@@ -293,6 +293,12 @@ L/Reductions/H10_to_L.v
 
 L/Complexity/ResourceMeasures.v
 L/Complexity/SpaceBoundsTime.v
+L/Complexity/Synthetic.v
+L/Complexity/AbstractTimeHierarchyTheorem.v
+L/Complexity/UnivDecTime.v
+L/Complexity/TimeHierarchyTheorem.v
+L/Complexity/Monotonic.v
+L/Complexity/NP.v
 
 L/AbstractMachines/Programs.v
 L/AbstractMachines/AbstractSubstMachine.v
