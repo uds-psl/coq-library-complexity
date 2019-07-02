@@ -43,23 +43,20 @@ Section TimeHierarchy_Parametric.
   
   Lemma L_A_notIn_f : ~ L__f ∈Timeo f.
   Proof.
-    intros [t__o [(fdec &[fdec__intT]&f_dec_spec) [Ht__o]]].
-    evar (n:nat).
-    pose (w:=(extT fdec,n)).  unfold extracted in w.
+    intros [t__o [(fdec &[fdec__intT]&f_dec_spec) Ht__o]].
+    specialize (Ht__o 1) as (n0&Hn0). setoid_rewrite Nat.mul_1_l in Hn0.
+    pose (w:=(extT fdec,n0)).  unfold extracted in w.
 
     assert (E__fdec : (extT fdec) (enc w) ⇓(<=f (size (enc w))) enc (fdec w)).
     {
       eapply le_evalLe_proper. 2-3:reflexivity.
       2:{ eapply computesTime_evalLe, extTCorrect. }
       cbn [fst].
-      specialize (correct_n__ino (H:=Ht__o) (c0:=1) (H':=Nat.lt_0_1)) as H'.
-      cbn in H'. setoid_rewrite Nat.mul_1_l in H'.
-      eapply Nat.lt_le_incl,H'.
+      eapply Nat.lt_le_incl,Hn0.
 
-      rewrite size_prod. unfold w,n;cbn [fst snd]. rewrite size_nat_enc.
-      instantiate (n := n__ino Ht__o Nat.lt_0_1). lia.
+      rewrite size_prod. unfold w;cbn [fst snd]. rewrite size_nat_enc. lia.
     }
-    clearbody n; clear Ht__o.
+    clear Hn0.
     
     specialize (f_dec_spec w) as f_dec_spec.
     unfold L__f in f_dec_spec. unfold w in f_dec_spec at 1 3.  cbn [start fst snd] in *. fold w in f_dec_spec.
@@ -105,8 +102,7 @@ Section TimeHierarchy_Parametric.
   
   Instance term_start : computableTime' start (fun w _ => (size (fst w) *30 + snd w * 14 + 36,tt)).
   Proof.
-    unfold start. rewrite enc_prod_eq. unfold enc;cbn.
-    extract. solverec.
+    unfold start. extract. solverec.
   Qed.
 
    (* computes the input and fuel for E__spec *)
@@ -130,17 +126,15 @@ Section TimeHierarchy_Parametric.
     unfold U_preproc.
     change (@enc term _) with term_enc.
     change (@enc nat _) with nat_enc.
-    extract. rewrite enc_prod_eq. intros [s padding]. cbn [prod_enc' size]. recRel_prettify2.
-    all:inv H.
-    (* all:try rewrite Nat.le_min_r with (m:=1). *)
-    all:unfold enc;cbn [registered_term_enc registered_nat_enc].
-    all: remember ((1 + (1 + (1 + (1 + 0) + size (term_enc s)) + size (nat_enc padding)))) as k eqn:eqk.
-    all:ring_simplify in eqk.
-    -rewrite (size_term_enc_r s).
-     subst k. Lia.nia.
-    -rewrite <-eqk.
-     rewrite (size_term_enc_r s). rewrite (size_nat_enc_r padding) at 1.
-     Lia.nia.
+    extract. recRel_prettify2.
+    all:inv H. all:cbn [fst] in *.
+    1,4:now rewrite H0 in H2.
+    all:rewrite size_prod. all:cbn [fst snd].
+    all:rewrite size_term_enc_r.
+    2:rewrite (size_nat_enc_r b) at 1.
+    2:change (@enc term _) with term_enc.
+    2:change (@enc nat _) with nat_enc.
+    all:try lia.
   Qed.
   
   Definition U :term := Eval cbn [TH convert Nat.sub] in
@@ -292,46 +286,11 @@ Section TimeHierarchy_Parametric.
        rewrite size_prod. cbn [fst snd]. rewrite size_term_enc_r with (s:=s). change (term_enc) with (@enc term _). Lia.lia. 
      +intros w. rewrite <- spec_L__f.
       eapply reflect_iff. apply U_reflects_U_spec.
-    -split.  
-     repeat apply inO_add_l.
+    -repeat apply inO_add_l.
      +etransitivity. exact f_TC.
-      exists 1 0. intros. rewrite <- suplin_t__E. Lia.lia.
+      exists 1,0. intros. rewrite <- suplin_t__E. Lia.lia.
      +reflexivity.
-     +eexists 221 1. intros. rewrite <- suplin_t__E,<- n_leq_tn. Lia.lia.
-     +eexists 12 1. intros. rewrite <- suplin_t__E,<- n_leq_tn. Lia.lia.  
+     +eexists 221,1. intros. rewrite <- suplin_t__E,<- n_leq_tn. Lia.lia.
+     +eexists 12,1. intros. rewrite <- suplin_t__E,<- n_leq_tn. Lia.lia.  
   Qed.
 End TimeHierarchy_Parametric.
-
-(*
-Section TimeHierarchy.
-
-  Hypothesis TC__f : timeConstructible f.
-  Hypothesis f_geq_n : forall n, n <= f n.
-  Hypothesis f_largeEnough : f ∈o (fun n => n^cnst "largeEnough (needed? not in sipser)").
-
-
-  Let f' := (fun n : nat => cnst ("TODO",n)).
-
-  Definition L4 : (term*nat) -> Prop :=
-    fun '(s,w) => s (enc w) ⇓(<= f (size (enc (s,w)))) (enc false)
-                /\ largestVar s <= cVar.
-
- (*  Definition L4' : Pro*nat -> Prop :=
-    fun '(s,w) => (exists i, i < f (size (enc (s,w)))) (enc false)
-                /\ largestVar s <= cVar. *)
-  (*** Todo: L4 : Pro * nat -> bool instead ? *)
-
-  Lemma notInUpper:
-    ~ L4 ∈Timeo f'.
-  Proof.
-    intros (fT&f_inO&dec&dec_computable&dec_correct).
-    cbn in timeConstructible.
-    unfold L4 in *.
-  Abort.
-
-  Lemma TimeHierarchyTheorem :
-    exists P, P inTimeO f /\ ~ P inTimeO (fun n => cnst ("TODO",n)).
-    
-  Abort.
-End TimeHierarchy.
-*)

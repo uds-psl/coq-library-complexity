@@ -116,7 +116,6 @@ Section fix_sig.
   Context `{reg_sig : registered sig}.
 
 
-
   Definition mconfigAsPair {B : finType} {n} (c:mconfig sig B n):= let (x,y) := c in (x,y).
 
   Global Instance registered_mconfig (B : finType) `{registered B} n: registered (mconfig sig B n).
@@ -151,6 +150,4 @@ Section fix_sig.
   Qed.
 End fix_sig.
 
-
-(* Fixpoint time_loop f fT p pT := cnst 1. *)
 Hint Resolve tape_enc_correct : Lrewrite.

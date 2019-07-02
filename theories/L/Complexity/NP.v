@@ -1,12 +1,13 @@
-From Undecidability.L Require Import Complexity.Synthetic Complexity.Monotonic.
+From Undecidability.L.Complexity Require Export Synthetic RegisteredP LinTimeDecodable.
 From Undecidability.L.Tactics Require Import LTactics.
-From Undecidability.L.Datatypes Require Import LProd.
 
 
-Definition inOPoly (f : nat -> nat) : Prop :=
-  exists n, 0 < n /\ inhabited (f ∈O (fun x => x ^ n)).
+From Undecidability.L.Datatypes Require Import LProd LOptions LTerm.
+From Undecidability.L Require Export Functions.Decoding.
 
 (** inspired by Papadimitriou *)
+
+(** ** NP *)
 
 Section NP_certificate_fix.
   Variable X Y : Type.
@@ -15,7 +16,7 @@ Section NP_certificate_fix.
 
   Implicit Type R : X -> Y -> Prop.
 
-  
+
   Definition polyBalanced R :Prop :=
     exists f, inOPoly f /\ (forall x y, R x y -> size (enc y) <= f (size (enc x))) /\ monotonic f.
 
@@ -25,105 +26,74 @@ Section NP_certificate_fix.
 
 End NP_certificate_fix.
 
+Set Warnings "-cannot-define-projection".
 Record inNP {X} `{registered X} (L : X -> Prop) : Prop :=
   {
-    inNP__Y : Type;
-    inNP__regY : registered inNP__Y;
-    inNP__R : X -> inNP__Y -> Prop;
-    inNP__time : inTimePoly (prod_curry inNP__R);
-    inNP__bal : polyBalanced inNP__R;
-    inNP__spec : forall x, L x <-> exists y, inNP__R x y
+    (*Y : Type;
+    reg__Y : registered Y;*)
+    R : X -> term -> Prop; (* fixed to term for simplicity *)
+    poly__R : inTimePoly (prod_curry R);
+    bal__R : polyBalanced R;
+    spec__R : forall x, L x <-> exists y, R x y
   }.
 
-Lemma inOPoly_c c: inOPoly (fun _ => c).
-Proof.
-  exists 1. split. omega.
-  split. eapply inO_c with (n0:=1). cbn. intros. Lia.nia.
-Qed.
 
-Lemma inOPoly_x: inOPoly (fun x => x).
-Proof.
-  exists 1. split. omega.
-  split. cbn. exists 1 1. intros ? ?. Lia.nia.
-Qed.
 
-Lemma inOPoly_add f1 f2: inOPoly f1 -> inOPoly f2 -> inOPoly (fun x => f1 x + f2 x).
+Lemma inNP_intro {X Y} `{_:registered X} `{registered Y} {_:decodable Y} (P : X -> Prop) (R:X -> Y -> Prop):
+  polyTimeComputable (decode Y)
+  -> inTimePoly (prod_curry R)
+  -> polyBalanced R
+  ->  ( forall x, P x <-> exists y, R x y)
+  -> inNP P.
 Proof.
-  intros (n1&?&[?]) (n2&?&[?]).
-  exists (max n1 n2). split. Lia.nia. split.
-  eapply inO_add_l.
-  all:etransitivity;[eassumption|].
-  all:eapply inO_leq with (n0:=1).
-  all:intros ? ?.
-  all:eapply Nat.pow_le_mono_r. all:Lia.nia.
-Qed.
-
-Lemma inOPoly_mul f1 f2: inOPoly f1 -> inOPoly f2 -> inOPoly (fun x => f1 x * f2 x).
-Proof.
-  intros (n1&?&[?]) (n2&?&[?]).
-  exists (n1+n2). split. Lia.nia. split.
-  transitivity (fun x : nat => x ^ n1 * x^n2).
-  1:now eauto using inO_mul_l.
-  all:eapply inO_leq with (n0:=0).
-  all:intros ? _.
-  rewrite Nat.pow_add_r. Lia.nia.
-Qed.
-
-Lemma inOPoly_comp f1 f2: monotonic f1 -> inOPoly f1 -> inOPoly f2 -> inOPoly (fun x => f1 (f2 x)).
-Proof.
-  intros ? (n1&?&[?]) (n2&?&[?]).
-  exists (n2*n1). split. Lia.nia. split.
-  etransitivity.
-  {eapply inO_comp_l. 1-3:eassumption.
-   -cbn beta. intros. replace x with (x^1) at 1 by (cbn;Lia.nia).
-    decide (x=0). 2:now eapply Nat.pow_le_mono;Lia.nia.
-    subst x. rewrite !Nat.pow_0_l. all:Lia.nia.
-   -cbn beta. intros c.
-    exists (c^n1) 0. intros.
-    rewrite Nat.pow_mul_l. reflexivity.
+  intros decode__comp poly_R bal_R spec_R.
+  eexists (fun x y => exists y', y = enc y' /\ R x y').
+  3:{ intro. rewrite spec_R. split;[intros (?&?)|intros (?&?&->&?)].
+      all:repeat eexists. all:try eassumption. }
+  2:{ destruct bal_R as (f&?&Hf&?). exists (fun x => f x * 11).
+      all:repeat split.
+      1,3:now smpl_inO.
+      -intros ? ? (?&->&?). rewrite size_term_enc. rewrite Hf. 2:eassumption. cbn. reflexivity.
   }
-  cbn beta.
-  eapply inO_leq with (n0:=0). intros.
-  rewrite Nat.pow_mul_r. reflexivity.
+  { destruct poly_R as (t__f&(f&[]&?)&?&mono_t__f).
+    destruct decode__comp as [? [] ? ? ?].
+    pose (f' (x:X*term) :=
+            let '(x,y):= x in
+            match decode Y y with
+              None => false
+            | Some y => f (x,y)
+            end).
+    evar (t__f' : nat -> nat). [t__f']:intro.
+    exists t__f'. repeat eapply conj.
+    -exists f'. split.
+     +split. unfold f'. extract. solverec.
+      all:rewrite !size_prod. all:cbn [fst snd].
+      all:hnf in polyTimeC__mono,mono_t__f.
+      *eapply decode_correct2 in H3 as <-.
+       
+       
+       remember (size (enc a) + size (enc (enc y)) + 4) as n eqn:eqn.
+       rewrite mono_t__f with (x':=n). 2:subst n;rewrite <- size_term_enc_r;lia.
+       rewrite polyTimeC__mono with (x':=n). 2:lia.
+       unfold t__f';reflexivity.
+      *rewrite polyTimeC__mono with (x':=(size (enc a) + size (enc b) + 4)). 2:lia.
+       unfold t__f'. lia.
+     +unfold f'. intros []. cbn.
+      destruct decode eqn:H'.
+      *etransitivity. 2:exact (H1 _). cbn.
+       eapply decode_correct2 in H'. symmetry in H'.
+       split;[intros (?&?&?)|intros ?].
+       --enough (x0 = y) by congruence. eapply inj_enc.  rewrite <- H', <- H3. reflexivity.
+       --eauto.
+      *split.  2:eauto.
+       intros (?&->&?). rewrite decode_correct in H'.  easy.
+    -unfold t__f'. smpl_inO.
+    -unfold t__f'. smpl_inO.
+  }
 Qed.
+  
+(** ** Poly Time Reduction s*)
 
-Hint Resolve inOPoly_c inOPoly_x.
-Hint Resolve inOPoly_add inOPoly_mul.
-
-
-Lemma monotonic_c c: monotonic (fun _ => c).
-Proof.
-  hnf. 
-  intros **. easy.
-Qed.
-
-
-Lemma monotonic_add f1 f2: monotonic f1 -> monotonic f2 -> monotonic (fun x => f1 x + f2 x).
-Proof.
-  unfold monotonic.
-  intros H1 H2 **.
-  rewrite H1,H2. reflexivity. all:eassumption.
-Qed.
-
-
-Lemma monotonic_comp f1 f2: monotonic f1 -> monotonic f2 -> monotonic (fun x => f1 (f2 x)).
-Proof.
-  unfold monotonic.
-  intros H1 H2 **.
-  rewrite H1. reflexivity. eauto.
-Qed.
-
-Hint Resolve monotonic_c monotonic_add monotonic_comp.
-
-Record polyTimeComputable X Y `{registered X} `{registered Y} (f : X -> Y): Prop :=
-  {
-    polyTimeC__t : nat -> nat;
-    polyTimeC__comp : is_computable_time (t:=TyArr _ _) f (fun x _ => (polyTimeC__t (L.size (enc x)),tt));
-    polyTimeC__polyTime : inOPoly polyTimeC__t ;
-    polyTimeC__mono : monotonic polyTimeC__t; 
-    polyTimeC__polyRes : exists f', (forall x, size (enc (f x))
-                                   <= f' (size (enc x)) ) /\ inOPoly f' /\ monotonic f'
-  }.
 
 Definition reducesPolyMO X Y `{registered X} `{registered Y} (P : X -> Prop) (Q : Y -> Prop) :=
   exists (f: X -> Y), polyTimeComputable f /\ forall x, (P x <-> Q (f x)).
@@ -134,11 +104,11 @@ Lemma reducesPolyMO_reflexive X {regX : registered X} (P : X -> Prop) : P ⪯p P
 Proof.
   exists (fun x => x).
   split. 2:tauto.
-  exists (fun _ => 1). 
+  exists (fun _ => 1).
   -constructor. extract. solverec.
-  -eauto.
+  -smpl_inO.
   -hnf. reflexivity.
-  -exists (fun x => x). repeat split. 3:hnf. all:eauto.
+  -exists (fun x => x). repeat split. 2-3:now smpl_inO.  reflexivity.
 Qed.
 
 Lemma reducesPolyMO_transitive X Y Z {regX : registered X} {regY : registered Y} {regZ : registered Z} (P : X -> Prop) (Q : Y -> Prop) (R : Z -> Prop) :
@@ -146,33 +116,33 @@ Lemma reducesPolyMO_transitive X Y Z {regX : registered X} {regY : registered Y}
 Proof.
   intros (f&Cf&Hf) (g&Cg&Hg).
   exists (fun x =>g (f x)). split. 2:intro;rewrite Hf,Hg;reflexivity.
-  destruct Cf as [t__f [] ? f__mono (sizef&H__sizef&?&?)], Cg as [t__g [] ? g__mono (size__g&?&?&?)]. 
+  destruct Cf as [t__f [] ? f__mono (sizef&H__sizef&?&?)], Cg as [t__g [] ? g__mono (size__g&?&?&?)].
   exists (fun x => t__f x + t__g (sizef x) + 1).
   -split. extract. solverec.
    hnf in g__mono.
    erewrite g__mono. 2:eapply H__sizef. reflexivity.
-  -repeat (eapply inOPoly_mul || eapply inOPoly_add || eauto).
-   eapply inOPoly_comp. all:try eassumption.
-  -repeat (eapply monotonic_add || eauto).
+  -smpl_inO.
+   eapply inOPoly_comp. all:smpl_inO.
+  -smpl_inO.
   -exists (fun x => size__g (sizef x)). repeat split.
    +intros. rewrite H1. hnf in H3;rewrite H3. 2:eapply H__sizef. reflexivity.
    +eapply inOPoly_comp. all:try eassumption.
    +eapply monotonic_comp. all:try eassumption.
 Qed.
 
-Lemma red_NP X Y {regX : registered X} {regY : registered Y} (P : X -> Prop) (Q : Y -> Prop) :
+Lemma red_inNP X Y `{regX : registered X} `{regY : registered Y} (P : X -> Prop) (Q : Y -> Prop) :
   P ⪯p Q -> inNP Q -> inNP P.
 Proof.
-  intros (f&Cf&Hf) [Z reg__Z R polyR bal specR].
-  
-  eexists _ reg__Z (fun x z => R (f x) z).
+  intros (f&Cf&Hf) [(*? ?*) R polyR bal specR].
+
+  eexists (*_ _*) (fun x z => R (f x) z).
   -destruct Cf as [? [] ? ? (fs&H__fs&?&mono__fs)].
    destruct polyR as (f'__t&[f' [[comp__f'] H__f']]&?&mono_f'__t).
    eexists (fun n => polyTimeC__t n + f'__t (fs n + n) + 7). split.
    +exists (fun '(x,z)=> f' (f x,z)).
     split.
     *split. extract. solverec.
-     all:rewrite !size_prod. all:cbn [fst snd].
+     all:rewrite !LProd.size_prod. all:cbn [fst snd].
      hnf in polyTimeC__mono,mono_f'__t,mono__fs.
      rewrite polyTimeC__mono with (x':=size (enc a) + size (enc b) + 4). 2:easy.
      erewrite mono_f'__t with (x':=_). reflexivity.
@@ -181,12 +151,9 @@ Proof.
     *intros [x z]. rewrite <- H__f'.
      cbn. reflexivity.
    +split.
-    *repeat (eapply inOPoly_mul || eapply inOPoly_add || eauto).
-     eapply inOPoly_comp. all:try eassumption. repeat (eapply inOPoly_mul || eapply inOPoly_add || eauto).
-    *repeat (eapply monotonic_add || eauto).
-     eapply monotonic_comp. all:repeat (eapply monotonic_add || eauto);try eassumption.
-     hnf. easy.
-  -destruct bal as (f__bal&poly_f__bal&Hf__bal&Hf__mono). 
+    all:smpl_inO.
+    { eapply inOPoly_comp. all:smpl_inO. }
+  -destruct bal as (f__bal&poly_f__bal&Hf__bal&Hf__mono).
    destruct Cf as [? ? ? ? (fs&H__fs&?&mono__fs)].
    exists (fun x =>  f__bal (fs x));split;[|split].
    +eapply inOPoly_comp.  all:eassumption.
@@ -199,13 +166,21 @@ Proof.
    rewrite Hf.  apply specR.
 Qed.
 
-(*** TODO: is this ok? *)
+
+(** ** NP Hardness and Completeness *)
 Definition NPhard X `{registered X} (P : X -> Prop) :=
-  forall Y `{registered Y} (Q : Y -> Prop),
+  forall Y `{registeredP Y} (Q : Y -> Prop),
     inNP Q -> Q ⪯p P.
 
-(* Goal NPhard (fun (x:nat) => False). *)
-(* Proof. *)
-(*   intros Y reg__Y Q []. *)
-(*   destruct *)
-(*   eexists. *)
+Lemma red_NPhard X Y `{registered X} `{registered Y} (P : X -> Prop) (Q: Y -> Prop)
+  : P ⪯p Q -> NPhard P -> NPhard Q.
+Proof.
+  intros R hard.
+  intros ? ? ? Q' H'. apply hard in H'.
+  eapply reducesPolyMO_transitive with (1:=H'). all:eassumption.
+Qed.
+
+Definition NPcomplete X `{registered X} (P : X -> Prop) :=
+  NPhard P /\ inNP P.
+
+Hint Unfold NPcomplete.

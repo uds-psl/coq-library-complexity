@@ -336,8 +336,9 @@ Fixpoint freeVars (s:Ast.term) : list nat :=
   | tConstruct _ _ _ => []
   | tConst _ _ => []
   | _ => [error ("freeVars",s)] 
-  end.
+  end. 
 
+Definition isClosed (s:Ast.term)
 (*Get a term representing a type of form 'forall x1 ...xn, T' and returns the number of paramaters*)
 Fixpoint dependentArgs (s:Ast.term) : nat :=
   match s with

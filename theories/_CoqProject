@@ -281,8 +281,12 @@ L/Functions/Unenc.v
 L/Functions/Ackermann.v
 
 L/TM/TMEncoding.v
+L/TM/TMflat.v
+L/TM/TMflatEnc.v
+L/TM/TMflatFun.v
 L/TM/TMinL.v
 L/TM/TapeFuns.v
+L/TM/TapeDecode.v
 L/Reductions/TM_to_L.v
 
 L/Reductions/SRH_SR_computable.v
@@ -295,10 +299,15 @@ L/Complexity/ResourceMeasures.v
 L/Complexity/SpaceBoundsTime.v
 L/Complexity/Synthetic.v
 L/Complexity/AbstractTimeHierarchyTheorem.v
-L/Complexity/UnivDecTime.v
 L/Complexity/TimeHierarchyTheorem.v
 L/Complexity/Monotonic.v
+L/Complexity/ONotation.v
+L/Complexity/RegisteredP.v
+L/Complexity/LinTimeDecodable.v
 L/Complexity/NP.v
+L/Complexity/Problems/GenericNPcompleteProblem.v
+L/Complexity/Problems/TMGenericNPcompleteProblem.v
+L/Complexity/Reductions/L_to_mTM.v
 
 L/AbstractMachines/Programs.v
 L/AbstractMachines/AbstractSubstMachine.v
@@ -314,6 +323,7 @@ L/AbstractMachines/Computable/SubstMachine.v
 L/AbstractMachines/Computable/Unfolding.v
 L/AbstractMachines/Computable/Lookup.v
 L/AbstractMachines/Computable/UnivDecTime.v
+L/AbstractMachines/Computable/LargestVar.v
 L/AbstractMachines/Computable/EvalForTime.v
 L/AbstractMachines/Computable/EvalForTimeBool.v
 
