@@ -28,7 +28,7 @@ Lemma size_flatTapes (sig : finType) (n : nat) (t:list (tape nat)) (t' : Vector.
   isFlatteningTapesOf t t'
   -> size (enc t) <= n * sizeOfmTapes t' * (Cardinality.Cardinality sig * 4 + 9) + n * 22 + 4.
 Proof.
-  intro R__tapes. inv R__tapes. Set Printing Coercions.
+  intro R__tapes. inv R__tapes.
   unfold sizeOfmTapes,mapTapes.
   rewrite size_list.
   rewrite Vector.fold_left_right_assoc_eq. 2:intros;nia.
@@ -59,7 +59,7 @@ Lemma sizeOfmTapesFlat_eq (sig : finType) (n : nat) (ts:list (tape nat)) (ts' : 
   isFlatteningTapesOf ts ts'
   -> sizeOfmTapesFlat ts = sizeOfmTapes ts'.
 Proof.
-  intro R__tapes. inv R__tapes. Set Printing Coercions.
+  intro R__tapes. inv R__tapes.
   unfold sizeOfmTapes,mapTapes.
   rewrite Vector.fold_left_right_assoc_eq. 2:intros;nia.
   induction n.
@@ -70,29 +70,56 @@ Proof.
    specialize (IHn x0). rewrite IHn,sizeoftape_maptape_eq. lia.
 Qed.
 
-Lemma isFlatteningTransOf_eq st sig' n trans trans' s v d:
+Lemma lookup_sound' (A: eqType) (B: Type) (L : list (prod A B)) a b def :
+  (forall a' b1 b2, (a',b1) el L -> (a',b2) el L -> b1=b2) -> ( (a,b) el L \/ ((forall b', ~ (a,b') el L) /\ b = def) ) -> lookup L a def = b.
+Proof.
+  intros H1 H2. unfold lookup.
+  destruct filter eqn:E.
+  - destruct H2 as [H2|H2].
+    +assert ((a,b) el filter (fun p : A * B => Dec (fst p = a)) L) by ( rewrite in_filter_iff ; eauto).
+     now rewrite E in H.
+    +easy.
+  - destruct p. assert ((e,b0) el (filter (fun p : A * B => Dec (fst p = a)) L)) by now rewrite E.
+    rewrite in_filter_iff in H. 
+    dec; cbn in *; subst; firstorder.
+Qed.
+
+Lemma isFlatteningTransOf_eq st sig' n trans trans' s v:
   isFlatteningTransOf (st:=st) (sig:=sig') (n:=n) trans trans' ->
   (let (s',v'):= trans' (s,v) in
-  (index s', map (map_fst (option_map index)) (Vector.to_list v')))= lookup trans (index s,map (option_map index) (Vector.to_list v)) d.
+  (index s', map (map_fst (option_map index)) (Vector.to_list v'))) = lookup trans (index s,map (option_map index) (Vector.to_list v)) (index s, repeat (None,N) n).
 Proof.
-  intros [H].
+  intros [H1 H2].
   destruct trans' as [s' v'] eqn:eq.
-  erewrite lookup_sound.
+  erewrite lookup_sound'.
   -reflexivity.
-  -intros [] [] []. rewrite !H.
-   intros (?&?&?&?&?&->&->&->&->).
-   intros (?&?&?&?&?&<-%injective_index&->&H'%map_injective&->).
+  -intros [s0 v0] [s1 v1] [s2 v2] T1 T2.
+   apply H1 in T1 as  (?&?&?&?&Ht&->&->&->&->).
+   apply H1 in T2 as  (?&?&?&?&Ht'&<-%injective_index&->&H'%map_injective&->).
    2:{intros [] [] [=];f_equal. now eapply injective_index. }
    eapply vector_to_list_inj in H' as <-.
-   congruence.
-  -rewrite H.
-   repeat eexists. easy.
+   congruence. 
+  -specialize (H2 s v) as H2'. rewrite eq in H2'.
+   destruct H2' as [ | (<-&->) ]. easy.
+   edestruct lookup_complete as [H'|H'].
+   2:{right. split.
+      +intros ? ?.
+       eapply H'. eexists. eassumption.
+      +f_equal. unfold Vector.to_list.
+       clear.
+       induction n;cbn. all:easy.
+   }
+   left.
+   edestruct lookup as [] eqn:eq' in H'.
+   specialize H1 with (1:=H') as  (?&?&?&?&Ht&<-%injective_index&->&H'''%map_injective&->).
+   2:{intros [] [] [=];f_equal. now eapply injective_index. }
+   eapply vector_to_list_inj in H''' as <-. rewrite eq in Ht. inv Ht.
+   eassumption.
+   Unshelve.
+   repeat econstructor. 
 Qed.
 
 
-
-
-Print mconfig.
 Definition mconfigFlat :Type := nat * list (tape nat).
 
 Inductive isFlatteningConfigOf {st sig : finType} {n}: mconfigFlat -> mconfig st sig n -> Prop :=
@@ -126,7 +153,7 @@ Qed.
 
 
 Definition stepFlat (trans:list (nat * list (option nat) * (nat * list (option nat * move)))) (c:mconfigFlat) : mconfigFlat :=
-  let (news, actions) := lookup trans (fst c, map (@current _) (snd c)) (0,[]) in (news,(zipWith (@doAct _) (snd c) actions)).
+  let (news, actions) := lookup trans (fst c, map (@current _) (snd c)) (fst c, repeat (None, N) (length (snd c))) in (news,(zipWith (@doAct _) (snd c) actions)).
 
 Lemma current_charsFlat_eq (sig:finType) n t (t': tapes sig n):
   isFlatteningTapesOf t t' ->
@@ -149,6 +176,8 @@ Proof.
 
   unfold stepFlat, step. cbn [fst snd cstate ctapes] in *.
   erewrite current_charsFlat_eq. 2:easy.
+  replace (length l) with n.
+  2:{inv Ht. destruct c'. now rewrite LVector.to_list_length. }
   erewrite <-isFlatteningTransOf_eq. 2:easy.
   destruct TM.trans. econstructor. now easy.
   cbn - [doAct_multi]. 

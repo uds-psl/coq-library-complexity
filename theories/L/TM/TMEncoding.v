@@ -13,6 +13,20 @@ Require Import PslBase.FiniteTypes.FinTypes.
 Run TemplateProgram (tmGenEncode "move_enc" move).
 Hint Resolve move_enc_correct : Lrewrite.
 
+
+Definition move_eqb (m n : move) : bool :=
+  match m,n with
+    N,N => true
+  | L,L => true
+  | R,R => true
+  | _,_ => false
+  end.
+
+Lemma move_eqb_spec x y : reflect (x = y) (move_eqb x y).
+Proof.
+  destruct x, y;constructor. all:easy.
+Qed.
+
 (*
 Definition move_decode (s : term) : option (move) :=
   match s with

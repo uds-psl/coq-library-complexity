@@ -16,13 +16,17 @@ Inductive isFlatteningTransOf {st sig : finType} {n}
           (f:list (nat * list (option nat) * (nat * list (option nat * move))))
           (f': st * Vector.t (option sig) n -> st * Vector.t (option sig * move) n): Prop :=
   mkIsFlatteningTransOf
-    (R__trans :
-       (forall s s' v v', ((s,v),(s',v')) el f <->
-       (exists s0 s0' v0 v0', f' (s0,v0) = (s0', v0')
-                         /\ s = index s0
-                         /\ s' = index s0'
-                         /\ v = map (option_map index) (Vector.to_list v0)
-                         /\ v' = map (map_fst (option_map index)) (Vector.to_list v0'))))
+    (R__sound :
+       (forall s s' v v', (((s,v),(s',v')) el f ->
+                     ((exists s0 s0' v0 v0', ( f' (s0,v0) = (s0', v0')
+                                          /\ s = index s0
+                                          /\ s' = index s0'
+                                          /\ v = map (option_map index) (Vector.to_list v0)
+                                          /\ v' = map (map_fst (option_map index)) (Vector.to_list v0')))))))
+    (R_complete : (forall s0 v0, let (s0',v0') := f' (s0,v0)
+                             in ((index s0,map (option_map index) (Vector.to_list v0))
+                                 ,(index s0',map (map_fst (option_map index)) (Vector.to_list v0'))) el f
+                                \/ (s0=s0' /\ v0' = Vector.const (None,N) n)))
   : isFlatteningTransOf f f'.
 
 Inductive isFlatteningHaltOf {st:finType} (f : list bool) (f' : st -> bool) : Prop :=
