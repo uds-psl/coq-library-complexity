@@ -257,7 +257,7 @@ L/Datatypes/LComparison.v
 L/Datatypes/LFinType.v
 L/Datatypes/LVector.v
 L/Datatypes/LDepPair.v
-
+L/Datatypes/LGraph.v
 
 L/Functions/Equality.v
 L/Functions/Encoding.v
@@ -308,6 +308,8 @@ L/Complexity/LinTimeDecodable.v
 L/Complexity/NP.v
 L/Complexity/Problems/GenericNPcompleteProblem.v
 L/Complexity/Problems/TMGenericNPcompleteProblem.v
+L/Complexity/Problems/Clique.v
+L/Complexity/Problems/SAT.v
 L/Complexity/Reductions/L_to_mTM.v
 
 L/AbstractMachines/Programs.v
