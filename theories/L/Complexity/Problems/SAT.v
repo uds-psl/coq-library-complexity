@@ -5,10 +5,10 @@ From Undecidability.L.Complexity Require Import NP Synthetic Monotonic.
 From Undecidability.L.Functions Require Import Size.
 
 (*Conjunctive normal forms (need not be canonical)*)
-Definition var := nat. 
-Definition literal := (bool * var)%type. 
-Definition clause := list literal. 
-Definition cnf := list clause. 
+Notation var := (nat). 
+Notation literal := ((bool * var)%type).
+Notation clause := (list literal). 
+Notation cnf := (list clause).
 
 
 (*Bounds on the number of used variables*)
@@ -21,7 +21,7 @@ Inductive varBound_cnf (n : nat) : cnf -> Prop :=
    | varBound_cnfS : forall cl c, varBound_clause n cl -> varBound_cnf n c -> varBound_cnf n (cl :: c).  
 
 (*Assignments as lists of natural numbers: variable i is mapped to value list[i] *)
-Definition assgn := list (bool). 
+Notation assgn := (list bool). 
 
 Definition evalLiteral (a : assgn) (l : literal) : option bool := match l with
   | (s, v) => match nth_error a v with
@@ -156,18 +156,6 @@ Qed.
 
 Definition SAT (c : cnf) : Prop := exists (a : assgn), evalCnf a c = Some true. 
 
-Run TemplateProgram (tmGenEncode "satvar_enc" var).
-Hint Resolve satvar_enc_correct : Lrewrite.
-Run TemplateProgram (tmGenEncode "satliteral_enc" literal). 
-Hint Resolve satliteral_enc_correct : Lrewrite.
-Run TemplateProgram (tmGenEncode "satclause_enc" clause).
-Hint Resolve satclause_enc_correct : Lrewrite.
-Run TemplateProgram (tmGenEncode "satcnf_enc" cnf).
-Hint Resolve satcnf_enc_correct : Lrewrite. 
-
-Run TemplateProgram (tmGenEncode "satassgn_enc" assgn).
-Hint Resolve satassgn_enc_correct : Lrewrite. 
-
 
 Global Instance term_bool_eqb : computableTime' Bool.eqb (fun _ _ => (1, fun _ _ => (7, tt))). 
 Proof.
@@ -208,13 +196,6 @@ Qed.
 
 (*TODO: derive a nice bound under assumptions on the running time of the step function *)
 
-
-Instance term_fold_leftOptionBoolLit :  computableTime' (@fold_leftOption bool literal) (fun f t__f => (1, fun l _ => (5, fun opt _ => (term_fold_leftOption_time f t__f l opt, tt)))). 
-Proof.
-  extract. 
-  solverec. 
-Qed. 
-
 (*we need to factor out the fold step function first and extract it separately *)
 Definition evalClause'_step (a : assgn):=
   fun (acc : bool) (lit : literal) => match evalLiteral a lit with
@@ -253,12 +234,6 @@ Definition evalCnf'_step (a : assgn) :=
                                 | Some v => Some (acc && v)
                                 | None => None
                               end. 
-
-Instance term_fold_leftOptionBoolClause :  computableTime' (@fold_leftOption bool clause) (fun f t__f => (1, fun l _ => (5, fun opt _ => (term_fold_leftOption_time f t__f l opt, tt)))). 
-Proof.
-  extract. 
-  solverec. 
-Qed. 
 
 Instance term_evalCnf'_step : computableTime' evalCnf'_step (fun a _ => (1, fun acc _ => (1, fun cl _ => (evalClause'_time a cl (Some false) + 16, tt)))).
 Proof.

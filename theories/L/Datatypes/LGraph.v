@@ -14,21 +14,21 @@ Structure UndirectedGraph := {
 
 (* for the L representation, the symmetric closure is implicit
  (i.e. we do not require the edge list to contain symmetric edges)*)
-Definition Lnode := nat.
-Definition Ledge := (Lnode * Lnode)%type.
-Definition Lgraph := (nat * list Ledge)%type.
+Notation Lnode := (nat) (only parsing).
+Notation Ledge := ((Lnode * Lnode)%type) (only parsing).
+Notation Lgraph := ((nat * list Ledge)%type) (only parsing).
 
 (*well-formedness: all referenced nodes exist*)
 Inductive Lgraph_wellformed : Lgraph -> Prop :=
 | edgeB (n : nat) : Lgraph_wellformed (n, [])
 | edgeS (n : nat) (u v : nat) (e : list Ledge) : Lgraph_wellformed (n, e) -> u < n -> v < n -> Lgraph_wellformed (n, (u, v) :: e). 
 
-Fixpoint Lgraph_wellformedb' (n : nat) (e : list Ledge) : bool :=
+Fixpoint Lgraph_wellformedb' (n : Lnode) (e : list Ledge) : bool :=
   match e with [] => true
           | ((u, v) :: e) => leb (S u) n && leb (S v) n && Lgraph_wellformedb' n e
   end.                             
 
-Fixpoint Lgraph_wellformedb (g : Lgraph): bool :=
+Definition Lgraph_wellformedb (g : Lgraph): bool :=
   match g with (nodes, e) => Lgraph_wellformedb' nodes e end.  
 
 Lemma Lgraph_wellformedb_correct (g : Lgraph) : reflect (Lgraph_wellformed g) (Lgraph_wellformedb g).
@@ -40,8 +40,8 @@ Proof.
       all : apply andb_prop in H; destruct H as (H1 & H2). 
       all : apply andb_prop in H1; destruct H1 as (H1 & H3).
       now apply IHl. all: destruct n; try congruence. 
-      specialize (Nat.leb_spec0 l0 n) as H4; inv H4.
-      3: specialize (Nat.leb_spec0 l1 n) as H4; inv H4. 
+      specialize (Nat.leb_spec0 n0 n) as H4; inv H4.
+      3: specialize (Nat.leb_spec0 n1 n) as H4; inv H4. 
       all:  try lia; try congruence. 
   - intros H1. induction H1.
     + cbn in H; congruence. 
@@ -205,11 +205,88 @@ Admitted.
 
 (*TODO: notion of equivalence, prove that the two conversion functions invert each other modulo equivalence*)
 
-(* k-Clique: duplicate-free list of k nodes such that all pairwise-distinct nodes are connected *)
-Inductive isClique (g : UndirectedGraph) : list (Fin.t (V g)) -> nat -> Prop :=
-| isCliqueB : isClique [] 0
-| isCliqueS (cl : list (Fin.t (V g))) (node : Fin.t (V g)) (k : nat):
-    isClique cl k -> (not (node el cl)) -> (forall (node' : Fin.t (V g)), node' el cl -> E node node') -> isClique (node :: cl) (S k).
 
-Definition Clique (input : UndirectedGraph * nat) :=
-  let (g, k) := input in exists cl, @isClique g cl k. 
+(*extractions*)
+From Undecidability.L.Tactics Require Import LTactics ComputableTactics.
+From Undecidability.L.Datatypes Require Import LProd LBool LTerm LNat Lists LOptions.
+
+(* From Undecidability.L.Functions Require Import Size. *)
+
+Instance term_wellformedb' : computableTime' Lgraph_wellformedb' (fun n _ => (5, fun e _ => ((28 * n + 81) * |e| + 4 , tt))).  
+Proof. 
+  extract.
+  solverec. 
+Defined. 
+
+Instance term_wellformedb : computableTime' Lgraph_wellformedb (fun (g : Lgraph) _ => (let (n, e) := g in (28 * n + 81) * |e| + 10, tt)). 
+Proof.
+  extract. 
+  solverec. 
+Defined. 
+
+Instance term_Lgraph_node_in_dec : computableTime' Lgraph_node_in_dec (fun g _ => (1, fun n _ => (33 + 14 * n, tt))).
+Proof.
+  extract. 
+  solverec.  
+Qed. 
+
+Definition pair_eqb_nat_time := (fun (a : nat * nat) (_:unit) => (1, fun (b : nat * nat) (_:unit) => (let (a1, a2) := a in let (b1, b2) := b in 17 * (min a1 b1 + min a2 b2) + 42, tt))).
+Instance term_pair_eqb_nat : computableTime' (@pair_eqb nat nat Nat.eqb Nat.eqb) pair_eqb_nat_time . 
+Proof.
+  extract. 
+  solverec. 
+Defined. 
+
+Fixpoint list_in_decb_time (X : Type) (eqbT: X -> unit -> (nat * (X -> unit -> nat * unit)%type)) (l : list X) (e : X) : nat :=
+    match l with [] => 4 | (l :: ls) => callTime2 eqbT l e + 16 + list_in_decb_time eqbT ls e end. 
+
+Instance term_list_in_decb (X : Type) `{registered X} : computableTime' (@list_in_decb X)
+  (fun eqb eqbT => (1, fun l _ => (5, fun x _ => (list_in_decb_time eqbT l x, tt)))). 
+Proof. 
+  extract. 
+  solverec. 
+Qed. 
+
+From Undecidability.L Require Import Complexity.ONotation Complexity.Monotonic.
+
+Lemma list_el_size_bound (X : Type) `{registered X} (l : list X) (a : X) :
+  a el l -> size(enc a) <= size(enc l). 
+Proof. 
+  intros H1. 
+  rewrite size_list. 
+  induction l. 
+  - destruct H1.
+  - cbn. destruct H1. rewrite H0; clear H0. solverec. rewrite IHl. 2: assumption. 
+    solverec. 
+Qed. 
+
+Lemma list_in_decb_time_bound (X : Type) `{registered X} (eqbT : X -> unit -> (nat * (X -> unit -> nat * unit))) :
+  (exists (f : nat -> nat), (forall (a b : X), callTime2 eqbT a b <= f(size(enc a) + size(enc b))) /\ inOPoly f /\ monotonic f)
+    -> exists (f : nat -> nat), (forall (l : list X) (e : X), list_in_decb_time eqbT l e <= f(size(enc l) + size(enc e)) ) /\ inOPoly f /\ monotonic f. 
+Proof.
+  intros (f' & H1 & H2 & H3). 
+  evar (f : nat -> nat). exists f; split. 
+  - intros l e. unfold list_in_decb_time. 
+    (*bound each step *)
+    assert (forall a : X, a el l -> callTime2 eqbT a e <= f'(size(enc l) + size(enc e))). 
+    {intros a He. rewrite H1. apply H3. rewrite list_el_size_bound. 2: apply He. reflexivity. }
+    (* with a tighter analysis, one could obtain a linear bound, but this is not worth the hassle *)
+    instantiate (f:= fun n => f' n * n * 5 + 20 + 16 * n). subst f. 
+    induction l. 
+    * solverec. 
+    * rewrite IHl. rewrite H0. 2 : now left. solverec. recRel_prettify2. 
+Admitted. 
+     
+
+Instance term_Lgraph_edge_in_dec' : computableTime' Lgraph_edge_in_dec' (fun e _ => (1, fun u _ => (1, fun v _ => (  list_in_decb_time pair_eqb_nat_time e (u, v) + list_in_decb_time pair_eqb_nat_time e (v, u) + 22, tt)))). 
+Proof.
+  extract.
+  solverec. 
+Defined. 
+
+
+Instance term_Lgraph_edge_in_dec : computableTime' Lgraph_edge_in_dec (fun g _ => (1, fun u _ => (1, fun v _ => (let (_, e) := g in list_in_decb_time pair_eqb_nat_time e (u, v) + list_in_decb_time pair_eqb_nat_time e (v, u) + 29, tt)))). 
+Proof.  
+  extract. 
+  solverec. 
+Defined. 

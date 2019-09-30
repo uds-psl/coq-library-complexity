@@ -310,7 +310,10 @@ L/Complexity/Problems/GenericNPcompleteProblem.v
 L/Complexity/Problems/TMGenericNPcompleteProblem.v
 L/Complexity/Problems/Clique.v
 L/Complexity/Problems/SAT.v
+L/Complexity/Problems/TSAT.v
 L/Complexity/Reductions/L_to_mTM.v
+L/Complexity/Reductions/TSAT_to_Clique.v
+L/Complexity/Reductions/TSAT_to_SAT.v
 
 L/AbstractMachines/Programs.v
 L/AbstractMachines/AbstractSubstMachine.v
