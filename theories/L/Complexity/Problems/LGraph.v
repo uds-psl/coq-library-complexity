@@ -1,6 +1,8 @@
 From Undecidability.L Require Export L.
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
+From Undecidability.L.Datatypes Require Export Lists.
 Require Import PslBase.FiniteTypes. 
+From Undecidability.L.Complexity Require Export ONotation Monotonic. 
 
 (* Coq representation, using Fin.t to represent nodes *)
 (* using Fin.t instead of nat saves a lot of hassle when translating to
@@ -70,29 +72,6 @@ Section pair_eq.
       apply eqbX_correct; congruence. apply eqbY_correct; congruence. 
     + intros [H1 H2]%andb_prop. apply eqbX_correct in H1. apply eqbY_correct in H2. congruence. Qed. 
 End pair_eq. 
-
-Section list_in.
-  Variable (X : Type). 
-  Variable (eqb : X -> X -> bool). 
-  Variable eqb_correct : forall a b,  a = b <-> eqb a b = true.  
-
-  Definition list_in_decb := fix rec (l : list X) (x : X) : bool :=
-  match l with [] => false
-          | (l :: ls) => eqb l x || rec ls x
-  end. 
-
-  Lemma list_in_decb_iff (l : list X) : forall x, list_in_decb l x = true <-> x el l. 
-  Proof. 
-    intros x. induction l.
-    - cbn. firstorder. 
-    - split. 
-      + intros [H1 | H1]%orb_true_elim. left. now apply eqb_correct. 
-        apply IHl in H1. now right. 
-      + intros [H | H].
-        cbn. apply orb_true_intro; left; now apply eqb_correct. 
-        cbn. apply orb_true_intro; right; now apply IHl. 
-  Qed. 
-End list_in. 
 
 
 Definition Lgraph_node_in_dec (g : Lgraph) (node : Lnode) := match g with (max, _) => Nat.leb (S node) max end. 
@@ -237,45 +216,8 @@ Proof.
   solverec. 
 Defined. 
 
-Fixpoint list_in_decb_time (X : Type) (eqbT: X -> unit -> (nat * (X -> unit -> nat * unit)%type)) (l : list X) (e : X) : nat :=
-    match l with [] => 4 | (l :: ls) => callTime2 eqbT l e + 16 + list_in_decb_time eqbT ls e end. 
-
-Instance term_list_in_decb (X : Type) `{registered X} : computableTime' (@list_in_decb X)
-  (fun eqb eqbT => (1, fun l _ => (5, fun x _ => (list_in_decb_time eqbT l x, tt)))). 
-Proof. 
-  extract. 
-  solverec. 
-Qed. 
-
 From Undecidability.L Require Import Complexity.ONotation Complexity.Monotonic.
 
-Lemma list_el_size_bound (X : Type) `{registered X} (l : list X) (a : X) :
-  a el l -> size(enc a) <= size(enc l). 
-Proof. 
-  intros H1. 
-  rewrite size_list. 
-  induction l. 
-  - destruct H1.
-  - cbn. destruct H1. rewrite H0; clear H0. solverec. rewrite IHl. 2: assumption. 
-    solverec. 
-Qed. 
-
-Lemma list_in_decb_time_bound (X : Type) `{registered X} (eqbT : X -> unit -> (nat * (X -> unit -> nat * unit))) :
-  (exists (f : nat -> nat), (forall (a b : X), callTime2 eqbT a b <= f(size(enc a) + size(enc b))) /\ inOPoly f /\ monotonic f)
-    -> exists (f : nat -> nat), (forall (l : list X) (e : X), list_in_decb_time eqbT l e <= f(size(enc l) + size(enc e)) ) /\ inOPoly f /\ monotonic f. 
-Proof.
-  intros (f' & H1 & H2 & H3). 
-  evar (f : nat -> nat). exists f; split. 
-  - intros l e. unfold list_in_decb_time. 
-    (*bound each step *)
-    assert (forall a : X, a el l -> callTime2 eqbT a e <= f'(size(enc l) + size(enc e))). 
-    {intros a He. rewrite H1. apply H3. rewrite list_el_size_bound. 2: apply He. reflexivity. }
-    (* with a tighter analysis, one could obtain a linear bound, but this is not worth the hassle *)
-    instantiate (f:= fun n => f' n * n * 5 + 20 + 16 * n). subst f. 
-    induction l. 
-    * solverec. 
-    * rewrite IHl. rewrite H0. 2 : now left. solverec. recRel_prettify2. 
-Admitted. 
      
 
 Instance term_Lgraph_edge_in_dec' : computableTime' Lgraph_edge_in_dec' (fun e _ => (1, fun u _ => (1, fun v _ => (  list_in_decb_time pair_eqb_nat_time e (u, v) + list_in_decb_time pair_eqb_nat_time e (v, u) + 22, tt)))). 
@@ -285,8 +227,36 @@ Proof.
 Defined. 
 
 
-Instance term_Lgraph_edge_in_dec : computableTime' Lgraph_edge_in_dec (fun g _ => (1, fun u _ => (1, fun v _ => (let (_, e) := g in list_in_decb_time pair_eqb_nat_time e (u, v) + list_in_decb_time pair_eqb_nat_time e (v, u) + 29, tt)))). 
+Definition Lgraph_edge_in_dec_time (g : Lgraph) (u v : Lnode) := let (_, e):= g in list_in_decb_time pair_eqb_nat_time e (u, v) + list_in_decb_time pair_eqb_nat_time e (v, u) + 29.
+
+Instance term_Lgraph_edge_in_dec : computableTime' Lgraph_edge_in_dec (fun g _ => (1, fun u _ => (1, fun v _ => (Lgraph_edge_in_dec_time g u v, tt)))). 
 Proof.  
   extract. 
   solverec. 
 Defined. 
+
+From Undecidability.L.Complexity Require Import PolyBounds.
+
+Lemma pair_eqb_nat_time_bound : exists (f : nat -> nat), (forall a b, callTime2 pair_eqb_nat_time a b <= f(size(enc a) + size(enc b))) /\ inOPoly f /\ monotonic f. 
+Proof. 
+  evar (f : nat -> nat). exists f. split.
+  - intros a b. cbn -[Nat.mul]. destruct a as [a1 a2], b as [b1 b2]. repeat rewrite size_prod; cbn [fst snd].
+    repeat rewrite Nat.le_min_r. repeat rewrite size_nat_enc. solverec.
+    instantiate (f := fun n => 5 * n + 43). subst f. solverec. 
+  - split; subst f; smpl_inO. 
+Qed. 
+
+Lemma Lgraph_edge_in_dec_time_bound : exists (f : nat -> nat), (forall (g : Lgraph) (u v : Lnode), Lgraph_edge_in_dec_time g u v <= f(size(enc g) + size(enc u) + size(enc v))) /\ inOPoly f /\ monotonic f.
+
+Proof.
+  specialize (list_in_decb_time_bound pair_eqb_nat_time_bound) as (f & H1 & H2 & H3). 
+  evar (f' : nat -> nat). exists f'. split.
+  - intros g u v. unfold Lgraph_edge_in_dec_time. destruct g. 
+    repeat rewrite H1. repeat rewrite size_prod; cbn [fst snd].
+    instantiate (f' := fun n => f n + f n + 29). subst f'. cbn.
+    unfold monotonic in H3. rewrite H3 with (x' := size(enc n) + size(enc l) + 4 + size(enc u) + size(enc v)).
+    rewrite Nat.add_assoc.
+    rewrite H3 with (x:= size (enc l) + (size (enc v) + size (enc u)) + 4) (x' := size(enc n) + size(enc l) + 4 + size(enc u) + size(enc v)).
+    all: solverec. 
+  - split; subst f'; smpl_inO. 
+Qed. 

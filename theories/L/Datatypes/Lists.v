@@ -264,3 +264,87 @@ Proof.
             end a)) with (enc a). solverec. 
 Qed.
   
+Definition forallb_time (X:Type) (fT : X -> unit -> nat * unit) (l : list X) := fold_right (fun elm acc => fst(fT elm tt) + acc + 15) 8 l.
+
+Instance term_forallb (X : Type) `{registered X} : computableTime' (@forallb X) (fun f fT => (1, fun l _ => (forallb_time fT l, tt))). 
+Proof.
+  extract. 
+  solverec. 
+  unfold forallb_time. solverec. 
+Defined. 
+
+Section list_in.
+  Variable (X : Type). 
+  Variable (eqb : X -> X -> bool). 
+  Variable eqb_correct : forall a b,  a = b <-> eqb a b = true.  
+
+  Definition list_in_decb := fix rec (l : list X) (x : X) : bool :=
+  match l with [] => false
+          | (l :: ls) => eqb l x || rec ls x
+  end. 
+
+  Lemma list_in_decb_iff (l : list X) : forall x, list_in_decb l x = true <-> x el l. 
+  Proof. 
+    intros x. induction l.
+    - cbn. firstorder. 
+    - split. 
+      + intros [H1 | H1]%orb_true_elim. left. now apply eqb_correct. 
+        apply IHl in H1. now right. 
+      + intros [H | H].
+        cbn. apply orb_true_intro; left; now apply eqb_correct. 
+        cbn. apply orb_true_intro; right; now apply IHl. 
+  Qed. 
+End list_in. 
+
+Fixpoint list_in_decb_time (X : Type) (eqbT: X -> unit -> (nat * (X -> unit -> nat * unit)%type)) (l : list X) (e : X) : nat :=
+    match l with [] => 4 | (l :: ls) => callTime2 eqbT l e + 16 + list_in_decb_time eqbT ls e end. 
+
+Instance term_list_in_decb (X : Type) `{registered X} : computableTime' (@list_in_decb X)
+  (fun eqb eqbT => (1, fun l _ => (5, fun x _ => (list_in_decb_time eqbT l x, tt)))). 
+Proof. 
+  extract. 
+  solverec. 
+Qed. 
+
+
+
+Section dupfree_dec.
+  Variable (X : Type).
+  Variable (eqbX : X -> X -> bool).
+  Variable (eqbX_correct : forall a b, a = b <-> eqbX a b = true). 
+
+  Fixpoint dupfreeb (l : list X) : bool :=
+    match l with [] => true
+            | (x :: ls) => negb (list_in_decb eqbX ls x) && dupfreeb ls
+  end. 
+
+  Lemma dupfreeb_correct (l : list X) : reflect (dupfree l) (dupfreeb l).
+  Proof.
+    destruct dupfreeb eqn:H; constructor. 
+    - induction l; constructor. all: cbn in H; apply andb_prop in H. 
+      all: cbn in H; destruct H. apply ssrbool.negbTE in H.
+      now intros H1%(list_in_decb_iff eqbX_correct).
+      now apply IHl.  
+    - intros H0. induction H0. cbn in H; congruence. 
+      apply IHdupfree. cbn in H; apply andb_false_elim in H. destruct H.
+      apply ssrbool.negbFE in e. apply (list_in_decb_iff eqbX_correct) in e. tauto. 
+      assumption. 
+  Qed.
+
+  Lemma dupfreeb_iff (l : list X) : dupfreeb l = true <-> dupfree l. 
+  Proof. 
+    specialize (dupfreeb_correct l) as H0.
+    destruct dupfreeb. inv H0. split; eauto. inv H0; split; eauto. 
+  Qed.
+
+End dupfree_dec. 
+
+Fixpoint dupfreeb_time (X : Type) (eqbT : X -> unit -> (nat * (X -> unit -> nat * unit ))) (l : list X) := match l with [] => 8 | l :: ls => list_in_decb_time eqbT ls l + 25 + dupfreeb_time eqbT ls end.
+Instance term_dupfreeb (X : Type) `{registered X}: computableTime' (@dupfreeb X) (fun eqb eqbT => (8, fun l _ => (dupfreeb_time eqbT l, tt))).
+Proof.
+  extract. 
+  solverec. 
+Defined. 
+
+
+

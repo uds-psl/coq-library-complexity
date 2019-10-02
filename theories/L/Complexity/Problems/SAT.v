@@ -5,10 +5,10 @@ From Undecidability.L.Complexity Require Import NP Synthetic Monotonic.
 From Undecidability.L.Functions Require Import Size.
 
 (*Conjunctive normal forms (need not be canonical)*)
-Notation var := (nat). 
-Notation literal := ((bool * var)%type).
-Notation clause := (list literal). 
-Notation cnf := (list clause).
+Notation var := (nat) (only parsing). 
+Notation literal := ((bool * var)%type) (only parsing).
+Notation clause := (list literal) (only parsing). 
+Notation cnf := (list clause) (only parsing).
 
 
 (*Bounds on the number of used variables*)
@@ -97,9 +97,13 @@ Proof.
     exists v'. auto. 
 Qed.
 
+(* inversion of evaluation*)
 Corollary evalCnf_correct (l : cnf) (a : assgn) (n : nat) : varBound_cnf n l -> |a| >= n -> exists v, evalCnf a l = Some v. 
 Proof. unfold evalCnf; apply evalCnf'_correct. Qed. 
 
+                                           
+
+(*if a formula evaluates, the variable indices are bounded by the assignment length*)
 Lemma evalLiteral_varBound (n: nat) (sign : bool) (a : assgn) : (exists v, evalLiteral a (sign, n) = Some v) -> n < |a|. 
 Proof. 
   intros [v H]. unfold evalLiteral in H. destruct (nth_error a n) eqn:H1.
@@ -258,8 +262,33 @@ Proof.
   extract. solverec. 
 Qed. 
 
-Definition clause_maxVar (c : clause) := fold_left (fun acc '(_, v) => Nat.max acc v) c 0. 
-Definition cnf_maxVar (c : cnf) := fold_left (fun acc cl => Nat.max acc (clause_maxVar cl)) c 0.
+Definition clause_maxVar (c : clause) := fold_right (fun '(_, v) acc => Nat.max acc v) 0 c. 
+Definition cnf_maxVar (c : cnf) := fold_right (fun cl acc => Nat.max acc (clause_maxVar cl)) 0 c.
+
+Lemma varBound_clause_monotonic (c : clause) (n n' : nat) : n <= n' -> varBound_clause n c -> varBound_clause n' c. 
+Proof. intros H1 H2. induction H2. constructor. constructor. lia. auto. Qed. 
+
+Lemma varBound_cnf_monotonic (c : cnf) (n n' : nat) : n <= n' -> varBound_cnf n c -> varBound_cnf n' c.
+Proof.
+  intros H1 H2. induction H2; constructor.
+  now apply varBound_clause_monotonic with (n:= n). assumption. 
+Qed.
+
+Lemma clause_maxVar_bound (c : clause) : varBound_clause (S (clause_maxVar c)) c. 
+Proof.
+  induction c.
+  - cbn. constructor. 
+  - destruct a. constructor. cbn. lia. cbn. eapply varBound_clause_monotonic.
+    2: apply IHc. unfold clause_maxVar. lia. 
+Qed.
+
+Lemma cnf_maxVar_bound (c : cnf) : varBound_cnf (S (cnf_maxVar c)) c.
+Proof.
+  induction c.
+  - cbn; constructor. 
+  - constructor. eapply varBound_clause_monotonic. 2: apply clause_maxVar_bound. cbn. lia. 
+    eapply varBound_cnf_monotonic. 2: apply IHc. cbn. unfold cnf_maxVar. lia. 
+Qed. 
 
 (*a verifier for SAT. The condition |l| <= S(cnf_maxVar cn) is needed in order to make sure that it rejects certificates that are too long*)
 Definition sat_verifier (cn : cnf) (cert : term) :=
@@ -273,71 +302,192 @@ Definition takeN (X : Type) := fix rec (l : list X) (n : nat) {struct n} :=
                   end
   end. 
 
-(* Lemma clause_eval_sub (c : cnf) (l : literal) (a : assgn) : (exists v, evalCnf j) *)
+Lemma ntherror_sublist (X : Type) (l l' : list X) (k : nat) (x : X) : (nth_error l k = Some x) -> nth_error (l ++ l') k = Some x. 
+Proof. 
+  revert k. 
+  induction l. 
+  - intros []; cbn; congruence.  
+  - intros k H. destruct k.
+    + cbn in H. destruct l'; now cbn.
+    + cbn. apply IHl. now cbn in H. 
+Qed. 
 
-(* Lemma cnf_eval_sub (c : cnf) (cl : clause) (a : assgn) : (exists v, evalCnf a (cl :: c) = Some v) -> (exists v, evalCnf a c = Some v).  *)
-(* Proof.  *)
-(*   intros [v' H1]. destruct (evalCnf a c) eqn:H2. eauto.  *)
-(*   exfalso. cbn in H1.  *)
+Lemma takeN_sublist (X : Type) (l : list X) (k k' : nat) (t : list X) : takeN l k = t -> k' >= k -> exists t', takeN l k' = t ++ t'. 
+Proof. 
+  revert k k' t. induction l. 
+  - intros k k' t H1 H2. exists []. destruct k', k; cbn in H1; cbn; rewrite <- H1; firstorder. 
+  - intros k k' t H1 H2. destruct k, k'; cbn in H1; cbn; try rewrite <- H1. firstorder.
+    exists (a :: takeN l k'). firstorder. lia.
+    destruct t; try congruence. 
+    specialize (IHl k k' t). inv H1.  destruct (IHl); try tauto; try lia. exists x0. firstorder. 
+Qed. 
 
-(* Lemma assgn_subset_literal (l : literal) (a : assgn) (b : bool) : evalLiteral a l = Some b -> forall a', a <<= a' -> evalLiteral a' l = Some b. *)
-(* Proof. *)
-(*   intros H a' subs. destruct l. *)
-(*   induction a.  *)
-(*   - destruct v; cbn in H; congruence.  *)
-(*   - cbn in H. *)
+Lemma takeN_more_length (X : Type) (l : list X) (k : nat) : k >= (|l|) ->  takeN l k = l. 
+Proof. 
+  revert k. induction l. 
+  - intros k. cbn. destruct k; tauto. 
+  - intros k. cbn. destruct k; cbn. lia. intros H. rewrite IHl. reflexivity. lia. 
+Qed. 
 
-(*     intros H a' subs. destruct l. *)
+Lemma takeN_split (X : Type) (l : list X) (k : nat) : exists t, l = takeN l k ++ t.
+Proof.
+  enough (exists t, takeN l (|l|) = takeN l k ++ t). 
+  { destruct H. specialize (@takeN_more_length X l (|l|)) as H2. exists x. now rewrite <- H, H2.   }
+  destruct (lt_eq_lt_dec k (|l|)) as [[H|H] |H].
+  1-2: apply takeN_sublist with (k:=k); try reflexivity; try lia.  
+  exists []. repeat rewrite takeN_more_length. firstorder. all: lia.
+Qed. 
 
-(*   induction v. *)
-(*   - cbn. *)
+Lemma takeN_length (X : Type) (l :list X) (k : nat) : (|takeN l k|) <= k. 
+Proof. 
+  induction l in k |-*. 
+  - destruct k; cbn; lia. 
+  - destruct k; cbn; try lia. rewrite IHl. lia. 
+Qed. 
 
-(* Lemma assgn_subset_clause' (c : clause) (a : assgn) (b : bool) (acc : bool): evalClause' a c (Some acc) = Some b -> forall a', a' <<= a -> evalClause' a' c (Some acc) = Some b.  *)
-(* Proof.  *)
-(*   revert acc.  *)
-(*   induction c.  *)
-(*   - intros acc. cbn. tauto.  *)
-(*   - intros acc. intros H1. cbn in H1. destruct (evalLiteral a a0) eqn:H2. change (evalClause' a c (Some (acc || b0)) = Some b) in H1.    *)
-(*     specialize (IHc ((acc || b0)) H1).  *)
-(*     intros a' subs. cbn.  apply IHc.  *)
+Lemma takeN_minlength (X : Type) (l : list X) (n k : nat) : |l| >= k -> n >= k -> |takeN l n| >= k. 
+Proof. 
+  induction l in n, k |-*. 
+  - destruct n; cbn; lia.
+  - cbn. destruct n, k; cbn. 1-3: lia.
+    intros H1 H2. enough (|takeN l n| >= k) by lia. apply IHl; lia.  
+Qed. 
 
-(* Lemma assgn_subset (c : cnf) (a : assgn) (b : bool) : evalCnf a c = Some b -> forall a', a' <<= a -> evalCnf a' c = Some b.  *)
-(* Proof.  *)
-(*   intros H. induction c.  *)
-(*   - cbn in H. inversion H; clear H. intros a' _. reflexivity.    *)
-(*   - intros a' H1. *)
-(*     destruct (evalCnf a c) eqn:H2.  *)
-(*     2: { cbn in H. unfold evalCnf, evalCnf' in H2. destruct (evalClause a a0) eqn:H3. *)
-(*          destruct b0. congruence.  *)
+Lemma ntherror_take (X : Type) (l : list X) (k n : nat) (v :X) : k < n -> nth_error l k = Some v -> nth_error (takeN l n) k = Some v. 
+Proof. 
+  specialize (takeN_split l n) as [t H]. intros H1 H2. 
+  (*Proof by contradiction*)
+  destruct (nth_error (takeN l n) k) eqn:H3. 
+  2: { exfalso. 
+       apply nth_error_None in H3. assert (|l| > k) by (now apply nth_error_Some_lt with (x := v)).
+       (*contradiction by H1, H3, H0 *)
+       destruct (takeN_split l k) as [[] H4].
+       - enough (|l| = k) by lia. rewrite H4. enough (|takeN l k| <= k /\ |takeN l k| >= k).
+         {replace (takeN l k ++ []) with (takeN l k) by firstorder. lia. }
+         split. apply takeN_length. apply takeN_minlength. all: lia. 
+       - assert (|takeN l n| = k). enough (|takeN l n| >= k) by lia. apply takeN_minlength; lia. 
+         assert (|takeN l n| >= S k). apply takeN_minlength; lia. lia. 
+  }
+  rewrite H in H2. specialize(Prelim.nthe_app_l t H3) as H4. now rewrite H4 in H2. 
+Qed. 
 
-(* Lemma bounded_cap_assgn_literal (n : nat) (sign : bool) (k : nat) : n < k -> forall (a : assgn) (v : bool), evalLiteral a (sign, n) = Some v -> evalLiteral (takeN a k) (sign, n) = Some v.  *)
-(* Proof.  *)
-(*   intros H a v H1.  *)
-(*   induction k.  *)
+(*now the wanted results: we can shorten the assignment if this doesn't yield to variables being unbound*)
+Lemma bounded_cap_assgn_literal (n : nat) (sgn : bool) (k : nat) : n < k ->
+  forall (a : assgn) (v : bool), evalLiteral a (sgn, n) = Some v -> evalLiteral (takeN a k) (sgn, n) = Some v.
+Proof.
+  intros H a v H1.
+  unfold evalLiteral in *. destruct (nth_error a n) eqn:H2.
+  + specialize (@ntherror_take (bool) a n k b H H2) as H3. now rewrite H3. 
+  + congruence. 
+Qed. 
 
-(* Lemma bounded_cap_assignment (c : cnf) (n: nat) : varBound_cnf n c -> forall (a : assgn) (v : bool), evalCnf a c = Some v -> evalCnf (takeN a n) c = Some v.   *)
-(* Proof.  *)
-  
-(*   induction n.  *)
-(*   - intros H1. intros a v. unfold takeN. cbn. change (takeN a 0) with ([] : assgn). . inv H1. intros a b. cbn. tauto.   *)
-(*     intros a v H1.    *)
-(*   -  *)
+Lemma bounded_cap_assgn_clause' (c : clause) (n : nat) : varBound_clause n c -> forall (a : assgn) (init v : bool),
+      evalClause' a c (Some init) = Some v -> evalClause' (takeN a n) c (Some init) = Some v. 
+Proof.
+  induction c. 
+  - intros H a init v. cbn; now destruct v. 
+  - intros H assg init v H1. inv H. cbn [evalClause' fold_leftOption] in *.
+    destruct (evalLiteral assg (b, k)) eqn:H5. 
+    + rewrite bounded_cap_assgn_literal with (v := b0). 2-3: assumption.
+      change (evalClause' (takeN assg n) c (Some (init ||b0)) = Some v). now apply IHc.
+    + exfalso. now rewrite fold_leftOption_none_ties_down in H1. 
+Qed. 
 
-(* Lemma sat_NP : inNP SAT.  *)
-(* Proof.  *)
-(*   exists sat_verifier. *)
-(*   3 : { *)
-(*     unfold SAT, sat_verifier. intros x; split.   *)
-(*     - intros [a H]. exists (enc (take ())a), a. repeat split. assumption.  *)
-(*     - intros (ter&  a &H). exists a; tauto.  *)
-(*   } *)
-(*   2 : { *)
-(*     unfold polyBalanced.  *)
-(*   } *)
+Lemma bounded_cap_assgn_clause (c : clause) (n : nat) : varBound_clause n c -> forall (a : assgn) (v : bool),
+      evalClause a c = Some v -> evalClause (takeN a n) c = Some v.
+Proof. intros H a v. now apply bounded_cap_assgn_clause'. Qed. 
 
-(* Goal forall (a : assgn) (cl : clause) (acc : option bool), evalClause'_time a cl acc <= cnst "a" * |a| * |cl| + cnst "b".  *)
-(* Proof. *)
-(*   intros a cl acc.  *)
-(*   unfold evalClause'_time. *)
-(*   unfold evalLiteral_time. rewrite (Min.le_min_r _ (|a|)). Search "min".  *)
-(*   unfold term_fold_leftOption_time. unfold evalClause'_step. *)
+Lemma bounded_cap_assgn_cnf' (c : cnf) (n: nat) : varBound_cnf n c -> forall (a : assgn) (init v : bool),
+      evalCnf' a c (Some init) = Some v -> evalCnf' (takeN a n) c (Some init) = Some v.
+Proof.
+  induction c.
+  - intros H a init v. cbn; now destruct v. 
+  - intros H assg init v H1. inv H. cbn [evalCnf' fold_leftOption] in *.
+    destruct (evalClause assg a) eqn:H5.
+    + rewrite bounded_cap_assgn_clause with (v := b). 2-3: assumption.
+      change (evalCnf' (takeN assg n) c (Some (init && b)) = Some v). now apply IHc. 
+    + exfalso. now rewrite fold_leftOption_none_ties_down in H1.
+Qed. 
+
+Lemma bounded_cap_assignment (c:cnf) (n:nat) : varBound_cnf n c -> forall (a :assgn) (v : bool),
+      evalCnf a c = Some v -> evalCnf (takeN a n) c = Some v.
+Proof. intros H a v. now apply bounded_cap_assgn_cnf'. Qed. 
+
+(*now that we've got the tools to verify the verifier, let's build a boolean verifier and prove its correctness*)
+Definition sat_verifierb (input : cnf * term) :=
+  let (cn, a) := input in
+  match decode (list bool) a with Some a => 
+    if leb (|a|) (S(cnf_maxVar cn)) then
+      match evalCnf a cn with Some b => b | None => false end
+    else false
+                          | None => false end. 
+
+Lemma sat_verifierb_correct (c : cnf) (a : term) : reflect (sat_verifier c a) (sat_verifierb (c, a)).
+Proof. 
+  destruct (sat_verifierb (c, a)) eqn:H; constructor. 
+  - unfold sat_verifierb in H. unfold sat_verifier.
+    destruct (decode assgn a) eqn:H1. exists l. split; try split. 
+    (*problem: is the encoding of the decoding identity?*)
+Admitted. 
+
+
+(*some more bounds required for the following inNP proof*)
+Lemma list_bound_enc_size (X : Type) `{registered X} : (exists c, forall (x : X), size(enc x) <= c) -> exists c' c'', forall (l : list X), size(enc l) <= (c' * |l|) + c''. 
+Proof.
+  intros [c H1]. evar (c' : nat). evar (c'' : nat). exists c', c''.  
+  induction l.
+  - instantiate (c'' := 4). subst c''. enough (size(enc ([] : list X)) <= 4) by lia. now cbv. 
+  - rewrite size_list. cbn.
+    rewrite size_list in IHl. rewrite <- Nat.add_assoc. rewrite IHl.
+    solverec. rewrite (H1 a). instantiate (c' := c + 5). subst c'; solverec. 
+Qed. 
+
+Lemma clause_maxVar_bound_enc (c : clause) : clause_maxVar c <= size(enc c). 
+Proof.
+  induction c. 
+  - cbv; lia.
+  - cbn. destruct a. rewrite IHc. rewrite size_list. rewrite size_list. solverec. rewrite size_prod; cbn [fst snd]. assert (forall a b, max a b <= a + b).   
+    {intros a b'. lia. }
+    rewrite H. solverec. rewrite size_nat_enc. solverec. 
+Qed. 
+
+Lemma cnf_maxVar_bound_enc (c : cnf) : cnf_maxVar c <= size(enc c). 
+Proof.
+  induction c.
+  - cbn; lia.
+  - cbn. rewrite IHc. repeat rewrite size_list. rewrite clause_maxVar_bound_enc. 
+    assert (forall a b, max a b <= a + b). {intros a' b'. lia. } rewrite H. 
+    cbn. solverec. 
+Qed.
+
+Lemma sat_NP : inNP SAT.
+Proof.
+  exists sat_verifier.
+  3 : {
+    unfold SAT, sat_verifier. intros x; split.
+    - intros [a H]. pose (a' := takeN a (S(cnf_maxVar x))). (*use a shorted assignment*)
+      exists (enc a'), a'. repeat split. apply bounded_cap_assignment. apply cnf_maxVar_bound. 
+      assumption. apply takeN_length. 
+    - intros (ter&  a &H). exists a; tauto.
+  }
+  2 : {
+    unfold polyBalanced.
+    destruct (list_bound_enc_size (X:= bool)) as (c' & c'' & H').
+    {exists 5. intros []; cbv; lia. }
+    evar (f : nat -> nat). exists f. split; try split.
+    2: { intros x y (a & H1 & _ & H3). rewrite <- H1.
+         (*idea: x contains the maxVar and each entry of a has constant size (booleans)  *)
+         rewrite size_term_enc.
+          subst f.
+         replace (size(enc a) * 11) with (11 * size(enc a)) by lia. 
+         rewrite H'. solverec. rewrite H3. solverec. 
+         rewrite cnf_maxVar_bound_enc.
+         instantiate (f:= fun n => 11 * c' * n + 11 * c'' + 11 * c').
+         solverec. 
+    }
+    1-2: subst f; smpl_inO. 
+  }
+
+  evar (f : nat -> nat). exists f. split; try split.
+Admitted. 
+
