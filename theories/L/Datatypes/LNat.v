@@ -48,6 +48,13 @@ Proof.
   solverec.
 Defined.
 
+Instance termT_nat_min : computableTime' Nat.min (fun x _ => (5, fun y _ => (8 + 15 * min x y, tt))).
+Proof. 
+  extract. solverec. 
+Qed. 
+
+Instance termT_nat_max : computableTime' Nat.max (fun x _ => (5, fun y _ => (8 + 15 * min x y, tt))).
+Proof. extract. solverec. Qed. 
 
 Instance termT_pow:
   computableTime' Init.Nat.pow   (fun (x : nat) _ => (5,fun (n : nat) _ => (n* (x*19+x^n*11+19) + 5, tt))).
