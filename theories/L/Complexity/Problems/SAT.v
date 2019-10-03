@@ -1,7 +1,7 @@
 From Undecidability.L Require Import L.
 From Undecidability.L.Tactics Require Import LTactics ComputableTactics.
 From Undecidability.L.Datatypes Require Import LProd LTerm LNat Lists LOptions.
-From Undecidability.L.Complexity Require Import NP Synthetic Monotonic Tactics.
+From Undecidability.L.Complexity Require Import NP Synthetic Monotonic Tactics PolyBounds.
 From Undecidability.L.Functions Require Import Size.
 
 (*Conjunctive normal forms (need not be canonical)*)
@@ -506,6 +506,13 @@ Proof.
   extract. solverec; unfold sat_verifierb_time; solverec. 
 Qed. 
 
+(*polynomial time bounds for sat_verifierb and the functions it uses*)
+(** * TODO *)
+
+Lemma sat_verifierb_time_bound : exists (f : nat -> nat), (forall (c : cnf) (a : assgn), sat_verifierb_time c a <= f(size(enc c) + size(enc a))) /\ inOPoly f /\ monotonic f. 
+Proof.
+
+Admitted. 
 
 (*some more bounds required for the following inNP proof*)
 Lemma list_bound_enc_size (X : Type) `{registered X} : (exists c, forall (x : X), size(enc x) <= c) -> exists c' c'', forall (l : list X), size(enc l) <= (c' * |l|) + c''. 
@@ -520,18 +527,25 @@ Qed.
 
 Lemma clause_maxVar_bound_enc (c : clause) : clause_maxVar c <= size(enc c). 
 Proof.
+  unfold clause_maxVar.
+  enough (forall n, fold_left (fun (acc : nat) '(_, v) => Nat.max acc v) c n <= size(enc c) + n). 
+  specialize (H 0); lia. 
   induction c. 
-  - cbv; lia.
-  - cbn. destruct a. rewrite IHc. rewrite size_list. rewrite size_list. solverec. rewrite size_prod; cbn [fst snd]. assert (forall a b, max a b <= a + b).   
+  - intros n; cbv. lia.
+  - cbn. destruct a. intros n0. specialize (IHc (Nat.max n0 n)). rewrite IHc. 
+    rewrite list_size_cons. rewrite size_prod; cbn [fst snd]. assert (forall a b, max a b <= a + b).
     {intros a b'. lia. }
     rewrite H. solverec. rewrite size_nat_enc. solverec. 
 Qed. 
 
 Lemma cnf_maxVar_bound_enc (c : cnf) : cnf_maxVar c <= size(enc c). 
 Proof.
+  unfold cnf_maxVar. 
+  enough (forall n, fold_left (fun (acc : nat) (cl : list (bool * nat)) => Nat.max acc (clause_maxVar cl)) c n <= size(enc c) + n). 
+  specialize (H 0); lia. 
   induction c.
-  - cbn; lia.
-  - cbn. rewrite IHc. repeat rewrite size_list. rewrite clause_maxVar_bound_enc. 
+  - intros n. cbn; lia.
+  - intros n. cbn. rewrite IHc. rewrite list_size_cons. rewrite clause_maxVar_bound_enc. 
     assert (forall a b, max a b <= a + b). {intros a' b'. lia. } rewrite H. 
     cbn. solverec. 
 Qed.
@@ -563,7 +577,13 @@ Proof.
   }
   1 : apply linDec_polyTimeComputable.
 
+  destruct (sat_verifierb_time_bound) as (f' & H1 & H2 & H3). 
   evar (f : nat -> nat). exists f. split.
-  + exists sat_verifierb. 
-Admitted. 
-
+  + exists (fun x => sat_verifierb x). split.
+    - constructor. extract. solverec. rewrite H1. rewrite size_prod; cbn [fst snd].  
+      [f]: intros n. subst f; cbn. unfold monotonic in H3.
+      rewrite H3 with (x':= size(enc a) + size(enc b) + 4). 2:lia.
+      generalize (size(enc a) + size(enc b) + 4). intros n; reflexivity. 
+    - intros [cn a]. cbn [prod_curry]. apply (reflect_iff). apply sat_verifierb_correct. 
+ + split; subst f; smpl_inO. 
+Qed. 
