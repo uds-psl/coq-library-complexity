@@ -22,10 +22,8 @@ Inductive isLClique (g : Lgraph) : list Lnode -> nat -> Prop :=
 Definition LClique (input : Lgraph * nat) :=
   let (g, k) := input in exists cl, @isLClique g cl k. 
 
-Definition LClique_verifier (input : Lgraph * nat) (cert : term) :=
-  let (g, k) := input in 
-  exists (l : list nat),
-     Some l = decode (list nat) cert /\ isLClique g l k. (*this includes that l is short enough*)
+Definition LClique_verifier (input : Lgraph * nat) (cert : list Lnode) :=
+  let (g, k) := input in isLClique g cert k. (*this includes that l is short enough*)
 
 Lemma isLClique_node_in (g : Lgraph) (k : nat) (cl : list Lnode) : isLClique g cl k -> forall n, n el cl -> Lgraph_node_in_dec g n = true. 
 Proof.
@@ -151,63 +149,57 @@ Admitted.
                  
 Lemma clique_inNP : inNP LClique. 
 Proof.
-  exists LClique_verifier. 
+  apply (inNP_intro) with (R:= LClique_verifier).
+  1: { apply linDec_polyTimeComputable. }
   3 : {
     intros [g k]; split.
-    - destruct g. intros (cert & H1). exists (enc cert), cert. split; try tauto. now rewrite decode_correct. 
-    - intros (ter & cert & H1 & H2). now exists cert. 
+    - destruct g. intros (cert & H1). exists cert. easy.  
+    - intros (cert & H). now exists cert. 
   }
   2 : {
     evar (f' : nat -> nat). 
     exists f'. split. 2: split. 
     2: {
-      intros [g k] y (cert & H1 & H2). (*the missing injection problem, again*)
-Abort. 
-(*       assert (k = (|cert|)) by (now apply isLClique_length with (g:= g)). *)
-(*       rewrite H in *; clear H k. rewrite size_prod; cbn [fst snd].  *)
-(*       rewrite size_term_enc. rewrite size_nat_enc. rewrite size_list.    *)
-(*       recRel_prettify2. *)
-(*       (*LHS is in O(max_node * |cert|) *) *)
-(*       unfold Lgraph_node_in_dec in H2. destruct g. *)
-(*       assert (sumn (map (fun (x : nat ) => size (enc x) + 5) cert) <= (size(enc n) + 5) * (|cert|)).  *)
-(*       - clear H1. induction cert. cbn; lia. *)
-(*         cbn. assert (a <= n). *)
-(*         { assert (Lgraph_node_in_dec (n, l) a = true ). *)
-(*           apply isLClique_node_in with (k:= |a::cert|) (cl:= a::cert); easy. *)
-(*           cbn in H. destruct n. congruence. apply leb_complete in H. lia.  *)
-(*         }  *)
-(*         apply size_nat_enc_mono in H. rewrite H. rewrite IHcert. solverec.  *)
-(*         firstorder. now inv H2.  *)
-(*       - rewrite H. rewrite size_prod with (w := (n, l)); cbn [fst snd]. *)
-(*         instantiate (f' := fun n => 4 * n * n). subst f'.  *)
-(*         solverec.  *)
-(*     } *)
-(*     all: (subst f'; smpl_inO).  *)
-(*   } *)
+      intros [g k] cert H. cbn in H.
+      assert (k = (|cert|)) by (now apply isLClique_length with (g:= g)).
+      rewrite H0 in *; clear H0 k. rewrite size_prod; cbn [fst snd].
+      rewrite size_nat_enc. rewrite size_list.
+      (*LHS is in O(max_node * |cert|) *)
+      specialize (isLClique_node_in H) as H2. 
+      unfold Lgraph_node_in_dec in H2. destruct g.
+      assert (sumn (map (fun (x : nat ) => size (enc x) + 5) cert) <= (size(enc n) + 5) * (|cert|)).
+      - induction cert. cbn; lia.
+        cbn. assert (a <= n).
+        { assert (Lgraph_node_in_dec (n, l) a = true ).
+          apply isLClique_node_in with (k:= |a::cert|) (cl:= a::cert); easy.
+          cbn in H0. destruct n. congruence. dec_bool. lia.
+        }
+        apply size_nat_enc_mono in H0. rewrite H0. rewrite IHcert. solverec.
+        now inv H. firstorder. 
+      - rewrite H0. rewrite size_prod with (w := (n, l)); cbn [fst snd].
+        instantiate (f' := fun n => 4 * n * n). subst f'.
+        solverec.
+    }
+    all: (subst f'; smpl_inO).
+  }
 
-(*   destruct (Lclique_verifierb_time_bound) as (f' & H1 & H2 & H3). *)
-(*   evar (f : nat -> nat). exists f. split; try split.  *)
-(*   - exists (fun inp => match inp with ((g, k), cert) => match decode (list nat) cert with Some cert => LClique_verifierb g k cert | _ => false end end). *)
-(*     split. *)
-(*     + constructor. extract. solverec. *)
-(*       repeat (rewrite size_prod; cbn [fst snd]). *)
-(*       rewrite H1. rewrite size_prod; cbn [fst snd]. *)
-(*       instantiate (f:= fun n => c__linDec(list nat) * n + f'(n) + 15). subst f. *)
-(*       cbn. unfold monotonic in H3. rewrite H3 at 1.   *)
-(*       2 : { *)
-(*         assert (size(enc a) + size(enc b1) + 4 + size(enc b0) + size(enc l) <= size(enc a) + size(enc b1) + 4 + size(enc b0) + 4+ size(enc b) + 4).  *)
-(*         2: apply H0. enough (size(enc l) <= size(enc b)) by lia.  *)
-(*         (* intuitively, this should be clear, since b is an encoding of l *) *)
-(*         (* but since decode isn't injective, this seems to be difficult to prove*) *)
-(*         (* one way would be to prove injectivity for this particular instance*) *)
-(*         admit. *)
-(*       } *)
-(*       rewrite size_term_enc_r. solverec.  *)
-(*       subst f. solverec. repeat rewrite size_prod; cbn [fst snd]. rewrite size_term_enc_r. solverec.   *)
-(*   + intros [[g k] b]. specialize (LClique_verifierb_correct g k) as H4.  split.  *)
-(*     * cbn. intros (l & F1 & F2). rewrite F1. rewrite decode_correct. *)
-(*       destruct (reflect_iff (isLClique g l k) (LClique_verifierb g k l) ) as (F3 & _). apply H4. *)
-(*       apply F3, F2.  *)
-(*     * intros H. cbn. destruct (decode (list nat) b) eqn:H5. 2: congruence. exists l. *)
-(*       (*same enc/dec problem*) *)
-(* Admitted.  *)
+  destruct (Lclique_verifierb_time_bound) as (f' & H1 & H2 & H3).
+  evar (f : nat -> nat). exists f. split; try split.
+  - exists (fun inp => match inp with ((g, k), cert) => LClique_verifierb g k cert end).
+    split.
+    + constructor. extract. solverec.
+      repeat (rewrite size_prod; cbn [fst snd]).
+      rewrite H1. rewrite size_prod; cbn [fst snd].
+      instantiate (f:= fun n => f'(n) + 11). subst f.
+      cbn. unfold monotonic in H3. rewrite H3 at 1.
+      2 : {
+        assert (size(enc a) + size(enc b1) + 4 + size(enc b0) + size(enc b) <= size(enc a) + size(enc b1) + 4 + size(enc b0) + 4+ size(enc b) + 4).
+        2: apply H. lia.
+      }
+      reflexivity. 
+  + intros [[g k] b]. specialize (LClique_verifierb_correct g k) as H4.
+    destruct (reflect_iff (isLClique g b k) (LClique_verifierb g k b)) as (F1 & F2). apply H4.
+    split; cbn; tauto. 
+ - subst f; smpl_inO. 
+ - subst f; smpl_inO. 
+Qed. 

@@ -1,7 +1,7 @@
 From Undecidability.L Require Import L.
 From Undecidability.L.Tactics Require Import LTactics ComputableTactics.
 From Undecidability.L.Datatypes Require Import LProd LTerm LNat Lists LOptions.
-From Undecidability.L.Complexity Require Import NP Synthetic Monotonic.
+From Undecidability.L.Complexity Require Import NP Synthetic Monotonic Tactics.
 From Undecidability.L.Functions Require Import Size.
 
 (*Conjunctive normal forms (need not be canonical)*)
@@ -167,11 +167,6 @@ Proof.
   solverec. 
 Qed.
 
-Instance term_nthErrorBool : computableTime' (@nth_error bool) (fun l _ => (5, fun n _ => (Nat.min n (|l|) * 15 + 10, tt))). 
-Proof.
-  extract. solverec. 
-Qed. 
-
 Definition evalLiteral_time (a : assgn) (l : literal) := match l with (_, v) => 15 * Nat.min v (|a|) + 33 end. 
 
 Instance term_evalLiteral : computableTime' evalLiteral (fun a _ => (1, fun l _ => (evalLiteral_time a l, tt))). 
@@ -262,8 +257,9 @@ Proof.
   extract. solverec. 
 Qed. 
 
-Definition clause_maxVar (c : clause) := fold_right (fun '(_, v) acc => Nat.max acc v) 0 c. 
-Definition cnf_maxVar (c : cnf) := fold_right (fun cl acc => Nat.max acc (clause_maxVar cl)) 0 c.
+(*fold_left makes verification more ugly, but the runtime functions get easier *)
+Definition clause_maxVar (c : clause) := fold_left (fun acc '(_, v) => Nat.max acc v) c 0. 
+Definition cnf_maxVar (c : cnf) := fold_left (fun acc cl => Nat.max acc (clause_maxVar cl)) c 0.
 
 Lemma varBound_clause_monotonic (c : clause) (n n' : nat) : n <= n' -> varBound_clause n c -> varBound_clause n' c. 
 Proof. intros H1 H2. induction H2. constructor. constructor. lia. auto. Qed. 
@@ -274,25 +270,53 @@ Proof.
   now apply varBound_clause_monotonic with (n:= n). assumption. 
 Qed.
 
+Proposition fold_left_maxVar (c : clause) (n :nat) : fold_left (fun acc '(_, v) => Nat.max acc v) c n >= n.
+Proof.
+  revert n; induction c.
+  - intros; cbn; lia. 
+  - intros n. cbn. destruct a. specialize (IHc (Nat.max n n0)). lia.
+Qed. 
+
+Proposition fold_left_maxVar2 (c : clause) (n n' : nat) : n >= n' ->  fold_left (fun acc '(_, v) => Nat.max acc v) c n >= fold_left (fun acc '(_, v) => Nat.max acc v) c n'.
+Proof.
+  revert n n'. induction c.
+  - intros n n'. cbn; lia. 
+  - intros n n' H. cbn; destruct a. apply IHc. lia. 
+Qed. 
+
 Lemma clause_maxVar_bound (c : clause) : varBound_clause (S (clause_maxVar c)) c. 
 Proof.
   induction c.
   - cbn. constructor. 
-  - destruct a. constructor. cbn. lia. cbn. eapply varBound_clause_monotonic.
-    2: apply IHc. unfold clause_maxVar. lia. 
-Qed.
+  - destruct a. constructor. cbn.
+    1: { specialize (fold_left_maxVar c n). lia. } 
+    eapply varBound_clause_monotonic.
+    2: apply IHc. unfold clause_maxVar. cbn. 
+    ring_simplify. assert (n >= 0) by lia. specialize (fold_left_maxVar2 c H). lia. 
+Qed. 
 
 Lemma cnf_maxVar_bound (c : cnf) : varBound_cnf (S (cnf_maxVar c)) c.
 Proof.
   induction c.
   - cbn; constructor. 
-  - constructor. eapply varBound_clause_monotonic. 2: apply clause_maxVar_bound. cbn. lia. 
-    eapply varBound_cnf_monotonic. 2: apply IHc. cbn. unfold cnf_maxVar. lia. 
+  - constructor.
+    1: { cbn. eapply varBound_clause_monotonic. 2: apply clause_maxVar_bound.
+         clear IHc. generalize (clause_maxVar a). induction c.
+         + intros n; cbn; lia. 
+         + intros n; cbn. specialize (IHc (max n (clause_maxVar a0))). lia.  
+       } 
+    eapply varBound_cnf_monotonic. 2: apply IHc. cbn. unfold cnf_maxVar.  
+    pose (step := (fun acc (cl :list (bool * nat)) => Nat.max acc (clause_maxVar cl)) ). 
+    enough (forall n n', n >= n' -> fold_left step c n' <= fold_left step c n).  
+    {assert (0 <= (clause_maxVar a)) by lia. specialize (H (clause_maxVar a) 0 H0). subst step. lia. }
+    clear IHc. induction c. 
+    + intros n n' H. cbn; lia. 
+    + intros n n' H. cbn. apply IHc. unfold step; lia. 
 Qed. 
 
 (*a verifier for SAT. The condition |l| <= S(cnf_maxVar cn) is needed in order to make sure that it rejects certificates that are too long*)
-Definition sat_verifier (cn : cnf) (cert : term) :=
-  exists (l : assgn), enc l = cert /\ evalCnf l cn = Some true /\ |l| <= S(cnf_maxVar cn). 
+Definition sat_verifier (cn : cnf) (a : assgn) :=
+  evalCnf a cn = Some true /\ |a| <= S(cnf_maxVar cn).
 
 (*tools needed for the verification of the verifier*)
 Definition takeN (X : Type) := fix rec (l : list X) (n : nat) {struct n} :=
@@ -414,21 +438,73 @@ Lemma bounded_cap_assignment (c:cnf) (n:nat) : varBound_cnf n c -> forall (a :as
 Proof. intros H a v. now apply bounded_cap_assgn_cnf'. Qed. 
 
 (*now that we've got the tools to verify the verifier, let's build a boolean verifier and prove its correctness*)
-Definition sat_verifierb (input : cnf * term) :=
+Definition sat_verifierb (input : cnf * assgn) :=
   let (cn, a) := input in
-  match decode (list bool) a with Some a => 
     if leb (|a|) (S(cnf_maxVar cn)) then
       match evalCnf a cn with Some b => b | None => false end
-    else false
-                          | None => false end. 
+    else false.
 
-Lemma sat_verifierb_correct (c : cnf) (a : term) : reflect (sat_verifier c a) (sat_verifierb (c, a)).
+Lemma sat_verifierb_correct (c : cnf) (a : assgn) : reflect (sat_verifier c a) (sat_verifierb (c, a)).
 Proof. 
   destruct (sat_verifierb (c, a)) eqn:H; constructor. 
-  - unfold sat_verifierb in H. unfold sat_verifier.
-    destruct (decode assgn a) eqn:H1. exists l. split; try split. 
-    (*problem: is the encoding of the decoding identity?*)
-Admitted. 
+  - unfold sat_verifierb in H. unfold sat_verifier. destruct (leb (|a|) (S (cnf_maxVar c))) eqn:H1.
+    destruct (evalCnf a c) eqn:H2. split; try congruence; dec_bool. all: congruence. 
+  - intros [H1 H2]. cbn in H. apply leb_correct in H2. rewrite H2, H1 in H. congruence. 
+Qed. 
+
+(*extraction of the verifier *)
+Fixpoint fold_left_time X Y (f : X -> Y -> X) (t__f : X -> unit -> nat * (Y -> unit -> nat * unit)) (l : list Y) (acc : X) :=
+  (match l with
+       | [] => 4
+       | (l :: ls) => callTime2 t__f acc l + 15 + fold_left_time f t__f ls (f acc l)
+       end ).
+
+Instance term_fold_left (X: Type) (Y : Type) `{registered X} `{registered Y} :
+  computableTime' (@fold_left X Y) (fun f fT => (5, fun l _ => (5, fun acc _ => (fold_left_time f fT l acc, tt)))). 
+Proof.
+  extract. 
+  solverec. 
+Qed. 
+
+Definition clause_maxVar_step := fun (acc : nat) (l : literal) => let '(_, v) := l in max acc v. 
+Instance term_clause_maxVar_step : computableTime' clause_maxVar_step (fun acc _ => (1, fun l _ => (let '(_, v):= l in 18 + 15 * min acc v, tt))). 
+Proof. extract. solverec. Qed.
+
+Definition clause_maxVar_time (c : clause) :=   fold_left_time clause_maxVar_step (fun (acc : nat) (_ : unit) =>
+     (1, fun (l : bool * nat) (_ : unit) => (let '(_, v) := l in 18 + 15 * Init.Nat.min acc v, tt))) c 0 + 11. 
+Instance term_clause_maxVar : computableTime' clause_maxVar (fun cl _ => (clause_maxVar_time cl, tt)).  
+Proof.
+  assert (H' : extEq (fun c => fold_left clause_maxVar_step c 0) clause_maxVar).
+  { intros c. unfold extEq. unfold clause_maxVar.
+    generalize 0. 
+    induction c. now cbn.
+    intros n. cbn. destruct a. cbn. apply IHc. }
+  apply (computableTimeExt H'). extract. solverec. unfold clause_maxVar_time. solverec.
+Qed. 
+
+Definition cnf_maxVar_step := fun (acc : nat) (cl : clause) => max acc (clause_maxVar cl). 
+Instance term_cnf_maxVar_step : computableTime' cnf_maxVar_step (fun acc _ => (1, fun cl _ => (clause_maxVar_time cl + 15 * min acc (clause_maxVar cl) + 14, tt))).
+Proof. extract. solverec. Qed. 
+
+Definition cnf_maxVar_time (c : cnf) := fold_left_time cnf_maxVar_step
+    (fun (acc : nat) (_ : unit) =>
+     (1,
+     fun (cl : list (bool * nat)) (_ : unit) =>
+     (clause_maxVar_time cl + 15 * Init.Nat.min acc (clause_maxVar cl) + 14, tt))) c 0 + 11.
+Instance term_cnf_maxVar : computableTime' cnf_maxVar (fun (c : cnf) _  => (cnf_maxVar_time c, tt)). 
+Proof. 
+  assert (H' : extEq (fun c => fold_left cnf_maxVar_step c 0) cnf_maxVar).
+  { intros c. unfold extEq, cnf_maxVar. generalize 0. induction c. now cbn. 
+    intros n; cbn. apply IHc. }
+  apply (computableTimeExt H'). extract; solverec. 
+  unfold cnf_maxVar_time. solverec. 
+Qed. 
+
+Definition sat_verifierb_time (c : cnf) (a : assgn) :=   11 * (| a |) + cnf_maxVar_time c + 14 * Init.Nat.min (| a |) (1 + cnf_maxVar c) +  evalCnf'_time a c (Some true) + 39.
+Instance term_sat_verifierb : computableTime' sat_verifierb (fun input _ => (let (c, a) := input in sat_verifierb_time c a, tt)). 
+Proof.
+  extract. solverec; unfold sat_verifierb_time; solverec. 
+Qed. 
 
 
 (*some more bounds required for the following inNP proof*)
@@ -462,32 +538,32 @@ Qed.
 
 Lemma sat_NP : inNP SAT.
 Proof.
-  exists sat_verifier.
-  3 : {
+  apply inNP_intro with (R:= sat_verifier). 
+  4 : {
     unfold SAT, sat_verifier. intros x; split.
     - intros [a H]. pose (a' := takeN a (S(cnf_maxVar x))). (*use a shorted assignment*)
-      exists (enc a'), a'. repeat split. apply bounded_cap_assignment. apply cnf_maxVar_bound. 
+      exists a'. repeat split. apply bounded_cap_assignment. apply cnf_maxVar_bound. 
       assumption. apply takeN_length. 
-    - intros (ter&  a &H). exists a; tauto.
+    - intros (a & H1 &H2). exists a; tauto.
   }
-  2 : {
+  3 : {
     unfold polyBalanced.
     destruct (list_bound_enc_size (X:= bool)) as (c' & c'' & H').
     {exists 5. intros []; cbv; lia. }
     evar (f : nat -> nat). exists f. split; try split.
-    2: { intros x y (a & H1 & _ & H3). rewrite <- H1.
+    2: { intros x a (H1 & H2). 
          (*idea: x contains the maxVar and each entry of a has constant size (booleans)  *)
-         rewrite size_term_enc.
-          subst f.
-         replace (size(enc a) * 11) with (11 * size(enc a)) by lia. 
-         rewrite H'. solverec. rewrite H3. solverec. 
+         rewrite H'. rewrite H2. solverec. 
          rewrite cnf_maxVar_bound_enc.
-         instantiate (f:= fun n => 11 * c' * n + 11 * c'' + 11 * c').
-         solverec. 
+         generalize (size (enc x)) as n; intros n. 
+         [f]: intros n. subst f. cbn. 
+         reflexivity. 
     }
     1-2: subst f; smpl_inO. 
   }
+  1 : apply linDec_polyTimeComputable.
 
-  evar (f : nat -> nat). exists f. split; try split.
+  evar (f : nat -> nat). exists f. split.
+  + exists sat_verifierb. 
 Admitted. 
 

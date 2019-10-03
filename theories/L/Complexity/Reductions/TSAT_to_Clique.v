@@ -85,8 +85,29 @@ Definition enumLiteral_different_clause (c : cnf) (k : nat) (u : nat) (v : nat) 
 (*     exists 0 (fun u v => False); tauto. (*empty graph, the reduction then  *) *)
 (* Defined.  *)
 
-(* Definition redGraph' (c : cnf)   *)
-(* Definition redLraph (c : cnf)  *)
+(*contruction principle: enumerate the literals from left to right; for each literal go through the literals *)
+(*of the clauses to the right of it and make appropriate edges *)
+(* this suffices since we are dealing with an undirected graph*)
+Fixpoint makeEdgesLiteral' (l : literal) (numL : nat) (cl :clause) (numAcc : nat) :=
+  match cl with [] => []
+              | (l' :: cl) => if literalsConflictb l l' then makeEdgesLiteral' l numL cl (S numAcc) else (numL, numAcc) :: makeEdgesLiteral' l numL cl (S numAcc)
+  end.
+Fixpoint makeEdgesLiteral (l : literal) (numL : nat) (cn : cnf) (numAcc : nat) := match cn with [] => []
+  | (cl::cn) => makeEdgesLiteral' l numL cl numAcc ++ makeEdgesLiteral l numL cn (3 + numAcc) end.
+Fixpoint makeEdges' (c : clause) (numL : nat) (cn : cnf) := match c with [] => []
+                                                           | (l :: c) => makeEdgesLiteral l numL cn 0
+                                                           end. 
+Fixpoint makeEdges (c : cnf) (numL : nat) := match c with [] => []
+             | (cl::c) => makeEdges' cl numL c ++ makeEdges c (3 + numL) end.
+Definition redGraph (c : cnf) : Lgraph := if kCNF_decb 3 c then (3 * |c|, makeEdges c 0)
+                                                            else (0, []). 
+
+Definition literal_in_CNF (c : cnf) (l : literal) := exists cl, cl el c /\ l el cl.
+
+Lemma makeEdges_correct (c : cnf) : kCNF 3 c -> forall (l l' : literal) (n n' : nat), (n < 3 * (|c|) /\ n' < 3 * (|c|) /\ enumerateLiteral c 3 n = Some l /\ enumerateLiteral c 3 n' = Some l')
+                                               -> (not (literalsConflict l l') /\ enumLiteral_different_clause c 3 n n'  <->
+                                                  Lgraph_edge_in_dec' (makeEdges c 0) n n'). 
+Abort. 
 
 Lemma tsat_to_clique  : reducesPolyMO (kSAT 3) LClique. 
 Proof. 

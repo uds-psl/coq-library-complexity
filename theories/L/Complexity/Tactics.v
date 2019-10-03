@@ -16,11 +16,26 @@ Ltac simp_bool := repeat match goal with
                   | [ |- andb (?b1) (?b2) = true] => apply andb_true_intro 
                   end; try congruence.
 
-Ltac eqdec_bool := repeat match goal with
+Local Lemma eqb_false_iff a b : Bool.eqb a b = false <-> a <> b.
+Proof.
+  split.
+  - intros H1 H2%eqb_true_iff; congruence.
+  - intros H1; destruct (eqb a b) eqn:H2; try reflexivity. rewrite eqb_true_iff in H2; congruence.
+Qed.
+
+Ltac dec_bool := repeat match goal with
                    | [ H : Bool.eqb ?b ?b0 = true |- _ ] =>
                      let h := fresh "H" in assert (Is_true (Bool.eqb b b0)) as h by firstorder;
                                            apply eqb_eq in h; clear H
                    | [H : Bool.eqb ?b ?b0 = false |- _] => apply eqb_false_iff in H
                    | [ H : Nat.eqb ?n ?n0 = true |- _] => apply Nat.eqb_eq in H
                    | [ H : Nat.eqb ?n ?n0 = false |- _] => apply Nat.eqb_neq in H
+                   | [  |- Nat.eqb ?n ?n0 = true ] => apply Nat.eqb_eq
+                   | [  |- Nat.eqb ?n ?n0 = false] => apply Nat.eqb_neq
+                   | [ |- Bool.eqb ?n ?n0 = true] => apply eqb_true_iff
+                   | [ |- Bool.eqb ?n ?n0 = false] => apply eqb_false_iff 
+                   | [ H : Nat.leb ?n ?n0 = true |- _] => apply leb_complete in H
+                   | [ H : Nat.leb ?n ?n0 = false |- _ ] => apply leb_complete_conv in H
+                   | [  |- Nat.leb ?n ?n0 = true ] => apply leb_correct
+                   | [  |- Nat.leb ?n ?n0 = false] => apply leb_correct_conv
                     end; try congruence; try tauto.
