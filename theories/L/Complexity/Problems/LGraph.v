@@ -4,16 +4,6 @@ From Undecidability.L.Datatypes Require Export Lists.
 Require Import PslBase.FiniteTypes. 
 From Undecidability.L.Complexity Require Export ONotation Monotonic. 
 
-(* Coq representation, using Fin.t to represent nodes *)
-(* using Fin.t instead of nat saves a lot of hassle when translating to
- the list-based representation of edges in L*)
-Structure UndirectedGraph := {
-                              V :> nat ;
-                              E :> (Fin.t V) -> (Fin.t V) -> Prop ;
-                              dec_edge : forall (u v : Fin.t V), {E u v} + {not (E u v)} ;
-                              E_symm : forall (u v : Fin.t V) , E u v -> E v u 
-                            }.
-
 (* for the L representation, the symmetric closure is implicit
  (i.e. we do not require the edge list to contain symmetric edges)*)
 Notation Lnode := (nat) (only parsing).
@@ -101,11 +91,20 @@ Qed.
 Lemma Lgraph_edge_in_dec_correct (g : Lgraph) : let (v, e) := g in forall (u v : Lnode), Lgraph_edge_in_dec g u v = true <-> (u, v) el e \/ (v, u) el e. 
 Proof. destruct g. apply Lgraph_edge_in_dec'_correct. Qed. 
 
+(* Coq representation, using Fin.t to represent nodes *)
+(* using Fin.t instead of nat saves a lot of hassle when translating to
+ the list-based representation of edges in L*)
+Structure UndirectedGraph := {
+                              V :> nat ;
+                              E :> (Fin.t V) -> (Fin.t V) -> Prop ;
+                              dec_edge : forall (u v : Fin.t V), {E u v} + {not (E u v)} ;
+                              E_symm : forall (u v : Fin.t V) , E u v -> E v u 
+                            }.
 
 (*the two definitions of graphs are equivalent*)
 Definition finToNat (n : nat) (a : Fin.t n) : nat := proj1_sig (Fin.to_nat a). 
 
-Definition Lgraph_toUndirGraph (g : Lgraph) : UndirectedGraph. 
+Definition Lgraph_to_UndirectedGraph (g : Lgraph) : UndirectedGraph. 
 Proof. 
   destruct g.
   exists n (fun u v => Lgraph_edge_in_dec (n, l) (finToNat u) (finToNat v) = true). 
@@ -114,6 +113,13 @@ Proof.
     cbn.
     intros [H | H]%orb_true_elim; apply orb_true_intro; tauto.  
 Defined. 
+
+Lemma Lgraph_to_UndirectedGraph_correct (g : Lgraph) : let (n, e) := g in let ug := Lgraph_to_UndirectedGraph g in
+      forall (u v : Fin.t (V ug)), finToNat u < n /\ finToNat v < n /\ (Lgraph_edge_in_dec g (finToNat u) (finToNat v) = true <-> E u v).
+Proof. 
+  destruct g. cbn.  intros u v; split; try split. 1-2: unfold finToNat; destruct (Fin.to_nat u), (Fin.to_nat v); now cbn. 
+  tauto. 
+Qed.
 
 (*extraction of all edges by enumerating all values of the finite type representing the nodes *)
 Fixpoint enumFint (n : nat) : list (Fin.t n) :=
@@ -158,6 +164,7 @@ Instance finTypeC_Fint (n : nat) : finTypeC (EqType (Fin.t n)).
 Proof.
   econstructor. intros x. apply enum_count; eapply enumFint_correct. 
 Defined.
+
   
 Fixpoint genEdge' (g : UndirectedGraph) (l : list ((Fin.t (V g) * Fin.t (V g))%type)) : list Ledge :=
   match l with [] => []
@@ -169,9 +176,13 @@ Definition genEdge (g : UndirectedGraph) : list Ledge := genEdge' (list_prod (en
 Lemma genEdge_correct (g : UndirectedGraph) (u v : Fin.t (V g)) : Lgraph_edge_in_dec' (genEdge g) (finToNat u) (finToNat v) = true <-> E u v. 
 Proof. 
   split. 
-  - intros H.  
+  - intros H. destruct (dec_edge u v); try tauto. exfalso.   
+    rewrite Lgraph_edge_in_dec'_correct in H. destruct H.
+    + unfold genEdge in H. destruct g.  cbn in n. induction V0. 
+      * now cbn in H. 
+      * cbn in IHV0. cbn [V] in H. 
+    
 Admitted. 
-
    
 Definition UndirGraph_toLgraph (a : UndirectedGraph) : Lgraph.
 Proof. 
