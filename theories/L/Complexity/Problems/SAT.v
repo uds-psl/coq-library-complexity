@@ -155,8 +155,108 @@ Proof.
   split; eauto using evalCnf_varBound. 
   intros (n & H1 & H2). now apply evalCnf_correct with (n:= n). 
 Qed. 
-  
 
+
+(*more helpful properties *)
+
+(*evaluation will not change if we move clauses or literals*)
+Lemma evalClause'_comm (a : assgn) (cl : clause) (l l' : literal) (init : bool) :
+  evalClause' a (l :: l' :: cl) (Some init) = evalClause' a (l' :: l :: cl) (Some init). 
+Proof.
+  cbn. destruct (evalLiteral a l) eqn:eq1; destruct (evalLiteral a l') eqn:eq2. 
+  2-3: now rewrite fold_leftOption_none_ties_down. 
+  2: reflexivity. 
+  repeat rewrite <- orb_assoc. now replace (b || b0) with (b0 || b) by (now rewrite orb_comm). 
+Qed. 
+
+(*a characterisation of one processing step of evalClause *)
+Lemma evalClause'_step_inv (a : assgn) (cl : clause) (l : literal) (init : bool) (b :bool) : evalClause' a (l::cl) (Some init) = Some b <-> exists b1 b2, evalClause' a cl (Some init)= Some b1 /\ evalLiteral a l = Some b2 /\ b = b1 || b2.
+Proof.
+  revert init b l.
+  induction cl. 
+  - intros init b l. cbn. destruct (evalLiteral a l) eqn:H1.
+    + split. intros H. exists init, b0. split; try split; cbn; try tauto. congruence.
+      intros (b1 & b2 & H2 & H3 & H4). destruct b1; try congruence; cbn in H4; now rewrite <- H4 in H3.
+    + firstorder; congruence. 
+ - intros init b l. split.
+   + intros H1. rewrite evalClause'_comm in H1. cbn in H1. destruct (evalLiteral a a0) eqn:eql.
+     * change (evalClause' a (l::cl) (Some (init || b0)) = Some b) in H1. apply IHcl in H1.
+       destruct H1 as (b1 & b2 & H1 & H2 & H3). cbn. rewrite eql.
+       unfold evalClause' in H1. firstorder.   
+     * congruence. 
+  + intros (b1 & b2 & H1 & H2 & H3). rewrite evalClause'_comm. cbn. destruct (evalLiteral a a0) eqn:H4.  
+    * apply IHcl. cbn in H1; rewrite H4 in H1. exists b1, b2. tauto. 
+    * cbn in H1. rewrite H4 in H1. now rewrite fold_leftOption_none_ties_down in H1. 
+Qed. 
+
+Corollary evalClause_step_inv (a : assgn) (cl : clause) (l : literal) (b : bool) : evalClause a (l::cl) = Some b <-> exists b1 b2, evalClause a cl = Some b1 /\ evalLiteral a l = Some b2 /\ b = b1 || b2. 
+Proof. apply evalClause'_step_inv. Qed.
+
+Lemma evalCnf'_comm (a:assgn) (cn : cnf) (cl cl' : clause) (init : bool) :
+  evalCnf' a (cl::cl'::cn) (Some init) = evalCnf' a (cl' :: cl::cn) (Some init). 
+Proof.
+  cbn; destruct (evalClause a cl) eqn:eq1; destruct (evalClause a cl') eqn:eq2. 
+  2-3: now rewrite fold_leftOption_none_ties_down. 2: reflexivity. 
+  repeat rewrite <- andb_assoc. now replace (b&&b0) with (b0&&b) by (now rewrite andb_comm).
+Qed. 
+
+Lemma evalCnf'_step_inv (a : assgn) (cn : cnf) (cl : clause) (init : bool) (b:bool) : evalCnf' a (cl::cn) (Some init) = Some b <-> exists b1 b2, evalCnf' a cn (Some init) = Some b1 /\ evalClause a cl = Some b2 /\ b = b1 && b2.
+Proof.
+  revert init b cl. induction cn. 
+  - intros init b cl. cbn. destruct evalClause.
+    + split. intros H. exists init, b0. firstorder; try congruence. 
+      intros (b1 & b2 & H1 & H2 & H3). inv H1; now inv H2. 
+    + firstorder; congruence.  
+  - intros init b cl. split.
+    + intros H1. rewrite evalCnf'_comm in H1. cbn in H1. destruct (evalClause a a0) eqn:eql. 
+      * change (evalCnf' a (cl::cn) (Some (init && b0)) = Some b) in H1. apply IHcn in H1.
+        destruct H1 as (b1 & b2 & H1 & H2 & H3). cbn. rewrite H2, eql. unfold evalCnf' in H1; firstorder.
+      * congruence.
+   + intros (b1 & b2 & H1 & H2 & H3). rewrite evalCnf'_comm. cbn. destruct (evalClause a a0) eqn:H4. 
+     * apply IHcn. cbn in H1; rewrite H4 in H1. exists b1, b2. tauto. 
+     * cbn in H1. rewrite H4 in H1. now rewrite fold_leftOption_none_ties_down in H1. 
+Qed. 
+
+Corollary evalCnf_step_inv (a : assgn) (cn : cnf) (cl : clause) (b : bool) : evalCnf a (cl :: cn) = Some b <-> exists b1 b2, evalCnf a cn = Some b1 /\ evalClause a cl = Some b2 /\ b = b1 && b2.
+Proof. apply evalCnf'_step_inv. Qed. 
+
+Lemma evalClause'_init_true (a : assgn) (cl : clause) : varBound_clause (|a|) cl ->  evalClause' a cl (Some true) = Some true.
+Proof.
+  induction cl.
+  - now cbn.
+  - intros H. apply evalClause'_step_inv. inv H. assert (|a| >= |a|) by lia.
+    specialize (evalLiteral_correct b H2 H) as (v & ->). rewrite IHcl. 2: apply H3. exists true, v. firstorder. 
+Qed. 
+
+Lemma evalClause_literal_iff (a : assgn) (cl : clause) : evalClause a cl = Some true <-> ((exists l, l el cl /\ evalLiteral a l = Some true) /\ varBound_clause (|a|) cl). 
+Proof.
+  induction cl.
+  - cbn. firstorder. congruence. 
+  - split.
+    + intros H. split. 2: now apply evalClause_varBound.
+      apply evalClause_step_inv in H. destruct H as (b1 & b2 & H1 & H2 & H3). destruct b2.
+      * exists a0. firstorder. 
+      * destruct b1. 2: discriminate H3. apply IHcl in H1. destruct H1 as [[l [F1 F2]] _]. exists l. firstorder. 
+    + intros [(l & H1 & H2) H]. destruct H1.
+      * rewrite H0 in *. cbn; rewrite H2. change (evalClause' a cl (Some true) = Some true).
+        apply evalClause'_init_true. now inv H. 
+      * cbn. destruct (evalLiteral a a0) eqn:eq. destruct b.
+        change (evalClause' a cl (Some true) = Some true). rewrite evalClause'_init_true. reflexivity. now inv H. 
+        change (evalClause a cl = Some true). apply IHcl. split. exists l. firstorder. now inv H. 
+        inv H. assert (|a| >= |a|) by lia. specialize (evalLiteral_correct b H4 H) as (v & H6). congruence. 
+Qed. 
+
+Lemma evalCnf_clause_iff (a : assgn) (cn : cnf) : evalCnf a cn = Some true <-> (forall cl, cl el cn -> evalClause a cl = Some true).
+Proof.
+  induction cn.
+  - cbn. firstorder. 
+  - split.
+    + intros H cl [-> | H1]; apply evalCnf_step_inv in H; destruct H as (b1 & b2 & F1 & F2 & F3); simp_bool.
+      rewrite IHcn in F1. now apply F1. 
+    + intros H. cbn. destruct (evalClause a a0) eqn:eq. destruct b.
+      1: apply IHcn; intros cl H1; firstorder. 
+      all: now specialize (H a0 (or_introl eq_refl)).
+Qed. 
 
 Definition SAT (c : cnf) : Prop := exists (a : assgn), evalCnf a c = Some true. 
 

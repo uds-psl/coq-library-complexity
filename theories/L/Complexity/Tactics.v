@@ -9,11 +9,16 @@ Ltac simp_bool := repeat match goal with
                                                          let a := fresh "H" in
                                                          let b := fresh "H" in
                                                          destruct H as [a b]
+                  | [H : true = andb ?b1 ?b2 |- _ ] => symmetry in H; simp_bool
                   | [H : andb (?b1) (?b2) = false |- _] => apply andb_false_elim in H;
                                                          destruct H as [H | H]
                   | [H : false = andb (?b1) (?b2) |- _] => symmetry in H; simp_bool
                   | [ |- context[andb (?b1) (?b2) = false]] => rewrite andb_false_iff 
                   | [ |- andb (?b1) (?b2) = true] => apply andb_true_intro 
+                  | [H : ?b = true |- _ ] => rewrite H in *; clear H
+                  | [H : ?b = false |- _] => rewrite H in *; clear H
+                  | [H : true = ?b |- _] => symmetry in H; simp_bool
+                  | [H : false = ?b |- _] => symmetry in H; simp_bool
                   end; try congruence.
 
 Local Lemma eqb_false_iff a b : Bool.eqb a b = false <-> a <> b.
