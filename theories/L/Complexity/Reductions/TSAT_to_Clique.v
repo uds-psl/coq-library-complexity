@@ -12,52 +12,51 @@ Require Import Coq.Init.Nat.
 (*construction of the edge set: iterate over clauses. for each literal of each clause, iterate over all clauses*)
 (*this should run in quadratic time*)
 
-(*the instance has 3 * num_clauses nodes and at most 9 * num_clauses^2 edges *)
-(*care needs to be taken to show that this is indeed the case *)
+(*We proceed in the following way: *)
+(*First, we define a relation on cnf * UndirectedGraph that connects sat instances to clique instances *)
 
-Definition tripToList (X : Type) (a : X * X * X) := [fst(fst a); snd(fst a); snd a]. 
+(*a labelling function for a graph with 3*num nodes that assigns a clause and a literal index *)
+Definition labGraph (g : UndirectedGraph) (num : nat) := Fin.t g -> {'(n, k)| n < num /\ k < 3}.
+Definition literal_in_CNF (c : cnf) (l : literal) := exists cl, cl el c /\ l el cl.
+
+Definition flatLab (g : UndirectedGraph) (n : nat) (f : labGraph g n) (h : Fin.t g) := proj1_sig (f h). 
 
 Definition literalsConflict (a b : literal) := match a, b with (s1, v1), (s2, v2) => s1 <> s2 /\ v1 = v2 end.
 Definition literalsConflictb (a b : literal) := match a, b with (s1, v1), (s2, v2) => negb(Bool.eqb s1 s2) && Nat.eqb v1 v2 end. 
 
-Definition enumerateLiteral' (c : clause) (n : nat) := nth_error c n.
-Definition enumerateLiteral (c : cnf) (k : nat) (n : nat) := match nth_error c (n / k) with Some cl => enumerateLiteral' cl (n mod k) 
+Section enumLiteral.
+  Variable (k :nat).
+
+  Definition enumerateLiteral' (c : clause) (n : nat) := nth_error c n.
+  Definition enumerateLiteral (c : cnf) (pos : nat * nat) := let (cl, n) := pos in  match nth_error c cl with Some cl => enumerateLiteral' cl n 
                                                                            | None => None
                                                                             end.
 
-Lemma enumerateLiteral_clstep (c : cnf) (cl :clause) (k : nat) (n : nat) : kCNF k (cl ::c) -> enumerateLiteral (cl::c) k (n + k) = enumerateLiteral c k n. 
+Lemma enumerateLiteral'_Some (c : clause) : |c| = k -> forall (n : nat), n < k -> exists (l : literal), enumerateLiteral' c n = Some l.
 Proof. 
-  intros H.
-  unfold enumerateLiteral. cbn.
-  replace k with (1*k) at 1 by lia. rewrite Nat.div_add. cbn. replace (n/k + 1) with (S (n/k)) by lia. 
-  replace (n+k) with (n + 1 * k) by lia. rewrite Nat.mod_add.
-  reflexivity. all: apply kCNF_kge in H; lia. 
-Qed.
-
-Lemma enumerateLiteral'_Some (c : clause) (k : nat) : |c| = k -> forall n, n < k -> exists (l : literal), enumerateLiteral' c n = Some l.
-Proof. 
-  intros H n H1. 
+  intros H n H1.  
   unfold enumerateLiteral'. rewrite <- H in H1. destruct (Prelim.nthe_length H1). now exists x.
 Qed.                                                                                      
 
-Lemma enumerateLiteral_Some (c : cnf) (k : nat) :   kCNF k c -> forall n, n < |c| * k -> exists (l : literal), enumerateLiteral c k n = Some l.
+Lemma enumerateLiteral_Some (c : cnf) : kCNF k c -> forall (n :nat) (n' : nat), n < |c| -> n' < k -> 
+      exists (l : literal), enumerateLiteral c (n, n') = Some l.
 Proof.
-  intros H n H1. specialize (kCNF_kge H) as H0. destruct (enumerateLiteral c k n) eqn:H2. now exists p. 
-  exfalso. revert n H1 H2. induction c. 
-  + intros n H1 H2. cbn in H1; lia. 
-  + intros n H1 H2. cbn in H1. inv H.
-    destruct (le_lt_dec (|a|) n).
-    - apply (IHc H6 (n - |a|)). lia. replace n with ((n - |a|) + |a|) in H2.  
-      rewrite (enumerateLiteral_clstep (c:= c) (cl:= a)) in H2. apply H2.
-      now constructor. lia. 
-    - clear IHc. unfold enumerateLiteral in H2. replace (n/(|a|)) with 0 in H2. cbn in H2.
-      assert (n mod (|a|) < |a|). { rewrite Nat.mod_small; auto. }
-      destruct (enumerateLiteral'_Some (c := a) (n := n mod (|a|)) eq_refl H) as (l' & H'). 
-      congruence.
-      now rewrite Nat.div_small. 
-Qed.
+  intros H n n' H1 H2. specialize (kCNF_kge H) as H0. destruct (enumerateLiteral c (n, n')) eqn:H3. now exists p. 
+  exfalso. revert n H1 H3. induction c. 
+  + intros n H1. cbn in H1; lia.  
+  + intros n H1 H3. cbn in H1.
+    destruct n. cbn in H3. inversion H.  specialize (enumerateLiteral'_Some H6 H2) as (l & H8). congruence. 
+    unfold enumerateLiteral in H3. cbn in H3. apply IHc with (n := n). now inv H. lia. apply H3.
+Qed. 
 
-Definition enumLiteral_different_clause (c : cnf) (k : nat) (u : nat) (v : nat) := (u / k) <> (v /k).
+Definition enumLiteral_different_clause (l1 : nat * nat) (l2 : nat * nat) := fst l1 <> snd l2. 
+End enumLiteral.
+
+Definition redRel (c : cnf) (cl : UndirectedGraph * nat) := let (g, k) := cl in V g = (3 * |c|) /\  
+  exists (labF : labGraph g (|c|)), injective (flatLab labF) /\ (forall (u v : Fin.t (V g)), @E g u v <->
+      (enumLiteral_different_clause (flatLab labF u) (flatLab labF v) /\
+       not (exists (l1 l2 : literal), enumerateLiteral c (flatLab labF u) = Some l1 /\ enumerateLiteral c (flatLab labF v) = Some l2 /\ literalsConflict l1 l2))).
+
 
 (* I am dumb. This obviously can't be extracted...*)
 (* Definition redGraph (c :cnf) : UndirectedGraph. *)
@@ -102,7 +101,7 @@ Fixpoint makeEdges (c : cnf) (numL : nat) := match c with [] => []
 Definition redGraph (c : cnf) : Lgraph := if kCNF_decb 3 c then (3 * |c|, makeEdges c 0)
                                                             else (0, []). 
 
-Definition literal_in_CNF (c : cnf) (l : literal) := exists cl, cl el c /\ l el cl.
+
 
 Lemma makeEdges_correct (c : cnf) : kCNF 3 c -> forall (l l' : literal) (n n' : nat), (n < 3 * (|c|) /\ n' < 3 * (|c|) /\ enumerateLiteral c 3 n = Some l /\ enumerateLiteral c 3 n' = Some l')
                                                -> (not (literalsConflict l l') /\ enumLiteral_different_clause c 3 n n'  <->

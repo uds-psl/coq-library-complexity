@@ -59,5 +59,6 @@ Qed.
 
 Lemma inNP_kSAT (k : nat) : inNP (kSAT k). 
 Proof.
-  (* apply red_inNP with (Q := SAT). *)
-Admitted. 
+  apply red_inNP with (regY := @registered_list_enc (list (bool * nat)) (@registered_list_enc (bool * nat)(@registered_prod_enc bool nat  registered_bool_enc registered_nat_enc) ))(Q := SAT). 
+  apply ksat_to_sat. apply sat_NP. 
+Qed. 

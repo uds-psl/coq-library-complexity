@@ -6,14 +6,6 @@ From Undecidability.L.Functions Require Import Size.
 
 
 (* k-Clique: duplicate-free list of k nodes such that all pairwise-distinct nodes are connected *)
-Inductive isClique (g : UndirectedGraph) : list (Fin.t (V g)) -> nat -> Prop :=
-| isCliqueB : isClique [] 0
-| isCliqueS (cl : list (Fin.t (V g))) (node : Fin.t (V g)) (k : nat):
-    isClique cl k -> (not (node el cl)) -> (forall (node' : Fin.t (V g)), node' el cl -> E node node') -> isClique (node :: cl) (S k).
-
-Definition Clique (input : UndirectedGraph * nat) :=
-  let (g, k) := input in exists cl, @isClique g cl k. 
-
 Inductive isLClique (g : Lgraph) : list Lnode -> nat -> Prop :=
 | isLCliqueB : isLClique g [] 0
 | isLCliqueS (cl : list Lnode) (node : Lnode) (k : nat) : isLClique g cl k ->
@@ -21,6 +13,8 @@ Inductive isLClique (g : Lgraph) : list Lnode -> nat -> Prop :=
 
 Definition LClique (input : Lgraph * nat) :=
   let (g, k) := input in exists cl, @isLClique g cl k. 
+
+
 
 Definition LClique_verifier (input : Lgraph * nat) (cert : list Lnode) :=
   let (g, k) := input in isLClique g cert k. (*this includes that l is short enough*)
@@ -102,6 +96,18 @@ Proof.
     + exfalso. specialize (forallb_forall (Lgraph_edge_in_dec g node) cl) as H4.
       now apply H4 in H3.  
 Qed. 
+
+(*we lift this definition to the abstract UndirectedGraph which can't be extracted to L *)
+Inductive isClique (g : UndirectedGraph) : list (Fin.t (V g)) -> nat -> Prop :=
+| isCliqueB : isClique [] 0
+| isCliqueS (cl : list (Fin.t (V g))) (node : Fin.t (V g)) (k : nat):
+    isClique cl k -> (not (node el cl)) -> (forall (node' : Fin.t (V g)), node' el cl -> E node node') -> isClique (node :: cl) (S k).
+
+Definition Clique (input : UndirectedGraph * nat) :=
+  let (g, k) := input in exists cl, @isClique g cl k. 
+
+Lemma LClique_Clique_equiv (abstr : UndirectedGraph) (l : LGraph) : 
+
 
 From Undecidability.L.Complexity Require Import PolyBounds ONotation Monotonic. 
 
