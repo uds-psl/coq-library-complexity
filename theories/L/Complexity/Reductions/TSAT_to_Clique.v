@@ -199,7 +199,7 @@ Section constructClique.
                     | [] => False
                     | b :: m => b = a1 \/ In a1 m
                     end) elm l} =>
-           let (elm, p) := m in exist (fun x0 : X => a = x0 \/ a0 = x0 \/ x0 el l) elm (or_intror p)) l') = l) by now rewrite H1.  rewrite <- IHl with (l' := l').
+           let (elm, p) := m in exist (fun x0 : X => a = x0 \/ a0 = x0 \/ x0 el l) elm (or_intror p)) l') = l) by now rewrite H1.  
         Admitted. 
 
   Definition constructClique_fin (a : assgn) (cn : cnf) (k : nat) : kCNF k cn -> list (Fin.t (|cn|) * Fin.t k). 
@@ -207,7 +207,7 @@ Section constructClique.
     intros H. remember (constructClique_cnf a cn) as l. 
     specialize (construct_literals_bound (a := a) H) as H'. rewrite <- Heql in H'.
     induction l. exact []. 
-
+  Admitted. 
 
 End constructClique.
 
@@ -265,6 +265,14 @@ Fixpoint makeEdges (c : cnf) (numL : nat) := match c with [] => []
 Definition redGraph (c : cnf) : Lgraph := if kCNF_decb 3 c then (3 * |c|, makeEdges c 0)
                                                             else (0, []). 
 
+Definition reduction (c : cnf) : Lgraph * nat := (redGraph c, |c|). 
+
+
+Lemma reduction_sat_redRel (c : cnf) : redRel c (reduction c). 
+Proof. 
+  unfold redRel. destruct (reduction c) as (g, k) eqn:H. destruct g as (n, e). 
+  unfold reduction in H. inversion H. unfold redGraph in H1. destruct (kCNF_decb 3 c) eqn:H3. 
+  - inv H1. split. reflexivity. 
 
 
 (* Lemma makeEdges_correct (c : cnf) : kCNF 3 c -> forall (l l' : literal) (n n' : nat), (n < 3 * (|c|) /\ n' < 3 * (|c|) /\ enumerateLiteral c 3 n = Some l /\ enumerateLiteral c 3 n' = Some l') *)
