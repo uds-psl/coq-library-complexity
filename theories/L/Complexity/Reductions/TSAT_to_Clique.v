@@ -17,10 +17,8 @@ Import PslBase.Bijection.
 (*First, we define a relation on cnf * UndirectedGraph that connects sat instances to clique instances *)
 
 (*a labelling function for a graph that assigns a clause and a literal index *)
-(*we use finite types as domain because this enables us to talk about the labelling function as a bijection*)
-(*(in case of valid reduction instances) between literals and nodes in the graph *)
-Definition labGraph (nodes : nat) (numcl : nat) := (Fin.t nodes) -> (Fin.t numcl * Fin.t 3).
-Definition labGraphInv (nodes : nat) (numcl : nat) := Fin.t numcl * Fin.t 3 -> Fin.t nodes. 
+Definition labGraph:= nat -> nat * nat.
+Definition labGraphInv := nat * nat -> nat. 
 Definition literal_in_CNF (c : cnf) (l : literal) := exists cl, cl el c /\ l el cl.
 
 Definition literalsConflict (a b : literal) := match a, b with (s1, v1), (s2, v2) => s1 <> s2 /\ v1 = v2 end.
@@ -73,19 +71,16 @@ Admitted.
 Definition enumLiteral_different_clause (l1 : nat * nat) (l2 : nat * nat) := fst l1 <> snd l2. 
 End enumLiteral.
 
-Definition finToNat (n : nat) (k : Fin.t n) := proj1_sig (Fin.to_nat k). 
-Definition labGraphNat (nodes : nat) (numcl : nat) (f : labGraph nodes numcl) (m : Fin.t nodes) :=
-  let '(a, b) := f m in (finToNat a, finToNat b).
-
+Definition isLabelling (c : cnf) (f : labGraph) (fInv : labGraphInv) := inverse f fInv /\ (forall n, n < 3 * (|c|) -> fst(f n) < (|c|) /\ snd (f n) < 3). 
 (* the reduction relation *)
 Definition redRel (c : cnf) (cl : Lgraph * nat) := let (g, k) := cl in
                                                  let (n, e) := g in n = (3 * |c|) /\  
-  exists (labF : labGraph n (|c|)) (labFInv : labGraphInv n (|c|)), inverse labF labFInv /\
-     (forall (u v : Fin.t n), Lgraph_edge_in_dec (n, e) (finToNat u) (finToNat v) <->
-      (enumLiteral_different_clause (labGraphNat labF u) (labGraphNat labF v) /\
-      (forall (l1 l2 : literal), enumerateLiteral c (labGraphNat labF u) = Some l1 ->
-                               enumerateLiteral c (labGraphNat labF v) = Some l2 ->
-                               not (literalsConflict l1 l2)))).
+  exists (labF : labGraph) (labFInv : labGraphInv), isLabelling c labF labFInv /\
+     (forall (u v : nat), u < n /\ v < n -> (Lgraph_edge_in_dec (n, e) u v <->
+      (enumLiteral_different_clause (labF u) (labF v) /\
+      (forall (l1 l2 : literal), enumerateLiteral c (labF u) = Some l1 ->
+                               enumerateLiteral c (labF v) = Some l2 ->
+                               not (literalsConflict l1 l2))))).
 
 (*construction of a set of literal indices, one for each clause, that is satisfied for an assignment*)
 Section constructClique.
@@ -171,44 +166,6 @@ Section constructClique.
     intros H n m H1. apply enumerateLiteral_Some_conv. apply H.
     destruct (construct_literals_positive H1) as (l & H2 & _). exists l; apply H2. 
   Qed. 
-
-  Definition liftList (X : Type) (l : list X) : {a : list ({e | e el l}) | map (@proj1_sig X (fun a => a el l)) a = l}. 
-  Proof.
-    induction l. 
-    - exists []. now cbn. 
-    - destruct IHl as (l' & H). 
-      exists ((exist (fun x => x el a ::l) a (or_introl eq_refl)) :: (map (fun m => match m with exist _  elm p => exist (fun x => x el a ::l) elm (or_intror p) end) l')). 
-      cbn. enough (map (proj1_sig (P:=fun a0 : X => a = a0 \/ a0 el l))
-       (map
-          (fun
-             m : {elm : X |
-                 (fix In (a0 : X) (l0 : list X) {struct l0} : Prop :=
-                    match l0 with
-                    | [] => False
-                    | b :: m => b = a0 \/ In a0 m
-                    end) elm l} => let (elm, p) := m in exist (fun x : X => a = x \/ x el l) elm (or_intror p)) l')  = l) by now rewrite H0. revert l' H. induction l. 
-      + intros l' H. destruct l'. cbn. reflexivity. now destruct s.
-      + intros l' H. destruct l'. cbn in H; congruence. cbn. destruct s. cbn. cbn in H.
-        assert (x = a0) by congruence. rewrite H0. enough (map (proj1_sig (P:=fun a1 : X => a = a1 \/ a0 = a1 \/ a1 el l))
-       (map
-          (fun
-             m : {elm : X |
-                 a0 = elm \/
-                 (fix In (a1 : X) (l0 : list X) {struct l0} : Prop :=
-                    match l0 with
-                    | [] => False
-                    | b :: m => b = a1 \/ In a1 m
-                    end) elm l} =>
-           let (elm, p) := m in exist (fun x0 : X => a = x0 \/ a0 = x0 \/ x0 el l) elm (or_intror p)) l') = l) by now rewrite H1.  
-        Admitted. 
-
-  Definition constructClique_fin (a : assgn) (cn : cnf) (k : nat) : kCNF k cn -> list (Fin.t (|cn|) * Fin.t k). 
-  Proof. 
-    intros H. remember (constructClique_cnf a cn) as l. 
-    specialize (construct_literals_bound (a := a) H) as H'. rewrite <- Heql in H'.
-    induction l. exact []. 
-  Admitted. 
-
 End constructClique.
 
 Lemma redRel_reduces (c : cnf) (cl : Lgraph * nat) : redRel c cl -> (SAT c <-> LClique cl ).
@@ -216,7 +173,6 @@ Proof.
   split. 
   + intros (a & H1). destruct cl as (g & k). destruct g. cbn in H.
     destruct H as (neq & labF & labFInv & labinv & H2).
-    (*now need to lift the constructClique output to Fin.t and prove, using H2, that it is indeed a clique *)
     (* exists (constructClique_cnf a c).  *)
     admit.
   + destruct cl as (g, k). destruct g as (n, e). intros (clique & H1).
@@ -267,6 +223,44 @@ Definition redGraph (c : cnf) : Lgraph := if kCNF_decb 3 c then (3 * |c|, makeEd
 
 Definition reduction (c : cnf) : Lgraph * nat := (redGraph c, |c|). 
 
+Definition enumerateLiteral' (c : clause) (n : nat) := nth_error c n.
+Definition enumerateLiteral (c : cnf) (k : nat) (n : nat) := match nth_error c (n / k) with Some cl => enumerateLiteral' cl (n mod k) 
+                                                                           | None => None
+                                                                            end.
+
+Lemma enumerateLiteral_clstep (c : cnf) (cl :clause) (k : nat) (n : nat) : kCNF k (cl ::c) -> enumerateLiteral (cl::c) k (n + k) = enumerateLiteral c k n. 
+Proof. 
+  intros H.
+  unfold enumerateLiteral. cbn.
+  replace k with (1*k) at 1 by lia. rewrite Nat.div_add. cbn. replace (n/k + 1) with (S (n/k)) by lia. 
+  replace (n+k) with (n + 1 * k) by lia. rewrite Nat.mod_add.
+  reflexivity. all: apply kCNF_kge in H; lia. 
+Qed.
+
+Lemma enumerateLiteral'_Some (c : clause) (k : nat) : |c| = k -> forall n, n < k -> exists (l : literal), enumerateLiteral' c n = Some l.
+Proof. 
+  intros H n H1. 
+  unfold enumerateLiteral'. rewrite <- H in H1. destruct (Prelim.nthe_length H1). now exists x.
+Qed.                                                                                      
+
+Lemma enumerateLiteral_Some (c : cnf) (k : nat) :   kCNF k c -> forall n, n < |c| * k -> exists (l : literal), enumerateLiteral c k n = Some l.
+Proof.
+  intros H n H1. specialize (kCNF_kge H) as H0. destruct (enumerateLiteral c k n) eqn:H2. now exists p. 
+  exfalso. revert n H1 H2. induction c. 
+  + intros n H1 H2. cbn in H1; lia. 
+  + intros n H1 H2. cbn in H1. inv H.
+    destruct (le_lt_dec (|a|) n).
+    - apply (IHc H6 (n - |a|)). lia. replace n with ((n - |a|) + |a|) in H2.  
+      rewrite (enumerateLiteral_clstep (c:= c) (cl:= a)) in H2. apply H2.
+      now constructor. lia. 
+    - clear IHc. unfold enumerateLiteral in H2. replace (n/(|a|)) with 0 in H2. cbn in H2.
+      assert (n mod (|a|) < |a|). { rewrite Nat.mod_small; auto. }
+      destruct (enumerateLiteral'_Some (c := a) (n := n mod (|a|)) eq_refl H) as (l' & H'). 
+      congruence.
+      now rewrite Nat.div_small. 
+Qed.
+
+Definition enumLiteral_different_clause (c : cnf) (k : nat) (u : nat) (v : nat) := (u / k) <> (v /k).
 
 Lemma reduction_sat_redRel (c : cnf) : redRel c (reduction c). 
 Proof. 
