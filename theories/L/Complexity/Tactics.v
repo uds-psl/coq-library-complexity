@@ -15,11 +15,16 @@ Ltac simp_bool := repeat match goal with
                   | [H : false = andb (?b1) (?b2) |- _] => symmetry in H; simp_bool
                   | [ |- context[andb (?b1) (?b2) = false]] => rewrite andb_false_iff 
                   | [ |- andb (?b1) (?b2) = true] => apply andb_true_intro 
+                  | [ H : context [orb (?b1) false] |- _] => rewrite orb_false_r in H
+                  | [ |- context [orb ?b1 false] ] => rewrite orb_false_r
+                  end; try congruence.
+
+Ltac simp_bool' :=  repeat (match goal with
                   | [H : ?b = true |- _ ] => rewrite H in *; clear H
                   | [H : ?b = false |- _] => rewrite H in *; clear H
                   | [H : true = ?b |- _] => symmetry in H; simp_bool
                   | [H : false = ?b |- _] => symmetry in H; simp_bool
-                  end; try congruence.
+                           end; simp_bool).
 
 Local Lemma eqb_false_iff a b : Bool.eqb a b = false <-> a <> b.
 Proof.

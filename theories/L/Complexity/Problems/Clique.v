@@ -14,11 +14,6 @@ Inductive isLClique (g : Lgraph) : list Lnode -> nat -> Prop :=
 Definition LClique (input : Lgraph * nat) :=
   let (g, k) := input in exists cl, @isLClique g cl k. 
 
-
-
-Definition LClique_verifier (input : Lgraph * nat) (cert : list Lnode) :=
-  let (g, k) := input in isLClique g cert k. (*this includes that l is short enough*)
-
 Lemma isLClique_node_in (g : Lgraph) (k : nat) (cl : list Lnode) : isLClique g cl k -> forall n, n el cl -> Lgraph_node_in_dec g n = true. 
 Proof.
   induction 1. 
@@ -28,6 +23,9 @@ Qed.
 
 Lemma isLClique_length (g : Lgraph) (k : nat) (cl : list Lnode) : isLClique g cl k -> k = (|cl|).
 Proof. induction 1; now cbn. Qed. 
+
+Definition LClique_verifier (input : Lgraph * nat) (cert : list Lnode) :=
+  let (g, k) := input in isLClique g cert k. (*this includes that l is short enough*)
 
 
 Lemma size_nat_enc_mono (n  :nat) (m : nat) :
@@ -96,18 +94,6 @@ Proof.
     + exfalso. specialize (forallb_forall (Lgraph_edge_in_dec g node) cl) as H4.
       now apply H4 in H3.  
 Qed. 
-
-(*we lift this definition to the abstract UndirectedGraph which can't be extracted to L *)
-Inductive isClique (g : UndirectedGraph) : list (Fin.t (V g)) -> nat -> Prop :=
-| isCliqueB : isClique [] 0
-| isCliqueS (cl : list (Fin.t (V g))) (node : Fin.t (V g)) (k : nat):
-    isClique cl k -> (not (node el cl)) -> (forall (node' : Fin.t (V g)), node' el cl -> E node node') -> isClique (node :: cl) (S k).
-
-Definition Clique (input : UndirectedGraph * nat) :=
-  let (g, k) := input in exists cl, @isClique g cl k. 
-
-Lemma LClique_Clique_equiv (abstr : UndirectedGraph) (l : LGraph) : 
-
 
 From Undecidability.L.Complexity Require Import PolyBounds ONotation Monotonic. 
 

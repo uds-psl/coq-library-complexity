@@ -2,6 +2,7 @@ From Undecidability.L.Complexity Require Import NP Synthetic Problems.SAT Proble
 From Undecidability.L Require Import Tactics.LTactics.
 From Undecidability.L.Complexity Require Import Problems.LGraph.
 Require Import Coq.Init.Nat.
+Import PslBase.Bijection.
 
 (*we first design the reduction function*)
 (* idea: for every clause c, create three nodes n^c_1, n^c_2, n^c_3 , corresponding to the three literals*)
@@ -15,11 +16,12 @@ Require Import Coq.Init.Nat.
 (*We proceed in the following way: *)
 (*First, we define a relation on cnf * UndirectedGraph that connects sat instances to clique instances *)
 
-(*a labelling function for a graph with 3*num nodes that assigns a clause and a literal index *)
-Definition labGraph (g : UndirectedGraph) (num : nat) := Fin.t g -> {'(n, k)| n < num /\ k < 3}.
+(*a labelling function for a graph that assigns a clause and a literal index *)
+(*we use finite types as domain because this enables us to talk about the labelling function as a bijection*)
+(*(in case of valid reduction instances) between literals and nodes in the graph *)
+Definition labGraph (nodes : nat) (numcl : nat) := (Fin.t nodes) -> (Fin.t numcl * Fin.t 3).
+Definition labGraphInv (nodes : nat) (numcl : nat) := Fin.t numcl * Fin.t 3 -> Fin.t nodes. 
 Definition literal_in_CNF (c : cnf) (l : literal) := exists cl, cl el c /\ l el cl.
-
-Definition flatLab (g : UndirectedGraph) (n : nat) (f : labGraph g n) (h : Fin.t g) := proj1_sig (f h). 
 
 Definition literalsConflict (a b : literal) := match a, b with (s1, v1), (s2, v2) => s1 <> s2 /\ v1 = v2 end.
 Definition literalsConflictb (a b : literal) := match a, b with (s1, v1), (s2, v2) => negb(Bool.eqb s1 s2) && Nat.eqb v1 v2 end. 
@@ -52,11 +54,100 @@ Qed.
 Definition enumLiteral_different_clause (l1 : nat * nat) (l2 : nat * nat) := fst l1 <> snd l2. 
 End enumLiteral.
 
-Definition redRel (c : cnf) (cl : UndirectedGraph * nat) := let (g, k) := cl in V g = (3 * |c|) /\  
-  exists (labF : labGraph g (|c|)), injective (flatLab labF) /\ (forall (u v : Fin.t (V g)), @E g u v <->
-      (enumLiteral_different_clause (flatLab labF u) (flatLab labF v) /\
-       not (exists (l1 l2 : literal), enumerateLiteral c (flatLab labF u) = Some l1 /\ enumerateLiteral c (flatLab labF v) = Some l2 /\ literalsConflict l1 l2))).
+Definition finToNat (n : nat) (k : Fin.t n) := proj1_sig (Fin.to_nat k). 
+Definition labGraphNat (nodes : nat) (numcl : nat) (f : labGraph nodes numcl) (m : Fin.t nodes) :=
+  let '(a, b) := f m in (finToNat a, finToNat b).
 
+(* the reduction relation *)
+Definition redRel (c : cnf) (cl : Lgraph * nat) := let (g, k) := cl in
+                                                 let (n, e) := g in n = (3 * |c|) /\  
+  exists (labF : labGraph n (|c|)) (labFInv : labGraphInv n (|c|)), inverse labF labFInv /\
+     (forall (u v : Fin.t n), Lgraph_edge_in_dec (n, e) (finToNat u) (finToNat v) <->
+      (enumLiteral_different_clause (labGraphNat labF u) (labGraphNat labF v) /\
+      (forall (l1 l2 : literal), enumerateLiteral c (labGraphNat labF u) = Some l1 ->
+                               enumerateLiteral c (labGraphNat labF v) = Some l2 ->
+                               not (literalsConflict l1 l2)))).
+
+(*construction of a set of literal indices, one for each clause, that is satisfied for an assignment*)
+Section constructClique.
+  Fixpoint constructClique_clause' (a : assgn) (cl_index : nat) (cl : clause) (lit_index : nat):=
+  match cl with [] => None
+              | (l :: cl) => match evalLiteral a l with Some true => Some (cl_index, lit_index)
+                                               | _  => constructClique_clause' a cl_index cl (S lit_index)
+  end end. 
+  Definition constructClique_clause (a : assgn) (cl_index : nat) (cl : clause) :=
+  constructClique_clause' a cl_index cl 0.
+
+  Fixpoint constructClique_cnf' (a:assgn) (cn : cnf) (cl_index : nat) :=
+  match cn with [] => []
+              | (l :: cn) => match constructClique_clause a cl_index l with Some l => l :: constructClique_cnf' a cn (S cl_index)
+                                                                          | None => []
+                            end
+  end. 
+  Definition constructClique_cnf (a : assgn) (cn : cnf) := constructClique_cnf' a cn 0.
+
+
+  Lemma everyClause' (a : assgn) (cn : cnf): evalCnf a cn = Some true -> forall cl, cl el cn -> forall n, exists k, constructClique_clause a n cl = Some (n, k).
+  Proof.
+    intros H cl H1 n.
+    enough (forall m : nat, exists k, constructClique_clause' a n cl m = Some (n, m + k)) by apply H0.
+    assert (evalClause a cl = Some true ) by (apply (proj1 (evalCnf_clause_iff a cn) H cl H1)).
+    clear H1. induction cl. 
+    - cbn in H0; congruence. 
+    - intros m. cbn. destruct (evalLiteral a a0) eqn:eq.
+      2 : rewrite evalClause_step_inv in H0; destruct H0 as (b1 & b2 & F1 & F2 & F3); congruence. 
+      destruct b eqn:eq2. now exists 0. 
+      rewrite evalClause_step_inv in H0; destruct H0 as (b1 & b2 & F1 & F2 & F3).
+      destruct b2; try congruence. simp_bool'. apply IHcl  with (m := S m) in F1.
+      destruct F1 as (k & F1). exists (S k). now rewrite Nat.add_succ_r. 
+  Qed. 
+
+  Lemma everyClause (a : assgn) (cn : cnf): evalCnf a cn = Some true -> forall n, n < |cn| -> exists k, (n, k) el constructClique_cnf a cn. 
+  Proof.
+    intros H.
+    enough (forall (m n: nat), n < |cn| -> exists k, (m + n, k) el constructClique_cnf' a cn m) by (apply (H0 0)).
+    induction cn; intros m n H1; cbn in H1; try lia. 
+    destruct n. 
+    - cbn. destruct (everyClause' H (or_introl eq_refl) m). rewrite H0. exists x. now rewrite Nat.add_0_r.  
+    - cbn. destruct (everyClause' H (or_introl eq_refl) m).
+      apply evalCnf_step_inv in H. destruct H as (b1 & b2 & F1 & F2 & F3). simp_bool'.
+      assert (n < (|cn|)) by lia. specialize (IHcn F1 (S m) n H) as (k & H2).
+      cbn. rewrite H0. exists k. right; now rewrite Nat.add_succ_r. 
+  Qed. 
+
+  Lemma construct_length_bound (a : assgn) (cn : cnf): |constructClique_cnf a cn| <= |cn|. 
+  Proof.
+    enough (forall (m : nat), |constructClique_cnf' a cn m| <= |cn|) by apply (H 0). 
+    induction cn; intros m; cbn; try lia.
+    destruct (constructClique_clause a m a0); try cbn; try lia. rewrite IHcn. lia.
+  Qed. 
+
+  Lemma construct_length (a : assgn) (cn : cnf) : evalCnf a cn = Some true -> |constructClique_cnf a cn| = |cn|. 
+  Proof.
+    intros H. enough (|constructClique_cnf a cn| >= |cn|).
+    {specialize (construct_length_bound a cn); lia. }
+    specialize (everyClause  H) as H1.
+  Admitted. 
+
+  Lemma construct_literals_positive (a : assgn) (cn : cnf) : forall (pos : nat * nat), pos el constructClique_cnf a cn
+                                                            -> exists (l : literal), enumerateLiteral cn pos = Some l
+                                                                 /\ evalLiteral a l = Some true. 
+  Proof.
+    (*by induction over the structure of the CNF again*)
+  Admitted. 
+
+End constructClique.
+
+Lemma redRel_reduces (c : cnf) (cl : Lgraph * nat) : redRel c cl -> (SAT c <-> LClique cl ).
+Proof. 
+  split. 
+  + intros (a & H1). destruct cl as (g & k). destruct g. cbn in H.
+    destruct H as (neq & labF & labFInv & labinv & H2).
+    (*now need to lift the constructClique output to Fin.t and prove, using H2, that it is indeed a clique *)
+    (* exists (constructClique_cnf a c).  *)
+    admit.
+  + destruct cl as (g, k). destruct g as (n, e). intros (clique & H1).
+Admitted. 
 
 (* I am dumb. This obviously can't be extracted...*)
 (* Definition redGraph (c :cnf) : UndirectedGraph. *)
@@ -103,10 +194,10 @@ Definition redGraph (c : cnf) : Lgraph := if kCNF_decb 3 c then (3 * |c|, makeEd
 
 
 
-Lemma makeEdges_correct (c : cnf) : kCNF 3 c -> forall (l l' : literal) (n n' : nat), (n < 3 * (|c|) /\ n' < 3 * (|c|) /\ enumerateLiteral c 3 n = Some l /\ enumerateLiteral c 3 n' = Some l')
-                                               -> (not (literalsConflict l l') /\ enumLiteral_different_clause c 3 n n'  <->
-                                                  Lgraph_edge_in_dec' (makeEdges c 0) n n'). 
-Abort. 
+(* Lemma makeEdges_correct (c : cnf) : kCNF 3 c -> forall (l l' : literal) (n n' : nat), (n < 3 * (|c|) /\ n' < 3 * (|c|) /\ enumerateLiteral c 3 n = Some l /\ enumerateLiteral c 3 n' = Some l') *)
+(*                                                -> (not (literalsConflict l l') /\ enumLiteral_different_clause c 3 n n'  <-> *)
+(*                                                   Lgraph_edge_in_dec' (makeEdges c 0) n n').  *)
+(* Abort.  *)
 
 Lemma tsat_to_clique  : reducesPolyMO (kSAT 3) LClique. 
 Proof. 

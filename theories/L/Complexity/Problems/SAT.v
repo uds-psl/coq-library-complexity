@@ -251,7 +251,7 @@ Proof.
   induction cn.
   - cbn. firstorder. 
   - split.
-    + intros H cl [-> | H1]; apply evalCnf_step_inv in H; destruct H as (b1 & b2 & F1 & F2 & F3); simp_bool.
+    + intros H cl [-> | H1]; apply evalCnf_step_inv in H; destruct H as (b1 & b2 & F1 & F2 & F3); simp_bool'.
       rewrite IHcn in F1. now apply F1. 
     + intros H. cbn. destruct (evalClause a a0) eqn:eq. destruct b.
       1: apply IHcn; intros cl H1; firstorder. 
