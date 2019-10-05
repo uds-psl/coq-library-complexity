@@ -27,7 +27,6 @@ Proof. induction 1; now cbn. Qed.
 Definition LClique_verifier (input : Lgraph * nat) (cert : list Lnode) :=
   let (g, k) := input in isLClique g cert k. (*this includes that l is short enough*)
 
-
 Lemma size_nat_enc_mono (n  :nat) (m : nat) :
   n <= m -> size (enc n) <= size(enc m). 
 Proof. 

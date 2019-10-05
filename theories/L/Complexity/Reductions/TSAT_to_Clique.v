@@ -24,6 +24,17 @@ Definition labGraphInv (nodes : nat) (numcl : nat) := Fin.t numcl * Fin.t 3 -> F
 Definition literal_in_CNF (c : cnf) (l : literal) := exists cl, cl el c /\ l el cl.
 
 Definition literalsConflict (a b : literal) := match a, b with (s1, v1), (s2, v2) => s1 <> s2 /\ v1 = v2 end.
+
+Lemma literalsConflict_eval (s s' : bool) (n n' : nat) (a : assgn) : n' < |a| -> n < |a| -> (literalsConflict (s, n) (s', n') <-> (evalLiteral a (s, n) <> evalLiteral a (s', n') /\ n = n')). 
+Proof.
+  intros H1 H2. split.
+  - intros [F1 F2]. rewrite F2. cbn. apply (nth_error_Some a n') in H1. destruct (nth_error a n'). 2: split; auto.
+    split; try reflexivity. enough (Bool.eqb s b <> Bool.eqb s' b) by congruence. destruct s, b, s'; cbn; congruence.
+  - intros [F1 ->]. split. 2: reflexivity. cbn in F1. apply (nth_error_Some a n') in H1. destruct (nth_error a n').
+    2: auto. destruct s, s', b; cbn in F1; congruence. 
+Qed. 
+
+
 Definition literalsConflictb (a b : literal) := match a, b with (s1, v1), (s2, v2) => negb(Bool.eqb s1 s2) && Nat.eqb v1 v2 end. 
 
 Section enumLiteral.
@@ -50,6 +61,14 @@ Proof.
     destruct n. cbn in H3. inversion H.  specialize (enumerateLiteral'_Some H6 H2) as (l & H8). congruence. 
     unfold enumerateLiteral in H3. cbn in H3. apply IHc with (n := n). now inv H. lia. apply H3.
 Qed. 
+
+Lemma enumerateLiteral_Some_conv (c : cnf) : kCNF k c -> forall n n', (exists (l : literal), enumerateLiteral c (n, n') = Some l) -> n < |c| /\ n' < k. 
+Proof.
+  intros H n n' (l & H1). induction c. 
+  - cbn in H1. destruct n; cbn in H1; congruence.  
+  - cbn in H1. destruct n; cbn in H1. apply nth_error_Some_lt in H1. inv H. split; cbn; lia. 
+    (* inv H. cbn in IHc. destruct c. destruct n; cbn in H1; congruence. destruct (nth_error c n); try congruence.  *)
+Admitted. 
 
 Definition enumLiteral_different_clause (l1 : nat * nat) (l2 : nat * nat) := fst l1 <> snd l2. 
 End enumLiteral.
@@ -135,6 +154,60 @@ Section constructClique.
   Proof.
     (*by induction over the structure of the CNF again*)
   Admitted. 
+
+  Lemma construct_literals_no_conflict (a : assgn) (cn : cnf) : forall (pos pos' : nat * nat), pos el constructClique_cnf a cn -> pos' el constructClique_cnf a cn -> pos <> pos'
+    -> exists l l', Some l = enumerateLiteral cn pos /\ Some l' = enumerateLiteral cn pos' /\ not(literalsConflict l l').
+  Proof.
+    intros pos pos' H1 H2 H3. destruct (construct_literals_positive H1) as (l1 & F1 & F2). 
+    destruct (construct_literals_positive H2) as (l2 & G1 & G2). exists l1, l2. 
+    split; try split; firstorder. intros H. destruct l1, l2. rewrite literalsConflict_eval with (a := a)in H. 
+    now rewrite F2, G2 in H.
+    - now apply evalLiteral_varBound with (sign:= b0).
+    - now apply evalLiteral_varBound with (sign:=b). 
+  Qed. 
+
+  Lemma construct_literals_bound (a : assgn) (cn : cnf) (k : nat) : kCNF k cn -> forall (n m : nat), (n, m) el constructClique_cnf a cn -> n < |cn| /\ m < k. 
+  Proof.
+    intros H n m H1. apply enumerateLiteral_Some_conv. apply H.
+    destruct (construct_literals_positive H1) as (l & H2 & _). exists l; apply H2. 
+  Qed. 
+
+  Definition liftList (X : Type) (l : list X) : {a : list ({e | e el l}) | map (@proj1_sig X (fun a => a el l)) a = l}. 
+  Proof.
+    induction l. 
+    - exists []. now cbn. 
+    - destruct IHl as (l' & H). 
+      exists ((exist (fun x => x el a ::l) a (or_introl eq_refl)) :: (map (fun m => match m with exist _  elm p => exist (fun x => x el a ::l) elm (or_intror p) end) l')). 
+      cbn. enough (map (proj1_sig (P:=fun a0 : X => a = a0 \/ a0 el l))
+       (map
+          (fun
+             m : {elm : X |
+                 (fix In (a0 : X) (l0 : list X) {struct l0} : Prop :=
+                    match l0 with
+                    | [] => False
+                    | b :: m => b = a0 \/ In a0 m
+                    end) elm l} => let (elm, p) := m in exist (fun x : X => a = x \/ x el l) elm (or_intror p)) l')  = l) by now rewrite H0. revert l' H. induction l. 
+      + intros l' H. destruct l'. cbn. reflexivity. now destruct s.
+      + intros l' H. destruct l'. cbn in H; congruence. cbn. destruct s. cbn. cbn in H.
+        assert (x = a0) by congruence. rewrite H0. enough (map (proj1_sig (P:=fun a1 : X => a = a1 \/ a0 = a1 \/ a1 el l))
+       (map
+          (fun
+             m : {elm : X |
+                 a0 = elm \/
+                 (fix In (a1 : X) (l0 : list X) {struct l0} : Prop :=
+                    match l0 with
+                    | [] => False
+                    | b :: m => b = a1 \/ In a1 m
+                    end) elm l} =>
+           let (elm, p) := m in exist (fun x0 : X => a = x0 \/ a0 = x0 \/ x0 el l) elm (or_intror p)) l') = l) by now rewrite H1.  rewrite <- IHl with (l' := l').
+        Admitted. 
+
+  Definition constructClique_fin (a : assgn) (cn : cnf) (k : nat) : kCNF k cn -> list (Fin.t (|cn|) * Fin.t k). 
+  Proof. 
+    intros H. remember (constructClique_cnf a cn) as l. 
+    specialize (construct_literals_bound (a := a) H) as H'. rewrite <- Heql in H'.
+    induction l. exact []. 
+
 
 End constructClique.
 
