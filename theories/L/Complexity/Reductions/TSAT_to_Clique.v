@@ -1,4 +1,4 @@
-From Undecidability.L.Complexity Require Import NP Synthetic Problems.SAT Problems.Clique Problems.kSAT.
+From Undecidability.L.Complexity Require Import NP Synthetic Problems.SAT Problems.Clique Problems.kSAT MorePrelim.
 From Undecidability.L Require Import Tactics.LTactics.
 From Undecidability.L.Complexity Require Import Problems.LGraph.
 Require Import Coq.Init.Nat.
@@ -68,10 +68,28 @@ Proof.
     (* inv H. cbn in IHc. destruct c. destruct n; cbn in H1; congruence. destruct (nth_error c n); try congruence.  *)
 Admitted. 
 
-Definition enumLiteral_different_clause (l1 : nat * nat) (l2 : nat * nat) := fst l1 <> snd l2. 
+Definition enumLiteral_different_clause (l1 : nat * nat) (l2 : nat * nat) := fst l1 <> fst l2. 
 End enumLiteral.
 
 Definition isLabelling (c : cnf) (f : labGraph) (fInv : labGraphInv) := inverse f fInv /\ (forall n, n < 3 * (|c|) -> fst(f n) < (|c|) /\ snd (f n) < 3). 
+
+
+(*a few technical lemmas that are needed in order to work with the labelling function *)
+Lemma dupfree_map_bijection (X Y : Type) (l : list X) (f : X -> Y) (g : Y -> X) : inverse f g -> dupfree l <-> dupfree (map f l). 
+Proof.
+Admitted.
+
+Lemma map_el (X Y : Type) (l : list X) (f : X -> Y) (e : Y) : e el (map f l) -> exists e', e' el l /\ f e' = e. 
+Proof.
+  induction l. 
+  - cbn. intros []. 
+  - intros [H1 | H2].
+    + exists a. split; firstorder. 
+    + destruct (IHl H2) as (e' & F1 & F2). exists e'. split; firstorder. 
+Qed. 
+
+Lemma inverse_symmetric (X Y : Type) (f : X -> Y) (g : Y -> X) : inverse f g -> inverse g f.
+Proof. intros [H1 H2]. split; tauto. Qed.
 
 Lemma isLabelling_range_inv (c : cnf) (f : labGraph) (fInv : labGraphInv) : isLabelling c f fInv -> forall (n m : nat), n < (|c|) /\ m < 3 -> fInv (n, m) < 3 * (|c|).
 Proof.
@@ -185,24 +203,201 @@ Section constructClique.
 End constructClique.
 
 (*now the converse: from a clique, we can construct a satisfying assignment for the corresponding CNF*)
-(*TODO*)
+(*since the reduction relation redRel is inherently asymmetric, the structure of this proof is different from the proof above *)
+(*we need argue directly over the target CNF and use the facts given by redRel *)
 
-(*a few technical lemmas that are needed in order to work with the labelling function *)
-Lemma dupfree_map_bijection (X Y : Type) (l : list X) (f : X -> Y) (g : Y -> X) : inverse f g -> dupfree l <-> dupfree (map f l). 
-Proof.
-Admitted.
+  (*we proceed in the following way *)
+  (*1) graph g, cnf c, and clique cl; g, c satisfy redRel and the clique cl is a |c|-clique of that graph *) 
+  (*2) list of (clause, literal)-positions - non-conflicting and exactly one for every clause, i.e. also bounded *)
+  (*3) list of literals, mapped by enumLiteral from the positions - non-conflicting, if all are satisfied, then the cnf evals to true *)
+  (* the list in 3) can be interpreted as a list of fixed assignments list (nat * bool) -*)
+  (* - if all other variables are set arbitrarily, then the cnf evals to true*)
+  (*4) expand to complete assignment using cnf_maxVar - under this assignment, c evaluates to true *)
 
-Lemma map_el (X Y : Type) (l : list X) (f : X -> Y) (e : Y) : e el (map f l) -> exists e', e' el l /\ f e' = e. 
-Proof.
-  induction l. 
-  - cbn. intros []. 
-  - intros [H1 | H2].
-    + exists a. split; firstorder. 
-    + destruct (IHl H2) as (e' & F1 & F2). exists e'. split; firstorder. 
-Qed. 
+Section constructAssgnToPos.
+  (*1 -> 2*)
+  Variable (c : cnf) (g : Lgraph).
+  Variable (f : labGraph) (fInv: labGraphInv). 
 
-Lemma inverse_symmetric (X Y : Type) (f : X -> Y) (g : Y -> X) : inverse f g -> inverse g f.
-Proof. intros [H1 H2]. split; tauto. Qed.
+  Context (nc : fst g = 3 * |c|).
+  Context (kc : kCNF 3 c). 
+  Context (islab : isLabelling c f fInv). 
+  Context (red : forall (u v : nat), u < fst g /\ v < fst g -> (Lgraph_edge_in_dec g u v = true <->
+      (enumLiteral_different_clause (f u) (f v) /\
+      (forall (l1 l2 : literal), enumerateLiteral c (f u) = Some l1 ->
+                               enumerateLiteral c (f v) = Some l2 ->
+                               not (literalsConflict l1 l2))))). 
+
+  Definition toPos (cl : list Lnode) := map f cl. 
+
+  Lemma toPos_bounded (cl : list Lnode) : isLClique g cl (|c|) -> forall a b, (a, b) el toPos cl -> a < (|c|) /\ b < 3. 
+  Proof. 
+    intros H a b Hel. unfold toPos in Hel; apply map_el in Hel. destruct Hel as (node & Hel1 & Hel2). specialize (isLClique_node_in H Hel1) as Hel3.  
+    unfold Lgraph_node_in_dec in Hel3. destruct g. dec_bool. destruct islab. cbn [fst] in nc; rewrite <- nc in H1. specialize (H1 node). 
+    rewrite Hel2 in H1. apply H1. lia. 
+  Qed. 
+
+  Lemma toPos_exists_literal (cl : list Lnode) : isLClique g cl (|c|) -> forall pos, pos el toPos cl -> exists l, enumerateLiteral c pos = Some l.
+  Proof.
+    intros H (a & b) Hel. apply enumerateLiteral_Some with (k:= 3).  apply kc. 
+    all: now specialize (toPos_bounded H Hel). 
+  Qed. 
+
+  Lemma toPos_no_conflict (cl : list Lnode) : isLClique g cl (|c|) -> forall pos1 pos2, pos1 el toPos cl -> pos2 el toPos cl -> pos1 <> pos2 ->
+                                              enumLiteral_different_clause pos1 pos2 /\ exists l1 l2, enumerateLiteral c pos1 = Some l1 /\ enumerateLiteral c pos2 = Some l2 /\ not(literalsConflict l1 l2). 
+  Proof. 
+    intros H (cl1 & lit1) (cl2 & lit2) H1 H2 H3.
+    unfold toPos in H1, H2. destruct (map_el H1) as (node1 & D1 & D2). destruct (map_el H2) as (node2 & G1 & G2). 
+    destruct (toPos_exists_literal H H1) as (l1 & F1). destruct (toPos_exists_literal H H2) as (l2 & F2). 
+    assert (node1 < fst g /\ node2 < fst g). 
+    { specialize (isLClique_node_in H D1) as E1. specialize (isLClique_node_in H G1) as E2. unfold Lgraph_node_in_dec in E1, E2. destruct g.  dec_bool. }
+    specialize (red H0); clear H0.
+    destruct (proj1(isLClique_explicit_correct g cl (|c|)) H) as (_ & _ & _ & edge_in).
+    assert (node1 <> node2). { contradict H3. rewrite <-D2, <- G2. now rewrite H3. }
+    specialize (edge_in node1 node2 H0 D1 G1). apply red in edge_in.    
+    destruct edge_in as (edge_in1 & edge_in2).
+    split.
+    - now rewrite <- D2, <- G2. 
+    - exists l1, l2. split; try split; try tauto. now apply edge_in2. 
+  Qed. 
+
+  Lemma toPos_for_all_clauses (cl : list Lnode) : isLClique g cl (|c|) -> forall k, k < (|c|) -> exists l, (k, l) el toPos cl. 
+  Proof. 
+    intros H k H1. 
+    (*proof idea: pigeon hole principle. we have a |c|-clique in a graph with 3 * |c| nodes, and we only have edges between vertices of different clauses *)
+  Admitted. 
+End constructAssgnToPos. 
+
+Section constructAssgnToLiterals. 
+  Variable (c : cnf).
+  Context (kc : kCNF 3 c). 
+
+  Definition toLiterals' (posl : list (nat * nat)) := map (enumerateLiteral c) posl. 
+
+  Lemma toLiterals'_Some (posl : list (nat * nat)) : (forall a b, (a, b) el posl -> a < (|c|) /\ b < 3) -> forall l', l' el toLiterals' posl -> exists l, l' = Some l.
+  Proof.
+    intros H l' Hel. 
+    unfold toLiterals' in Hel. destruct (map_el Hel) as (pos & H1 & H2). destruct pos as (a & b). specialize (H a b H1). 
+    destruct (enumerateLiteral_Some kc (proj1 H) (proj2 H)) as (l & H0). exists l. now rewrite <- H2, H0.
+  Qed. 
+
+  (*strip away the Some wrappers*)
+  Definition toLiterals (posl : list (nat * nat)) := fold_right (fun (a : option (bool * nat)) acc => match a with Some a' => a'::acc | _ => acc end) [] (toLiterals' posl). 
+
+  Proposition toLiterals_enum (posl : list (nat * nat)) (a : nat * nat):  (forall a b, (a, b) el posl -> a < (|c|) /\ b < 3) -> a el posl -> enumerateLiteral c a <> None. 
+  Proof. 
+    intros H Hel F. enough (exists l, enumerateLiteral c a = Some l) by (destruct H0; congruence). 
+    apply toLiterals'_Some with (posl := posl). apply H.
+    unfold toLiterals'. now apply in_map. 
+  Qed. 
+
+  Lemma toLiterals_Some (posl :  (list (nat * nat))) : (forall a b, (a, b) el posl -> a < (|c|) /\ b < 3) -> map Some (toLiterals posl) = toLiterals' posl. 
+  Proof.
+    intros H1.
+    induction posl. 
+    - now cbn. 
+    - cbn. destruct (enumerateLiteral c a) eqn:H. cbn. unfold toLiterals, toLiterals' in IHposl. rewrite IHposl; firstorder. 
+      now specialize (toLiterals_enum H1 (or_introl eq_refl)). 
+  Qed. 
+
+  Lemma toLiterals_inv (posl: (list (nat * nat))) : (forall a b, (a, b) el posl -> a < (|c|) /\ b < 3) -> forall l, l el toLiterals posl -> exists pos, pos el posl /\ enumerateLiteral c pos = Some l. 
+  Proof.
+    intros H l Hel. induction posl. 
+    - destruct Hel.
+    - cbn in Hel. destruct (enumerateLiteral c a) eqn:H1. 2: now specialize (toLiterals_enum H (or_introl eq_refl)). 
+      destruct Hel as [-> | Hel]. 
+      + now exists a. 
+      + destruct (IHposl).
+        * firstorder. 
+        * apply Hel. 
+        * now exists x. 
+  Qed. 
+
+  Lemma toLiterals_el (posl : list (nat * nat)) (p : literal) : Some p el toLiterals' posl -> p el toLiterals posl.
+  Proof.
+    induction posl. 
+    - now cbn. 
+    - intros [H | H]. 
+      + cbn. rewrite H; now left.
+      + cbn. destruct (enumerateLiteral c a); [ right | ]; now apply IHposl. 
+  Qed. 
+    
+  (*the no-conflict property transfers from posl to toLiterals posl *)
+  Lemma toLiterals_no_conflict (posl : list (nat * nat)): (forall a b, (a, b) el posl -> a < (|c|) /\ b < 3) -> 
+    (forall pos1 pos2, pos1 el posl -> pos2 el posl -> (pos1 <> pos2 -> enumLiteral_different_clause pos1 pos2 /\
+     exists l1 l2, enumerateLiteral c pos1 = Some l1 /\ enumerateLiteral c pos2 = Some l2 /\ not(literalsConflict l1 l2) ))
+        -> (forall l1 l2, l1 el toLiterals posl -> l2 el toLiterals posl -> not (literalsConflict l1 l2)). 
+  Proof. 
+    intros H0 H l1 l2 H1 H2. 
+    specialize (toLiterals_inv H0 H1) as (pos1 & F1 & F2). specialize (toLiterals_inv H0 H2) as (pos2 & E1 & E2). 
+    destruct (pair_eqb Nat.eqb Nat.eqb pos1 pos2) eqn:eq. 
+    + rewrite <- pair_eqb_correct in eq. rewrite eq in F2. assert (l1 = l2) by congruence. unfold literalsConflict.
+      destruct l1, l2. intros H'. assert (b = b0) by congruence. tauto. all: apply nat_eqb_correct. 
+    + assert (pos1 <> pos2). {intros H'; rewrite pair_eqb_correct in H'. 2-3: apply nat_eqb_correct. congruence. }
+      clear eq. destruct (H pos1 pos2 F1 E1 H3) as (_ & (lit1 & lit2 & G1 & G2 & G3)). 
+      assert (lit1 = l1) by congruence. assert (lit2 = l2) by congruence. now rewrite <- H4, <- H5. 
+   Qed. 
+
+  (* satisfying the literal list given by toLiterals is enough to satisfy the cnf*)
+
+  Lemma toLiterals_eval_cnf (posl : list (nat * nat)) (a : assgn):
+    (forall a b, (a, b) el posl -> a < (|c|) /\ b < 3) 
+    -> (forall k, k < (|c|) -> exists l, (k, l) el posl)
+    -> (forall l, l el toLiterals posl -> evalLiteral a l = Some true)
+    -> varBound_cnf (|a|) c -> evalCnf a c = Some true. 
+  Proof. 
+    intros H0 H1 H2 H3. 
+    apply evalCnf_clause_iff.
+    (*we modify the statement in order to get additional information on the index of the clause *)
+    enough (forall n, n < |c| -> exists cl, nth_error c n = Some cl /\ evalClause a cl = Some true).
+    {
+      intros cl Hel. apply In_nth_error in Hel. destruct Hel as (clpos & Hel).
+      specialize (nth_error_Some_lt Hel) as Hel'. 
+      specialize (H clpos Hel') as (cl' & F1 & F2). assert (cl = cl') by congruence. now rewrite H. 
+    }
+    intros clpos Hclpos. 
+    destruct (nth_error c clpos) as [cl | ] eqn:H4. 
+    2: { specialize (proj2 (nth_error_Some c clpos) Hclpos) as H5; congruence. }
+    exists cl; split. reflexivity. 
+    apply evalClause_literal_iff. split. 2: {rewrite varBound_cnf_iff in H3. apply H3. now apply nth_error_In with (n := clpos).  } 
+    specialize (H1 clpos Hclpos) as (lpos & Hlpos). 
+    assert (lpos < 3) by firstorder. assert (|cl| = 3).
+    {apply kCNF_clause_length with (c:= c); [assumption | now apply nth_error_In with (n:= clpos) ].  }
+    rewrite <- H1 in H; clear H1. 
+    destruct (nth_error cl lpos) eqn:lEl. 2: { specialize (proj2 (nth_error_Some cl lpos) H); congruence. }
+    exists p. split; [now apply nth_error_In with (n:= lpos) | ]. 
+    apply H2. 
+    assert (enumerateLiteral c (clpos, lpos) el toLiterals' posl ). 
+    { apply in_map_iff. exists (clpos, lpos). tauto.  }
+    assert (enumerateLiteral c (clpos, lpos) = Some (p)). 
+    { unfold enumerateLiteral. rewrite H4. unfold enumerateLiteral'. now apply lEl. }
+    rewrite H5 in H1; clear H5. now apply toLiterals_el. 
+  Qed. 
+End constructAssgnToLiterals.  
+
+(*3 -> 4*)
+Section constructAssgnComplete.
+  Fixpoint lookup (n: nat) (l : list literal) :=
+    match l with [] => None
+            | ((a, b)::ls) => if Nat.eqb n b then Some a else lookup n ls
+    end. 
+  Fixpoint expandAssignment (largestVar : nat) (partial : list literal) :=
+    (match lookup largestVar partial with None => false | Some a => a end) :: (match largestVar with 0 => [] | S l => expandAssignment l partial end). 
+
+  Lemma expandAssignment_partial (largestVar : nat) (partial : list literal) :
+    forall l, l el partial -> evalLiteral (expandAssignment largestVar partial) l = Some true.
+  Proof.
+    intros l Hel. 
+  Admitted. 
+
+  Lemma expandAssignment_correct (c : cnf) (partialAssign : list literal) (n : nat):
+    varBound_cnf n c -> (forall (a : assgn), (forall l, l el partialAssign -> evalLiteral a l = Some true) -> varBound_cnf (|a|) c -> evalCnf a c = Some true)
+    -> evalCnf (expandAssignment n partialAssign) c = Some true. 
+  Proof.
+  Admitted. 
+
+End constructAssgnComplete. 
+      
 
 (*now the key result: if a reduction function satisfies the redRel, then it admits a "correct" reduction from SAT to LClique *)
 Lemma redRel_reduces (c : cnf) (cl : Lgraph * nat) : redRel c cl -> (SAT c <-> LClique cl ).

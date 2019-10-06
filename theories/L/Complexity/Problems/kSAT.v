@@ -28,6 +28,13 @@ Qed.
 Lemma kCNF_kge (k : nat) (c : cnf) : kCNF k c -> k > 0.
 Proof. induction 1; assumption. Qed.
 
+Lemma kCNF_clause_length (k : nat) (c : cnf) : kCNF k c -> forall cl, cl el c -> |cl| =k.
+Proof.
+  induction 1. 
+  - intros cl [].
+  - intros cl' [-> | Hel]; [assumption | now apply IHkCNF]. 
+Qed. 
+
 Instance term_kCNF_decb_pred : computableTime' kCNF_decb_pred (fun k _ => (1, fun cl _ => (11 * (|cl|) + 17 * min k (|cl|) + 23, tt))).  
 Proof.
   extract. 

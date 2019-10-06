@@ -20,6 +20,17 @@ Inductive varBound_cnf (n : nat) : cnf -> Prop :=
    | varBound_cnfB : varBound_cnf n [] 
    | varBound_cnfS : forall cl c, varBound_clause n cl -> varBound_cnf n c -> varBound_cnf n (cl :: c).  
 
+Lemma varBound_cnf_iff (n : nat) (c : cnf) : varBound_cnf n c <-> forall (cl : clause), cl el c -> varBound_clause n cl.
+Proof.
+  split.
+  - induction 1. 
+    + intros cl [].
+    + intros cl' [-> |Hel]. assumption. now apply IHvarBound_cnf. 
+  - intros H. induction c; constructor.
+    + now apply H. 
+    + apply IHc. firstorder.
+Qed. 
+
 (*Assignments as lists of natural numbers: variable i is mapped to value list[i] *)
 Notation assgn := (list bool). 
 
@@ -414,7 +425,7 @@ Proof.
     + intros n n' H. cbn. apply IHc. unfold step; lia. 
 Qed. 
 
-(*a verifier for SAT. The condition |l| <= S(cnf_maxVar cn) is needed in order to make sure that it rejects certificates that are too long*)
+(*a verifier for SAT. The condition |a| <= S(cnf_maxVar cn) is needed in order to make sure that it rejects certificates that are too long*)
 Definition sat_verifier (cn : cnf) (a : assgn) :=
   evalCnf a cn = Some true /\ |a| <= S(cnf_maxVar cn).
 
