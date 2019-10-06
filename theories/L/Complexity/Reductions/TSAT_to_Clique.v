@@ -71,8 +71,12 @@ Admitted.
 Definition enumLiteral_different_clause (l1 : nat * nat) (l2 : nat * nat) := fst l1 <> fst l2. 
 End enumLiteral.
 
-Definition isLabelling (c : cnf) (f : labGraph) (fInv : labGraphInv) := inverse f fInv /\ (forall n, n < 3 * (|c|) -> fst(f n) < (|c|) /\ snd (f n) < 3). 
+Definition inverseOn (X Y : Type) (f : X -> Y) (g : Y -> X) (p : X -> Prop) (q : Y -> Prop) :=
+  (forall x, p x -> q (f x) /\ x = g(f x)) /\ (forall y, q y -> p (g y) /\ y = f(g y)). 
+Definition isLabelling (c : cnf) (f : labGraph) (fInv : labGraphInv) :=
+  inverseOn f fInv (fun n => n < 3 * |c|) (fun n => let (a, b):= n in a < (|c|) /\ b < 3). 
 
+(** * TODO: adapt the below proofs to the new isLabelling definition *)
 
 (*a few technical lemmas that are needed in order to work with the labelling function *)
 Lemma dupfree_map_bijection (X Y : Type) (l : list X) (f : X -> Y) (g : Y -> X) : inverse f g -> dupfree l <-> dupfree (map f l). 
@@ -384,20 +388,53 @@ Section constructAssgnComplete.
   Fixpoint expandAssignment (largestVar : nat) (partial : list literal) :=
     (match lookup largestVar partial with None => false | Some a => a end) :: (match largestVar with 0 => [] | S l => expandAssignment l partial end). 
 
-  Lemma expandAssignment_partial (largestVar : nat) (partial : list literal) :
+  Lemma expandAssignment_length (n : nat) (partial : list literal) : |expandAssignment n partial| = S n.
+  Proof.
+    induction n. 
+    - now cbn. 
+    - cbn. now rewrite IHn. 
+  Qed. 
+
+  Lemma expandAssignment_partial (largestVar : nat) (partial : list literal) : varBound_clause largestVar partial ->
     forall l, l el partial -> evalLiteral (expandAssignment largestVar partial) l = Some true.
   Proof.
-    intros l Hel. 
+
   Admitted. 
 
   Lemma expandAssignment_correct (c : cnf) (partialAssign : list literal) (n : nat):
-    varBound_cnf n c -> (forall (a : assgn), (forall l, l el partialAssign -> evalLiteral a l = Some true) -> varBound_cnf (|a|) c -> evalCnf a c = Some true)
+    varBound_cnf (S n) c -> (forall (a : assgn), (forall l, l el partialAssign -> evalLiteral a l = Some true) -> varBound_cnf (|a|) c -> evalCnf a c = Some true)
     -> evalCnf (expandAssignment n partialAssign) c = Some true. 
   Proof.
   Admitted. 
 
 End constructAssgnComplete. 
       
+Section constructAssgn.
+  Variable (c : cnf) (g : Lgraph).
+  Variable (f : labGraph) (fInv: labGraphInv). 
+
+  Context (nc : fst g = 3 * |c|).
+  Context (kc : kCNF 3 c). 
+  Context (islab : isLabelling c f fInv). 
+  Context (red : forall (u v : nat), u < fst g /\ v < fst g -> (Lgraph_edge_in_dec g u v = true <->
+      (enumLiteral_different_clause (f u) (f v) /\
+      (forall (l1 l2 : literal), enumerateLiteral c (f u) = Some l1 ->
+                               enumerateLiteral c (f v) = Some l2 ->
+                               not (literalsConflict l1 l2))))). 
+
+
+  Definition clique_to_assgn (cl : list Lnode) := expandAssignment (cnf_maxVar c) (toLiterals c (toPos f cl)).
+
+  Lemma assgn_satisfies (cl : list Lnode) : isLClique g cl (|c|) -> evalCnf (clique_to_assgn cl) c = Some true.
+  Proof. 
+    intros Hclique. 
+    unfold clique_to_assgn. apply expandAssignment_correct. 1: now apply cnf_maxVar_bound. 
+    intros a. apply toLiterals_eval_cnf. 1: now apply kc. 
+    - apply toPos_bounded with (g := g) (fInv := fInv); [apply nc | apply islab | apply red | apply Hclique]. 
+    - apply toPos_for_all_clauses with (g := g) (fInv := fInv); [apply nc | apply kc | apply islab | apply red | apply Hclique]. 
+  Qed. 
+End constructAssgn. 
+
 
 (*now the key result: if a reduction function satisfies the redRel, then it admits a "correct" reduction from SAT to LClique *)
 Lemma redRel_reduces (c : cnf) (cl : Lgraph * nat) : redRel c cl -> (SAT c <-> LClique cl ).
@@ -431,10 +468,13 @@ Proof.
          rewrite (match labinv with conj inve _ => match inve with conj _ re => re end end) in E1.
          rewrite (match labinv with conj inve _ => match inve with conj _ re => re end end) in E2. 
          destruct (construct_literals_no_conflict G1 D1 H3) as (l1' & l2' & H4 & H5 & H6).  rewrite <- H4 in E1. rewrite <- H5 in E2. 
-         easy. 
-  +  
+         easy.
+  + destruct cl as (g & k). intros (cl & Hclique).
+        destruct g as (n, e). destruct H as (nc & kc &kcnf & (f & fInv & islab & red)).  
+        exists (clique_to_assgn c f cl).
+        now apply assgn_satisfies with (g:= (n, e)) (fInv := fInv). 
+Qed. 
 
-Admitted. 
 
 (* I am dumb. This obviously can't be extracted...*)
 (* Definition redGraph (c :cnf) : UndirectedGraph. *)
@@ -481,44 +521,49 @@ Definition redGraph (c : cnf) : Lgraph := if kCNF_decb 3 c then (3 * |c|, makeEd
 
 Definition reduction (c : cnf) : Lgraph * nat := (redGraph c, |c|). 
 
-Definition enumerateLiteral' (c : clause) (n : nat) := nth_error c n.
-Definition enumerateLiteral (c : cnf) (k : nat) (n : nat) := match nth_error c (n / k) with Some cl => enumerateLiteral' cl (n mod k) 
-                                                                           | None => None
-                                                                            end.
+Definition labF (n : nat) := (n /3, n mod 3). 
+Definition labFInv (n : nat * nat) := (fst n * 3 + snd n). 
 
-Lemma enumerateLiteral_clstep (c : cnf) (cl :clause) (k : nat) (n : nat) : kCNF k (cl ::c) -> enumerateLiteral (cl::c) k (n + k) = enumerateLiteral c k n. 
-Proof. 
-  intros H.
-  unfold enumerateLiteral. cbn.
-  replace k with (1*k) at 1 by lia. rewrite Nat.div_add. cbn. replace (n/k + 1) with (S (n/k)) by lia. 
-  replace (n+k) with (n + 1 * k) by lia. rewrite Nat.mod_add.
-  reflexivity. all: apply kCNF_kge in H; lia. 
-Qed.
+Lemma labF_isLabelling (c : cnf) : isLabelling c labF labFInv. 
+  split. 
+  - split.
+    + intros n. rewrite Nat.div_mod with (y:= 3). 2: congruence. 
+      unfold labF, labFInv. cbn [fst snd]. lia. 
+    + intros n. unfold labF, labFInv. destruct n as (a & b). cbn [fst snd]. 
 
-Lemma enumerateLiteral'_Some (c : clause) (k : nat) : |c| = k -> forall n, n < k -> exists (l : literal), enumerateLiteral' c n = Some l.
-Proof. 
-  intros H n H1. 
-  unfold enumerateLiteral'. rewrite <- H in H1. destruct (Prelim.nthe_length H1). now exists x.
-Qed.                                                                                      
+(* Lemma enumerateLiteral_clstep (c : cnf) (cl :clause) (k : nat) (n : nat) : kCNF k (cl ::c) -> enumerateLiteral (cl::c) k (n + k) = enumerateLiteral c k n.  *)
+(* Proof.  *)
+(*   intros H. *)
+(*   unfold enumerateLiteral. cbn. *)
+(*   replace k with (1*k) at 1 by lia. rewrite Nat.div_add. cbn. replace (n/k + 1) with (S (n/k)) by lia.  *)
+(*   replace (n+k) with (n + 1 * k) by lia. rewrite Nat.mod_add. *)
+(*   reflexivity. all: apply kCNF_kge in H; lia.  *)
+(* Qed. *)
 
-Lemma enumerateLiteral_Some (c : cnf) (k : nat) :   kCNF k c -> forall n, n < |c| * k -> exists (l : literal), enumerateLiteral c k n = Some l.
-Proof.
-  intros H n H1. specialize (kCNF_kge H) as H0. destruct (enumerateLiteral c k n) eqn:H2. now exists p. 
-  exfalso. revert n H1 H2. induction c. 
-  + intros n H1 H2. cbn in H1; lia. 
-  + intros n H1 H2. cbn in H1. inv H.
-    destruct (le_lt_dec (|a|) n).
-    - apply (IHc H6 (n - |a|)). lia. replace n with ((n - |a|) + |a|) in H2.  
-      rewrite (enumerateLiteral_clstep (c:= c) (cl:= a)) in H2. apply H2.
-      now constructor. lia. 
-    - clear IHc. unfold enumerateLiteral in H2. replace (n/(|a|)) with 0 in H2. cbn in H2.
-      assert (n mod (|a|) < |a|). { rewrite Nat.mod_small; auto. }
-      destruct (enumerateLiteral'_Some (c := a) (n := n mod (|a|)) eq_refl H) as (l' & H'). 
-      congruence.
-      now rewrite Nat.div_small. 
-Qed.
+(* Lemma enumerateLiteral'_Some (c : clause) (k : nat) : |c| = k -> forall n, n < k -> exists (l : literal), enumerateLiteral' c n = Some l. *)
+(* Proof.  *)
+(*   intros H n H1.  *)
+(*   unfold enumerateLiteral'. rewrite <- H in H1. destruct (Prelim.nthe_length H1). now exists x. *)
+(* Qed.                                                                                       *)
 
-Definition enumLiteral_different_clause (c : cnf) (k : nat) (u : nat) (v : nat) := (u / k) <> (v /k).
+(* Lemma enumerateLiteral_Some (c : cnf) (k : nat) :   kCNF k c -> forall n, n < |c| * k -> exists (l : literal), enumerateLiteral c k n = Some l. *)
+(* Proof. *)
+(*   intros H n H1. specialize (kCNF_kge H) as H0. destruct (enumerateLiteral c k n) eqn:H2. now exists p.  *)
+(*   exfalso. revert n H1 H2. induction c.  *)
+(*   + intros n H1 H2. cbn in H1; lia.  *)
+(*   + intros n H1 H2. cbn in H1. inv H. *)
+(*     destruct (le_lt_dec (|a|) n). *)
+(*     - apply (IHc H6 (n - |a|)). lia. replace n with ((n - |a|) + |a|) in H2.   *)
+(*       rewrite (enumerateLiteral_clstep (c:= c) (cl:= a)) in H2. apply H2. *)
+(*       now constructor. lia.  *)
+(*     - clear IHc. unfold enumerateLiteral in H2. replace (n/(|a|)) with 0 in H2. cbn in H2. *)
+(*       assert (n mod (|a|) < |a|). { rewrite Nat.mod_small; auto. } *)
+(*       destruct (enumerateLiteral'_Some (c := a) (n := n mod (|a|)) eq_refl H) as (l' & H').  *)
+(*       congruence. *)
+(*       now rewrite Nat.div_small.  *)
+(* Qed. *)
+
+(* Definition enumLiteral_different_clause (c : cnf) (k : nat) (u : nat) (v : nat) := (u / k) <> (v /k). *)
 
 Lemma reduction_sat_redRel (c : cnf) : redRel c (reduction c). 
 Proof. 

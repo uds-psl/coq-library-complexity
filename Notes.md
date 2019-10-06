@@ -5,7 +5,7 @@ Technische Probleme:
 * Kann man solverec einfach erweitern (Hint Database / SMPL / o.ä.) ?
   - Konkret um Möglichkeiten, mit Monotonizität umzugehen, sowie mit Add Commutativity in Funktionsargumenten
 
-* Gibt es bestehende Taktiken, die versuchen, Ungleichungen zu kürzen?
+* Best Practices, um neue Prelim-Sachen hinzuzufügen (am besten ohne dabei alles neu kompilieren zu müssen)
 
 
 Technische Wunschliste: 
