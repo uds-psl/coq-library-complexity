@@ -72,17 +72,25 @@ Definition enumLiteral_different_clause (l1 : nat * nat) (l2 : nat * nat) := fst
 End enumLiteral.
 
 Definition isLabelling (c : cnf) (f : labGraph) (fInv : labGraphInv) := inverse f fInv /\ (forall n, n < 3 * (|c|) -> fst(f n) < (|c|) /\ snd (f n) < 3). 
+
+Lemma isLabelling_range_inv (c : cnf) (f : labGraph) (fInv : labGraphInv) : isLabelling c f fInv -> forall (n m : nat), n < (|c|) /\ m < 3 -> fInv (n, m) < 3 * (|c|).
+Proof.
+  intros [H1 H2]. intros n m [F1 F2]. unfold inverse in H1.
+  (*would need cardinality arguments at this point *)
+Admitted. 
+
 (* the reduction relation *)
 Definition redRel (c : cnf) (cl : Lgraph * nat) := let (g, k) := cl in
-                                                 let (n, e) := g in n = (3 * |c|) /\  
+                                                 let (n, e) := g in n = (3 * |c|) /\ k = |c| /\ kCNF 3 c /\ 
   exists (labF : labGraph) (labFInv : labGraphInv), isLabelling c labF labFInv /\
-     (forall (u v : nat), u < n /\ v < n -> (Lgraph_edge_in_dec (n, e) u v <->
+     (forall (u v : nat), u < n /\ v < n -> (Lgraph_edge_in_dec (n, e) u v = true <->
       (enumLiteral_different_clause (labF u) (labF v) /\
       (forall (l1 l2 : literal), enumerateLiteral c (labF u) = Some l1 ->
                                enumerateLiteral c (labF v) = Some l2 ->
                                not (literalsConflict l1 l2))))).
 
 (*construction of a set of literal indices, one for each clause, that is satisfied for an assignment*)
+(*from this, we directly get a clique in a suitable reduction graph*)
 Section constructClique.
   Fixpoint constructClique_clause' (a : assgn) (cl_index : nat) (cl : clause) (lit_index : nat):=
   match cl with [] => None
@@ -161,21 +169,76 @@ Section constructClique.
     - now apply evalLiteral_varBound with (sign:=b). 
   Qed. 
 
+  Lemma construct_literals_different_clause (a : assgn) (cn : cnf) : forall (pos pos' : nat * nat), pos el constructClique_cnf a cn -> pos' el constructClique_cnf a cn -> pos <> pos' -> enumLiteral_different_clause pos pos'. 
+  Proof. 
+  Admitted. 
+
   Lemma construct_literals_bound (a : assgn) (cn : cnf) (k : nat) : kCNF k cn -> forall (n m : nat), (n, m) el constructClique_cnf a cn -> n < |cn| /\ m < k. 
   Proof.
     intros H n m H1. apply enumerateLiteral_Some_conv. apply H.
     destruct (construct_literals_positive H1) as (l & H2 & _). exists l; apply H2. 
   Qed. 
+
+  Lemma construct_dupfree ( a : assgn) (cn : cnf) : dupfree(constructClique_cnf a cn). 
+  Proof.
+  Admitted. 
 End constructClique.
 
+(*now the converse: from a clique, we can construct a satisfying assignment for the corresponding CNF*)
+(*TODO*)
+
+(*a few technical lemmas that are needed in order to work with the labelling function *)
+Lemma dupfree_map_bijection (X Y : Type) (l : list X) (f : X -> Y) (g : Y -> X) : inverse f g -> dupfree l <-> dupfree (map f l). 
+Proof.
+Admitted.
+
+Lemma map_el (X Y : Type) (l : list X) (f : X -> Y) (e : Y) : e el (map f l) -> exists e', e' el l /\ f e' = e. 
+Proof.
+  induction l. 
+  - cbn. intros []. 
+  - intros [H1 | H2].
+    + exists a. split; firstorder. 
+    + destruct (IHl H2) as (e' & F1 & F2). exists e'. split; firstorder. 
+Qed. 
+
+Lemma inverse_symmetric (X Y : Type) (f : X -> Y) (g : Y -> X) : inverse f g -> inverse g f.
+Proof. intros [H1 H2]. split; tauto. Qed.
+
+(*now the key result: if a reduction function satisfies the redRel, then it admits a "correct" reduction from SAT to LClique *)
 Lemma redRel_reduces (c : cnf) (cl : Lgraph * nat) : redRel c cl -> (SAT c <-> LClique cl ).
 Proof. 
   split. 
   + intros (a & H1). destruct cl as (g & k). destruct g. cbn in H.
-    destruct H as (neq & labF & labFInv & labinv & H2).
-    (* exists (constructClique_cnf a c).  *)
-    admit.
-  + destruct cl as (g, k). destruct g as (n, e). intros (clique & H1).
+    destruct H as (neq & keq & tcnf & labF & labFInv & labinv & H2).
+    exists (map labFInv (constructClique_cnf a c)).
+    rewrite isLClique_explicit_correct. 
+    split; try split; try split. 
+    - rewrite map_length. rewrite construct_length. 2: apply H1. now rewrite keq. 
+    - clear H2. rewrite <- dupfree_map_bijection. 
+      2: {apply inverse_symmetric. now destruct labinv. }
+      apply construct_dupfree. 
+    - intros node H.
+      enough (node < 3 * |c|) by ( unfold Lgraph_node_in_dec; apply leb_correct; lia ).
+      destruct (map_el H) as (nodepos & F1 & F2). rewrite <- F2. destruct nodepos as (clpos & litpos).
+      apply isLabelling_range_inv with (f:=labF); [apply labinv | apply construct_literals_bound with (a:=a); [apply tcnf | apply F1]]. 
+    - intros u v F1 F2 F3. destruct (map_el F2) as ((ucl & ulit) & G1 & G2). destruct (map_el F3) as ((vcl & vlit) & D1 & D2). 
+      specialize (H2 u v). change (n = 3 * (|c|)) in neq. 
+      assert (u < n). { rewrite neq. rewrite <- G2. apply (isLabelling_range_inv labinv). apply construct_literals_bound with (a:=a);
+                      [ apply tcnf | apply G1]. }
+      assert (v < n). {rewrite neq. rewrite <- D2. apply (isLabelling_range_inv labinv). apply construct_literals_bound with (a:=a);
+                       [apply tcnf | apply D1]. }
+      specialize (H2 (conj H H0)).  cbn. apply H2. assert ((ucl, ulit) <> (vcl, vlit)).
+      {contradict F1. rewrite <- G2, <- D2. now rewrite F1. }
+      split.
+      -- rewrite <- G2, <- D2. repeat rewrite (match labinv with conj inve _ => match inve with conj _ re => re end end).
+         now apply (construct_literals_different_clause G1 D1). 
+      -- intros l1 l2 E1 E2. rewrite <- G2 in E1. rewrite <- D2 in E2.
+         rewrite (match labinv with conj inve _ => match inve with conj _ re => re end end) in E1.
+         rewrite (match labinv with conj inve _ => match inve with conj _ re => re end end) in E2. 
+         destruct (construct_literals_no_conflict G1 D1 H3) as (l1' & l2' & H4 & H5 & H6).  rewrite <- H4 in E1. rewrite <- H5 in E2. 
+         easy. 
+  +  
+
 Admitted. 
 
 (* I am dumb. This obviously can't be extracted...*)

@@ -11,9 +11,6 @@ Inductive isLClique (g : Lgraph) : list Lnode -> nat -> Prop :=
 | isLCliqueS (cl : list Lnode) (node : Lnode) (k : nat) : isLClique g cl k ->
     (not (node el cl)) -> Lgraph_node_in_dec g node = true -> (forall (node' : Lnode), node' el cl -> Lgraph_edge_in_dec g node node' = true) -> isLClique g (node :: cl) (S k).                                                     
 
-Definition LClique (input : Lgraph * nat) :=
-  let (g, k) := input in exists cl, @isLClique g cl k. 
-
 Lemma isLClique_node_in (g : Lgraph) (k : nat) (cl : list Lnode) : isLClique g cl k -> forall n, n el cl -> Lgraph_node_in_dec g n = true. 
 Proof.
   induction 1. 
@@ -23,6 +20,39 @@ Qed.
 
 Lemma isLClique_length (g : Lgraph) (k : nat) (cl : list Lnode) : isLClique g cl k -> k = (|cl|).
 Proof. induction 1; now cbn. Qed. 
+
+Definition isLClique_explicit (g : Lgraph) (cl : list Lnode) (k : nat) :=
+  |cl| = k /\ dupfree cl /\ (forall n, n el cl -> Lgraph_node_in_dec g n = true) /\ (forall (n m : nat), n <> m -> n el cl -> m el cl -> Lgraph_edge_in_dec g n m = true).
+Lemma isLClique_explicit_correct (g : Lgraph) (cl : list Lnode) (k : nat) :
+  isLClique g cl k <-> isLClique_explicit g cl k. 
+Proof.
+  split.
+  - induction 1.
+    + split; try split. constructor. split. intros n []. intros _ n m _ []. 
+    + destruct IHisLClique as [IH1 [IH2 [IH3 IH4]]]. split; try split. now rewrite <- IH1.  
+      now constructor. split.
+      -- intros n [-> | H3]. apply H1. now apply IH3. 
+      -- intros n m H5 [-> | F1] [-> | F2].  
+         * congruence.
+         * now apply H2. 
+         * destruct g as (nodes & e).
+           destruct (Lgraph_edge_in_dec_correct (nodes, e) m n) as [H6 _].
+           specialize (H6 (H2 n F1)). apply (Lgraph_edge_in_dec_correct (nodes, e) n m). tauto. 
+         * now apply IH4.  
+  - revert k. induction cl.
+    * intros k H. destruct H as [H1 [H2 [H3 H4]]]. cbn in H1; rewrite <- H1. constructor.
+    * intros [] [H1 [H2 [H3 H4]]]. 
+      -- cbn in H1. congruence. 
+      -- constructor. apply IHcl. split. cbn in H1. lia. 
+         split. now inv H2.
+         split. intros m H. now apply H3. 
+         intros m1 m2 F1 F2 F3. now apply H4.
+         now inv H2. now apply H3. 
+         intros m H. apply H4. inv H2. now intros ->. now left. now right. 
+Qed. 
+
+Definition LClique (input : Lgraph * nat) :=
+  let (g, k) := input in exists cl, @isLClique g cl k. 
 
 Definition LClique_verifier (input : Lgraph * nat) (cert : list Lnode) :=
   let (g, k) := input in isLClique g cert k. (*this includes that l is short enough*)
@@ -69,29 +99,17 @@ Definition nat_eqb_correct := (fun a b => conj (proj2 (Nat.eqb_eq a b)) (proj1 (
 Lemma LClique_verifierb_correct (g : Lgraph) (k : nat) (cl : list Lnode) :
   reflect (isLClique g cl k) (LClique_verifierb g k cl). 
 Proof.
-  destruct LClique_verifierb eqn:H; constructor.
-  - unfold LClique_verifierb in H; simp_bool.
-    revert k H1; induction cl; intros k H1; cbn in H1; destruct k; try discriminate H1; constructor.
-    + apply IHcl.
-      * cbn in H0;simp_bool; tauto. 
-      * cbn in H3; simp_bool; tauto. 
-      * cbn in H2; simp_bool; tauto. 
-      * apply H1. 
-    + specialize (dupfreeb_correct nat_eqb_correct (a::cl)) as H; inv H.
-      -- symmetry in H4. simp_bool. intros H7.
-         apply (list_in_decb_iff nat_eqb_correct) in H7. congruence.
-      -- exfalso. simp_bool. cbn in H3; simp_bool. cbn in H3; simp_bool. 
-    + cbn in H0. simp_bool. 
-    + assert (dupfree (a::cl)) by ( now apply (proj1 (dupfreeb_iff nat_eqb_correct (a::cl)))).
-      specialize (connectedb_correct g H) as [H4 _]. specialize (H4 H2). 
-      intros b H5. apply H4. intros ->. now inv H. now left. now right. 
-  - intros H0; induction H0. now cbn in H. 
-    apply IHisLClique. clear IHisLClique. unfold LClique_verifierb in H.
-    simp_bool; cbn in H; simp_bool.
-    all: unfold LClique_verifierb; simp_bool; try tauto.
-    + apply (list_in_decb_iff) in H. tauto. apply nat_eqb_correct.   
-    + exfalso. specialize (forallb_forall (Lgraph_edge_in_dec g node) cl) as H4.
-      now apply H4 in H3.  
+  destruct LClique_verifierb eqn:H; constructor; rewrite isLClique_explicit_correct. 
+  - split; try split; try split; unfold LClique_verifierb in H; simp_bool.
+    3: now rewrite forallb_forall in H0.
+    now apply nat_eqb_correct. 
+    all: rewrite <- (reflect_iff (dupfree cl) (dupfreeb Nat.eqb cl) (dupfreeb_correct nat_eqb_correct cl)) in H3.
+    assumption. now rewrite connectedb_correct in H2. 
+  - intros [H1 [H2 [H3 H4]]]. unfold LClique_verifierb in H. simp_bool.
+    + now rewrite <- forallb_forall in H3. 
+    + now rewrite -> (reflect_iff (dupfree cl) (dupfreeb Nat.eqb cl) (dupfreeb_correct nat_eqb_correct cl)) in H2.
+    + now rewrite <- connectedb_correct in H4. 
+    + now apply nat_eqb_correct in H1. 
 Qed. 
 
 From Undecidability.L.Complexity Require Import PolyBounds ONotation Monotonic. 
