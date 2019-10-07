@@ -35,6 +35,12 @@ Qed.
 
 Definition literalsConflictb (a b : literal) := match a, b with (s1, v1), (s2, v2) => negb(Bool.eqb s1 s2) && Nat.eqb v1 v2 end. 
 
+Lemma literalsConflictb_correct (a b : literal) : literalsConflict a b <-> literalsConflictb a b = true. 
+  split; unfold literalsConflictb; destruct a, b.
+  - intros H. simp_bool; split; simp_bool. all: destruct H; dec_bool. 
+  - intros H. simp_bool. split; dec_bool. 
+Qed. 
+
 Section enumLiteral.
   Variable (k :nat).
 
@@ -76,12 +82,11 @@ Definition inverseOn (X Y : Type) (f : X -> Y) (g : Y -> X) (p : X -> Prop) (q :
 Definition isLabelling (c : cnf) (f : labGraph) (fInv : labGraphInv) :=
   inverseOn f fInv (fun n => n < 3 * |c|) (fun n => let (a, b):= n in a < (|c|) /\ b < 3). 
 
-(** * TODO: adapt the below proofs to the new isLabelling definition *)
-
 (*a few technical lemmas that are needed in order to work with the labelling function *)
-Lemma dupfree_map_bijection (X Y : Type) (l : list X) (f : X -> Y) (g : Y -> X) : inverse f g -> dupfree l <-> dupfree (map f l). 
+
+Lemma dupfree_map_inverse (X Y : Type) (f : X -> Y) (g : Y -> X) (p : X -> Prop) (q : Y -> Prop) (l : list Y): inverseOn f g p q -> dupfree l -> (forall x, x el l -> q x) -> dupfree (map g l). 
 Proof.
-Admitted.
+Admitted. 
 
 Lemma map_el (X Y : Type) (l : list X) (f : X -> Y) (e : Y) : e el (map f l) -> exists e', e' el l /\ f e' = e. 
 Proof.
@@ -91,15 +96,6 @@ Proof.
     + exists a. split; firstorder. 
     + destruct (IHl H2) as (e' & F1 & F2). exists e'. split; firstorder. 
 Qed. 
-
-Lemma inverse_symmetric (X Y : Type) (f : X -> Y) (g : Y -> X) : inverse f g -> inverse g f.
-Proof. intros [H1 H2]. split; tauto. Qed.
-
-Lemma isLabelling_range_inv (c : cnf) (f : labGraph) (fInv : labGraphInv) : isLabelling c f fInv -> forall (n m : nat), n < (|c|) /\ m < 3 -> fInv (n, m) < 3 * (|c|).
-Proof.
-  intros [H1 H2]. intros n m [F1 F2]. unfold inverse in H1.
-  (*would need cardinality arguments at this point *)
-Admitted. 
 
 (* the reduction relation *)
 Definition redRel (c : cnf) (cl : Lgraph * nat) := let (g, k) := cl in
@@ -237,8 +233,7 @@ Section constructAssgnToPos.
   Lemma toPos_bounded (cl : list Lnode) : isLClique g cl (|c|) -> forall a b, (a, b) el toPos cl -> a < (|c|) /\ b < 3. 
   Proof. 
     intros H a b Hel. unfold toPos in Hel; apply map_el in Hel. destruct Hel as (node & Hel1 & Hel2). specialize (isLClique_node_in H Hel1) as Hel3.  
-    unfold Lgraph_node_in_dec in Hel3. destruct g. dec_bool. destruct islab. cbn [fst] in nc; rewrite <- nc in H1. specialize (H1 node). 
-    rewrite Hel2 in H1. apply H1. lia. 
+    unfold Lgraph_node_in_dec in Hel3. destruct g. dec_bool. destruct islab. cbn [fst] in nc; specialize (H0 node); rewrite <- nc, Hel2 in H0. tauto. 
   Qed. 
 
   Lemma toPos_exists_literal (cl : list Lnode) : isLClique g cl (|c|) -> forall pos, pos el toPos cl -> exists l, enumerateLiteral c pos = Some l.
@@ -446,28 +441,25 @@ Proof.
     rewrite isLClique_explicit_correct. 
     split; try split; try split. 
     - rewrite map_length. rewrite construct_length. 2: apply H1. now rewrite keq. 
-    - clear H2. rewrite <- dupfree_map_bijection. 
-      2: {apply inverse_symmetric. now destruct labinv. }
-      apply construct_dupfree. 
+    - clear H2. destruct labinv. apply dupfree_map_inverse with (f:= labF) (p := fun x => x < 3 * |c|) (q:=fun (y : nat * nat)=> let (a, b):= y in a < |c| /\ b < 3);
+      [apply (conj H H0) | apply construct_dupfree |  intros (x & y); now apply construct_literals_bound]. 
     - intros node H.
       enough (node < 3 * |c|) by ( unfold Lgraph_node_in_dec; apply leb_correct; lia ).
       destruct (map_el H) as (nodepos & F1 & F2). rewrite <- F2. destruct nodepos as (clpos & litpos).
-      apply isLabelling_range_inv with (f:=labF); [apply labinv | apply construct_literals_bound with (a:=a); [apply tcnf | apply F1]]. 
+      apply labinv. now apply construct_literals_bound with (a:=a). 
     - intros u v F1 F2 F3. destruct (map_el F2) as ((ucl & ulit) & G1 & G2). destruct (map_el F3) as ((vcl & vlit) & D1 & D2). 
       specialize (H2 u v). change (n = 3 * (|c|)) in neq. 
-      assert (u < n). { rewrite neq. rewrite <- G2. apply (isLabelling_range_inv labinv). apply construct_literals_bound with (a:=a);
-                      [ apply tcnf | apply G1]. }
-      assert (v < n). {rewrite neq. rewrite <- D2. apply (isLabelling_range_inv labinv). apply construct_literals_bound with (a:=a);
-                       [apply tcnf | apply D1]. }
+      assert (u < n). { rewrite neq. rewrite <- G2. apply labinv. now apply construct_literals_bound with (a:=a). }
+      assert (v < n). {rewrite neq. rewrite <- D2. apply labinv. now apply construct_literals_bound with (a:=a). }
       specialize (H2 (conj H H0)).  cbn. apply H2. assert ((ucl, ulit) <> (vcl, vlit)).
       {contradict F1. rewrite <- G2, <- D2. now rewrite F1. }
+      assert (labF (labFInv (ucl, ulit)) = (ucl, ulit) /\ labF(labFInv(vcl, vlit)) = (vcl, vlit)) as (H4 & H5). 
+      { split; symmetry; apply labinv; now apply construct_literals_bound with (a:=a). }
       split.
-      -- rewrite <- G2, <- D2. repeat rewrite (match labinv with conj inve _ => match inve with conj _ re => re end end).
-         now apply (construct_literals_different_clause G1 D1). 
+      -- rewrite <- G2, <- D2. rewrite H4, H5. now apply (construct_literals_different_clause G1 D1). 
       -- intros l1 l2 E1 E2. rewrite <- G2 in E1. rewrite <- D2 in E2.
-         rewrite (match labinv with conj inve _ => match inve with conj _ re => re end end) in E1.
-         rewrite (match labinv with conj inve _ => match inve with conj _ re => re end end) in E2. 
-         destruct (construct_literals_no_conflict G1 D1 H3) as (l1' & l2' & H4 & H5 & H6).  rewrite <- H4 in E1. rewrite <- H5 in E2. 
+         rewrite H4 in E1. rewrite H5 in E2. 
+         destruct (construct_literals_no_conflict G1 D1 H3) as (l1' & l2' & H6 & H7 & H8).  rewrite <- H6 in E1. rewrite <- H7 in E2. 
          easy.
   + destruct cl as (g & k). intros (cl & Hclique).
         destruct g as (n, e). destruct H as (nc & kc &kcnf & (f & fInv & islab & red)).  
@@ -505,19 +497,92 @@ Qed.
 (*contruction principle: enumerate the literals from left to right; for each literal go through the literals *)
 (*of the clauses to the right of it and make appropriate edges *)
 (* this suffices since we are dealing with an undirected graph*)
+
+(*make edges between the literal l and all qualifying literals in cl. numAcc is the index of the first literal in cl *)
 Fixpoint makeEdgesLiteral' (l : literal) (numL : nat) (cl :clause) (numAcc : nat) :=
   match cl with [] => []
               | (l' :: cl) => if literalsConflictb l l' then makeEdgesLiteral' l numL cl (S numAcc) else (numL, numAcc) :: makeEdgesLiteral' l numL cl (S numAcc)
   end.
+
+(*make edges where the first node (literal) is fixed. l is the first node and numL its index, while numAcc is the index of the first literal in cn *)
 Fixpoint makeEdgesLiteral (l : literal) (numL : nat) (cn : cnf) (numAcc : nat) := match cn with [] => []
   | (cl::cn) => makeEdgesLiteral' l numL cl numAcc ++ makeEdgesLiteral l numL cn (3 + numAcc) end.
-Fixpoint makeEdges' (c : clause) (numL : nat) (cn : cnf) := match c with [] => []
-                                                           | (l :: c) => makeEdgesLiteral l numL cn 0
+
+(*make all edges where the first node is from c. numL is the index of c's first literal *)
+Fixpoint makeEdges' (c : clause) (numL : nat) (cn : cnf) (numCn : nat):= match c with [] => []
+                                                           | (l :: c) => makeEdgesLiteral l numL cn numCn ++ makeEdges' c (S numL) cn numCn
                                                            end. 
+(*make edges for a whole cnf. numL is the index of the first literal in c *)
+(* this makes use of the fact that we are constructing an undirected graph and we don't want any edges within the same clause*)
 Fixpoint makeEdges (c : cnf) (numL : nat) := match c with [] => []
-             | (cl::c) => makeEdges' cl numL c ++ makeEdges c (3 + numL) end.
+             | (cl::c) => makeEdges' cl numL c (3 + numL) ++ makeEdges c (3 + numL) end.
+
+(* using makeEdges, we can construct the whole clique instance*)
+(* if the input CNF isn't a 3-CNF (this implies that the CNF isn't empty), we construct *)
+(* an empty graph - this graph will not have a k-clique for any k > 0, *)
+(* in particular not a (|c|)-clique *)
 Definition redGraph (c : cnf) : Lgraph := if kCNF_decb 3 c then (3 * |c|, makeEdges c 0)
                                                             else (0, []). 
+
+Section makeEdgesVerification.
+
+  Lemma makeEdgesLiteral'_indices (a k numL numAcc : nat) (l : literal) (cl : clause) : (a, k) el makeEdgesLiteral' l numL cl numAcc -> k >= numAcc /\ a = numL.
+  Proof. 
+    revert numAcc a k. 
+    induction cl as [ | cl cls]. 
+    - intros numAcc a k. now cbn. 
+    - intros numAcc a k. cbn. destruct (literalsConflictb); [intros H | intros [H | H]].
+      2: {assert (numL = a /\ numAcc = k) as (H1 & H2) by (split; congruence ); clear H. rewrite <- H1, <- H2 in *. auto.  }
+      all: apply IHcls in H; lia. 
+  Qed. 
+
+  Lemma makeEdgesLiteral'_iff (k numL numAcc : nat) (l l' : literal) (cl : clause) : k < 3 -> nth_error cl k = Some l' ->
+                                                  ((numL, numAcc+k) el makeEdgesLiteral' l numL cl numAcc <-> not (literalsConflict l l') ).
+  Proof.
+    revert numAcc k. 
+    induction cl.
+    - intros numAcc k H1 H2. destruct k; cbn in H2; congruence. 
+    - intros numAcc k H1 H2. split. 
+      + destruct k. cbn in H2. cbn. assert (a = l') by congruence; clear H2. rewrite H; clear H.
+        destruct (literalsConflictb l l') eqn:conf.
+        * intros H. apply makeEdgesLiteral'_indices in H. lia. 
+        * intros _.  now intros H%literalsConflictb_correct. 
+        * cbn. destruct (literalsConflictb); [intros H | intros [H | H]]. 2: {assert (numAcc = numAcc + S k) by congruence. lia. }
+          all: cbn in H2; rewrite <- IHcl; [rewrite Nat.add_succ_r in H | |]. 2, 5: (assert (k < 3) by lia; apply H0 ).
+          1, 3: replace (S(numAcc + k)) with (S numAcc + k) in H by reflexivity; apply H. 
+          all: apply H2. 
+     + destruct k. cbn in H2. assert (a = l') by congruence; clear H2. rewrite H; clear H. all: intros H. 
+       all: assert (literalsConflictb l l' = false) by (destruct literalsConflictb eqn:H3; try reflexivity; now apply literalsConflictb_correct in H3). 
+       *  cbn; rewrite H0. left. now rewrite Nat.add_0_r. 
+       * cbn. destruct (literalsConflictb l a). 2: right. 
+         all: rewrite Nat.add_succ_r; replace (S (numAcc + k)) with (S numAcc + k) by reflexivity. all: now rewrite IHcl. 
+  Qed. 
+
+  Lemma makeEdgesLiteral'_iff' (numL numAcc : nat) (l : literal) (cl : clause) (a b : nat) :
+    (a, b) el makeEdgesLiteral' l numL cl numAcc <-> (exists k, k < 3 /\ exists l', nth_error cl k = Some l' /\ a = numL /\ b = numAcc + k /\ not(literalsConflict l l')).
+  Proof. 
+    revert numAcc. induction cl.
+    - intros numAcc. cbn. firstorder. destruct x; cbn in H0; congruence. 
+    - intros numAcc. split.
+      + cbn. destruct (literalsConflictb l a0) eqn:Hel. 
+  Admitted.
+
+  (* Lemma makeEdgesLiteral_indices (numL numAcc a b : nat) (l : literal)(cn : cnf) : (a, b) el makeEdgesLiteral l numL cn numAcc -> a = numL /\ k >= numAcc.  *)
+  (* Proof. *)
+  (* Admitted.  *)
+
+  Lemma makeEdgesLiteral_iff (l l' : literal) (numL numAcc clpos lpos : nat) (cn : cnf) (cl : clause): kCNF 3 cn -> nth_error cn clpos = Some cl ->
+        lpos < 3 -> nth_error cl lpos = Some l' -> ((numL, 3 * clpos + numAcc + lpos) el makeEdgesLiteral l numL cn numAcc <-> not(literalsConflict l l')).
+  Proof. 
+    intros H H1 H2 H3. revert numAcc clpos H1. 
+    induction cn.
+    - intros numAcc []; cbn; congruence. 
+    - inv H. specialize (IHcn H5). 
+      intros numAcc [|clpos].
+      * cbn. intros [=->]. split. 
+        + 
+  Admitted. 
+End makeEdgesVerification.
 
 Definition reduction (c : cnf) : Lgraph * nat := (redGraph c, |c|). 
 
@@ -527,9 +592,16 @@ Definition labFInv (n : nat * nat) := (fst n * 3 + snd n).
 Lemma labF_isLabelling (c : cnf) : isLabelling c labF labFInv. 
   split. 
   - split.
-    + intros n. rewrite Nat.div_mod with (y:= 3). 2: congruence. 
-      unfold labF, labFInv. cbn [fst snd]. lia. 
-    + intros n. unfold labF, labFInv. destruct n as (a & b). cbn [fst snd]. 
+    + cbn [labF]. split.
+      * admit. 
+      * cbn. destruct (Nat.divmod); destruct n0; try destruct n0; cbn; lia. 
+    + unfold labF, labFInv. cbn [fst snd]. replace ((x/3) * 3) with (3 * (x/3)) by lia. now apply Nat.div_mod. 
+  - intros (a & b) H. split.
+    + unfold labFInv; cbn [fst snd]. destruct H. admit.
+    + cbn. unfold labF. enough (a = (a * 3 + b) /3 /\ b = (a * 3 + b) mod 3) by firstorder. split. 
+      * admit. 
+      * admit. 
+Admitted. 
 
 (* Lemma enumerateLiteral_clstep (c : cnf) (cl :clause) (k : nat) (n : nat) : kCNF k (cl ::c) -> enumerateLiteral (cl::c) k (n + k) = enumerateLiteral c k n.  *)
 (* Proof.  *)
@@ -569,16 +641,258 @@ Lemma reduction_sat_redRel (c : cnf) : redRel c (reduction c).
 Proof. 
   unfold redRel. destruct (reduction c) as (g, k) eqn:H. destruct g as (n, e). 
   unfold reduction in H. inversion H. unfold redGraph in H1. destruct (kCNF_decb 3 c) eqn:H3. 
-  - inv H1. split. reflexivity. 
+  - inv H1. split. reflexivity.
+Admitted. 
 
 
-(* Lemma makeEdges_correct (c : cnf) : kCNF 3 c -> forall (l l' : literal) (n n' : nat), (n < 3 * (|c|) /\ n' < 3 * (|c|) /\ enumerateLiteral c 3 n = Some l /\ enumerateLiteral c 3 n' = Some l') *)
-(*                                                -> (not (literalsConflict l l') /\ enumLiteral_different_clause c 3 n n'  <-> *)
-(*                                                   Lgraph_edge_in_dec' (makeEdges c 0) n n').  *)
-(* Abort.  *)
+(*extraction of the reduction function*)
+Definition literalsConflictb_time (l1 l2: literal) := let (_, v1) := l1 in let (_, v2) := l2 in 17 * min v1 v2 + 40.
+Instance term_literalsConflictb : computableTime' literalsConflictb (fun l1 _ => (1, fun l2 _ => (literalsConflictb_time l1 l2, tt))). 
+Proof. 
+  extract.
+  solverec. 
+Defined.
+
+Fixpoint makeEdgesLiteral'_time (l : literal) (cl : clause) := match cl with [] => 4 | l'::cl => literalsConflictb_time l l' + 22 + makeEdgesLiteral'_time l cl end.
+Instance term_makeEdgesLiteral' : computableTime' makeEdgesLiteral' (fun l _ => (5, fun lpos _ => (1, fun cl _ => (1, fun numAcc _ => (makeEdgesLiteral'_time l cl , tt))))). 
+Proof.
+  extract. solverec.
+Defined. 
+
+Fixpoint makeEdgesLiteral_time (l : literal) (numL : nat) (cn : cnf) (numAcc : nat) :=
+    match cn with [] => 4
+             | (cl::cn) => makeEdgesLiteral'_time l cl + makeEdgesLiteral_time l numL cn (3 + numAcc) + 16 * (|makeEdgesLiteral' l numL cl numAcc|) + 74
+    end.
+Instance term_makeEdgesLiteral : computableTime' makeEdgesLiteral (fun l _ => (5, fun numL _ => (1, fun cn _ => (1, fun numAcc _ => (makeEdgesLiteral_time l numL cn numAcc, tt))))). 
+Proof.
+  extract. solverec. 
+Qed.
+
+Fixpoint makeEdges'_time (c : clause) (numL : nat) (cn : cnf) (numCn : nat) :=
+    match c with [] => 4
+            | (l::c) => makeEdgesLiteral_time l numL cn numCn + makeEdges'_time c (S numL) cn numCn + 16 * (|makeEdgesLiteral l numL cn numCn|) + 30
+    end.
+Instance term_makeEdges' : computableTime' makeEdges' (fun c _ => (5, fun numL _ => (1, fun cn _ => (1, fun numCn _ => (makeEdges'_time c numL cn numCn, tt))))). 
+Proof.
+  extract. solverec. 
+Qed. 
+                                                                                                                                            
+Fixpoint makeEdges_time (c : cnf) (numL : nat) :=
+    match c with [] => 4
+            | (cl::c) => makeEdges'_time cl numL c (3 + numL) + makeEdges_time c (3+numL) + 16 * (|makeEdges' cl numL c (3+numL)|) + 117
+    end. 
+Instance term_makeEdges : computableTime' makeEdges (fun c _ => (5, fun numL _ => (makeEdges_time c numL , tt))).
+Proof.
+  extract. solverec. 
+Qed. 
+
+Definition redGraph_time (c : cnf) := kCNF_decb_time c + 44 * (| c |) + makeEdges_time c 0 + 92.
+Instance term_redGraph : computableTime' redGraph (fun c _ => (redGraph_time c, tt)). 
+Proof.
+  extract. unfold redGraph_time. solverec. 
+Qed. 
+
+Definition reduction_time (c : cnf) := redGraph_time c + 11 * S (|c|).
+Instance term_reduction : computableTime' reduction (fun c _ => (reduction_time c, tt)).
+Proof.
+  extract. unfold reduction_time. solverec. 
+Qed. 
+
+From Undecidability.L.Datatypes Require Import LProd LNat. 
+From Undecidability.L.Complexity Require Import PolyBounds.
+
+(*polynomial bounds in encoding size*)
+Lemma literalsConflictb_time_bound : exists (f : nat -> nat), (forall (l1 l2 : literal), literalsConflictb_time l1 l2 <= f(size(enc l1) + size(enc l2))) /\ inOPoly f /\ monotonic f. 
+Proof.
+  evar (f : nat -> nat). exists f. 
+  split.
+  - intros (s1 & v1) (s2 & v2). cbn -[Nat.mul]. repeat rewrite size_prod; cbn [fst snd]. 
+    rewrite Nat.le_min_r. rewrite size_nat_enc_r with (n:=v2) at 1. 
+    instantiate (f:= fun n => 17 * n). subst f. solverec. 
+  - split; subst f; smpl_inO. 
+Qed. 
+                                                                                                         
+Lemma makeEdgesLiteral'_time_bound : exists (f : nat -> nat), (forall (l : literal) (cl : clause), makeEdgesLiteral'_time l cl <= f(size(enc l) + size(enc cl))) /\ inOPoly f /\ monotonic f. 
+Proof.
+  assert (exists (f': nat -> nat), (forall (l l' : literal) (cl : clause), l' el cl -> literalsConflictb_time l l' + 22 <= f' (size(enc l) + size(enc cl))) /\ inOPoly f' /\ monotonic f') as (f' & H1 & H2 & H3).
+  {
+    destruct (literalsConflictb_time_bound) as (f' & H1 & H2 & H3).
+    evar (f : nat -> nat). exists f. split.
+    - intros l l' cl Hel.  
+      rewrite H1. unfold monotonic in H3. rewrite H3 with (x' := size(enc l) + size(enc cl)).
+      generalize (size(enc l) + size(enc cl)); intros n. [f]: intros n. subst f. cbn. reflexivity. 
+      rewrite list_el_size_bound with (l:= cl) (a := l'); auto. 
+    - split; subst f; smpl_inO. 
+  }
+
+  evar (f : nat -> nat). exists f. 
+  split.
+  - intros (l1 & l2) cl . rewrite size_prod; cbn [fst snd]. 
+    unfold makeEdgesLiteral'_time. instantiate (f:= fun n => 4 + f' n * n). subst f.
+    induction cl.
+    + nia. 
+    + rewrite H1. rewrite IHcl. 2: assert (a el a ::cl) as H by (now left); apply H. 
+      repeat rewrite size_prod; cbn [fst snd]. rewrite list_size_cons at 3. 
+      unfold monotonic in H3. rewrite H3 with (x:= size(enc l1) + size(enc l2) + 4 + size(enc(cl)))(x' := size(enc l1) + size(enc l2) + 4 + size(enc(a :: cl))). 
+      solverec. 
+      rewrite list_size_cons. nia. 
+  - subst f; split; smpl_inO. 
+Qed. 
+
+Lemma makeEdgesLiteral'_size (l : literal) (numL : nat) (cl : clause) (numAcc : nat) : (|makeEdgesLiteral' l numL cl numAcc|) <= (|cl|). 
+Proof. revert numAcc. induction cl; cbn. intros _; lia. intros numAcc; destruct literalsConflictb; cbn; rewrite IHcl; lia. Qed. 
+
+Lemma makeEdgesLiteral_time_bound : exists (f : nat -> nat), (forall (l : literal) (numL : nat) (cn : cnf) (numAcc : nat), makeEdgesLiteral_time l numL cn numAcc <= f(size(enc l) + size(enc cn))) /\ inOPoly f /\ monotonic f. 
+Proof.
+  (*first bound the running time of each step *)
+  assert (exists (f' : nat -> nat), (forall (l : literal) (cl : clause) (cn : cnf) (numAcc numL : nat), cl el cn -> makeEdgesLiteral'_time l cl + 16 * (|makeEdgesLiteral' l numL cl numAcc|) + 74 <= f'(size(enc l) + size(enc cn))) /\ inOPoly f' /\ monotonic f') as (f' & H1 & H2 & H3). 
+  {
+    destruct (makeEdgesLiteral'_time_bound) as (f' & H1 & H2 & H3).
+    evar (f : nat -> nat). exists f. split.
+    - intros l cl cn numAcc numL Hel. rewrite H1. rewrite makeEdgesLiteral'_size. 
+      rewrite list_size_length with (l:= cl) (H:= (((@registered_prod_enc bool nat LBool.registered_bool_enc registered_nat_enc)))).
+      unfold monotonic in H3. rewrite H3 with (x' := size(enc l) + size(enc cn)).
+      rewrite list_el_size_bound with (l:= cn) (a:= cl). 2: apply Hel. 
+      2: rewrite list_el_size_bound with (l:=cn)(a:= cl). 2: lia. 2 : apply Hel. 
+      instantiate (f := fun n => f' n + 16 * n + 74). subst f.
+      solverec.
+    - subst f; split; smpl_inO. 
+  }
+  evar (f : nat -> nat). exists f. split.
+  - intros. unfold makeEdgesLiteral_time. 
+    instantiate (f:= fun n => 4 + f' n * n). subst f.
+    revert numAcc. 
+    induction cn. 
+    + intros ; lia.
+    + intros numAcc; rewrite IHcn.
+      setoid_rewrite <- Nat.add_assoc. setoid_rewrite Nat.add_comm at 2.
+      rewrite <- Nat.add_assoc. setoid_rewrite Nat.add_assoc at 2. 
+      rewrite H1.
+      2: {assert (a el a :: cn) as H4 by now left. apply H4.  }
+      rewrite list_size_cons at 3. unfold monotonic in H3. rewrite H3 with (x' := size(enc l) + size(enc (a :: cn))) at 1. 
+      solverec. 
+      rewrite list_size_cons. solverec.
+  - split; subst f; smpl_inO. 
+Qed. 
+
+(* We assume a constant that bounds the length of each clause for this bound *)
+Lemma makeEdgesLiteral_size (l : literal) (numL : nat) (cn : cnf) (numCn : nat) (k : nat) :
+  (forall cl, cl el cn -> (|cl|) <= k) -> (|makeEdgesLiteral l numL cn numCn|) <= k * (|cn|). 
+Proof.
+  intros H. induction cn in numCn ,H |-*. 
+  - cbn. lia.
+  - cbn. rewrite app_length. rewrite IHcn. rewrite makeEdgesLiteral'_size.
+    + specialize (H a (or_introl eq_refl)). lia. 
+    + firstorder. 
+Qed. 
+
+(*We now derive a constant with which we can instantiate the previous lemma *)
+Lemma cnf_clause_length_bound (c : cnf) : forall cl, cl el c -> (|cl|) <= size(enc c). 
+Proof. 
+  intros cl H. rewrite list_size_length. now rewrite list_el_size_bound.
+Qed. 
+
+Lemma makeEdges'_time_bound : exists (f : nat -> nat), (forall (c : clause) (numL : nat) (cn : cnf) (numCn : nat), makeEdges'_time c numL cn numCn <= f(size(enc c) + size(enc cn))) /\ inOPoly f /\ monotonic f. 
+Proof.
+  (*again, we first bound the running time of each recursion step*)
+  assert (exists (f : nat -> nat), (forall (l : literal) (numL : nat) (cn : cnf) (numCn : nat), makeEdgesLiteral_time l numL cn numCn + 16 * (|makeEdgesLiteral l numL cn numCn|) + 30 <= f(size(enc l) + size(enc cn))) /\ inOPoly f /\ monotonic f) as (f' & H1 & H2 & H3). 
+  {
+    destruct (makeEdgesLiteral_time_bound) as (f' & H1 & H2 & H3). 
+    evar (f : nat -> nat). exists f. split.
+    - intros. rewrite H1.
+      rewrite makeEdgesLiteral_size. 2: apply cnf_clause_length_bound.
+      rewrite list_size_length with (l:= cn) (H:= (@registered_list_enc (bool * nat) (@registered_prod_enc bool nat  (@LBool.registered_bool_enc) (@registered_nat_enc)))).
+      instantiate (f:= fun n => f' n + 16 * n * n + 30). subst f.
+      solverec. 
+    - subst f; split; smpl_inO. 
+  }
+
+  evar (f : nat -> nat). exists f. split.
+  - intros. unfold makeEdges'_time.
+    instantiate (f := fun n => (4 + f' n * n)). subst f.
+    revert numL. 
+    induction c. 
+    + intros; lia.
+    + intros; rewrite IHc.
+      setoid_rewrite Nat.add_comm at 3.
+      rewrite <- Nat.add_assoc.
+      rewrite <- Nat.add_assoc. 
+      setoid_rewrite Nat.add_assoc at 2. 
+      rewrite H1.
+      unfold monotonic in H3.
+      repeat setoid_rewrite H3 with (x' := size(enc (a :: c)) + size(enc cn)).
+      rewrite list_size_cons at 4. solverec. 
+      all: rewrite list_size_cons; solverec. 
+  - subst f; split; smpl_inO. 
+Qed.  
+
+(* We bound the output size of makeEdges' *)
+Lemma makeEdges'_size (c : clause) (numL : nat) (cn : cnf) (numCn : nat) (k : nat) :
+  (forall c', c' el cn -> (|c'|) <= k) -> (|makeEdges' c numL cn numCn|) <= k * (|c|) * (|cn|). 
+Proof.
+  intros H. revert numL.
+  induction c. 
+  - intros; cbn. lia. 
+  - intros; cbn. rewrite app_length. rewrite IHc. rewrite (makeEdgesLiteral_size). 
+    2: apply H.  lia. 
+Qed.  
+      
+Lemma makeEdges_time_bound : exists (f : nat -> nat), (forall (c: cnf) (numL : nat), makeEdges_time c numL <= f(size(enc c))) /\ inOPoly f /\ monotonic f.
+Proof.
+  (*and again, we first bound the running time of each step*)
+  assert (exists (f' : nat -> nat), (forall (cl : clause) (numL : nat) (cn : cnf), makeEdges'_time cl numL cn (3 + numL) + 16 * (|makeEdges' cl numL cn (3+numL)|) + 117 <= f'(size(enc cl) + size(enc cn))) /\ inOPoly f' /\ monotonic f') as (f' & H1 & H2 & H3).
+  {
+    destruct (makeEdges'_time_bound) as (f' & H1 & H2 & H3).
+    evar (f : nat -> nat). exists f. split.
+    - intros. rewrite makeEdges'_size. 2: apply cnf_clause_length_bound. 
+      rewrite H1. 
+      instantiate (f:= fun n => 121 + 16 * n * n * n + f' n). subst f.
+      solverec.
+      rewrite list_size_length with (l:=cl) (H:= @registered_prod_enc bool nat (@LBool.registered_bool_enc) (@registered_nat_enc)).
+      rewrite list_size_length with (l:=cn) (H:= @registered_list_enc (bool * nat) (@registered_prod_enc bool nat (@LBool.registered_bool_enc) (@registered_nat_enc))).
+      solverec.
+    - subst f; split; smpl_inO. 
+  }
+
+  evar (f : nat -> nat). exists f. split.
+  - intros c numL. unfold makeEdges_time. 
+    instantiate (f:= fun n => 4 + f' n * n). subst f.
+    revert numL. induction c.
+    + intros; lia.  
+    + intros; rewrite IHc. 
+      setoid_rewrite Nat.add_comm at 3.
+      rewrite <- Nat.add_assoc.
+      rewrite <- Nat.add_assoc. 
+      setoid_rewrite Nat.add_assoc at 2. 
+      rewrite H1. 
+      unfold monotonic in H3. repeat setoid_rewrite H3 with (x' := size(enc (a::c))). 
+      rewrite list_size_cons at 4. solverec. 
+      all: rewrite list_size_cons; lia. 
+  - subst f; split; smpl_inO. 
+Qed. 
+    
+(*now, finally, we come to the desired result: the reduction runs in polynomial time*)
+
+Lemma reduction_time_bound : exists (f : nat -> nat), (forall (c : cnf), reduction_time c <= f(size(enc c))) /\ inOPoly f /\ monotonic f. 
+Proof. 
+  destruct (kCNF_decb_time_bound) as (g & H1 & H2 & H3).
+  destruct (makeEdges_time_bound) as (h & F1 & F2 & F3). 
+  evar (f : nat -> nat). exists f. split.
+  - intros c. unfold reduction_time, redGraph_time. rewrite H1. rewrite F1. 
+    rewrite list_size_length with (l:=c) (H:= @registered_list_enc ((bool * nat)) (@registered_prod_enc bool nat (@LBool.registered_bool_enc) (@LNat.registered_nat_enc))). 
+    generalize (size (enc c)).  [f] : intros n. subst f. intros n.
+    replace (S n) with (n+1) by lia. (*makes the proof below easier, since it doesn't know that S is in inOPoly *)
+    cbn -[mul]. reflexivity.
+  - subst f; split; smpl_inO. 
+Qed. 
 
 Lemma tsat_to_clique  : reducesPolyMO (kSAT 3) LClique. 
 Proof. 
-  
+  exists reduction. split.
+  - destruct (reduction_time_bound) as (f & H1 & H2 & H3). exists f. 
+    + constructor. extract. solverec. unfold reduction_time in H1.  specialize (H1 x). lia.   
+    + apply H2.
+    + apply H3.
+    + (*the output size is polynomial*)
 Admitted. 
 

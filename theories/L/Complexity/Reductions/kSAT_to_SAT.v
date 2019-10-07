@@ -4,39 +4,29 @@ From Undecidability.L.Complexity Require Import Problems.kSAT PolyBounds Tactics
 From Undecidability.L.Datatypes Require Import LBool LNat Lists LProd. 
 
 Lemma evalCnf_inv_true (c : cnf) (cl :clause) (a : assgn) : (evalCnf a (cl::c) = Some true) -> (evalCnf a c = Some true). 
-Admitted. 
+  intros (b1 & b2 & H1 & H2 & H3)%evalCnf_step_inv. 
+  simp_bool. 
+Qed. 
 
 Lemma ksat_to_sat (k : nat): reducesPolyMO (kSAT k) SAT. 
 Proof. 
   (*check if it is a kCNF. if so, the reduction the SAT instance is the identity. otherwise, return a negative SAT instance*)
   exists (fun x => if kCNF_decb k x then x else [[(true, 0)]; [(false, 0)]] ). 
   split.
-  - pose (predT := (fun (cl : list (bool * nat)) (_ : unit) => (11 * (| cl |) + 17 * Init.Nat.min k (| cl |) + 23, tt))). 
-    assert (exists (fPred : nat -> nat), (forall (a : list (bool * nat)), fst(predT a tt) <= fPred (size(enc a))) /\ inOPoly fPred /\ monotonic fPred). 
-    * evar (fPred : nat -> nat). exists fPred. split; try split. 
-        1: {
-          intros a. unfold predT. cbn [fst]. instantiate (fPred := fun n => 28 * n + 23). subst fPred. 
-          induction a. 
-          + cbn; lia. 
-          + cbn -[Nat.mul]. solverec. rewrite Nat.le_min_r. solverec. rewrite list_size_cons. rewrite list_size_length. 
-            solverec. 
-        }
-      all: subst fPred; smpl_inO.
-    * specialize (forallb_time_bound H) as (f' & H1 & H2 & H3).
-      evar (f : nat -> nat). exists f.
-      + constructor.  extract. solverec.
-        2: { fold predT. rewrite H1. instantiate (f := fun n => f' n + 53). subst f. lia. }
-        fold predT. rewrite H1. subst f; lia.
-      + subst f; smpl_inO. 
-      + subst f; smpl_inO. 
-      + (* now we need to prove that the output of the reduction is polynomial *)
+  - specialize (kCNF_decb_time_bound) as (f' & H1 & H2 & H3). 
+    evar (f : nat -> nat). exists f.
+    + constructor. extract. solverec; rewrite H1. 
+      instantiate (f:= fun n => f' n + 17). all: subst f; solverec. 
+    + subst f; smpl_inO. 
+    + subst f; smpl_inO. 
+    + (* now we need to prove that the output of the reduction is polynomial *)
         evar (tf : nat -> nat). exists tf. split. 
         1 : {
           intros x. destruct (kCNF_decb k x).
           Compute (size(enc [[(true, 0)]; [(false, 0)]])).
           instantiate (tf := fun n => n + 55).
-          all: subst tf. 2 : replace (size(enc [[(true, 0)]; [(false, 0)]])) with 55. 1-2: lia. 
-          now cbv. 
+          all: subst tf. 2 : replace (size(enc [[(true, 0)]; [(false, 0)]])) with 55. 1-2: lia.
+          now cbv.
         }
         split; subst tf; smpl_inO. 
   - intros x. split.

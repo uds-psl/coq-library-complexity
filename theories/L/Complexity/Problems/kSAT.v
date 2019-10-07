@@ -35,15 +35,46 @@ Proof.
   - intros cl' [-> | Hel]; [assumption | now apply IHkCNF]. 
 Qed. 
 
-Instance term_kCNF_decb_pred : computableTime' kCNF_decb_pred (fun k _ => (1, fun cl _ => (11 * (|cl|) + 17 * min k (|cl|) + 23, tt))).  
+Definition kCNF_decb_pred_time (cl : clause) := 11 * (|cl|) + 17 * (|cl|) + 23.
+Instance term_kCNF_decb_pred : computableTime' kCNF_decb_pred (fun k _ => (1, fun cl _ => (kCNF_decb_pred_time cl, tt))).  
 Proof.
   extract. 
+  unfold kCNF_decb_pred_time.
   solverec. 
 Defined. 
 
-Instance term_kCNF_decb : computableTime' kCNF_decb (fun k _ => (1, fun c _ => (forallb_time (fun cl _ => (11 * (|cl|) + 17 * min k (|cl|) + 23, tt)) c + 36, tt))).
+Definition kCNF_decb_time (c : cnf) := forallb_time (fun cl _ => (kCNF_decb_pred_time cl, tt)) c + 36.
+Instance term_kCNF_decb : computableTime' kCNF_decb (fun k _ => (1, fun c _ => (kCNF_decb_time c, tt))).
 Proof.
   extract. 
+  unfold kCNF_decb_time, kCNF_decb_pred_time. 
   solverec. 
 Qed. 
-  
+
+From Undecidability.L.Complexity Require Import PolyBounds.
+Lemma kCNF_decb_pred_time_bound : exists (f : nat -> nat), (forall (cl : clause), kCNF_decb_pred_time cl <= f(size(enc cl))) /\ inOPoly f /\ monotonic f.
+Proof. 
+  evar (f : nat -> nat). exists f. split.
+  - intros cl. unfold kCNF_decb_pred_time.
+    repeat rewrite list_size_length with (l:=cl) (H:= @registered_prod_enc bool nat (@LBool.registered_bool_enc) (@LNat.registered_nat_enc)).
+    [f] : intros n. subst f. generalize (size(enc cl)). intros n. reflexivity. 
+  - split; subst f; smpl_inO. 
+Qed. 
+
+Lemma kCNF_decb_time_bound : exists (f : nat -> nat), (forall (c : cnf), kCNF_decb_time c <= f(size(enc c))) /\ inOPoly f /\ monotonic f.
+Proof. 
+  (*a bit of glue due to the other format of the hypothesis of forallb_time *)
+  pose (predT := fun x (_ : unit) => (kCNF_decb_pred_time x, tt)). 
+  assert (exists f, (forall (c : clause), fst(predT c tt) <= f(size(enc c))) /\ inOPoly f /\ monotonic f).
+  {
+    destruct (kCNF_decb_pred_time_bound) as (f' & H1 & H2 & H3). 
+    exists f'. split.
+    - intros c. cbn [fst predT]. apply H1.
+    - now split.
+  }
+  destruct (forallb_time_bound H) as (f' & H1 & H2 & H3). 
+  evar (f : nat -> nat). exists f. split.
+  - intros c. unfold kCNF_decb_time.
+    fold predT. rewrite H1. instantiate (f:= fun n => f' n + 36); subst f. solverec. 
+  - split; subst f; smpl_inO. 
+Qed. 

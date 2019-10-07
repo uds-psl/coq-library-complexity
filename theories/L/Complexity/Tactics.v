@@ -17,6 +17,8 @@ Ltac simp_bool := repeat match goal with
                   | [ |- andb (?b1) (?b2) = true] => apply andb_true_intro 
                   | [ H : context [orb (?b1) false] |- _] => rewrite orb_false_r in H
                   | [ |- context [orb ?b1 false] ] => rewrite orb_false_r
+                  | [ |- context[negb ?b = true]] => rewrite negb_true_iff
+                  | [ |- context[negb ?b = false]] => rewrite negb_false_iff
                   end; try congruence.
 
 Ltac simp_bool' :=  repeat (match goal with

@@ -7,6 +7,14 @@ Technische Probleme:
 
 * Best Practices, um neue Prelim-Sachen hinzuzufügen (am besten ohne dabei alles neu kompilieren zu müssen)
 
+* Irgendwelche externen Bibliotheken mit mehr arithmetischen Facts? z.B. zu Division - Monotonie in Argumenten, etc.
+* Rewrite-Instanzen mit Preconditions - z.B. bei Division in Argumenten mit Ungleichungen rewriten, aber unter der Voraussetzung, dass der Divisor > 0 ist
+
+* Manchmal klappt das Inferieren der Registered-Instanz nicht -siehe z.B. makeEdgesLiteral_time_bound 
+
+TODOs: 
+* uniformes Format für die polybounds lemmas
+
 
 Technische Wunschliste: 
 
