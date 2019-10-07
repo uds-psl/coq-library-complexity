@@ -1,5 +1,5 @@
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L Require Import Datatypes.LNat.
+From Undecidability.L Require Import Datatypes.LNat Functions.EqBool.
 
 Require Export PslBase.FiniteTypes.FinTypes.
 
@@ -29,9 +29,26 @@ Section finType_eqb.
     apply cast_computableTime.
   Qed.
 
+  Instance eqbFinType_inst (X:finType): eqbClass finType_eqb (X:=X).
+  Proof.
+    intros ? ?. eapply finType_eqb_reflect. 
+  Qed.
+
+  Instance eqbFinType_nat (X:finType): eqbCompT X.
+  Proof.
+    evar (c:nat). exists c. unfold finType_eqb.
+    unfold enc;cbn.
+    extract. unfold eqbTime.
+    solverec. 
+    [c]:exact (c__eqbComp nat + 2).
+    rewrite !size_nat_enc.
+    all:unfold c;try nia. 
+  Qed.
+
+(*  
   Global Instance term_finType_eqb (X:finType) : computableTime' (finType_eqb (X:=X)) (fun x _ => (1,fun y _ => (17 * Init.Nat.min (index x) (index y) + 17,tt))).
   Proof.
     extract.
     solverec.
-  Qed.
+  Qed. *)
 End finType_eqb.

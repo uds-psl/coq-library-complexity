@@ -1,7 +1,8 @@
 From Undecidability.L.Tactics Require Export LTactics GenEncode.
 Require Import PslBase.Numbers.
 
-Require Import Nat Undecidability.L.Datatypes.LBool.
+Require Import Nat.
+From Undecidability.L Require Import Datatypes.LBool Functions.EqBool.
 (** ** Encoding of natural numbers *)
 
 Run TemplateProgram (tmGenEncode "nat_enc" nat).
@@ -42,12 +43,21 @@ Proof.
   solverec.
 Defined.
 
-Instance termT_nat_eqb: computableTime' Nat.eqb (fun x xT => (5,(fun y yT => ((min x y)*17 + 9,tt)))).
+
+Instance eqbNat_inst : eqbClass Nat.eqb.
 Proof.
+  exact Nat.eqb_spec. 
+Qed.
+
+Instance eqbComp_nat : eqbCompT nat.
+Proof.
+  evar (c:nat). exists c. unfold Nat.eqb.
+  unfold enc;cbn.
   extract.
   solverec.
-Defined.
-
+  [c]:exact 5.
+  all:unfold c;try lia.
+Qed.
 
 Instance termT_pow:
   computableTime' Init.Nat.pow   (fun (x : nat) _ => (5,fun (n : nat) _ => (n* (x*19+x^n*11+19) + 5, tt))).

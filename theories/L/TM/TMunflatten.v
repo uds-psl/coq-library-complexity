@@ -1,7 +1,8 @@
-From Undecidability Require Import TM.TM L.Functions.FinTypeLookup.
+From Undecidability Require Import L.Functions.FinTypeLookup L.Functions.EqBool.
 Require Import PslBase.FiniteTypes.
 From PslBase.FiniteTypes Require Import VectorFin Cardinality.
 
+From Undecidability Require Import TM.TM.
 From Undecidability Require Import L.TM.TMflat.
 From Undecidability Require L.TM.TMEncoding.
 
@@ -312,22 +313,21 @@ Proof.
   -apply index_le.
 Qed.
 
-Definition allSameEntry {X Y} (eqbX:X -> X -> bool) (eqbY:Y -> Y -> bool) x y (f : list (X*Y)) :=
+Definition allSameEntry {X Y} eqbX eqbY `{_:eqbClass (X:=X) eqbX} `{eqbClass (X:=Y) eqbY} x y (f : list (X*Y)) :=
   forallb (fun '(x',y') => implb (eqbX x x') (eqbY y y')) f.
 
-Fixpoint isInjFinfuncTable {X Y} (eqbX:X -> X -> bool) (eqbY:Y -> Y -> bool) (f : list (X*Y)) :=
+Definition isInjFinfuncTable {X Y} eqbX eqbY `{_:eqbClass (X:=X) eqbX} `{eqbClass (X:=Y) eqbY}
+  := fix isInjFinfuncTable (f : list (X*Y)) : bool :=
   match f with
     [] => true
-  | (x,y)::f => allSameEntry eqbX eqbY x y f
-              && isInjFinfuncTable eqbX eqbY f
+  | (x,y)::f => allSameEntry x y f
+              && isInjFinfuncTable f
   end.
 
-Lemma allSameEntry_spec X Y eqbX eqbY x y f:
-  (forall x y : X, reflect (x = y) (eqbX x y))
-  -> (forall x y : Y, reflect (x = y) (eqbY x y))
-  -> reflect (forall (y' : Y), (x, y') el f -> y = y') (allSameEntry eqbX eqbY x y f).
+Lemma allSameEntry_spec X Y eqbX eqbY `{Hx:eqbClass (X:=X) eqbX} `{Hy:eqbClass (X:=Y) eqbY} x y (f:list (X*Y)):
+  reflect (forall (y' : Y), (x, y') el f -> y = y') (allSameEntry x y f).
 Proof.
-  intros Hx Hy. unfold allSameEntry.
+  unfold allSameEntry.
   apply iff_reflect. rewrite forallb_forall.
   transitivity (forall x' y',  (x',y') el f -> implb (eqbX x x') (eqbY y y') = true).
   2:{split. now intros ? [].
@@ -344,15 +344,13 @@ Proof.
    apply H in H0. easy.
 Qed.
 
-Lemma isInjFinfuncTable_spec X Y eqbX eqbY f:
-  (forall x y : X, reflect (x = y) (eqbX x y))
-  -> (forall x y : Y, reflect (x = y) (eqbY x y))
-  -> reflect (forall (a : X) (b b' : Y), (a, b) el f -> (a, b') el f -> b = b') (isInjFinfuncTable eqbX eqbY f).
+Lemma isInjFinfuncTable_spec X Y eqbX eqbY `{Hx:eqbClass (X:=X) eqbX} `{Hy:eqbClass (X:=Y) eqbY} (f:list (X*Y)):
+  reflect (forall (a : X) (b b' : Y), (a, b) el f -> (a, b') el f -> b = b') (isInjFinfuncTable f).
 Proof.
-  intros Hx Hy. induction f as [ |[x y] f].
+  induction f as [ |[x y] f].
   cbn;constructor. easy.
   cbn.
-  edestruct (allSameEntry_spec x y f Hx Hy) as [H' | H'].
+  edestruct (allSameEntry_spec x y f) as [H' | H'].
   2:{cbn. constructor.
      intros H. eapply H'.  intros.
      eapply H;[left|right].  all:easy.
@@ -416,8 +414,7 @@ Proof.
 Qed.   
 
 Definition isValidFlatTrans sig n states (f : list (nat * list (option nat) * (nat * list (option nat * move)))) :=
-  isInjFinfuncTable (LProd.prod_eqb Nat.eqb (Lists.list_eqb (LOptions.option_eqb Nat.eqb)))
-                    (LProd.prod_eqb Nat.eqb (Lists.list_eqb (LProd.prod_eqb (LOptions.option_eqb Nat.eqb) TMEncoding.move_eqb))) f && isBoundTransTable sig n states f.
+  isInjFinfuncTable  f && isBoundTransTable sig n states f.
 
 Lemma isValidFlatTrans_spec sig n states f:
   reflect (validFlatTrans sig n states f)
@@ -427,8 +424,7 @@ Proof.
   eapply iff_reflect.
   rewrite andb_true_iff. rewrite <- !reflect_iff.
   2:{ eapply isBoundTransTable_spec. }
-  2:{ eapply isInjFinfuncTable_spec.
-      all:intros;eauto using LProd.prod_eqb_spec, LOptions.option_eqb_spec, Lists.list_eqb_spec, TMEncoding.move_eqb_spec, Nat.eqb_spec. }
+  2:{ eapply isInjFinfuncTable_spec. }
   split.
   -now intros [].
   -econstructor. all:easy.

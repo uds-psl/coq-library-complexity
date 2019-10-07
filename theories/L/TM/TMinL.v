@@ -47,7 +47,7 @@ Section loopM.
   Instance term_trans : computableTime' (trans (m:=M)) (fun _ _ => (transTime,tt)).
   Proof.
     pose (t:= (funTable (trans (m:=M)))).
-    apply computableTimeExt with (x:= fun c => lookup (prod_eqb finType_eqb (Vector.eqb (LOptions.option_eqb finType_eqb))) c t (start M,Vector.const (None,N) _)).
+    apply computableTimeExt with (x:= fun c => lookup EqBool.eqb c t (start M,Vector.const (None,N) _)).
     2:{extract.
        cbn [fst snd]. intuition ring_simplify.
 

@@ -32,7 +32,7 @@ Qed.
 
 
 Definition unfoldBool_time lengthH largestVar :=
-  lookupTime lengthH largestVar * 7 + largestVar *196+ 1245.
+  lookupTime lengthH largestVar * 7 + largestVar *196+ EqBool.c__eqbComp term * (size (enc (lam (lam 0))) + size (enc (lam (lam 1)))) + 1245.
 
 Instance term_unfoldBool : computableTime' unfoldBoolean
                                           (fun H _ => (1,fun q _ => (unfoldBool_time (length H) (max (largestVarH H) (largestVarC q)),tt))).
@@ -83,9 +83,10 @@ Proof.
 *)
    destruct loopSum as [[]|].
    cbn [size].
+
    repeat destruct _.
-   all:unfold unfoldBool_time, largestVarC.
-   all:Lia.lia.
+   all:unfold unfoldBool_time, largestVarC, EqBool.eqbTime. all:cbn [fst snd].
+   all:try rewrite -> !Nat.le_min_r. all:try nia.
 Qed.
 
 
@@ -97,9 +98,10 @@ Proof.
 Qed.
 
 Lemma unfoldBool_time_leq lengthH largestVar :
-  unfoldBool_time lengthH largestVar <= (largestVar + 1) * (lengthH * 15 + 38 + 28) * 7 + 1245.
+  unfoldBool_time lengthH largestVar <= (largestVar + 1) * (lengthH * 15 + 38 + 28) * 7 + EqBool.c__eqbComp term * 46 + 1245.
 Proof.
   unfold unfoldBool_time. unfold lookupTime.
+  unfold enc,registered_term_enc. cbn [size term_enc nat_enc]. cbn [plus].
   Lia.nia.
 Qed.
 

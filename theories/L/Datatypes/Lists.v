@@ -1,4 +1,5 @@
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
+From Undecidability.L Require Import Functions.EqBool.
 From Undecidability.L.Datatypes Require Import LBool LNat LOptions LProd.
 Require Export List PslBase.Lists.Filter Datatypes.
 
@@ -228,6 +229,26 @@ Section int.
     destruct B.
     -cbn. Lia.lia.
     -rewrite H,IHA. cbn [length map sumn]. Lia.lia.
+  Qed.
+
+  Global Instance eqbList f `{eqbClass (X:=X) f}:
+    eqbClass (list_eqb f).
+  Proof.
+    intros ? ?. eapply list_eqb_spec. all:eauto using eqb_spec.
+  Qed.
+
+  Global Instance eqbComp_List `{eqbCompT X (R:=HX)}:
+    eqbCompT (list X).
+  Proof.
+    evar (c:nat). exists c. unfold list_eqb. 
+    unfold enc;cbn.
+    change (eqb0) with (eqb (X:=X)).
+    extract. unfold eqb,eqbTime. fold @enc.
+    recRel_prettify2. easy.
+    [c]:exact (c__eqbComp X + 6).
+    all:unfold c. all:cbn iota beta delta [list_enc].
+    all:fold (@enc X _).
+    all:cbn [size]. all: nia.
   Qed.
   
 End int.

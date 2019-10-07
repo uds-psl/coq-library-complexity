@@ -259,6 +259,7 @@ L/Datatypes/LVector.v
 L/Datatypes/LDepPair.v
 
 
+L/Functions/EqBool.v
 L/Functions/Equality.v
 L/Functions/Encoding.v
 L/Functions/Decoding.v

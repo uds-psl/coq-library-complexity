@@ -2,6 +2,8 @@ From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import LNat Lists LProd LFinType LVector.
 From Undecidability.L Require Import Computability.MuRec Functions.FinTypeLookup.
 From Undecidability.L Require Import MuRec.
+From Undecidability.L Require Import Functions.EqBool.
+
 
 
 From Undecidability Require Import TM.TM L.Functions.Decoding.
@@ -25,6 +27,24 @@ Definition move_eqb (m n : move) : bool :=
 Lemma move_eqb_spec x y : reflect (x = y) (move_eqb x y).
 Proof.
   destruct x, y;constructor. all:easy.
+Qed.
+
+
+Instance eqbOption:
+  eqbClass move_eqb.
+Proof.
+  intros ? ?. eapply move_eqb_spec.
+Qed.
+
+
+Instance eqbComp_bool : eqbCompT move.
+Proof.
+  evar (c:nat). exists c. unfold move_eqb.
+  unfold enc;cbn.
+  extract.
+  solverec.
+  [c]:exact 3.
+  all:unfold c;try lia.
 Qed.
 
 (*

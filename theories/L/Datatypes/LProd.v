@@ -1,7 +1,8 @@
 From Undecidability.L Require Export L Tactics.LTactics.
 
-From Undecidability.L.Datatypes Require Import LNat.
-
+From Undecidability.L Require Import Functions.EqBool GenEncode.
+(*
+From Undecidability.L Require Import LNat.*)
 (** ** Encoding of pairs *)
 
 Section Fix_XY.
@@ -45,7 +46,29 @@ Section Fix_XY.
     inv Hf;inv Hg;cbn...
   Qed.
 
-  
+  Global Instance eqbProd f g `{eqbClass (X:=X) f} `{eqbClass (X:=Y) g}:
+    eqbClass (prod_eqb f g).
+  Proof.
+    intros ? ?. eapply prod_eqb_spec. all:eauto using eqb_spec.
+  Qed.
+
+  Global Instance eqbComp_Prod `{eqbCompT X (R:=intX)} `{eqbCompT Y (R:=intY)}:
+    eqbCompT (X*Y).
+  Proof.
+    evar (c:nat). exists c. unfold prod_eqb. 
+    unfold enc;cbn.
+    change (eqb0) with (eqb (X:=X)).
+    change (eqb1) with (eqb (X:=Y)).
+    extract. unfold eqb,eqbTime. fold @enc.
+    recRel_prettify2. easy.
+    [c]:exact (c__eqbComp X + c__eqbComp Y + 6).
+    all:unfold c. cbn iota delta [prod_enc].
+    fold (@enc X _). fold (@enc Y _). 
+    cbn [size].  nia.
+  Qed.
+
+
+  (*
   Global Instance term_prod_eqb :
     computableTime' prod_eqb
                      (fun _ eqT1 =>
@@ -64,7 +87,7 @@ Section Fix_XY.
     computable prod_eqb.
   Proof.
     extract. 
-  Defined.
+  Defined. *)
 
   
   Lemma size_prod (w:X*Y):

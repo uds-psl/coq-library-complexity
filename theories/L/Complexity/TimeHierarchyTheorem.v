@@ -93,7 +93,7 @@ Section TimeHierarchy.
     all:unfold unfoldBool_time.
     all:unfold heapStep_timeBound,Lookup.lookupTime.
     smpl_inO.
-    1,4,6-9:inO_leq 1.
+    1,4,6-11:inO_leq 1.
     2:unfold unfoldBool_time.
     2-3:unfold heapStep_timeBound,Lookup.lookupTime.     
     -eapply inO_size_nat. inO_leq 1.
