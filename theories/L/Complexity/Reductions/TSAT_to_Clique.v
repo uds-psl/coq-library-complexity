@@ -168,6 +168,10 @@ Section constructClique.
     intros H. enough (|constructClique_cnf a cn| >= |cn|).
     {specialize (construct_length_bound a cn); lia. }
     specialize (everyClause  H) as H1.
+    induction cn.
+    - cbn; lia.
+    - cbn. destruct (constructClique_clause a 0 a0) eqn:H2. 
+      + admit.
   Admitted. 
 
   Lemma construct_literals_positive (a : assgn) (cn : cnf) : forall (pos : nat * nat), pos el constructClique_cnf a cn
@@ -468,33 +472,6 @@ Proof.
         now apply assgn_satisfies with (g:= (n, e)) (fInv := fInv). 
 Qed. 
 
-
-(* I am dumb. This obviously can't be extracted...*)
-(* Definition redGraph (c :cnf) : UndirectedGraph. *)
-(*   destruct (kCNF_decb 3 c) eqn:H1.  *)
-(*   - exists ( 3 * (|c|)) *)
-(*     (fun (u : Fin.t (3 * |c|)) (v : Fin.t (3 * |c|)) => match enumerateLiteral c 3 (finToNat u) with Some l1 => *)
-(*                                               match enumerateLiteral c 3 (finToNat v) with Some l2 => *)
-(*                                                  not (literalsConflict l1 l2) /\ *)
-(*                                                 enumLiteral_different_clause c 3 (finToNat u) (finToNat v) *)
-(*                                                | None => False end | None => False end). *)
-(*     + intros u v. *)
-(*       pose (u' := finToNat u). pose (v' := finToNat v). *)
-(*       destruct (enumerateLiteral c 3 (finToNat u)), (enumerateLiteral c 3 (finToNat v)). *)
-(*       destruct p, p0. cbn. destruct (Bool.eqb b b0) eqn:H2, (Nat.eqb n n0) eqn:H3.  *)
-(*       1,2,4: destruct (Nat.eqb (u' / 3) (v'/3)) eqn:H4.   *)
-(*       all: try (right; intros [_ H]; now eqdec_bool); try (left; split; eqdec_bool; tauto).  *)
-(*       1 : right; intros [H H']; apply H; eqdec_bool.   *)
-(*       1-3: now right. *)
-(*     + (*symmetry*) *)
-(*       intros u v. pose (u' := finToNat u). pose(v' := finToNat v).  *)
-(*       destruct (enumerateLiteral c 3 (finToNat u)), (enumerateLiteral c 3 (finToNat v)). *)
-(*       2-4: tauto.  *)
-(*       destruct p, p0. cbn. unfold enumLiteral_different_clause. intros [H2 H3]. split; firstorder.  *)
-(*   - (*invalid instance*) *)
-(*     exists 0 (fun u v => False); tauto. (*empty graph, the reduction then  *) *)
-(* Defined.  *)
-
 (*contruction principle: enumerate the literals from left to right; for each literal go through the literals *)
 (*of the clauses to the right of it and make appropriate edges *)
 (* this suffices since we are dealing with an undirected graph*)
@@ -530,18 +507,25 @@ Definition reduction (c : cnf) : Lgraph * nat := (redGraph c, |c|).
 Definition labF (n : nat) := (n /3, n mod 3). 
 Definition labFInv (n : nat * nat) := (fst n * 3 + snd n). 
 
+Lemma labF_proj (a b : nat) : b < 3 -> labF(3 * a + b) = (a, b). 
+Proof. 
+  intros H. unfold labF. 
+  rewrite Nat.mul_comm. rewrite Nat.div_add_l; [|lia]. rewrite Nat.add_comm with (n := a * 3). 
+  rewrite Nat.mod_add; [| lia]. rewrite Nat.div_small; [|apply H]. rewrite Nat.mod_small; [|apply H]. now rewrite Nat.add_0_r. 
+Qed. 
+
 Lemma labF_isLabelling (c : cnf) : isLabelling c labF labFInv. 
   split. 
   - split.
     + cbn [labF]. split.
-      * admit. 
+      * enough (S(x/3) <= |c|) by lia. assert (S x <= 3 * |c|) by lia. clear H. 
+        (* this is not entirely straightforward *)
+        admit.
       * cbn. destruct (Nat.divmod); destruct n0; try destruct n0; cbn; lia. 
     + unfold labF, labFInv. cbn [fst snd]. replace ((x/3) * 3) with (3 * (x/3)) by lia. now apply Nat.div_mod. 
   - intros (a & b) H. split.
-    + unfold labFInv; cbn [fst snd]. destruct H. admit.
-    + cbn. unfold labF. enough (a = (a * 3 + b) /3 /\ b = (a * 3 + b) mod 3) by firstorder. split. 
-      * admit. 
-      * admit. 
+    + unfold labFInv; cbn [fst snd]. destruct H. lia. 
+    + cbn. now rewrite <- labF_proj. 
 Admitted. 
 
 
@@ -672,13 +656,54 @@ Section makeEdgesVerification.
   Lemma makeEdges_correct (cn : cnf) (a b : nat) : kCNF 3 cn ->
    ((a, b) el makeEdges cn 0 <-> a < b /\ exists l l', Some l = enumerateLiteral cn (labF a) /\ Some l' = enumerateLiteral cn (labF b) /\ enumLiteral_different_clause (labF a) (labF b) /\ not (literalsConflict l l')). 
   Proof. 
+    intros H. rewrite makeEdges_iff. split. 
+    + intros (clpos & lpos & H1 & H2 & H3 & (cl & cn1 & cn2 & H4 & H5 & H6 & H7)). cbn -[Nat.mul] in H7. 
+      rewrite makeEdges'_iff in H7. destruct H7 as (lpos2 & F1 & (l & F2 & F3)). assert (lpos = lpos2) by lia. rewrite <- H0 in F2; clear H0 F1 lpos2. 
+      rewrite makeEdgesLiteral_iff in F3. destruct F3 as (_ & (clpos' & lpos' & G1 & G2 & (cl' & l' & G3 & G4 & G5 & G6))). 
+      split.
+      - rewrite H3, G5; cbn. lia. 
+      - cbn -[Nat.mul] in H3. rewrite H3, G5. exists l, l'. rewrite <- G4, <- F2.
+        split; try split; try split. 
+        * rewrite labF_proj; [|apply H2]. cbn. rewrite H4. reflexivity. 
+        * replace (3 * S clpos + 3 * clpos') with (3* (S clpos + clpos')) by lia. rewrite labF_proj; [|apply G1].  
+          rewrite H5. unfold enumerateLiteral. rewrite nth_error_app2; rewrite H6. 2: lia. 
+          replace (S clpos + clpos' - clpos ) with (S clpos') by lia. cbn. now rewrite G3. 
+        * replace (3 * S clpos + 3 * clpos') with (3* (S clpos + clpos')) by lia. repeat rewrite labF_proj. 
+          unfold enumLiteral_different_clause. cbn [fst]. lia.  
+          all: assumption.
+        * apply G6. 
+     - apply kCNF_decb_iff, kCNF_decb_correct. rewrite H5 in H. rewrite <- kCNF_decb_iff, kCNF_decb_correct in H. firstorder. 
+     - rewrite H5 in H. rewrite <- kCNF_decb_iff, kCNF_decb_correct in H. destruct H as (_ & H).
+       specialize (H cl). enough (|cl| = 3) by lia; symmetry. firstorder.
+     - apply kCNF_decb_iff, kCNF_decb_correct. rewrite H5 in H. rewrite <- kCNF_decb_iff, kCNF_decb_correct in H. firstorder.
+   + intros (H1 & (l & l' & H2 & H3 & H4 & H5)). 
+     destruct (labF a) as (clpos & lpos) eqn:H6. exists clpos, lpos.
+     symmetry in H2.
+     destruct (enumerateLiteral_Some_conv H (ex_intro (fun x => enumerateLiteral cn (clpos, lpos) = Some x) l H2)).
+     split; try split; try assumption. split.
+     1: {
+       admit.
+     }
+     destruct (labF b) as (clpos' & lpos') eqn:H8. unfold enumerateLiteral in H2. destruct (nth_error cn clpos) eqn:H9. 
+     -- exists l0. specialize (nth_error_In cn clpos H9) as H10; apply in_split in H10. destruct H10 as (cn1 & cn2 & H10).  
+        exists cn1, cn2. firstorder.
+        ++ admit. 
+        ++ apply makeEdges'_iff. 
+
   Admitted.
 
   (*or in terms of edges, thus encapsulating the asymmetry of a and b*)
   Lemma makeEdges_correct' (cn : cnf) (a b : nat) : kCNF 3 cn ->
     (Lgraph_edge_in_dec' (makeEdges cn 0) a b = true <-> exists l l', Some l = enumerateLiteral cn (labF a) /\ Some l' = enumerateLiteral cn (labF b) /\ enumLiteral_different_clause (labF a) (labF b) /\ not(literalsConflict l l')).  
-        
-  Admitted. 
+    intros H. rewrite Lgraph_edge_in_dec'_correct. split.
+    - intros [H1%makeEdges_correct|H1%makeEdges_correct]. 2, 4: assumption.
+      + firstorder. 
+      + destruct H1 as (_ & (l & l' & F1 & F2 & F3 & F4)). exists l', l. firstorder. destruct l, l'. firstorder.
+    - intros (l & l' & H1 & H2 & H3 & H4). destruct (lt_eq_lt_dec a b) as [[H5 | ->] | H5]. 
+      + left. apply makeEdges_correct; firstorder. 
+      + assert (l = l') by congruence. rewrite H0 in H4. unfold literalsConflict in H4. destruct l, l'. congruence.  
+      + right. apply makeEdges_correct; [assumption| split; [assumption|]]. exists l', l. firstorder. destruct l, l'; firstorder. 
+  Qed. 
 
 End makeEdgesVerification. 
                 
@@ -849,6 +874,7 @@ Proof.
   intros cl H. rewrite list_size_length. now rewrite list_el_size_bound.
 Qed. 
 
+
 Lemma makeEdges'_time_bound : exists (f : nat -> nat), (forall (c : clause) (numL : nat) (cn : cnf) (numCn : nat), makeEdges'_time c numL cn numCn <= f(size(enc c) + size(enc cn))) /\ inOPoly f /\ monotonic f. 
 Proof.
   (*again, we first bound the running time of each recursion step*)
@@ -858,6 +884,8 @@ Proof.
     evar (f : nat -> nat). exists f. split.
     - intros. rewrite H1.
       rewrite makeEdgesLiteral_size. 2: apply cnf_clause_length_bound.
+      (* Set Printing Implicit . *)
+      (* Typeclasses eauto := debug. *)
       rewrite list_size_length with (l:= cn) (H:= (@registered_list_enc (bool * nat) (@registered_prod_enc bool nat  (@LBool.registered_bool_enc) (@registered_nat_enc)))).
       instantiate (f:= fun n => f' n + 16 * n * n + 30). subst f.
       solverec. 
@@ -1012,8 +1040,3 @@ Proof.
         -- symmetry in H3. apply length_zero_iff_nil in H3. rewrite H3 in H; now cbn in H.
         -- destruct node; cbn in H4; congruence. 
 Qed. 
-
-
-    (*reduction_sat_redRel, redRel_reduces *)
-Admitted. 
-
