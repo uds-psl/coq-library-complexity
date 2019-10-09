@@ -24,6 +24,14 @@ Proof.
   - cbn. rewrite IHl. lia. 
 Qed. 
 
+Lemma list_size_of_el (X : Type) `{registered X} (l : list X) (k : nat) : (forall a, a el l -> size(enc a) <= k) -> size(enc l) <= (k * (|l|)) + 5 * (|l|) +  4 . 
+Proof.
+  intros H1. induction l. 
+  - cbn. rewrite size_list. cbn.  lia.
+  - cbn. rewrite list_size_cons. rewrite IHl; [ |now firstorder]. rewrite H1; [|now left].
+    solverec. 
+Qed. 
+    
 Lemma list_in_decb_time_bound (X : Type) `{registered X} (eqbT : X -> unit -> (nat * (X -> unit -> nat * unit))) :
   (exists (f : nat -> nat), (forall (a b : X), callTime2 eqbT a b <= f(size(enc a) + size(enc b))) /\ inOPoly f /\ monotonic f)
     -> exists (f : nat -> nat), (forall (l : list X) (e : X), list_in_decb_time eqbT l e <= f(size(enc l) + size(enc e)) ) /\ inOPoly f /\ monotonic f. 

@@ -25,6 +25,18 @@ Proof.
     rewrite forallb_forall. intros. rewrite Nat.eqb_eq. now apply H2. 
 Qed. 
 
+Lemma kCNF_decb_iff (k : nat) (c : cnf) : kCNF_decb k c = true <-> kCNF k c.
+Proof. 
+  rewrite kCNF_decb_correct. 
+  split.
+  - induction c.
+    + cbn. intros [H1 H2]. now constructor. 
+    + cbn. intros [H1 H2]. constructor. symmetry; now apply H2. apply IHc; firstorder. 
+  - induction 1.  
+    + firstorder. 
+    + firstorder. symmetry; now rewrite <- H3.
+Qed. 
+
 Lemma kCNF_kge (k : nat) (c : cnf) : kCNF k c -> k > 0.
 Proof. induction 1; assumption. Qed.
 
