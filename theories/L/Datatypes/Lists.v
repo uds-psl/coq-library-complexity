@@ -294,6 +294,15 @@ Section list_in.
         cbn. apply orb_true_intro; left; now apply eqb_correct. 
         cbn. apply orb_true_intro; right; now apply IHl. 
   Qed. 
+
+  Lemma list_in_decb_iff' (l : list X) : forall x, list_in_decb l x = false <-> not (x el l).
+  Proof. 
+    intros x. split.
+    - intros H H'. apply list_in_decb_iff in H'. congruence.
+    - intros H'. destruct (list_in_decb l x) eqn:H.
+      + now apply list_in_decb_iff in H.
+      + reflexivity.
+  Qed. 
 End list_in. 
 
 Fixpoint list_in_decb_time (X : Type) (eqbT: X -> unit -> (nat * (X -> unit -> nat * unit)%type)) (l : list X) (e : X) : nat :=

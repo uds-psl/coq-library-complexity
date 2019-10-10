@@ -1,26 +1,62 @@
 From Undecidability.L.Complexity Require Import NP Synthetic Problems.SAT Problems.Clique Problems.kSAT MorePrelim.
 From Undecidability.L Require Import Tactics.LTactics.
-From Undecidability.L.Complexity Require Import Problems.LGraph.
+From Undecidability.L.Complexity Require Import Problems.LGraph MorePrelim.
 Require Import Coq.Init.Nat.
 Import PslBase.Bijection.
 
-(*we first design the reduction function*)
-(* idea: for every clause c, create three nodes n^c_1, n^c_2, n^c_3 , corresponding to the three literals*)
-(* connect n^c_i to n^d_j iff c <> d and the literals corresponding to n^c_i and n^d_j are not conflicting*)
-(* if there are k clauses, we have a k clique iff the cnf is satisfiable*)
 
-(*Layout of the constructed instance: for every clause with index i the three nodes with indices 3i..3i+2 *)
-(*construction of the edge set: iterate over clauses. for each literal of each clause, iterate over all clauses*)
-(*this should run in quadratic time*)
+(** TODO: might factor out some parts to a new variant of SAT that does work with list (bool * nat) assignments *)
 
 (*We proceed in the following way: *)
-(*First, we define a relation on cnf * UndirectedGraph that connects sat instances to clique instances *)
+(*First, we define a relation on cnf * (LGraph * nat) that connects 3-SAT instances to Clique instances *)
+(* This graph has to satisfy the following properties with relation to the CNF: *)
+(* For every clause c, there are three nodes n^c_1, n^c_2, n^c_3 , corresponding to the three literals.*)
+(* Nodes n^c_i and n^d_j are connected iff c <> d and the literals corresponding to n^c_i and n^d_j are not conflicting.*)
+(* If there are k clauses, we then have a k-clique iff the CNF is satisfiable.*)
+(*The above construction implies that the graph should have 3 * |c| nodes, where c is the CNF *)
+
+(*The relation will abstract away from specific connections between literals and nodes by working with an abstract labelling function*)
 
 (*a labelling function for a graph that assigns a clause and a literal index *)
 Definition labGraph:= nat -> nat * nat.
 Definition labGraphInv := nat * nat -> nat. 
-Definition literal_in_CNF (c : cnf) (l : literal) := exists cl, cl el c /\ l el cl.
 
+(*The labelling function should form a bijection between literals and graph nodes *)
+Definition inverseOn (X Y : Type) (f : X -> Y) (g : Y -> X) (p : X -> Prop) (q : Y -> Prop) :=
+  (forall x, p x -> q (f x) /\ x = g(f x)) /\ (forall y, q y -> p (g y) /\ y = f(g y)). 
+Definition isLabelling (c : cnf) (f : labGraph) (fInv : labGraphInv) :=
+  inverseOn f fInv (fun n => n < 3 * |c|) (fun n => let (a, b):= n in a < (|c|) /\ b < 3). 
+
+(*A technical lemma that we will later need to work with the labelling function*)
+Lemma map_inverse_el (X Y : Type) (f : X -> Y) (g : Y -> X) (p : X -> Prop) (q : Y -> Prop) (l : list Y) :
+  inverseOn f g p q -> (forall x, x el l -> q x) -> forall x, q x -> g x el (map g l) -> x el l /\ p (g x).
+Proof.
+  intros [H1 H2] H3 y H4 H5. induction l.
+  + destruct H5.
+  + destruct H5 as [H5 | H5].
+    - clear IHl. split.
+      * left. rewrite (proj2(H2 y H4)). rewrite (proj2(H2 a (H3 a (or_introl eq_refl)))). 
+        now rewrite H5.
+      * now apply H2. 
+    - assert (forall x, x el l -> q x) by firstorder. specialize (IHl H H5). split; [right|]; apply IHl. 
+Qed. 
+
+Lemma inverseOn_symmetric {X Y : Type} {f : X -> Y} {g : Y -> X} {p : X -> Prop} {q : Y->Prop}:
+  inverseOn f g p q <-> inverseOn g f q p.
+Proof. unfold inverseOn. tauto. Qed. 
+
+Lemma dupfree_map_inverse (X Y : Type) (f : X -> Y) (g : Y -> X) (p : X -> Prop) (q : Y -> Prop) (l : list Y): inverseOn f g p q -> dupfree l -> (forall x, x el l -> q x) -> dupfree (map g l). 
+Proof.
+  intros H1 H3 H4.   
+  induction H3. 
+  - cbn; constructor. 
+  - cbn. constructor.
+    + contradict H. apply (map_inverse_el (l:=A) H1); firstorder. 
+    + apply IHdupfree. firstorder. 
+Qed. 
+
+(*The notion of conflicting literals, i.e. literals that cannot simultaneously be positive for any assignment*)
+Definition literal_in_CNF (c : cnf) (l : literal) := exists cl, cl el c /\ l el cl.
 Definition literalsConflict (a b : literal) := match a, b with (s1, v1), (s2, v2) => s1 <> s2 /\ v1 = v2 end.
 
 Lemma literalsConflict_eval (s s' : bool) (n n' : nat) (a : assgn) : n' < |a| -> n < |a| -> (literalsConflict (s, n) (s', n') <-> (evalLiteral a (s, n) <> evalLiteral a (s', n') /\ n = n')). 
@@ -33,8 +69,8 @@ Proof.
 Qed. 
 
 
+(*A boolean decider *)
 Definition literalsConflictb (a b : literal) := match a, b with (s1, v1), (s2, v2) => negb(Bool.eqb s1 s2) && Nat.eqb v1 v2 end. 
-
 Lemma literalsConflictb_correct (a b : literal) : literalsConflict a b <-> literalsConflictb a b = true. 
   split; unfold literalsConflictb; destruct a, b.
   - intros H. simp_bool; split; simp_bool. all: destruct H; dec_bool. 
@@ -42,62 +78,48 @@ Lemma literalsConflictb_correct (a b : literal) : literalsConflict a b <-> liter
 Qed. 
 
 Section enumLiteral.
+  (*In this section, we derive from a (clause, literal) index pair the corresponding literal in a kCNF *)
   Variable (k :nat).
-
   Definition enumerateLiteral' (c : clause) (n : nat) := nth_error c n.
   Definition enumerateLiteral (c : cnf) (pos : nat * nat) := let (cl, n) := pos in  match nth_error c cl with Some cl => enumerateLiteral' cl n 
                                                                            | None => None
                                                                             end.
 
-Lemma enumerateLiteral'_Some (c : clause) : |c| = k -> forall (n : nat), n < k -> exists (l : literal), enumerateLiteral' c n = Some l.
-Proof. 
-  intros H n H1.  
-  unfold enumerateLiteral'. rewrite <- H in H1. destruct (Prelim.nthe_length H1). now exists x.
-Qed.                                                                                      
+  Lemma enumerateLiteral'_Some (c : clause) : |c| = k -> forall (n : nat), n < k -> exists (l : literal), enumerateLiteral' c n = Some l.
+  Proof. 
+    intros H n H1.  
+    unfold enumerateLiteral'. rewrite <- H in H1. destruct (Prelim.nthe_length H1). now exists x.
+  Qed.                                                                                      
 
-Lemma enumerateLiteral_Some (c : cnf) : kCNF k c -> forall (n :nat) (n' : nat), n < |c| -> n' < k -> 
-      exists (l : literal), enumerateLiteral c (n, n') = Some l.
-Proof.
-  intros H n n' H1 H2. specialize (kCNF_kge H) as H0. destruct (enumerateLiteral c (n, n')) eqn:H3. now exists p. 
-  exfalso. revert n H1 H3. induction c. 
-  + intros n H1. cbn in H1; lia.  
-  + intros n H1 H3. cbn in H1.
-    destruct n. cbn in H3. inversion H.  specialize (enumerateLiteral'_Some H6 H2) as (l & H8). congruence. 
-    unfold enumerateLiteral in H3. cbn in H3. apply IHc with (n := n). now inv H. lia. apply H3.
-Qed. 
+  Lemma enumerateLiteral_Some (c : cnf) : kCNF k c -> forall (n :nat) (n' : nat), n < |c| -> n' < k -> 
+    exists (l : literal), enumerateLiteral c (n, n') = Some l.
+  Proof.
+    intros H n n' H1 H2. specialize (kCNF_kge H) as H0. destruct (enumerateLiteral c (n, n')) eqn:H3. now exists p. 
+    exfalso. revert n H1 H3. induction c. 
+    + intros n H1. cbn in H1; lia.  
+    + intros n H1 H3. cbn in H1.
+      destruct n. cbn in H3. inversion H.  specialize (enumerateLiteral'_Some H6 H2) as (l & H8). congruence. 
+      unfold enumerateLiteral in H3. cbn in H3. apply IHc with (n := n). now inv H. lia. apply H3.
+  Qed. 
 
-Lemma enumerateLiteral_Some_conv (c : cnf) : kCNF k c -> forall n n', (exists (l : literal), enumerateLiteral c (n, n') = Some l) -> n < |c| /\ n' < k. 
-Proof.
-  intros H n n' (l & H1). induction c. 
-  - cbn in H1. destruct n; cbn in H1; congruence.  
-  - cbn in H1. destruct n; cbn in H1. apply nth_error_Some_lt in H1. inv H. split; cbn; lia. 
-    (* inv H. cbn in IHc. destruct c. destruct n; cbn in H1; congruence. destruct (nth_error c n); try congruence.  *)
-Admitted. 
+  Lemma enumerateLiteral_Some_inv (c : cnf) : kCNF k c -> forall n n', (exists (l : literal), enumerateLiteral c (n, n') = Some l) -> n < |c| /\ n' < k. 
+  Proof.
+     induction c. 
+    - intros H n n' (l & H1). cbn in H1. destruct n; cbn in H1; congruence.  
+    - intros H n n' (l & H1). cbn in H1. destruct n; cbn in H1.
+      + apply nth_error_Some_lt in H1. inv H. split; cbn; lia. 
+      + inv H. cbn. enough (n < |c| /\ n' < |a|) by lia. apply IHc; [apply H4|]. 
+        exists l. apply H1. 
+  Qed.
 
-Definition enumLiteral_different_clause (l1 : nat * nat) (l2 : nat * nat) := fst l1 <> fst l2. 
+  Definition enumLiteral_different_clause (l1 : nat * nat) (l2 : nat * nat) := fst l1 <> fst l2. 
+  Hint Unfold enumLiteral_different_clause. 
 End enumLiteral.
 
-Definition inverseOn (X Y : Type) (f : X -> Y) (g : Y -> X) (p : X -> Prop) (q : Y -> Prop) :=
-  (forall x, p x -> q (f x) /\ x = g(f x)) /\ (forall y, q y -> p (g y) /\ y = f(g y)). 
-Definition isLabelling (c : cnf) (f : labGraph) (fInv : labGraphInv) :=
-  inverseOn f fInv (fun n => n < 3 * |c|) (fun n => let (a, b):= n in a < (|c|) /\ b < 3). 
 
-(*a few technical lemmas that are needed in order to work with the labelling function *)
 
-Lemma dupfree_map_inverse (X Y : Type) (f : X -> Y) (g : Y -> X) (p : X -> Prop) (q : Y -> Prop) (l : list Y): inverseOn f g p q -> dupfree l -> (forall x, x el l -> q x) -> dupfree (map g l). 
-Proof.
-Admitted. 
-
-Lemma map_el (X Y : Type) (l : list X) (f : X -> Y) (e : Y) : e el (map f l) -> exists e', e' el l /\ f e' = e. 
-Proof.
-  induction l. 
-  - cbn. intros []. 
-  - intros [H1 | H2].
-    + exists a. split; firstorder. 
-    + destruct (IHl H2) as (e' & F1 & F2). exists e'. split; firstorder. 
-Qed. 
-
-(* the reduction relation *)
+(*The reduction relation, as described above *)
+(*We explicitly enforce that the graph has a suitable number of nodes *)
 (*TODO: maybe remove the kCNF constraint? *)
 Definition redRel (c : cnf) (cl : Lgraph * nat) := let (g, k) := cl in
                                                  let (n, e) := g in n = (3 * |c|) /\ k = |c| /\ kCNF 3 c /\ 
@@ -111,14 +133,17 @@ Definition redRel (c : cnf) (cl : Lgraph * nat) := let (g, k) := cl in
 (*construction of a set of literal indices, one for each clause, that is satisfied for an assignment*)
 (*from this, we directly get a clique in a suitable reduction graph*)
 Section constructClique.
+  (*Given a clause cl, find the index of a literal that is satisfied by the assignment a *)
+  (*If there is none, return None*)
   Fixpoint constructClique_clause' (a : assgn) (cl_index : nat) (cl : clause) (lit_index : nat):=
   match cl with [] => None
               | (l :: cl) => match evalLiteral a l with Some true => Some (cl_index, lit_index)
                                                | _  => constructClique_clause' a cl_index cl (S lit_index)
   end end. 
-  Definition constructClique_clause (a : assgn) (cl_index : nat) (cl : clause) :=
-  constructClique_clause' a cl_index cl 0.
+  Definition constructClique_clause (a : assgn) (cl_index : nat) (cl : clause) := constructClique_clause' a cl_index cl 0.
 
+  (*Given a cnf cn, find a list of (clause, literal) indices, one for each clause, that is satisfied by the assignment*)
+  (*If there is no such literal for some clause (the assignment is not satisfying), return an empty list *)
   Fixpoint constructClique_cnf' (a:assgn) (cn : cnf) (cl_index : nat) :=
   match cn with [] => []
               | (l :: cn) => match constructClique_clause a cl_index l with Some l => l :: constructClique_cnf' a cn (S cl_index)
@@ -165,19 +190,95 @@ Section constructClique.
 
   Lemma construct_length (a : assgn) (cn : cnf) : evalCnf a cn = Some true -> |constructClique_cnf a cn| = |cn|. 
   Proof.
-    intros H. enough (|constructClique_cnf a cn| >= |cn|).
-    {specialize (construct_length_bound a cn); lia. }
-    specialize (everyClause  H) as H1.
-    induction cn.
-    - cbn; lia.
-    - cbn. destruct (constructClique_clause a 0 a0) eqn:H2. 
-      + admit.
+    intros H.
+    enough (forall (m : nat), |constructClique_cnf' a cn m| = |cn|) by apply (H0 0). 
+    induction cn. 
+    - intros; now cbn.
+    - intros m. 
+      cbn. specialize (everyClause' H (or_introl eq_refl) m ) as (k & ->). cbn. 
+      rewrite IHcn; [lia|].  
+      apply evalCnf_step_inv in H as (b1 & b2 & H1 & H2 & H3). simp_bool'.
+  Qed. 
+
+  Lemma constructClique_clause_pos (a : assgn) (cl_index : nat) (cl : clause) : forall pos, constructClique_clause  a cl_index cl = Some pos -> fst pos = cl_index.
+  Proof. 
+    intros (p1 & p2). cbn [fst].
+    unfold constructClique_clause. generalize 0. induction cl.
+    - intros; cbn in H; congruence. 
+    - intros. cbn in H. destruct (evalLiteral a a0) eqn:H1. destruct b.
+      * congruence. 
+      * now apply IHcl with (n:= S n). 
+      * now apply IHcl with (n:= S n). 
+  Qed. 
+
+  Lemma constructClique_cnf'_pos (a : assgn) (cn : cnf) (clpos: nat): forall pos, pos el constructClique_cnf' a cn clpos -> fst pos >= clpos. 
+  Proof.
+    intros pos H. revert clpos H; induction cn.
+    - intros; destruct H.
+    - intros; cbn in H. destruct (constructClique_clause a clpos a0) eqn:H1. destruct H as [-> | H2]. 
+      * destruct pos. apply constructClique_clause_pos in H1. firstorder.   
+      * apply IHcn in H2. lia. 
+      * destruct H. 
+  Qed. 
+
+  (* We prove this slightly awkward version using nth_error since this also allows us to show that the result is duplicate-free *)
+  Lemma construct_literals_different_clause' (a : assgn) (cn : cnf) : forall (pos pos' : nat * nat) (i j: nat),
+      nth_error (constructClique_cnf a cn) i = Some pos -> nth_error (constructClique_cnf a cn) j = Some pos'
+      -> i <> j -> enumLiteral_different_clause pos pos'.
+  Proof.
+    intros pos pos'. unfold constructClique_cnf. generalize 0. induction cn.
+    - cbn; intros.  destruct i; cbn in H; congruence. 
+    - intros. cbn in H, H0. destruct (constructClique_clause a n a0) eqn:H2; destruct i, j; cbn in H, H0. 
+      + congruence. 
+      + apply nth_error_In in H0. apply constructClique_clause_pos in H2. apply constructClique_cnf'_pos in H0. destruct pos, pos', p; cbn in H0, H2.  
+        unfold enumLiteral_different_clause; cbn. rewrite H2 in H. inv H.  lia. 
+      + apply nth_error_In in H. apply constructClique_clause_pos in H2. apply constructClique_cnf'_pos in H. destruct pos, pos', p; cbn in H, H2.  
+        unfold enumLiteral_different_clause; cbn. rewrite H2 in H0. inv H0. lia.
+      + now apply IHcn with (n := S n) (i:= i) (j:= j).
+      + congruence. 
+      + congruence. 
+      + congruence. 
+      + congruence. 
+   Qed. 
+
+  Corollary construct_literals_different_clause (a : assgn) (cn : cnf) : forall (pos pos' : nat * nat), pos el constructClique_cnf a cn -> pos' el constructClique_cnf a cn -> pos <> pos' -> enumLiteral_different_clause pos pos'. 
+  Proof.
+    intros. apply In_nth_error in H as (n & H). apply In_nth_error in H0 as (n' & H0).
+    now apply construct_literals_different_clause' with (a:=a) (cn:=cn) (i:=n)(j:=n').
+  Qed. 
+
+  Corollary construct_dupfree ( a : assgn) (cn : cnf) : dupfree(constructClique_cnf a cn). 
+  Proof.
+    apply dupfree_nthe. intros. 
+    specialize (construct_literals_different_clause' H H0 H1). unfold enumLiteral_different_clause. firstorder.
+  Qed. 
+
+  Lemma construct_literals_positive' (a : assgn) (m : nat) (cl : clause)  : forall n, constructClique_clause a m cl = Some (m, n)
+                                                                               -> exists (l : literal), enumerateLiteral' cl n = Some l
+                                                                                    /\ evalLiteral a l = Some true.
+  Proof.
+    intros n. unfold constructClique_clause. replace (enumerateLiteral' cl n) with (enumerateLiteral' cl (n - 0)) by (now rewrite Nat.sub_0_r).
+    generalize 0. induction cl. 
+    - cbn. congruence. 
+    - intros n'. cbn. destruct (evalLiteral a a0) eqn:H1. 
+      + destruct b.
+        * intros [=]. rewrite H0, <- minus_diag_reverse. exists a0. firstorder. 
+        * intros H2. destruct (IHcl (S n') H2) as (l & F1 & F2). exists l.
+          destruct n. cbn. 
   Admitted. 
+                                                                                  
+                                                                                                                               
 
   Lemma construct_literals_positive (a : assgn) (cn : cnf) : forall (pos : nat * nat), pos el constructClique_cnf a cn
                                                             -> exists (l : literal), enumerateLiteral cn pos = Some l
                                                                  /\ evalLiteral a l = Some true. 
   Proof.
+    enough (forall m pos, pos el constructClique_cnf' a cn m -> exists l, enumerateLiteral cn pos = Some l /\ evalLiteral a l = Some true) by firstorder.
+    induction cn. 
+    - intros m pos []. 
+    - cbn. intros m pos. destruct (constructClique_clause a m a0) eqn:H1. 2: intros []. 
+      intros [-> | H2]. 
+      + destruct pos. 
     (*by induction over the structure of the CNF again*)
   Admitted. 
 
@@ -186,47 +287,44 @@ Section constructClique.
   Proof.
     intros pos pos' H1 H2 H3. destruct (construct_literals_positive H1) as (l1 & F1 & F2). 
     destruct (construct_literals_positive H2) as (l2 & G1 & G2). exists l1, l2. 
-    split; try split; firstorder. intros H. destruct l1, l2. rewrite literalsConflict_eval with (a := a)in H. 
-    now rewrite F2, G2 in H.
-    - now apply evalLiteral_varBound with (sign:= b0).
-    - now apply evalLiteral_varBound with (sign:=b). 
+    split; try split; firstorder. intros H. destruct l1, l2. rewrite literalsConflict_eval in H.
+    2: { eapply evalLiteral_varBound. exists true; apply G2.  }
+    2: { eapply evalLiteral_varBound. exists true; apply F2. }
+    destruct H; congruence.  
   Qed. 
 
-  Lemma construct_literals_different_clause (a : assgn) (cn : cnf) : forall (pos pos' : nat * nat), pos el constructClique_cnf a cn -> pos' el constructClique_cnf a cn -> pos <> pos' -> enumLiteral_different_clause pos pos'. 
-  Proof. 
-  Admitted. 
 
   Lemma construct_literals_bound (a : assgn) (cn : cnf) (k : nat) : kCNF k cn -> forall (n m : nat), (n, m) el constructClique_cnf a cn -> n < |cn| /\ m < k. 
   Proof.
-    intros H n m H1. apply enumerateLiteral_Some_conv. apply H.
+    intros H n m H1. apply enumerateLiteral_Some_inv. apply H.
     destruct (construct_literals_positive H1) as (l & H2 & _). exists l; apply H2. 
   Qed. 
 
-  Lemma construct_dupfree ( a : assgn) (cn : cnf) : dupfree(constructClique_cnf a cn). 
-  Proof.
-  Admitted. 
 End constructClique.
 
-(*now the converse: from a clique, we can construct a satisfying assignment for the corresponding CNF*)
-(*since the reduction relation redRel is inherently asymmetric, the structure of this proof is different from the proof above *)
-(*we need argue directly over the target CNF and use the facts given by redRel *)
+(*Now the converse: from a clique, we can construct a satisfying assignment for the corresponding CNF*)
+(*Since the reduction relation redRel is inherently asymmetric, the structure of this proof is different from the other direction above.*)
+(*We need argue directly over the target CNF and use the facts given by redRel. *)
 
-  (*we proceed in the following way *)
-  (*1) graph g, cnf c, and clique cl; g, c satisfy redRel and the clique cl is a |c|-clique of that graph *) 
-  (*2) list of (clause, literal)-positions - non-conflicting and exactly one for every clause, i.e. also bounded *)
-  (*3) list of literals, mapped by enumLiteral from the positions - non-conflicting, if all are satisfied, then the cnf evals to true *)
-  (* the list in 3) can be interpreted as a list of fixed assignments list (nat * bool) -*)
-  (* - if all other variables are set arbitrarily, then the cnf evals to true*)
-  (*4) expand to complete assignment using cnf_maxVar - under this assignment, c evaluates to true *)
+  (*We proceed in the following way *)
+  (*1) We start with a graph g, CNF c, and a |c|-clique cl; g, c need to satisfy redRel*) 
+  (*2) This is translated to a list of (clause, literal)-positions, giving the positions of literals corresponding to the nodes in cl *)
+  (*   The literals at these positions are non-conflicting and there is exactly one for every clause*)
+  (*3) We then map this to a list of literals at these positions*)
+  (*   again these are non-conflicting and if all of them are satisfied, then the CNF evaluates to true. *)
+  (*   The list in 3) can also be interpreted as a list of fixed assignments list (nat * bool) *)
+  (*   - if all other variables are set arbitrarily, then the CNF evals to true*)
+  (*4) This is expanded to a complete assignment using cnf_maxVar - under this assignment, c evaluates to true *)
 
 Section constructAssgnToPos.
   (*1 -> 2*)
   Variable (c : cnf) (g : Lgraph).
   Variable (f : labGraph) (fInv: labGraphInv). 
+  Context (islab : isLabelling c f fInv). 
 
+  (*c, g are associated via redRel using the labelling f, fInv *)
   Context (nc : fst g = 3 * |c|).
   Context (kc : kCNF 3 c). 
-  Context (islab : isLabelling c f fInv). 
   Context (red : forall (u v : nat), u < fst g /\ v < fst g -> (Lgraph_edge_in_dec g u v = true <->
       (enumLiteral_different_clause (f u) (f v) /\
       (forall (l1 l2 : literal), enumerateLiteral c (f u) = Some l1 ->
@@ -248,7 +346,7 @@ Section constructAssgnToPos.
   Qed. 
 
   Lemma toPos_no_conflict (cl : list Lnode) : isLClique g cl (|c|) -> forall pos1 pos2, pos1 el toPos cl -> pos2 el toPos cl -> pos1 <> pos2 ->
-                                              enumLiteral_different_clause pos1 pos2 /\ exists l1 l2, enumerateLiteral c pos1 = Some l1 /\ enumerateLiteral c pos2 = Some l2 /\ not(literalsConflict l1 l2). 
+    enumLiteral_different_clause pos1 pos2 /\ exists l1 l2, enumerateLiteral c pos1 = Some l1 /\ enumerateLiteral c pos2 = Some l2 /\ not(literalsConflict l1 l2). 
   Proof. 
     intros H (cl1 & lit1) (cl2 & lit2) H1 H2 H3.
     unfold toPos in H1, H2. destruct (map_el H1) as (node1 & D1 & D2). destruct (map_el H2) as (node2 & G1 & G2). 
@@ -265,11 +363,93 @@ Section constructAssgnToPos.
     - exists l1, l2. split; try split; try tauto. now apply edge_in2. 
   Qed. 
 
-  Lemma toPos_for_all_clauses (cl : list Lnode) : isLClique g cl (|c|) -> forall k, k < (|c|) -> exists l, (k, l) el toPos cl. 
-  Proof. 
+  Proposition demorgan_not_exists_forall (X : Type) (p : X -> Prop) : (not (exists x, p x)) -> forall x, not (p x). 
+  Proof. intros H x px. now apply H. Qed.
+  Lemma toPos_for_all_clauses (cl : list Lnode) : isLClique g cl (|c|) -> forall k, k < (|c|) -> exists l, (k, l) el toPos cl.
+  Proof.
     intros H k H1. 
-    (*proof idea: pigeon hole principle. we have a |c|-clique in a graph with 3 * |c| nodes, and we only have edges between vertices of different clauses *)
-  Admitted. 
+    (* We can constructively assume that ¬ (∃ l, (k, l) ∈ toPos cl), since the range of possible values for l is bounded by 3.*)
+    enough (not (not  (exists l, (k, l) el toPos cl))). 
+    {destruct (list_in_decb (pair_eqb Nat.eqb Nat.eqb) (toPos cl) (k, 0)) eqn:F1; 
+    [apply (list_in_decb_iff (eqb := pair_eqb Nat.eqb Nat.eqb)) in F1 | apply (list_in_decb_iff' (eqb := pair_eqb Nat.eqb Nat.eqb)) in F1].
+    2, 4: apply pair_eqb_correct; apply nat_eqb_correct. now exists 0.
+    
+    destruct (list_in_decb (pair_eqb Nat.eqb Nat.eqb) (toPos cl) (k, 1)) eqn:F2; 
+    [apply (list_in_decb_iff (eqb := pair_eqb Nat.eqb Nat.eqb)) in F2 | apply (list_in_decb_iff' (eqb := pair_eqb Nat.eqb Nat.eqb)) in F2].
+    2, 4: apply pair_eqb_correct; apply nat_eqb_correct. now exists 1.
+
+    destruct (list_in_decb (pair_eqb Nat.eqb Nat.eqb) (toPos cl) (k, 2)) eqn:F3; 
+    [apply (list_in_decb_iff (eqb := pair_eqb Nat.eqb Nat.eqb)) in F3 | apply (list_in_decb_iff' (eqb := pair_eqb Nat.eqb Nat.eqb)) in F3].
+    2, 4: apply pair_eqb_correct; apply nat_eqb_correct. now exists 2.
+
+    exfalso. apply H0. intros (l & H2). destruct l; try destruct l; try destruct l; try congruence.  
+    specialize (toPos_bounded H H2); firstorder. }
+
+    intros H2.
+
+    specialize (demorgan_not_exists_forall H2) as H3. cbn in H3. clear H2. 
+
+    (*If we can show that there are is a clause that occurs twice in toPos, we are finished *)
+    enough (rep (map fst (toPos cl))). 
+    {
+      apply (rep_sigma _) in H0 as (A1 & k' & A2 & A3 & H0).
+      assert (exists p1 p2 h1 h2, p1 <> p2 /\ nth_error (toPos cl) p1 = Some (k', h1) /\ nth_error (toPos cl) p2 = Some (k', h2)).
+      {
+        exists (|A1|), (1 + |A1| + |A2|).
+        assert (|toPos cl| = 2 + |A1| + |A2| + |A3|).
+        { erewrite <- map_length. rewrite H0. repeat (rewrite app_length; cbn). lia. }
+        destruct nth_error eqn:F1. 2: {apply nth_error_None in F1. lia. }
+        destruct (nth_error (toPos cl) (1 + ((|A1|) + (|A2|)))) eqn:F2. 2: {apply nth_error_None in F2. lia. }
+        destruct p, p0. 
+        (* n = n1 = k by H0*)
+        (*for F1 *)
+        apply (map_nth_error (B:= nat) (fst) ) in F1. rewrite H0 in F1. rewrite nth_error_app2 in F1; [|lia].
+        rewrite Nat.sub_diag in F1. cbn in F1. 
+        (*for F2*)
+        apply (map_nth_error (B:= nat) (fst) ) in F2. rewrite H0 in F2. rewrite nth_error_app2 in F2; [|lia].
+        replace (1 + (|A1| + |A2|) - |A1|) with (1 + |A2|) in F2 by lia. cbn in F2.
+        rewrite nth_error_app2 in F2; [|lia]. rewrite Nat.sub_diag in F2. cbn in F2.
+
+        exists n0, n2. split; [lia|split;congruence ]. 
+      }
+      (*we make a case distinction: *)
+      (*if h1 = h2, then there was a duplicate in the clique cl, since the labelling f in toPos is injective *)
+      (*otherwise, we get a contradiction by toPos_no_conflict*)
+      destruct H2 as (p1 & p2 & h1 & h2 & F1 & F2 & F3).
+      destruct (Nat.eqb h1 h2) eqn:H2.
+      - dec_bool. 
+        specialize (proj1(isLClique_explicit_correct g cl (|c|)) H) as (_ & cldupfree & clnodein & _).
+        apply (dupfree_map_inverse (proj1 (inverseOn_symmetric) islab)) in cldupfree.
+        2: {
+          unfold Lgraph_node_in_dec in clnodein. destruct g. cbn [fst] in nc; rewrite nc in clnodein.
+          intros x H4. specialize (clnodein x H4). dec_bool. 
+        }
+        rewrite dupfree_nthe in cldupfree. specialize (cldupfree p1 p2 (k', h1) (k', h2) F2 F3 F1). 
+        congruence. 
+      - dec_bool. apply nth_error_In in F2. apply nth_error_In in F3.
+        assert ((k', h1) <> (k', h2)) by congruence. 
+        specialize (toPos_no_conflict H F2 F3 H4) as (diffcl & _).
+        unfold enumLiteral_different_clause in diffcl; cbn in diffcl; congruence.
+    }
+
+    (*Now we apply the pigeonhole principle: There are |c| elements in map fst (toPos c), but only |c|-1 in [0, ..., |c| -1] \ [k] *)
+    eapply (pigeonhole _).
+    - enough (map fst (toPos cl) <<= remove nat_eq_dec k (seq 0 (|c|)) ) by apply H0.
+      specialize (toPos_bounded H) as H4. 
+      clear red kc H. 
+      induction cl; cbn.
+      + firstorder. 
+      + apply incl_cons.
+        * apply remove_el. rewrite in_seq. cbn in H3, H4. split; destruct (f a).
+          -- specialize (H4 n n0 (or_introl eq_refl)). cbn. lia. 
+          -- specialize (H3 n0). cbn. contradict H3. left; congruence.
+        * apply IHcl. firstorder. intros a0 b; specialize (H4 a0 b). firstorder.  
+   - repeat rewrite map_length.
+     assert (k el seq 0 (|c|)) by (apply in_seq; lia). 
+     specialize (remove_length_el nat_eq_dec H0) as H4.
+     rewrite seq_length in H4. 
+     specialize (proj1 (isLClique_explicit_correct g cl (|c|)) H) as (clsize &_). lia. 
+  Qed. 
 End constructAssgnToPos. 
 
 Section constructAssgnToLiterals. 
@@ -430,8 +610,8 @@ Section constructAssgn.
     intros Hclique. 
     unfold clique_to_assgn. apply expandAssignment_correct. 1: now apply cnf_maxVar_bound. 
     intros a. apply toLiterals_eval_cnf. 1: now apply kc. 
-    - apply toPos_bounded with (g := g) (fInv := fInv); [apply nc | apply islab | apply red | apply Hclique]. 
-    - apply toPos_for_all_clauses with (g := g) (fInv := fInv); [apply nc | apply kc | apply islab | apply red | apply Hclique]. 
+    - apply toPos_bounded with (g := g) (fInv := fInv); [apply islab | apply nc | apply red | apply Hclique]. 
+    - apply toPos_for_all_clauses with (g := g) (fInv := fInv); [apply islab | apply nc | apply kc | apply red | apply Hclique]. 
   Qed. 
 End constructAssgn. 
 
@@ -472,11 +652,13 @@ Proof.
         now apply assgn_satisfies with (g:= (n, e)) (fInv := fInv). 
 Qed. 
 
-(*contruction principle: enumerate the literals from left to right; for each literal go through the literals *)
-(*of the clauses to the right of it and make appropriate edges *)
-(* this suffices since we are dealing with an undirected graph*)
+(*Layout of the constructed instance: To every clause with index i, we assign three nodes with indices 3i..3i+2 *)
 
-(*make edges between the literal l and all qualifying literals in cl. numAcc is the index of the first literal in cl *)
+(*Contruction principle: enumerate the literals from left to right; for each literal go through the literals *)
+(*of the clauses to the right of it and make appropriate edges. *)
+(* This suffices since we are dealing with an undirected graph.*)
+
+(*make edges between the literal l and all qualifying literals in clause cl. numAcc is the index of the first literal in cl *)
 Fixpoint makeEdgesLiteral' (l : literal) (numL : nat) (cl :clause) (numAcc : nat) :=
   match cl with [] => []
               | (l' :: cl) => if literalsConflictb l l' then makeEdgesLiteral' l numL cl (S numAcc) else (numL, numAcc) :: makeEdgesLiteral' l numL cl (S numAcc)
@@ -619,7 +801,7 @@ Section makeEdgesVerification.
           destruct H' as (H1 & (l & H2 & H3)). 
           exists 0, lpos. split; [lia | split ].
           -- inv kc. apply nth_error_Some_lt in H2; now rewrite H4 in H2. 
-          -- split; [lia |  ]. exists a0, [], cn. cbn; split; try split; try split; try reflexivity.
+          -- split; [cbn; now rewrite Nat.add_0_r | ]. exists a0, [], cn. cbn; split; try split; try split; try reflexivity.
              apply makeEdges'_iff; [inv kc; lia | now inv kc | ].
              exists lpos; split; [lia |]. exists l; split; [firstorder | ].
              replace (numL + 3) with (S (S (S numL))) by lia. now apply H3. 
@@ -679,7 +861,7 @@ Section makeEdgesVerification.
    + intros (H1 & (l & l' & H2 & H3 & H4 & H5)). 
      destruct (labF a) as (clpos & lpos) eqn:H6. exists clpos, lpos.
      symmetry in H2.
-     destruct (enumerateLiteral_Some_conv H (ex_intro (fun x => enumerateLiteral cn (clpos, lpos) = Some x) l H2)).
+     destruct (enumerateLiteral_Some_inv H (ex_intro (fun x => enumerateLiteral cn (clpos, lpos) = Some x) l H2)).
      split; try split; try assumption. split.
      1: {
        admit.
@@ -803,7 +985,7 @@ Proof.
     - intros l l' cl Hel.  
       rewrite H1. unfold monotonic in H3. rewrite H3 with (x' := size(enc l) + size(enc cl)).
       generalize (size(enc l) + size(enc cl)); intros n. [f]: intros n. subst f. cbn. reflexivity. 
-      rewrite list_el_size_bound with (l:= cl) (a := l'); auto. 
+      rewrite (list_el_size_bound Hel); auto. 
     - split; subst f; smpl_inO. 
   }
 
@@ -832,10 +1014,10 @@ Proof.
     destruct (makeEdgesLiteral'_time_bound) as (f' & H1 & H2 & H3).
     evar (f : nat -> nat). exists f. split.
     - intros l cl cn numAcc numL Hel. rewrite H1. rewrite makeEdgesLiteral'_size. 
-      rewrite list_size_length with (l:= cl) (H:= (((@registered_prod_enc bool nat LBool.registered_bool_enc registered_nat_enc)))).
+      rewrite list_size_length.
       unfold monotonic in H3. rewrite H3 with (x' := size(enc l) + size(enc cn)).
-      rewrite list_el_size_bound with (l:= cn) (a:= cl). 2: apply Hel. 
-      2: rewrite list_el_size_bound with (l:=cn)(a:= cl). 2: lia. 2 : apply Hel. 
+      rewrite list_el_size_bound with (l0:= cn) (a:= cl). 2: apply Hel. 
+      2: rewrite list_el_size_bound with (l0:=cn)(a:= cl). 2: lia. 2 : apply Hel. 
       instantiate (f := fun n => f' n + 16 * n + 74). subst f.
       solverec.
     - subst f; split; smpl_inO. 
@@ -884,9 +1066,7 @@ Proof.
     evar (f : nat -> nat). exists f. split.
     - intros. rewrite H1.
       rewrite makeEdgesLiteral_size. 2: apply cnf_clause_length_bound.
-      (* Set Printing Implicit . *)
-      (* Typeclasses eauto := debug. *)
-      rewrite list_size_length with (l:= cn) (H:= (@registered_list_enc (bool * nat) (@registered_prod_enc bool nat  (@LBool.registered_bool_enc) (@registered_nat_enc)))).
+      rewrite list_size_length.
       instantiate (f:= fun n => f' n + 16 * n * n + 30). subst f.
       solverec. 
     - subst f; split; smpl_inO. 
@@ -933,8 +1113,8 @@ Proof.
       rewrite H1. 
       instantiate (f:= fun n => 121 + 16 * n * n * n + f' n). subst f.
       solverec.
-      rewrite list_size_length with (l:=cl) (H:= @registered_prod_enc bool nat (@LBool.registered_bool_enc) (@registered_nat_enc)).
-      rewrite list_size_length with (l:=cn) (H:= @registered_list_enc (bool * nat) (@registered_prod_enc bool nat (@LBool.registered_bool_enc) (@registered_nat_enc))).
+      rewrite list_size_length.
+      rewrite list_size_length.
       solverec.
     - subst f; split; smpl_inO. 
   }
@@ -978,7 +1158,7 @@ Proof.
   destruct (makeEdges_time_bound) as (h & F1 & F2 & F3). 
   evar (f : nat -> nat). exists f. split.
   - intros c. unfold reduction_time, redGraph_time. rewrite H1. rewrite F1. 
-    rewrite list_size_length with (l:=c) (H:= @registered_list_enc ((bool * nat)) (@registered_prod_enc bool nat (@LBool.registered_bool_enc) (@LNat.registered_nat_enc))). 
+    rewrite list_size_length. 
     generalize (size (enc c)).  [f] : intros n. subst f. intros n.
     replace (S n) with (n+1) by lia. (*makes the proof below easier, since it doesn't know that S is in inOPoly *)
     cbn -[mul]. reflexivity.
@@ -1026,10 +1206,10 @@ Proof.
              repeat rewrite size_nat_enc. lia. 
            }
            repeat rewrite (makeEdges_size 0 kcdec). solverec. repeat rewrite size_nat_enc. solverec.
-           repeat rewrite list_size_length with (l:=c) (H:= (@registered_list_enc (bool * nat) (@registered_prod_enc bool nat  (@LBool.registered_bool_enc) (@registered_nat_enc)))).
+           repeat rewrite list_size_length.
            generalize (size(enc c)). [f']: intros n. subst f'. intros n. cbn -[Nat.mul]. reflexivity.  
         -- rewrite size_prod; cbn [fst snd]; rewrite size_list, size_nat_enc. cbn -[Nat.mul]. rewrite size_nat_enc.
-           rewrite list_size_length with (l:=c) (H:= (@registered_list_enc (bool * nat) (@registered_prod_enc bool nat  (@LBool.registered_bool_enc) (@registered_nat_enc)))).
+           rewrite list_size_length.
            subst f'; solverec. 
       * subst f'; split; smpl_inO. 
   - intros cn. destruct (kCNF_decb 3 cn) eqn:H. 

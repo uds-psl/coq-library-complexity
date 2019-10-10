@@ -3,7 +3,7 @@ From Undecidability.L Require Export Datatypes.Lists.
 From Undecidability.L.Complexity Require Export NP ONotation. 
 From Undecidability.L.Tactics Require Import LTactics.
 
-Lemma list_el_size_bound (X : Type) `{registered X} (l : list X) (a : X) :
+Lemma list_el_size_bound {X : Type} `{registered X} (l : list X) (a : X) :
   a el l -> size(enc a) <= size(enc l). 
 Proof. 
   intros H1. 
@@ -14,17 +14,17 @@ Proof.
     solverec. 
 Qed. 
 
-Lemma list_size_cons (X : Type) `{registered X} (l : list X) (a : X) : size(enc (a::l)) = size(enc a) + size(enc l) + 5.
+Lemma list_size_cons {X : Type} `{registered X} (l : list X) (a : X) : size(enc (a::l)) = size(enc a) + size(enc l) + 5.
 Proof. repeat rewrite size_list. cbn.  lia. Qed. 
 
-Lemma list_size_length (X : Type) `{registered X} (l : list X) : |l| <= size(enc l). 
+Lemma list_size_length {X : Type} `{registered X} (l : list X) : |l| <= size(enc l). 
 Proof. 
   rewrite size_list. induction l.
   - cbn; lia. 
   - cbn. rewrite IHl. lia. 
 Qed. 
 
-Lemma list_size_of_el (X : Type) `{registered X} (l : list X) (k : nat) : (forall a, a el l -> size(enc a) <= k) -> size(enc l) <= (k * (|l|)) + 5 * (|l|) +  4 . 
+Lemma list_size_of_el {X : Type} `{registered X} (l : list X) (k : nat) : (forall a, a el l -> size(enc a) <= k) -> size(enc l) <= (k * (|l|)) + 5 * (|l|) +  4 . 
 Proof.
   intros H1. induction l. 
   - cbn. rewrite size_list. cbn.  lia.
@@ -32,7 +32,7 @@ Proof.
     solverec. 
 Qed. 
     
-Lemma list_in_decb_time_bound (X : Type) `{registered X} (eqbT : X -> unit -> (nat * (X -> unit -> nat * unit))) :
+Lemma list_in_decb_time_bound {X : Type} `{registered X} (eqbT : X -> unit -> (nat * (X -> unit -> nat * unit))) :
   (exists (f : nat -> nat), (forall (a b : X), callTime2 eqbT a b <= f(size(enc a) + size(enc b))) /\ inOPoly f /\ monotonic f)
     -> exists (f : nat -> nat), (forall (l : list X) (e : X), list_in_decb_time eqbT l e <= f(size(enc l) + size(enc e)) ) /\ inOPoly f /\ monotonic f. 
 Proof.
@@ -54,7 +54,7 @@ Proof.
   - split; unfold f; smpl_inO. 
 Qed. 
 
-Lemma dupfreeb_time_bound (X : Type) `{registered X} (eqbT : X -> unit -> (nat * (X -> unit -> nat * unit))):
+Lemma dupfreeb_time_bound {X : Type} `{registered X} (eqbT : X -> unit -> (nat * (X -> unit -> nat * unit))):
   (*eqbT is polynomial in encoding of a and b *)
   (exists (f : nat -> nat), (forall (a b : X), callTime2 eqbT a b <= f (size(enc a) + size(enc b))) /\ inOPoly f /\ monotonic f)
   -> exists (f : nat -> nat), (forall (l : list X), dupfreeb_time eqbT l <= f (size(enc l))) /\ inOPoly f /\ monotonic f. 
@@ -74,7 +74,7 @@ Proof.
   all: subst f; smpl_inO.  
 Qed. 
 
-Lemma forallb_time_bound (X : Type) `{registered X} (predT : X -> unit -> nat * unit) :
+Lemma forallb_time_bound {X : Type} `{registered X} (predT : X -> unit -> nat * unit) :
   (exists (f : nat -> nat), (forall (a : X), fst(predT a tt) <= f (size(enc a))) /\ inOPoly f /\ monotonic f)
   -> exists (f : nat -> nat), (forall (l : list X), forallb_time predT l <= f(size (enc l)) ) /\ inOPoly f /\ monotonic f. 
 Proof. 

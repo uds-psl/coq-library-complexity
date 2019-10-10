@@ -68,7 +68,7 @@ Lemma kCNF_decb_pred_time_bound : exists (f : nat -> nat), (forall (cl : clause)
 Proof. 
   evar (f : nat -> nat). exists f. split.
   - intros cl. unfold kCNF_decb_pred_time.
-    repeat rewrite list_size_length with (l:=cl) (H:= @registered_prod_enc bool nat (@LBool.registered_bool_enc) (@LNat.registered_nat_enc)).
+    repeat rewrite list_size_length.
     [f] : intros n. subst f. generalize (size(enc cl)). intros n. reflexivity. 
   - split; subst f; smpl_inO. 
 Qed. 
