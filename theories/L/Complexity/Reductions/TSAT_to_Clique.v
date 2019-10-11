@@ -696,6 +696,11 @@ Proof.
   rewrite Nat.mod_add; [| lia]. rewrite Nat.div_small; [|apply H]. rewrite Nat.mod_small; [|apply H]. now rewrite Nat.add_0_r. 
 Qed. 
 
+Lemma labF_inv (k a b : nat) : labF k = (a, b) -> k = 3 * a + b.
+Proof. 
+  unfold labF. intros H. inversion H. apply Nat.div_mod. lia.
+Qed. 
+
 Lemma labF_isLabelling (c : cnf) : isLabelling c labF labFInv. 
   split. 
   - split.
@@ -835,6 +840,7 @@ Section makeEdgesVerification.
   Qed. 
 
   (*now the final, less abstract correctness result*)
+  (*TODO: split up and restructure*)
   Lemma makeEdges_correct (cn : cnf) (a b : nat) : kCNF 3 cn ->
    ((a, b) el makeEdges cn 0 <-> a < b /\ exists l l', Some l = enumerateLiteral cn (labF a) /\ Some l' = enumerateLiteral cn (labF b) /\ enumLiteral_different_clause (labF a) (labF b) /\ not (literalsConflict l l')). 
   Proof. 
@@ -862,16 +868,20 @@ Section makeEdgesVerification.
      destruct (labF a) as (clpos & lpos) eqn:H6. exists clpos, lpos.
      symmetry in H2.
      destruct (enumerateLiteral_Some_inv H (ex_intro (fun x => enumerateLiteral cn (clpos, lpos) = Some x) l H2)).
-     split; try split; try assumption. split.
-     1: {
-       admit.
-     }
+     split; try split; try assumption. split; [now apply labF_inv| ].
      destruct (labF b) as (clpos' & lpos') eqn:H8. unfold enumerateLiteral in H2. destruct (nth_error cn clpos) eqn:H9. 
      -- exists l0. specialize (nth_error_In cn clpos H9) as H10; apply in_split in H10. destruct H10 as (cn1 & cn2 & H10).  
         exists cn1, cn2. firstorder.
-        ++ admit. 
+        ++ rewrite H10 in H9. admit.
         ++ apply makeEdges'_iff. 
-
+           ** rewrite (kCNF_clause_length H); [lia | rewrite H10; firstorder ]. 
+           ** eapply kCNF_inv_app with (l1 := [l0]). eapply kCNF_inv_app.
+              now rewrite H10 in H.
+           ** exists lpos. cbn [Nat.add]. split; [now apply labF_inv | ].
+              exists l; split; [apply H2 | ]. apply makeEdgesLiteral_iff. 
+              --- eapply kCNF_inv_app with (l1 := [l0]). eapply kCNF_inv_app.
+                  now rewrite H10 in H.
+              --- split; [reflexivity|]. exists (clpos' - S clpos), lpos'. 
   Admitted.
 
   (*or in terms of edges, thus encapsulating the asymmetry of a and b*)

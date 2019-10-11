@@ -10,6 +10,32 @@ Inductive kCNF (k : nat) : cnf -> Prop :=
 | kCNFB : k > 0 -> kCNF k []
 | kCNFS (c : cnf) (cl : clause) : (|cl|) = k -> kCNF k c -> kCNF k (cl :: c).               
 
+Lemma kCNF_kge (k : nat) (c : cnf) : kCNF k c -> k > 0.
+Proof. induction 1; assumption. Qed.
+
+Lemma kCNF_clause_length (k : nat) (c : cnf) : kCNF k c -> forall cl, cl el c -> |cl| =k.
+Proof.
+  induction 1. 
+  - intros cl [].
+  - intros cl' [-> | Hel]; [assumption | now apply IHkCNF]. 
+Qed. 
+
+Lemma kCNF_inv_app (k : nat) (l1 l2 : cnf) : kCNF k (l1 ++ l2) -> kCNF k l1 /\ kCNF k l2.
+Proof.
+  remember (l1 ++ l2). intros H. revert l1 l2 Heql. induction H. 
+  - intros; split; destruct l1, l2; cbn in Heql; try congruence; now constructor.  
+  - intros. destruct l1. 
+    + destruct l2; cbn in Heql; try congruence. 
+      assert (cl = l) by congruence. rewrite H1 in Heql, H; clear H1. 
+      split.
+      * constructor. now eapply kCNF_kge. 
+      * now constructor. 
+    + cbn in Heql. assert (cl = l) by congruence. rewrite H1 in Heql, H; clear H1. 
+      assert (c = l1 ++ l2) by congruence. specialize (IHkCNF l1 l2 H1). split. 
+      * now constructor.
+      * easy.
+Qed. 
+
 Definition kSAT (k : nat) (c : cnf) : Prop := kCNF k c /\ exists (a : assgn), evalCnf a c = Some true. 
 
 Definition kCNF_decb_pred (k : nat) := (fun (cl : clause) => Nat.eqb k (|cl|)).
@@ -35,16 +61,6 @@ Proof.
   - induction 1.  
     + firstorder. 
     + firstorder. symmetry; now rewrite <- H3.
-Qed. 
-
-Lemma kCNF_kge (k : nat) (c : cnf) : kCNF k c -> k > 0.
-Proof. induction 1; assumption. Qed.
-
-Lemma kCNF_clause_length (k : nat) (c : cnf) : kCNF k c -> forall cl, cl el c -> |cl| =k.
-Proof.
-  induction 1. 
-  - intros cl [].
-  - intros cl' [-> | Hel]; [assumption | now apply IHkCNF]. 
 Qed. 
 
 Definition kCNF_decb_pred_time (cl : clause) := 11 * (|cl|) + 17 * (|cl|) + 23.

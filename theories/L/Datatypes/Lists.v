@@ -264,14 +264,18 @@ Proof.
             end a)) with (enc a). solverec. 
 Qed.
   
-Definition forallb_time (X:Type) (fT : X -> unit -> nat * unit) (l : list X) := fold_right (fun elm acc => fst(fT elm tt) + acc + 15) 8 l.
+Section forallb. 
+  Variable (X : Type).
+  Context (H : registered X).
+  Definition forallb_time (fT : timeComplexity (X -> bool)) (l : list X) := fold_right (fun elm acc => fst(fT elm tt) + acc + 15) 8 l.
 
-Instance term_forallb (X : Type) `{registered X} : computableTime' (@forallb X) (fun f fT => (1, fun l _ => (forallb_time fT l, tt))). 
-Proof.
-  extract. 
-  solverec. 
-  unfold forallb_time. solverec. 
-Defined. 
+  Global Instance term_forallb : computableTime' (@forallb X) (fun f fT => (1, fun l _ => (forallb_time fT l, tt))). 
+  Proof.
+    extract. 
+    solverec. 
+    unfold forallb_time. solverec. 
+  Defined. 
+End forallb.
 
 Section list_in.
   Variable (X : Type). 
@@ -303,19 +307,21 @@ Section list_in.
       + now apply list_in_decb_iff in H.
       + reflexivity.
   Qed. 
-End list_in. 
+End list_in.
+Section list_in_time.
+  Variable (X : Type).
+  Context {H : registered X}.
 
-Fixpoint list_in_decb_time (X : Type) (eqbT: X -> unit -> (nat * (X -> unit -> nat * unit)%type)) (l : list X) (e : X) : nat :=
+  Fixpoint list_in_decb_time (eqbT: timeComplexity (X -> X -> bool)) (l : list X) (e : X) : nat :=
     match l with [] => 4 | (l :: ls) => callTime2 eqbT l e + 16 + list_in_decb_time eqbT ls e end. 
 
-Instance term_list_in_decb (X : Type) `{registered X} : computableTime' (@list_in_decb X)
+  Global Instance term_list_in_decb : computableTime' (@list_in_decb X)
   (fun eqb eqbT => (1, fun l _ => (5, fun x _ => (list_in_decb_time eqbT l x, tt)))). 
-Proof. 
-  extract. 
-  solverec. 
-Qed. 
-
-
+  Proof. 
+    extract. 
+    solverec. 
+  Qed. 
+End list_in_time. 
 
 Section dupfree_dec.
   Variable (X : Type).
@@ -348,12 +354,15 @@ Section dupfree_dec.
 
 End dupfree_dec. 
 
-Fixpoint dupfreeb_time (X : Type) (eqbT : X -> unit -> (nat * (X -> unit -> nat * unit ))) (l : list X) := match l with [] => 8 | l :: ls => list_in_decb_time eqbT ls l + 25 + dupfreeb_time eqbT ls end.
-Instance term_dupfreeb (X : Type) `{registered X}: computableTime' (@dupfreeb X) (fun eqb eqbT => (8, fun l _ => (dupfreeb_time eqbT l, tt))).
-Proof.
-  extract. 
-  solverec. 
-Defined. 
+Section dupfree_dec_time.
+  Context {X : Type}.
+  Context {H : registered X}. 
 
+  Fixpoint dupfreeb_time (eqbT : timeComplexity (X -> X -> bool)) (l : list X) := match l with [] => 8 | l :: ls => list_in_decb_time eqbT ls l + 25 + dupfreeb_time eqbT ls end.
 
-
+  Instance term_dupfreeb: computableTime' (@dupfreeb X) (fun eqb eqbT => (8, fun l _ => (dupfreeb_time eqbT l, tt))).
+  Proof.
+    extract. 
+    solverec. 
+  Defined.
+End dupfree_dec_time. 

@@ -18,6 +18,24 @@ Section pair_eq.
     + intros [H1 H2]%andb_prop. apply eqbX_correct in H1. apply eqbY_correct in H2. congruence. Qed. 
 End pair_eq. 
 
+Section subsequence.
+  Variable (X : Type).
+  Definition subsequence (A B : list X) := exists C D, B = C ++ A ++ D.
+  Notation "A 'subs' B" := (subsequence A B)(at level 70).
+
+  Lemma subsequence_incl (A B : list X) : A subs B -> incl A B.
+  Proof. 
+    induction B. 
+    - unfold subsequence. destruct A; cbn; try firstorder.
+      intros (C & D & H). destruct C; cbn in H; congruence.   
+    - intros (C & D & H). intros x xel. destruct C. 
+      + cbn in H. rewrite H. firstorder. 
+      + cbn in H. assert (x0 = a) as -> by congruence.  
+        right. apply IHB; [|assumption]. exists C,D. congruence. 
+  Qed.
+End subsequence. 
+
+
 
 Lemma map_el (X Y : Type) (l : list X) (f : X -> Y) (e : Y) : e el (map f l) -> exists e', e' el l /\ f e' = e. 
 Proof.

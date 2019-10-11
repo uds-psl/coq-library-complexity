@@ -133,10 +133,24 @@ Qed.
 
 Lemma connectedb_time_bound : exists (f : nat -> nat), (forall (g : Lgraph) (cl : list Lnode), connectedb_time g cl <= f (size(enc g) + size(enc cl))) /\ inOPoly f /\ monotonic f.
 Proof.
-  pose (forallb_step_t := fun (e : list Ledge) (cl_check : nat) => (fun (v : nat) (_ : unit) =>
-            (list_in_decb_time pair_eqb_nat_time e (cl_check, v) + list_in_decb_time pair_eqb_nat_time e (v, cl_check) + 29, tt))).
-  specialize (list_in_decb_time_bound pair_eqb_nat_time_bound) as (fin & H1 & H2 & H3). 
-  (* specialize (forallb_time_bound) *)
+  (*bound the running time of each step*)
+  pose (forallb_step_time := fun (e : list Ledge) (a: Lnode) => (fun (v : nat) (_ : unit) => (list_in_decb_time pair_eqb_nat_time e (a, v) + list_in_decb_time pair_eqb_nat_time e (v, a) + 29, tt))).
+  pose (step_time := fun (g : Lgraph) cl cls => let (_, e) := g in forallb_time (forallb_step_time e cl) cls + 19).
+  (*We would like to get a polynomial in g and the clique cl*)
+  assert (exists (f : nat -> nat), (forall (g : Lgraph) (cl : list Lnode) (a : Lnode) (cls: list Lnode), a el cl -> incl cls cl ->
+                              step_time g a cls <= f(size(enc g) + size(enc cl)))
+         /\ inOPoly f /\ monotonic f).
+  {
+    destruct (Lgraph_edge_in_dec_time_bound) as (f__edgeIn & F1 & F2 & F3).
+    evar (f : nat -> nat). exists f. split.
+    - intros. unfold step_time. destruct g.
+      rewrite forallb_time_bound. 
+
+    
+  }
+
+  (* pose (forallb_step_t := fun (e : list Ledge) (cl_check : nat) => (fun (v : nat) (_ : unit) => *)
+            (* (list_in_decb_time pair_eqb_nat_time e (cl_check, v) + list_in_decb_time pair_eqb_nat_time e (v, cl_check) + 29, tt))). *)
   evar (f : nat -> nat). exists f. split.
   - intros g cl. unfold connectedb_time.
 
