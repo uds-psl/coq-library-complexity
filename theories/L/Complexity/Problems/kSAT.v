@@ -85,7 +85,7 @@ Proof.
   evar (f : nat -> nat). exists f. split.
   - intros cl. unfold kCNF_decb_pred_time.
     repeat rewrite list_size_length.
-    [f] : intros n. subst f. generalize (size(enc cl)). intros n. reflexivity. 
+    [f] : intros n. subst f. cbn -[Nat.mul]; generalize (size(enc cl)). intros n. reflexivity. 
   - split; subst f; smpl_inO. 
 Qed. 
 

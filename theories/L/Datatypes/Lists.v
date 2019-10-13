@@ -360,9 +360,28 @@ Section dupfree_dec_time.
 
   Fixpoint dupfreeb_time (eqbT : timeComplexity (X -> X -> bool)) (l : list X) := match l with [] => 8 | l :: ls => list_in_decb_time eqbT ls l + 25 + dupfreeb_time eqbT ls end.
 
-  Instance term_dupfreeb: computableTime' (@dupfreeb X) (fun eqb eqbT => (8, fun l _ => (dupfreeb_time eqbT l, tt))).
+  Global Instance term_dupfreeb: computableTime' (@dupfreeb X) (fun eqb eqbT => (8, fun l _ => (dupfreeb_time eqbT l, tt))).
   Proof.
     extract. 
     solverec. 
   Defined.
 End dupfree_dec_time. 
+
+Section foldl_time.
+  Context {X Y : Type}.
+  Context {H : registered X}.
+  Context {F : registered Y}.
+
+  Fixpoint fold_left_time (f : X -> Y -> X) (t__f : X -> unit -> nat * (Y -> unit -> nat * unit)) (l : list Y) (acc : X) :=
+  (match l with
+       | [] => 4
+       | (l :: ls) => callTime2 t__f acc l + 15 + fold_left_time f t__f ls (f acc l)
+       end ).
+
+  Global Instance term_fold_left :
+    computableTime' (@fold_left X Y) (fun f fT => (5, fun l _ => (5, fun acc _ => (fold_left_time f fT l acc, tt)))). 
+  Proof.
+    extract. 
+    solverec. 
+  Qed. 
+End foldl_time.

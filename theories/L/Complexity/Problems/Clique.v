@@ -134,27 +134,51 @@ Qed.
 Lemma connectedb_time_bound : exists (f : nat -> nat), (forall (g : Lgraph) (cl : list Lnode), connectedb_time g cl <= f (size(enc g) + size(enc cl))) /\ inOPoly f /\ monotonic f.
 Proof.
   (*bound the running time of each step*)
-  pose (forallb_step_time := fun (e : list Ledge) (a: Lnode) => (fun (v : nat) (_ : unit) => (list_in_decb_time pair_eqb_nat_time e (a, v) + list_in_decb_time pair_eqb_nat_time e (v, a) + 29, tt))).
-  pose (step_time := fun (g : Lgraph) cl cls => let (_, e) := g in forallb_time (forallb_step_time e cl) cls + 19).
+  (*the step function used with forall is not closed, therefore the running time function needs to explicitly capture the needed *)
+  (*environment variables *)
+  pose (forallb_step_time := fun (env : Lgraph * Lnode) => let (g, a) := env in (fun (v : nat) (_ : unit) => (Lgraph_edge_in_dec_time g a v, tt))).
+  pose (step_time := fun (g : Lgraph) cl cls => forallb_time (forallb_step_time (g, cl)) cls + 19).
+
   (*We would like to get a polynomial in g and the clique cl*)
-  assert (exists (f : nat -> nat), (forall (g : Lgraph) (cl : list Lnode) (a : Lnode) (cls: list Lnode), a el cl -> incl cls cl ->
-                              step_time g a cls <= f(size(enc g) + size(enc cl)))
-         /\ inOPoly f /\ monotonic f).
+  assert (exists (f : nat -> nat), (forall (g : Lgraph) (cl : list Lnode) (a : Lnode) (cls: list Lnode),
+             a el cl -> subsequence cls cl -> step_time g a cls <= f(size(enc g) + size(enc cl)))
+             /\ inOPoly f /\ monotonic f) as (f' & H1 & H2 & H3).
   {
     destruct (Lgraph_edge_in_dec_time_bound) as (f__edgeIn & F1 & F2 & F3).
+    (*In order to instantiate forallb_time_bound_env, we need to prove another result first*)
+    assert (exists (f' : nat -> nat), (forall a env, fst (forallb_step_time env a tt) <= f'(size (enc a) + size(enc env))) /\ inOPoly f' /\ monotonic f').
+    {
+      exists f__edgeIn. split.
+      - intros node (e & node'). unfold forallb_step_time. cbn. rewrite F1. setoid_rewrite size_prod at 2; cbn[fst snd].
+        unfold monotonic in F3; apply F3. lia. 
+      - tauto. 
+    }
+    destruct (forallb_time_bound_env H) as (f__forall & E1 & E2 & E3).
     evar (f : nat -> nat). exists f. split.
-    - intros. unfold step_time. destruct g.
-      rewrite forallb_time_bound. 
-
-    
+    - intros. unfold step_time. rewrite E1. rewrite size_prod; cbn [fst snd]. 
+      unfold monotonic in E3. rewrite E3 with (x' := size(enc g) + 2 * size (enc cl)  + 4). 
+      instantiate (f := fun n => f__forall (2 * n + 4) + 19). subst f. cbn. 
+      rewrite <- Nat.add_le_mono_r. apply E3. lia. 
+      rewrite (list_subsequence_size_bound H1). 
+      rewrite (list_el_size_bound H0). lia. 
+    - subst f; split; smpl_inO. apply inOPoly_comp; smpl_inO. 
   }
 
-  (* pose (forallb_step_t := fun (e : list Ledge) (cl_check : nat) => (fun (v : nat) (_ : unit) => *)
-            (* (list_in_decb_time pair_eqb_nat_time e (cl_check, v) + list_in_decb_time pair_eqb_nat_time e (v, cl_check) + 29, tt))). *)
   evar (f : nat -> nat). exists f. split.
   - intros g cl. unfold connectedb_time.
-
-Admitted.  
+    instantiate (f:= fun n => 4 + f' n * n). subst f.
+    destruct g as (n, e). induction cl.
+    + lia.
+    + rewrite IHcl. specialize (H1 (n, e) (a::cl) a cl).
+      unfold step_time, forallb_step_time, Lgraph_edge_in_dec_time in H1. rewrite H1.
+      3: exists [a], []; firstorder.  2: now left.
+      rewrite list_size_cons at 3.
+      unfold monotonic in H3.
+      rewrite H3 with (x:= size(enc(n, e)) + size(enc(cl)))(x' := size(enc(n, e)) + size(enc(a::cl))).
+      solverec.
+      rewrite (list_size_cons); lia. 
+  - subst f; split; smpl_inO. 
+Qed. 
 
 Definition Lclique_verifierb_time (g : Lgraph) (k:nat) (cl : list Lnode):= forallb_time (fun n _ => (33 + 14 * n, tt)) cl
   + dupfreeb_time (fun x _ => (5, fun y _ => (min x y * 17 + 9, tt))) cl
@@ -166,10 +190,40 @@ Proof.
   solverec. unfold Lclique_verifierb_time. solverec. 
 Qed. 
 
-Lemma Lclique_verifierb_time_bound : exists (f : nat -> nat) , (forall (g: Lgraph) (k : nat) (cl : list Lnode), Lclique_verifierb_time g k cl <= f(size(enc g) + size(enc k) + size(enc cl))) /\ inOPoly f /\ monotonic f. 
+Lemma Lclique_verifierb_time_bound : exists (f : nat -> nat) , (forall (g: Lgraph) (k : nat) (cl : list Lnode), Lclique_verifierb_time g k cl <= f(size(enc g) + size(enc cl))) /\ inOPoly f /\ monotonic f. 
 Proof.
-Admitted. 
-                 
+  assert (exists (f : nat -> nat), (forall (a : Lnode), fst((fun n _ => (33 + 14 * n, tt)) a tt) <= f(size(enc a))) /\ inOPoly f /\ monotonic f).
+  {
+    evar (f : nat -> nat); exists f; split.
+    - intros a. cbn -[Nat.mul Nat.add]. rewrite size_nat_enc. 
+      instantiate (f := fun n => 4 * n + 17); subst f; lia. 
+    - split; subst f; smpl_inO. 
+  }
+  destruct (forallb_time_bound H) as (f__forall & H1 & H2 & H3); clear H.
+
+  assert (exists (f : nat -> nat), (forall (a b : nat), callTime2 (fun x _ => (5, fun y _ => (min x y * 17 + 9, tt))) a b <= f(size(enc a) + size(enc b))) /\ inOPoly f /\ monotonic f).
+  {
+    evar (f : nat -> nat). exists f; split.
+    - intros a b. cbn -[Nat.add]. rewrite Nat.le_min_r. solverec.
+      instantiate (f := fun n => 17 * n + 14). subst f. 
+      specialize size_nat_enc_r with (n:= b). lia.
+    - split; subst f; smpl_inO.
+  }
+  destruct (dupfreeb_time_bound H) as (f__dupfree & F1 & F2 & F3); clear H.
+
+  destruct (connectedb_time_bound) as (f__connected & E1 & E2 & E3).
+
+  evar (f : nat -> nat). exists f. split.
+  - intros g k cl. unfold Lclique_verifierb_time. 
+    rewrite H1, F1, E1. rewrite Nat.le_min_l. repeat rewrite list_size_length.
+    unfold monotonic in H3, F3.
+    rewrite H3 with (x':= size(enc g) + size(enc cl)) by lia.
+    rewrite F3 with (x':= size(enc g) + size(enc cl)) by lia. 
+    instantiate (f := fun n => f__connected n + f__forall n + f__dupfree n + 28 * n + 53); subst f.
+    solverec.
+  - subst f; split; smpl_inO.
+Qed.
+
 Lemma clique_inNP : inNP LClique. 
 Proof.
   apply (inNP_intro) with (R:= LClique_verifier).
@@ -216,7 +270,7 @@ Proof.
       instantiate (f:= fun n => f'(n) + 11). subst f.
       cbn. unfold monotonic in H3. rewrite H3 at 1.
       2 : {
-        assert (size(enc a) + size(enc b1) + 4 + size(enc b0) + size(enc b) <= size(enc a) + size(enc b1) + 4 + size(enc b0) + 4+ size(enc b) + 4).
+        assert (size(enc a) + size(enc b1) + 4 + size(enc b) <= size(enc a) + size(enc b1) + 4 + size(enc b0) + 4+ size(enc b) + 4).
         2: apply H. lia.
       }
       reflexivity. 
