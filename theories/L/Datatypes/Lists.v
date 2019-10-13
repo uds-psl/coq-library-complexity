@@ -385,3 +385,18 @@ Section foldl_time.
     solverec. 
   Qed. 
 End foldl_time.
+
+Section foldr_time.
+  Context {X Y: Type}.
+  Context {H:registered X}.
+  Context {H0: registered Y}.
+
+  Fixpoint fold_right_time (f : Y -> X -> X) (tf : timeComplexity (Y -> X -> X)) (l : list Y) (acc : X) :=
+      match l with [] => 4
+              | l::ls => callTime2 tf l (fold_right f acc ls) + 15 + fold_right_time f tf ls acc
+      end. 
+  Global Instance term_fold_right : computableTime' (@fold_right X Y) (fun f fT => (1, fun acc _ => (1, fun l _ => (fold_right_time f fT l acc + 4, tt)))).
+  Proof.
+    extract. solverec. unfold fold_right. solverec.  
+  Qed. 
+End foldr_time.

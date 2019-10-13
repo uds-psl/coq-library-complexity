@@ -149,15 +149,9 @@ Section fixXY.
   Context {H0: registered Y}.
   Context {H1 : registered Z}.
 
-    Fixpoint fold_right_time (f : Y -> X -> X) (tf : timeComplexity (Y -> X -> X)) (l : list Y) (acc : X) :=
-      match l with [] => 4
-              | l::ls => callTime2 tf l (fold_right f acc ls) + 15 + fold_right_time f tf ls acc
-      end. 
-  Instance term_fold_right : computableTime' (@fold_right X Y) (fun f fT => (1, fun acc _ => (1, fun l _ => (fold_right_time f fT l acc + 4, tt)))).
-  Proof.
-    extract. solverec. unfold fold_right. solverec.  
-  Qed. 
-
+  (*the running time of foldr not only depends on the running time of the step function, *)
+  (*but also on the output size of the step function; in order to get a polynomial bound, *)
+  (*we require that this output size grows only by an additive constant in each step *)
   Lemma fold_right_time_bound_env (step : Z -> Y -> X -> X) (stepT : Z -> timeComplexity (Y -> X -> X)) :
     (exists (f : nat -> nat), (forall (acc : X) (ele : Y) (env : Z), callTime2 (stepT env) ele acc <= f(size(enc acc) + size(enc ele) + size(enc env))) /\ inOPoly f /\ monotonic f)
     -> (exists (c__out : nat), forall (acc : X) (ele : Y) (env : Z), size(enc (step env ele acc)) <= size(enc acc) + size(enc ele) + size(enc env) + c__out)
@@ -191,35 +185,9 @@ Section fixXY.
 
           rewrite list_size_cons at 7. rewrite list_size_cons at 10. solverec. 
        * clear IHl. intros. apply H5 with (l' := a::l'). firstorder. 
-  - subst f; split; smpl_inO. apply inOPoly_comp; smpl_inO. 
-Qed. 
-
-
-  (*the running time of foldl not only depends on the running time of the step function, *)
-  (*but also on the output size of the step function; in order to get a polynomial bound, *)
-  (*we require that this output size grows only by an additive constant in each step *)
-  Lemma fold_left_time_bound_env (step : Z -> X -> Y -> X) (stepT : Z -> timeComplexity (X -> Y -> X)) :
-    (exists (f : nat -> nat), (forall (acc : X) (ele : Y) (env : Z), callTime2 (stepT env) acc ele <= f(size(enc(acc)) + size(enc ele) + size(enc env))) /\ inOPoly f /\ monotonic f)
-    -> (exists (c__out : nat), forall (acc : X) (ele : Y) (env : Z), size(enc (step env acc ele)) <= size(enc acc) + size(enc ele) + size(enc env) + c__out)
-    -> exists (f : nat -> nat), (forall (l : list Y) (acc : X) (env : Z), fold_left_time (step env) (stepT env) l acc <= f(size(enc l) + size(enc acc) + size(enc env))) /\ inOPoly f /\ monotonic f. 
-  Proof.
-    intros (f__step & H2 & H3 & H4) (c__out & F). 
-    evar (f : nat -> nat). exists f. split.
-    - intros l init env.  
-      (*we strengthen the statement: for every acc that is polynomial in init, l and env, we derive the bound*)
-      (* enough (forall acc, (exists f__acc, size(enc acc) <= f__acc(size(enc init) + size(enc l) + size(enc env)) /\ inOPoly f__acc /\ monotonic f__acc) -> fold_left_time (step env) (stepT env) l acc <= f (size(enc l) + size(enc init) + size(enc env))). *)
-      (* {apply (H5 init). exists (fun n => n); split; [lia |split; smpl_inO]. } *)
-      revert init.
-      instantiate (f := fun n => 4 + 15 * n + n * f__step(n * n + (1 + c__out) * n)). subst f. 
-      induction l. 
-      + intros. solverec. 
-      + intros acc. unfold fold_left_time. fold (@fold_left_time X Y). 
-        rewrite IHl. rewrite H2. rewrite F.
-        (*we'd like to rewrite with G1, but can't do that directly since we have no Proper instance for monotonic functions *)
-        unfold monotonic in H4. rewrite H4 with (x' := f__acc (size(enc init) + size(enc (a::l)) + size(enc env)) + size(enc a) + size(enc env)). 2: now rewrite G1.
-        
-
-
+    - subst f; split; smpl_inO. apply inOPoly_comp; smpl_inO. 
+  Qed. 
+End fixXY.
 
 
 (*We now fix variants where the environment is not important*)

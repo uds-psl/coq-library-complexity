@@ -51,35 +51,23 @@ Definition evalLiteral (a : assgn) (l : literal) : option bool := match l with
 end. 
 
 
-(*foldl, but on option values. If the step function ever returns None, this pins the result to None *)
-Definition fold_leftOption (A B : Type) (f : A -> B -> option A) := fix rec (l : list B) (acc : option A) : option A :=
+(*foldr, but on option values. If the step function ever returns None, this pins the result to None *)
+Definition fold_rightOption (A B : Type) (f : B -> A -> option A) := fix rec (acc : option A) (l : list B) : option A :=
   match l with
     | [] => acc
-    | (l :: ls) => match acc with
+    | (l :: ls) => match rec acc ls with
                    | None => None
-                   | Some acc => rec ls (f acc l)
+                   | Some acc => f l acc 
                   end
   end. 
 
-Lemma fold_leftOption_none_ties_down (A B : Type) (f : A -> B -> option A) l : fold_leftOption f l None = None.
-Proof. 
-  unfold fold_leftOption. destruct l; reflexivity.  
-Qed. 
-
-Definition evalClause' (a : assgn) (l : clause) (init : option bool) : option bool := 
-  fold_leftOption (fun acc lit => match evalLiteral a lit with Some v => Some(orb acc v) | _ => None end) l init.  
-
 (*Empty disjunction evaluates to false*)
-Definition evalClause (a : assgn) (l : clause) : option bool :=
-  evalClause' a l (Some false). 
-
-
-Definition evalCnf' (a : assgn) (l : cnf) (init : option bool) : option bool :=
-  fold_leftOption (fun acc cl => match evalClause a cl with Some v => Some(andb acc v) | _ => None end) l init.
+Definition evalClause (a : assgn) (l : clause) : option bool := 
+  fold_rightOption (fun lit acc => match evalLiteral a lit with Some v => Some(orb acc v) | _ => None end) (Some false) l.  
 
 (*Empty conjunction evaluates to true *)
 Definition evalCnf (a : assgn) (l : cnf) : option bool :=
-  evalCnf' a l (Some true). 
+  fold_rightOption (fun cl acc => match evalClause a cl with Some v => Some(andb acc v) | _ => None end) (Some true) l.
 
 (*Correctness: if the assignment a assigns a value to each used variable, then the result will be a Some _ *)
 
@@ -90,33 +78,24 @@ Proof.
   omega. 
 Qed. 
 
-Lemma evalClause'_correct (l : clause) (a : assgn) (n : nat) (b : bool): varBound_clause n l -> |a| >= n -> exists v, evalClause' a l (Some b) = Some v. 
+Lemma evalClause_correct (l : clause) (a : assgn) (n : nat): varBound_clause n l -> |a| >= n -> exists v, evalClause a l = Some v. 
 Proof. 
-  intros H1; revert b; induction H1. 
-  - intros; cbn. now exists b.
-  - intros. unfold evalClause', fold_leftOption. 
-    destruct (evalLiteral_correct b H H0) as [v H2]. rewrite H2.
-    destruct (IHvarBound_clause (b0||v) H0) as [v' H3]. exists v'; auto. 
+  intros H1; induction H1. 
+  - intros; cbn. now exists false.
+  - intros. unfold evalClause, fold_rightOption. 
+    destruct (IHvarBound_clause H0) as [v' H3]. unfold evalClause, fold_rightOption in H3. rewrite H3.
+    destruct (evalLiteral_correct b H H0) as [v H2]. rewrite H2. exists (v' || v); auto.
 Qed. 
 
-Corollary evalClause_correct (l : clause) (a : assgn) (n : nat) : varBound_clause n l -> |a| >= n -> exists v, evalClause a l = Some v. 
-Proof.
-  unfold evalClause. apply evalClause'_correct. 
-Qed. 
-
-Lemma evalCnf'_correct (l : cnf) (a : assgn) (n : nat) (b : bool): varBound_cnf n l -> |a| >= n -> exists v, evalCnf' a l (Some b) = Some v. 
+Lemma evalCnf_correct (l : cnf) (a : assgn) (n : nat): varBound_cnf n l -> |a| >= n -> exists v, evalCnf a l = Some v. 
 Proof. 
-  intros H1; revert b. induction H1. 
-  - intros. cbn. now exists b.
+  intros H1; induction H1. 
+  - intros. cbn. now exists true.
   - intros. cbn. destruct (evalClause_correct H H0) as [v H2]. 
-    rewrite H2. destruct (IHvarBound_cnf (b && v) H0) as [v' H3]. exists v'. auto.  
+    rewrite H2. destruct (IHvarBound_cnf H0) as [v' H3]. unfold evalCnf in H3. rewrite H3.
+    exists (v' && v); auto.
 Qed.
 
-(* inversion of evaluation*)
-Corollary evalCnf_correct (l : cnf) (a : assgn) (n : nat) : varBound_cnf n l -> |a| >= n -> exists v, evalCnf a l = Some v. 
-Proof. unfold evalCnf; apply evalCnf'_correct. Qed. 
-
-                                           
 
 (*if a formula evaluates, the variable indices are bounded by the assignment length*)
 Lemma evalLiteral_varBound (n: nat) (sign : bool) (a : assgn) : (exists v, evalLiteral a (sign, n) = Some v) -> n < |a|. 
@@ -126,43 +105,34 @@ Proof.
   discriminate H. 
 Qed. 
 
-Lemma evalClause'_varBound (l : clause) (a : assgn) (b : bool) : (exists v, evalClause' a l (Some b) = Some v) -> varBound_clause (|a|) l. 
+Lemma evalClause_varBound (l : clause) (a : assgn): (exists v, evalClause a l = Some v) -> varBound_clause (|a|) l. 
 Proof. 
-  revert b. 
   induction l; try constructor. 
-  destruct a0 as [b v0]. constructor.
-  - destruct H as [v H]. unfold evalClause, evalClause', fold_leftOption in H.
-    destruct (evalLiteral a (b, v0)) eqn:H1.
-    + apply evalLiteral_varBound with (sign := b). exists b1; apply H1. 
-    + change (evalClause' a l None = Some v) in H. unfold evalClause' in H.
-      rewrite fold_leftOption_none_ties_down in H; congruence.
-  - cbn in H. destruct (nth_error) in H. 
-    eapply (IHl (b0 || eqb b b1)). destruct (evalClause' a l (Some b0)) eqn:H1. eauto.
-    apply H. 
-    destruct H as [v H]. rewrite fold_leftOption_none_ties_down in H; congruence. 
+  destruct a0 as [b0 v0]. constructor.
+  - destruct H as [v H]. unfold evalClause, evalClause, fold_rightOption in H.
+    destruct (evalLiteral a (b0, v0)) eqn:H1.
+    + apply evalLiteral_varBound with (sign := b0). exists b; apply H1. 
+    + change (match evalClause a l with | Some _ | _ => None end = Some v) in H.
+      destruct (evalClause a l); congruence. 
+  - apply IHl. destruct H as (v & H). 
+    unfold evalClause, fold_rightOption in H.
+    change (match evalClause a l with |Some acc => match evalLiteral a (b0, v0) with | Some v => Some (acc || v) | None => None end | None => None end = Some v) in H.
+    destruct (evalClause a l).
+    * now exists b.
+    * congruence. 
 Qed. 
 
-Corollary evalClause_varBound (l : clause) (a : assgn) : (exists v, evalClause a l = Some v) -> varBound_clause (|a|) l. 
-Proof.
-  apply evalClause'_varBound. 
-Qed. 
-
-Lemma evalCnf'_varBound (l : cnf) (a : assgn) (b : bool) : (exists v, evalCnf' a l (Some b) = Some v) -> varBound_cnf (|a|) l. 
+Lemma evalCnf_varBound (l : cnf) (a : assgn): (exists v, evalCnf a l = Some v) -> varBound_cnf (|a|) l. 
 Proof. 
-  revert b. 
   induction l; try constructor. 
   - destruct H as [v H]. cbn in H. destruct (evalClause a a0) eqn:H1.
     + apply evalClause_varBound. rewrite H1; eauto. 
-    + now rewrite fold_leftOption_none_ties_down in H. 
+    + destruct (fold_rightOption) in H; congruence.  
   - cbn in H. destruct (evalClause a a0) eqn:H1.
-    + apply (IHl (b && b0)). apply H. 
-    + rewrite fold_leftOption_none_ties_down in H. now destruct H.  
+    + apply IHl. unfold evalCnf. destruct (fold_rightOption) eqn:H2; [ |destruct H; congruence ]. now exists b0. 
+    + destruct fold_rightOption in H; destruct H; congruence.   
 Qed. 
 
-Corollary  evalCnf_varBound (l : cnf) (a : assgn) : (exists v, evalCnf a l = Some v) -> varBound_cnf (|a|) l. 
-Proof.
-  apply evalCnf'_varBound. 
-Qed. 
 
 (*evaluation will succeed iff the assignment list binds every variable *)
 Lemma evalCnf_iff_bound (a :assgn) (c : cnf) : (exists v, evalCnf a c = Some v) <-> (exists n, varBound_cnf n c /\ |a| >= n).
@@ -173,115 +143,62 @@ Qed.
 
 (*A computable notion of boundedness *)
 (*fold_left makes verification more ugly, but the runtime functions get easier *)
-Definition clause_maxVar (c : clause) := fold_left (fun acc '(_, v) => Nat.max acc v) c 0. 
-Definition cnf_maxVar (c : cnf) := fold_left (fun acc cl => Nat.max acc (clause_maxVar cl)) c 0.
+Definition clause_maxVar (c : clause) := fold_right (fun '(_, v) acc => Nat.max acc v) 0 c. 
+Definition cnf_maxVar (c : cnf) := fold_right (fun cl acc => Nat.max acc (clause_maxVar cl)) 0 c.
 
-Lemma clause_maxVar_bound (c : clause) : varBound_clause (S (clause_maxVar c)) c. 
+Lemma clause_maxVar_bound (c : clause) : varBound_clause (S (clause_maxVar c)) c.
 Proof.
   induction c.
-  - cbn. constructor. 
-  - destruct a. constructor. cbn.
-    1: { clear IHc. revert n; induction c. 
-         + intros; cbn; lia.
-         + intros; cbn. destruct a. specialize (IHc (Nat.max n n0)); lia. 
-       } 
-    eapply varBound_clause_monotonic.
-    2: apply IHc. unfold clause_maxVar. cbn. 
-    clear IHc. assert (n >= 0) by lia. revert n H. generalize 0.
-    induction c.
-    + intros; cbn. lia. 
-    + intros; cbn. destruct a. apply IHc. lia.  
-Qed. 
+  - cbn. constructor.
+  - destruct a. constructor; cbn.
+    + lia.   
+    + eapply varBound_clause_monotonic.
+      2: apply IHc. unfold clause_maxVar. cbn. lia. 
+Qed.
 
 Lemma cnf_maxVar_bound (c : cnf) : varBound_cnf (S (cnf_maxVar c)) c.
 Proof.
   induction c.
-  - cbn; constructor. 
+  - cbn; constructor.
   - constructor.
-    1: { cbn. eapply varBound_clause_monotonic. 2: apply clause_maxVar_bound.
-         clear IHc. generalize (clause_maxVar a). induction c.
-         + intros n; cbn; lia. 
-         + intros n; cbn. specialize (IHc (max n (clause_maxVar a0))). lia.  
-       } 
-    eapply varBound_cnf_monotonic. 2: apply IHc. cbn. unfold cnf_maxVar.  
-    pose (step := (fun acc (cl :list (bool * nat)) => Nat.max acc (clause_maxVar cl)) ). 
-    enough (forall n n', n >= n' -> fold_left step c n' <= fold_left step c n).  
-    {assert (0 <= (clause_maxVar a)) by lia. specialize (H (clause_maxVar a) 0 H0). subst step. lia. }
-    clear IHc. induction c. 
-    + intros n n' H. cbn; lia. 
-    + intros n n' H. cbn. apply IHc. unfold step; lia. 
+    + cbn. eapply varBound_clause_monotonic. 2: apply clause_maxVar_bound. lia. 
+    + eapply varBound_cnf_monotonic. 2: apply IHc. cbn. unfold cnf_maxVar. lia.  
 Qed. 
-
 
 (*more helpful properties *)
-
-(*evaluation will not change if we move clauses or literals*)
-Lemma evalClause'_comm (a : assgn) (cl : clause) (l l' : literal) (init : bool) :
-  evalClause' a (l :: l' :: cl) (Some init) = evalClause' a (l' :: l :: cl) (Some init). 
-Proof.
-  cbn. destruct (evalLiteral a l) eqn:eq1; destruct (evalLiteral a l') eqn:eq2. 
-  2-3: now rewrite fold_leftOption_none_ties_down. 
-  2: reflexivity. 
-  repeat rewrite <- orb_assoc. now replace (b || b0) with (b0 || b) by (now rewrite orb_comm). 
-Qed. 
-
 (*a characterisation of one processing step of evalClause *)
-Lemma evalClause'_step_inv (a : assgn) (cl : clause) (l : literal) (init : bool) (b :bool) : evalClause' a (l::cl) (Some init) = Some b <-> exists b1 b2, evalClause' a cl (Some init)= Some b1 /\ evalLiteral a l = Some b2 /\ b = b1 || b2.
+Lemma evalClause_step_inv (a : assgn) (cl : clause) (l : literal) (b :bool) : evalClause a (l::cl) = Some b <-> exists b1 b2, evalClause a cl = Some b1 /\ evalLiteral a l = Some b2 /\ b = b1 || b2.
 Proof.
-  revert init b l.
   induction cl. 
-  - intros init b l. cbn. destruct (evalLiteral a l) eqn:H1.
-    + split. intros H. exists init, b0. split; try split; cbn; try tauto. congruence.
+  - cbn. destruct (evalLiteral a l) eqn:H1.
+    + split. intros H. exists false, b0. split; try split; cbn; try tauto. congruence.
       intros (b1 & b2 & H2 & H3 & H4). destruct b1; try congruence; cbn in H4; now rewrite <- H4 in H3.
     + firstorder; congruence. 
- - intros init b l. split.
-   + intros H1. rewrite evalClause'_comm in H1. cbn in H1. destruct (evalLiteral a a0) eqn:eql.
-     * change (evalClause' a (l::cl) (Some (init || b0)) = Some b) in H1. apply IHcl in H1.
-       destruct H1 as (b1 & b2 & H1 & H2 & H3). cbn. rewrite eql.
-       unfold evalClause' in H1. firstorder.   
-     * congruence. 
-  + intros (b1 & b2 & H1 & H2 & H3). rewrite evalClause'_comm. cbn. destruct (evalLiteral a a0) eqn:H4.  
-    * apply IHcl. cbn in H1; rewrite H4 in H1. exists b1, b2. tauto. 
-    * cbn in H1. rewrite H4 in H1. now rewrite fold_leftOption_none_ties_down in H1. 
+ - split.
+   + intros H1. change (match evalClause a (a0::cl) with Some acc => match evalLiteral a l with Some v => Some (acc || v) | None => None end | None => None end = Some b) in H1. 
+     destruct (evalClause a (a0::cl)); try congruence. 
+     destruct (evalLiteral a l); try congruence. 
+     exists b0, b1. split; try split; try tauto. congruence. 
+   + intros (b1 & b2 & H1 & H2 & H3).  
+     change (match evalClause a (a0::cl) with Some acc => match evalLiteral a l with Some v => Some (acc || v) | None => None end | None => None end = Some b). 
+     rewrite H1, H2. now rewrite H3. 
 Qed. 
 
-Corollary evalClause_step_inv (a : assgn) (cl : clause) (l : literal) (b : bool) : evalClause a (l::cl) = Some b <-> exists b1 b2, evalClause a cl = Some b1 /\ evalLiteral a l = Some b2 /\ b = b1 || b2. 
-Proof. apply evalClause'_step_inv. Qed.
-
-Lemma evalCnf'_comm (a:assgn) (cn : cnf) (cl cl' : clause) (init : bool) :
-  evalCnf' a (cl::cl'::cn) (Some init) = evalCnf' a (cl' :: cl::cn) (Some init). 
+Lemma evalCnf_step_inv (a : assgn) (cn : cnf) (cl : clause) (b:bool) : evalCnf a (cl::cn) = Some b <-> exists b1 b2, evalCnf a cn = Some b1 /\ evalClause a cl = Some b2 /\ b = b1 && b2.
 Proof.
-  cbn; destruct (evalClause a cl) eqn:eq1; destruct (evalClause a cl') eqn:eq2. 
-  2-3: now rewrite fold_leftOption_none_ties_down. 2: reflexivity. 
-  repeat rewrite <- andb_assoc. now replace (b&&b0) with (b0&&b) by (now rewrite andb_comm).
-Qed. 
-
-Lemma evalCnf'_step_inv (a : assgn) (cn : cnf) (cl : clause) (init : bool) (b:bool) : evalCnf' a (cl::cn) (Some init) = Some b <-> exists b1 b2, evalCnf' a cn (Some init) = Some b1 /\ evalClause a cl = Some b2 /\ b = b1 && b2.
-Proof.
-  revert init b cl. induction cn. 
-  - intros init b cl. cbn. destruct evalClause.
-    + split. intros H. exists init, b0. firstorder; try congruence. 
+  induction cn. 
+  - cbn. destruct evalClause.
+    + split. intros H. exists true, b0. firstorder; try congruence. inv H. eauto.
       intros (b1 & b2 & H1 & H2 & H3). inv H1; now inv H2. 
     + firstorder; congruence.  
-  - intros init b cl. split.
-    + intros H1. rewrite evalCnf'_comm in H1. cbn in H1. destruct (evalClause a a0) eqn:eql. 
-      * change (evalCnf' a (cl::cn) (Some (init && b0)) = Some b) in H1. apply IHcn in H1.
-        destruct H1 as (b1 & b2 & H1 & H2 & H3). cbn. rewrite H2, eql. unfold evalCnf' in H1; firstorder.
-      * congruence.
-   + intros (b1 & b2 & H1 & H2 & H3). rewrite evalCnf'_comm. cbn. destruct (evalClause a a0) eqn:H4. 
-     * apply IHcn. cbn in H1; rewrite H4 in H1. exists b1, b2. tauto. 
-     * cbn in H1. rewrite H4 in H1. now rewrite fold_leftOption_none_ties_down in H1. 
-Qed. 
-
-Corollary evalCnf_step_inv (a : assgn) (cn : cnf) (cl : clause) (b : bool) : evalCnf a (cl :: cn) = Some b <-> exists b1 b2, evalCnf a cn = Some b1 /\ evalClause a cl = Some b2 /\ b = b1 && b2.
-Proof. apply evalCnf'_step_inv. Qed. 
-
-Lemma evalClause'_init_true (a : assgn) (cl : clause) : varBound_clause (|a|) cl ->  evalClause' a cl (Some true) = Some true.
-Proof.
-  induction cl.
-  - now cbn.
-  - intros H. apply evalClause'_step_inv. inv H. assert (|a| >= |a|) by lia.
-    specialize (evalLiteral_correct b H2 H) as (v & ->). rewrite IHcl. 2: apply H3. exists true, v. firstorder. 
+  - split.
+    + intros H1. change (match evalCnf a (a0::cn) with Some acc => match evalClause a cl with Some v => Some (acc && v) | None => None end | None => None end = Some b) in H1. 
+      destruct (evalCnf a (a0::cn)); try congruence. 
+      destruct (evalClause a cl); try congruence. 
+      exists b0, b1. split; try split; try tauto. congruence. 
+    + intros (b1 & b2 & H1 & H2 & H3).
+      change (match evalCnf a (a0::cn) with Some acc => match evalClause a cl with Some v => Some (acc && v) | None => None end | None => None end = Some b).
+      rewrite H1, H2. now rewrite H3. 
 Qed. 
 
 Lemma evalClause_literal_iff (a : assgn) (cl : clause) : evalClause a cl = Some true <-> ((exists l, l el cl /\ evalLiteral a l = Some true) /\ varBound_clause (|a|) cl). 
@@ -294,12 +211,19 @@ Proof.
       * exists a0. firstorder. 
       * destruct b1. 2: discriminate H3. apply IHcl in H1. destruct H1 as [[l [F1 F2]] _]. exists l. split; [now right | assumption]. 
     + intros [(l & H1 & H2) H]. destruct H1.
-      * rewrite H0 in *. cbn; rewrite H2. change (evalClause' a cl (Some true) = Some true).
-        apply evalClause'_init_true. now inv H. 
-      * cbn. destruct (evalLiteral a a0) eqn:eq. destruct b.
-        change (evalClause' a cl (Some true) = Some true). rewrite evalClause'_init_true. reflexivity. now inv H.
-        change (evalClause a cl = Some true). apply IHcl. split. exists l. firstorder. now inv H. 
-        inv H. assert (|a| >= |a|) by lia. specialize (evalLiteral_correct b H4 H) as (v & H6). congruence. 
+      * rewrite H0 in *. cbn; rewrite H2. destruct fold_rightOption eqn:H3.
+        -- now rewrite orb_true_r. 
+        -- inv H. apply evalClause_correct with (a:=a) in H6. destruct H6; unfold evalClause in H; congruence.  
+           lia. 
+      * cbn. destruct fold_rightOption eqn:H3. 
+        -- destruct (evalLiteral a a0) eqn:eq.
+           2: {inv H. apply evalLiteral_correct with (a:=a) (b:= b0) (k :=k) in H5. destruct H5; congruence. lia. }
+           destruct b; [reflexivity | ].
+           enough ((exists l, l el cl /\ evalLiteral a l = Some true) /\ varBound_clause (|a|) cl).
+           { apply IHcl in H1. unfold evalClause in H1. congruence. }
+           split; [exists l; firstorder | now inv H]. 
+        -- inv H. apply evalClause_correct with (a:=a) in H6; [| lia].
+           destruct H6 as [v H6]; unfold evalClause in H6; congruence.
 Qed. 
 
 Lemma evalCnf_clause_iff (a : assgn) (cn : cnf) : evalCnf a cn = Some true <-> (forall cl, cl el cn -> evalClause a cl = Some true).
@@ -310,7 +234,7 @@ Proof.
     + intros H cl [-> | H1]; apply evalCnf_step_inv in H; destruct H as (b1 & b2 & F1 & F2 & F3); simp_bool'.
       rewrite IHcn in F1. now apply F1. 
     + intros H. cbn. destruct (evalClause a a0) eqn:eq. destruct b.
-      1: apply IHcn; intros cl H1; firstorder. 
+      1: { assert (evalCnf a cn = Some true) by (apply IHcn; firstorder). unfold evalCnf in H0; now rewrite H0. }
       all: now specialize (H a0 (or_introl eq_refl)).
 Qed. 
 
@@ -331,37 +255,33 @@ Proof.
   + congruence. 
 Qed. 
 
-Lemma bounded_cap_assgn_clause' (c : clause) (n : nat) : varBound_clause n c -> forall (a : assgn) (init v : bool),
-      evalClause' a c (Some init) = Some v -> evalClause' (takeN a n) c (Some init) = Some v. 
+Lemma bounded_cap_assgn_clause (c : clause) (n : nat) : varBound_clause n c -> forall (a : assgn) (v : bool),
+      evalClause a c = Some v -> evalClause (takeN a n) c  = Some v. 
 Proof.
   induction c. 
-  - intros H a init v. cbn; now destruct v. 
-  - intros H assg init v H1. inv H. cbn [evalClause' fold_leftOption] in *.
+  - intros H a v. cbn; now destruct v. 
+  - intros H assg v H1. inv H. cbn [evalClause fold_rightOption] in *.
     destruct (evalLiteral assg (b, k)) eqn:H5. 
     + rewrite bounded_cap_assgn_literal with (v := b0). 2-3: assumption.
-      change (evalClause' (takeN assg n) c (Some (init ||b0)) = Some v). now apply IHc.
-    + exfalso. now rewrite fold_leftOption_none_ties_down in H1. 
+      destruct (fold_rightOption) eqn:H6 in H1. 
+      -- unfold evalClause in IHc. rewrite IHc with (v:= b1); assumption. 
+      -- congruence. 
+    + exfalso. now destruct fold_rightOption in H1. 
 Qed. 
 
-Lemma bounded_cap_assgn_clause (c : clause) (n : nat) : varBound_clause n c -> forall (a : assgn) (v : bool),
-      evalClause a c = Some v -> evalClause (takeN a n) c = Some v.
-Proof. intros H a v. now apply bounded_cap_assgn_clause'. Qed. 
-
-Lemma bounded_cap_assgn_cnf' (c : cnf) (n: nat) : varBound_cnf n c -> forall (a : assgn) (init v : bool),
-      evalCnf' a c (Some init) = Some v -> evalCnf' (takeN a n) c (Some init) = Some v.
+Lemma bounded_cap_assgn_cnf (c : cnf) (n: nat) : varBound_cnf n c -> forall (a : assgn) (v : bool),
+      evalCnf a c = Some v -> evalCnf (takeN a n) c = Some v.
 Proof.
   induction c.
-  - intros H a init v. cbn; now destruct v. 
-  - intros H assg init v H1. inv H. cbn [evalCnf' fold_leftOption] in *.
+  - intros H a v. cbn; now destruct v. 
+  - intros H assg v H1. inv H. cbn [evalCnf fold_rightOption] in *.
     destruct (evalClause assg a) eqn:H5.
     + rewrite bounded_cap_assgn_clause with (v := b). 2-3: assumption.
-      change (evalCnf' (takeN assg n) c (Some (init && b)) = Some v). now apply IHc. 
-    + exfalso. now rewrite fold_leftOption_none_ties_down in H1.
+      destruct (fold_rightOption) eqn:H6 in H1. 
+      -- unfold evalCnf in IHc. rewrite IHc with (v := b0); assumption. 
+      -- congruence. 
+    + exfalso. now destruct fold_rightOption in H1.
 Qed. 
-
-Lemma bounded_cap_assignment (c:cnf) (n:nat) : varBound_cnf n c -> forall (a :assgn) (v : bool),
-      evalCnf a c = Some v -> evalCnf (takeN a n) c = Some v.
-Proof. intros H a v. now apply bounded_cap_assgn_cnf'. Qed. 
 
 (*now that we've got the tools to verify the verifier, let's build a boolean verifier and prove its correctness*)
 Definition sat_verifierb (input : cnf * assgn) :=
@@ -392,126 +312,117 @@ Proof.
   solverec. 
 Qed. 
 
+Section fixXY.
+  Variable (X Y : Type).
+  Context {H : registered X}.
+  Context {H0 : registered Y}. 
+  Fixpoint fold_rightOption_time (f : Y -> X -> option X) (tf : timeComplexity (Y -> X -> option X)) (l : list Y) (acc : option X) :=
+    match l with [] => 4
+               | l::ls => (match fold_rightOption f acc ls with Some acc' => callTime2 tf l acc'
+                                                       | None => 0 end)
+                   + 15 + fold_rightOption_time f tf ls acc
+ end. 
 
-Fixpoint term_fold_leftOption_time X Y (f : X -> Y -> option X) (t__f : X -> unit -> nat * (Y -> unit -> nat * unit)) (l : list Y) (acc : option X) :=
-  (match l with
-       | [] => 9
-       | (l :: ls) => match acc with
-                    | None => 9
-                    | Some acc => callTime2 t__f acc l +
-                                 15 + term_fold_leftOption_time f t__f ls (f acc l)
-                    end
-       end ).
+  Global Instance term_fold_rightOption:  computableTime' (@fold_rightOption X Y) (fun f t__f => (1, fun acc _ => (5, fun l _ => (fold_rightOption_time f t__f l acc, tt)))). 
+  Proof.
+    extract. 
+    solverec. 
+    - unfold fold_rightOption in H3. assert (x4 = x5) by congruence. now rewrite H5. 
+    - unfold fold_rightOption in H3; congruence. 
+  Qed. 
 
-
-Instance term_fold_leftOption X Y `{registered X} `{registered Y}:  computableTime' (@fold_leftOption X Y) (fun f t__f => (1, fun l _ => (5, fun opt _ => (term_fold_leftOption_time f t__f l opt, tt)))). 
-Proof.
-  extract. 
-  solverec. 
-Qed. 
+End fixXY. 
 
 (*we need to factor out the fold step function first and extract it separately *)
-Definition evalClause'_step (a : assgn):=
-  fun (acc : bool) (lit : literal) => match evalLiteral a lit with
+Definition evalClause_step (a : assgn):=
+  fun (lit : literal) (acc : bool)  => match evalLiteral a lit with
                                   | Some v => Some (acc || v)
                                   | None => None
                                  end. 
 
-Instance term_evalClause'_step : computableTime' evalClause'_step (fun a _ => (1, fun acc _ => (1, fun lit _ => (evalLiteral_time a lit + 12, tt)))). 
+Instance term_evalClause_step : computableTime' evalClause_step (fun a _ => (1, fun lit _ => (1, fun acc _ => (evalLiteral_time a lit + 12, tt)))). 
 Proof. 
   extract. 
   solverec.
 Qed. 
 
-Definition evalClause'_time (a : assgn) (cl : clause) (acc : option bool):= term_fold_leftOption_time (evalClause'_step a) (fun _ _ => (1, fun lit _ => (evalLiteral_time a lit + 12, tt))) cl acc + 8 . 
+Definition evalClause_time (a : assgn) (cl : clause):= fold_rightOption_time (evalClause_step a) (fun lit _ => (1, fun acc _ => (evalLiteral_time a lit + 12, tt))) cl (Some false) + 9 . 
 
-Instance term_evalClause' : computableTime' evalClause'  (fun (a: assgn) (_ : unit) =>
-  (1, fun (cl : clause) (_ : unit) => (1, fun (acc : option bool) (_ : unit) => (evalClause'_time a cl acc, tt)))).  
+Instance term_evalClause : computableTime' evalClause  (fun (a: assgn) (_ : unit) =>
+  (1, fun (cl : clause) (_ : unit) => (evalClause_time a cl, tt))).  
 Proof.
-  assert (H : extEq (fun a l init => fold_leftOption (evalClause'_step a) l init) evalClause'). 
-  { unfold extEq, evalClause', evalClause'_step. auto. }
+  assert (H : extEq (fun a l => fold_rightOption (evalClause_step a) (Some false) l) evalClause). 
+  { unfold extEq, evalClause, evalClause_step. auto. }
   eapply computableTimeExt. apply H. 
   extract. 
   solverec. 
-  unfold evalClause'_time. 
+  unfold evalClause_time. 
   solverec. 
 Qed. 
 
-Instance term_evalClause : computableTime' evalClause (fun a _ => (1, fun cl _ => (evalClause'_time a cl (Some false) + 4, tt))). 
-Proof.
-  extract. 
-  solverec. 
-Qed. 
 
-Definition evalCnf'_step (a : assgn) :=
-  fun (acc : bool) (cl : clause) => match evalClause a cl with
+Definition evalCnf_step (a : assgn) :=
+  fun (cl : clause) (acc : bool) => match evalClause a cl with
                                 | Some v => Some (acc && v)
                                 | None => None
                               end. 
 
-Instance term_evalCnf'_step : computableTime' evalCnf'_step (fun a _ => (1, fun acc _ => (1, fun cl _ => (evalClause'_time a cl (Some false) + 16, tt)))).
+Instance term_evalCnf_step : computableTime' evalCnf_step (fun a _ => (1, fun cl _ => (1, fun acc _ => (evalClause_time a cl + 16, tt)))).
 Proof.
   extract. solverec. 
 Qed.
 
 
-Definition evalCnf'_time (a : assgn) (cn : cnf) (init : option bool) := term_fold_leftOption_time (evalCnf'_step a) (fun _ _ => (1, fun cl _ => (evalClause'_time a cl (Some false) + 16, tt))) cn init + 8.
+Definition evalCnf_time (a : assgn) (cn : cnf) := fold_rightOption_time (evalCnf_step a) (fun cl _ => (1, fun acc _ => (evalClause_time a cl  + 16, tt))) cn (Some true) + 9.
 
-Instance term_evalCnf' : computableTime' evalCnf' (fun (a : assgn) _ => (1, fun cn _ => (1, fun init _ => (evalCnf'_time a cn init, tt)))). 
+Instance term_evalCnf : computableTime' evalCnf (fun (a : assgn) _ => (1, fun cn _ => (evalCnf_time a cn , tt))). 
 Proof.
-  assert (H : extEq (fun a l init => fold_leftOption (evalCnf'_step a) l init) evalCnf'). 
-  { unfold extEq, evalCnf', evalCnf'_step. auto. }
+  assert (H : extEq (fun a l => fold_rightOption (evalCnf_step a) (Some true) l) evalCnf). 
+  { unfold extEq, evalCnf, evalCnf_step. auto. }
   eapply computableTimeExt. apply H. 
   extract.
   solverec. 
-  unfold evalCnf'_time; solverec. 
-Qed. 
-
-Instance term_evalCnf : computableTime' evalCnf (fun a _ => (1, fun cn _ => (  evalCnf'_time a cn (Some true) + 4, tt))). 
-Proof. 
-  extract. solverec. 
+  unfold evalCnf_time; solverec. 
 Qed. 
 
 (*extraction of the verifier *)
 
+Require Import Undecidability.L.Datatypes.Lists.
 
-
-
-Definition clause_maxVar_step := fun (acc : nat) (l : literal) => let '(_, v) := l in max acc v. 
-Instance term_clause_maxVar_step : computableTime' clause_maxVar_step (fun acc _ => (1, fun l _ => (let '(_, v):= l in 18 + 15 * min acc v, tt))). 
+Definition clause_maxVar_step := fun (l : literal) (acc : nat) => let '(_, v) := l in max acc v. 
+Instance term_clause_maxVar_step : computableTime' clause_maxVar_step (fun l _ => (1, fun acc _ => (let '(_, v):= l in 18 + 15 * min acc v, tt))). 
 Proof. extract. solverec. Qed.
 
-Definition clause_maxVar_time (c : clause) :=   fold_left_time clause_maxVar_step (fun (acc : nat) (_ : unit) =>
-     (1, fun (l : bool * nat) (_ : unit) => (let '(_, v) := l in 18 + 15 * Init.Nat.min acc v, tt))) c 0 + 11. 
+Definition clause_maxVar_time (c : clause) := fold_right_time clause_maxVar_step (fun (l : literal) (_ : unit) =>
+     (1, fun (acc : nat) (_ : unit) => (let '(_, v) := l in 18 + 15 * Init.Nat.min acc v, tt))) c 0 + 11. 
 Instance term_clause_maxVar : computableTime' clause_maxVar (fun cl _ => (clause_maxVar_time cl, tt)).  
 Proof.
-  assert (H' : extEq (fun c => fold_left clause_maxVar_step c 0) clause_maxVar).
+  assert (H' : extEq (fun c => fold_right clause_maxVar_step 0 c) clause_maxVar).
   { intros c. unfold extEq. unfold clause_maxVar.
-    generalize 0. 
     induction c. now cbn.
-    intros n. cbn. destruct a. cbn. apply IHc. }
+    cbn. destruct a. cbn. now rewrite IHc. }
   apply (computableTimeExt H'). extract. solverec. unfold clause_maxVar_time. solverec.
 Qed. 
 
-Definition cnf_maxVar_step := fun (acc : nat) (cl : clause) => max acc (clause_maxVar cl). 
-Instance term_cnf_maxVar_step : computableTime' cnf_maxVar_step (fun acc _ => (1, fun cl _ => (clause_maxVar_time cl + 15 * min acc (clause_maxVar cl) + 14, tt))).
+Definition cnf_maxVar_step := fun (cl : clause) (acc : nat)  => max acc (clause_maxVar cl). 
+Instance term_cnf_maxVar_step : computableTime' cnf_maxVar_step (fun cl _ => (1, fun acc _ => (clause_maxVar_time cl + 15 * min acc (clause_maxVar cl) + 14, tt))).
 Proof. extract. solverec. Qed. 
 
-Definition cnf_maxVar_time (c : cnf) := fold_left_time cnf_maxVar_step
-    (fun (acc : nat) (_ : unit) =>
+Definition cnf_maxVar_time (c : cnf) := fold_right_time cnf_maxVar_step
+    (fun (cl : clause) (_ : unit) =>
      (1,
-     fun (cl : list (bool * nat)) (_ : unit) =>
+     fun (acc : nat) (_ : unit) =>
      (clause_maxVar_time cl + 15 * Init.Nat.min acc (clause_maxVar cl) + 14, tt))) c 0 + 11.
 Instance term_cnf_maxVar : computableTime' cnf_maxVar (fun (c : cnf) _  => (cnf_maxVar_time c, tt)). 
 Proof. 
-  assert (H' : extEq (fun c => fold_left cnf_maxVar_step c 0) cnf_maxVar).
-  { intros c. unfold extEq, cnf_maxVar. generalize 0. induction c. now cbn. 
-    intros n; cbn. apply IHc. }
+  assert (H' : extEq (fun c => fold_right cnf_maxVar_step 0 c) cnf_maxVar).
+  { intros c. unfold extEq, cnf_maxVar. induction c. now cbn. 
+    cbn. now rewrite IHc. }
   apply (computableTimeExt H'). extract; solverec. 
   unfold cnf_maxVar_time. solverec. 
 Qed. 
 
-Definition sat_verifierb_time (c : cnf) (a : assgn) :=   11 * (| a |) + cnf_maxVar_time c + 14 * Init.Nat.min (| a |) (1 + cnf_maxVar c) +  evalCnf'_time a c (Some true) + 39.
+Definition sat_verifierb_time (c : cnf) (a : assgn) :=   11 * (| a |) + cnf_maxVar_time c + 14 * Init.Nat.min (| a |) (1 + cnf_maxVar c) +  evalCnf_time a c + 39.
 Instance term_sat_verifierb : computableTime' sat_verifierb (fun input _ => (let (c, a) := input in sat_verifierb_time c a, tt)). 
 Proof.
   extract. solverec; unfold sat_verifierb_time; solverec. 
@@ -538,27 +449,22 @@ Qed.
 
 Lemma clause_maxVar_bound_enc (c : clause) : clause_maxVar c <= size(enc c). 
 Proof.
-  unfold clause_maxVar.
-  enough (forall n, fold_left (fun (acc : nat) '(_, v) => Nat.max acc v) c n <= size(enc c) + n). 
-  specialize (H 0); lia. 
   induction c. 
-  - intros n; cbv. lia.
-  - cbn. destruct a. intros n0. specialize (IHc (Nat.max n0 n)). rewrite IHc. 
-    rewrite list_size_cons. rewrite size_prod; cbn [fst snd]. assert (forall a b, max a b <= a + b).
+  - cbn. lia.
+  - cbn. destruct a. unfold clause_maxVar in IHc; rewrite IHc. 
+    rewrite list_size_cons, size_prod; cbn [fst snd]. 
+    assert (forall a b, max a b <= a + b).
     {intros a b'. lia. }
     rewrite H. solverec. rewrite size_nat_enc. solverec. 
 Qed. 
 
 Lemma cnf_maxVar_bound_enc (c : cnf) : cnf_maxVar c <= size(enc c). 
 Proof.
-  unfold cnf_maxVar. 
-  enough (forall n, fold_left (fun (acc : nat) (cl : list (bool * nat)) => Nat.max acc (clause_maxVar cl)) c n <= size(enc c) + n). 
-  specialize (H 0); lia. 
   induction c.
-  - intros n. cbn; lia.
-  - intros n. cbn. rewrite IHc. rewrite list_size_cons. rewrite clause_maxVar_bound_enc. 
+  - cbn; lia.
+  - cbn. unfold cnf_maxVar in IHc; rewrite IHc. 
     assert (forall a b, max a b <= a + b). {intros a' b'. lia. } rewrite H. 
-    cbn. solverec. 
+    rewrite list_size_cons. rewrite clause_maxVar_bound_enc. solverec. 
 Qed.
 
 Lemma sat_NP : inNP SAT.
@@ -567,7 +473,7 @@ Proof.
   4 : {
     unfold SAT, sat_verifier. intros x; split.
     - intros [a H]. pose (a' := takeN a (S(cnf_maxVar x))). (*use a shorted assignment*)
-      exists a'. repeat split. apply bounded_cap_assignment. apply cnf_maxVar_bound. 
+      exists a'. repeat split. apply bounded_cap_assgn_cnf. apply cnf_maxVar_bound. 
       assumption. apply takeN_length. 
     - intros (a & H1 &H2). exists a; tauto.
   }
