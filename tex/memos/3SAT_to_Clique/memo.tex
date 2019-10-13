@@ -1,4 +1,5 @@
 \documentclass[a4paper,UKenglish,cleveref, autoref]{lipics-v2019}
+\usepackage{proof}
 \usepackage{gensymb}
 %This is a template for producing LIPIcs articles. 
 %See lipics-manual.pdf for further information.
@@ -69,12 +70,12 @@
 \end{abstract}
 
 \section{Introduction}
-Since Karp presented his 21 \emph{NP-complete} problems in 1972, the concept of NP-completeness has proved very fruitful in the theory of computational complexity theory. Many of his original reductions are nowadays taught in undergraduate courses on theoretical computer science. 
+Since Karp presented his 21 \emph{NP-complete} problems in 1972, the concept of NP-completeness has proved very fruitful in computational complexity theory. Many of his original reductions are nowadays taught in undergraduate courses on theoretical computer science. 
 While the ideas these reductions rely on are very simple conceptually, the proofs of correctness are done with a lot of handwaving, relying on the reader's intuition. The reasons for this are diverse: Turing machines, the standard computatinal model in the theory of NP-completeness, are very low-level and non-compositional, making formal arguments about their behaviour quite painful. Moreover, formal running time analyses are often deemed unnecessary, since the involved machines only need to run in polynomial time -- which can usually be readily believed.
 
 Nevertheless, a formal treatment of the theory of NP-completeness is desirable: Verifying these proofs that have been taught for decades might yield new insights into invariants which are tacitly assumed.
 
-In this memo, we provide a formalisation of the \textbf{SAT} and \textbf{Clique} problems, prove that they are in \emph{NP} and provide a formalisation of a well-known reduction from \textbf{3SAT} to \textbf{Clique}. We use a weak call-by-value lambda calculus introduced by Forster and Smolka in~\cite{ForsterSmolka:2017:L-Computability} and which we will call L as the model of computation. L has been proved to be a reasonable machine model by Forster et al.\ in~\cite{ForsterKunzeRoth:2019:wcbv-Reasonable}, in the sense that L and Turing machines can simulate each other with a polynomial overhead in time and a constant overhead in space. 
+In this memo, we provide a formalisation of the \textbf{SAT} and \textbf{Clique} problems, prove that they are in \emph{NP} and provide a formalisation of a well-known reduction from \textbf{3SAT} to \textbf{Clique}. We use a weak call-by-value lambda calculus called L introduced by Forster and Smolka in~\cite{ForsterSmolka:2017:L-Computability} as the model of computation. L has been proved to be a reasonable computational model by Forster et al.\ in~\cite{ForsterKunzeRoth:2019:wcbv-Reasonable}, in the sense that L and Turing machines can simulate each other with a polynomial overhead in time and a constant overhead in space. 
 While the lambda-calculus is higher-level than Turing machines, directly programming in L is still unpleasant. Forster and Kunze have provided a framework for the certifying extraction of Coq terms to L terms, which also allows the user to instantiate time bounds during the extraction process~\cite{ForsterKunze:2019:Certifying-extraction}. Thus we can formalise problems and reductions in Coq and later extract these definitions to L, proving running time bounds in the process.
 
 \section{SAT}
@@ -85,18 +86,18 @@ While the lambda-calculus is higher-level than Turing machines, directly program
 \newcommand{\assgn}{\textsf{assgn}}
 
 \newcommand*{\eval}[2]{\mathcal{E}~#1~#2~}
-\newcommand*{\meval}[3]{\overline{\mathcal{E}}~#1~#2~#3~}
 
-When formalising computational problems, one has to strike a balance regarding abstraction and technical sophistication: While reasoning about correctness in Coq can be done in a much more elegant way when using abstract formalisations and inductive predicates instead of computational functions, members of $\mathbb{P}$, the universe of propositions, cannot be extracted to L. Running time analyses get easier, too, when employing simple formalisations -- ideally, one would exclusively use boolean logic when reasoning, thus reverting to classical logic. 
+When formalising computational problems, one has to strike a balance regarding abstraction and technical sophistication: While reasoning about correctness in Coq can be done in a much more elegant way when using abstract formalisations and inductive predicates instead of computational functions, members of $\mathbb{P}$, the universe of propositions, cannot be extracted to L. Running time analyses get easier, too, when employing simple formalisations. 
 
 We therefore define most properties using inductive predicates and accompany them with boolean deciders if necessary, while all datatypes used for the problem definitions are kept as simple as possible.
 
-Following this line, we define a simple list-based representation of conjunctive normal forms (CNFs):
+\subsection{Conjunctive Normal Forms}
+Following this line of thought, we define a simple list-based representation of conjunctive normal forms (CNFs):
 \begin{align*}
   x : \var := \nat &&
-  l : \literal := \bool \times \var &&
-  c : \clause := \listsof \literal &&
-  n : \cnf := \listsof \clause && 
+  L : \literal := \bool \times \var &&
+  C : \clause := \listsof \literal &&
+  N : \cnf := \listsof \clause && 
 \end{align*}
 A literal is represented by a pair of a boolean denoting its sign and its variable. 
 Assignments are lists of booleans: $a : \assgn := \listsof \bool$. The list $[\btrue, \bfalse, \btrue]$, for instance, denotes the assignment $\{x_0 \mapsto 1, x_1 \mapsto 0, x_2 \mapsto 1\}$. 
@@ -107,64 +108,251 @@ The evaluation of CNFs is defined via boolean functions recursively defined on t
 \end{align*}
 \vspace{-2em}
 \begin{align*}
-  \textsf{foldlO} &: (A \rightarrow B \rightarrow \opt{(A)}) \rightarrow \listsofb B \rightarrow \opt{(A)} \rightarrow \opt{(A)}\\ 
-  \textsf{foldlO}~f~[]~acc &:= acc\\
-  \textsf{foldlO}~f~(x::xs)~acc &:= \match acc~\withl \Some acc \Rightarrow \textsf{foldlO}~f~xs~(f~acc~x) \withm \None \Rightarrow \None \withr
+  \textsf{foldrO} &: (B \rightarrow A \rightarrow \opt{(A)})  \rightarrow \opt{(A)} \rightarrow \listsofb B \rightarrow \opt{(A)}\\ 
+  \textsf{foldrO}~f~acc~[] &:= acc\\
+  \textsf{foldrO}~f~acc~(x::xs) &:= \match \textsf{foldrO}~f~acc~xs~\withl \Some acc \Rightarrow (f~x~acc) \withm \None \Rightarrow \None \withr
 \end{align*}
 \vspace{-2em}
 \begin{align*}
-  \eval{a}{l} &:= \llet (s, v) := l~\lin \match a.v \withl \Some {value} \Rightarrow \Some {(\eqb{s}{value})} \withm \None \Rightarrow \None \withr \\
-  \meval{a}{c}{init} &:= \textsf{foldlO}~(\lambda~acc~l.~ \match \eval{a}{l} \withl \Some{v} \Rightarrow \Some{(acc~\orb~v)} \withm \None \Rightarrow \None\withr~l~init \\
-  \eval{a}{c} &:= \meval{a}{c}{(\Some{\bfalse})}\\
-  \meval{a}{n}{init} &:= \textsf{foldlO}~(\lambda~acc~l.~ \match \eval{a}{l} \withl\Some{v} \Rightarrow \Some{(acc~\andb~v)} \withm \None \Rightarrow \None\withr~l~init\\
-  \eval{a}{n} &:=\meval{a}{n}{(\Some{\btrue})}
+  \eval{a}{L} &:= \llet (s, n) := L~\lin \match a.n \withl \Some {value} \Rightarrow \Some {(\eqb{s}{value})} \withm \None \Rightarrow \None \withr \\
+  \eval{a}{C} &:= \textsf{foldrO}~(\lambda~L~acc.~ \match \eval{a}{L} \withl \Some{v} \Rightarrow \Some{(acc~\orb~v)} \withm \None \Rightarrow \None\withr)~(\Some{\bfalse})~C \\
+  \eval{a}{N} &:= \textsf{foldrO}~(\lambda~C~acc.~ \match \eval{a}{C} \withl\Some{v} \Rightarrow \Some{(acc~\andb~v)} \withm \None \Rightarrow \None\withr)~(\Some{\btrue})~N
 \end{align*}
 
-The function $xs.n$ yields the $n$-th element of $xs$, wrapped in the option type $\opt{}$, or $\None$ if the subscript is invalid and is used to lookup values of assignments. \textsf{foldlO} is a variant of the known fold-left function, but the aggregation function returns an element of $\opt{(A)}$. The folding only continues as long as the aggregation result is not $\None$. 
-Using \textsf{foldlO}, the definition of the evaluation functions $\mathcal{E}$ is straightforward. Splitting the evaluation of clauses and CNFs up with an auxiliary function $\overline{\mathcal{E}}$ is necessary for some proofs. The presence of option values is due to our choice that an assignment only has finite support, which we find more expressive than using default values. 
+The function $xs.n$ yields the $n$-th element of $xs$, wrapped in the option type $\opt{}$, or $\None$ if the subscript is invalid and is used to lookup values of assignments. \textsf{foldrO} is a variant of the known fold-right function, but the aggregation function returns an element of $\opt{(A)}$. The folding only continues as long as the aggregation result is not $\None$. 
+Using \textsf{foldrO}, the definition of the evaluation functions $\mathcal{E}$ is straightforward. The presence of option values is due to our choice that an assignment only has finite support, which we find more expressive than using default values. 
 We use $\mathcal{E}$ to refer to evaluation of both literals, clauses and CNFs, but from the context it will always be clear which of the functions we mean.
 
-TODO: first introduce boundedness
+Next we introduce the notion of boundedness of CNFs: a CNF $N$ is bounded by $k$, written $N \prec k$, if all variables occuring in $N$ are strictly smaller than $k$. We need the same notion for clauses and again use the same notation to refer to boundedness of clauses and CNFs. This is formalised using inductive predicates:
+\begin{align*}
+  \infer{[] \prec k}{} && \infer{((s, n) :: C) \prec k}{n < k \quad C \prec k} && \infer{[] \prec k}{} && \infer{C :: N \prec k}{C \prec k && N \prec k}
+\end{align*}
 
-\begin{proposition}\label{prop:evalcomm}
-  Changing the order of literals or clauses does not change the evaluation result. 
+\begin{proposition}\label{prop:varboundmono}\leavevmode
   \begin{enumerate}
-    \item $\meval{a}{(l_1 :: l_2 :: c)}{i} = \meval{a}{(l_2 :: l_1 :: c)}{i}$ 
-    \item $\meval{a}{(c_1 :: c_2 :: n)}{i} = \meval{a}{(c_2 :: c_1 :: c)}{i}$
+    \item $k \le k' \rightarrow C \prec k \rightarrow C \prec k'$
+    \item $k \le k' \rightarrow N \prec k \rightarrow C \prec k'$
+  \end{enumerate}
+\end{proposition}
+
+\begin{proposition}\label{prop:evalbounded}
+  If the CNF is bounded by the length $\length{a}$ of the assignment, evaluation will yield a result.
+  \begin{enumerate}
+    \item $v < k \rightarrow \length{a} \ge k \rightarrow \exists~r. \eval{a}{(s, v)} = \Some{r}$
+    \item $C \prec k \rightarrow \length{a} \ge k \rightarrow \exists~r. \eval{a}{C} = \Some{r}$
+    \item $N \prec k \rightarrow \length{a} \ge k \rightarrow \exists~r. \eval{a}{N} = \Some{r}$
   \end{enumerate}
 \end{proposition}
 \begin{proof}
-  By case analysis on the evaluation of $l_1, l_2$ and $c_1, c_2$, respectively.
+  1.\ is proved using standard facts on $xs.n$. 2.\ and 3.\ are proved by induction on $C \prec k$ and $N \prec k$, respectively. In the inductive step of 2., we need 1., while we need 2.\ in the inductive step of 3.
 \end{proof}
+  
+The converse statements of Proposition~\ref{prop:evalbounded} also hold.
+
+\begin{proposition}\label{prop:boundedeval}
+  If evaluation succeeds for an assignment $a$, the CNF is bounded by $\length{a}$. 
+  \begin{enumerate}
+    \item $(\exists~r. \eval{a}{(s, v)} = \Some{r}) \rightarrow v < \length{a}$
+    \item $(\exists~r. \eval{a}{C} = \Some{r}) \rightarrow C \prec \length{a}$
+    \item $(\exists~r. \eval{a}{N} = \Some{r}) \rightarrow N \prec \length{a}$
+  \end{enumerate}
+\end{proposition}
+
+Apart from the inductive predicate $\prec$, we will also need a computable notion of boundedness which can be extracted to L. We use functions $\textsf{maxClause}$ and $\textsf{maxCnf}$ that compute the maximal variable which is used in a clause or CNF, respectively: 
+\begin{align*}
+  \textsf{maxClause}~C &:= \textsf{foldr}~(\lambda~(\_, n)~acc.~\max acc~n)~0~C \\
+  \textsf{maxCnf}~N &:= \textsf{foldr}~(\lambda~C~acc.~\max acc~(\textsf{maxClause}~C))~0~N
+\end{align*}
+
+\begin{proposition}\label{prop:maxvarbounded}
+  A CNF is bounded by the successor of the maximal variable.
+  \begin{enumerate}
+    \item $C \prec (\natS{\textsf{maxClause}~C})$
+    \item $N \prec (\natS{\textsf{maxCnf}~N})$
+  \end{enumerate}
+\end{proposition}
+\begin{proof}
+  \begin{enumerate}
+    \item The statement is shown using induction on $C$. In the inductive step, the inductive definition of $\prec$ leaves us with two proof obligations. For the second obligation $C \prec (\natS{\textsf{maxClause}(L::C)})$ for some literal $L$, we need the monoticity given by Proposition~\ref{prop:varboundmono}. 
+    \item Similar to 1.
+  \end{enumerate}
+\end{proof}
+
+We proceed with results on the evaluation functions.
 
 \begin{lemma}\label{prop:evalstepinv}
   One evaluation step can be characterised as follows:
   \begin{enumerate}
-    \item $\eval{a}{(l::c)} = \Some{b} \leftrightarrow \exists~b_1~b_2, \eval{a}{c} = \Some{b_1} \land \eval{a}{l} = \Some{b_2} \land b = b_1~\orb~b_2$
-    \item $\eval{a}{(c::n)} = \Some{b} \leftrightarrow \exists~b_1,~b_2, \eval{a}{n} = \Some{b_1} \land \eval{a}{c} = \Some{b_2} \land b = b_1~\andb~b_2$
+    \item $\eval{a}{(L::C)} = \Some{b} \leftrightarrow \exists~b_1,b_2. \eval{a}{C} = \Some{b_1} \land \eval{a}{L} = \Some{b_2} \land b = b_1~\orb~b_2$
+    \item $\eval{a}{(C::N)} = \Some{b} \leftrightarrow \exists~b_1,b_2. \eval{a}{N} = \Some{b_1} \land \eval{a}{C} = \Some{b_2} \land b = b_1~\andb~b_2$
   \end{enumerate}
 \end{lemma}
 \begin{proof}
-  We first prove the corresponding statements for the generalised functions $\overline{\mathcal{E}}$ by induction on $c$ (or $n$, respectively), with the initial value of $\textsf{foldlO}$, $l$ and $b$ generalised. In the inductive step Proposition~\ref{prop:evalcomm} is needed.
-  The facts for $\mathcal{E}$ then follow directly.
+  Using induction on $C$ and $N$, respectively. A few case analyses are needed, but otherwise the proof is standard.
 \end{proof}
 
+We can now derive a helpful equivalent characterisation of satisfaction of clauses and CNFs:
 
+\begin{lemma}\label{prop:evalclauseiff}\leavevmode
+  \begin{enumerate}
+    \item
+      $\eval{a}{C} = \Some{\btrue} \leftrightarrow (\exists~L \in C. \eval{a}{L} = \Some{\btrue}) \land C \prec \length{a}$
+    \item 
+      $\eval{a}{N} = \Some{\btrue} \leftrightarrow (\forall~C \in N. \eval{a}{C} = \Some{\btrue}) \land N \prec \length{a}$
+  \end{enumerate}
+\end{lemma}
+\begin{proof}
+  \begin{enumerate}
+    \item By induction on $C$. The base case is trivial. In the direction from left to right in the inductive step, the statement $L::C \prec \length{a}$ follows directly from Proposition~\ref{prop:boundedeval}. For the other part of the conjunction, we apply Lemma~\ref{prop:evalstepinv}.
+      For the direction from right to left, we need Proposition~\ref{prop:evalbounded} and a few case analyses.    
+    \item By induction on $N$. The proof is simpler than the one for 1. In the inductive step, we need Lemma~\ref{prop:evalstepinv}.
+  \end{enumerate}
+\end{proof}
 
-TODO: present definitions and results regarding semantics (i.e. boundedness of variables, inversion of evaluation)
+\subsection{Satisfiability}
+We now define \textbf{SAT} as the following problem:
+\begin{definition}
+  Given a CNF $N$, \textbf{SAT} is the problem of determining whether there exists a satisfying assignment $a$:
+  \[\textbf{SAT}~N := \exists~a. \eval{a}{N} = \Some{\btrue} \]
+\end{definition}
 
-Then the definition of SAT, the verifier, and the derivation that SAT is in NP
-Can mention at this point the technicalities with deriving polynomial bounds. 
+In the remainder of this section, we show that \textbf{SAT} is in NP. We use the well-known definition of NP using polynomial-time verifiers, since this saves us from introducing nondeterminism to L. 
+The verifier gets a problem instance and a certificate and has to check whether the certificate is a valid proof of the instance being an inhabitant of the problem at hand. There should be valid certificates exactly for the positive instances. We require that a verifier only accepts certificates having an encoding size polynomial in the encoding size of the instance\footnote{An alternative definition not posing this restriction, but instead requiring that there exists a certificate of polynomial size exactly for the positive instances would also work, but make proofs more complicated.}.
 
-Definition of kSAT and kCNFs
+Using the functions defined above, it is straightforward to define a verifier for \textbf{SAT}:
+\begin{align*}
+  \textsf{Ver}_{\textbf{SAT}}~N~a := \eval{a}{C} = \Some{\btrue} \land \length{a} \le \natS{\textsf{maxCnf}~N} 
+\end{align*}
+Note that this is again a propositional definition. A boolean decider, which can then be extracted to L, can be derived in a straightforward way, though. The second condition captures the requirement of polynomial certificates: Valid certificates are only as long as they need to be. Nevertheless, it isn't straightforward to see that the requirement is actually fulfilled: It only works because the Scott encoding of natural numbers which we use is unary in nature. Since the encoding size of Booleans is constant, the encoding size of a minimal satisfying assignment is thus linear in the encoding size of the maximal variable used, which is part of the encoding of the CNF.
+
+In order to derive that \textbf{SAT} is in NP, we need to show that:
+\begin{enumerate}
+  \item $\textbf{SAT}~N \leftrightarrow \exists~a. \textsf{Ver}_{\textbf{SAT}}~N~a$,
+  \item the boolean version of $\textsf{Ver}_\textbf{SAT}$ runs in polynomial time in the encoding size of its two inputs,
+  \item $\textsf{Ver}_\textbf{SAT}$ only accepts certificates whose encoding size is polynomial in the encoding size of $N$.
+\end{enumerate}
+
+Since 2.\ and 3.\ are quite technical to prove, we only go into step 1.\ in detail. Essentially, we need to show that if there exists a certificate, i.e.\ a satisfying assignment, then there also exists a short one. This short assignment can be obtained by only taking a prefix of the assignment. The standard $\textsf{take} : \listsof~A \rightarrow \nat \rightarrow \listsof~A$ function is used.
+
+\begin{lemma}\label{prop:boundedcapassgn}\leavevmode
+  \begin{enumerate}
+    \item $n < k \rightarrow \eval{a}{(s, n)} = \Some{v} \rightarrow \eval{(\normalfont\textsf{take}~a~k)}{(s, n)} = \Some{v}$
+    \item $C \prec k \rightarrow \eval{a}{C} = \Some{v} \rightarrow \eval{(\normalfont\textsf{take}~a~k)}{C} = \Some{v}$
+    \item $N \prec k \rightarrow \eval{a}{N} = \Some{v} \rightarrow \eval{(\normalfont\textsf{take}~a~k)}{N} = \Some{v}$
+  \end{enumerate}
+\end{lemma}
+\begin{proof}
+  1.\ follows from $n < k \rightarrow l.n = \Some{v} \rightarrow (\textsf{take}~l~k).n = \Some{v}$, which is proved using standard facts on \textsf{take} and $l.n$.
+  2.\ and 3.\ follow by induction on $C$ and $N$, respectively.
+\end{proof}
+
+\subsection{$k$-Satisfiability}
+We introduce the notion of $k$-CNFs using an inductive predicate.
+
+\begin{align*}
+  \infer{\textsf{kCNF}~k~[]}{k > 0} && \infer{\textsf{kCNF}~k~(C::N)}{\length{C} = k \quad \textsf{kCNF}~k~N}
+\end{align*}
+
+Thus, the representation of $k$-CNFs does not differ from the representation of unconstrained CNFs. 
+
+\begin{proposition}\label{prop:kCNFexp}
+  $\textsf{kCNF}~k~N \leftrightarrow k > 0 \land \forall C \in N. k = \length{C}$
+\end{proposition}
+
+The corresponding problem is $k$-\textbf{SAT}:
+\begin{definition}
+  For every fixed $k$, $k$-\textbf{SAT} is the problem of determining whether there exists a satisfying assignment $a$ for a $k$-CNF $N$: 
+  \[$k$-\textbf{SAT}~N := \textsf{kCNF}~k~N \land \exists~a.\eval{a}{N} = \Some{\btrue} \]
+\end{definition}
+
+TODO: maybe show the reduction to SAT.
 
 \section{Clique}
-The definition of graphs, edgeIn, nodeIn deciders
+In this section, we formalise the \textbf{Clique} problem. 
 
-The definition of Clique: inductive predicate, explicit characterisation
-Then connectedb, and a short overview of the inNP proof
+\subsection{Graphs}
+\newcommand{\lnode}{\textsf{node}}
+\newcommand{\ledge}{\textsf{edge}}
+\newcommand{\lgraph}{\textsf{graph}}
+We start with a formalisation of undirected graphs which can be extracted to L. Again, we strive to keep the representation as simple as possible in order to admit a compact running time analysis, trading off expressivity. Thus we use a list-based representation.
+\begin{align*}
+  n,u,v : \lnode := \nat && e : \ledge := \lnode \times \lnode && g : \lgraph := \nat \times \listsof~\ledge 
+\end{align*}
+
+A graph is pair of a natural number giving the number of nodes and a list of edges. This definition is very weak and doesn't give any semantic guarantees. We correct for this lack by giving an inductive predicate defining well-formed graphs:
+\begin{align*}
+  \infer{\textsf{gwf}~(n,[])}{} && \infer{\textsf{gwf}~(n,(u, v) :: e)}{u < n \quad v < n \quad \textsf{gwf}~(n, e)}
+\end{align*}
+
+We give Boolean deciders for node and edge containment:
+\begin{align*}
+  \textsf{nodeIn}~g~n := \llet (max, \_) := g~\lin (\natS n) \overset{?}{\le} max\\
+  \textsf{edgeIn}~g~u~v := \llet (\_, e) := g~\lin (u, v) \overset{?}{\in} e~\orb~(v, u) \overset{?}{\in} e
+\end{align*}
+
+While our definition of the type \textsf{edge} works with pairs, we are giving it the semantics of an undirected graph.
+
+\subsection{Clique}
+A $k$-clique is a duplicate-free list of $k$ nodes such that all pairwise-distinct nodes are connected.
+
+\begin{align*}
+  \infer{\textsf{isClique}~g~[]~0}{} && \infer{\textsf{isClique}~g~(n::cl)~(\natS k)}{n \notin cl \quad \textsf{nodeIn}~g~n = \btrue \quad (\forall n' \in cl. \textsf{edgeIn}~g~n~n' = \btrue) \quad \textsf{isClique}~g~cl~k}
+\end{align*}
+
+\begin{lemma}[Explicit characterisation]\label{prop:cliqueexpl}
+  \begin{align*}
+    \normalfont\textsf{isClique}~g~cl~k \leftrightarrow \length{cl} = k \land \normalfont\textsf{dupfree}~cl &\land (\forall n \in cl. \normalfont\textsf{nodeIn}~g~n = \btrue) \\
+    &\land (\forall u,v \in cl. u \neq v \rightarrow \normalfont\textsf{edgeIn}~g~u~v = \btrue)
+  \end{align*}
+\end{lemma}
+\begin{proof}
+  The direction from left to right follows by an induction on the derivation of \textsf{isClique}. The other direction follows by an induction on $cl$.
+\end{proof}
+
+We can now define the \textbf{Clique} problem.
+
+\begin{definition}
+  Given a graph $g$ and a natural number $k > 0$, \textbf{Clique} is the problem of determining whether there is a set of nodes $cl$ such that $cl$ is a $k$-clique in $g$:
+  \[\normalfont\textbf{Clique} (g, k) := \exists~cl. \normalfont\textsf{isClique}~g~cl~k \]
+\end{definition}
+
+A verifier can be derived mechanically, using the list of nodes as the certificate:
+\[\textsf{Ver}_{\textbf{Clique}} ((g, k), cl) := \textsf{isClique}~g~cl~k \]
+In contrast to the \textbf{SAT} verifier, we need not explcitly require that the certificate is short enough, since already \textsf{isClique} places a bound. At this point it is critical that the representation of graphs explicitly contains a bound on the indices of nodes.
+
+It is straightforward to obtain a Boolean decider for the \textsf{isClique} predicate and thus a computable verifier.
 
 \section{Reducing \textbf{3SAT} to \textbf{Clique}}
+In this section, we finally reduce \textbf{3SAT} to \textbf{Clique}. The reduction is well-known; nevertheless, we give a short account of the intuition behind it. 
+
+Given a \textbf{3SAT} instance $N$, we have to construct a graph $g$ and a number $k$ such that $g$ has a $k$-clique if, and only if, $N$ is satisfiable. First observe that an assignment satisfies $N$ iff for every clause $C \in N$, there is at least one literal $L \in C$ such that $\eval{a}{L} = \Some{\btrue}$ (this is a direct consequence of the two statements in Lemma~\ref{prop:evalclauseiff}). 
+We therefore construct a graph with $3 \cdot \length{N}$ nodes, one for each literal: $n^0_0, n^0_1, n^0_2, n^1_0, \ldots, n^{\length{N}}_2$. Two nodes $n^i_j, n^k_l$ are connected via an edge iff $i \neq k$, i.e.\ the corresponding literals belong to distinct clauses, and the literals are not conflicting, meaning that there is an assignment that satisfies both literals simultaneously.
+It is easy to believe (although not formally satisfying) that this construction does indeed satsisfy the desired equivalence. 
+
+\begin{definition}[Conflicting literals]
+  \[\normalfont\textsf{conflict}~(s_1, n_1)~(s_2, n_2) := s_1 \neq s_2 \land n_1 = n_2 \]
+\end{definition}
+\begin{proposition}\label{prop:conflictingassgn}
+  \[n_1 < \length{a} \rightarrow n_2 < \length{a} \rightarrow (\normalfont\textsf{conflict}~(s_1, n_1)~(s_2, n_2) \leftrightarrow \eval{a}{(s_1, n_1)} \neq \eval{a}{(s_2, n_2)}) \]
+\end{proposition}
+
+In order to reason about the reduction, we have to somehow connect a CNF with the corresponding graph. Since there is a one-to-one correspondence between literals of the CNF and nodes of the graph, we require a bijection between nodes and literals. However, there can be several literals in one CNF that are syntactically identical but are at different positions in the list representation, meaning that we cannot simply use elements of \literal. Instead, we use pairs of indices describing the index of the clause and the index of the literal inside this clause.
+
+\begin{definition}[Bijections of sets]
+  Let two sets be given by $p : X \rightarrow \Prop$ and $q : Y \rightarrow \Prop$. Let $f : X \rightarrow Y$ and $g : Y \rightarrow X$.
+  \[\normalfont\textsf{inverseOn}~p~q~f~g := (\forall x. p~x \rightarrow q(f~x) \land x = g(f~x)) \land (\forall y. q~y \rightarrow p(f~y) \land y = f(g~y)) \]
+\end{definition}
+\begin{definition}[Labellings of graphs]
+  A labelling assigns each node of a graph a corresponding literal, and vice versa.
+  \begin{align*}
+  \textsf{labG} := \nat \rightarrow \nat \times \nat && \textsf{labG}^{-1} := \nat \times \nat \rightarrow \nat
+  \end{align*}
+  \begin{align*}
+  \textsf{isLabelling}~N~(f : \textsf{labG})~(f^{-1} : \textsf{labG}^{-1}) := \textsf{inverseOn}~f~f^{-1}~ &(\lambda~v. v < 3 \cdot \length{N})\\
+  ~&(\lambda~(c, l). c < \length{N} \land l < 3) 
+\end{align*}
+\end{definition}
+
 
 First intuitive graphical overview of the reduction.
 
