@@ -142,7 +142,6 @@ Proof.
 Qed. 
 
 (*A computable notion of boundedness *)
-(*fold_left makes verification more ugly, but the runtime functions get easier *)
 Definition clause_maxVar (c : clause) := fold_right (fun '(_, v) acc => Nat.max acc v) 0 c. 
 Definition cnf_maxVar (c : cnf) := fold_right (fun cl acc => Nat.max acc (clause_maxVar cl)) 0 c.
 
@@ -304,7 +303,7 @@ Proof.
   solverec. 
 Qed.
 
-Definition evalLiteral_time (a : assgn) (l : literal) := match l with (_, v) => 15 * Nat.min v (|a|) + 33 end. 
+Definition evalLiteral_time (a : assgn) (l : literal) := match l with (_, v) => callTime2 (@nth_error_time bool) a v + 18 end. 
 
 Instance term_evalLiteral : computableTime' evalLiteral (fun a _ => (1, fun l _ => (evalLiteral_time a l, tt))). 
 Proof. 
@@ -422,6 +421,7 @@ Proof.
   unfold cnf_maxVar_time. solverec. 
 Qed. 
 
+
 Definition sat_verifierb_time (c : cnf) (a : assgn) :=   11 * (| a |) + cnf_maxVar_time c + 14 * Init.Nat.min (| a |) (1 + cnf_maxVar c) +  evalCnf_time a c + 39.
 Instance term_sat_verifierb : computableTime' sat_verifierb (fun input _ => (let (c, a) := input in sat_verifierb_time c a, tt)). 
 Proof.
@@ -429,12 +429,206 @@ Proof.
 Qed. 
 
 (*polynomial time bounds for sat_verifierb and the functions it uses*)
-(** * TODO *)
+Proposition max_bound a b : max a b <= a + b.
+Proof. lia. Qed. 
+
+Require Import Undecidability.L.Complexity.PolyBounds.
+
+(* eval bounds*)
+(*first of all: a bound for fold_rightOption; adapted from the fold_right bound *)
+Section fixXYZ_fold_rightOption.
+  Context {X Y Z: Type}.
+  Context {H:registered X}.
+  Context {H0: registered Y}.
+  Context {H1 : registered Z}.
+
+  Lemma fold_rightOption_time_bound_env (step : Z -> Y -> X -> option X) (stepT : Z -> timeComplexity (Y -> X -> option X)) :
+    (exists (f : nat -> nat), (forall (acc : X) (ele : Y) (env : Z), callTime2 (stepT env) ele acc <= f(size(enc acc) + size(enc ele) + size(enc env))) /\ inOPoly f /\ monotonic f)
+    -> (exists (c__out : nat), forall (acc : X) (ele : Y) (env : Z), size(enc (step env ele acc)) <= size(enc acc) + size(enc ele) + size(enc env) + c__out)
+    -> exists (f : nat -> nat), (forall (l : list Y) (acc : option X) (env : Z), fold_rightOption_time (step env) (stepT env) l acc <= f(size(enc l) + size(enc acc) + size(enc env))) /\ inOPoly f /\ monotonic f.
+  Proof.
+    intros (f__step & H2 & H3 & H4) (c__out & F). 
+    evar (f : nat -> nat). exists f. split.
+    - intros l init env.
+      (* we first show that the output size of foldr on every suffix is polynomial *)
+      assert (forall l' l'', l = l' ++ l'' -> forall v, fold_rightOption (step env) init l'' = Some v -> size(enc v) <= size(enc init) + size(enc l'') + (|l''|) * (size(enc env) + c__out)).
+      {
+        intros l' l''; revert l'. induction l''.
+        + cbn. intros. rewrite H6. rewrite size_option. lia.
+        + intros. cbn in H6. destruct fold_rightOption eqn:H7.
+          * specialize (size_option (Some v)) as H8. cbn in H8. assert (size(enc v) <= size(enc (Some v))) as H9 by lia; rewrite H9, <- H6. clear H8 H9.
+            rewrite F. rewrite IHl''. 3: reflexivity. 2: {now rewrite app_comm_cons' in H5. }
+            rewrite list_size_cons. solverec. 
+          * congruence.
+      }
+
+      instantiate (f := fun n => 4 + n * f__step((S c__out) * n * n + n) + 15 * n). subst f.
+      unfold fold_rightOption_time. 
+      induction l.
+      + solverec.
+      + rewrite IHl.
+        * destruct (fold_rightOption) eqn:H6.
+          -- rewrite H2. unfold monotonic in H4.
+             rewrite H4 with (x' := size(enc init) + size(enc l) + (|l|) * (size(enc env) + c__out) + size(enc a) + size(enc env)).
+             2: {
+               rewrite H5. 3: apply H6. 2: assert (a::l = [a] ++ l) as H7 by reflexivity; apply H7. now lia. 
+             }
+
+             rewrite H4 with (x' := (S c__out) * (size(enc(a::l)) + size(enc init) + size(enc env)) *  (size(enc(a::l)) + size(enc init) + size(enc env)) + (size(enc(a::l)) + size(enc init) + size(enc env))). 
+             2: {clear IHl. rewrite list_size_length. rewrite list_size_cons. cbn; nia. }
+
+             setoid_rewrite H4 with (x' := (S c__out) *( size(enc(a::l)) + size(enc init) + size(enc env)) *  (size(enc(a::l)) + size(enc init) + size(enc env)) + (size(enc(a::l)) + size(enc init) + size(enc env))) at 2. 
+             2: {clear IHl. rewrite list_size_cons. cbn; nia. }
+
+             rewrite list_size_cons at 7. rewrite list_size_cons at 10. solverec. 
+         -- unfold monotonic in H4. rewrite H4 with (x' := (S c__out) *( size(enc(a::l)) + size(enc init) + size(enc env)) *  (size(enc(a::l)) + size(enc init) + size(enc env)) + (size(enc(a::l)) + size(enc init) + size(enc env))). 
+             2: {clear IHl. rewrite list_size_cons. cbn; nia. }
+
+             rewrite list_size_cons at 4. rewrite list_size_cons at 7. solverec. 
+
+       * clear IHl. intros. apply H5 with (l' := a::l'); now firstorder.
+    - subst f; split; smpl_inO. apply inOPoly_comp; smpl_inO. 
+  Qed. 
+End fixXYZ_fold_rightOption.
+
+Lemma evalLiteral_time_bound : exists (f : nat -> nat), (forall (a : assgn) (l : literal), evalLiteral_time a l <= f (size (enc a))) /\ inOPoly f /\ monotonic f.
+Proof.
+  destruct (nth_error_time_bound (X := bool)) as (f & H1 & H2 & H3). 
+  exists (fun n => f n + 18). split.
+  - intros. unfold evalLiteral_time. destruct l. now rewrite H1. 
+  - split; smpl_inO.
+Qed. 
+
+Require Import Undecidability.L.Datatypes.LBool.
+
+Lemma evalClause_time_bound : exists (f : nat -> nat), (forall (a : assgn) (cl : clause), evalClause_time a cl <= f (size (enc a) + size(enc cl)) ) /\ inOPoly f /\ monotonic f.
+Proof.
+  pose (stepT := fun a => fun (lit : literal) (_ : unit) => (1, fun (_ : bool) (_ : unit) => (evalLiteral_time a lit + 12, tt))).
+
+  assert (exists (f : nat -> nat), (forall (acc : bool) (lit : literal) (a : assgn), callTime2 (stepT a) lit acc <= f(size(enc acc) + size(enc lit) + size(enc a))) /\ inOPoly f /\ monotonic f). 
+  {
+    destruct (evalLiteral_time_bound) as (f' & H1 & H2 & H3).
+    evar (f : nat -> nat). exists f. split.
+    - intros. cbn. rewrite H1.
+      unfold monotonic in H3. rewrite H3 with (x' := (size(enc acc) + size(enc lit) + size(enc a))) by lia. 
+      instantiate (f := fun n => f' n + 13). subst f. lia. 
+    - subst f; split; smpl_inO. 
+  }
+
+  assert (exists c__out, forall (acc : bool) (lit : literal) (a : assgn), size(enc (evalClause_step a lit acc)) <= size(enc acc) + size(enc lit) + size(enc a) + c__out).
+  {
+    exists 9. intros. unfold evalClause_step. destruct (evalLiteral); rewrite size_option. repeat rewrite size_bool. all: lia. 
+  }
+
+  destruct (fold_rightOption_time_bound_env H H0) as (f & H1 & H2 & H3). 
+  exists (fun n => f (n + 9) + 9). split.
+  - unfold evalClause_time. intros a cl. fold (stepT a). rewrite H1. unfold monotonic in H3.
+    rewrite H3 with (x' := size(enc a) + size(enc cl) + 9). lia. 
+    rewrite size_option, size_bool. lia. 
+  - split; smpl_inO. apply inOPoly_comp; smpl_inO. 
+Qed. 
+
+Lemma evalCnf_time_bound : exists (f : nat -> nat), (forall (a : assgn) (c : cnf), evalCnf_time a c <= f(size(enc a) + size(enc c))) /\ inOPoly f /\ monotonic f.
+Proof.
+  pose (stepT := fun a => fun (cl : clause) (_ : unit) => (1, fun (acc : bool) (_ : unit) => (evalClause_time a cl + 16, tt))).
+  assert (exists (f : nat -> nat), (forall (acc : bool) (cl : clause) (a : assgn), callTime2 (stepT a) cl acc <= f(size(enc acc) + size(enc cl) + size(enc a))) /\ inOPoly f /\ monotonic f). 
+  {
+    destruct (evalClause_time_bound) as (f' & H1 & H2 & H3).
+    evar (f : nat -> nat). exists f. split.
+    - intros. cbn. rewrite H1.
+      unfold monotonic in H3. rewrite H3 with (x' := (size(enc acc) + size(enc cl) + size(enc a))) by lia.
+      instantiate (f := fun n => f' n + 17). subst f; lia. 
+    - subst f; split; smpl_inO. 
+  }
+
+  assert (exists c__out, forall (acc : bool) (cl : clause) (a : assgn), size(enc (evalCnf_step a cl acc)) <= size(enc acc) + size(enc cl) + size(enc a) + c__out). 
+  {
+    exists 9. intros. unfold evalCnf_step. destruct evalClause; rewrite size_option.  repeat rewrite size_bool. all: lia. 
+  }
+
+  destruct (fold_rightOption_time_bound_env H H0) as (f & H1 & H2 & H3).
+  exists (fun n => f(n+9) + 9). split. 
+  - unfold evalCnf_time. intros. fold (stepT a). rewrite H1. unfold monotonic in H3.
+    rewrite H3 with (x' := size(enc a) + size(enc c) + 9). lia. 
+    rewrite size_option, size_bool. lia. 
+  - split; smpl_inO. apply inOPoly_comp; smpl_inO. 
+Qed. 
+
+
+(*cnf_maxVar bounds *)
+Lemma clause_maxVar_time_bound : exists (f : nat -> nat), (forall (c : clause), clause_maxVar_time c <= f(size(enc c))) /\ inOPoly f /\ monotonic f. 
+Proof.
+  unfold clause_maxVar_time. 
+  pose (stepT := (fun (l : bool * nat) (_ : unit) =>
+        (1, fun (acc : nat) (_ : unit) => (let '(_, v) := l in 18 + 15 * Init.Nat.min acc v, tt)))).
+  assert (exists (f : nat -> nat), (forall (acc : nat) (l : literal), callTime2 stepT l acc <= f(size (enc acc) + size(enc l))) /\ inOPoly f /\ monotonic f). 
+  {
+    evar (f : nat -> nat). exists f. split.
+    - intros. destruct l. cbn -[Nat.mul Nat.add]. rewrite Nat.le_min_r. rewrite size_prod; cbn [fst snd]. 
+      specialize size_nat_enc_r with (n := n). 
+      instantiate (f := fun n => 19 + 15 * n). subst f; solverec. 
+    - subst f; split; smpl_inO. 
+  }
+  assert (exists c__out, forall (acc : nat) (l : literal), size(enc (clause_maxVar_step l acc)) <= size(enc acc) + size(enc l) + c__out). 
+  {
+    exists 0. intros. 
+    unfold clause_maxVar_step. destruct l. rewrite size_prod; cbn [fst snd].
+    repeat rewrite size_nat_enc. rewrite max_bound. lia. 
+  }
+  fold stepT. 
+  specialize (fold_right_time_bound H H0) as (f & H1 & H2 & H3). 
+  exists (fun n => f (n + 4) + 11). split.
+  - intros. specialize (H1 c 0). rewrite H1. rewrite size_nat_enc. solverec. 
+  - split; smpl_inO. apply inOPoly_comp; smpl_inO. 
+Qed.
+
+Lemma cnf_maxVar_time_bound : exists (f : nat -> nat), (forall (c : cnf), cnf_maxVar_time c <= f(size (enc c))) /\ inOPoly f /\ monotonic f. 
+Proof.
+  pose (stepT := (fun (cl : list (bool * nat)) (_ : unit) =>
+   (1,
+   fun (acc : nat) (_ : unit) =>
+     (clause_maxVar_time cl + 15 * Init.Nat.min acc (clause_maxVar cl) + 14, tt)))).
+  unfold cnf_maxVar_time. fold stepT. 
+
+  assert (exists (f : nat -> nat), (forall (acc : nat) (l : clause), callTime2 stepT l acc <= f(size (enc acc) + size(enc l))) /\ inOPoly f /\ monotonic f). 
+  {
+    destruct (clause_maxVar_time_bound) as (f' & H1 & H2 & H3).
+    evar (f : nat -> nat). exists f. split.
+    - intros; cbn -[Nat.add Nat.mul]. rewrite H1. rewrite Nat.le_min_l. 
+      unfold monotonic in H3. rewrite H3 with (x' := size(enc acc) + size(enc l)) by lia.
+      specialize size_nat_enc_r with (n := acc). 
+      instantiate (f := fun n => f' n + 15 * n + 15). subst f. solverec. 
+   - subst f; split; smpl_inO. 
+  } 
+  assert (exists c__out, forall (acc : nat) (c : clause), size(enc (cnf_maxVar_step c acc)) <= size(enc acc) + size(enc c) + c__out).
+  {
+    exists 0. intros. 
+    unfold cnf_maxVar_step. repeat rewrite size_nat_enc. rewrite max_bound. 
+    enough (clause_maxVar c * 4 <= size(enc c)) by lia.
+    induction c. 
+    - cbn. lia.
+    - cbn. destruct a. rewrite list_size_cons. rewrite max_bound. rewrite size_prod; cbn [fst snd].
+      recRel_prettify2. rewrite Nat.mul_comm. rewrite IHc. rewrite size_nat_enc. solverec. 
+  }
+
+  specialize (fold_right_time_bound H H0) as (f & H1 & H2 & H3). 
+  exists (fun n => f (n + 4) + 11). split.
+  - intros. rewrite H1. rewrite size_nat_enc. solverec. 
+  - split; smpl_inO. apply inOPoly_comp; smpl_inO. 
+Qed. 
 
 Lemma sat_verifierb_time_bound : exists (f : nat -> nat), (forall (c : cnf) (a : assgn), sat_verifierb_time c a <= f(size(enc c) + size(enc a))) /\ inOPoly f /\ monotonic f. 
 Proof.
-
-Admitted. 
+  destruct (evalCnf_time_bound) as (h & H1 & H2 & H3).
+  destruct (cnf_maxVar_time_bound) as (g & F1 & F2 & F3). 
+  evar (f : nat -> nat). exists f; split.
+  - intros. unfold sat_verifierb_time. rewrite F1, H1. rewrite Nat.le_min_l. 
+    rewrite list_size_length.
+    unfold monotonic in F3. rewrite F3 with (x' := size(enc c) + size(enc a)) by lia. 
+    setoid_rewrite Nat.add_comm with (n := size(enc a)) (m := size(enc c)).  
+    instantiate (f := fun n => 25 *n + g n + h n + 39). subst f. solverec. 
+  - subst f; split; smpl_inO. 
+Qed. 
 
 (*some more bounds required for the following inNP proof*)
 Lemma list_bound_enc_size (X : Type) `{registered X} : (exists c, forall (x : X), size(enc x) <= c) -> exists c' c'', forall (l : list X), size(enc l) <= (c' * |l|) + c''. 
@@ -453,9 +647,7 @@ Proof.
   - cbn. lia.
   - cbn. destruct a. unfold clause_maxVar in IHc; rewrite IHc. 
     rewrite list_size_cons, size_prod; cbn [fst snd]. 
-    assert (forall a b, max a b <= a + b).
-    {intros a b'. lia. }
-    rewrite H. solverec. rewrite size_nat_enc. solverec. 
+    rewrite max_bound. solverec. rewrite size_nat_enc. solverec. 
 Qed. 
 
 Lemma cnf_maxVar_bound_enc (c : cnf) : cnf_maxVar c <= size(enc c). 
@@ -463,7 +655,7 @@ Proof.
   induction c.
   - cbn; lia.
   - cbn. unfold cnf_maxVar in IHc; rewrite IHc. 
-    assert (forall a b, max a b <= a + b). {intros a' b'. lia. } rewrite H. 
+    rewrite max_bound.
     rewrite list_size_cons. rewrite clause_maxVar_bound_enc. solverec. 
 Qed.
 

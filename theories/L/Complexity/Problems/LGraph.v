@@ -46,7 +46,6 @@ Qed.
 
 (* deciders for node and edge containment*)
 
-
 Definition Lgraph_node_in_dec (g : Lgraph) (node : Lnode) := match g with (max, _) => Nat.leb (S node) max end. 
 
 Definition edge_eqb := pair_eqb Nat.eqb Nat.eqb. 
@@ -55,13 +54,12 @@ Proof.
   apply pair_eqb_correct. all: intros; split; apply Nat.eqb_eq. 
 Qed. 
   
-Definition Lgraph_edge_in_dec' (e : list Ledge) (u v : Lnode) :=
-  list_in_decb edge_eqb e (u, v) || list_in_decb edge_eqb e (v, u) . 
 Definition Lgraph_edge_in_dec (g : Lgraph) (u v : Lnode) :=
-  let (_,e ) := g in Lgraph_edge_in_dec' e u v. 
+  let (_,e ) := g in list_in_decb edge_eqb e (u, v) || list_in_decb edge_eqb e (v, u). 
 
-Lemma Lgraph_edge_in_dec'_correct (e : list Ledge) : forall (u v : Lnode), Lgraph_edge_in_dec' e u v = true <-> (u, v) el e \/ (v, u) el e. 
+Lemma Lgraph_edge_in_dec_correct (g : Lgraph) : let (_, e) := g in forall (u v : Lnode), Lgraph_edge_in_dec g u v = true <-> (u, v) el e \/ (v, u) el e. 
 Proof. 
+  destruct g as (n & e). 
   intros u v. split.
   + intros H%orb_true_elim. destruct H as [H | H].
     left. now apply (list_in_decb_iff edge_eqb_correct e (u, v)).  
@@ -70,9 +68,6 @@ Proof.
     - cbn. apply orb_true_intro. left; now apply (list_in_decb_iff edge_eqb_correct). 
     - cbn. apply orb_true_intro. right; now apply (list_in_decb_iff edge_eqb_correct). 
 Qed. 
-
-Lemma Lgraph_edge_in_dec_correct (g : Lgraph) : let (v, e) := g in forall (u v : Lnode), Lgraph_edge_in_dec g u v = true <-> (u, v) el e \/ (v, u) el e. 
-Proof. destruct g. apply Lgraph_edge_in_dec'_correct. Qed. 
 
 (*extractions*)
 From Undecidability.L.Tactics Require Import LTactics ComputableTactics.
@@ -107,22 +102,15 @@ Defined.
 
 From Undecidability.L Require Import Complexity.ONotation Complexity.Monotonic.
 
-     
 
-Instance term_Lgraph_edge_in_dec' : computableTime' Lgraph_edge_in_dec' (fun e _ => (1, fun u _ => (1, fun v _ => (  list_in_decb_time pair_eqb_nat_time e (u, v) + list_in_decb_time pair_eqb_nat_time e (v, u) + 22, tt)))). 
+Definition Lgraph_edge_in_dec_time (g : Lgraph) (u v : Lnode) := let (_, e):= g in list_in_decb_time pair_eqb_nat_time e (u, v) + list_in_decb_time pair_eqb_nat_time e (v, u) + 26.
+
+Instance term_Lgraph_edge_in_dec : computableTime' Lgraph_edge_in_dec (fun g _ => (1, fun u _ => (1, fun v _ => (Lgraph_edge_in_dec_time g u v, tt)))). 
 Proof.
   extract.
   solverec. 
 Defined. 
 
-
-Definition Lgraph_edge_in_dec_time (g : Lgraph) (u v : Lnode) := let (_, e):= g in list_in_decb_time pair_eqb_nat_time e (u, v) + list_in_decb_time pair_eqb_nat_time e (v, u) + 29.
-
-Instance term_Lgraph_edge_in_dec : computableTime' Lgraph_edge_in_dec (fun g _ => (1, fun u _ => (1, fun v _ => (Lgraph_edge_in_dec_time g u v, tt)))). 
-Proof.  
-  extract. 
-  solverec. 
-Defined. 
 
 From Undecidability.L.Complexity Require Import PolyBounds.
 

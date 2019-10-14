@@ -56,7 +56,6 @@ Proof.
 Qed. 
 
 (*The notion of conflicting literals, i.e. literals that cannot simultaneously be positive for any assignment*)
-Definition literal_in_CNF (c : cnf) (l : literal) := exists cl, cl el c /\ l el cl.
 Definition literalsConflict (a b : literal) := match a, b with (s1, v1), (s2, v2) => s1 <> s2 /\ v1 = v2 end.
 
 Lemma literalsConflict_eval (s s' : bool) (n n' : nat) (a : assgn) : n' < |a| -> n < |a| -> (literalsConflict (s, n) (s', n') <-> (evalLiteral a (s, n) <> evalLiteral a (s', n') /\ n = n')). 

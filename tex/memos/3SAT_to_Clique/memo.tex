@@ -327,7 +327,9 @@ In this section, we finally reduce \textbf{3SAT} to \textbf{Clique}. The reducti
 
 Given a \textbf{3SAT} instance $N$, we have to construct a graph $g$ and a number $k$ such that $g$ has a $k$-clique if, and only if, $N$ is satisfiable. First observe that an assignment satisfies $N$ iff for every clause $C \in N$, there is at least one literal $L \in C$ such that $\eval{a}{L} = \Some{\btrue}$ (this is a direct consequence of the two statements in Lemma~\ref{prop:evalclauseiff}). 
 We therefore construct a graph with $3 \cdot \length{N}$ nodes, one for each literal: $n^0_0, n^0_1, n^0_2, n^1_0, \ldots, n^{\length{N}}_2$. Two nodes $n^i_j, n^k_l$ are connected via an edge iff $i \neq k$, i.e.\ the corresponding literals belong to distinct clauses, and the literals are not conflicting, meaning that there is an assignment that satisfies both literals simultaneously.
-It is easy to believe (although not formally satisfying) that this construction does indeed satsisfy the desired equivalence. 
+
+The graph now has a $\length{N}$ clique iff $N$ is satisfiable.
+It is easy to believe (although not formally satisfactory) that this construction does indeed satsisfy the desired equivalence. 
 
 \begin{definition}[Conflicting literals]
   \[\normalfont\textsf{conflict}~(s_1, n_1)~(s_2, n_2) := s_1 \neq s_2 \land n_1 = n_2 \]
@@ -342,272 +344,218 @@ In order to reason about the reduction, we have to somehow connect a CNF with th
   Let two sets be given by $p : X \rightarrow \Prop$ and $q : Y \rightarrow \Prop$. Let $f : X \rightarrow Y$ and $g : Y \rightarrow X$.
   \[\normalfont\textsf{inverseOn}~p~q~f~g := (\forall x. p~x \rightarrow q(f~x) \land x = g(f~x)) \land (\forall y. q~y \rightarrow p(f~y) \land y = f(g~y)) \]
 \end{definition}
+
+TODO: maybe add technical statements regarding map + inverseOn
+
 \begin{definition}[Labellings of graphs]
-  A labelling assigns each node of a graph a corresponding literal, and vice versa.
+  A labelling assigns to each node of a graph a corresponding literal, and vice versa.
   \begin{align*}
-  \textsf{labG} := \nat \rightarrow \nat \times \nat && \textsf{labG}^{-1} := \nat \times \nat \rightarrow \nat
+  \normalfont\textsf{labG} := \nat \rightarrow \nat \times \nat && \normalfont\textsf{labG}^{-1} := \nat \times \nat \rightarrow \nat
   \end{align*}
   \begin{align*}
-  \textsf{isLabelling}~N~(f : \textsf{labG})~(f^{-1} : \textsf{labG}^{-1}) := \textsf{inverseOn}~f~f^{-1}~ &(\lambda~v. v < 3 \cdot \length{N})\\
+  \normalfont\textsf{isLabelling}~N~(f : \normalfont\textsf{labG})~(f^{-1} : \normalfont\textsf{labG}^{-1}) := \normalfont\textsf{inverseOn}~f~f^{-1}~ &(\lambda~v. v < 3 \cdot \length{N})\\
   ~&(\lambda~(c, l). c < \length{N} \land l < 3) 
 \end{align*}
 \end{definition}
 
-
-First intuitive graphical overview of the reduction.
-
-Then the relation-based approach, labelling, etc.
-
-Present both directions of the relation-based equivalence, but leave out intermediate results that are too technical.
-
-Finally the reduction function. 
-
-\section{Typesetting instructions -- Summary}
-\label{sec:typesetting-summary}
-
-LIPIcs is a series of open access high-quality conference proceedings across all fields in informatics established in cooperation with Schloss Dagstuhl. 
-In order to do justice to the high scientific quality of the conferences that publish their proceedings in the LIPIcs series, which is ensured by the thorough review process of the respective events, we believe that LIPIcs proceedings must have an attractive and consistent layout matching the standard of the series.
-Moreover, the quality of the metadata, the typesetting and the layout must also meet the requirements of other external parties such as indexing service, DOI registry, funding agencies, among others. The guidelines contained in this document serve as the baseline for the authors, editors, and the publisher to create documents that meet as many different requirements as possible. 
-
-Please comply with the following instructions when preparing your article for a LIPIcs proceedings volume. 
-\paragraph*{Minimum requirements}
-
-\begin{itemize}
-\item Use pdflatex and an up-to-date \LaTeX{} system.
-\item Use further \LaTeX{} packages and custom made macros carefully and only if required.
-\item Use the provided sectioning macros: \verb+\section+, \verb+\subsection+, \verb+\subsubsection+, \linebreak \verb+\paragraph+, \verb+\paragraph*+, and \verb+\subparagraph*+.
-\item Provide suitable graphics of at least 300dpi (preferably in PDF format).
-\item Use BibTeX and keep the standard style (\verb+plainurl+) for the bibliography.
-\item Please try to keep the warnings log as small as possible. Avoid overfull \verb+\hboxes+ and any kind of warnings/errors with the referenced BibTeX entries.
-\item Use a spellchecker to correct typos.
-\end{itemize}
-
-\paragraph*{Mandatory metadata macros}
-Please set the values of the metadata macros carefully since the information parsed from these macros will be passed to publication servers, catalogues and search engines.
-Avoid placing macros inside the metadata macros. The following metadata macros/environments are mandatory:
-\begin{itemize}
-\item \verb+\title+ and, in case of long titles, \verb+\titlerunning+.
-\item \verb+\author+, one for each author, even if two or more authors have the same affiliation.
-\item \verb+\authorrunning+ and \verb+\Copyright+ (concatenated author names)\\
-The \verb+\author+ macros and the \verb+\Copyright+ macro should contain full author names (especially with regard to the first name), while \verb+\authorrunning+ should contain abbreviated first names.
-\item \verb+\ccsdesc+ (ACM classification, see \url{https://www.acm.org/publications/class-2012}).
-\item \verb+\keywords+ (a comma-separated list of keywords).
-\item \verb+\relatedversion+ (if there is a related version, typically the ``full version''); please make sure to provide a persistent URL, e.\,g., at arXiv.
-\item \verb+\begin{abstract}...\end{abstract}+ .
-\end{itemize}
-
-\paragraph*{Please do not \ldots} %Do not override the \texttt{\seriesstyle}-defaults}
-Generally speaking, please do not override the \texttt{lipics-v2019}-style defaults. To be more specific, a short checklist also used by Dagstuhl Publishing during the final typesetting is given below.
-In case of \textbf{non-compliance} with these rules Dagstuhl Publishing will remove the corresponding parts of \LaTeX{} code and \textbf{replace it with the \texttt{lipics-v2019} defaults}. In serious cases, we may reject the LaTeX-source and expect the corresponding author to revise the relevant parts.
-\begin{itemize}
-\item Do not use a different main font. (For example, the \texttt{times} package is forbidden.)
-\item Do not alter the spacing of the \texttt{lipics-v2019.cls} style file.
-\item Do not use \verb+enumitem+ and \verb+paralist+. (The \texttt{enumerate} package is preloaded, so you can use
- \verb+\begin{enumerate}[(a)]+ or the like.)
-\item Do not use ``self-made'' sectioning commands (e.\,g., \verb+\noindent{\bf My+ \verb+Paragraph}+).
-\item Do not hide large text blocks using comments or \verb+\iffalse+ $\ldots$ \verb+\fi+ constructions. 
-\item Do not use conditional structures to include/exclude content. Instead, please provide only the content that should be published -- in one file -- and nothing else.
-\item Do not wrap figures and tables with text. In particular, the package \texttt{wrapfig} is not supported.
-\item Do not change the bibliography style. In particular, do not use author-year citations. (The
-\texttt{natbib} package is not supported.)
-\end{itemize}
-
-\enlargethispage{\baselineskip}
-
-This is only a summary containing the most relevant details. Please read the complete document ``LIPIcs: Instructions for Authors and the \texttt{lipics-v2019} Class'' for all details and don't hesitate to contact Dagstuhl Publishing (\url{mailto:publishing@dagstuhl.de}) in case of questions or comments:
-\href{http://drops.dagstuhl.de/styles/lipics-v2019/lipics-v2019-authors/lipics-v2019-authors-guidelines.pdf}{\texttt{http://drops.dagstuhl.de/styles/lipics-v2019/\newline lipics-v2019-authors/lipics-v2019-authors-guidelines.pdf}}
-
-\section{Lorem ipsum dolor sit amet}
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit \cite{DBLP:journals/cacm/Knuth74}. Praesent convallis orci arcu, eu mollis dolor. Aliquam eleifend suscipit lacinia. Maecenas quam mi, porta ut lacinia sed, convallis ac dui. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse potenti. Donec eget odio et magna ullamcorper vehicula ut vitae libero. Maecenas lectus nulla, auctor nec varius ac, ultricies et turpis. Pellentesque id ante erat. In hac habitasse platea dictumst. Curabitur a scelerisque odio. Pellentesque elit risus, posuere quis elementum at, pellentesque ut diam. Quisque aliquam libero id mi imperdiet quis convallis turpis eleifend. 
-
-\begin{lemma}[Lorem ipsum]
-\label{lemma:lorem}
-Vestibulum sodales dolor et dui cursus iaculis. Nullam ullamcorper purus vel turpis lobortis eu tempus lorem semper. Proin facilisis gravida rutrum. Etiam sed sollicitudin lorem. Proin pellentesque risus at elit hendrerit pharetra. Integer at turpis varius libero rhoncus fermentum vitae vitae metus.
-\end{lemma}
-
+From the literal positions, we can restore the syntax of the literal:
+\begin{align*}
+  \textsf{enumLiteral}~N~(cl, l) := \match N.cl ~\withl \Some{C} \Rightarrow C.l \withm \None \Rightarrow \None \withr 
+\end{align*}
+\begin{proposition}[Correctness of \textsf{enumLiteral}]\label{prop:enumLiteralcorrect}\leavevmode
+  \begin{enumerate}
+    \item $\normalfont\textsf{kCNF}~k~N \rightarrow cl < \length{N} \rightarrow l < k \rightarrow \exists~L. \normalfont\textsf{enumLiteral}~N~(cl, l) = \Some{L} $
+    \item $\normalfont\textsf{kCNF}~k~N \rightarrow (\exists~L. \normalfont\textsf{enumLiteral}~N~(cl, l) = \Some{L}) \rightarrow cl < \length{N} \land l < k$
+  \end{enumerate}
+\end{proposition}
 \begin{proof}
-Cras purus lorem, pulvinar et fermentum sagittis, suscipit quis magna.
-
-\begin{claim}
-content...
-\end{claim}
-\begin{claimproof}
-content...
-\end{claimproof}
-
+  Both statements are proved using induction on $N$ and standard facts on $xs.n$. For the first statement, we need to quantify over $n$.
 \end{proof}
 
-\begin{corollary}[Curabitur pulvinar, \cite{DBLP:books/mk/GrayR93}]
-\label{lemma:curabitur}
-Nam liber tempor cum soluta nobis eleifend option congue nihil imperdiet doming id quod mazim placerat facer possim assum. Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
-\end{corollary}
+Using literal positions, we can formalise what it means that two literals are part of another clause:
+\[\textsf{diffClause}~(cl_1, l_1)~(cl_2, l_2) := cl_1 \neq cl_2 \]
 
-\begin{proposition}\label{prop1}
-This is a proposition
-\end{proposition}
+\subsection{A Reduction Relation}
+\newcommand*{\redrel}{\sim^{\textbf{3SAT}}_{\textbf{Clique}}}
+We first define a relation $\redrel$ which connects positive \textbf{3SAT} instances to corresponding graphs. This relation abstracts away from specific syntactic properties of the graph, such as the order of the nodes or the order in which edges are stored. We show that two \textbf{3SAT} and \textbf{Clique} instances $N$ and $(g,k)$ which are related by this relation are equivalent, in the sense that one instance is an inhabitant of the problem iff the other instance is an inhabitant of the other problem: $N \redrel (g, k) \rightarrow (\textbf{SAT}~N \leftrightarrow \textbf{Clique}~(g, k))$.
 
-\autoref{prop1} and \cref{prop1} \ldots
-
-\subsection{Curabitur dictum felis id sapien}
-
-Curabitur dictum \cref{lemma:curabitur} felis id sapien \autoref{lemma:curabitur} mollis ut venenatis tortor feugiat. Curabitur sed velit diam. Integer aliquam, nunc ac egestas lacinia, nibh est vehicula nibh, ac auctor velit tellus non arcu. Vestibulum lacinia ipsum vitae nisi ultrices eget gravida turpis laoreet. Duis rutrum dapibus ornare. Nulla vehicula vulputate iaculis. Proin a consequat neque. Donec ut rutrum urna. Morbi scelerisque turpis sed elit sagittis eu scelerisque quam condimentum. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Aenean nec faucibus leo. Cras ut nisl odio, non tincidunt lorem. Integer purus ligula, venenatis et convallis lacinia, scelerisque at erat. Fusce risus libero, convallis at fermentum in, dignissim sed sem. Ut dapibus orci vitae nisl viverra nec adipiscing tortor condimentum \cite{DBLP:journals/cacm/Dijkstra68a}. Donec non suscipit lorem. Nam sit amet enim vitae nisl accumsan pretium. 
-
-\begin{lstlisting}[caption={Useless code},label=list:8-6,captionpos=t,float,abovecaptionskip=-\medskipamount]
-for i:=maxint to 0 do 
-begin 
-    j:=square(root(i));
-end;
-\end{lstlisting}
-
-\subsection{Proin ac fermentum augue}
-
-Proin ac fermentum augue. Nullam bibendum enim sollicitudin tellus egestas lacinia euismod orci mollis. Nulla facilisi. Vivamus volutpat venenatis sapien, vitae feugiat arcu fringilla ac. Mauris sapien tortor, sagittis eget auctor at, vulputate pharetra magna. Sed congue, dui nec vulputate convallis, sem nunc adipiscing dui, vel venenatis mauris sem in dui. Praesent a pretium quam. Mauris non mauris sit amet eros rutrum aliquam id ut sapien. Nulla aliquet fringilla sagittis. Pellentesque eu metus posuere nunc tincidunt dignissim in tempor dolor. Nulla cursus aliquet enim. Cras sapien risus, accumsan eu cursus ut, commodo vel velit. Praesent aliquet consectetur ligula, vitae iaculis ligula interdum vel. Integer faucibus faucibus felis. 
-
-\begin{itemize}
-\item Ut vitae diam augue. 
-\item Integer lacus ante, pellentesque sed sollicitudin et, pulvinar adipiscing sem. 
-\item Maecenas facilisis, leo quis tincidunt egestas, magna ipsum condimentum orci, vitae facilisis nibh turpis et elit. 
-\end{itemize}
-
-\begin{remark}
-content...
-\end{remark}
-
-\section{Pellentesque quis tortor}
-
-Nec urna malesuada sollicitudin. Nulla facilisi. Vivamus aliquam tempus ligula eget ornare. Praesent eget magna ut turpis mattis cursus. Aliquam vel condimentum orci. Nunc congue, libero in gravida convallis \cite{DBLP:conf/focs/HopcroftPV75}, orci nibh sodales quam, id egestas felis mi nec nisi. Suspendisse tincidunt, est ac vestibulum posuere, justo odio bibendum urna, rutrum bibendum dolor sem nec tellus. 
-
-\begin{lemma} [Quisque blandit tempus nunc]
-Sed interdum nisl pretium non. Mauris sodales consequat risus vel consectetur. Aliquam erat volutpat. Nunc sed sapien ligula. Proin faucibus sapien luctus nisl feugiat convallis faucibus elit cursus. Nunc vestibulum nunc ac massa pretium pharetra. Nulla facilisis turpis id augue venenatis blandit. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.
-\end{lemma}
-
-Fusce eu leo nisi. Cras eget orci neque, eleifend dapibus felis. Duis et leo dui. Nam vulputate, velit et laoreet porttitor, quam arcu facilisis dui, sed malesuada risus massa sit amet neque.
-
-\appendix
-\section{Morbi eros magna}
-
-Morbi eros magna, vestibulum non posuere non, porta eu quam. Maecenas vitae orci risus, eget imperdiet mauris. Donec massa mauris, pellentesque vel lobortis eu, molestie ac turpis. Sed condimentum convallis dolor, a dignissim est ultrices eu. Donec consectetur volutpat eros, et ornare dui ultricies id. Vivamus eu augue eget dolor euismod ultrices et sit amet nisi. Vivamus malesuada leo ac leo ullamcorper tempor. Donec justo mi, tempor vitae aliquet non, faucibus eu lacus. Donec dictum gravida neque, non porta turpis imperdiet eget. Curabitur quis euismod ligula. 
-
-
-%%
-%% Bibliography
-%%
-
-%% Please use bibtex, 
-
-\bibliography{memo}
-
-\appendix
-
-\section{Styles of lists, enumerations, and descriptions}\label{sec:itemStyles}
-
-List of different predefined enumeration styles:
-
-\begin{itemize}
-\item \verb|\begin{itemize}...\end{itemize}|
-\item \dots
-\item \dots
-%\item \dots
-\end{itemize}
-
-\begin{enumerate}
-\item \verb|\begin{enumerate}...\end{enumerate}|
-\item \dots
-\item \dots
-%\item \dots
-\end{enumerate}
-
-\begin{alphaenumerate}
-\item \verb|\begin{alphaenumerate}...\end{alphaenumerate}|
-\item \dots
-\item \dots
-%\item \dots
-\end{alphaenumerate}
-
-\begin{romanenumerate}
-\item \verb|\begin{romanenumerate}...\end{romanenumerate}|
-\item \dots
-\item \dots
-%\item \dots
-\end{romanenumerate}
-
-\begin{bracketenumerate}
-\item \verb|\begin{bracketenumerate}...\end{bracketenumerate}|
-\item \dots
-\item \dots
-%\item \dots
-\end{bracketenumerate}
-
-\begin{description}
-\item[Description 1] \verb|\begin{description} \item[Description 1]  ...\end{description}|
-\item[Description 2] Fusce eu leo nisi. Cras eget orci neque, eleifend dapibus felis. Duis et leo dui. Nam vulputate, velit et laoreet porttitor, quam arcu facilisis dui, sed malesuada risus massa sit amet neque.
-\item[Description 3]  \dots
-%\item \dots
-\end{description}
-
-\section{Theorem-like environments}\label{sec:theorem-environments}
-
-List of different predefined enumeration styles:
-
-\begin{theorem}\label{testenv-theorem}
-Fusce eu leo nisi. Cras eget orci neque, eleifend dapibus felis. Duis et leo dui. Nam vulputate, velit et laoreet porttitor, quam arcu facilisis dui, sed malesuada risus massa sit amet neque.
-\end{theorem}
-
-\begin{lemma}\label{testenv-lemma}
-Fusce eu leo nisi. Cras eget orci neque, eleifend dapibus felis. Duis et leo dui. Nam vulputate, velit et laoreet porttitor, quam arcu facilisis dui, sed malesuada risus massa sit amet neque.
-\end{lemma}
-
-\begin{corollary}\label{testenv-corollary}
-Fusce eu leo nisi. Cras eget orci neque, eleifend dapibus felis. Duis et leo dui. Nam vulputate, velit et laoreet porttitor, quam arcu facilisis dui, sed malesuada risus massa sit amet neque.
-\end{corollary}
-
-\begin{proposition}\label{testenv-proposition}
-Fusce eu leo nisi. Cras eget orci neque, eleifend dapibus felis. Duis et leo dui. Nam vulputate, velit et laoreet porttitor, quam arcu facilisis dui, sed malesuada risus massa sit amet neque.
-\end{proposition}
-
-\begin{exercise}\label{testenv-exercise}
-Fusce eu leo nisi. Cras eget orci neque, eleifend dapibus felis. Duis et leo dui. Nam vulputate, velit et laoreet porttitor, quam arcu facilisis dui, sed malesuada risus massa sit amet neque.
-\end{exercise}
-
-\begin{definition}\label{testenv-definition}
-Fusce eu leo nisi. Cras eget orci neque, eleifend dapibus felis. Duis et leo dui. Nam vulputate, velit et laoreet porttitor, quam arcu facilisis dui, sed malesuada risus massa sit amet neque.
+\begin{definition}
+  Let $N : \cnf$ and $((n, e), k) : \lgraph \times \nat$. $N$ and $(g, k)$ are related, written $N \sim^{\textbf{3SAT}}_{\textbf{Clique}} (g, k)$, iff 
+  \begin{itemize} 
+    \item $N$ is a 3-CNF: $\normalfont\textsf{kCNF}~3~N$
+    \item $n = 3 \cdot \length{N} \land k = \length{N}$
+    \item there is a labelling $(f, f^{-1})$, $\normalfont\textsf{isLabelling}~N~f~f^{-1}$, such that for all $u, v < n$, $\normalfont\textsf{edgeIn}~(n, e)~u~v = \btrue$ is equivalent to
+      \begin{align*}
+        &\normalfont\textsf{diffClause}~(f~u)~(f~v) \\
+      \land& \forall L_1,L_2. \normalfont{\textsf{enumLiteral}}~N~(f~u) = \Some{L_1} \rightarrow \normalfont{\textsf{enumLiteral}}~N~(f~v) = \Some{L_2} \rightarrow \lnot (\normalfont\textsf{conflict}~L_1~L_2) 
+    \end{align*}
+  \end{itemize}
 \end{definition}
 
-\begin{example}\label{testenv-example}
-Fusce eu leo nisi. Cras eget orci neque, eleifend dapibus felis. Duis et leo dui. Nam vulputate, velit et laoreet porttitor, quam arcu facilisis dui, sed malesuada risus massa sit amet neque.
-\end{example}
+This relation exactly captures the construction described above, with the minor technical nuisance of having to convert between literal positions and syntactical literals.
+TODO: maybe add well-formedness explicitly
 
-\begin{note}\label{testenv-note}
-Fusce eu leo nisi. Cras eget orci neque, eleifend dapibus felis. Duis et leo dui. Nam vulputate, velit et laoreet porttitor, quam arcu facilisis dui, sed malesuada risus massa sit amet neque.
-\end{note}
+We show the above equivalence for related instances constructively, by explicitly constructing a clique for a satisfying assignment, and a satisfying assignment for a clique. 
 
-\begin{note*}
-Fusce eu leo nisi. Cras eget orci neque, eleifend dapibus felis. Duis et leo dui. Nam vulputate, velit et laoreet porttitor, quam arcu facilisis dui, sed malesuada risus massa sit amet neque.
-\end{note*}
+\subsection{Constructing a Clique From a Satisfying Assignment}
+We start with the construction of cliques. If we have an assignment $a$ satisfying the CNF $N$, the corresponding clique in a graph $g$ related by $\redrel$ consists of one node per clause which is satisfied by the assignment. The construction proceeds by recursively iterating over the CNF and checking which literal is satisfied. We have to keep track of the clause and literal indices while doing that.
 
-\begin{remark}\label{testenv-remark}
-Fusce eu leo nisi. Cras eget orci neque, eleifend dapibus felis. Duis et leo dui. Nam vulputate, velit et laoreet porttitor, quam arcu facilisis dui, sed malesuada risus massa sit amet neque.
-\end{remark}
+\begin{align*}
+  \textsf{constrCliCla'}~a~cl~[]~l &:= \None \\
+  \textsf{constrCliCla'}~a~cl~(L::C)~l &:= \match \eval{a}{L} \\
+  &\withl \Some{\btrue} \Rightarrow \Some{(cl, l)} \withm \_ \Rightarrow \textsf{constrCliCla'}~a~cl~C~(\natS{l}) \withr\\
+  \textsf{constrCliCla}~a~cl~C &:= \textsf{constrCliCla'}~a~cl~C~0
+\end{align*}
 
-\begin{remark*}
-Fusce eu leo nisi. Cras eget orci neque, eleifend dapibus felis. Duis et leo dui. Nam vulputate, velit et laoreet porttitor, quam arcu facilisis dui, sed malesuada risus massa sit amet neque.
-\end{remark*}
+\begin{align*}
+  \textsf{constrCliCnf'}~a~[]~cl &:= [] \\
+  \textsf{constrCliCnf'}~a~(C::N)~cl &:= \match \textsf{constrCliCla}~a~C~cl \\
+  &\withl \Some{p} \Rightarrow p :: \textsf{constrCliCnf'}~a~N~(\natS{cl}) \withm \None \rightarrow [] \withr\\
+  \textsf{constrCliCnf}~a~N &:= \textsf{constrCliCnf'}~a~N~0
+\end{align*}
 
-\begin{claim}\label{testenv-claim}
-Fusce eu leo nisi. Cras eget orci neque, eleifend dapibus felis. Duis et leo dui. Nam vulputate, velit et laoreet porttitor, quam arcu facilisis dui, sed malesuada risus massa sit amet neque.
-\end{claim}
+The function \textsf{constrCliCnf} calculates literal positions. If we map those positions to a graph (using a labelling) related to the CNF via $\redrel$, we get a clique.
 
-\begin{claim*}\label{testenv-claim2}
-Fusce eu leo nisi. Cras eget orci neque, eleifend dapibus felis. Duis et leo dui. Nam vulputate, velit et laoreet porttitor, quam arcu facilisis dui, sed malesuada risus massa sit amet neque.
-\end{claim*}
-
+\begin{lemma} If $a$ satisifies $N$, \normalfont\textsf{constrCliCnf} will indeed yield a literal position for every clause. 
+  \begin{enumerate}
+    \item $\eval{a}{N} = \Some{\btrue} \rightarrow C \in N \rightarrow \exists~l. \normalfont\textsf{constrCliCla}~a~cl~C = \Some{(cl, l)}$
+    \item $\eval{a}{N} = \Some{\btrue} \rightarrow cl < \length{N} \rightarrow \exists~l. (cl, l) \in \normalfont\textsf{constrCliCnf}~a~N $
+  \end{enumerate}
+\end{lemma}
 \begin{proof}
-Fusce eu leo nisi. Cras eget orci neque, eleifend dapibus felis. Duis et leo dui. Nam vulputate, velit et laoreet porttitor, quam arcu facilisis dui, sed malesuada risus massa sit amet neque.
+  \begin{enumerate}
+    \item We generalise over the constant 0 in the definition and then do an induction over $C$. In the inductive step, we need Lemma~\ref{prop:evalstepinv}, statement 1.
+    \item By induction on $N$, generalising over the constant 0. In the inductive step, we use the first statement and Lemma~\ref{prop:evalstepinv}, statement 2. 
+  \end{enumerate}
 \end{proof}
 
-\begin{claimproof}
-Fusce eu leo nisi. Cras eget orci neque, eleifend dapibus felis. Duis et leo dui. Nam vulputate, velit et laoreet porttitor, quam arcu facilisis dui, sed malesuada risus massa sit amet neque.
-\end{claimproof}
+\begin{lemma}
+  Every two members of the constructed position list describe literals of different clauses.
+  \[(\normalfont\textsf{constrCliCnf}~a~N).i = \Some{pos} \rightarrow (\normalfont\textsf{constrCliCla}~a~N).j = \Some{pos'} \rightarrow i \neq j \rightarrow \normalfont\textsf{diffClause}~pos~pos' \]
+\end{lemma}
+\begin{proof}
+  By generalising over the constant 0 and induction over $N$. For the inductive step, we need several auxiliary lemmas giving bounds on the indices which are part of the result list.
+\end{proof}
+
+While the above result isn't very helpful on its own, we get two important corollaries from it.
+
+\begin{corollary}
+  \[ pos \in \normalfont\textsf{constrCliCnf}~a~N \rightarrow pos' \in \normalfont\textsf{constrCliCla}~a~N \rightarrow pos \neq pos' \rightarrow \normalfont\textsf{diffClause}~pos~pos' \]
+\end{corollary}
+
+\begin{corollary}
+   $\normalfont\textsf{dupfree}~(\normalfont\textsf{constrCliCnf}~a~N)$
+\end{corollary}
+
+\begin{lemma}\label{prop:constrallsat}
+  All literals determined by \normalfont\textsf{constrCliCnf} are satisfied by the assignment.
+  \[ pos \in \normalfont\textsf{constrCliCnf}~a~N \rightarrow \exists~L. \normalfont\textsf{enumLiteral}~N~pos = \Some{L} \land \eval{a}{L} = \Some{\btrue} \]
+\end{lemma}
+\begin{proof}
+  TODO
+\end{proof}
+
+\begin{proposition}
+  Every two literals determined by \normalfont\textsf{constrCliCnf} are non-conflicting.
+  \begin{align*}
+    &pos, pos' \in \normalfont\textsf{constrCliCnf}~a~N \rightarrow pos \neq pos' \\
+    \rightarrow& \exists~L,L'. \normalfont\textsf{enumLiteral}~N~pos = \Some{L} \land \normalfont\textsf{enumLiteral}~N~pos' = \Some{L'} \rightarrow \lnot{(\normalfont\textsf{conflict}~L~L')} 
+ \end{align*}
+\end{proposition}
+\begin{proof}
+  By Lemma~\ref{prop:constrallsat} and Proposition~\ref{prop:conflictingassgn}.
+\end{proof}
+
+\subsection{Constructing a Satisfying Assignment From a Clique}
+In this subsection, we deal with the other direction of the equivalence. From a clique in a graph $g$ connected to a CNF $N$ via $\redrel$, we have to show the existence of a satisfying assignment. Again, we do this constructively by computing such an assignment. Due to the construction of $\redrel$, all members of a clique need to correspond to literals of different clauses, and all of these literals are non-conflicting. Thus we obtain a satisfying assignment by setting all these literals to $\btrue$ and assigning arbitrary values to all unaffected variables. 
+
+From a technical perspective, this direction is more involved: Due to the inherent asymmetry of $\redrel$, we have to directly reason about properties of the graph which are asserted by $\redrel$. We therefore proceed in four steps, changing the representation in each until we end up with a satisfying assignment:
+\begin{enumerate}
+  \item We start with a graph $g$, CNF $N$ and a $\length{N}$-clique $cl$ of $g$ such that $N \redrel (g, \length{N})$.
+  \item This is translated to a list of literal positions ($\listsof~(\nat \times \nat)$), giving the positions of the literals corresponding to the nodes in $cl$. The literals at these positions are non-conflicting and there is exactly one for every clause of $N$.
+  \item We proceed by mapping this list to a list of syntactic literals. These are non-conflicting and if all of them are satisfied by an assignment, this assignment also satisfies the CNF. 
+  \item The list in 3.\ can be interpreted as a partial assignment. If this is expanded to a complete assignment, assigning arbitrary values to all other variables, we get a satisfying assignment.
+\end{enumerate}
+
+\subsubsection{Mapping to Literal Positions}
+Throughout this subsection, we assume a CNF $N$, a graph $g$ and a $\length{N}$-clique $cl$ of $g$, such that $N \redrel (g, \length{N})$. 
+Let $(f, f^{-1})$ be the labelling from $\redrel$. We simply apply the labelling function to all elements of the clique:
+\[\textsf{toPos}~cl := \textsf{map}~f~cl \]
+From the reduction relation, we get a number of straightforward properties:
+\begin{lemma}\label{prop:toPosbasic}
+  Let $N$ be a CNF, $g$ a graph such that $N \redrel (g, \length{N})$. 
+  \begin{enumerate}
+    \item $(a, b) \in \normalfont\textsf{toPos}~cl \rightarrow a < \length{N} \land b < 3$ 
+    \item $pos \in \normalfont\textsf{toPos}~cl \rightarrow \exists~L. \textsf{enumLiteral}~N~pos = \Some{L}$
+    \item $\begin{aligned}[t] 
+        &pos, pos' \in \normalfont\textsf{toPos}~cl \rightarrow pos \neq pos' \\
+    \rightarrow& \exists~L,L'. \normalfont\textsf{enumLiteral}~N~pos = \Some{L} \land \normalfont\textsf{enumLiteral}~N~pos' = \Some{L'} \rightarrow \lnot{(\normalfont\textsf{conflict}~L~L')} 
+  \end{aligned}$
+  \end{enumerate}
+\end{lemma}
+
+\begin{lemma}
+  For every clause of $N$, there is a corresponding literal position in the result of \normalfont\textsf{toPos}:
+  $ k < \length{N} \rightarrow \exists~l. (k, l) \in \normalfont\textsf{toPos}~cl $
+\end{lemma}
+\begin{proof}
+  Essentially, the statement is an instance of the pigeon-hole principle: There are $\length{N}$ nodes in the clique $cl$ and $\length{N}$ clauses. Since no two distinct nodes of $cl$ belong to the same clause, there must be one for every clause.
+  Proving this formally requires somewhat more effort. 
+
+  First of all, we can constructively do a proof by contradiction, i.e.\ assume that $\lnot(\exists~l. (k, l) \in \textsf{toPos}~cl)$, since the possible range of $l$ is finite by Lemma~\ref{prop:toPosbasic}, part 1.
+
+  It now suffices to show that there is a clause index that occurs twice in the output of \textsf{toPos}, $\textsf{rep}~(\textsf{map}~\textsf{fst}~(\textsf{toPos}~cl))$. For, if this is the case, there are indices $i_1, i_2$, a claue index $k'$ and literal indices $l_1, l_2$ such that
+  \[ i_1 \neq i_2 \land (\textsf{toPos}~cl).i_1 = \Some{(k', l_1)} \land (\textsf{toPos}~cl).i_2 = \Some{(k', l_2)}. \]
+  Now, if $l_1 = l_2$, then there was a duplicate in the clique $cl$, since the labelling $f$ is injective; but this is a contradiction to the definition of a clique. Otherwise, $l_1 \neq l_2$ and we get a contradiction by Lemma~\ref{prop:toPosbasic}, part 3. 
+
+  Thus we show $\textsf{rep}~(\textsf{map}~\textsf{fst}~(\textsf{toPos}~cl))$. An instance of the pigeon-hole principle on lists reads as follows: 
+  $\forall l_1, l_2. l_1 \subseteq l_2 \rightarrow \length{l_2} < \length{l_2} \rightarrow \textsf{rep}~l_1$.
+  Since by assumption and Lemma~\ref{prop:toPosbasic}, part 1, $\textsf{map}~\textsf{fst}~(\textsf{toPos}~cl) \subseteq [0, \ldots, \length{N}-1] \setminus [k]$, but the former list has $\length{N}$ elements, this closes the proof.
+\end{proof}
+
+\subsubsection{Mapping to Literals}
+Throughout this subsection, we assume that the list $posl$ is the output of \textsf{toPos} of the previous subsection, thus satisfying the properties proved for it.
+
+We define two functions which use \textsf{enumLiteral} to obtain the syntactic representations of literals reference by literal positions.
+
+\begin{align*}
+  \textsf{toLit'}~posl &:= \textsf{map}~(\textsf{enumLiteral}~N)~posl \\
+  \textsf{toLit}~posl &:= \textsf{foldr}~(\lambda~l~acc. \match l ~\withl \Some a \Rightarrow a :: acc \withm \_ \Rightarrow acc \withr)~[]~(\textsf{toLit'}~posl) 
+\end{align*}
+The function \textsf{toLit} strips away the option wrappers from the output of \textsf{toLit'}, a procedure which is justified by the following lemmas:
+
+\begin{lemma}\leavevmode
+  \begin{enumerate}
+    \item $L' \in \textsf{toLit'}~posl \rightarrow \exists~L. L' = \Some{L}$
+    \item $p \in posl \rightarrow \textsf{enumLiteral}~c~a \neq \None$
+    \item $\textsf{map}~(\lambda x. \Some{x})~(\textsf{toLit}~posl) = \textsf{toLit'}~posl$
+    \item $L \in \textsf{toLit}~posl \rightarrow \exists~pos. pos \in posl \land \textsf{enumLiteral}~N~pos = \Some{L}$
+    \item $\Some{L} \in \textsf{toLit'}~posl \rightarrow L \in \textsf{toLit}~posl$
+    \item $L_1, L_2 \in \textsf{toLit}~posl \rightarrow \lnot (\textsf{conflict}~L_1~L_2)$
+  \end{enumerate}
+\end{lemma}
+\begin{proof}
+  All of the statements follow straightforwardly from the definitions.
+\end{proof}
+
+\begin{lemma} Satisfying the literals given by \textsf{toLit} is enough to obtain a satisfying assignment.
+  $(\forall L \in \textsf{toLit}~posl. \eval{a}{L} = \Some{\btrue}) \rightarrow N \prec \length{a} \rightarrow \eval{a}{N} = \Some{\btrue}$
+\end{lemma}
+\begin{proof}
+  We use the characterisation of evaluation given by Lemma~\ref{prop:evalclauseiff}. 
+  The statement then needs to be strenghtened in order to obtain additional information on the index of the clauses:
+  \[\forall n < \length{N}. \exists~$C$. N.n = \Some{C} \land \eval{a}{C} = \Some{\btrue} \]
+  Using Lemma~\ref{prop:evalclauseiff}, the rest of the proof is easy.
+\end{proof}
+
+\subsubsection{Expanding to a Full Assignment}
+TODO
+
+\subsection{The Reduction Function}
+TODO
+
+\section{Running-time Bounds and Coq formalisation}
+
+\section{Closing Remarks}
 
 \end{document}

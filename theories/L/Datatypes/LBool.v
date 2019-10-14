@@ -42,3 +42,6 @@ Proof.
   solverec.
 Qed.
 
+Lemma size_bool (b : bool) : size(enc b) <= 4. 
+Proof.  destruct b; cbv; lia. Qed. 
+

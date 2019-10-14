@@ -81,7 +81,7 @@ Proof.
       apply (proj1 (forallb_forall (Lgraph_edge_in_dec (n, l) u) cl) F1 v H2 ).
     * rewrite H2 in *; clear H2.
       specialize (proj1 (forallb_forall (Lgraph_edge_in_dec (n, l) v) cl) F1 u H1) as H0.
-      apply Lgraph_edge_in_dec'_correct. apply Lgraph_edge_in_dec'_correct in H0. tauto.
+      apply (Lgraph_edge_in_dec_correct (n, l)). apply (Lgraph_edge_in_dec_correct (n, l)) in H0. tauto.
     * inv F0. apply IHcl; tauto. 
   - intros H. apply utils.andb_and; split.
     2: {apply IHcl. firstorder. now inv F0. firstorder. }
@@ -116,14 +116,14 @@ From Undecidability.L.Complexity Require Import PolyBounds ONotation Monotonic.
 
 (*extraction of needed functions and derivation of runtime bounds in terms of encoding size*)
 
-  Fixpoint connectedb_time (g : Lgraph) (cl : list Lnode) :=
-    let (n, e) := g in 
-    match cl with [] => 4
-                | (cl :: cls) => forallb_time
-   (fun (v : Lnode) (_ : unit) =>
-    (list_in_decb_time pair_eqb_nat_time e (cl, v) +
-     list_in_decb_time pair_eqb_nat_time e (v, cl) + 29, tt)) cls + 19 + connectedb_time g cls
-              end. 
+Fixpoint connectedb_time (g : Lgraph) (cl : list Lnode) :=
+  let (n, e) := g in 
+  match cl with [] => 4
+              | (cl :: cls) => forallb_time
+  (fun (v : Lnode) (_ : unit) =>
+  (list_in_decb_time pair_eqb_nat_time e (cl, v) +
+    list_in_decb_time pair_eqb_nat_time e (v, cl) + 26, tt)) cls + 19 + connectedb_time g cls
+            end. 
 
 Instance term_connectedb : computableTime' connectedb (fun g _ => (5, fun cl _ => (connectedb_time g cl, tt))).
 Proof.

@@ -141,6 +141,15 @@ Section fixX.
     }
     all: unfold f; smpl_inO. 
   Qed. 
+
+  Lemma nth_error_time_bound : exists (f : nat -> nat), (forall (l : list X) (n : nat), callTime2 (@nth_error_time X) l n <= f(size (enc l))) /\ inOPoly f /\ monotonic f. 
+  Proof.
+    evar (f : nat -> nat). exists f. split.
+    - intros. unfold nth_error_time. cbn -[Nat.add Nat.mul]. rewrite Nat.le_min_r. specialize (list_size_length l). 
+      instantiate (f := fun n => 15 + 15 * n). subst f. solverec. 
+    - subst f; split; smpl_inO. 
+  Qed. 
+
 End fixX.
 
 Section fixXY.
@@ -245,5 +254,32 @@ Section noEnv.
     + intros. now rewrite <- size_unit_enc.
     + split; smpl_inO. apply inOPoly_comp; smpl_inO. 
   Qed. 
+
+  Variable (Y : Type).
+  Context {H0 : registered Y}. 
+  Lemma fold_right_time_bound (step : Y -> X -> X) (stepT : timeComplexity (Y -> X -> X)) :
+    (exists (f : nat -> nat), (forall (acc : X) (ele : Y), callTime2 stepT ele acc <= f(size(enc acc) + size(enc ele))) /\ inOPoly f /\ monotonic f)
+    -> (exists (c__out : nat), forall (acc : X) (ele : Y), size(enc (step ele acc)) <= size(enc acc) + size(enc ele) + c__out)
+    -> exists (f : nat -> nat), (forall (l : list Y) (acc : X), fold_right_time step stepT l acc <= f(size(enc l) + size(enc acc))) /\ inOPoly f /\ monotonic f.
+  Proof.
+    intros (f' & H1 & H2 & H3).
+    intros (c__out & F). 
+    assert (exists (f : nat -> nat), (forall (acc : X) (ele : Y) (env : unit), callTime2 stepT ele acc <= f(size(enc acc) + size(enc ele) + size(enc env))) /\ inOPoly f /\ monotonic f). 
+    {
+      exists f'; split. 
+      - intros; rewrite H1. unfold monotonic in H3. apply H3. lia. 
+      - split; smpl_inO. 
+    }
+    assert (exists (c__out : nat), forall (acc : X) (ele : Y) (env : unit), size(enc (step ele acc)) <= size(enc acc) + size(enc ele) + size(enc env) + c__out).
+    {
+      exists c__out. intros. rewrite F. lia. 
+    }
+    specialize (fold_right_time_bound_env H4 H5) as (f & G1 & G2 & G3).
+    exists (fun n => f (n + 2)). 
+    split.
+    - intros. rewrite G1 with (env := tt). now rewrite <- size_unit_enc. 
+    - split; smpl_inO. apply inOPoly_comp; smpl_inO. 
+  Qed. 
+
 End noEnv.
 
