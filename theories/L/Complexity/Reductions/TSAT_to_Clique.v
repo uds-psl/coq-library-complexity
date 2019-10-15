@@ -58,6 +58,8 @@ Qed.
 (*The notion of conflicting literals, i.e. literals that cannot simultaneously be positive for any assignment*)
 Definition literalsConflict (a b : literal) := match a, b with (s1, v1), (s2, v2) => s1 <> s2 /\ v1 = v2 end.
 
+Definition literal_in_cnf (a : literal) (c : cnf) := exists cl, cl el c /\ a el cl. 
+
 Lemma literalsConflict_eval (s s' : bool) (n n' : nat) (a : assgn) : n' < |a| -> n < |a| -> (literalsConflict (s, n) (s', n') <-> (evalLiteral a (s, n) <> evalLiteral a (s', n') /\ n = n')). 
 Proof.
   intros H1 H2. split.
@@ -84,20 +86,24 @@ Section enumLiteral.
                                                                            | None => None
                                                                             end.
 
-  Lemma enumerateLiteral'_Some (c : clause) : |c| = k -> forall (n : nat), n < k -> exists (l : literal), enumerateLiteral' c n = Some l.
+  Lemma enumerateLiteral'_Some (c : clause) : |c| = k -> forall (n : nat), n < k -> exists (l : literal), enumerateLiteral' c n = Some l /\ l el c.
   Proof. 
     intros H n H1.  
-    unfold enumerateLiteral'. rewrite <- H in H1. destruct (Prelim.nthe_length H1). now exists x.
+    unfold enumerateLiteral'. rewrite <- H in H1. destruct (Prelim.nthe_length H1). exists x. split.
+    - apply e.
+    - eapply nth_error_In, e. 
   Qed.                                                                                      
 
   Lemma enumerateLiteral_Some (c : cnf) : kCNF k c -> forall (n :nat) (n' : nat), n < |c| -> n' < k -> 
-    exists (l : literal), enumerateLiteral c (n, n') = Some l.
+    exists (l : literal), enumerateLiteral c (n, n') = Some l /\ literal_in_cnf l c.
   Proof.
-    intros H n n' H1 H2. specialize (kCNF_kge H) as H0. destruct (enumerateLiteral c (n, n')) eqn:H3. now exists p. 
+    intros H n n' H1 H2. specialize (kCNF_kge H) as H0. destruct (enumerateLiteral c (n, n')) eqn:H3.
+    { exists p. unfold enumerateLiteral in H3. destruct (nth_error c n) eqn:H4; try congruence. split; [reflexivity | ].  
+      exists l. split; now eapply nth_error_In. }
     exfalso. revert n H1 H3. induction c. 
     + intros n H1. cbn in H1; lia.  
     + intros n H1 H3. cbn in H1.
-      destruct n. cbn in H3. inversion H.  specialize (enumerateLiteral'_Some H6 H2) as (l & H8). congruence. 
+      destruct n. cbn in H3. inversion H.  specialize (enumerateLiteral'_Some H6 H2) as (l & H8 & _). congruence. 
       unfold enumerateLiteral in H3. cbn in H3. apply IHc with (n := n). now inv H. lia. apply H3.
   Qed. 
 
@@ -119,7 +125,7 @@ End enumLiteral.
 
 (*The reduction relation, as described above *)
 (*We explicitly enforce that the graph has a suitable number of nodes *)
-(*TODO: maybe remove the kCNF constraint? *)
+(* TODO: would it be sensible to add a well-formedness constraint? *)
 Definition redRel (c : cnf) (cl : Lgraph * nat) := let (g, k) := cl in
                                                  let (n, e) := g in n = (3 * |c|) /\ k = |c| /\ kCNF 3 c /\ 
   exists (labF : labGraph) (labFInv : labGraphInv), isLabelling c labF labFInv /\
@@ -155,16 +161,16 @@ Section constructClique.
   Lemma everyClause' (a : assgn) (cn : cnf): evalCnf a cn = Some true -> forall cl, cl el cn -> forall n, exists k, constructClique_clause a n cl = Some (n, k).
   Proof.
     intros H cl H1 n.
-    enough (forall m : nat, exists k, constructClique_clause' a n cl m = Some (n, m + k)) by apply H0.
+    unfold constructClique_clause. generalize 0 as m. 
     assert (evalClause a cl = Some true ) by (apply (proj1 (evalCnf_clause_iff a cn) H cl H1)).
     clear H1. induction cl. 
     - cbn in H0; congruence. 
     - intros m. cbn. destruct (evalLiteral a a0) eqn:eq.
       2 : rewrite evalClause_step_inv in H0; destruct H0 as (b1 & b2 & F1 & F2 & F3); congruence. 
-      destruct b eqn:eq2. now exists 0. 
+      destruct b eqn:eq2. now exists m. 
       rewrite evalClause_step_inv in H0; destruct H0 as (b1 & b2 & F1 & F2 & F3).
       destruct b2; try congruence. simp_bool'. apply IHcl  with (m := S m) in F1.
-      destruct F1 as (k & F1). exists (S k). now rewrite Nat.add_succ_r. 
+      destruct F1 as (k & F1). exists (k). now apply F1. 
   Qed. 
 
   Lemma everyClause (a : assgn) (cn : cnf): evalCnf a cn = Some true -> forall n, n < |cn| -> exists k, (n, k) el constructClique_cnf a cn. 
@@ -252,9 +258,8 @@ Section constructClique.
     specialize (construct_literals_different_clause' H H0 H1). unfold enumLiteral_different_clause. firstorder.
   Qed. 
 
-  Lemma construct_literals_positive' (a : assgn) (m : nat) (cl : clause)  : forall n, constructClique_clause a m cl = Some (m, n)
-                                                                               -> exists (l : literal), enumerateLiteral' cl n = Some l
-                                                                                    /\ evalLiteral a l = Some true.
+  Lemma construct_literals_positive' (a : assgn) (m : nat) (cl : clause)  :
+    forall n, constructClique_clause a m cl = Some (m, n) -> exists (l : literal), enumerateLiteral' cl n = Some l /\ evalLiteral a l = Some true.
   Proof.
     intros n. unfold constructClique_clause. replace (enumerateLiteral' cl n) with (enumerateLiteral' cl (n - 0)) by (now rewrite Nat.sub_0_r).
     generalize 0. induction cl. 
@@ -268,9 +273,8 @@ Section constructClique.
                                                                                   
                                                                                                                                
 
-  Lemma construct_literals_positive (a : assgn) (cn : cnf) : forall (pos : nat * nat), pos el constructClique_cnf a cn
-                                                            -> exists (l : literal), enumerateLiteral cn pos = Some l
-                                                                 /\ evalLiteral a l = Some true. 
+  Lemma construct_literals_positive (a : assgn) (cn : cnf) :
+    forall (pos : nat * nat), pos el constructClique_cnf a cn -> exists (l : literal), enumerateLiteral cn pos = Some l /\ evalLiteral a l = Some true. 
   Proof.
     enough (forall m pos, pos el constructClique_cnf' a cn m -> exists l, enumerateLiteral cn pos = Some l /\ evalLiteral a l = Some true) by firstorder.
     induction cn. 
@@ -340,8 +344,8 @@ Section constructAssgnToPos.
 
   Lemma toPos_exists_literal (cl : list Lnode) : isLClique g cl (|c|) -> forall pos, pos el toPos cl -> exists l, enumerateLiteral c pos = Some l.
   Proof.
-    intros H (a & b) Hel. apply enumerateLiteral_Some with (k:= 3).  apply kc. 
-    all: now specialize (toPos_bounded H Hel). 
+    intros H (a & b) Hel. enough (exists l, enumerateLiteral c (a, b) = Some l /\ literal_in_cnf l c) by firstorder. apply enumerateLiteral_Some with (k:= 3).
+    apply kc. all: now specialize (toPos_bounded H Hel). 
   Qed. 
 
   Lemma toPos_no_conflict (cl : list Lnode) : isLClique g cl (|c|) -> forall pos1 pos2, pos1 el toPos cl -> pos2 el toPos cl -> pos1 <> pos2 ->
@@ -431,7 +435,7 @@ Section constructAssgnToPos.
         unfold enumLiteral_different_clause in diffcl; cbn in diffcl; congruence.
     }
 
-    (*Now we apply the pigeonhole principle: There are |c| elements in map fst (toPos c), but only |c|-1 in [0, ..., |c| -1] \ [k] *)
+    (*Now we apply the pigeonhole principle: There are |c| elements in map fst (toPos cl), but only |c|-1 in [0, ..., |c| -1] \ [k] *)
     eapply (pigeonhole _).
     - enough (map fst (toPos cl) <<= remove nat_eq_dec k (seq 0 (|c|)) ) by apply H0.
       specialize (toPos_bounded H) as H4. 
@@ -461,7 +465,7 @@ Section constructAssgnToLiterals.
   Proof.
     intros H l' Hel. 
     unfold toLiterals' in Hel. destruct (map_el Hel) as (pos & H1 & H2). destruct pos as (a & b). specialize (H a b H1). 
-    destruct (enumerateLiteral_Some kc (proj1 H) (proj2 H)) as (l & H0). exists l. now rewrite <- H2, H0.
+    destruct (enumerateLiteral_Some kc (proj1 H) (proj2 H)) as (l & H0 & _). exists l. now rewrite <- H2, H0.
   Qed. 
 
   (*strip away the Some wrappers*)
@@ -483,6 +487,26 @@ Section constructAssgnToLiterals.
       now specialize (toLiterals_enum H1 (or_introl eq_refl)). 
   Qed. 
 
+
+  Lemma toLiterals_el (posl : list (nat * nat)) (p : literal) : Some p el toLiterals' posl -> p el toLiterals posl.
+  Proof.
+    induction posl. 
+    - now cbn. 
+    - intros [H | H]. 
+      + cbn. rewrite H; now left.
+      + cbn. destruct (enumerateLiteral c a); [ right | ]; now apply IHposl. 
+  Qed. 
+
+  Lemma toLiterals_el' (posl :  (list (nat * nat))) : (forall a b, (a, b) el posl -> a < (|c|) /\ b < 3) -> forall l, l el toLiterals posl -> Some l el toLiterals' posl. 
+  Proof. intros. rewrite <- toLiterals_Some. now apply in_map. assumption.  Qed. 
+
+  Lemma toLiterals_in_cnf (posl : list (nat * nat)) : (forall a b, (a, b) el posl -> a < (|c|) /\ b < 3) -> forall l, l el toLiterals posl -> literal_in_cnf l c.
+  Proof. 
+    intros. apply toLiterals_el' in H0; [|assumption]. unfold toLiterals' in H0. apply in_map_iff in H0 as (pos & H1 & H2).
+    destruct pos; destruct (H n n0 H2). 
+    destruct (enumerateLiteral_Some kc H0 H3) as (l' & H4 & H5). now assert (l = l') by (rewrite H4 in H1; congruence).
+  Qed. 
+
   Lemma toLiterals_inv (posl: (list (nat * nat))) : (forall a b, (a, b) el posl -> a < (|c|) /\ b < 3) -> forall l, l el toLiterals posl -> exists pos, pos el posl /\ enumerateLiteral c pos = Some l. 
   Proof.
     intros H l Hel. induction posl. 
@@ -496,14 +520,6 @@ Section constructAssgnToLiterals.
         * now exists x. 
   Qed. 
 
-  Lemma toLiterals_el (posl : list (nat * nat)) (p : literal) : Some p el toLiterals' posl -> p el toLiterals posl.
-  Proof.
-    induction posl. 
-    - now cbn. 
-    - intros [H | H]. 
-      + cbn. rewrite H; now left.
-      + cbn. destruct (enumerateLiteral c a); [ right | ]; now apply IHposl. 
-  Qed. 
     
   (*the no-conflict property transfers from posl to toLiterals posl *)
   Lemma toLiterals_no_conflict (posl : list (nat * nat)): (forall a b, (a, b) el posl -> a < (|c|) /\ b < 3) -> 
@@ -564,27 +580,169 @@ Section constructAssgnComplete.
     match l with [] => None
             | ((a, b)::ls) => if Nat.eqb n b then Some a else lookup n ls
     end. 
+
+  Lemma lookup_iff (n : nat) (s : bool) (l : list literal): lookup n l = Some s <-> (exists i, nth_error l i = Some (s, n) /\ forall j, j < i -> forall s', nth_error l j <> Some (s', n)). 
+  Proof.
+    induction l. 
+    - cbn. split; [congruence|intros ([] & []); cbn in *; congruence]. 
+    - split.
+      + intros. cbn in H. destruct a. destruct (Nat.eqb n n0) eqn:H1.
+        * exists 0. dec_bool. rewrite H1. inv H. cbn; firstorder. 
+        * apply IHl in H. destruct H as (i & H2 & H3). exists (S i). cbn. dec_bool. split; [assumption | intros]. 
+          destruct j; [cbn; congruence | cbn]. apply H3; lia. 
+      + intros (i & H1 & H2). cbn. destruct a. destruct (Nat.eqb n n0) eqn:H3. 
+        * destruct i.
+          -- cbn in H1. congruence.
+          -- cbn in H1. dec_bool. assert (0 < S i) by lia. specialize (H2 0 H).
+             specialize (H2 b).  cbn in H2. congruence. 
+        * dec_bool. destruct i; [cbn in H1; congruence | ]. 
+          apply IHl; cbn in H1. exists i. split; [assumption | intros].
+          assert (S j < S i) by lia. specialize (H2 (S j) H0 s').  cbn in H2; congruence. 
+  Qed. 
+
   Fixpoint expandAssignment (largestVar : nat) (partial : list literal) :=
-    (match lookup largestVar partial with None => false | Some a => a end) :: (match largestVar with 0 => [] | S l => expandAssignment l partial end). 
+     (match largestVar with 0 => [] | S l => expandAssignment l partial end) ++ [match lookup largestVar partial with None => false | Some a => a end].
+
+
 
   Lemma expandAssignment_length (n : nat) (partial : list literal) : |expandAssignment n partial| = S n.
   Proof.
     induction n. 
     - now cbn. 
-    - cbn. now rewrite IHn. 
+    - cbn. rewrite app_length. rewrite IHn. destruct lookup; now cbn. 
   Qed. 
 
-  Lemma expandAssignment_partial (largestVar : nat) (partial : list literal) : varBound_clause largestVar partial ->
+  Proposition expandAssignment_step' (largestVar : nat) (partial : list literal) : expandAssignment (S largestVar) partial = expandAssignment largestVar partial ++ [match lookup (S largestVar) partial with |Some a => a | None => false end].
+  Proof.
+    induction largestVar. 
+      * now cbn.  
+      * intros. specialize IHlargestVar. cbn. reflexivity.
+  Qed. 
+
+  Lemma expandAssignment_split (lV lV' : nat) (partial : list literal) : lV' > lV -> exists l, expandAssignment lV' partial = expandAssignment lV partial ++ l /\ |l| = lV' - lV.
+  Proof. 
+    revert lV. induction lV'.  
+    - intros; lia. 
+    - intros. destruct (Nat.eqb lV' lV) eqn:H1; dec_bool.
+      + rewrite H1. clear IHlV' H H1 lV'. 
+        replace (S lV - lV) with 1 by lia. specialize (expandAssignment_step' lV partial). firstorder.  
+      + assert (lV' > lV) by lia. specialize (IHlV' lV H0) as (l & F1 & F2). cbn -[Nat.sub]. rewrite F1. 
+       exists (l ++ [match lookup (S lV') partial with | Some a => a | None => false end]). split; try firstorder. 
+       rewrite app_length. destruct lookup; cbn [length]; lia.  
+  Qed. 
+
+  Proposition expandAssignment_last (m : nat) (s : bool) (partial : list literal) : nth_error (expandAssignment m ((s, m)::partial)) m = Some s.
+  Proof.
+    destruct m. 
+    - cbn; reflexivity. 
+    - rewrite expandAssignment_step'. rewrite nth_error_app2. all: rewrite expandAssignment_length. 2: lia. 
+      rewrite Nat.sub_diag. cbn. destruct (Nat.eqb m m) eqn:H.
+      + reflexivity.
+      + dec_bool.
+   Qed. 
+
+  Lemma expandAssignment_elem (largestVar m : nat) (partial : list literal) :
+    m <= largestVar -> nth_error (expandAssignment largestVar partial) m = Some (match lookup m partial with None => false | Some a => a end). 
+  Proof.
+    induction largestVar. 
+    - intros. assert (m = 0) by lia. rewrite H0. cbn. reflexivity. 
+    - intros. destruct (Nat.eqb m (S largestVar)) eqn:H1; dec_bool.
+      + rewrite H1. cbn [expandAssignment]. rewrite nth_error_app2. 2: rewrite expandAssignment_length; lia.  
+        rewrite expandAssignment_length, Nat.sub_diag. cbn. reflexivity. 
+      + assert (m <= largestVar) by lia. specialize (IHlargestVar H0). rewrite expandAssignment_step'. rewrite nth_error_app1.
+        now apply IHlargestVar. rewrite expandAssignment_length; lia. 
+  Qed. 
+
+  Proposition expandAssignment_unaffected (m n largestVar : nat) (s : bool) (partial : list literal) :
+    m <> n -> m <= largestVar -> nth_error (expandAssignment largestVar ((s, n) :: partial)) m = nth_error(expandAssignment largestVar partial) m. 
+  Proof. 
+    intros. repeat rewrite expandAssignment_elem by lia. f_equal.
+    destruct (lookup m ((s, n)::partial)) eqn:H1. 
+    - apply (lookup_iff ) in H1 as (i & F1 & F2). enough (lookup m partial = Some b) by now rewrite H1.
+      destruct i.
+      + cbn in F1; congruence. 
+      + apply lookup_iff. exists i. cbn in F1; split; try assumption. 
+        intros. assert (S j < S i) by lia. specialize (F2 (S j) H2 s'); firstorder. 
+    - enough (forall b, lookup m partial <> Some b) as H2.
+      { destruct (lookup m partial); [specialize (H2 b); congruence | reflexivity]. }
+      intros b H2. apply lookup_iff in H2 as (i & H2 & H3).
+      enough (lookup m ((s, n) :: partial) = Some b) by congruence. 
+      apply lookup_iff. exists (S i). cbn. split; [assumption | intros].   
+      destruct j. 
+      + cbn. congruence. 
+      + assert (j < i) by lia. specialize (H3 j H5 s'). now cbn.  
+  Qed. 
+
+  Lemma expandAssignment_step (largestVar n m : nat) (partial : list literal) (s : bool) : m <= largestVar -> 
+    (n = m -> nth_error (expandAssignment largestVar ((s, n) :: partial)) m = Some s) /\ (n <> m -> nth_error(expandAssignment largestVar ((s, n) ::partial)) m = nth_error(expandAssignment largestVar partial) m). 
+  Proof.
+    intros H0.
+    induction largestVar. 
+    - cbn [expandAssignment lookup]. destruct (Nat.eqb 0 n) eqn:H1.
+      + dec_bool. split.
+        * rewrite <- H1; intros <-. now cbn. 
+        * rewrite <- H1; destruct m; [congruence | lia].
+      + dec_bool. assert (m = 0) by lia. split; [congruence | intros]. rewrite H; now cbn.  
+    - destruct (Nat.eqb m (S largestVar)) eqn:H1; dec_bool.
+      * clear IHlargestVar. rewrite H1. split.
+        + intros -> . rewrite expandAssignment_step'. rewrite nth_error_app2. rewrite expandAssignment_length, Nat.sub_diag. cbn.
+          destruct (Nat.eqb largestVar largestVar) eqn:H2; dec_bool. now rewrite expandAssignment_length.  
+        + intros Heq. now apply expandAssignment_unaffected. 
+      * assert (m <= largestVar) by lia. destruct (IHlargestVar H) as (IH1 & IH2). split.
+        + intros. rewrite expandAssignment_step'. rewrite nth_error_app1 by (rewrite expandAssignment_length; lia). now apply IH1. 
+        + intros. now apply expandAssignment_unaffected.  
+  Qed. 
+      
+  Proposition expandAssignment_ntherror (largestVar : nat) (partial : list literal) (i n : nat) (s : bool) :
+    nth_error partial i = Some (s, n) -> (forall j, j < i -> nth_error partial j <> Some (negb s, n)) -> n <= largestVar -> nth_error (expandAssignment largestVar partial) n = Some s.
+  Proof.
+    revert i. induction partial.
+    - intros []; cbn; congruence.
+    - intros. destruct i.
+      + cbn in H. clear IHpartial. inv H. destruct (expandAssignment_step n partial s H1). 
+        destruct (Nat.eqb n largestVar) eqn:H3; dec_bool.
+      + cbn in H. apply IHpartial in H as H'. 3: apply H1.
+        * destruct a. specialize (@expandAssignment_step largestVar n0 n partial s H1) as (F1 & F2).
+          destruct (Nat.eqb n0 n) eqn:H2; dec_bool.
+          ++ destruct (Bool.eqb b s) eqn:H3. rewrite eqb_true_iff in H3. rewrite H3. now apply F1. 
+             assert (b = negb s) by (destruct b,s; cbn in H3; cbn; try congruence).  
+             assert (0 < S i) by lia. 
+             specialize (H0 0 H5). cbn in H0. congruence. 
+         ++ rewrite expandAssignment_unaffected.
+          -- apply H'. 
+          -- assert (0 < S i) by lia. specialize (H0 0 H3). cbn in H0. congruence. 
+          -- apply H1. 
+        * intros. assert (S j < S i) by lia. specialize (H0 (S j) H3). now cbn in H0. 
+   Qed. 
+
+  Lemma expandAssignment_partial (largestVar : nat) (partial : list literal) : varBound_clause (S largestVar) partial ->
+    (forall l1 l2, l1 el partial -> l2 el partial -> not(literalsConflict l1 l2)) -> 
     forall l, l el partial -> evalLiteral (expandAssignment largestVar partial) l = Some true.
   Proof.
-
-  Admitted. 
+    intros. unfold evalLiteral. destruct l.
+    apply In_nth_error in H1 as (i & H1).
+    erewrite expandAssignment_ntherror with (s := b).  
+    - destruct b; now cbn. 
+    - exact H1. 
+    - intros j H2 H3. eapply H0. 
+      + now apply nth_error_In in H1.  
+      + now apply nth_error_In in H3. 
+      + cbn. destruct b; cbn; eauto. 
+    - rewrite varBound_clause_iff in H. apply nth_error_In in H1. specialize (H b n H1); lia. 
+  Qed. 
 
   Lemma expandAssignment_correct (c : cnf) (partialAssign : list literal) (n : nat):
-    varBound_cnf (S n) c -> (forall (a : assgn), (forall l, l el partialAssign -> evalLiteral a l = Some true) -> varBound_cnf (|a|) c -> evalCnf a c = Some true)
+    varBound_cnf (S n) c -> varBound_clause (S n) partialAssign -> (forall l1 l2, l1 el partialAssign -> l2 el partialAssign -> not(literalsConflict l1 l2)) ->
+    (forall (a : assgn), (forall l, l el partialAssign -> evalLiteral a l = Some true) -> varBound_cnf (|a|) c -> evalCnf a c = Some true)
     -> evalCnf (expandAssignment n partialAssign) c = Some true. 
   Proof.
-  Admitted. 
+    intros. apply H2.
+    + intros. apply expandAssignment_partial. 
+      - apply H0.
+      - apply H1.  
+      - apply H3.
+    + now rewrite expandAssignment_length. 
+  Qed. 
 
 End constructAssgnComplete. 
       
@@ -607,9 +765,20 @@ Section constructAssgn.
   Lemma assgn_satisfies (cl : list Lnode) : isLClique g cl (|c|) -> evalCnf (clique_to_assgn cl) c = Some true.
   Proof. 
     intros Hclique. 
-    unfold clique_to_assgn. apply expandAssignment_correct. 1: now apply cnf_maxVar_bound. 
-    intros a. apply toLiterals_eval_cnf. 1: now apply kc. 
-    - apply toPos_bounded with (g := g) (fInv := fInv); [apply islab | apply nc | apply red | apply Hclique]. 
+    unfold clique_to_assgn. apply expandAssignment_correct.
+    + now apply cnf_maxVar_bound. 
+    + apply varBound_clause_iff. intros. apply toLiterals_in_cnf in H. 
+      - destruct H as (cla & H1 & H2). specialize (cnf_maxVar_bound c) as H3.
+        rewrite varBound_cnf_iff in H3. specialize (H3 cla H1).
+        rewrite varBound_clause_iff in H3. now apply H3 with (s := s). 
+      - apply kc.
+      - apply toPos_bounded with (g := g) (fInv := fInv); [apply islab | apply nc | apply red | apply Hclique].
+   + apply toLiterals_no_conflict.
+     - apply kc. 
+     - apply toPos_bounded with (g := g) (fInv := fInv); [apply islab | apply nc | apply red | apply Hclique].
+     - intros. apply toPos_no_conflict with (g := g) (f := f) (fInv := fInv) (cl := cl); firstorder.  
+  + intros a. apply toLiterals_eval_cnf. 1: now apply kc. 
+    -  apply toPos_bounded with (g := g) (fInv := fInv); [apply islab | apply nc | apply red | apply Hclique].
     - apply toPos_for_all_clauses with (g := g) (fInv := fInv); [apply islab | apply nc | apply kc | apply red | apply Hclique]. 
   Qed. 
 End constructAssgn. 
@@ -885,8 +1054,9 @@ Section makeEdgesVerification.
 
   (*or in terms of edges, thus encapsulating the asymmetry of a and b*)
   Lemma makeEdges_correct' (cn : cnf) (a b : nat) : kCNF 3 cn ->
-    (Lgraph_edge_in_dec' (makeEdges cn 0) a b = true <-> exists l l', Some l = enumerateLiteral cn (labF a) /\ Some l' = enumerateLiteral cn (labF b) /\ enumLiteral_different_clause (labF a) (labF b) /\ not(literalsConflict l l')).  
-    intros H. rewrite Lgraph_edge_in_dec'_correct. split.
+    (Lgraph_edge_in_dec (3 * |cn|, (makeEdges cn 0)) a b = true <-> exists l l', Some l = enumerateLiteral cn (labF a) /\ Some l' = enumerateLiteral cn (labF b) /\ enumLiteral_different_clause (labF a) (labF b) /\ not(literalsConflict l l')).  
+    intros H. specialize (Lgraph_edge_in_dec_correct (3 * |cn|, makeEdges cn 0)) as H0; cbn in H0. cbn [Lgraph_edge_in_dec].
+    rewrite H0; clear H0. split.
     - intros [H1%makeEdges_correct|H1%makeEdges_correct]. 2, 4: assumption.
       + firstorder. 
       + destruct H1 as (_ & (l & l' & F1 & F2 & F3 & F4)). exists l', l. firstorder. destruct l, l'. firstorder.
@@ -907,14 +1077,14 @@ Proof.
   unfold redGraph. rewrite H0'. 
   split; [apply H0|].
   exists labF, labFInv. split; [apply labF_isLabelling|]. intros u v [H1 H2]. 
-  cbn [Lgraph_edge_in_dec]. rewrite makeEdges_correct'. split.
+  cbn [Lgraph_edge_in_dec]. specialize makeEdges_correct' as E; cbn [Lgraph_edge_in_dec] in E. rewrite E; clear E. split.
   + firstorder. assert (x = l1) by congruence. assert (x0 = l2) by congruence. now rewrite H9, H10 in H6. 
   + intros (F1 & F2). destruct (enumerateLiteral c (labF u)) eqn:E1, (enumerateLiteral c (labF v)) eqn:E2. 
     1: exists p, p0; firstorder.  
     all: destruct (labF_isLabelling c). 
     2: specialize (H3 u H1); destruct (labF u). 
     1,3: specialize (H3 v H2); destruct (labF v). 
-    all: destruct H3 as ((bound_1 & bound_2) & _); specialize (enumerateLiteral_Some H0 bound_1 bound_2) as (l & E3); congruence. 
+    all: destruct H3 as ((bound_1 & bound_2) & _); specialize (enumerateLiteral_Some H0 bound_1 bound_2) as (l & E3 & _); congruence. 
   + apply H0. 
 Qed.
 

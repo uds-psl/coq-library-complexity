@@ -20,6 +20,21 @@ Inductive varBound_cnf (n : nat) : cnf -> Prop :=
    | varBound_cnfB : varBound_cnf n [] 
    | varBound_cnfS : forall cl c, varBound_clause n cl -> varBound_cnf n c -> varBound_cnf n (cl :: c).  
 
+Lemma varBound_clause_iff (n : nat) (c : clause) : varBound_clause n c <-> forall (s : bool) (k : nat), (s, k) el c -> k < n.
+Proof.
+  split.
+  - induction 1.
+    + intros s k []. 
+    + intros s k0 [H1 | H1].
+      * inv H1. now apply H. 
+      * now apply IHvarBound_clause with (s := s). 
+  - induction c.
+    + intros. constructor. 
+    + intros. destruct a. constructor.
+      * apply H with (s := b). firstorder.  
+      * apply IHc. firstorder.  
+Qed. 
+
 Lemma varBound_cnf_iff (n : nat) (c : cnf) : varBound_cnf n c <-> forall (cl : clause), cl el c -> varBound_clause n cl.
 Proof.
   split.
