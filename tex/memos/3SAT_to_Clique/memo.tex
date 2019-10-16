@@ -14,9 +14,9 @@
 
 \bibliographystyle{plainurl}% the mandatory bibstyle
 
-\title{A formalised polynomial-time reduction from \emph{3SAT} to \emph{Clique}} %TODO Please add
+\title{A Formalised Polynomial-Time Reduction From \emph{3SAT} to \emph{Clique}} %TODO Please add
 
-\titlerunning{Dummy short title}%optional, please use if title is longer than one line
+\titlerunning{}%optional, please use if title is longer than one line
 
 \author{Lennard Gäher}{Saarland University, Germany}{s8legaeh@stud.uni-saarland.de}{}{}%TODO mandatory, please use full name; only 1 author per \author macro; first two parameters are mandatory, other parameters can be empty. Please provide at least the name of the affiliation and the country. The full address is optional
 
@@ -89,7 +89,7 @@ While the lambda-calculus is higher-level than Turing machines, directly program
 
 When formalising computational problems, one has to strike a balance regarding abstraction and technical sophistication: While reasoning about correctness in Coq can be done in a much more elegant way when using abstract formalisations and inductive predicates instead of computational functions, members of $\mathbb{P}$, the universe of propositions, cannot be extracted to L. Running time analyses get easier, too, when employing simple formalisations. 
 
-We therefore define most properties using inductive predicates and accompany them with boolean deciders if necessary, while all datatypes used for the problem definitions are kept as simple as possible.
+We therefore define most properties using inductive predicates and accompany them with Boolean deciders if necessary, while all datatypes used for the problem definitions are kept as simple as possible.
 
 \subsection{Conjunctive Normal Forms}
 Following this line of thought, we define a simple list-based representation of conjunctive normal forms (CNFs):
@@ -99,10 +99,10 @@ Following this line of thought, we define a simple list-based representation of 
   C : \clause := \listsof \literal &&
   N : \cnf := \listsof \clause && 
 \end{align*}
-A literal is represented by a pair of a boolean denoting its sign and its variable. 
-Assignments are lists of booleans: $a : \assgn := \listsof \bool$. The list $[\btrue, \bfalse, \btrue]$, for instance, denotes the assignment $\{x_0 \mapsto 1, x_1 \mapsto 0, x_2 \mapsto 1\}$. 
+A literal is represented by a pair of a Boolean and a natural number, denoting its sign and its variable. 
+Assignments are lists of Booleans: $a : \assgn := \listsof \bool$. The list $[\btrue, \bfalse, \btrue]$, for instance, denotes the assignment $\{x_0 \mapsto 1, x_1 \mapsto 0, x_2 \mapsto 1\}$. 
   
-The evaluation of CNFs is defined via boolean functions recursively defined on the structure of the lists:
+The evaluation of CNFs is defined via Boolean functions recursively defined on the structure of the lists:
 \begin{align*}
   ([]).0 := \None && (x :: xs).0 := \Some{x} && ([]).(S n) := \None && (x :: xs).(S n) := xs.n
 \end{align*}
@@ -119,13 +119,13 @@ The evaluation of CNFs is defined via boolean functions recursively defined on t
   \eval{a}{N} &:= \textsf{foldrO}~(\lambda~C~acc.~ \match \eval{a}{C} \withl\Some{v} \Rightarrow \Some{(acc~\andb~v)} \withm \None \Rightarrow \None\withr)~(\Some{\btrue})~N
 \end{align*}
 
-The function $xs.n$ yields the $n$-th element of $xs$, wrapped in the option type $\opt{}$, or $\None$ if the subscript is invalid and is used to lookup values of assignments. \textsf{foldrO} is a variant of the known fold-right function, but the aggregation function returns an element of $\opt{(A)}$. The folding only continues as long as the aggregation result is not $\None$. 
-Using \textsf{foldrO}, the definition of the evaluation functions $\mathcal{E}$ is straightforward. The presence of option values is due to our choice that an assignment only has finite support, which we find more expressive than using default values. 
-We use $\mathcal{E}$ to refer to evaluation of both literals, clauses and CNFs, but from the context it will always be clear which of the functions we mean.
+The function $xs.n$ yields the $n$-th element of $xs$, wrapped in the option type $\opt{}$, or $\None$ if the subscript is invalid, and is used to lookup values of assignments. \textsf{foldrO} is a variant of the known fold-right function, but the aggregation function returns an element of $\opt{(A)}$. The folding only continues as long as the aggregation result is not $\None$. 
+Using \textsf{foldrO}, the definition of the evaluation function $\mathcal{E}$ is straightforward. The presence of option values is due to our choice that an assignment only has finite support, which we find more expressive than using default values. 
+We use $\mathcal{E}$ to refer to evaluation of both literals, clauses and CNFs, but from the context and the metavariables it will always be clear which of the functions we mean.
 
 Next we introduce the notion of boundedness of CNFs: a CNF $N$ is bounded by $k$, written $N \prec k$, if all variables occuring in $N$ are strictly smaller than $k$. We need the same notion for clauses and again use the same notation to refer to boundedness of clauses and CNFs. This is formalised using inductive predicates:
 \begin{align*}
-  \infer{[] \prec k}{} && \infer{((s, n) :: C) \prec k}{n < k \quad C \prec k} && \infer{[] \prec k}{} && \infer{C :: N \prec k}{C \prec k && N \prec k}
+  \infer{[] \prec k}{} && \infer{((s, n) :: C) \prec k}{n < k \quad C \prec k} &&  \infer{C :: N \prec k}{C \prec k && N \prec k}
 \end{align*}
 
 \begin{proposition}\label{prop:varboundmono}\leavevmode
@@ -223,12 +223,12 @@ Using the functions defined above, it is straightforward to define a verifier fo
 \begin{align*}
   \textsf{Ver}_{\textbf{SAT}}~N~a := \eval{a}{C} = \Some{\btrue} \land \length{a} \le \natS{\textsf{maxCnf}~N} 
 \end{align*}
-Note that this is again a propositional definition. A boolean decider, which can then be extracted to L, can be derived in a straightforward way, though. The second condition captures the requirement of polynomial certificates: Valid certificates are only as long as they need to be. Nevertheless, it isn't straightforward to see that the requirement is actually fulfilled: It only works because the Scott encoding of natural numbers which we use is unary in nature. Since the encoding size of Booleans is constant, the encoding size of a minimal satisfying assignment is thus linear in the encoding size of the maximal variable used, which is part of the encoding of the CNF.
+Note that this is again a propositional definition. A Boolean decider, which can then be extracted to L, can be derived in a straightforward way, though. The second condition captures the requirement of polynomial certificates: Valid certificates are only as long as they need to be. Nevertheless, it isn't straightforward to see that the requirement is actually fulfilled: It only works because the Scott encoding of natural numbers which we use is unary in nature. Since the encoding size of Booleans is constant, the encoding size of a minimal satisfying assignment is thus linear in the encoding size of the maximal variable used, which is part of the encoding of the CNF.
 
 In order to derive that \textbf{SAT} is in NP, we need to show that:
 \begin{enumerate}
   \item $\textbf{SAT}~N \leftrightarrow \exists~a. \textsf{Ver}_{\textbf{SAT}}~N~a$,
-  \item the boolean version of $\textsf{Ver}_\textbf{SAT}$ runs in polynomial time in the encoding size of its two inputs,
+  \item the Boolean version of $\textsf{Ver}_\textbf{SAT}$ runs in polynomial time in the encoding size of its two inputs,
   \item $\textsf{Ver}_\textbf{SAT}$ only accepts certificates whose encoding size is polynomial in the encoding size of $N$.
 \end{enumerate}
 
@@ -265,7 +265,7 @@ The corresponding problem is $k$-\textbf{SAT}:
   \[$k$-\textbf{SAT}~N := \textsf{kCNF}~k~N \land \exists~a.\eval{a}{N} = \Some{\btrue} \]
 \end{definition}
 
-TODO: maybe show the reduction to SAT.
+A reduction of $k$-\textbf{SAT} to \textbf{SAT} can be easily obtained and formalised.
 
 \section{Clique}
 In this section, we formalise the \textbf{Clique} problem. 
@@ -293,6 +293,7 @@ We give Boolean deciders for node and edge containment:
 While our definition of the type \textsf{edge} works with pairs, we are giving it the semantics of an undirected graph.
 
 \subsection{Clique}
+TODO: add well-formedness as a requirement
 A $k$-clique is a duplicate-free list of $k$ nodes such that all pairwise-distinct nodes are connected.
 
 \begin{align*}
@@ -362,9 +363,10 @@ From the literal positions, we can restore the syntax of the literal:
 \begin{align*}
   \textsf{enumLiteral}~N~(cl, l) := \match N.cl ~\withl \Some{C} \Rightarrow C.l \withm \None \Rightarrow \None \withr 
 \end{align*}
+\[L~\textsf{inCnf}~N := \exists~C. C \in N \land L \in C \]
 \begin{proposition}[Correctness of \textsf{enumLiteral}]\label{prop:enumLiteralcorrect}\leavevmode
   \begin{enumerate}
-    \item $\normalfont\textsf{kCNF}~k~N \rightarrow cl < \length{N} \rightarrow l < k \rightarrow \exists~L. \normalfont\textsf{enumLiteral}~N~(cl, l) = \Some{L} $
+    \item $\normalfont\textsf{kCNF}~k~N \rightarrow cl < \length{N} \rightarrow l < k \rightarrow \exists~L. \normalfont\textsf{enumLiteral}~N~(cl, l) = \Some{L} \land L~\textsf{inCnf}~N $
     \item $\normalfont\textsf{kCNF}~k~N \rightarrow (\exists~L. \normalfont\textsf{enumLiteral}~N~(cl, l) = \Some{L}) \rightarrow cl < \length{N} \land l < k$
   \end{enumerate}
 \end{proposition}
@@ -380,7 +382,7 @@ Using literal positions, we can formalise what it means that two literals are pa
 We first define a relation $\redrel$ which connects positive \textbf{3SAT} instances to corresponding graphs. This relation abstracts away from specific syntactic properties of the graph, such as the order of the nodes or the order in which edges are stored. We show that two \textbf{3SAT} and \textbf{Clique} instances $N$ and $(g,k)$ which are related by this relation are equivalent, in the sense that one instance is an inhabitant of the problem iff the other instance is an inhabitant of the other problem: $N \redrel (g, k) \rightarrow (\textbf{SAT}~N \leftrightarrow \textbf{Clique}~(g, k))$.
 
 \begin{definition}
-  Let $N : \cnf$ and $((n, e), k) : \lgraph \times \nat$. $N$ and $(g, k)$ are related, written $N \sim^{\textbf{3SAT}}_{\textbf{Clique}} (g, k)$, iff 
+  Let $N : \cnf$ and $((n, e), k) : \lgraph \times \nat$. $N$ and $((n, e), k)$ are related, written $N \sim^{\textbf{3SAT}}_{\textbf{Clique}} ((n, e), k)$, iff 
   \begin{itemize} 
     \item $N$ is a 3-CNF: $\normalfont\textsf{kCNF}~3~N$
     \item $n = 3 \cdot \length{N} \land k = \length{N}$
@@ -398,7 +400,7 @@ TODO: maybe add well-formedness explicitly
 We show the above equivalence for related instances constructively, by explicitly constructing a clique for a satisfying assignment, and a satisfying assignment for a clique. 
 
 \subsection{Constructing a Clique From a Satisfying Assignment}
-We start with the construction of cliques. If we have an assignment $a$ satisfying the CNF $N$, the corresponding clique in a graph $g$ related by $\redrel$ consists of one node per clause which is satisfied by the assignment. The construction proceeds by recursively iterating over the CNF and checking which literal is satisfied. We have to keep track of the clause and literal indices while doing that.
+We start with the construction of cliques. If we have an assignment $a$ satisfying the CNF $N$, the corresponding clique in a graph $g$ related by $\redrel$ consists of one node per clause which is satisfied by the assignment. The construction proceeds by recursively iterating over the CNF and checking which literal is satisfied. We have to keep track of the clause and literal indices while doing so.
 
 \begin{align*}
   \textsf{constrCliCla'}~a~cl~[]~l &:= \None \\
@@ -467,7 +469,7 @@ While the above result isn't very helpful on its own, we get two important corol
 \end{proof}
 
 \subsection{Constructing a Satisfying Assignment From a Clique}
-In this subsection, we deal with the other direction of the equivalence. From a clique in a graph $g$ connected to a CNF $N$ via $\redrel$, we have to show the existence of a satisfying assignment. Again, we do this constructively by computing such an assignment. Due to the construction of $\redrel$, all members of a clique need to correspond to literals of different clauses, and all of these literals are non-conflicting. Thus we obtain a satisfying assignment by setting all these literals to $\btrue$ and assigning arbitrary values to all unaffected variables. 
+In this subsection, we deal with the other direction of the equivalence. Starting with a clique in a graph $g$ connected to a CNF $N$ via $\redrel$, we have to show the existence of a satisfying assignment. Again, we do this constructively by computing such an assignment. Due to the construction of $\redrel$, all members of a clique need to correspond to literals of different clauses, and all of these literals are non-conflicting. Thus we obtain a satisfying assignment by setting all these literals to $\btrue$ and assigning arbitrary values to all unaffected variables. 
 
 From a technical perspective, this direction is more involved: Due to the inherent asymmetry of $\redrel$, we have to directly reason about properties of the graph which are asserted by $\redrel$. We therefore proceed in four steps, changing the representation in each until we end up with a satisfying assignment:
 \begin{enumerate}
@@ -504,7 +506,7 @@ From the reduction relation, we get a number of straightforward properties:
 
   First of all, we can constructively do a proof by contradiction, i.e.\ assume that $\lnot(\exists~l. (k, l) \in \textsf{toPos}~cl)$, since the possible range of $l$ is finite by Lemma~\ref{prop:toPosbasic}, part 1.
 
-  It now suffices to show that there is a clause index that occurs twice in the output of \textsf{toPos}, $\textsf{rep}~(\textsf{map}~\textsf{fst}~(\textsf{toPos}~cl))$. For, if this is the case, there are indices $i_1, i_2$, a claue index $k'$ and literal indices $l_1, l_2$ such that
+  It now suffices to show that there is a clause index that occurs twice in the output of \textsf{toPos}, $\textsf{rep}~(\textsf{map}~\textsf{fst}~(\textsf{toPos}~cl))$. For, if this is the case, there are indices $i_1, i_2$, a clause index $k'$ and literal indices $l_1, l_2$ such that
   \[ i_1 \neq i_2 \land (\textsf{toPos}~cl).i_1 = \Some{(k', l_1)} \land (\textsf{toPos}~cl).i_2 = \Some{(k', l_2)}. \]
   Now, if $l_1 = l_2$, then there was a duplicate in the clique $cl$, since the labelling $f$ is injective; but this is a contradiction to the definition of a clique. Otherwise, $l_1 \neq l_2$ and we get a contradiction by Lemma~\ref{prop:toPosbasic}, part 3. 
 
@@ -516,7 +518,7 @@ From the reduction relation, we get a number of straightforward properties:
 \subsubsection{Mapping to Literals}
 Throughout this subsection, we assume that the list $posl$ is the output of \textsf{toPos} of the previous subsection, thus satisfying the properties proved for it.
 
-We define two functions which use \textsf{enumLiteral} to obtain the syntactic representations of literals reference by literal positions.
+We define two functions which use \textsf{enumLiteral} to obtain the syntactic representations of literals referenced by literal positions.
 
 \begin{align*}
   \textsf{toLit'}~posl &:= \textsf{map}~(\textsf{enumLiteral}~N)~posl \\
@@ -526,36 +528,170 @@ The function \textsf{toLit} strips away the option wrappers from the output of \
 
 \begin{lemma}\leavevmode
   \begin{enumerate}
-    \item $L' \in \textsf{toLit'}~posl \rightarrow \exists~L. L' = \Some{L}$
-    \item $p \in posl \rightarrow \textsf{enumLiteral}~c~a \neq \None$
-    \item $\textsf{map}~(\lambda x. \Some{x})~(\textsf{toLit}~posl) = \textsf{toLit'}~posl$
-    \item $L \in \textsf{toLit}~posl \rightarrow \exists~pos. pos \in posl \land \textsf{enumLiteral}~N~pos = \Some{L}$
-    \item $\Some{L} \in \textsf{toLit'}~posl \rightarrow L \in \textsf{toLit}~posl$
-    \item $L_1, L_2 \in \textsf{toLit}~posl \rightarrow \lnot (\textsf{conflict}~L_1~L_2)$
+    \item $L' \in \normalfont\textsf{toLit'}~posl \rightarrow \exists~L. L' = \Some{L}$
+    \item $p \in posl \rightarrow \normalfont\textsf{enumLiteral}~c~a \neq \None$
+    \item $L \in \normalfont\textsf{toLit}~posl \rightarrow L~\normalfont\textsf{inCnf}~N$
+    \item $L \in \normalfont\textsf{toLit}~posl \rightarrow \exists~pos. pos \in posl \land \normalfont\textsf{enumLiteral}~N~pos = \Some{L}$
+    \item $\Some{L} \in \normalfont\textsf{toLit'}~posl \rightarrow L \in \normalfont\textsf{toLit}~posl$
+    \item $L_1, L_2 \in \normalfont\textsf{toLit}~posl \rightarrow \lnot (\normalfont\textsf{conflict}~L_1~L_2)$
   \end{enumerate}
 \end{lemma}
 \begin{proof}
   All of the statements follow straightforwardly from the definitions.
 \end{proof}
 
-\begin{lemma} Satisfying the literals given by \textsf{toLit} is enough to obtain a satisfying assignment.
-  $(\forall L \in \textsf{toLit}~posl. \eval{a}{L} = \Some{\btrue}) \rightarrow N \prec \length{a} \rightarrow \eval{a}{N} = \Some{\btrue}$
+\begin{lemma} Satisfying the literals given by \normalfont\textsf{toLit} is enough to obtain a satisfying assignment.
+  $(\forall L \in \normalfont\textsf{toLit}~posl.~\eval{a}{L} = \Some{\btrue}) \rightarrow N \prec \length{a} \rightarrow \eval{a}{N} = \Some{\btrue}$
 \end{lemma}
 \begin{proof}
   We use the characterisation of evaluation given by Lemma~\ref{prop:evalclauseiff}. 
   The statement then needs to be strenghtened in order to obtain additional information on the index of the clauses:
-  \[\forall n < \length{N}. \exists~$C$. N.n = \Some{C} \land \eval{a}{C} = \Some{\btrue} \]
+  \[\forall n < \length{N}. \exists~$C$.~N.n = \Some{C} \land \eval{a}{C} = \Some{\btrue} \]
   Using Lemma~\ref{prop:evalclauseiff}, the rest of the proof is easy.
 \end{proof}
 
 \subsubsection{Expanding to a Full Assignment}
-TODO
+The only thing that is left to do is to expand a partial assignment $A : \listsof{\literal}$ given by a list of non-conflicting literals which should be satisfied to a full assignment $a$. For this, we define a recursive function which takes a variable index $\mathit{largestVar}$ up to which the constructed assignment should be valid and a partial assignment $p$. We again assume that $p$ satisfies the properties proved for the output of $\textsf{toPos}$ in the previous subsection.
+\begin{align*}
+  \textsf{lookup}~m~[] &:= \None \\
+  \textsf{lookup}~m~((s, n)::p) &:= \ITE{\eqb{n}{m}}{\Some{s}}{\textsf{lookup}~m~p} 
+\end{align*}
+\begin{align*}
+  \textsf{expand}~\mathit{largestVar}~p := &(\match \mathit{largestVar} ~\withl 0 \Rightarrow [] \withm S~l \Rightarrow \textsf{expand}~l~p \withr) \\
+  &\con [\match \textsf{lookup}~\mathit{largestVar}~p ~\withl \Some~b \Rightarrow b \withm \None \Rightarrow \bfalse \withr]
+\end{align*}
+
+\begin{proposition}
+  The value returned by \normalfont\textsf{lookup} is the first value of the list $l$ for which the associated variable matches the requested variable $n$.
+  \begin{align*}
+    \normalfont\textsf{lookup}~n~l = \Some{s} \leftrightarrow \exists~i.~l.i = \Some{(s, n)} \land \forall j. j < i \rightarrow \forall s'.~l.j \neq \Some{(s', n)}
+  \end{align*}
+\end{proposition}
+
+\begin{lemma}\label{prop:expandtech}\leavevmode
+  \begin{enumerate}
+    \item $\length{\normalfont\textsf{expand}~\mathit{lV}~p} = \natS{\mathit{lV}}$
+    \item $\normalfont\textsf{expand}~(\natS{lV})~p = \normalfont\textsf{expand}~lV~p \con [\match \normalfont\textsf{lookup}~(\natS{lV})~p ~\withl \Some b \Rightarrow b \withm \None \Rightarrow \bfalse \withr]$
+    \item $m \le lV \rightarrow (\normalfont\textsf{expand}~lV~p).m = \Some{(\match \normalfont\textsf{lookup}~m~p ~\withl \Some{b} \Rightarrow b \withm \None \Rightarrow \bfalse \withr)}$
+    \item $m \neq n \rightarrow m \le lV \rightarrow (\normalfont\textsf{expand}~lV~((s, n) :: p)).m = (\normalfont\textsf{expand}~lV~p).m$
+    \item $\begin{aligned}[t]
+        m \le lV \rightarrow & (n = m \rightarrow (\normalfont\textsf{expand}~lV~((s, n) :: p)).m = \Some{s}) \\
+      \land & (n \neq m \rightarrow (\normalfont\textsf{expand}~lV~((s, n) :: p)).m = (\normalfont\textsf{expand}~lV~p).m)
+    \end{aligned}
+    $
+  \item $p.i = \Some{(s, n)} \rightarrow (\forall j < i.~p.j \neq \Some{(\notb{s}, n)}) \rightarrow n \le lV \rightarrow (\normalfont\textsf{expand}~lV~p).n = \Some{s}$
+  \end{enumerate}
+\end{lemma}
+\begin{proof}
+  \begin{enumerate}
+    \item By induction on $lV$.
+    \item By induction on $lV$.
+    \item By induction on $lV$, doing a case analysis on $\eqb{m}{\natS{lV}}$ in the inductive step. Fact 1 is used repeatedly.
+    \item The second part of the conjunction is statement 3. The first part is proved by induction on $lV$, doing a case analysis on $\eqb{0}{n}$ and $\eqb{m}{\natS{lV}}$. Statements 1 and 2 are needed. 
+    \item By induction on $p$, using statements 4 and 5 and doing several case analyses.
+  \end{enumerate}
+\end{proof}
+
+\begin{corollary}
+  The expanded assignment satisfies the CNF. 
+  \begin{enumerate}
+    \item $p \prec (\natS{lV}) \rightarrow L \in p \rightarrow \eval{(\normalfont\textsf{expand}~lV~p)}{L} = \Some{\btrue}$
+    \item $N \prec (\natS{lV}) \rightarrow p \prec(\natS{lV}) \rightarrow \eval{(\normalfont\textsf{expand}~lV~p)}{N} = \Some{\btrue}$
+  \end{enumerate}
+\end{corollary}
+\begin{proof}
+  \begin{enumerate}
+    \item By Lemma~\ref{prop:expandtech}, parts 1 and 6.
+    \item Directly from part 1 and the assumptions on $p$.
+  \end{enumerate}
+\end{proof}
+
+We now obtain the final result of this subsection:
+\begin{lemma}\label{prop:redrelreduces}
+  Let $N : \cnf$, $g : \lgraph$ and $k : \nat$. 
+  \[N \redrel (g, k) \rightarrow (\textbf{kSAT}~3~N \leftrightarrow \textbf{Clique}~(g, k)) \]
+\end{lemma}
 
 \subsection{The Reduction Function}
-TODO
+Now that we have shown that it is sufficient to satisfy the reduction relation $\redrel$ in order to get a reduction from \textbf{3SAT} to \textbf{Clique}, we have to construct a function computing a graph from a CNF obeying this relation and which can be extracted to L and runs in polynomial time.
+
+Writing such a function is straightforward: The main work is generating the graph's edges. We iterate over the literals, from left to right. For each literal, we iterate over all literals in clauses to the right of it\footnote{this suffices since we are working with undirected graphs}. If a pair of literals is non-conflicting, we add an edge.
+Since the function $\textsf{makeEdges}: \cnf \rightarrow \listsof{\ledge}$ has to keep track of the literal indices, its definition is nevertheless quite technical and we therefore omit it. 
+
+The final reduction is given by 
+\begin{align*}
+\textsf{red}~N := (\ITE{\textsf{kCNF\_dec}~3~N}{(3 \cdot \length{N}, \textsf{makeEdges}~N)}{(0, [])}, \length{N}), 
+\end{align*}
+where \textsf{kCNF\_dec} is a Boolean decider for the \textsf{kCNF} predicate. If the input CNF is not valid, we output an empty graph. Since $\length{N} > 0$ in such a case, the resulting \textbf{Clique} instance is not positive, too.
+
+The labelling we use is in line with the above description of \textsf{makeEdges}:
+\begin{align*}
+  labF~n := (n/3, n~\text{mod}~3) && labF^{-1}~(cl, l) := 3 \cdot cl + l
+\end{align*}
+  
+\begin{proposition}
+  Let $N$ be a CNF. 
+  \[\normalfont\textsf{isLabelling}~N~labF~labF^{-1} \]
+\end{proposition}
+
+Because of the conversion between syntactical literals and literal positions, the verification of \textsf{makeEdges} is very technical. We only state the final result:
+\begin{lemma}
+  \begin{align*}
+    \normalfont\textsf{edgeIn}~(3\cdot \length{N}, &\normalfont\textsf{makeEdges}~N)~a~b = \btrue \leftrightarrow \exists~L,L'. \normalfont\textsf{enumLiteral}~N~(labF~a) = \Some{L} \\
+    &\land \normalfont\textsf{enumLiteral}~N~(labF~b) = \Some{L'} \land \normalfont\textsf{diffClause}~L~L' \land \lnot(\normalfont\textsf{conflict}~L~L')
+  \end{align*}
+\end{lemma}
+
+Now it is easy to show that $\redrel$ is satisfied:
+\begin{corollary}\label{prop:redredrel}
+  $\normalfont\textsf{kCNF}~3~N \rightarrow N \redrel (\normalfont\textsf{red}~N) $
+\end{corollary}
+
+It remains to show that a) \textsf{red} runs in polynomial time and b) the output produced by \textsf{red} has a size polynomial in the size of the input CNF\footnote{It does not suffice to show that \textsf{red} runs in polynomial time, since ``space bounds time'' does not hold for L, in contrast to Turing machines.}. Both proofs are straightforward.
 
 \section{Running-time Bounds and Coq formalisation}
+In this section, we briefly comment on the derivation of the running time bounds. As mentioned in the introduction, the extraction mechanism developed by Forster and Kunze~\cite{ForsterKunze:2019:Certifying-extraction} enables us to give running time bounds solving automatically generated recurrences. These running time functions need not be in a closed form, but can be recursive. Moreover, the bounds are not functions of the encoding size of the arguments, but functions of the arguments themselves. 
+In the end, though, we need to show that some function runs in polynomial time in the encoding size of its arguments. 
+
+After deriving the time bounds given by the extraction process, we therefore usually prove a lemma providing polynomial time bounds in the encoding size. These lemmas always take the same form. If the function we are analysing is a higher-order function, the time bound will be conditional on a polynomial bound for its argument function. Then we show the existence of $f : \nat \rightarrow \nat$, that, given the sum of the encoding sizes of the function's arguments, computes a bound on the number of steps required, and is polynomial and monotonic. Special care needs to be taken for higher-order functions since the argument function might capture part of the environment, which will then influence the running time. 
+
+As an example, we consider the function \textsf{forallb}, checking if a Boolean predicate holds for all elements of a list:
+\begin{align*}
+  \textsf{forallb}~(f : A \rightarrow \bool)~[] &:= \btrue \\
+  \textsf{forallb}~(f : A \rightarrow \bool)~(l::ls) &:= {f~a}~\andb~{\textsf{forallb}~f~ls}
+\end{align*}
+
+Instantiating the recurrences we get during extraction results in a non-closed running time function which has direct access to the arguments:
+\begin{align*}
+  \textsf{forallb\_time}~(fT : A \rightarrow \nat)~l := \textsf{foldr}~(\lambda~el~acc.~fT~el + acc + 15)~8~l 
+\end{align*}
+The running time depends on the running time of the Boolean predicate. The appearing constants reflect the number of reduction steps required by the extracted L term.
+
+The running time lemma we then prove is\footnote{The definitions of \textsf{inOPoly} and \textsf{monotonic} are just what one would expect them to be.}:
+\begin{alignat*}{1}
+  &\forall (fT : E \rightarrow A \rightarrow \nat). (\exists (f : \nat \rightarrow \nat). (\forall el, env. fT~env~el \le f(size(enc~el) + size(enc~env))) \\
+  & \quad \land \textsf{inOPoly}~f \land \textsf{monotonic}~f) \\
+  &\rightarrow \exists (f : \nat \rightarrow \nat). (\forall l, env.~\textsf{forallb\_time}~(fT~env)~l \le f(size(enc~l) + size(enc~env))) \\
+  &\quad \land \textsf{inOPoly}~f \land \textsf{monotonic}~f
+\end{alignat*}
+
+The proves are usually relatively mechanic, but require an induction on the object the function recurses on, using suitable rewriting with facts about the encoding size of objects. We believe that most of the proofs could be automated, but this would entail a considerable effort for developing suitable procedures.
+
+Some functions need additional assumptions in order to derive bounds. For instance, for \textsf{foldr} we assume that the output size of the aggregation function is only growing by an additive constant:
+\[ \exists~c. \forall acc, el, env. size(enc (step~env~el~acc)) \le size(enc~acc) + size(enc~el) + size(enc~env) + c \]
+Even a relaxation to linear functions would not work since the size could then be doubled in each step.
+The derivation of bounds for tail-recursive functions like \textsf{foldl} is, for this reason, rather unpleasant and requires a non-trivial strengthening of the inductive statement.
 
 \section{Closing Remarks}
+The proof presented in this memo stays conceptually very close to the usual proof on paper, and is rather monolithic. A disadvantage of this technique is that most of the proofs work very closely with the representation of CNFs and graphs. Especially the verification of the \textsf{makeEdges} function is somewhat technical because of the required enumeration of literals and the direct recursion over the CNF when constructing edges.
+
+One reason for the technical overhead is the fact that literals in a CNF are not uniquely identified by their syntax. This required us to work with literal positions and indices. In hindsight, it might have been smarter to reduce \textbf{SAT} to an intermediate problem where each literal is annotated with its position, correcting for the lack of uniqueness.
+
+We don't believe the approach taken here will scale well to more complex reductions. Some reductions admit a nice ``gadget structure'', allowing to build and verify individual gadgets and composition functions. Of course, such a fine-grained approach is not possible for all constructions -- for instance, due to the ``global'' character of the construction of the graph for the reduction to \textbf{Clique}, we don't believe that a significantly more clever approach is possible for formalising the construction presented here.
+
+Another path for improvement lies in abstracting away from specific representations and the iteration over these presentations. One possible approach would be to use abstract iterator functions taking relations as argument which describe the desired output in a more abstract way. The challenge with such abstractions lies with ensuring extractability to L and nice running time bounds. 
+
+\bibliography{memo}{}
+
 
 \end{document}
