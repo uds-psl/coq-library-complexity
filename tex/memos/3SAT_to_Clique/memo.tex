@@ -561,7 +561,7 @@ The only thing that is left to do is to expand a partial assignment $A : \listso
   &\con [\match \textsf{lookup}~\mathit{largestVar}~p ~\withl \Some~b \Rightarrow b \withm \None \Rightarrow \bfalse \withr]
 \end{align*}
 
-\begin{proposition}
+\begin{proposition}\label{prop:lookupiff}
   The value returned by \normalfont\textsf{lookup} is the first value of the list $l$ for which the associated variable matches the requested variable $n$.
   \begin{align*}
     \normalfont\textsf{lookup}~n~l = \Some{s} \leftrightarrow \exists~i.~l.i = \Some{(s, n)} \land \forall j. j < i \rightarrow \forall s'.~l.j \neq \Some{(s', n)}
@@ -587,7 +587,8 @@ The only thing that is left to do is to expand a partial assignment $A : \listso
     \item By induction on $lV$.
     \item By induction on $lV$.
     \item By induction on $lV$, doing a case analysis on $\eqb{m}{\natS{lV}}$ in the inductive step. Fact 1 is used repeatedly.
-    \item The second part of the conjunction is statement 3. The first part is proved by induction on $lV$, doing a case analysis on $\eqb{0}{n}$ and $\eqb{m}{\natS{lV}}$. Statements 1 and 2 are needed. 
+    \item By repeated case analyses on the result of \textsf{lookup} and using Proposition~\ref{prop:lookupiff}.
+    \item The second part of the conjunction is statement 4. The first part is proved by induction on $lV$, doing a case analysis on $\eqb{0}{n}$ and $\eqb{m}{\natS{lV}}$. Statements 1 and 2 are needed. 
     \item By induction on $p$, using statements 4 and 5 and doing several case analyses.
   \end{enumerate}
 \end{proof}
@@ -675,7 +676,7 @@ The running time lemma we then prove is\footnote{The definitions of \textsf{inOP
   &\quad \land \textsf{inOPoly}~f \land \textsf{monotonic}~f
 \end{alignat*}
 
-The proves are usually relatively mechanic, but require an induction on the object the function recurses on, using suitable rewriting with facts about the encoding size of objects. We believe that most of the proofs could be automated, but this would entail a considerable effort for developing suitable procedures.
+The proofs are usually relatively mechanical, but require an induction on the object the function recurses on, using rewriting with facts about the encoding size of objects. We believe that most of the proofs could be automated, but this would entail a considerable effort for developing suitable procedures.
 
 Some functions need additional assumptions in order to derive bounds. For instance, for \textsf{foldr} we assume that the output size of the aggregation function is only growing by an additive constant:
 \[ \exists~c. \forall acc, el, env. size(enc (step~env~el~acc)) \le size(enc~acc) + size(enc~el) + size(enc~env) + c \]
