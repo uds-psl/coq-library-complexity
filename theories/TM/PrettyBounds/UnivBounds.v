@@ -27,10 +27,9 @@ Module Univ_nice.
 
   Section LookupAssociativeList_nice.
 
-    Variable (sigX sigY : Type) (X : eqType) (Y : Type) (cX : codable sigX X) (cY : codable sigY Y).
 
     Lemma Lookup_Step_steps_Compare_nice :
-      { c | forall (x x' : X) (y : Y) (xs : list (X * Y)),
+      { c | forall (sigX sigY : Type) (X : eqType) (Y : Type) (cX : codable sigX X) (cY : codable sigY Y) (x x' : X) (y : Y) (xs : list (X * Y)),
           Lookup_Step_steps_Compare x x' y xs
           <=(c)
              if Dec (x=x')
@@ -39,16 +38,16 @@ Module Univ_nice.
     Proof.
       eexists. intros. unfold Lookup_Step_steps_Compare. domWith_match.
       - subst. clear H. ring_simplify. domWith_approx.
-        + eapply dominatedWith_trans. eapply (proj2_sig (MoveValue_steps_nice cY cX) y x'). apply dominatedWith_solve. omega.
-        + eapply dominatedWith_trans. eapply (proj2_sig (Reset_steps_nice _)). apply dominatedWith_solve. omega.
-        + eapply dominatedWith_trans. eapply (proj2_sig (Reset_steps_nice _)). apply dominatedWith_solve. omega.
+        + eapply dominatedWith_trans. eapply (proj2_sig MoveValue_steps_nice). apply dominatedWith_solve. omega.
+        + eapply dominatedWith_trans. eapply (proj2_sig Reset_steps_nice). apply dominatedWith_solve. omega.
+        + eapply dominatedWith_trans. eapply (proj2_sig Reset_steps_nice). apply dominatedWith_solve. omega.
       - ring_simplify. domWith_approx.
-        + eapply dominatedWith_trans. eapply (proj2_sig (Reset_steps_nice _)). apply dominatedWith_solve. omega.
-        + eapply dominatedWith_trans. eapply (proj2_sig (Reset_steps_nice _)). apply dominatedWith_solve. omega.
+        + eapply dominatedWith_trans. eapply (proj2_sig Reset_steps_nice). apply dominatedWith_solve. omega.
+        + eapply dominatedWith_trans. eapply (proj2_sig Reset_steps_nice). apply dominatedWith_solve. omega.
     Qed.
 
     Lemma Lookup_Step_steps_CaseList_nice :
-      { c | forall (xs : list (X * Y)) (x : X),
+      { c | forall (sigX sigY : Type) (X : eqType) (Y : Type) (cX : codable sigX X) (cY : codable sigY Y)  (xs : list (X * Y)) (x : X),
           Lookup_Step_steps_CaseList xs x
           <=(c)
              match xs with
@@ -61,10 +60,10 @@ Module Univ_nice.
     Proof.
       eexists. intros. unfold Lookup_Step_steps_CaseList. domWith_match. domWith_approx. rename H into EqXs, xs0 into xs'. destruct x0 as (x',y).
       ring_simplify. apply dominatedWith_add_r. 1: domWith_approx.
-      - eapply dominatedWith_trans. apply (proj2_sig (CompareValues_steps_nice _)). decide (x = x') as [ -> | Hd].
+      - eapply dominatedWith_trans. apply (proj2_sig CompareValues_steps_nice). decide (x = x') as [ -> | Hd].
         + apply dominatedWith_solve. rewrite Encode_list_hasSize. cbn. rewrite Encode_pair_hasSize. cbn. omega.
         + apply dominatedWith_solve. omega.
-      - eapply dominatedWith_trans. apply (proj2_sig (CasePair_steps_nice _)). decide (x = x') as [ -> | Hd].
+      - eapply dominatedWith_trans. apply (proj2_sig CasePair_steps_nice). decide (x = x') as [ -> | Hd].
         + apply dominatedWith_solve. rewrite Encode_list_hasSize. cbn. rewrite Encode_pair_hasSize. cbn. omega.
         + apply dominatedWith_solve. omega.
       - eapply dominatedWith_trans. apply (proj2_sig Lookup_Step_steps_Compare_nice). decide (x = x') as [ -> | Hd].
@@ -74,7 +73,7 @@ Module Univ_nice.
     Qed.
 
     Lemma Lookup_Step_steps_nice :
-      { c | forall (xs : list (X * Y)) (x : X),
+      { c | forall (sigX sigY : Type) (X : eqType) (Y : Type) (cX : codable sigX X) (cY : codable sigY Y) (xs : list (X * Y)) (x : X),
           Lookup_Step_steps xs x
           <=(c)
              match xs with
@@ -86,7 +85,7 @@ Module Univ_nice.
              end }.
     Proof.
       eexists. intros. unfold Lookup_Step_steps. ring_simplify. apply dominatedWith_add_r. 1: domWith_approx.
-      - eapply dominatedWith_trans. apply (proj2_sig (CaseList_steps_nice _)). destruct xs as [ | (x',y) ? ].
+      - eapply dominatedWith_trans. apply (proj2_sig CaseList_steps_nice). destruct xs as [ | (x',y) ? ].
         + domWith_approx.
         + apply dominatedWith_solve. rewrite Encode_list_hasSize. cbn. rewrite Encode_pair_hasSize. cbn. decide (x = x') as [ -> | Hd]; omega.
       - eapply dominatedWith_trans. apply (proj2_sig (Lookup_Step_steps_CaseList_nice)). destruct xs as [ | (x',y) ? ].
@@ -96,7 +95,7 @@ Module Univ_nice.
     Qed.
 
     Lemma Lookup_Step_steps_nice' :
-      { c | forall (xs : list (X * Y)) (x : X),
+      { c | forall (sigX sigY : Type) (X : eqType) (Y : Type) (cX : codable sigX X) (cY : codable sigY Y)  (xs : list (X * Y)) (x : X),
           Lookup_Step_steps xs x
           <=(c)
              match xs with
@@ -116,7 +115,7 @@ Module Univ_nice.
         + hnf. rewrite Encode_pair_hasSize. cbn. omega.
     Qed.
 
-    Lemma Lookup_Loop_steps_eq (x : X) (xs : list (X*Y)) :
+    Lemma Lookup_Loop_steps_eq (sigX sigY : Type) (X : eqType) (Y : Type) (cX : codable sigX X) (cY : codable sigY Y) (x : X) (xs : list (X*Y)) :
       Lookup_Loop_steps x xs =
       match xs with
       | nil => Lookup_Step_steps xs x
@@ -127,7 +126,7 @@ Module Univ_nice.
     Proof. now destruct xs. Qed.
 
     Lemma Lookup_Loop_steps_nice' :
-      { c | forall (x : X) (xs : list (X*Y)), Lookup_Loop_steps x xs <=(c) (size x + 1) * (size xs + 1) }.
+      { c | forall (sigX sigY : Type) (X : eqType) (Y : Type) (cX : codable sigX X) (cY : codable sigY Y)  (x : X) (xs : list (X*Y)), Lookup_Loop_steps x xs <=(c) (size x + 1) * (size xs + 1) }.
     Proof.
       pose_nice Lookup_Step_steps_nice' Hc_Step c_Step.
       exists (c_Step + 1). intros. induction xs as [ | (x',y) xs' IH]; cbn [Lookup_Step_steps] in *.
@@ -136,7 +135,7 @@ Module Univ_nice.
         + hnf. apply Hc_Step.
         + apply dominatedWith_solve. unfold size. cbn. omega.
           Unshelve. omega.
-      - rewrite Lookup_Loop_steps_eq. specialize (Hc_Step ((x',y) :: xs') x). cbn [Lookup_Loop_steps] in *. decide (x = x') as [ Heq | Hd].
+      - rewrite Lookup_Loop_steps_eq. specialize Hc_Step with (xs:= ((x',y) :: xs')) (x:=x). cbn [Lookup_Loop_steps] in *. decide (x = x') as [ Heq | Hd].
         + hnf. rewrite Hc_Step. ring_simplify. clear_all. nia.
         + hnf. rewrite Hc_Step. hnf in IH. rewrite IH. ring_simplify. rewrite !Encode_list_hasSize. cbn. ring_simplify. clear_all. nia.
     Qed.
@@ -144,7 +143,7 @@ Module Univ_nice.
     (* Hypothesis (size_X_ge1 : forall (x : X), 1 <= size x). *)
 
     Lemma Lookup_Loop_steps_nice :
-      { c | forall (x : X) (xs : list (X*Y)), Lookup_Loop_steps x xs <=(c) (size x + 1) * size xs }.
+      { c | forall (sigX sigY : Type) (X : eqType) (Y : Type) (cX : codable sigX X) (cY : codable sigY Y) (x : X) (xs : list (X*Y)), Lookup_Loop_steps x xs <=(c) (size x + 1) * size xs }.
     Proof.
       eexists. intros. eapply dominatedWith_trans. apply (proj2_sig Lookup_Loop_steps_nice'). ring_simplify. domWith_approx.
       - apply dominatedWith_solve. enough (1 <= size xs) by nia. rewrite Encode_list_hasSize. apply Encode_list_hasSize_ge1.
@@ -156,18 +155,16 @@ Module Univ_nice.
     Qed.
 
     Lemma Lookup_steps_nice :
-      { c | forall (x : X) (xs : list (X*Y)), Lookup_steps x xs <=(c) (size x + 1) * size xs }.
+      { c | forall (sigX sigY : Type) (X : eqType) (Y : Type) (cX : codable sigX X) (cY : codable sigY Y)  (x : X) (xs : list (X*Y)), Lookup_steps x xs <=(c) (size x + 1) * size xs }.
     Proof.
       eexists. intros. unfold Lookup_steps. ring_simplify. apply dominatedWith_add_r. domWith_approx.
-      - eapply dominatedWith_trans. apply (proj2_sig (CopyValue_steps_nice _)). domWith_approx. apply dominatedWith_solve. enough (1 <= size xs) by nia. rewrite Encode_list_hasSize. apply Encode_list_hasSize_ge1.
+      - eapply dominatedWith_trans. apply (proj2_sig CopyValue_steps_nice). domWith_approx. apply dominatedWith_solve. enough (1 <= size xs) by nia. rewrite Encode_list_hasSize. apply Encode_list_hasSize_ge1.
       - eapply dominatedWith_trans. apply (proj2_sig (Lookup_Loop_steps_nice)). domWith_approx.
       - enough (1 <= size xs) by nia. rewrite Encode_list_hasSize. apply Encode_list_hasSize_ge1.
     Qed.
 
-    Hypothesis (size_X_ge1 : forall (x : X), 1 <= size x).
-
     Lemma Lookup_steps_nice' :
-      { c | forall (x : X) (xs : list (X*Y)), Lookup_steps x xs <=(c) size x * size xs }.
+      { c | forall (sigX sigY : Type) (X : eqType) (Y : Type) (cX : codable sigX X) (cY : codable sigY Y) (x : X) (xs : list (X*Y)) (size_X_ge1 : forall (x : X), 1 <= size x), Lookup_steps x xs <=(c) size x * size xs }.
     Proof.
       eexists. intros. eapply dominatedWith_trans. apply (proj2_sig Lookup_steps_nice). ring_simplify. domWith_approx.
       apply dominatedWith_solve. enough (1 <= size x) by nia. apply size_X_ge1.
@@ -260,9 +257,8 @@ Module Univ_nice.
     (** Note that [Univ] actually needs to be instantiated with some retraction, but we don't need to do it here for the running time bounds *)
 
     (** The alphabet of the simulated machine *)
-    Variable (sigM : finType).
+    Implicit Type (sigM : finType).
     (** The simulated machine *)
-    Implicit Type  (M : mTM sigM 1).
 
 
     Lemma DoAction'_steps_nice :
@@ -275,36 +271,36 @@ Module Univ_nice.
 
 
     Lemma Univ_Step_steps_CasePair_nice :
-      { c | forall (a : option sigM * move), Univ_Step_steps_CasePair a <=(c) 1 }.
+      { c | forall sigM (a : option sigM * move), Univ_Step_steps_CasePair a <=(c) 1 }.
     Proof.
-      eexists. unfold Univ_Step_steps_CasePair. intros (w,m). eapply dominatedWith_trans. apply (proj2_sig (CasePair_steps_nice _)).
+      eexists. intros ?. unfold Univ_Step_steps_CasePair. intros (w,m). eapply dominatedWith_trans. apply (proj2_sig CasePair_steps_nice).
       domWith_approx. apply dominatedWith_solve. reflexivity.
     Qed.
 
-    Definition number_of_states M: nat := length (enum (states M)).
+    Definition number_of_states sigM (M : mTM sigM 1): nat := length (enum (states M)).
 
-    Lemma size_state_index_lt M (q : states M) : size (index q) < size (number_of_states M).
+    Lemma size_state_index_lt sigM (M : mTM sigM 1) (q : states M) : size (index q) < size (number_of_states M).
     Proof. hnf. rewrite !Encode_nat_hasSize. enough (index q < (number_of_states M)) by omega. apply index_le. Qed.
 
-    Lemma size_state_index_le M (q : states M) : size (index q) <= size (number_of_states M).
+    Lemma size_state_index_le sigM (M : mTM sigM 1) (q : states M) : size (index q) <= size (number_of_states M).
     Proof. apply Nat.lt_le_incl. apply size_state_index_lt. Qed.
 
     Lemma Univ_Step_steps_ConstrPair_nice :
-      { c | forall (tp : tape sigM), Univ_Step_steps_ConstrPair tp <=(c) 1 }.
+      { c | forall sigM (tp : tape sigM), Univ_Step_steps_ConstrPair tp <=(c) 1 }.
     Proof.
-      eexists. intros. unfold Univ_Step_steps_ConstrPair. eapply dominatedWith_trans. apply (proj2_sig (Constr_pair_steps_nice _)).
+      eexists. intros. unfold Univ_Step_steps_ConstrPair. eapply dominatedWith_trans. apply (proj2_sig Constr_pair_steps_nice).
       domWith_approx. apply dominatedWith_solve. reflexivity.
     Qed.
 
     Lemma Univ_Step_steps_ResetSymbol_nice :
-      { c | forall (tp : tape sigM), Univ_Step_steps_ResetSymbol tp <=(c) 1 }.
+      { c | forall sigM (tp : tape sigM), Univ_Step_steps_ResetSymbol tp <=(c) 1 }.
     Proof.
-      eexists. intros. unfold Univ_Step_steps_ResetSymbol. eapply dominatedWith_trans. apply (proj2_sig (Reset_steps_nice _)).
+      eexists. intros. unfold Univ_Step_steps_ResetSymbol. eapply dominatedWith_trans. apply (proj2_sig Reset_steps_nice).
       domWith_approx. apply dominatedWith_solve. reflexivity.
     Qed.
 
 
-    Lemma Encode_state_hasSize (M : mTM sigM 1) (q : states M) :
+    Lemma Encode_state_hasSize sigM (M : mTM sigM 1) (q : states M) :
       size (halt q, index q) <= size (number_of_states M).
     Proof.
       setoid_rewrite Encode_pair_hasSize. cbn. setoid_rewrite Encode_bool_hasSize. cbn. hnf.
@@ -315,7 +311,7 @@ Module Univ_nice.
       { c | forall (b : bool), IsFinal_steps b <=(c) 1 }.
     Proof.
       eexists. intros. unfold IsFinal_steps. ring_simplify. apply dominatedWith_add_r; [ domWith_approx | reflexivity ].
-      eapply dominatedWith_trans. apply (proj2_sig (CasePair_steps_nice _)). domWith_approx.
+      eapply dominatedWith_trans. apply (proj2_sig CasePair_steps_nice). domWith_approx.
       rewrite Encode_bool_hasSize. domWith_approx.
     Qed.
 
@@ -325,7 +321,7 @@ Module Univ_nice.
       length (graph_of_fun f) = length (enum A).
     Proof. unfold graph_of_fun. now simpl_list. Qed.
 
-    Lemma length_graph_is_number_of_states (M : mTM sigM 1):
+    Lemma length_graph_is_number_of_states sigM (M : mTM sigM 1):
       length (graph_of_TM M) = (number_of_states M) * (1 + length (elem sigM)).
     Proof.
       unfold graph_of_TM, number_of_states. simpl_list. setoid_rewrite graph_of_fun_length. cbn -[enum]. cbn. simpl_list.
@@ -350,7 +346,7 @@ Module Univ_nice.
       nia.
     Qed.*)
 
-    Lemma Encode_graph_hasSize_ge1 (M : mTM sigM 1):
+    Lemma Encode_graph_hasSize_ge1 sigM (M : mTM sigM 1):
       1 <= size (graph_of_TM M).
     Proof. setoid_rewrite Encode_list_hasSize. apply Encode_list_hasSize_ge1. Qed.
 (*
@@ -366,9 +362,9 @@ Module Univ_nice.
     Qed. *)
 
     Lemma Univ_Step_steps_Lookup_nice :
-      { c | forall (M : mTM sigM 1) (q : states M) (tp : tape sigM), Univ_Step_steps_Lookup q tp <=(c) size (number_of_states M) * size (graph_of_TM M) }.
+      { c | forall sigM (M : mTM sigM 1) (q : states M) (tp : tape sigM), Univ_Step_steps_Lookup q tp <=(c) size (number_of_states M) * size (graph_of_TM M) }.
     Proof.
-      eexists. unfold Univ_Step_steps_Lookup. intros. eapply dominatedWith_trans. simple notypeclasses refine (proj2_sig (Lookup_steps_nice' _ _) _ _).
+      eexists. unfold Univ_Step_steps_Lookup. intros. eapply dominatedWith_trans. eapply (proj2_sig Lookup_steps_nice').
       - intros (s,(f,i)). setoid_rewrite Encode_pair_hasSize. cbn. setoid_rewrite Encode_bool_hasSize. omega. constructor. (* this is odd *)
       - setoid_rewrite Encode_pair_hasSize; cbn [Encode_pair_size]. setoid_rewrite Encode_Finite_hasSize. ring_simplify. domWith_approx.
         + apply dominatedWith_solve. setoid_rewrite Encode_state_hasSize.
@@ -377,17 +373,17 @@ Module Univ_nice.
     Qed.
 
     Lemma Univ_Step_steps_Translate_nice :
-      { c | forall (M : mTM sigM 1) (q : states M), Univ_Step_steps_Translate q <=(c) size (number_of_states M) }.
+      { c | forall sigM (M : mTM sigM 1) (q : states M), Univ_Step_steps_Translate q <=(c) size (number_of_states M) }.
     Proof.
       eexists. unfold Univ_Step_steps_Translate. intros.
-      eapply dominatedWith_trans. apply (proj2_sig (Translate_steps_nice _)).
+      eapply dominatedWith_trans. apply (proj2_sig Translate_steps_nice).
       rewrite Encode_pair_hasSize. cbn. rewrite Encode_bool_hasSize. ring_simplify. domWith_approx.
       - apply dominatedWith_solve. apply size_state_index_le.
       - instantiate (1 := 2). hnf. enough (1 <= size (number_of_states M)) by omega. apply Encode_nat_hasSize_ge1.
     Qed.
 
     Lemma Univ_Step_steps_IsFinal_nice :
-      { c | forall M (q : states M) (tp : tape sigM),
+      { c | forall sigM M (q : states M) (tp : tape sigM),
           Univ_Step_steps_IsFinal q tp
           <=(c)
              if halt q
@@ -407,7 +403,7 @@ Module Univ_nice.
     Qed.
 
     Lemma Univ_Step_steps_nice :
-      { c | forall M (q : states M) (tp : tape sigM),
+      { c | forall sigM M (q : states M) (tp : tape sigM),
           Univ_Step_steps q tp
           <=(c)
              if halt q
@@ -426,7 +422,7 @@ Module Univ_nice.
     Local Arguments Univ_Step_steps : simpl never.
 
     Lemma Univ_steps_nice :
-      { c | forall M (q : states M) (tp : tape sigM) (k : nat), Univ_steps q tp k <=(c) size k * size (graph_of_TM M) * size (number_of_states M) }.
+      { c | forall sig (M: mTM sig 1) (q : states M) (tp : tape sig) (k : nat), Univ_steps q tp k <=(c) size k * size (graph_of_TM M) * size (number_of_states M) }.
     Proof.
       pose_nice Univ_Step_steps_nice Hc_Step c_Step.
       exists (c_Step + 1). intros.
@@ -439,7 +435,7 @@ Module Univ_nice.
         + rewrite Encode_nat_hasSize. ring_simplify. nia.
         + rewrite Encode_nat_hasSize. ring_simplify. nia. 
       -specialize (Encode_nat_hasSize_ge1 (S k')) as ?.
-       specialize (Hc_Step M q tp). hnf. destruct halt eqn:E.
+       specialize (Hc_Step _ M q tp). hnf. destruct halt eqn:E.
         + rewrite Hc_Step. ring_simplify. enough (1 <= size (1 + k') /\ 1 <= size (graph_of_TM M)) by nia. split. apply Encode_nat_hasSize_ge1. apply Encode_graph_hasSize_ge1.
         + destruct (step (mk_mconfig q [|tp|])) as (q',tp') eqn:E'. specialize (IH q' tp'[@Fin0]); hnf in IH. rewrite IH. rewrite Hc_Step. clear_all.
           ring_simplify. rewrite !Encode_nat_hasSize. ring_simplify. enough (1 <= size (graph_of_TM M)) by nia. apply Encode_graph_hasSize_ge1.

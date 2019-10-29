@@ -742,7 +742,7 @@ Section U.
     unfold fp.
     eexists. intros.
     eapply dominatedWith_trans.
-    - apply (proj2_sig (@M2MBounds.Loop_steps_nice sigUniv (FinType(EqType unit)))).
+    - apply (proj2_sig (@M2MBounds.Loop_steps_nice)).
     - apply dominatedWith_solve. reflexivity.
   Qed.
 
@@ -759,10 +759,10 @@ Section U.
     eexists. intros. eapply dominatedWith_trans. apply (proj2_sig (fp_nice1 M)). apply dominatedWith_mult.
     - apply dominatedWith_quad. domWith_approx.
       eapply dominatedWith_trans.
-      apply (proj2_sig (UnivBounds.Univ_nice.Univ_steps_nice sigM)).
+      apply (proj2_sig (UnivBounds.Univ_nice.Univ_steps_nice)).
       domWith_approx.
       apply dominatedWith_solve. enough (1 <= size (graph_of_TM M)) by nia. apply UnivBounds.Univ_nice.Encode_graph_hasSize_ge1.
-    - apply (proj2_sig (UnivBounds.Univ_nice.Univ_steps_nice sigM)).
+    - apply (proj2_sig (UnivBounds.Univ_nice.Univ_steps_nice)).
   Qed.
 
   (** Throw away all constants that depend on [M] *)
@@ -1150,18 +1150,18 @@ Section UnivMultiTimeSpaceTheorem.
     - domWith_approx.
       + subst T'. apply dominatedWith_solve. nia.
       + eapply dominatedWith_trans.
-        apply (proj2_sig (@M2MBounds.Loop_steps_nice _ _)).
+        apply (proj2_sig (M2MBounds.Loop_steps_nice)).
         apply dominatedWith_solve.
         subst T' k'. nia.
     - domWith_approx.
       + subst T'. apply dominatedWith_solve. nia.
       + eapply dominatedWith_trans.
-        apply (proj2_sig (@M2MBounds.Loop_steps_nice _ _)).
+        apply (proj2_sig (M2MBounds.Loop_steps_nice)).
         apply dominatedWith_solve.
         subst T' k'. nia.
     - apply dominatedWith_add_r; [ | nia].
       eapply dominatedWith_trans.
-      apply (proj2_sig (@M2MBounds.Loop_steps_nice _ _)).
+      apply (proj2_sig M2MBounds.Loop_steps_nice).
       apply dominatedWith_solve. subst k'. nia.
   Qed.
 

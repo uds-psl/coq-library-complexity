@@ -154,8 +154,8 @@ Section UniversalMachine.
           isRight_size tout[@Fin4] (max c s4) /\
           isRight_size tout[@Fin5] (max c s5).
 
-
-  Lemma Univ_Realise_pretty : (Univ _ _) ⊨ Univ_Rel_pretty.
+  
+  Lemma Univ_Realise_pretty: (Univ _ _) ⊨ Univ_Rel_pretty.
   Proof.
     eapply Realise_monotone.
     { apply Univ_Realise. }
@@ -211,8 +211,6 @@ Section UniversalMachine.
      rewrite H''3. cbn -[graph_of_TM size]. reflexivity.
   Qed.
 
-  
-
   Definition Univ_T_pretty c: tRel sig^+ 6 :=
     fun tin k =>
         exists M (tp : tape sigM) (q : states M) (k' : nat) (q' : states M) (tp' : tape sigM),
@@ -224,45 +222,57 @@ Section UniversalMachine.
         c* (1+k') * size (graph_of_TM M) * (Cardinality (states M)) <= k.
 
 
-  (** This lemma ransforms the lemma we proofed in Coq to the more readable version in the paper. *)
-  Lemma Univ_Terminates_pretty: { c & projT1 (Univ _ _) ↓ Univ_T_pretty c}.
-  Proof.
-    eexists.
-    eapply TerminatesIn_monotone.
-    {apply Univ_Terminates. }
-    unfold Univ_T_pretty,Univ_T.
-    unfold containsWorkingTape,containsTrans,containsState.
-    intros tin k.
-    apply Morphisms_Prop.ex_impl_morphism;intro M;hnf.
-    apply Morphisms_Prop.ex_impl_morphism;intro tp;hnf.
-    apply Morphisms_Prop.ex_impl_morphism;intro q;hnf.
-    apply Morphisms_Prop.ex_impl_morphism;intro k';hnf.
-    apply Morphisms_Prop.ex_impl_morphism;intro q';hnf.
-    apply Morphisms_Prop.ex_impl_morphism;intro tp';hnf.
-
-    intros (?&?&?&?&?&?&?&Heq).
-    repeat eapply conj.
-    1-3,5:easy.
-    -intros i. destruct_fin i. all:easy.
-    -assert (Heq':=proj2_sig (Univ_nice.Univ_steps_nice sigM)).
-     unfold PrettyBounds.dominatedWith in Heq'.
-     rewrite Heq'.
-     rewrite <- Heq, !Encode_nat_hasSize.
-     Import PrettyBounds.
-     do 3 rewrite <- mult_assoc.
-     refine (_:dominatedWith _ _ _).
-     eapply dominatedWith_mult_l.
-     eapply dominatedWith_mult.
-     {apply dominatedWith_refl with (c:=1). nia. }
-     eapply dominatedWith_mult.
-     {apply dominatedWith_refl with (c:=1). nia. }
-     instantiate (1:=2). hnf.
-     unfold Univ_nice.number_of_states, Cardinality.Cardinality.
-     enough (H':1<= | elem (states M)|).
-     {cbn [mult]. rewrite <- H' at 2. cbn. rewrite Nat.add_1_r. reflexivity. }
-     apply Univ_nice.enum_length_ge1.
-     assert (H':start M el elem (states M)) by apply elem_spec.
-     intros H''. setoid_rewrite H'' in H'. inv H'.
-  Qed.
-
 End UniversalMachine.
+
+
+Import PrettyBounds.  
+
+(** This lemma ransforms the lemma we proofed in Coq to the more readable version in the paper. *)
+Lemma Univ_Terminates_pretty: { c & forall sigM sig retr_transfun retr_sigM ,
+                                  projT1 (Univ (sigM:=sigM) (sig:=sig) retr_transfun retr_sigM) ↓ (Univ_T_pretty retr_transfun retr_sigM c )}.
+Proof.
+  eexists. intros. 
+  eapply TerminatesIn_monotone.
+  {apply Univ_Terminates. }
+  unfold Univ_T_pretty,Univ_T.
+  unfold containsWorkingTape,containsTrans,containsState.
+  intros tin k.
+  apply Morphisms_Prop.ex_impl_morphism;intro M;hnf.
+  apply Morphisms_Prop.ex_impl_morphism;intro tp;hnf.
+  apply Morphisms_Prop.ex_impl_morphism;intro q;hnf.
+  apply Morphisms_Prop.ex_impl_morphism;intro k';hnf.
+  apply Morphisms_Prop.ex_impl_morphism;intro q';hnf.
+  apply Morphisms_Prop.ex_impl_morphism;intro tp';hnf.
+
+  intros (?&?&?&?&?&?&?&Heq).
+  repeat eapply conj.
+  1-3,5:easy.
+  -intros i. destruct_fin i. all:easy.
+  -assert (Heq':=proj2_sig (Univ_nice.Univ_steps_nice)).
+   unfold PrettyBounds.dominatedWith in Heq'.
+   rewrite Heq'.
+   rewrite <- Heq, !Encode_nat_hasSize.
+   do 3 rewrite <- mult_assoc.
+   refine (_:dominatedWith _ _ _).
+   eapply dominatedWith_mult_l.
+   eapply dominatedWith_mult.
+   {apply dominatedWith_refl with (c:=1). nia. }
+   eapply dominatedWith_mult.
+   {apply dominatedWith_refl with (c:=1). nia. }
+   instantiate (1:=2). hnf.
+   unfold Univ_nice.number_of_states, Cardinality.Cardinality.
+   enough (H':1<= | elem (states M)|).
+   {cbn [mult]. rewrite <- H' at 2. cbn. rewrite Nat.add_1_r. reflexivity. }
+   apply Univ_nice.enum_length_ge1.
+   assert (H':start M el elem (states M)) by apply elem_spec.
+   intros H''. setoid_rewrite H'' in H'. inv H'.
+Qed.
+
+
+From Undecidability Require Import TM.Single.StepTM.
+
+Section MultiToSingle.
+
+  
+
+End MultiToSingle.
