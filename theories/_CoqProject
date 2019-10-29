@@ -286,6 +286,7 @@ L/TM/TMflat.v
 L/TM/TMunflatten.v
 L/TM/TMflatEnc.v
 L/TM/TMflatFun.v
+L/TM/TMflatComp.v
 L/TM/TMinL.v
 L/TM/TapeFuns.v
 L/TM/TapeDecode.v

@@ -48,7 +48,7 @@ Section loopM.
   Proof.
     pose (t:= (funTable (trans (m:=M)))).
     apply computableTimeExt with (x:= fun c => lookup EqBool.eqb c t (start M,Vector.const (None,N) _)).
-    2:{extract.
+    2:{Typeclasses eauto := debug. (*** TODO: instantiatte eqb-instance? **) extract.
        cbn [fst snd]. intuition ring_simplify.
 
 

@@ -8,7 +8,7 @@ Require Import PslBase.FiniteTypes.FinTypes.
 
 
 Section fix_sig.
-  Variable sig : finType.
+  Variable sig : Type.
   Context `{reg_sig : registered sig}.
 
   Section reg_tapes.
@@ -52,6 +52,19 @@ Section fix_sig.
     Proof.
       extract. solverec.
     Qed.
+
+    
+    Global Instance term_tapeToList:  computableTime' (@tapeToList sig) (fun t _ => (sizeOfTape t*29 + 26,tt)).  
+    extract. recRel_prettify2. all:repeat (simpl_list;cbn -[plus mult]). all:nia.
+    Proof.
+    Qed.
+
+
+    Global Instance term_sizeOfTape: computableTime' (@sizeOfTape sig) (fun t _ => (sizeOfTape t*40 + 35,tt)).
+    Proof.
+      extract. unfold sizeOfTape. solverec.
+    Qed.
+
 
   End reg_tapes.
 End fix_sig.

@@ -29,12 +29,12 @@ Section finType_eqb.
     apply cast_computableTime.
   Qed.
 
-  Instance eqbFinType_inst (X:finType): eqbClass finType_eqb (X:=X).
+  Local Instance eqbFinType_inst (X:finType): eqbClass finType_eqb (X:=X).
   Proof.
     intros ? ?. eapply finType_eqb_reflect. 
   Qed.
 
-  Instance eqbFinType_nat (X:finType): eqbCompT X.
+  Local Instance eqbFinType (X:finType): eqbCompT X.
   Proof.
     evar (c:nat). exists c. unfold finType_eqb.
     unfold enc;cbn.
@@ -51,4 +51,5 @@ Section finType_eqb.
     extract.
     solverec.
   Qed. *)
+
 End finType_eqb.

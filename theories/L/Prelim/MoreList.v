@@ -66,6 +66,23 @@ Proof.
   rewrite IHn. rewrite <- minus_n_O. reflexivity.
 Qed.
 
+
+Lemma sumn_map_add X f g (l:list X) :
+  sumn (map (fun x => f x + g x) l) = sumn (map f l) + sumn (map g l).
+Proof.
+  induction l;cbn;nia.
+Qed.
+Lemma sumn_map_mult_c_r X f c (l:list X) :
+  sumn (map (fun x => f x *c) l) = sumn (map f l)*c.
+Proof.
+  induction l;cbn;nia.
+Qed.
+Lemma sumn_map_c X c (l:list X) :
+  sumn (map (fun _ => c) l) = length l * c.
+Proof.
+  induction l;cbn;nia.
+Qed.
+
 Definition maxl := fold_right max 0.
 Lemma maxl_leq n l: n el l -> n <= maxl l.
 Proof.

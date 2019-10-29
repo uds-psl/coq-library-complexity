@@ -253,6 +253,40 @@ Section int.
   
 End int.
 
+
+Instance term_length X {H:registered X}:
+  computableTime' (@length X) (fun t _ => (length t * 11 + 8,tt)).  
+extract. solverec.
+Proof.
+Qed.
+
+
+Fixpoint forallb_time {X} (fT:X -> nat) xs :=
+  match xs with
+    [] => 8
+  | x :: xs => fT x + forallb_time fT xs + 15
+  end.
+
+Lemma forallb_time_eq X f (l:list X):
+  forallb_time f l = sumn (map f l) + length l * 15 + 8.
+Proof.
+  induction l;cbn;nia.
+Qed.
+
+Lemma forallb_time_const X c (l:list X):
+  forallb_time (fun _ =>  c) l = length l * (c+15) + 8.
+Proof.
+  induction l;cbn;nia.
+Qed.
+
+Instance term_forallb X {HX:registered X}:
+  computableTime' (@forallb X) (fun f t__f => (1,fun l _ => (forallb_time (fun x => fst (t__f x tt)) l,tt))).
+Proof.
+  extract.
+  solverec.
+Qed.
+
+
 Section list_prod.
 
   Context {X Y : Type}.

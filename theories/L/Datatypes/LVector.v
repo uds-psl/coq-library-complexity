@@ -117,3 +117,34 @@ Lemma to_list_length X n0 (l:Vector.t X n0) :length (Vector.to_list l) = n0.
 Proof.
   induction l. reflexivity. rewrite <- IHl at 3. reflexivity.
 Qed.
+
+From Undecidability.L Require Import Functions.EqBool.
+
+Global Instance eqbVector  X eqbx `{eqbClass (X:=X) eqbx} n:
+  eqbClass (VectorEq.eqb eqbx (n:=n) (m:=n)).
+Proof.
+  intros ? ?. eapply vector_eqb_spec. all:eauto using eqb_spec.
+Qed.
+
+Global Instance eqbComp_List X `{registered X} `{eqbCompT X (R:=_)} n:
+  eqbCompT (Vector.t X n).
+Proof.
+  evar (c:nat). exists c. edestruct term_vector_eqb with (X:=X). now eauto using comp_eqb.
+  eexists.
+  eapply computesTime_timeLeq. 2:eauto. clear.
+  repeat (hnf;intros;cbn [fst snd];split). easy.
+  induction n.
+  -rewrite (destruct_vector_nil x), (destruct_vector_nil x0). cbn.
+   repeat (unfold enc;cbn). shelve.
+  -pattern x. apply Vector.caseS'.
+   pattern x0. apply Vector.caseS'.
+   intros.
+   unfold enc in *. cbn - [plus mult c max] in *. fold (Vector.to_list t0). fold (Vector.to_list t).
+   unfold enc in *. cbn - [plus mult c max] in *. 
+   all:fold (@enc X _).
+   unfold eqbTime at 1.
+   [c]:refine (c__eqbComp X + 10).
+   unfold c. ring_simplify.
+   specialize (IHn t0 t). zify. nia.
+   Unshelve. subst c. nia.
+Qed.
