@@ -11,12 +11,43 @@ Definition TMgenericNPcompleteProblem: TM*nat*nat -> Prop:=
     exists sig n (M':mTM sig n), isFlatteningTMOf M M' /\ (exists t, (exists f, loopM (initc M' t) steps = Some f)
          /\ sizeOfmTapes t <= maxSize).
 
- 
+
 From Undecidability.L.Complexity Require Import NP LinTimeDecodable.
 From Undecidability.L Require Import Tactics.LTactics Functions.Decoding TMflatFun.
 
 
 From Undecidability Require Import L.Functions.EqBool.
+
+From Undecidability Require Import L.Datatypes.LNat.
+Instance term_isValidFlatTM : computableTime' isValidFlatTM (fun M _ => (size (enc M) ^ 2 * (c__eqbComp nat + c__eqbComp (nat * list (option nat)) +  c__eqbComp (nat * list (option nat * move)) + 20)*9,tt)).
+Proof.
+  unfold isValidFlatTM. unfold Nat.ltb.
+  extract.
+  intros M _. 
+  clear. split. 2:easy. remember mult as f' eqn:eq'. ring_simplify. subst f'.
+  cbn - [plus mult].  remember mult as f' eqn:eq'. ring_simplify. subst f'.
+  rewrite Nat.le_min_r. rewrite size_nat_enc_r with (n:=states M).
+
+  assert (H1:size (enc (trans M)) <= size (enc M)) by (rewrite size_TM;destruct M;cbn;lia).
+  assert (H2:size (enc (states M)) <= size (enc M)) by (rewrite size_TM;destruct M;cbn;lia).
+  assert (H3:1 <= size (enc M)) by (rewrite size_TM;destruct M;cbn;lia).
+
+  (* assert (H4:size (enc (trans M)) <= size (enc M)) by (rewrite size_TM;destruct M;cbn;lia). *)
+  (* assert (H5:size (enc (trans M)) <= size (enc M)) by (rewrite size_TM;destruct M;cbn;lia). *)
+  (* assert (H6:size (enc (trans M)) <= size (enc M)) by (rewrite size_TM;destruct M;cbn;lia). *)
+  (* assert (H1:size (enc (trans M)) <= size (enc M)) by (rewrite size_TM;destruct M;cbn;lia). *)
+
+
+  Lemma size_list_enc_r X `{registered X} (l:list X):
+    length l <= size (enc l)*5 + 4.
+  Proof.
+    rewrite size_list. induction l;cbn. all:lia.
+  Qed.
+
+  rewrite !size_list_enc_r with (l:=trans M). Unshelve. 2:exact _.
+  rewrite !H1. rewrite !H2. ring_simplify.
+  nia.
+Qed.
 
 Lemma inNP_TMgenericNPCompleteProblem:
   inNP TMgenericNPcompleteProblem.
@@ -77,6 +108,8 @@ Proof.
      eexists.
 
      (* TODO: size flat TM *)
+     
+     
      Print isValidFlatTM.
      Fail now extract. all:admit. 
    }
