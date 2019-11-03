@@ -298,12 +298,14 @@
   \begin{align*}
     A \preceq_{\text{p}} B := \exists f : X \rightarrow Y, \quad&(\forall x, A~x \leftrightarrow B(f~x)) \\
     \land& \text{ polynomial-time computable } f\\
-    \land &\exists~p, \forall x, \textsf{size}{(\overline{f~x})} \le p(\textsf{size}{(\overline{x})}) 
+    \onslide<2->{\land} &\onslide<2-> {\exists~p, \forall x, \textsf{size}{(\overline{f~x})} \le p(\textsf{size}{(\overline{x})}) }
   \end{align*}
   
-  \begin{align*}
-    \textsf{NP-hard}~A := \forall B, \textsf{inNP}~B \rightarrow B \preceq_{\text{p}} A 
-  \end{align*}
+  \onslide<3->{
+    \begin{align*}
+      \textsf{NP-hard}~A := \forall B, \textsf{inNP}~B \rightarrow B \preceq_{\text{p}} A 
+    \end{align*}
+  }
 \end{frame}
 
 \section{3-SAT $\prec_\text{p}$ Clique}
@@ -334,15 +336,10 @@
   \begin{definition}[SAT]
     \[\textbf{SAT}~N := \exists~a, \eval{a}{N}~=~\Some{\btrue} \]
   \end{definition}
-
 \end{frame}
-
 
 \begin{frame}{SAT}
   \begin{definition}[$k$-SAT]
-    \begin{align*}
-      \infer{\textsf{$k$-CNF}~[]}{} && \infer{\textsf{$k$-CNF}~(C::N)}{\textsf{$k$-CNF}~N \quad \length{C} = k} 
-    \end{align*}
     \[\textbf{$k$-SAT}~N := \textsf{$k$-CNF}~N \land \exists~a, \eval{a}{N} ~=~\Some{\btrue} \]
   \end{definition}
 \end{frame}
@@ -417,10 +414,12 @@
 \end{columns}
 
 \begin{definition}[$k$-Clique]
-  \begin{gather*}
-    \infer{\textsf{isClique}~g~[]~0}{}\\[1.2ex]
-    \infer{\textsf{isClique}~g~(v::cl)~(\natS{k})}{v \notin cl \quad \textsf{nodeIn}~g~v \quad (\forall u \in cl, \textsf{edgeIn}~g~v~u) \quad \textsf{isClique}~g~cl~k}
-  \end{gather*}
+  \begin{align*}
+    \textsf{isClique}~g~cl~k := &\length{cl} = k \\
+    \land & \textsf{dupfree}~cl \\
+    \land & (\forall v \in cl, \textsf{nodeIn}~g~n) \\
+    \land & (\forall u~v \in cl, u \neq v \rightarrow \textsf{edgeIn}~g~u~v) 
+  \end{align*}
 \end{definition}
 
 \begin{definition}[Clique]
@@ -599,9 +598,6 @@
 
 \begin{frame}[t]{Time Analysis: Example}
   \vspace{-5ex}
-  \begin{align*}
-    \text{Show: polynomial-time computable } f
-  \end{align*}
 
   \begin{align*}
     \textsf{forallb}~&: (A \rightarrow \bool) \rightarrow \listsof{A} \rightarrow \bool\\
@@ -622,12 +618,14 @@
         \rightarrow &~\exists ~(p : \nat \rightarrow \nat), \forall~l, \textsf{forallb\_time}~fT~\le p(\textsf{size}(\overline{l}))
     \end{align*}
   }
-
     \only<4>{
     \begin{align*}
       \forall~&(fT: {\colorHOne E \rightarrow} A \rightarrow \nat), \\
               &(\exists~(p : \nat \rightarrow \nat), \forall~el~{\colorHOne env}, fT~{\colorHOne env}~el \le p(\textsf{size}(\overline{el}) {\colorHOne + \textsf{size}(\overline{env})})) \\
-              \rightarrow &~\exists ~(p : \nat \rightarrow \nat), \forall~l~{\colorHOne env}, \textsf{forallb\_time}~{\colorHOne (fT~env)}~l\le p(\textsf{size}(\overline{l}) {\colorHOne + \textsf{size}(\overline{env})})
+              \rightarrow &\begin{aligned}[t]
+                ~\exists ~(p : \nat \rightarrow \nat), \forall~l~{\colorHOne env}, &\textsf{forallb\_time}~{\colorHOne (fT~env)}~l \\
+                & \le p(\textsf{size}(\overline{l}) {\colorHOne + \textsf{size}(\overline{env})})
+              \end{aligned}
     \end{align*}
   }
   \end{overlayarea}
@@ -637,10 +635,10 @@
   \frametitle<4>{Problem: Abstractions, Revisited}
   \begin{itemize}
     \item explicit construction and analysis of reduction function 
-      \begin{itemize}
-        \item no implicit proof mode constructions
-        \item little potential for automation
-      \end{itemize}
+      %\begin{itemize}
+        %\item no implicit proof mode constructions
+        %\item little potential for automation
+      %\end{itemize}
     \item<2-> simple representations due to extraction and time analysis
       \begin{align*}
         u,v : \lnode := \nat \\
@@ -663,12 +661,19 @@
 
   \onslide<2->
   \begin{block}{Generic Problem}
-    \begin{overlayarea}{\textwidth}{0.1\textwidth}
+    \begin{overlayarea}{\textwidth}{0.25\textwidth}
       \only<2>{
-        $\textbf{GenNP}~(M, \mathit{input}, t) := M$ is a nondet.\ TM $\land M$ accepts on $\mathit{input}$ in $\le t$ steps    
+        \begin{align*}
+          \textbf{GenNP}~(M, \mathit{input}, t) := &M \text{ is a nondet.\ TM} \\
+          \land & M \text{ accepts on } \mathit{input} \text{ in } \le t \text{ steps}
+        \end{align*}
       }
       \only<3->{
-        $\textbf{GenNP}~(M, k, t) := M$ is a det.\ TM $\land \exists~\mathit{input}, \length{input} \le k \land$ $M$ accepts on $\mathit{input}$ in $\le t$ steps
+        \begin{align*}
+          \textbf{GenNP}~(M, k, t) := &M \text{ is a det.\ TM} \\
+          \land & \exists~\mathit{input}, \length{input} \le k \\
+           &\quad \land M \text{ accepts on } \mathit{input} \text{ in } \le t \text{ steps}
+        \end{align*}
       }
   \end{overlayarea}
   \end{block}
@@ -865,7 +870,7 @@
   \end{center}
 \end{frame}
 
-\begin{frame}{Representation of SAT}
+\begin{frame}[allowframebreaks]{Representation of SAT}
 
 \begin{align*}
   x : \var := \nat&& 
@@ -883,14 +888,50 @@
   {\color{gray}\{x_0 \mapsto \btrue, x_1 \mapsto \bfalse, x_2 \mapsto \bfalse, x_3 \mapsto \bfalse\}}\qquad 
   [\btrue, \bfalse, \bfalse, \bfalse] 
 \end{align*}
+
+\pagebreak
+\begin{block}{$k$-CNF}
+\begin{align*}
+\infer{\textsf{$k$-CNF}~[]}{} && \infer{\textsf{$k$-CNF}~(C::N)}{\textsf{$k$-CNF}~N \quad \length{C} = k} 
+\end{align*}
+\end{block}
 \end{frame}
 
-\begin{frame}{The Reduction Relation}
-  \TODO
+\begin{frame}[allowframebreaks]{The Reduction Relation}
+  \begin{block}{Labellings}
+ \begin{align*}
+  \normalfont\textsf{labG} := \nat \rightarrow \nat \times \nat && \normalfont\textsf{labG}^{-1} := \nat \times \nat \rightarrow \nat
+  \end{align*}
+  \begin{align*}
+    \normalfont\textsf{isLabelling}~&N~(f : \normalfont\textsf{labG})~(f^{-1} : \normalfont\textsf{labG}^{-1}) := \normalfont\textsf{inverseOn}~f~f^{-1}\\
+  &(\lambda~v. v < 3 \cdot \length{N})\\
+  ~&(\lambda~(c, l). c < \length{N} \land l < 3) 
+\end{align*}
+  \end{block}
+
+  \pagebreak
+
+  $N \redrel ((n, e), k)$, iff :
+  \begin{itemize}
+    \item $N$ is a 3-CNF
+    \item $n = 3 \cdot \length{N} \land k = \length{N}$
+    \item there is a labelling $(f, f^{-1})$ s.t.\ $\forall u~v < n$, $\textsf{edgeIn}~(n, e)~u~v$ is equivalent to 
+      \begin{itemize}
+        \item $f~u$ and $f~v$ being in different clauses, and
+        \item $\forall L_1~L_2$, if $L_1$ is the $(f~u)$-th literal of $N$ and $L_2$ is the $(f~v)$-th literal of $N$, then $L_1$ and $L_2$ do not conflict
+      \end{itemize}
+  \end{itemize}
 \end{frame}
 
 \begin{frame}{The Reduction Function}
-  \TODO
+  \begin{align*}
+    \textsf{red}~N := (&\ITE{\textsf{kCNF\_dec}~3~N}{(3 \cdot \length{N}, \textsf{makeEdges}~N)}{(0, [])}, \\
+    &\length{N})
+  \end{align*}
+
+  \begin{align*}
+    \mathit{labF}~n := (n/3, n \mod 3) && \mathit{labF}^{-1}~(cl, l) := 3 \cdot cl + l
+  \end{align*}
 \end{frame}
 
 \begin{frame}[allowframebreaks]{References}
