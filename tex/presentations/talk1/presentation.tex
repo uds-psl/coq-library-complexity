@@ -250,17 +250,17 @@
 \end{frame}
 
 
-\begin{frame}{\ldots as a Model of Computation}
-  \begin{block}{Scott Encoding (of Numbers)}
-    \vspace{-1ex}
-    \begin{align*} 
-      \overline{0} = \lambda\lambda. 1\\
-      \overline{S~n} = \lambda\lambda. 0~(\overline n)
-    \end{align*}
-    \vspace{-1ex}
-  \end{block}
+%\begin{frame}{\ldots as a Model of Computation}
+  %\begin{block}{Scott Encoding (of Numbers)}
+    %\vspace{-1ex}
+    %\begin{align*} 
+      %\overline{0} = \lambda\lambda. 1\\
+      %\overline{S~n} = \lambda\lambda. 0~(\overline n)
+    %\end{align*}
+    %\vspace{-1ex}
+  %\end{block}
   %similarly for other inductive types. mention encoding/decoding
-\end{frame}
+%\end{frame}
 \begin{frame}[noframenumbering]{\ldots as a Model of Computation}
 
   \begin{itemize}
@@ -288,10 +288,11 @@
     \item there is a verifier $V : X \rightarrow \Term \rightarrow \Prop$
     \item $\forall x, A~x \leftrightarrow \exists~\mathit{cert}, V~x~\mathit{cert}$
     \item $V$ is polynomial-time computable (in $\textsf{size}(\overline x), \textsf{size}(\overline{cert})$)
-    \item $\exists (p : \nat \rightarrow \nat), \forall x~\mathit{cert}, V~x~\mathit{cert} \rightarrow \textsf{size}(\overline {\mathit{cert}}) \le p(\textsf{size}(\overline x))$
+    %\item $\exists (p : \nat \rightarrow \nat), \forall x~\mathit{cert}, V~x~\mathit{cert} \rightarrow \textsf{size}(\overline {\mathit{cert}}) \le p(\textsf{size}(\overline x))$
+    \item $V$ only accepts certificates of polynomial size
   \end{itemize}
-  \vspace{2ex}
-  $p,q$: monotonic and polynomially bounded
+  %\vspace{2ex}
+  %$p,q$: monotonic and polynomially bounded
 \end{frame}
 
 \begin{frame}{Basic Definitions: Polynomial-time Reductions}
@@ -344,6 +345,11 @@
   \begin{definition}[$k$-SAT]
     \[\textbf{$k$-SAT}~N := \textsf{$k$-CNF}~N \land \exists~a, \eval{a}{N} ~=~\Some{\btrue} \]
   \end{definition}
+
+  \color{gray}
+  \begin{center}
+    $(x_0 \lor \overline{x_1} \lor x_2) \land (x_0 \lor x_3 \lor x_1)$ is in $3$-CNF
+  \end{center}
 \end{frame}
 
 \newcommand{\lnode}{\textsf{node}}
@@ -364,11 +370,11 @@
 
     \path (S_2) edge (S_3);
 
-    \only<2,3>{\path (S_0) edge[thick,color=\colorTikzA] (S_1);}
-    \only<3>{\path (S_0) edge[thick,color=\colorTikzA] (S_2);}
-    \only<3>{\path (S_1) edge[thick, color=\colorTikzA] (S_2);}
+    \only<2,3>{\path (S_0) edge[thick,color=\colorTikzC] (S_1);}
+    \only<3>{\path (S_0) edge[thick,color=\colorTikzC] (S_2);}
+    \only<3>{\path (S_1) edge[thick, color=\colorTikzC] (S_2);}
 
-      \only<4>{\path (S_1) edge[color=\colorTikzC] (S_3);}
+      \only<4>{\path (S_1) edge[color=\colorTikzA] (S_3);}
     \end{tikzpicture}
   \end{center}
 
@@ -397,11 +403,11 @@
 
     \path (S_2) edge (S_3);
 
-    \only<2,3>{\path (S_0) edge[thick,color=\colorTikzA] (S_1);}
-    \only<3>{\path (S_0) edge[thick,color=\colorTikzA] (S_2);}
-    \only<3>{\path (S_1) edge[thick, color=\colorTikzA] (S_2);}
+    \only<2,3>{\path (S_0) edge[thick,color=\colorTikzC] (S_1);}
+    \only<3>{\path (S_0) edge[thick,color=\colorTikzC] (S_2);}
+    \only<3>{\path (S_1) edge[thick, color=\colorTikzC] (S_2);}
 
-      \only<4>{\path (S_1) edge[color=\colorTikzC] (S_3);}
+      \only<4>{\path (S_1) edge[color=\colorTikzA] (S_3);}
     \end{tikzpicture}
   \end{center}
 \end{column}
@@ -424,15 +430,15 @@
   %\end{align*}
 %\end{definition}
 
-\begin{definition}[$k$-Clique]
-  A list of nodes $cl$ of $g$ is a $k$-Clique of $g$ iff: 
-  \begin{itemize}
-    \item $cl$ is duplicate-free
-    \item $\length{cl} = k$
-    \item $\forall~u~v \in cl, u \neq v \rightarrow \{u, v\} \in g$
-  \end{itemize}
-\end{definition}
-\pagebreak
+%\begin{definition}[$k$-Clique]
+  %A list of nodes $cl$ of $g$ is a $k$-Clique of $g$ iff: 
+  %\begin{itemize}
+    %\item $cl$ is duplicate-free
+    %\item $\length{cl} = k$
+    %\item $\forall~u~v \in cl, u \neq v \rightarrow \{u, v\} \in g$
+  %\end{itemize}
+%\end{definition}
+%\pagebreak
 
 \begin{definition}[Clique]
   %TODO: maybe add well-formedness
@@ -444,10 +450,18 @@
 
 \begin{frame}[noframenumbering]
   \[\scalebox{1.5}{$\text{3-\textbf{SAT}} \prec_{\text{p}} \textbf{Clique}$}\]
+
+  \color{gray}
+  \[ N \mapsto (g, k) \]
 \end{frame}
 
 
 \begin{frame}{Reduction: Example}
+  \begin{tikzpicture}[overlay, remember picture]
+    \node at (10.1, 0.9) {\color{gray} \small $N \mapsto (g, \only<-10>{k}\only<11>{\length{N}})$};
+  \end{tikzpicture}
+
+  \vspace{-2ex}
   \begin{columns}
     \begin{column}{0.44\textwidth}
       $({\only<4-6>{\colorHFour} x_0}
@@ -516,10 +530,15 @@
     \path (01) edge (11);
   }
 
-  \only<10-> {
+  \only<10> {
     \path (02) edge[thick,color =\colorTikzD] (10)
       (02) edge[thick, color =\colorTikzD] (11)
       (02) edge[thick, color = \colorTikzD] (12);
+  }
+  \only<11->{
+    \path (02) edge (10)
+      (02) edge (11)
+      (02) edge (12);
   }
 \end{tikzpicture}
 \begin{tikzpicture}[overlay, remember picture]
@@ -566,82 +585,6 @@
 
 \end{frame}
 
-\begin{frame}[t]{Correctness}
-  {$\scalebox{1.2}{$N \redrel{} (g, \length{N})$}$}
-  \vspace{-4ex}
-  \begin{overlayarea}{\textwidth}{0.1\textwidth}
-    \only<1>{\[ \text{3-\textbf{SAT}}~N \leftrightarrow \textbf{Clique}~(g, \length{N}) \]}
-    \only<2-3>{\[(\exists~a, \eval{a}{N} = \Some{\btrue}) \only<2>{\leftrightarrow} \only<3->{\rightarrow} (\exists~cl, \textsf{isClique}~g~cl~\length{N})\]}
-    \only<4->{\[(\exists~a, \eval{a}{N} = \Some{\btrue}) \leftarrow (\exists~cl, \textsf{isClique}~g~cl~\length{N})\]}
-  \end{overlayarea}
-
-  \vspace{-1ex}
-  \begin{overlayarea}{\textwidth}{0.2\textwidth}
-    \only<3>{
-      \begin{itemize}
-        \item Pick a satisfied literal for each clause
-        \item A clique is given by the corresponding nodes
-      \end{itemize}
-    }
-    \only<4->{
-      \begin{enumerate}
-        \item<6-> Map clique nodes to literal positions
-        \item<7-> Map literal positions to syntax of literals
-        \item<8-> Expand to full assignment
-      \end{enumerate}
-    }
-  \end{overlayarea}
-
-  \vspace{-1.5ex}
-  \begin{overlayarea}{\textwidth}{0.25\textwidth}
-    \begin{columns}
-      \begin{column}{0.48 \textwidth}
-        \newcommand*{\highlightcolor}{black}
-        \only<5-6>{\renewcommand*\highlightcolor{\colorTikzA}}
-
-        \begin{center}
-          \vspace{-6ex}
-          \[(x_0 \lor \overline{x_1} \lor x_2) \land (x_0 \lor x_3 \lor x_1)\]
-          \begin{tikzpicture}[node distance=1.2cm, shorten >=1pt,on grid, auto, baseline, scale=0.5,every node/.style={scale=0.5}] 
-            \node[state, label={[]180:$x_0$}] (00) {{\small(0, 0)}};
-            \node[state,below=of 00, label={[]180:$\overline{x_1}$},draw=\highlightcolor] (01) {{\small(0, 1)}};
-            \node[state,below=of 01, label={[]180:$x_2$}] (02) {{\small(0, 2)}};
-            \node[state,right =1.8cm of 00, label={[]0:$x_0$}] (10) {{\small(1, 0)}};
-            \node[state,below=of 10, label={[]0:$x_3$},draw=\highlightcolor] (11) {{\small(1, 1)}};
-            \node[state,below=of 11, label={[]0:$x_1$}] (12) {{\small(1, 2)}};
-
-              \path (00) edge (10)
-                (00) edge (11)
-                (00) edge (12);
-
-              \path (01) edge (10);
-
-            \only<-4,7->{
-                \path (01) edge (11);
-              }
-
-              \path (02) edge (10)
-                (02) edge (11)
-                (02) edge (12);
-
-            \only<5-6> {
-              \path (01) edge[color=\colorTikzA, thick] (11);
-            }
-          \end{tikzpicture}
-        \end{center}
-      \end{column}
-      \begin{column}{0.48 \textwidth}
-        \begin{align*}
-          \only<1-5>{\color{white}}\rightarrow \quad& \only<1-5>{\color{white}} [(0, 1), (1, 1)] \\[3.3ex]
-          \only<1-6>{\color{white}} \rightarrow \quad& \only<1-6>{\color{white}} [\overline{x_1}, x_3] \\[3.3ex]
-          \only<1-7> {\color{white}} \rightarrow \quad& \only<1-7>{\color{white}} \{x_0 \mapsto {\only<8->{\color{gray}}\bfalse,} x_1 \mapsto {\bfalse}, {\only<8->{\color{gray}} x_2 \mapsto \bfalse,} x_3 \mapsto {\btrue}\}
-        \end{align*}
-      \end{column}
-    \end{columns}
-  \end{overlayarea}
-
-\end{frame}
-
 \begin{frame}{Reduction Function}
   \[f : \cnf \rightarrow \textsf{graph} \times \nat \text{ with } N \redrel (f~N) \]
 
@@ -653,60 +596,6 @@
   \end{align*}
 \end{frame}
 
-\begin{frame}[t]{Time Analysis: Example}
-  \vspace{-5ex}
-
-  \begin{align*}
-    \textsf{forallb}~&: (A \rightarrow \bool) \rightarrow \listsof{A} \rightarrow \bool\\
-    \textsf{forallb}~&f~\lnil := \btrue \\
-    \textsf{forallb}~&f~(l::ls) := f~a~\andb~\textsf{forallb}~f~ls
-  \end{align*}
-
-  \onslide<2->
-  \begin{align*}
-    \textsf{forallb\_time}~(fT : A \rightarrow \nat)~l := 8 + \sum_{el \in l} (fT~el + 15)
-  \end{align*}
-
-  \begin{overlayarea}{\textwidth}{0.3\textwidth}
-    \only<3>{
-    \begin{align*}
-      \forall~&(fT: A \rightarrow \nat), \\
-        &(\exists~(p : \nat \rightarrow \nat), \forall~el, fT~el \le p(\textsf{size}(\overline{el}))) \\
-        \rightarrow &~\exists ~(p : \nat \rightarrow \nat), \forall~l, \textsf{forallb\_time}~fT~l\le p(\textsf{size}(\overline{l}))
-    \end{align*}
-  }
-
-  %explain that we want to have a polynomial independent of the environment, therefore we 
-    \only<4>{
-    \begin{align*}
-      \forall~&(fT: {\colorHOne E \rightarrow}~A \rightarrow \nat), \\
-              &(\exists~(p : \nat \rightarrow \nat), \forall~el~{\colorHOne env}, fT~{\colorHOne env}~el \le p(\textsf{size}(\overline{el}) {\colorHOne + \textsf{size}(\overline{env})})) \\
-              \rightarrow &\begin{aligned}[t]
-                ~\exists ~(p : \nat \rightarrow \nat), \forall~l~{\colorHOne env}, &\textsf{forallb\_time}~{\colorHOne (fT~env)}~l \\
-                & \le p(\textsf{size}(\overline{l}) {\colorHOne + \textsf{size}(\overline{env})})
-              \end{aligned}
-    \end{align*}
-  }
-  \end{overlayarea}
-\end{frame}
-
-\begin{frame}<1-3>[label=abstractions]{Problem: Abstractions}
-  \frametitle<4>{Problem: Abstractions, Revisited}
-  \begin{itemize}
-    \item explicit construction and analysis of reduction function 
-      %\begin{itemize}
-        %\item no implicit proof mode constructions
-        %\item little potential for automation
-      %\end{itemize}
-    \item<2-> simple representations due to extraction and time analysis
-      \begin{align*}
-        u,v : \lnode := \nat \\
-        e : \ledge := \lnode \times \lnode\\
-        g : \lgraph := \nat \times \listsof~\ledge 
-      \end{align*}
-    \item<3-> {\only<4>{\colorHOne} {``global'' structure as in \textbf{Clique}}}
-  \end{itemize}
-\end{frame}
 
 \section{Towards Cook's Theorem}
 \begin{frame}{Cook's Theorem}
@@ -716,26 +605,26 @@
   %outline: we reduce from Turing machines instead of L because of the simpler (low-level) structure
   %need reduction from L to TM in order to derive NP-hardness - TODO: Fabian is currently working on that
 
-  \vspace{5ex}
+  %\vspace{5ex}
 
-  \onslide<2->
-  \begin{block}{Generic Problem}
-    \begin{overlayarea}{\textwidth}{0.25\textwidth}
-      \only<2>{
-        \begin{align*}
-          \textbf{GenNP}~(M, \mathit{input}, t) := &M \text{ is a nondet.\ TM} \\
-          \land & M \text{ accepts on } \mathit{input} \text{ in } \le t \text{ steps}
-        \end{align*}
-      }
-      \only<3->{
-        \begin{align*}
-          \textbf{GenNP}~(M, k, t) := &M \text{ is a det.\ TM} \\
-          \land & \exists~\mathit{input}, \length{input} \le k \\
-           &\quad \land M \text{ accepts on } \mathit{input} \text{ in } \le t \text{ steps}
-        \end{align*}
-      }
-  \end{overlayarea}
-  \end{block}
+  %\onslide<2->
+  %\begin{block}{Generic Problem}
+    %\begin{overlayarea}{\textwidth}{0.25\textwidth}
+      %\only<2>{
+        %\begin{align*}
+          %\textbf{GenNP}~(M, \mathit{input}, t) := &M \text{ is a nondet.\ TM} \\
+          %\land & M \text{ accepts on } \mathit{input} \text{ in } \le t \text{ steps}
+        %\end{align*}
+      %}
+      %\only<3->{
+        %\begin{align*}
+          %\textbf{GenNP}~(M, k, t) := &M \text{ is a det.\ TM} \\
+          %\land & \exists~\mathit{input}, \length{input} \le k \\
+           %&\quad \land M \text{ accepts on } \mathit{input} \text{ in } \le t \text{ steps}
+        %\end{align*}
+      %}
+  %\end{overlayarea}
+  %\end{block}
 \end{frame}
 
 \begin{frame}{}
@@ -792,7 +681,7 @@
 \newcommand{\cmark}{\ding{51}}
 \newcommand{\xmark}{\ding{55}}
 
-\againframe<4>{abstractions}
+%\againframe<4>{abstractions}
 
 
 \begin{frame}{Conclusion}
@@ -843,7 +732,7 @@
   \end{center}
 \end{frame}
 
-\begin{frame}
+\begin{frame}{Cook's Theorem: Configuration Windows}
   \[\delta(q_1, a) = (q_1, b, R), \delta(q_1, b) = (q_2,c, L) \]
 
   \begin{columns}
@@ -931,6 +820,64 @@
   \end{columns}
 \end{frame}
 
+\begin{frame}<1-3>[label=abstractions]{Problem: Abstractions}
+  \frametitle<4>{Problem: Abstractions, Revisited}
+  \begin{itemize}
+    \item explicit construction and analysis of reduction function 
+      %\begin{itemize}
+        %\item no implicit proof mode constructions
+        %\item little potential for automation
+      %\end{itemize}
+    \item<2-> simple representations due to extraction and time analysis
+      \begin{align*}
+        u,v : \lnode := \nat \\
+        e : \ledge := \lnode \times \lnode\\
+        g : \lgraph := \nat \times \listsof~\ledge 
+      \end{align*}
+    \item<3-> {\only<4>{\colorHOne} {``global'' structure as in \textbf{Clique}}}
+  \end{itemize}
+\end{frame}
+
+
+
+\begin{frame}[t]{Time Analysis: Example}
+  \vspace{-5ex}
+
+  \begin{align*}
+    \textsf{forallb}~&: (A \rightarrow \bool) \rightarrow \listsof{A} \rightarrow \bool\\
+    \textsf{forallb}~&f~\lnil := \btrue \\
+    \textsf{forallb}~&f~(l::ls) := f~a~\andb~\textsf{forallb}~f~ls
+  \end{align*}
+
+  \onslide<2->
+  \begin{align*}
+    \textsf{forallb\_time}~(fT : A \rightarrow \nat)~l := 8 + \sum_{el \in l} (fT~el + 15)
+  \end{align*}
+
+  \begin{overlayarea}{\textwidth}{0.3\textwidth}
+    \only<3>{
+    \begin{align*}
+      \forall~&(fT: A \rightarrow \nat), \\
+        &(\exists~(p : \nat \rightarrow \nat), \forall~el, fT~el \le p(\textsf{size}(\overline{el}))) \\
+        \rightarrow &~\exists ~(p : \nat \rightarrow \nat), \forall~l, \textsf{forallb\_time}~fT~l\le p(\textsf{size}(\overline{l}))
+    \end{align*}
+  }
+
+  %explain that we want to have a polynomial independent of the environment, therefore we 
+    \only<4>{
+    \begin{align*}
+      \forall~&(fT: {\colorHOne E \rightarrow}~A \rightarrow \nat), \\
+              &(\exists~(p : \nat \rightarrow \nat), \forall~el~{\colorHOne env}, fT~{\colorHOne env}~el \le p(\textsf{size}(\overline{el}) {\colorHOne + \textsf{size}(\overline{env})})) \\
+              \rightarrow &\begin{aligned}[t]
+                ~\exists ~(p : \nat \rightarrow \nat), \forall~l~{\colorHOne env}, &\textsf{forallb\_time}~{\colorHOne (fT~env)}~l \\
+                & \le p(\textsf{size}(\overline{l}) {\colorHOne + \textsf{size}(\overline{env})})
+              \end{aligned}
+    \end{align*}
+  }
+  \end{overlayarea}
+\end{frame}
+
+
 \begin{frame}[allowframebreaks]{Representation of SAT}
 
 \begin{align*}
@@ -957,6 +904,84 @@
 \end{align*}
 \end{block}
 \end{frame}
+
+\begin{frame}[t]{Correctness}
+  {$\scalebox{1.2}{$N \redrel{} (g, \length{N})$}$}
+  \vspace{-4ex}
+  \begin{overlayarea}{\textwidth}{0.1\textwidth}
+    \only<1>{\[ \text{3-\textbf{SAT}}~N \leftrightarrow \textbf{Clique}~(g, \length{N}) \]}
+    \only<2-3>{\[(\exists~a, \eval{a}{N} = \Some{\btrue}) \only<2>{\leftrightarrow} \only<3->{\rightarrow} (\exists~cl, \textsf{isClique}~g~cl~\length{N})\]}
+    \only<4->{\[(\exists~a, \eval{a}{N} = \Some{\btrue}) \leftarrow (\exists~cl, \textsf{isClique}~g~cl~\length{N})\]}
+  \end{overlayarea}
+
+  \vspace{-1ex}
+  \begin{overlayarea}{\textwidth}{0.2\textwidth}
+    \only<3>{
+      \begin{itemize}
+        \item Pick a satisfied literal for each clause
+        \item A clique is given by the corresponding nodes
+      \end{itemize}
+    }
+    \only<4->{
+      \begin{enumerate}
+        \item<6-> Map clique nodes to literal positions
+        \item<7-> Map literal positions to syntax of literals
+        \item<8-> Expand to full assignment
+      \end{enumerate}
+    }
+  \end{overlayarea}
+
+  \vspace{-1.5ex}
+  \begin{overlayarea}{\textwidth}{0.25\textwidth}
+    \begin{columns}
+      \begin{column}{0.48 \textwidth}
+        \newcommand*{\highlightcolor}{black}
+        \only<5-6>{\renewcommand*\highlightcolor{\colorTikzC}}
+
+        \begin{center}
+          \vspace{-6ex}
+          \[(x_0 \lor \overline{x_1} \lor x_2) \land (x_0 \lor x_3 \lor x_1)\]
+          \begin{tikzpicture}[node distance=1.2cm, shorten >=1pt,on grid, auto, baseline, scale=0.5,every node/.style={scale=0.5}] 
+            \node[state, label={[]180:$x_0$}] (00) {{\small(0, 0)}};
+            \node[state,below=of 00, label={[]180:$\overline{x_1}$},draw=\highlightcolor] (01) {{\small(0, 1)}};
+            \node[state,below=of 01, label={[]180:$x_2$}] (02) {{\small(0, 2)}};
+            \node[state,right =1.8cm of 00, label={[]0:$x_0$}] (10) {{\small(1, 0)}};
+            \node[state,below=of 10, label={[]0:$x_3$},draw=\highlightcolor] (11) {{\small(1, 1)}};
+            \node[state,below=of 11, label={[]0:$x_1$}] (12) {{\small(1, 2)}};
+
+              \path (00) edge (10)
+                (00) edge (11)
+                (00) edge (12);
+
+              \path (01) edge (10);
+
+            \only<-4,7->{
+                \path (01) edge (11);
+              }
+
+              \path (02) edge (10)
+                (02) edge (11)
+                (02) edge (12);
+
+            \only<5-6> {
+              \path (01) edge[color=\colorTikzC, thick] (11);
+            }
+          \end{tikzpicture}
+        \end{center}
+      \end{column}
+      \begin{column}{0.48 \textwidth}
+        \begin{align*}
+          \only<1-5>{\color{white}}\rightarrow \quad& \only<1-5>{\color{white}} [(0, 1), (1, 1)] \\[3.3ex]
+          \only<1-6>{\color{white}} \rightarrow \quad& \only<1-6>{\color{white}} [\overline{x_1}, x_3] \\[3.3ex]
+          \only<1-7> {\color{white}} \rightarrow \quad& \only<1-7>{\color{white}} \{x_0 \mapsto {\only<8->{\color{gray}}\bfalse,} x_1 \mapsto {\bfalse}, {\only<8->{\color{gray}} x_2 \mapsto \bfalse,} x_3 \mapsto {\btrue}\}
+        \end{align*}
+      \end{column}
+    \end{columns}
+  \end{overlayarea}
+
+\end{frame}
+
+
 
 \begin{frame}[allowframebreaks]{The Reduction Relation}
   \begin{block}{Labellings}
