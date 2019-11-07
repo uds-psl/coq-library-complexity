@@ -198,9 +198,9 @@
   \setlength{\TPVertModule}{\textwidth}
   \begin{textblock}{0.5} (0.62, 0.2)
     \small
-    \textbf{1964:} DTIME, time hierarchy,\ldots
+    \textbf{1965:} time/space complexity, hierarchy theorems, \ldots
 
-    \emph{Computational complexity of recursive sequences}
+    \emph{On the Computational Complexity of Algorithms}
 
     Hartmanis and Stearns
   \end{textblock}
@@ -348,7 +348,7 @@
 
   \color{gray}
   \begin{center}
-    $(x_0 \lor \overline{x_1} \lor x_2) \land (x_0 \lor x_3 \lor x_1)$ is in $3$-CNF
+    $(x_0 \lor \overline{x_1} \lor x_2) \land (x_0 \lor x_3 \lor x_1)$ is a $3$-CNF
   \end{center}
 \end{frame}
 
@@ -421,7 +421,8 @@
 \begin{align*}
   u,v : \lnode \\
   e : \ledge \\
-  g : \lgraph 
+  g : \lgraph \\
+  cl : \listsof{\lnode}
 \end{align*}
 \end{column}
 \end{columns}
@@ -453,17 +454,18 @@
 
 \newcommand*{\redrel}{\ensuremath{\sim^{\text{3-\textbf{SAT}}}_{\textbf{Clique}}}}
 
-\begin{frame}[noframenumbering]
+\begin{frame}
   \[\scalebox{1.5}{$\text{3-\textbf{SAT}} \prec_{\text{p}} \textbf{Clique}$}\]
 
   \color{gray}
   \[ N \mapsto (g, k) \]
+  \[ \text{3-\textbf{SAT}}~N \leftrightarrow \textbf{Clique}~(g,k) \] 
 \end{frame}
 
 
 \begin{frame}{Reduction: Example}
   \begin{tikzpicture}[overlay, remember picture]
-    \node at (10.1, 0.9) {\color{gray} \small $N \mapsto (g, \only<-10>{k}\only<11>{\length{N}})$};
+    \node at (10.1, 0.9) {\color{gray} \small $N \mapsto (g, \only<-10>{k}\only<11->{\length{N}})$};
   \end{tikzpicture}
 
   \vspace{-2ex}
@@ -551,6 +553,12 @@
     \node at (-7.5, 0) {$\overline{x_1} \lightning x_1$};
   }
 \end{tikzpicture}
+
+\begin{tikzpicture}[overlay, remember picture]
+  \only<12>{
+    \node[anchor=center, fill=craneorange!20, text=black,draw, text width = 7cm, align=center] at ($(current page.south west)!0.5!(current page.north east)$) {Each node of a clique encodes\\ the selection of one non-conflicting\\ literal per clause};
+  }
+\end{tikzpicture}
 \end{center}
 \only<2>{}
 
@@ -607,6 +615,14 @@
   \begin{block}{\vspace*{-3ex}}
     \textbf{SAT} is NP-hard.
   \end{block}
+
+  \vspace{4ex}
+
+  \onslide<2->{
+    \begin{center}
+      Encode the computation of a 1-tape Turing machine on an input of size $k$ for $t$ steps
+    \end{center}
+  }
   %outline: we reduce from Turing machines instead of L because of the simpler (low-level) structure
   %need reduction from L to TM in order to derive NP-hardness - TODO: Fabian is currently working on that
 
@@ -696,7 +712,7 @@
 
 \begin{frame}{Conclusion}
   \begin{itemize}
-    \item a first fully formalised polynomial-time reduction from \textbf{3SAT} to \textbf{Clique}
+    \item a first formalised polynomial-time reduction from \textbf{3SAT} to \textbf{Clique}
     \item proofs that \textbf{SAT}, $k$-\textbf{SAT} and \textbf{Clique} are in NP
     \item nice proofs hard to obtain
   \end{itemize}
@@ -1075,14 +1091,25 @@
 
 
 \begin{frame}[allowframebreaks]{The Reduction Relation}
+  \begin{block}{Representation of graphs}
+    \vspace{-4ex}
+      \begin{align*}
+        \lnode := \nat &&
+        \ledge := \lnode \times \lnode &&
+        \lgraph := \nat \times \listsof~\ledge 
+      \end{align*}
+  \end{block}
+
   \begin{block}{Labellings}
+    \vspace{-3ex}
  \begin{align*}
   \normalfont\textsf{labG} := \nat \rightarrow \nat \times \nat && \normalfont\textsf{labG}^{-1} := \nat \times \nat \rightarrow \nat
   \end{align*}
+  \vspace{-4ex}
   \begin{align*}
     \normalfont\textsf{isLabelling}~&N~(f : \normalfont\textsf{labG})~(f^{-1} : \normalfont\textsf{labG}^{-1}) := \normalfont\textsf{inverseOn}~f~f^{-1}\\
-  &(\lambda~v. v < 3 \cdot \length{N})\\
-  ~&(\lambda~(c, l). c < \length{N} \land l < 3) 
+  &\{ v \in \nat | v < 3 \cdot \length{N}\} \\
+    ~&\{(c, l) \in \nat^2 | c < \length{N} \land l < 3\} 
 \end{align*}
   \end{block}
 
@@ -1113,6 +1140,7 @@
 
 \begin{frame}[allowframebreaks]{References}
   \nocite{Sipser:TheoryofComputation}
+  \nocite{Bläser:TISkript}
   \bibliographystyle{apalike}
   \bibliography{references}{}
 \end{frame}
