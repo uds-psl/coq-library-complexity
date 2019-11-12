@@ -100,7 +100,7 @@
   \end{tabular}
 }
 
-\newcommand{\blank}{\text{\textvisiblespace}}
+\newcommand{\blank}{\textbf{\textvisiblespace}}
 
 \section{Introduction}
 Cook's Theorem was proved in 1971 by Stephen A.\ Cook (and, in parallel, by Levin) and is one of the foundational results of computational complexity theory. 
@@ -134,6 +134,8 @@ Our reduction has the following structure:
 
 The reduction from \gennp{} to \strconrew{} does the main job of encoding the behaviour of Turing machines. We are then left with a structurally much simpler problem on strings. 
 In order to be able to encode this problem using logical formulas, we then simplify the alphabet to $\{0, 1\}$ in a reduction to \binstrconrew, making it possible to encode single characters using a boolean-valued atomic proposition in the reduction to \csat. The encoding of the string rewriting system that we use will not be in conjunctive normal form (CNF), therefore we then use the Tseytin transformation in a reduction from \csat{} to \sat{} on CNFs. 
+
+\TODO{consider introducing two new problems before strconrew that are already working with rewriting systems, but factor out the need to ``guess'' initial strings (first part: reduction to ``exists tape'', second part: reduction to ``exists tape whose position is normalised'', then reduction to strconrew)}
 
 \section{Involved Languages}
 We first give a formal description of the involved problems. 
@@ -213,11 +215,15 @@ We now formally define \strconrew{}:
   \begin{itemize}
     \item For every $0 \le i < t$ it holds that $\validR(x_i, x_{i+1})$, where $\validR$ is defined as follows:
       \[\forall (0 \le j\cdot o \le l -w + 1), \exists (a \constrent b) \in R, x_i[j\cdot o..j\cdot o+ k-1] = a \land x_{i+1}[j\cdot o..j\cdot o+k-1] = b \]
+      We will denote $\validR(x_i, x_{i+1})$ by $x_i \strent{} x_{i+1}$. 
     \item There exists an $x \in \Rfinal$ such that $x$ is a substring of $x_t$, i.e.\ there is $0 \le j \le l - \length{x} + 1$ with $x = x_t[j..j+\length{x} - 1]$.
   \end{itemize}
+
+  A rewriting system is specified by an 8-tuple $S = (\Sigma, l, t, x_0, w, o, R, \Rfinal)$.
 \end{definition}
 
 We admit that this definition is quite complex, but hope that the reason for this complexity becomes clear in the reduction from \gennp{}.
+Usually, we will use triples $S = (x_0, R, \Rfinal)$ to refer to a rewriting system; all the other parameters will be clear from the context.
 
 Finally, we establish a few properties about \strconrew{}. For the remainder of this section, fix a rewriting system with parameters according to Definition~\ref{def:strconrew}.
 
@@ -301,7 +307,7 @@ Using the string rewriting problem, it is then determined whether there exists a
   \end{tikzpicture}
 \end{center}
 
-In contrast to the representation of tapes in Definition~\ref{def:tapes}, we cannot make the string size grow dynamically, but instead have to make sure to allocate enough space such that the Turing machine will never run out of space during its $t$ computation steps. Turing machines can, in $t$ steps of computation, only visit $t+1$ cells. Since our tapes are two-sided, we reserve space for $2(k + t + 2)+1$ cells ($k + t + 2$ cells in each direction\footnote{We need $k+t$ cells because the Turing machine might never visit the input cells; the additional 2 cells are there in order to make reasoning easier.}, i.e.\ left and right, and one cell on which the head resides initially).
+In contrast to the representation of tapes in Definition~\ref{def:tapes}, we cannot make the string size grow dynamically, but instead have to make sure to allocate enough space such that the Turing machine will never run out of space during its $t$ computation steps. Turing machines can, in $t$ steps of computation, only visit $t+1$ cells. Since our tapes are two-sided, we reserve space for $2(k + t + 2)+1$ cells ($k + t + 2$ cells in each direction\footnote{We need $k+t$ cells because the Turing machine might never visit the input cells; the additional 2 cells are there in order to make reasoning easier since we can then assume that the configuration string has length $\ge 5$.}, i.e.\ left and right, and one cell on which the head resides initially).
 In general, most of these cells will be unused. We therefore introduce explicit blanks \blank{} which are used for these unused cells.
 
 For the encoding of configurations, we directly follow the representation of tapes of Definition~\ref{def:tapes}.
@@ -690,15 +696,116 @@ Luckily, the other direction is a bit more interesting. First of all, we formula
 \end{proof}
 
 \begin{theorem}[Completeness]
-  Let a configuration $(q, \mathit{tape})$ be given with $\length{\mathit{tape}} \le z'$. Then there exists a string $s$ with $(q, \mathit{tape}) \reprc{} s$. If $(q, \mathit{tape}) \rhd^{\le t} (q', \mathit{tape}')$ with $\length{\mathit{tape}'} \le z'$, then there exists a string $s'$ with $s \strent{}^t$ and $(q', \mathit{tape}') \reprc{} s'$.  
+  Let a configuration $(q, \mathit{tape})$ be given with $\length{\mathit{tape}} \le z'$. Then there exists a string $s$ with $(q, \mathit{tape}) \reprc{} s$. If $(q, \mathit{tape}) \rhd^{\le t} (q', \mathit{tape}')$ with $\length{\mathit{tape}'} \le z'$, then there exists a string $s'$ with $s \strent^t$ and $(q', \mathit{tape}') \reprc{} s'$.  
 \end{theorem}
 
 \begin{theorem}[Soundness]
-  Let a string $s$ be given such that there exists a configuration $(q, \mathit{tape})$ with $(q, \mathit{tape}) \reprc{} s$. If $s \strent{}^t s'$, then there exists a configuration $(q', \mathit{tape}')$ with $(q', \mathit{tape}') \reprc{} s'$ such that $(q, \mathit{tape}) \rhd^{\le t} (q', \mathit{tape}')$ and $\length{\mathit{tape}'} \le z'$. 
+  Let a string $s$ be given such that there exists a configuration $(q, \mathit{tape})$ with $(q, \mathit{tape}) \reprc{} s$. If $s \strent^t s'$, then there exists a configuration $(q', \mathit{tape}')$ with $(q', \mathit{tape}') \reprc{} s'$ such that $(q, \mathit{tape}) \rhd^{\le t} (q', \mathit{tape}')$ and $\length{\mathit{tape}'} \le z'$. 
 \end{theorem}
 
-\subsection{Introducing Nondeterminism}
+\TODO{Is it really a good idea to explicitly spell out this intermediate step?}
+We can now give a reduction from \gennp{} to a first variant of \strconrew{}, where we still haven't resolved the nondeterminism of choosing an initial tape state:
+\begin{definition}[\textbf{GenNP-IntermediateTape}]
+  Given: alphabets $\Gamma$ and $\Sigma \subseteq \Gamma$, a time bound $t$, a set of rewrite windows $R$, final constraints $\Rfinal$, and a Turing machine state $q$ and a number $k$. 
+  Determine if there exists a Turing machine tape $\mathit{tape}$ over $\Sigma$ with $\length{\mathit{tape}} \le k$ such that 
+  \[(\Gamma, 2 (t + k + 2) + 1, t, \textsf{initConf}~q~\mathit{tape}, 3, 1, R, \Rfinal) \in \strconrew{}.\]
+\end{definition}
+\begin{theorem}[Reduction to String Rewriting]
+  There is a polynomial-time reduction from \gennp{} to \textbf{GenNP-IntermediateTape}. 
+\end{theorem}
+\begin{proof}
+  The construction and correctness follow the description in this subsection. 
+\end{proof}
 
+
+\subsection{Interlude: A Recipe for Adding Preludes to \strconrew{}}
+In this section, we introduce a technique for changing the initial string $x_0$ of \strconrew{} instances (we will call this process the \emph{prelude} of the resulting \strconrew{} instance) by expanding the alphabet and adding new rules to the system. The rules have to be designed such that, from a new initial string $x_0'$, exactly $t'$ rewrite steps can be done using the new rules (and the original rules can not be applied to any intermediate string encountered during these steps), before ending up with a ``new'' initial string for the original \strconrew{} instance (and from there on, the new rules cannot be applied anymore). 
+This technique will, for instance, allow us to handle the nondeterministic input string of our Turing machines, by being able to reduce the question
+\begin{center}
+  ``Does there exist an initial input string $x_0$ of a certain form such that a rewrite with $t$ steps to a final string satisfying $\Rfinal$ is possible?''
+\end{center}
+to the simpler question
+\begin{center}
+  ``For a fixed input $x_0'$, can $x_0'$ be rewritten in $t + t'$ steps to a final string satisfying $\Rfinal$?''
+\end{center}
+This will be enabled by using nondeterministic rewrite rules. 
+
+\TODO{well, yes, formalise this!}
+
+\subsection{Normalising Tapes}
+In this subsection we show that we can restrict ourselves wlog to initial tape states for which the tape head initially resides to the left of the input. 
+\TODO{proceeds using nondeterministic rewrite rules that allow $k$ shifts of the tape; main challenge is that this needs to always take a fixed number of rewrite steps. for that, use a counter that is decreased with each shift. if the counter reaches zero, a final rewrite brings the string into a state on which the TM simulation can run}
+
+\begin{definition}[\textbf{GenNP-IntermediateNormTape}]
+  Given: alphabets $\Gamma$ and $\Sigma \subseteq \Gamma$, a time bound $t$, a set of rewrite windows $R$, final constraints $\Rfinal$, and a Turing machine state $q$ and a number $k$. 
+  Determine if there exists an input string $\mathit{input}$ over $\Sigma$ with $\length{\mathit{input}} \le k$ such that 
+  \[(\Gamma, 2 (t + k + 2) + 1, t, \textsf{initConf'}~q~\mathit{input}, 3, 1, R, \Rfinal) \in \strconrew{}.\]
+  \TODO{the important property here is that initConf' will generate either a leftof tape or a niltape}
+\end{definition}
+
+\TODO{the proof is implemented as a prelude as described in the previous section}
+
+\subsection{Introducing Nondeterminism}
+In this section we finally reduce \textbf{GenNP-IntermediateNormTape} to \strconrew{}\footnote{Yay!}. 
+
+The basic idea is to take create an initial string containing special symbols $\top$ where input symbols for the Turing machine can be placed. Then, we add nondeterministic rewrite rules that allow these symbols to be guessed in a single rewrite step. Thus, after a single step, we end up with a valid initial configuration string for the Turing machine simulation.
+
+The new initial string $x_0'$ looks as follows, for symbols $\top, \bot, \underline{q^\blank}$ not contained in the alphabet $\Gamma$, where $q$ is the desired initial state:
+\begin{center}
+  \begin{tikzpicture}
+    \draw (0, 0.5) -- (10.5, 0.5);
+    \draw (0, 0) -- (10.5, 0);
+    \draw (0, 0) -- (0, 0.5);
+    \draw (10.5, 0) -- (10.5, 0.5);
+
+    \draw (0.5, 0.5) -- (0.5, 0);
+    \draw (10, 0.5) -- (10, 0);
+    \draw (5, 0.5) -- (5, 0);
+    \draw (5.5, 0.5) -- (5.5, 0);
+    \draw (4.5, 0.5) -- (4.5, 0);
+    \draw (6, 0.5) -- (6, 0);
+    \draw (7.5, 0.5) -- (7.5, 0);
+    \draw (8, 0.5) -- (8, 0);
+    \draw (8.5, 0.5) -- (8.5, 0);
+   
+    \node at (0.25, 0.25) {$\bot$};
+    \node at (4.75, 0.25) {$\bot$};
+    \node at (5.25, 0.25) {$\underline{q^\blank}$};
+    \node at (5.75, 0.25) {$\top$};
+    \node at (7.75, 0.25) {$\top$};
+    \node at (8.25, 0.25) {$\bot$};
+    \node at (10.25, 0.25) {$\bot$};
+
+    \path[<->] (5.5, -0.5) edge node[fill=white, anchor=center, pos= 0.5] {\small $k$} (8, -0.5);
+    \path[<->] (0, -0.5) edge node [fill = white, anchor=center, pos=0.5] {\small $t + k + 2$} (5, -0.5);
+    \path[<->] (8, -0.5) edge node [fill = white, anchor =center, pos=0.5] {\small $t + 2$} (10.5, -0.5);
+  \end{tikzpicture}
+\end{center}
+
+The symbol $\top$ denotes positions where elements of the tape alphabet $\Sigma$ may be placed, $\bot$ denotes positions where blanks must be placed. While the string could, in principle, also directly contain blanks \blank{}, a string with no symbols of the old alphabet $\Gamma$ will make proofs more convenient. 
+
+Designing the rewriting rules is now straightforward. The only part which takes some consideration is the fact that the input string may be shorter than $k$ symbols, but there may never be blanks inbetween elements of the tape alphabet. This difficulty is easily resolved due to the overlapping rewrite windows:
+\begin{center}
+  \rewwin{\bot & \bot & \bot}{\blank & \blank & \blank}
+  \rewwin{\bot & \bot & \underline{q^\blank}} {\blank & \blank & q^\blank}
+  \rewwin{\bot & \underline{q^\blank} & \top}{\blank & q^\blank & \polneut{m_1}}
+  \rewwin{\bot & \underline{q^\blank} & \bot}{\blank & q^\blank & \blank} \\[3ex]
+  \rewwin{\underline{q^\blank} & \bot & \bot}{q^\blank & \blank & \blank} 
+  \rewwin{\underline{q^\blank} & \top & \bot}{q^\blank & \polneut{m_1} & \blank}
+  \rewwin{\underline{q^\blank} & \top & \top}{q^\blank & \polneut{\sigma_1} & \polneut{m_1}}
+  \rewwin{\underline{q^\blank} & \top & \top}{q^\blank & \blank & \blank} \\[3ex]
+  \rewwin{\top & \top & \top}{\polneut{\sigma_1} & \polneut{\sigma_2} & \polneut{m_1}}
+  \rewwin{\top & \top & \top}{\polneut{\sigma_1} & \blank & \blank} 
+  \rewwin{\top & \top & \top}{\blank & \blank & \blank} \\[3ex]
+  \rewwin{\top & \top & \bot}{\polneut{\sigma_1} & \polneut{m_1} & \blank}
+  \rewwin{\top & \top & \bot}{\blank & \blank & \blank} 
+  \rewwin{\top & \bot & \bot}{\polneut{m_1} & \blank & \blank}
+  \rewwin{\top & \bot & \bot}{\blank & \blank & \blank}
+\end{center}
+
+These rules enforce that if we decide to replace a $\top$ with a blank instead of an element from $\Sigma$, all $\top$'s to the right of it will also need to be replaced by blanks. After one step, a configuration with state $q$ and a tape which either represents a \textsf{niltape} or a \textsf{leftof} tape of length $\le k$ is generated. 
+
+\TODO{proof of correctness using the technique from the interlude section on preludes}
 
 \section{Reducing \strconrew{} to \binstrconrew{}}
 \TODO{outline the needed homomorphism and justification}
