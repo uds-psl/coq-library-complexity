@@ -719,7 +719,7 @@ We can now give a reduction from \gennp{} to a first variant of \strconrew{}, wh
 
 
 \subsection{Interlude: A Recipe for Adding Preludes to \strconrew{}}
-In this section, we introduce a technique for changing the initial string $x_0$ of \strconrew{} instances (we will call this process the \emph{prelude} of the resulting \strconrew{} instance) by expanding the alphabet and adding new rules to the system. The rules have to be designed such that, from a new initial string $x_0'$, exactly $t'$ rewrite steps can be done using the new rules (and the original rules can not be applied to any intermediate string encountered during these steps), before ending up with a ``new'' initial string for the original \strconrew{} instance (and from there on, the new rules cannot be applied anymore). 
+In this section, we introduce a technique for generating an initial string $x_0$ for \strconrew{} instances (we will call this process the \emph{prelude} of the resulting \strconrew{} instance) by expanding the alphabet and adding new rules to the system. The rules have to be designed such that, from a new initial string $x_0'$, exactly $t'$ rewrite steps can be done using the new rules (and the original rules can not be applied to any intermediate string encountered during these steps), before ending up with a ``new'' initial string for the original \strconrew{} instance (and from there on, the new rules cannot be applied anymore). 
 This technique will, for instance, allow us to handle the nondeterministic input string of our Turing machines, by being able to reduce the question
 \begin{center}
   ``Does there exist an initial input string $x_0$ of a certain form such that a rewrite with $t$ steps to a final string satisfying $\Rfinal$ is possible?''
@@ -728,9 +728,53 @@ to the simpler question
 \begin{center}
   ``For a fixed input $x_0'$, can $x_0'$ be rewritten in $t + t'$ steps to a final string satisfying $\Rfinal$?''
 \end{center}
-This will be enabled by using nondeterministic rewrite rules. 
+This will be enabled by using nondeterministic rewrite rules that can generate an input to the Turing machine simulation.
 
-\TODO{well, yes, formalise this!}
+\TODO{rework \& check the following definitions and results}
+
+Let us fix a partial rewriting system $S = (\Sigma, l, t, w, o, R, \Rfinal)$ (i.e.\ a rewriting system missing an initial string) throughout this subsection. 
+First of all, we define compatibility and disjointness of rules. 
+\begin{definition}[Compatibility]
+  Let an alphabet $\Sigma'$, a set of rules $R'$ and an initial string $s_0 \in \listsofb{\Sigma'}$ be given. 
+  The triple $(\Sigma', R', s_0)$ is compatible with $S$ if
+  \begin{itemize}
+    \item the rules in $R'$ have width $w$
+    \item $\length{s_0} = l$
+  \end{itemize}
+\end{definition}
+\begin{definition}[Disjointness]
+  Let an alphabet $\Sigma'$, a set of rules $R'$ and an initial string $s_0 \in \listsofb{\Sigma'}$ be given. 
+  The triple $(\Sigma', R, s_0)$ is disjoint from $S$ if 
+  \begin{itemize}
+    \item $\Sigma \cap \Sigma' = \emptyset$
+    \item the rules $a \constrent{} b \in  R'$ all have premises which are strings over $\Sigma'$, i.e.\ $a \in \listsofb{\Sigma'}$
+    \item $s_0 \in \listsofb{\Sigma'}$
+  \end{itemize}
+\end{definition}
+
+\begin{definition}[Prelude]
+  Let a triple $\Sigma', R', s_0$ be given such that $(\Sigma', R', s_0)$ satisfies compatibility and disjointess for $S$. 
+  For a number of \emph{prelude steps} $t'$, $P = (\Sigma', R', t', s_0)$ is a prelude for $S$ if the following condition is satisfied:
+  \[\forall s_1, \ldots, s_{t'}, (\forall 0 \le i < t', s_i \strent{} s_{i+1}) \rightarrow (\forall 0 \le i < t', s_i \in \listsofb{\Sigma'}) \land s_{t'} \in \listsofb{\Sigma} \]
+  (where the relation $\strent{}$ is wrt.\ to the new rules $R'$) %TODO: not that it makes a difference
+\end{definition}
+
+\begin{definition}[Soundness and Completeness]
+  A prelude $P$ for $S$ is complete with respect to an initial condition $p : \listsof{\Sigma} \rightarrow \Prop$, if
+  \[ \forall x_0, p~x_0 \rightarrow (\Sigma', l, t', s_0, w, o, R', \{x_0\}) \in \strconrew{}. \]
+  $P$ is sound for $p$, if 
+  \[ \forall x_0, (\Sigma', l, t', s_0, w, o, R', \{x_0\}) \in \strconrew{} \rightarrow p~x_0. \]
+\end{definition}
+
+Soundness and completeness say that $P$ can generate exactly those strings in $t'$ steps for which $p$ holds. 
+
+Using these definitions, we obtain the following central result:
+\begin{lemma}
+  Let a predicate $p$ and a prelude $P$ be given such that $P$ is sound and complete for $p$. 
+  Define $S' := (\Sigma \sqcup \Sigma', l, t + t', s_0, w, o, R \cup R', \Rfinal)$.
+  Then 
+  \[(\exists x_0, p~x_0 \land (\Sigma, l, t, x_0, w, o, R, \Rfinal) \in \strconrew{}) \leftrightarrow S' \in \strconrew{}. \]
+\end{lemma}
 
 \subsection{Normalising Tapes}
 In this subsection we show that we can restrict ourselves wlog to initial tape states for which the tape head initially resides to the left of the input. 
