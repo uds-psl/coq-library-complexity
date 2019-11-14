@@ -135,7 +135,7 @@ Our reduction has the following structure:
 The reduction from \gennp{} to \strconrew{} does the main job of encoding the behaviour of Turing machines. We are then left with a structurally much simpler problem on strings. 
 In order to be able to encode this problem using logical formulas, we then simplify the alphabet to $\{0, 1\}$ in a reduction to \binstrconrew, making it possible to encode single characters using a boolean-valued atomic proposition in the reduction to \csat. The encoding of the string rewriting system that we use will not be in conjunctive normal form (CNF), therefore we then use the Tseytin transformation in a reduction from \csat{} to \sat{} on CNFs. 
 
-\TODO{consider introducing two new problems before strconrew that are already working with rewriting systems, but factor out the need to ``guess'' initial strings (first part: reduction to ``exists tape'', second part: reduction to ``exists tape whose position is normalised'', then reduction to strconrew)}
+%\TODO{consider introducing two new problems before strconrew that are already working with rewriting systems, but factor out the need to ``guess'' initial strings (first part: reduction to ``exists tape'', second part: reduction to ``exists tape whose position is normalised'', then reduction to strconrew)}
 
 \section{Involved Languages}
 We first give a formal description of the involved problems. 
@@ -166,7 +166,13 @@ The function $\textsf{loop}_M : \textsf{Conf}_M \rightarrow \nat \rightarrow \op
 
 
 \begin{definition}[\gennp{}]
-  Given a deterministic 1-tape Turing machine $M$ and numbers $k$ and $t$, decide whether there is an input $x$ of length $\length{x} \le k$ such that $M$ halts on $x$ in at most $t$ steps: $ \exists c, (\mathit{halt}, x) \succ^{\le t} c $
+  Given a deterministic 1-tape Turing machine $M$ and numbers $k$ and $t$, decide whether there is an input $x$ of length $\length{x} \le k$ such that $M$ halts on $x$ in at most $t$ steps: 
+  $\exists c, (\mathit{halt}, \textsf{initTape}~x) \succ^{\le t} c$
+  where 
+  \begin{align*}
+    \textsf{initTape}~\nil := \textsf{niltape}\\
+    \textsf{initTape}~(x :: xs) := \textsf{leftof}~x~xs
+  \end{align*}
 \end{definition}
 
 A more wide-spread (but equivalent) definition of a generic problem for Turing machines is the following: Given a nondeterministic Turing machine $M$ and an input $x$ and a number $t$, decide whether $M$ halts on $x$ in at most $t$ steps. 
@@ -179,7 +185,7 @@ Using a classical definition of the complexity class \NP{} using Turing machines
 \subsection*{String Constraint Rewriting (\strconrew{})}
 This problem works on strings of a fixed length $l$ over an alphabet $\Sigma$. Starting with an initial string $x_0$, the task is to determine whether there is a sequence of strings $x_1, \ldots, x_t$ such that $x_{i+1}$ validly follows from $x_i$, denoted by $x_i \strent x_{i+1}$, such that $x_t$ satisfies a final condition. The number $t$ is fixed. All of the strings in the sequence must have the same length $l$. The relation $x_i \strent x_{i+1}$ is described by a set $R$ of rewrite windows.
 
-Each window specifies a rewrite $a \constrent b$ for strings $a, b$ of a fixed length $w \le l$. Basically, in order for $x_i \strent x_{i+1}$ to hold, each of the characters of $x_{i+1}$ must be derived from $x_i$ using a rewrite window.
+Each window specifies a rewrite $a \constrent b$ for strings $a, b$ of a fixed length $w \le l$. In order for $x_i \strent x_{i+1}$ to hold, each of the characters of $x_{i+1}$ must be derived from $x_i$ using a rewrite window.
 More precisely, in order for a string $x_{i+1}$ to validly follow from a string $x_i$, for each offset $j \cdot o$ in $x_i$ which is a multiple of a rewriting offset $o$, a rewrite window must hold:
 \[\bigwedge_{0 \le j\cdot o \le l - w + 1} \bigvee_{(a \constrent b) \in R} (x_i[j\cdot o..j\cdot o+w-1] = a \land x_{i+1}[j\cdot o..j\cdot o+w-1] = b) \]
 
@@ -188,14 +194,14 @@ The final condition is given by a set of substring constraints $\Rfinal$: In ord
 
 \newcommand*{\validR}{\textsf{valid}}
 
-\begin{example}[Generating permutations]
-  In this example, we develop an instance of \strconrew{} that determines whether $aaabc$ is a permutation of $abaca$ which can be obtained with at most 10 transpositions. 
+%\begin{example}[Generating permutations]
+  %In this example, we develop an instance of \strconrew{} that determines whether $aaabc$ is a permutation of $abaca$ which can be obtained with at most 10 transpositions. 
 
-  We work over the alphabet $\Sigma = \{a, b, c\}$ and a string length of $5$. We start with the initial string $x_0=abaca$ and our final substring constraint is $\{aaabc\}$; that is, we require that $aaabc$ is a substring of the final string, which implies equality because the final string will have a length of $5$.
+  %We work over the alphabet $\Sigma = \{a, b, c\}$ and a string length of $5$. We start with the initial string $x_0=abaca$ and our final substring constraint is $\{aaabc\}$; that is, we require that $aaabc$ is a substring of the final string, which implies equality because the final string will have a length of $5$.
 
-  Our rewrite windows have a width of 3 characters and we use an offset $o =1$. They allow for exchanging two adjacent characters and thus each rewrite step will capture . Namely, we have the following rewrite windows where $\sigma$ ranges over $\Sigma$:
-  \TODO{more suitable example where the limit in the number of steps has a meaning}
-\end{example}
+  %Our rewrite windows have a width of 3 characters and we use an offset $o =1$. They allow for exchanging two adjacent characters and thus each rewrite step will capture . Namely, we have the following rewrite windows where $\sigma$ ranges over $\Sigma$:
+  %\TODO{more suitable example where the limit in the number of steps has a meaning}
+%\end{example}
     
 We now formally define \strconrew{}:
 \begin{definition}\label{def:strconrew}
@@ -225,15 +231,31 @@ We now formally define \strconrew{}:
 We admit that this definition is quite complex, but hope that the reason for this complexity becomes clear in the reduction from \gennp{}.
 Usually, we will use triples $S = (x_0, R, \Rfinal)$ to refer to a rewriting system; all the other parameters will be clear from the context.
 
+Moreover, we will also use the notation $x \strent{} y$ for strings $x, y$ with $\length{x} = \length{y} < l$ in the natural way, by requiring that only for all positions $j$ with $0 \le j \cdot o \le \length{x} - w + 1$ a rewrite window holds. This allows us to reason about rewrites in substrings of a rewriting system. 
+
+A rewriting system is deterministic for a class of strings if there is at most one successor for these strings according to the relation $\strent{}$:
+\begin{definition}[Determinism]\label{def:rewdet}
+  Let a rewriting system $S = (\Sigma, l, t, x_0, w, o, R, \Rfinal)$ and a predicate $p : \listsofb{\Sigma} \rightarrow \Prop$ be given. 
+  $S$ is deterministic for $S$, iff: 
+  \[ \forall s, p~s \rightarrow \forall s_1~s_2, s \strent{} s_1 \rightarrow s \strent{} s_2 \rightarrow s_1 = s_2 \]
+\end{definition}
+
+%This is equivalent to the derivation being unique:
+%\begin{lemma}
+  %A rewriting system $S$ is deterministic for $p$, iff $\mathcal{W}($
+%\end{lemma}
+
+
+
 Finally, we establish a few properties about \strconrew{}. For the remainder of this section, fix a rewriting system with parameters according to Definition~\ref{def:strconrew}.
 
 \begin{lemma}\label{lem:rewind}
   $a :: b :: c :: rs \strent{} a' :: b' :: c' :: rs'$ iff $b :: c :: rs \strent{} b' :: c' :: rs'$ and $abc \constrent{} a'b'c'$. 
 \end{lemma}
-This lemma enables us to prove rewrites inductively.
+This lemma enables us to prove rewrites inductively. Note that we are already using the notational convention for $\strent{}$ established above.
 
 \section{Reducing \gennp{} to \strconrew{}}
-The basic idea of this reduction is very similar to the reduction in~\cite{Sipser:TheoryofComputation}, although we encode Turing machines using a constrained string rewriting system instead of logical formulas. We defer the handling of nondeterministically ``guessing'' an input of size at most $k$ to Section~\ref{TODO} and instead first deal with a setting in which we are given a deterministic 1-tape Turing machine and a fixed input $\sigma_1, \ldots, \sigma_k$ of size $k$. 
+The basic idea of this reduction is very similar to the reduction in~\cite{Sipser:TheoryofComputation}, although we encode Turing machines using a constrained string rewriting system instead of logical formulas. We defer the handling of nondeterministically ``guessing'' an input of size at most $k$ to Section~\ref{sec:nondet} and instead first deal with a setting in which we are given a deterministic 1-tape Turing machine and a fixed input $\sigma_1, \ldots, \sigma_k$ of size $k$. 
 
 \subsection{Encoding Deterministic Turing Machines}
 The configurations of the Turing machine are laid out in a tableau of $t \cdot (1 + 2(k + t + 2))$ characters. Each configuration is modelled by one line of the tableau, that is, a string of length $1 + 2(k + t + 2)$. Starting from an initial configuration $x_0$, the transition function is then encoded using rewrite windows of width 3 and rewriting offset 1. The final constraint is that the final configuration contains the symbol of a halting state. 
@@ -278,8 +300,8 @@ Using the string rewriting problem, it is then determined whether there exists a
     \node at (2.25, 2.75) {\textvisiblespace};
     \node at (3.5, 2.75) {$\ldots$};
     \node at (4.75, 2.75) {\textvisiblespace};
-    \node at (5.25, 2.75) {\small $q_0^{\sigma_1}$};
-    \node at (5.75, 2.75) {\small $\sigma_2$};
+    \node at (5.25, 2.75) {\small $q_0^{\blank}$};
+    \node at (5.75, 2.75) {\small $\sigma_1$};
     \node at (6.5, 2.75) {$\ldots$};
     \node at (7.25, 2.75) {\small $\sigma_k$};
     \node at (7.75, 2.75) {\textvisiblespace};
@@ -299,7 +321,7 @@ Using the string rewriting problem, it is then determined whether there exists a
 
     \path[<->] (1, -4) edge node[fill=white, anchor=center, pos= 0.5] {\small t} (1, 3);
     \path[<->] (1.5, -4.5) edge node[fill=white, anchor=center, pos=0.5] {\small $2 (k + t + 2) + 1$} (10, -4.5);
-    \path[<->] (5.5, 3.5) edge node[fill=white, anchor=center, pos=0.5] {\small $k-1$} (7.5, 3.5);
+    \path[<->] (5.5, 3.5) edge node[fill=white, anchor=center, pos=0.5] {\small $k$} (7.5, 3.5);
 
     \node at (11, 2.75) {\small 1\textsuperscript{st} config};
     \node at (11, 2.25) {\small 2\textsuperscript{nd} config};
@@ -308,10 +330,10 @@ Using the string rewriting problem, it is then determined whether there exists a
 \end{center}
 
 In contrast to the representation of tapes in Definition~\ref{def:tapes}, we cannot make the string size grow dynamically, but instead have to make sure to allocate enough space such that the Turing machine will never run out of space during its $t$ computation steps. Turing machines can, in $t$ steps of computation, only visit $t+1$ cells. Since our tapes are two-sided, we reserve space for $2(k + t + 2)+1$ cells ($k + t + 2$ cells in each direction\footnote{We need $k+t$ cells because the Turing machine might never visit the input cells; the additional 2 cells are there in order to make reasoning easier since we can then assume that the configuration string has length $\ge 5$.}, i.e.\ left and right, and one cell on which the head resides initially).
-In general, most of these cells will be unused. We therefore introduce explicit blanks \blank{} which are used for these unused cells.
+In general, most of these cells will be unused. We therefore introduce explicit blanks \blank{} which are contained in these unused cells.
 
 For the encoding of configurations, we directly follow the representation of tapes of Definition~\ref{def:tapes}.
-At the center of the string, there is always a symbol $q^m$ encoding the current state $q$ and the symbol $m$ the head currently resides on (this symbol may also be a blank \blank{} if the tape is empty or the head resides left or right of the used tape region). 
+At the center of the string, there is always a symbol $q^m$ encoding the current state $q$ and the symbol $m$ the head currently resides on (this symbol may also be a blank \blank{} if the tape is empty or the head resides to the left or right of the used tape region). 
 To the left of the center symbol, there will be the encoded left part of the tape, and to the right will be the encoded right part of the tape. 
 
 \newcommand{\polneg}[1]{\overleftarrow{#1}}
@@ -330,8 +352,13 @@ We desire that the following properties hold for our encoding:
 All of these properties are reasonable to desire in order to be able to obtain intuitive proofs.
 Our encoding will satisfy properties (1), (3) and (4); (2) will be nearly satisfied, with a small degree of freedom in the encoding.
 
-The main difficulty with encoding the transitions lies with our representation of tapes. Since the tape representation doesn't include an explicit blank symbol but our encoding needs to rely on blanks in order to be able to preallocate all the needed space statically, we have to work around this incompatibility. We will thus use symbols $q^m$ for the current state and current symbol under the head. 
-Actually, the head position will be fixed: A symbol $q^m$ will always be placed at the center of the string. The \emph{tape contents} are moved around it. This is necessary in order to fulfill property (2): Otherwise, there would be $\bigO{t}$ many different representations for each configuration since we could arbitrarily shift around the state and the tape contents inside the string.
+The main difficulty with encoding the transitions lies with our representation of tapes. 
+Since the tape representation doesn't include an explicit blank symbol but our encoding needs to rely on blanks in order to be able to preallocate all the needed space, we have to work around this incompatibility. 
+We will thus use symbols $q^m$ for the current state and current symbol under the head, and have the invariant that between any two cells that currently contain a tape symbol, there will never be a blank.
+Moreover, beyond the used tape region, there will only be blanks. 
+If the head is currently beyond the used tape region, for example to the left of it, on a blank, moves further away from the used tape region, e.g.\ to the left, will be ignored; instead the head will stay on the current blank (this mirrors the behaviour of the Turing machines presented in Section~\ref{sec:TM}).
+
+The head position will be fixed: A symbol $q^m$ will always be placed at the center of the string. The \emph{tape contents} are moved around it. This is necessary in order to fulfill property (2): Otherwise, there would be $\bigO{t}$ many different representations for each configuration since we could arbitrarily shift around the state and the tape contents inside the string.
 This invariant also makes proofs easier: We always know that a state character can only appear at the center of the string and nowhere else.
 
 We now define the alphabet.
@@ -340,8 +367,8 @@ Let $\Sigma$ be the finite type representing the Turing machine $M$'s alphabet a
   \Sigma' := \{\polneg{\sigma}, \polpos{\sigma}, \polneut{\sigma} | \sigma \in \Sigma\} \\
   \Gamma := \{\blank\} \cup \{q^m | q \in Q, m \in \Sigma \cup \{\blank\}\} \cup \Sigma'. 
 \end{align*}
-As mentioned above, the blank \blank{} is written in cells currently not in use by $M$. Symbols of the form $q^m$ are pairs of the current state and the symbol currently under $M$'s head and will always reside at the center of the string.
-Finally, symbols $\omega \in \Sigma'$ are used for ordinary elements of $M$'s tape. Each of these symbols is annotated with a polarity $p \in \{-1, 0, 1\}$ which annotates the last head movement (its sense will become clear when dealing with the transition function). We say that $\polneg{\sigma}$ has a \emph{negative} (or \emph{left}) polarity, $\polneut{\sigma}$ is \emph{neutral} and $\polpos{\sigma}$ has a \emph{positive} (or \emph{right}) polarity\footnote{At this point I wondered about this common connotation of ``left'' $\eqsim$ ``negative'' and ``right'' $\eqsim$ ``positive''. Apparently it's all down to left-handedness and right-handedness, historically.}. 
+As mentioned above, the blank \blank{} is written in cells currently not in use by the simulation. Symbols of the form $q^m$ are pairs of the current state and the symbol currently under $M$'s head and will always reside at the center of the string.
+Finally, symbols $\sigma \in \Sigma'$ are used for ordinary elements of $M$'s tape. Each of these symbols is annotated with a polarity $p \in \{-1, 0, 1\}$ which annotates the last head movement (its sense will become clear when dealing with the transition function). We say that $\polneg{\sigma}$ has a \emph{negative} (or \emph{left}) polarity $-1$, $\polneut{\sigma}$ is \emph{neutral} (0) and $\polpos{\sigma}$ has a \emph{positive} (or \emph{right}) polarity 1\footnote{At this point I wondered about this common connotation of ``left'' $\eqsim$ ``negative'' and ``right'' $\eqsim$ ``positive''. Apparently it's all down to left-handedness and right-handedness, historically.}. 
 
 The key idea now is to use rewrite windows with a width of 3, just as in the original reduction~\cite{Sipser:TheoryofComputation}. Also remember that we are using an offset of 1. Thus, one of the windows has to hold at every offset of a configuration. 
 
@@ -351,7 +378,7 @@ The key idea now is to use rewrite windows with a width of 3, just as in the ori
 
 
 In the following, the letter $\sigma$ will range over $\Sigma$, $m$ will range over $\Sigma \cup \{\blank\}$. 
-We will also use $\sigma$ to refer to elements of $\Sigma'$ when we do not care about the polarity, and will use polarities with elements $m \in \Sigma'$, e.g.\ $\polpos{m}$; in case that $m \in \Sigma$, this has the usual effect, while the polarity can be ignored if $m = \blank$. 
+We will also use $\sigma$ to refer to elements of $\Sigma'$ when we do not care about the polarity, and will use polarities with elements $m \in \Sigma \cup \{\blank\}$, e.g.\ $\polpos{m}$; in case that $m \in \Sigma$, this has the usual effect, while the polarity can be ignored if $m = \blank$. 
 
 
 The following windows are created for moving the tape. For the moment, the annotations stating to which half of the configuration string they can be applied can be disregarded.
@@ -390,11 +417,11 @@ The following windows are created for moving the tape. For the moment, the annot
 \end{center}
 
 Note that many of the rules are symmetric since we need left and right versions for most of them. 
-Also note that these rules explicitly encode the invariant that all elements of $M$'s tape are stored contiguously, without any blanks \blank{} in between.
+Also note that these rules explicitly encode the invariant that all elements of $M$'s tape are stored contiguously, without any blanks \blank{} between them.
 
 \paragraph*{Transitions}
 
-For every entry of the transition function, we introduce the following windows. Note that, when moving the head left, we have to shift the tape right, and we have to shift the tape left, if the head is moving right.
+For every entry of the transition function, we introduce the following windows. Note that, when moving the head left, we have to shift the tape right, and we have to shift the tape left if the head is moving right.
 
 \paragraph*{$\delta(q, \Some{a}) = (p, \Some{b}, \textsf{L})$:}
 \begin{center}
@@ -440,7 +467,7 @@ For every entry of the transition function, we introduce the following windows. 
 
 The rules for $\delta(q, \Some{a}) = (p, \None, \textsf{R})$ and $\delta(q, \Some{a}) = (p, \None, \textsf{N})$ can be derived from the $\Some{b}$ cases in a similar fashion and can be found in the appendix.
 
-For the cases where the current symbol is a blank, it must hold that there is a blank to the left or to the right (otherwise the invariant that all of the used cells are contiguous would be violated).
+For the cases where the current symbol is a blank, it must hold that there is a blank to the left or to the right of it (otherwise the invariant that all of the used cells are contiguous would be violated).
 \paragraph*{$\delta(q, \None) = (p, \Some{b}, \textsf{L})$:}
 \begin{center}
   \rewwin{\blank & q^\blank & m_1}{\blank & p^\blank & \polpos{b}} 
@@ -506,7 +533,7 @@ If the head is currently on a blank (i.e.\ the head is beyond the currently used
   \rewwin{\blank & \blank & q^\blank}{\blank & \blank & p^{m_1}}
 \end{center}
 
-\paragraph*{Extensions}
+\paragraph*{Halting Extensions}
 Finally, we need to account for the case where the Turing machine halts in less than $t$ steps. For this case, we add the following extension rules for any halting state $q$: 
 \begin{center}
   \rewwin{m_1 & q^{\sigma_1} & m_2}{\polneut{m_1} & q^{\sigma_1} & \polneut{m_2}} 
@@ -517,11 +544,11 @@ Finally, we need to account for the case where the Turing machine halts in less 
   \rewwin{q^{m_1} & \sigma_1 & m_2}{q^{m_1} & \polneut{\sigma_1} & \polneut{m_2}} 
   \rewwin{q^{m_1} & \blank & \blank}{q^{m_1} & \blank & \blank}
 \end{center}
-
-The intuition behind these rules is that one always starts at the center of the string, with a rule which contains the current state and symbol in the middle of the window. This rule then determines the action of the Turing machine uniquely. The polarities resulting from this rule indicate to adjacent rewrite positions how to move the tape. Note, however, that the rule one has to apply in the center is not uniquely determined from the three centermost symbols when the tape needs to be shifted. One has to look ahead in the opposite direction of the shift in order to determine the rule. 
+\vspace{7ex}
+The intuition behind all of these rules is that one always starts at the center of the string, with a rule which contains the current state and symbol in the middle of the window. This rule then determines the action of the Turing machine uniquely. The polarities resulting from this rule indicate to adjacent rewrite positions how to move the tape. Note, however, that the rule one has to apply in the center is not uniquely determined from the three centermost symbols when the tape needs to be shifted. One has to look ahead in the opposite direction of the shift in order to determine the rule. 
 
 We remark that leaving out the polarities would lead to an unsound rewriting system. Assume, for instance, that $\delta(q, \Some{a}) = (p, \Some{a'}, \textsf{L})$ and that we currently have the string $\blank bbbq^a c \blank$. Removing the polarities from the above rules would make the string $\blank b b b p^b a' c$ a valid successor string, due to the (necessary) identity rules.
-\TODO{nice graphic showing the problem}
+%\TODO{nice graphic showing the problem}
 
 While there are a great number of rewrite windows necessary (and one probably does not want to write them down even for simple Turing machines), their number is still polynomial in the size of the alphabet $\length{\Sigma}$ and the number of states $\length{Q}$: First note that the number of transitions is in $\bigO{\length{\Sigma} \cdot \length{Q}}$. For each of those transitions, we are creating at most seven sets of rules, each having at most five metavariables from $\Sigma'$ and being instantiated for $\le 3^2$ different polarities. Thus the number of rules induced by the transition function is in $\bigO{\length{\Sigma} \cdot \length{Q} \cdot \length{\Sigma}^5}$. 
 A similar argument can be given for the other rules. 
@@ -529,10 +556,40 @@ A similar argument can be given for the other rules.
 \subsubsection{Representation Relations}
 Now that we have described the construction on a high level, we turn towards formalising these intuitions. 
 Let us fix a Turing machine $M$ on an alphabet $\Sigma$  and the numbers $t$ and $k$. We set $w := 3$, $l := 2\cdot (t + k + 2) + 1$ and $o := 1$. 
-We use the letter $s$ to refer to configuration strings of fixed length $l$. In line with the notion that in the center of the string, there will always be the cell containing the Turing machine's current state, we index into the string based on this center. That is, $s[0]$ will refer to the cell containing the state. 
-Moreover, let $z' := t + k$ and $z := t + k + 2$. $z'$ is the space that the Turing machine can effectively use on one side of the tape, while $z'$ is the length of ``one side'' of a configuration string (including the two characters that are there for convenience). 
-We will use negative indices to access the left side of the string (and thus the left part of $M$'s tape) and positive indices to access the right side of the string. 
-\TODO{drawing describing the layout}
+We use the letter $s$ to refer to configuration strings of fixed length $l$. 
+In line with the notion that in the center of the string, there will always be the cell containing the Turing machine's current state, we index into the string based on this center. 
+That is, $s[0]$ will refer to the cell containing the state. 
+We will use negative indices to access the left side of the string (and thus the left part of $M$'s tape) and positive indices to access the right side of the string.
+Moreover, let $z' := t + k$ and $z := t + k + 2$. $z'$ is the space that the Turing machine can effectively use on one side of the tape, while $z$ is the length of ``one side'' of a configuration string (including the two characters that are there for convenience). 
+ 
+\begin{center}
+  \begin{tikzpicture}
+    \draw (0, 1) -- (11, 1);
+    \draw (0, 0) -- (11, 0);
+    \draw (0, 0) -- (0, 1);
+    \draw (11, 0) -- (11, 1);
+
+    \draw (5, 0) -- (5, 1);
+    \draw (6, 0) -- (6, 1);
+    \draw (4, 0) -- (4, 1);
+    \draw (3, 0) -- (3, 1);
+    \draw (7, 0) -- (7, 1);
+    \draw (8, 0) -- (8, 1);
+
+    \node at (5.5, 1.25) {$s[0]$};
+    \node at (6.5, 1.25) {$s[1]$};
+    \node at (4.5, 1.25) {$s[-1]$};
+    \node at (3.5, 1.25) {$s[-2]$};
+    \node at (7.5, 1.25) {$s[2]$};
+
+    \node at (1.5, 0.5) {$\cdots$};
+    \node at (9.5, 0.5) {$\cdots$};
+    \node at (5.5, 0.5) {$q^m$};
+
+    \path[<->] (6, -0.5) edge node[fill=white, anchor=center, pos= 0.5] {\small $z$} (11, -0.5);
+    \path[<->] (0, -0.5) edge node[fill=white, anchor=center, pos =0.5] {\small $z$} (5, -0.5);
+  \end{tikzpicture}
+\end{center}
 
 \newcommand{\reprt}[1]{\ensuremath{\sim_t^{#1}}}
 \newcommand{\reprc}{\ensuremath{\sim_c}}
@@ -540,7 +597,7 @@ We will use negative indices to access the left side of the string (and thus the
 We define the string $E_k$ by the $k$-fold repetition of the blank \blank.
 
 \begin{definition}[Representation of Half-Tapes]
-  Let a part $u$ of a tape be given, i.e.\ $u \in \listsofb{\Sigma}$. The string $h \in \Gamma^{l'}$ represents $u$ with polarity $p \in \{-1, 0, 1\}$, written $u \reprt{p} h$, if and only if $\length{u} \le z' $ and $h = (\textsf{mapPolarity}~p~u) \concat E_{z-\length{u}}$.
+  Let a part $u$ of a tape be given, i.e.\ $u \in \listsofb{\Sigma}$. The string $h \in \Gamma^{z}$ represents $u$ with polarity $p \in \{-1, 0, 1\}$, written $u \reprt{p} h$, if and only if $\length{u} \le z' $ and $h = (\textsf{mapPolarity}~p~u) \concat E_{z-\length{u}}$.
 \end{definition}
 
 Note that we require that $\length{u} \le z'$ instead of $\length{u} \le z$, which prohibits $M$ from using more space than allowed. 
@@ -569,8 +626,8 @@ Now let $R$ be the set of rewriting rules for $M$ given in Section~\ref{sec:rewr
     If $(q, \mathit{tape}) \reprc s$, $q$ is a halting state and $s \strent{} s'$, then it holds that $(q, \mathit{tape}) \reprc{} s'$. 
 \end{itemize}
 
-The second direction also entails that the rewriting system is deterministic for strings encoding configurations (since the Turing machine is deterministic). 
-\TODO{maybe formalise the notion of determinism for rewriting systems}
+Note that the second direction is equivalent to the conjunction of the first direction and the rewriting system being deterministic for strings encoding configurations. 
+
 
 \begin{lemma}\label{lem:tapeadd}
   The rewriting system enables us to add one element at the head of one half of the configuration.
@@ -789,7 +846,7 @@ In this subsection we show that we can restrict ourselves wlog to initial tape s
 
 \TODO{the proof is implemented as a prelude as described in the previous section}
 
-\subsection{Introducing Nondeterminism}
+\subsection{Introducing Nondeterminism}\label{sec:nondet}
 In this section we finally reduce \textbf{GenNP-IntermediateNormTape} to \strconrew{}\footnote{Yay!}. 
 
 The basic idea is to take create an initial string containing special symbols $\top$ where input symbols for the Turing machine can be placed. Then, we add nondeterministic rewrite rules that allow these symbols to be guessed in a single rewrite step. Thus, after a single step, we end up with a valid initial configuration string for the Turing machine simulation.
