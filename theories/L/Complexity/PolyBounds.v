@@ -163,14 +163,14 @@ Section fixXY.
   (*we require that this output size grows only by an additive constant in each step *)
   Lemma fold_right_time_bound_env (step : Z -> Y -> X -> X) (stepT : Z -> timeComplexity (Y -> X -> X)) :
     (exists (f : nat -> nat), (forall (acc : X) (ele : Y) (env : Z), callTime2 (stepT env) ele acc <= f(size(enc acc) + size(enc ele) + size(enc env))) /\ inOPoly f /\ monotonic f)
-    -> (exists (c__out : nat), forall (acc : X) (ele : Y) (env : Z), size(enc (step env ele acc)) <= size(enc acc) + size(enc ele) + size(enc env) + c__out)
+    -> (exists (c__out c__out' : nat), forall (acc : X) (ele : Y) (env : Z), size(enc (step env ele acc)) <= size(enc acc) + c__out' * (size(enc ele) + size(enc env)) + c__out)
     -> exists (f : nat -> nat), (forall (l : list Y) (acc : X) (env : Z), fold_right_time (step env) (stepT env) l acc <= f(size(enc l) + size(enc acc) + size(enc env))) /\ inOPoly f /\ monotonic f.
   Proof.
-    intros (f__step & H2 & H3 & H4) (c__out & F). 
+    intros (f__step & H2 & H3 & H4) (c__out & c__out' & F). 
     evar (f : nat -> nat). exists f. split.
     - intros l init env.
       (* we first show that the output size of foldr on every suffix is polynomial *)
-      assert (forall l' l'', l = l' ++ l'' -> size(enc (fold_right (step env) init l'')) <= size(enc init) + size(enc l'') + (|l''|) * (size(enc env) + c__out)).
+      assert (forall l' l'', l = l' ++ l'' -> size(enc (fold_right (step env) init l'')) <= size(enc init) + c__out' * size(enc l'') + (|l''|) * (c__out' * size(enc env) + c__out)).
       {
         intros l' l''; revert l'. induction l''.
         + cbn. intros; lia.
@@ -178,18 +178,18 @@ Section fixXY.
           rewrite list_size_cons. solverec. 
       }
 
-      instantiate (f := fun n => 4 + n * f__step((S c__out) * n * n + n) + 15 * n). subst f.
+      instantiate (f := fun n => 4 + n * f__step((S c__out) * (S c__out') * n * n + (S c__out') * n) + 15 * n). subst f.
       unfold fold_right_time. 
       induction l.
       + solverec.
       + rewrite IHl, H2.
         * unfold monotonic in H4.
-          rewrite H4 with (x' := size(enc init) + size(enc l) + (|l|) * (size(enc env) + c__out) + size(enc a) + size(enc env)). 2: rewrite H5; [lia|assert (a::l = [a] ++ l) as H6 by reflexivity; apply H6].
+          rewrite H4 with (x' := (S c__out) * (S c__out') * (size(enc(a::l)) + size(enc init) + size(enc env)) *  (size(enc(a::l)) + size(enc init) + size(enc env)) + (S c__out') * (size(enc(a::l)) + size(enc init) + size(enc env))). 
+          2: {clear IHl. rewrite H5. rewrite list_size_length. rewrite list_size_cons.
+              2: {assert (a::l = [a] ++ l) as H6 by reflexivity; apply H6. }
+              cbn. rewrite Nat.mul_add_distr_l. nia. }
 
-          rewrite H4 with (x' := (S c__out) * (size(enc(a::l)) + size(enc init) + size(enc env)) *  (size(enc(a::l)) + size(enc init) + size(enc env)) + (size(enc(a::l)) + size(enc init) + size(enc env))). 
-          2: {clear IHl. rewrite list_size_length. rewrite list_size_cons. cbn; nia. }
-
-          setoid_rewrite H4 with (x' := (S c__out) *( size(enc(a::l)) + size(enc init) + size(enc env)) *  (size(enc(a::l)) + size(enc init) + size(enc env)) + (size(enc(a::l)) + size(enc init) + size(enc env))) at 2. 
+          setoid_rewrite H4 with (x' := (S c__out) * (S c__out') * (size(enc(a::l)) + size(enc init) + size(enc env)) *  (size(enc(a::l)) + size(enc init) + size(enc env)) + (S c__out') * (size(enc(a::l)) + size(enc init) + size(enc env))) at 2. 
           2: {clear IHl. rewrite list_size_cons. cbn; nia. }
 
           rewrite list_size_cons at 7. rewrite list_size_cons at 10. solverec. 
@@ -259,20 +259,20 @@ Section noEnv.
   Context {H0 : registered Y}. 
   Lemma fold_right_time_bound (step : Y -> X -> X) (stepT : timeComplexity (Y -> X -> X)) :
     (exists (f : nat -> nat), (forall (acc : X) (ele : Y), callTime2 stepT ele acc <= f(size(enc acc) + size(enc ele))) /\ inOPoly f /\ monotonic f)
-    -> (exists (c__out : nat), forall (acc : X) (ele : Y), size(enc (step ele acc)) <= size(enc acc) + size(enc ele) + c__out)
+    -> (exists (c__out c__out' : nat), forall (acc : X) (ele : Y), size(enc (step ele acc)) <= size(enc acc) + c__out' * size(enc ele) + c__out)
     -> exists (f : nat -> nat), (forall (l : list Y) (acc : X), fold_right_time step stepT l acc <= f(size(enc l) + size(enc acc))) /\ inOPoly f /\ monotonic f.
   Proof.
     intros (f' & H1 & H2 & H3).
-    intros (c__out & F). 
+    intros (c__out & c__out' & F). 
     assert (exists (f : nat -> nat), (forall (acc : X) (ele : Y) (env : unit), callTime2 stepT ele acc <= f(size(enc acc) + size(enc ele) + size(enc env))) /\ inOPoly f /\ monotonic f). 
     {
       exists f'; split. 
       - intros; rewrite H1. unfold monotonic in H3. apply H3. lia. 
       - split; smpl_inO. 
     }
-    assert (exists (c__out : nat), forall (acc : X) (ele : Y) (env : unit), size(enc (step ele acc)) <= size(enc acc) + size(enc ele) + size(enc env) + c__out).
+    assert (exists (c__out c__out': nat), forall (acc : X) (ele : Y) (env : unit), size(enc (step ele acc)) <= size(enc acc) + c__out' * (size(enc ele) + size(enc env)) + c__out).
     {
-      exists c__out. intros. rewrite F. lia. 
+      exists c__out, c__out'. intros. rewrite F. nia. 
     }
     specialize (fold_right_time_bound_env H4 H5) as (f & G1 & G2 & G3).
     exists (fun n => f (n + 2)). 

@@ -4,6 +4,7 @@ From Undecidability.L.Datatypes Require Import LProd LTerm LNat Lists LOptions.
 From Undecidability.L.Complexity Require Import NP Synthetic Monotonic Tactics PolyBounds MorePrelim.
 From Undecidability.L.Functions Require Import Size.
 
+
 (*Conjunctive normal forms (need not be canonical)*)
 Notation var := (nat) (only parsing). 
 Notation literal := ((bool * var)%type) (only parsing).
@@ -584,9 +585,9 @@ Proof.
       instantiate (f := fun n => 19 + 15 * n). subst f; solverec. 
     - subst f; split; smpl_inO. 
   }
-  assert (exists c__out, forall (acc : nat) (l : literal), size(enc (clause_maxVar_step l acc)) <= size(enc acc) + size(enc l) + c__out). 
+  assert (exists c__out c__out', forall (acc : nat) (l : literal), size(enc (clause_maxVar_step l acc)) <= size(enc acc) + c__out' * size(enc l) + c__out). 
   {
-    exists 0. intros. 
+    exists 0, 1. intros. 
     unfold clause_maxVar_step. destruct l. rewrite size_prod; cbn [fst snd].
     repeat rewrite size_nat_enc. rewrite max_bound. lia. 
   }
@@ -615,9 +616,9 @@ Proof.
       instantiate (f := fun n => f' n + 15 * n + 15). subst f. solverec. 
    - subst f; split; smpl_inO. 
   } 
-  assert (exists c__out, forall (acc : nat) (c : clause), size(enc (cnf_maxVar_step c acc)) <= size(enc acc) + size(enc c) + c__out).
+  assert (exists c__out c__out', forall (acc : nat) (c : clause), size(enc (cnf_maxVar_step c acc)) <= size(enc acc) + c__out' * size(enc c) + c__out).
   {
-    exists 0. intros. 
+    exists 0, 1. intros. 
     unfold cnf_maxVar_step. repeat rewrite size_nat_enc. rewrite max_bound. 
     enough (clause_maxVar c * 4 <= size(enc c)) by lia.
     induction c. 

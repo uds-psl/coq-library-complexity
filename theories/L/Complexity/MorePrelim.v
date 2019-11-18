@@ -2,6 +2,7 @@ Require Import PslBase.Base.
 Require Import Lia. 
 From Undecidability.L Require Import L.
 From Undecidability.Shared Require Import Prelim.
+From Undecidability.L.Complexity Require Import Tactics.
 
 Section pair_eq.
   Variable (X Y : Type). 
@@ -39,6 +40,16 @@ Section takeN.
     - intros k H. destruct k.
       + cbn in H. destruct l'; now cbn.
       + cbn. apply IHl. now cbn in H. 
+  Qed. 
+
+  Lemma nth_error_nth (l : list X) (def res: X) (k : nat) : nth_error l k = Some res -> nth k l def = res. 
+  Proof.
+    revert k.
+    induction l.
+    - destruct k; cbn; congruence. 
+    - destruct k; cbn. 
+      + congruence. 
+      + intros. now apply IHl. 
   Qed. 
 
   Lemma takeN_sublist (l : list X) (k k' : nat) (t : list X) : takeN l k = t -> k' >= k -> exists t', takeN l k' = t ++ t'. 
@@ -101,6 +112,43 @@ Section takeN.
   Qed. 
 End takeN.
 
+Section tabulate.
+  Variable (A : Type).
+  Fixpoint tabulate (f : nat -> A) (n : nat): list A := match n with 0 => []
+                                                                      | S n => tabulate f n ++ [f n]
+                                                                end. 
+
+  Lemma tabulate_length (f : nat -> A)  (n : nat) : |tabulate f n| = n. 
+  Proof. 
+    induction n; cbn.
+    - reflexivity. 
+    - rewrite app_length, IHn. cbn;lia. 
+  Qed. 
+
+  Lemma tabulate_nth (f : nat -> A) (n : nat) : forall k, k < n -> nth_error (tabulate f n) k = Some (f k). 
+  Proof.
+    intros. induction n. 
+    - lia. 
+    - destruct (Nat.eqb k n) eqn:H1; dec_bool.
+      + rewrite H1 in *; clear H1. cbn. rewrite nth_error_app2, tabulate_length. 2: specialize (tabulate_length f n); lia. 
+        rewrite Nat.sub_diag; cbn; reflexivity.  
+      + assert (k < n) by lia. clear H1 H. cbn. rewrite nth_error_app1. 2: now rewrite tabulate_length. 
+        now apply IHn. 
+  Qed. 
+
+  Lemma tabulate_In (f : nat -> A) (n : nat) : forall a, a el tabulate f n <-> exists k, k < n /\ f k = a. 
+  Proof.
+    specialize (@tabulate_nth f n) as H1. 
+    intros a. split.
+    - intros (n0 & H2)%In_nth_error.
+      assert (n0 < n). { rewrite <- tabulate_length with (f := f). now apply nth_error_Some_lt with (x:=a). }
+      exists n0. split; [assumption|]. 
+      specialize (H1 n0 H). congruence. 
+    - intros (k & H2 & H3). specialize (H1 k H2).  
+      rewrite <- H3; eapply nth_error_In, H1. 
+  Qed. 
+End tabulate. 
+
 
 Section subsequence.
   Variable (X : Type).
@@ -121,13 +169,17 @@ End subsequence.
 
 
 
-Lemma map_el (X Y : Type) (l : list X) (f : X -> Y) (e : Y) : e el (map f l) -> exists e', e' el l /\ f e' = e. 
+Lemma map_el (X Y : Type) (l : list X) (f : X -> Y) (e : Y) : e el (map f l) <-> exists e', e' el l /\ f e' = e. 
 Proof.
   induction l. 
-  - cbn. intros []. 
-  - intros [H1 | H2].
-    + exists a. split; firstorder. 
-    + destruct (IHl H2) as (e' & F1 & F2). exists e'. split; firstorder. 
+  - cbn. split; [intros [] | intros (_ & [] & _)]. 
+  - split.
+    * intros [H1 | H2].
+      + exists a. split; firstorder. 
+      + destruct (proj1 IHl H2) as (e' & F1 & F2). exists e'. split; firstorder. 
+    * intros (e' & H1 & H2). cbn. destruct H1.
+      + rewrite H in *; now left. 
+      + right; apply IHl. now exists e'. 
 Qed. 
 
 Lemma dupfree_nthe (X : Type) (l : list X) : dupfree l <-> forall i j a b, nth_error l i = Some a -> nth_error l j = Some b -> i <> j -> a <> b.

@@ -51,6 +51,7 @@ Proof.
          intros m H. apply H4. inv H2. now intros ->. now left. now right. 
 Qed. 
 
+(** *TODO: include well-formedness*)
 Definition LClique (input : Lgraph * nat) :=
   let (g, k) := input in exists cl, @isLClique g cl k. 
 

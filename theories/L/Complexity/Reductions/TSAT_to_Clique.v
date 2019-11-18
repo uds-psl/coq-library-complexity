@@ -352,7 +352,7 @@ Section constructAssgnToPos.
     enumLiteral_different_clause pos1 pos2 /\ exists l1 l2, enumerateLiteral c pos1 = Some l1 /\ enumerateLiteral c pos2 = Some l2 /\ not(literalsConflict l1 l2). 
   Proof. 
     intros H (cl1 & lit1) (cl2 & lit2) H1 H2 H3.
-    unfold toPos in H1, H2. destruct (map_el H1) as (node1 & D1 & D2). destruct (map_el H2) as (node2 & G1 & G2). 
+    unfold toPos in H1, H2. destruct (proj1 (map_el cl f (cl1, lit1)) H1) as (node1 & D1 & D2). destruct (proj1 (map_el cl f (cl2, lit2)) H2) as (node2 & G1 & G2). 
     destruct (toPos_exists_literal H H1) as (l1 & F1). destruct (toPos_exists_literal H H2) as (l2 & F2). 
     assert (node1 < fst g /\ node2 < fst g). 
     { specialize (isLClique_node_in H D1) as E1. specialize (isLClique_node_in H G1) as E2. unfold Lgraph_node_in_dec in E1, E2. destruct g.  dec_bool. }
@@ -464,7 +464,7 @@ Section constructAssgnToLiterals.
   Lemma toLiterals'_Some (posl : list (nat * nat)) : (forall a b, (a, b) el posl -> a < (|c|) /\ b < 3) -> forall l', l' el toLiterals' posl -> exists l, l' = Some l.
   Proof.
     intros H l' Hel. 
-    unfold toLiterals' in Hel. destruct (map_el Hel) as (pos & H1 & H2). destruct pos as (a & b). specialize (H a b H1). 
+    unfold toLiterals' in Hel. apply map_el  in Hel as (pos & H1 & H2). destruct pos as (a & b). specialize (H a b H1). 
     destruct (enumerateLiteral_Some kc (proj1 H) (proj2 H)) as (l & H0 & _). exists l. now rewrite <- H2, H0.
   Qed. 
 
@@ -798,9 +798,9 @@ Proof.
       [apply (conj H H0) | apply construct_dupfree |  intros (x & y); now apply construct_literals_bound]. 
     - intros node H.
       enough (node < 3 * |c|) by ( unfold Lgraph_node_in_dec; apply leb_correct; lia ).
-      destruct (map_el H) as (nodepos & F1 & F2). rewrite <- F2. destruct nodepos as (clpos & litpos).
+      apply map_el in H as (nodepos & F1 & F2). rewrite <- F2. destruct nodepos as (clpos & litpos).
       apply labinv. now apply construct_literals_bound with (a:=a). 
-    - intros u v F1 F2 F3. destruct (map_el F2) as ((ucl & ulit) & G1 & G2). destruct (map_el F3) as ((vcl & vlit) & D1 & D2). 
+    - intros u v F1 F2 F3. apply map_el in F2 as ((ucl & ulit) & G1 & G2). apply map_el in F3 as ((vcl & vlit) & D1 & D2). 
       specialize (H2 u v). change (n = 3 * (|c|)) in neq. 
       assert (u < n). { rewrite neq. rewrite <- G2. apply labinv. now apply construct_literals_bound with (a:=a). }
       assert (v < n). {rewrite neq. rewrite <- D2. apply labinv. now apply construct_literals_bound with (a:=a). }
