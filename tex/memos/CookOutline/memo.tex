@@ -377,12 +377,19 @@ Let $\Sigma$ be the finite type representing the Turing machine $M$'s alphabet a
 As mentioned above, the blank \blank{} is written in cells currently not in use by the simulation. Symbols of the form $q^m$ are pairs of the current state and the symbol currently under $M$'s head and will always reside at the center of the string.
 Finally, symbols $\sigma \in \Sigma'$ are used for ordinary elements of $M$'s tape. Each of these symbols is annotated with a polarity $p \in \{-1, 0, 1\}$ which annotates the last head movement (its sense will become clear when dealing with the transition function). We say that $\polneg{\sigma}$ has a \emph{negative} (or \emph{left}) polarity $-1$, $\polneut{\sigma}$ is \emph{neutral} (0) and $\polpos{\sigma}$ has a \emph{positive} (or \emph{right}) polarity 1\sarcasm{At this point I wondered about this common connotation of ``left'' $\eqsim$ ``negative'' and ``right'' $\eqsim$ ``positive''. Apparently it's all down to left-handedness and right-handedness, historically.}. 
 
-The key idea now is to use rewrite windows with a width of 3, just as in the original reduction~\cite{Sipser:TheoryofComputation}. Also remember that we are using an offset of 1. Thus, one of the windows has to hold at every offset of a configuration. 
+The key idea now is to use rewrite windows with a width of 3, just as in the original reduction~\cite{Sipser:TheoryofComputation}. 
+We use the notation 
+\begin{center}
+  \rewwin{a & b & c}{d & e & f}
+\end{center}
+to refer to rewrite windows $abc \constrent{} def$ for $a,b,c,d,e,f \in \Gamma$. 
+Also remember that we are using an offset of 1. Thus, one of the windows has to hold at every offset of a configuration. 
 
+\TODO{
 \begin{example}
-  \TODO{some example of a Turing machine and the execution of a transition}
+  some example of a Turing machine and the execution of a transition
 \end{example}
-
+}
 
 In the following, the letter $\sigma$ will range over $\Sigma$, $m$ will range over $\Sigma \cup \{\blank\}$. 
 We will also use $\sigma$ to refer to elements of $\Sigma'$ when we do not care about the polarity, and will use polarities with elements $m \in \Sigma \cup \{\blank\}$, e.g.\ $\polpos{m}$; in case that $m \in \Sigma$, this has the usual effect, while the polarity can be ignored if $m = \blank$. 
@@ -391,23 +398,32 @@ We will also use $\sigma$ to refer to elements of $\Sigma'$ when we do not care 
 The following windows are created for moving the tape. For the moment, the annotations stating to which half of the configuration string they can be applied can be disregarded.
 \paragraph*{Move Tape Right}
 \begin{center}
-  \rewwin{\sigma_1 & \sigma_2 & \sigma_3}{\polpos{\sigma_4} & \polpos{\sigma_1} & \polpos{\sigma_2}}
-  \rewwin{\sigma_1 & \sigma_2 & m_1}{\polpos{\sigma_3} & \polpos{\sigma_1} & \polpos{\sigma_2}}  
+  \rewwin{\sigma_1 & \sigma_2 & \sigma_3}{\polpos{\sigma_4} & \polpos{\sigma_1} & \polpos{\sigma_2}} 
   \quad (both halves)
   \\[3ex]
-  \rewwin{\sigma_1 & \blank & \blank}{\polpos{\sigma_2} & \polpos{\sigma_1} & \blank}
   \rewwin{\blank & \blank & \blank}{\polpos{\sigma_1} & \blank & \blank} 
+  \rewwin{\sigma_1 & \blank & \blank}{\polpos{\sigma_2} & \polpos{\sigma_1} & \blank}
+  \rewwin{\sigma_1 & \sigma_2 & \blank}{\polpos{\sigma_3} & \polpos{\sigma_1} & \polpos{\sigma_2}}  
   \quad (right half)
+  \\[3ex]
+  \rewwin{\blank & \blank & \sigma_1}{\blank & \blank & \blank}
+  \rewwin{\blank & \sigma_1 & \sigma_2}{\blank & \blank & \polpos{\sigma_1}} 
+  \rewwin{\sigma_1 & \sigma_2 & \sigma_3}{\blank & \polpos{\sigma_1} & \polpos{\sigma_2}}
+  \quad (left half)
 \end{center}
 
 \paragraph*{Move Tape Left}
 \begin{center}
-  \rewwin{\blank & \blank & \blank}{\blank & \blank & \polneg{\sigma_1}}
-  \rewwin{\blank & \blank & \sigma_1}{\blank & \polneg{\sigma_1} & \polneg{\sigma_2}} 
-  \quad{(left half)} \\[3ex]
-  \rewwin{m_1 & \sigma_1 & \sigma_2}{\polneg{\sigma_1} & \polneg{\sigma_2} & \polneg{\sigma_3}}
   \rewwin{\sigma_1 & \sigma_2 & \sigma_3}{\polneg{\sigma_2} & \polneg{\sigma_3} & \polneg{\sigma_4}}
   \quad{(both halves)} \\[3ex]
+  \rewwin{\blank & \blank & \blank}{\blank & \blank & \polneg{\sigma_1}}
+  \rewwin{\blank & \blank & \sigma_1}{\blank & \polneg{\sigma_1} & \polneg{\sigma_2}} 
+  \rewwin{\blank & \sigma_1 & \sigma_2}{\polneg{\sigma_1} & \polneg{\sigma_2} & \polneg{\sigma_3}}
+  \quad{(left half)} \\[3ex]
+  \rewwin{\sigma_1 & \blank & \blank}{\blank & \blank & \blank} 
+  \rewwin{\sigma_1 & \sigma_2 & \blank}{\polneg{\sigma_2} & \blank & \blank}
+  \rewwin{\sigma_1 & \sigma_2 & \sigma_3}{\polneg{\sigma_2} & \polneg{\sigma_3} & \blank}
+  \quad{(right half)}
 \end{center}
 
 \paragraph*{Identity}
@@ -561,7 +577,7 @@ While there are a great number of rewrite windows necessary (and one probably do
 A similar argument can be given for the other rules. 
 
 Finally, we formally define the final constraint as 
-\[\Rfinal := \{[q^m] | m \in \Sigma \cup \{\blank\}\}, \]
+\[\Rfinal := \{[q^m] | q \text{ is a halting state and } m \in \Sigma \cup \{\blank\}\}, \]
 following the intuitive description given above.
 
 \subsubsection{Representation Relations}
@@ -808,7 +824,9 @@ The key insight behind the proofs for these results is that the successor tape s
           For both proofs, we have to do a case analysis on $lsr$ or $rsr$, respectively; apart from that, the proof is straightforward with the rules constructed for the given transition.
       \end{description}
     \item[$\textsf{leftof}~r~rs$:]
+    	Arguments are similar in style to the previous case. 
     \item[$\textsf{rightof}~l~ls$:]
+    	Arguments are similar in style to the previous case. 
     \item[$\textsf{niltape}$:]
       It is known by $(q, \mathit{tape}) \reprc s$ that $s = \rev{E_z} \concat [q^\blank] \concat E_z$. 
       Of course, $[] \reprc{} E_z$.
@@ -1085,7 +1103,7 @@ for an input string $\mathit{input}$ with $\length{\mathit{input}} \le k$ for th
 \begin{proof}
   Disjointness and compatiblity are obvious. 
   Now let $s_1$ be given with $s_0 \strent_{R'} s_1$. We need to show that $s_1 \in \Gamma^l$ for $l = 2 (t + k + 3) + 1$. 
-  \TODO{}
+  This easily follows from the fact that the conclusions of the rewrite rules only contain elements of $\Gamma$.
 \end{proof}
 
 \begin{lemma}\label{lem:nondetsc}
@@ -1093,7 +1111,11 @@ for an input string $\mathit{input}$ with $\length{\mathit{input}} \le k$ for th
   \[p~s := \exists \mathit{input}, \length{\mathit{input}} \le k \land s = \textsf{initConf}~q~(\textsf{initTape}~\mathit{input})\]
 \end{lemma}
 \begin{proof}
-  \TODO{}
+  We have to show two directions:
+  \begin{description}
+  	\item[$\Rightarrow$:]
+  	\item[$\Leftarrow$:]
+  \end{description}
 \end{proof}
 
 \begin{theorem}
@@ -1116,8 +1138,7 @@ for an input string $\mathit{input}$ with $\length{\mathit{input}} \le k$ for th
 \TODO{mainly Heiter's Bachelor thesis; comment on TM -> SR reduction and why their SR problem isn't suitable for our setting}
 
 \appendix
-\section{Appendix}
-Missing rules:
+\section{Missing Rewrite Rules}
 \paragraph*{$\delta(q, \Some{a}) = (p, \None, \textsf{R})$:}
 \begin{center}
   \rewwin{m_1 & q^a & \blank}{\polneg{a} & p^{\blank} & \blank}
@@ -1138,6 +1159,7 @@ Missing rules:
   \rewwin{\blank & \blank & q^a}{\blank & \blank & p^a}
 \end{center}
 
+\section{Semantics of Turing Machines}
 \TODO{more on semantics of Turing machines}
 
 \bibliography{memo}{}
