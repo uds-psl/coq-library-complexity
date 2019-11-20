@@ -91,7 +91,7 @@
 \newcommand{\gennp}{\textbf{GenNP}}
 \newcommand{\strconrew}{\textbf{StrConRew}}
 \newcommand{\binstrconrew}{\textbf{BinStrConRew}}
-\newcommand{\csat}{\textbf{CSAT}}
+\newcommand{\csat}{\textbf{FSAT}}
 \newcommand{\sat}{\textbf{SAT}}
 \newcommand{\NP}{\textsf{NP}}
 
@@ -125,8 +125,8 @@ Our reduction has the following structure:
     \node[rectangle, draw=black, minimum width = 10cm] (gennp) {Generic Turing Machine Simulation (\textbf{GenNP})};
     \node[rectangle, draw=black, below = of gennp, minimum width = 10cm] (strrew1) {String Constraint Rewriting (\strconrew) on arbitrary $\Sigma$};
     \node[rectangle, draw=black, below = of strrew1, minimum width = 10cm] (strrew2) {Binary String Constraint Rewriting: \binstrconrew};
-    \node[rectangle, draw=black, below = of strrew2, minimum width = 10cm] (csat) {Circuit SAT (\textbf{CSAT})};
-    \node[rectangle, draw=black, below = of csat, minimum width = 10cm] (sat) {\textbf{SAT}};
+    \node[rectangle, draw=black, below = of strrew2, minimum width = 10cm] (csat) {Propositional SAT (\csat{})};
+    \node[rectangle, draw=black, below = of csat, minimum width = 10cm] (sat) {SAT on CNFs (\textbf{SAT})};
     \draw[->] 
       (gennp) edge node[right] {structure similar to~\cite{Sipser:TheoryofComputation}} (strrew1)
       (strrew1) edge (strrew2)
@@ -143,7 +143,7 @@ In order to be able to encode this problem using logical formulas, we then simpl
 \section{Involved Languages}
 We first give a formal description of the involved problems. 
 
-\subsection*{Generic Turing Machine Simulation (\gennp{})}\label{sec:TM}
+\subsection{Generic Turing Machine Simulation (\gennp{})}\label{sec:TM}
 The formalisation of Turing machines we use has been introduced in~\cite{ForsterEtAl:2019:VerifiedTMs}, although we do not have any use for the abstractions developed for the programming of Turing machines in Coq. This formalisation is based on one originally done in the proof assistant Matita~\cite{Asperti2015AFO}. 
 
 For the representation of tapes, no blank symbol is explicitly specified. Instead, the constructors explicitly specify whether the head is currently at the left or the right end of the used tape area.
@@ -185,7 +185,7 @@ The restriction to 1-tape Turing machines is without loss of generality, a fact 
 
 Using a classical definition of the complexity class \NP{} using Turing machines, one is easily convinced that \gennp{} is \NP{}-hard. For our definition using the call-by-value $\lambda$-calculus L, this isn't straightforward at all, though. We thus leave the problem of proving the \NP{}-hardness of \gennp{} open for now.
 
-\subsection*{String Constraint Rewriting (\strconrew{})}
+\subsection{String Constraint Rewriting (\strconrew{})}
 This problem works on strings of a fixed length $l$ over an alphabet $\Sigma$. Starting with an initial string $x_0$, the task is to determine whether there is a sequence of strings $x_1, \ldots, x_t$ such that $x_{i+1}$ validly follows from $x_i$, denoted by $x_i \strent x_{i+1}$, such that $x_t$ satisfies a final condition. The number $t$ is fixed. All of the strings in the sequence must have the same length $l$. The relation $x_i \strent x_{i+1}$ is described by a set $R$ of rewrite windows.
 
 Each window specifies a rewrite $a \constrent b$ for strings $a, b$ of a fixed length $w \le l$. In order for $x_i \strent x_{i+1}$ to hold, each of the characters of $x_{i+1}$ must be derived from $x_i$ using a rewrite window.
@@ -250,14 +250,63 @@ A rewriting system is deterministic for a class of strings if there is at most o
   %A rewriting system $S$ is deterministic for $p$, iff $\mathcal{W}($
 %\end{lemma}
 
-
-
 Finally, we establish a few properties about \strconrew{}. For the remainder of this section, fix a rewriting system with parameters according to Definition~\ref{def:strconrew}.
 
 \begin{lemma}\label{lem:rewind}
   $a :: b :: c :: rs \strent{} a' :: b' :: c' :: rs'$ iff $b :: c :: rs \strent{} b' :: c' :: rs'$ and $abc \constrent{} a'b'c'$. 
 \end{lemma}
 This lemma enables us to prove rewrites inductively. Note that we are already using the notational convention for $\strent{}$ established above.
+
+\subsection{Binary String Constraint Rewriting (\binstrconrew{})}
+
+
+\subsection{Propositional Satisfiability (\csat{})}
+\newcommand{\var}{\textsf{var}}
+\newcommand{\literal}{\textsf{literal}}
+\newcommand{\clause}{\textsf{clause}}
+\newcommand{\cnf}{\textsf{cnf}}
+\newcommand{\assgn}{\textsf{assgn}}
+\newcommand{\eval}[2]{\mathcal{E}~#1~#2}
+\newcommand{\for}{\textsf{For}}
+
+
+In the \csat{} problem, we consider formulas over atomic propositions $x : \var := \nat$. Starting from atomic propositions, larger formulas can be built using negation $\lnot$ and binary as well as $n$-ary conjunction $\land$ and disjunction $\lor$. The choice to incorporate binary and $n$-ary versions of the operators is merely for convenience, we could restrict ourselves to either of them, although $n$-ary versions will be quite convenient in the reduction of \csat{} to \sat{} (Section~\ref{TODO}). 
+
+More formally, we define: 
+\begin{align*}
+  f : \for := x \bnfmid f_1 \lor f_2 \bnfmid f_1 \land f_2 \bnfmid f_1 \lor f_2 \lor \ldots \lor f_n \bnfmid f_1 \land f_2 \land \ldots \land f_n \bnfmid \lnot f \quad (x : \var)
+\end{align*}
+
+Boolean values can be assigned to atomic propositions; the formula can then be evaluated under such an assignment in the canonical way using Boolean operators. 
+We model assignments as lists of Boolean values:
+\[ a : \textsf{assgn} := \listsofb{\bool}\]
+The value at position $i$ of a list $a$ corresponds to the value assigned to atomic proposition $i$. Thus, if an assignment is too short, it may fail to assign a value to some of the atomic propositions of a formula $f$. Evaluation is thus partial.
+We believe that the added expressivity of this approach versus a definition of assignments using default values for unassigned atomic propositions is worth the drawback of partiality.
+
+We define an evaluation function $\mathcal{E} : \assgn \rightarrow \for \rightarrow \opt{(\bool)}$ in the canonical way. The option type encodes the partiality observed above. 
+
+Now the problem \csat{} asks, given a formula $f$, if there exists an assignment $a$ that satisfies $f$, that is, $\eval{a}{f} = \Some{\btrue}$. 
+\begin{definition}[Propositional Satisfiability \csat{}]
+  \[\csat{}~f := \exists~a, \eval{a}{f} = \Some{\btrue}  \]
+\end{definition}
+
+\subsection{Satisfiability of CNFs (\sat{})}
+
+The satisfiability problem on CNFs is a special case of the general \csat{} formulation. Here, the formula needs to be in conjunctive normal form: 
+\begin{align*}
+  x : \var := \nat &&
+  L : \literal := \bool \times \var &&
+  C : \clause := \listsof \literal &&
+  N : \cnf := \listsof \clause && 
+\end{align*}
+
+At the innermost level, we have literals which are either atomic propositions or negations of atomic propositions. Clauses are disjunctions of literals and finally, a CNF is a conjunction of clauses.
+
+We will use the same notion of assignments as for formulas $\for$. 
+Evaluation functions $\mathcal{E}$ can be defined for literals, clauses and CNFs in a similar way as for $\for$. We will refer to all of these functions with the same letter $\mathcal{E}$, but from the context it will always be clear what we mean.
+
+A more formal treatment of our definition of CNFs can be found in~\ref{memo1}.
+
 
 \section{Reducing \gennp{} to \strconrew{}}
 The basic idea of this reduction is very similar to the reduction in~\cite{Sipser:TheoryofComputation}, although we encode Turing machines using a constrained string rewriting system instead of logical formulas. We defer the handling of nondeterministically ``guessing'' an input of size at most $k$ to Section~\ref{sec:nondet} and instead first deal with a setting in which we are given a deterministic 1-tape Turing machine and a fixed input $\sigma_1, \ldots, \sigma_k$ of size $k$. 
