@@ -22,6 +22,8 @@ Proof.
     eapply countIn. rewrite enum_ok. lia. 
 Qed. 
 
+Hint Resolve -> makeExhaustive_correct. 
+
 Section fixTM.
   Variable (states : finType).
   Variable (Sigma : finType).
@@ -33,12 +35,15 @@ Section fixTM.
 
   Variables (t k : nat).
   Definition z' := t + k. (*effectively available space on each tape side *)
-  Definition z := z' + 3. (*length of each tape side *)
+  Definition wo := 3.     (*additional space for each side in order to make proofs more convenient *)
+  Definition z := z' + wo. (*length of each tape side *)
   Definition l := 2 * z + 1. (*length of the whole string: two tape sides and the state symbol*)
 
   Hint Unfold z z' l. 
 
   Inductive polarity := positive | negative | neutral. 
+
+  Hint Constructors polarity. 
 
   Instance polarity_eqTypeC : eq_dec polarity. 
   Proof. 
@@ -77,7 +82,7 @@ Section fixTM.
   (* Definition inra := @inr States tapeSigma.  *)
   (* Coercion inra : tapeSigma >-> Gamma.  *)
 
-  Notation "'|_|'" := (None) (only parsing). 
+  Notation "'|_|'" := (None). 
 
   (*move tape element from state to tape cell, adding a polarity*)
   Definition withPolaritySigma p σ : tapeSigma := Some (p, σ). 
@@ -86,7 +91,12 @@ Section fixTM.
   (*move from tape cell to state cell *)
   Definition removePolarity (σ : tapeSigma) : stateSigma := match σ with |_| => |_| | Some (p, σ) => Some σ end.
 
-  Notation "p ! a" := (withPolarity p a) (at level 40). 
+  Notation "p ! a" := (withPolarity p a) (at level 5). 
+  Notation "p !! a" := (withPolaritySigma p a) (at level 5). 
+
+  Hint Unfold withPolarity. 
+
+  Definition setPolarity p (σ : polSigma) : polSigma := match σ with (_, σ) => (p, σ) end. 
 
   (* Definition makeRulesPol (a b c : stateSigma) (d e f : Gamma) := *)
   (*   [  { inr (negative ! a), inr (negative ! a), inr (negative ! c)} *)
@@ -97,8 +107,18 @@ Section fixTM.
                                                     | ↑ σ => ↓ σ
                                                     | ∘ σ => ∘ σ
                                              end.
+  Lemma polarityFlipSigma_involutive (x : polSigma) : polarityFlipSigma (polarityFlipSigma x) = x. 
+  Proof. destruct x, p; now cbn. Qed.
+
   Definition polarityFlipTapeSigma (x : tapeSigma) : tapeSigma := match x with |_| => |_| | Some σ => Some (polarityFlipSigma σ) end. 
   Definition polarityFlipGamma (x : Gamma) : Gamma := match x with inl s => inl s | inr x => inr (polarityFlipTapeSigma x) end.
+
+  Notation "'~' x" := (polarityFlipGamma x). 
+
+  Lemma polarityFlipGamma_involutive (x : Gamma) : (~~x) = x. 
+  Proof. 
+    destruct x; [now cbn | ]. destruct e; cbn; [ | reflexivity]. now rewrite polarityFlipSigma_involutive. 
+  Qed. 
 
   (*reverse a string + flip its polarities *)
   Fixpoint polarityRev (x : list Gamma) : list Gamma := match x with [] => []
@@ -110,6 +130,12 @@ Section fixTM.
     match x with winp σ1 σ2 σ3 => winp (polarityFlipGamma σ3) (polarityFlipGamma σ2) (polarityFlipGamma σ1) end. 
   Definition polarityRevWin (x : TCSRWin Gamma) : TCSRWin Gamma := {| prem := polarityRevTCSRWinP (prem x); conc := polarityRevTCSRWinP (conc x)|}. 
 
+  Lemma polarityRevWin_inv r (σ1 σ2 σ3 σ4 σ5 σ6 : Gamma) : polarityRevWin r = {σ1, σ2, σ3} / {σ4, σ5, σ6} -> r = {~σ3, ~σ2, ~σ1} / {~σ6, ~σ5, ~σ4}. 
+  Proof.
+    unfold polarityRevWin. destruct r, prem, conc. cbn. intros.
+    inv H. now repeat rewrite polarityFlipGamma_involutive. 
+  Qed. 
+    
   (*a rule template which instantiates the symbols with the three possible consistent polarities*)
   Definition makeRulesPol (a b c : stateSigma ) (d e f : Gamma): list (TCSRWin Gamma) :=
     [  {     inr (negative ! a) , inr(negative ! b), inr (negative ! c) }
@@ -120,61 +146,214 @@ Section fixTM.
          / { d, e, f}
     ].
 
+  Ltac orintro := intros; repeat match goal with [H : ?a \/ ?b |- _ ] => destruct H end. 
+
   (** *Identity rules*)
   Definition makeIdentityRulesTemplate (x : stateSigma * stateSigma * stateSigma) : list (TCSRWin Gamma) :=
     match x with (a, b, c) => makeRulesPol a b c (inr (neutral ! a)) (inr (neutral ! b)) (inr (neutral ! c)) end. 
+  Lemma identityRulesTemplate_iff (σ1 σ2 σ3 :stateSigma) r : r el makeIdentityRulesTemplate (σ1, σ2, σ3) <-> exists p, r = {inr p ! σ1, inr p ! σ2, inr p ! σ3} / {inr neutral ! σ1, inr neutral ! σ2, inr neutral ! σ3}. 
+  Proof.
+    unfold makeIdentityRulesTemplate, makeRulesPol. split.
+    - cbn; orintro; eauto. 
+    - intros ([] & ->); eauto. 
+  Qed. 
 
-  (*rules that apply to both halves of the tape *)
+  Hint Resolve -> identityRulesTemplate_iff. 
+
+  (*both halves *)
+
+  (*
+    |_| |_| |_|
+    |_| |_| |_|
+   *)
   Definition makeIdentityRulesBlankBlankBlank := makeIdentityRulesTemplate (|_| , |_| , |_| ). 
-  Definition makeIdentityRulesSigSigSig (x : Sigma * Sigma * Sigma) :=
+  Lemma identityRulesBlankBlankBlank_iff r : r el makeIdentityRulesBlankBlankBlank <-> r = { inr |_| , inr |_| , inr |_| } / { inr |_| , inr |_| , inr |_| }. 
+  Proof. 
+    unfold makeIdentityRulesBlankBlankBlank. rewrite identityRulesTemplate_iff. cbn. split.
+    - intros (_ & -> ); reflexivity. 
+    - eauto. 
+  Qed. 
+
+  Hint Resolve -> identityRulesBlankBlankBlank_iff. 
+
+  (*
+    σ1 σ2 σ3
+    σ1 σ2 σ3
+   *)
+  Definition makeIdentityRulesSigSigSig' (x : Sigma * Sigma * Sigma) :=
     match x with (σ1, σ2, σ3) => makeIdentityRulesTemplate (Some σ1, Some σ2, Some σ3) end.
+  Definition makeIdentityRulesSigSigSig := makeExhaustive makeIdentityRulesSigSigSig'.
+  Lemma identityRulesSigSigSig_iff r : r el makeIdentityRulesSigSigSig <-> exists p σ1 σ2 σ3, r = { inr p !! σ1, inr p !! σ2, inr p !! σ3} / { inr neutral !! σ1, inr neutral !! σ2, inr neutral !! σ3}.
+  Proof. 
+    unfold makeIdentityRulesSigSigSig. rewrite makeExhaustive_correct. unfold makeIdentityRulesSigSigSig'. split.
+    - intros ([[σ1 σ2] σ3] & ([] & ->)%identityRulesTemplate_iff); cbn; eauto. 
+    - intros (p & σ1 & σ2 & σ3 & ->). exists (σ1, σ2, σ3). rewrite identityRulesTemplate_iff. exists p. eauto. 
+  Qed. 
 
-  (*templates for rules that apply to right half of tape *)
-  Definition makeIdentityRulesSigBlankBlank σ := makeIdentityRulesTemplate (Some σ , |_| , |_|). 
-  Definition makeIdentityRulesSigSigBlank (x : Sigma * Sigma) :=
+  Hint Resolve -> identityRulesSigSigSig_iff. 
+      
+  (*right half *)
+
+  (*
+    σ1 |_| |_|
+    σ1 |_| |_|
+   *)
+  Definition makeIdentityRulesSigBlankBlank' σ := makeIdentityRulesTemplate (Some σ , |_| , |_|). 
+  Definition makeIdentityRulesSigBlankBlank := makeExhaustive makeIdentityRulesSigBlankBlank'. 
+  Lemma identityRulesSigBlankBlank_iff r : r el makeIdentityRulesSigBlankBlank <-> exists p σ, r = { inr p !! σ, inr |_| , inr |_| } / { inr neutral !! σ , inr |_| , inr |_| }. 
+  Proof. 
+    unfold makeIdentityRulesSigBlankBlank. rewrite makeExhaustive_correct. unfold makeIdentityRulesSigBlankBlank'. setoid_rewrite identityRulesTemplate_iff.
+    cbn. split; intros [a [b H]]; eauto. 
+  Qed. 
+
+  Hint Resolve -> identityRulesSigBlankBlank_iff.
+
+  (*
+    σ1 σ2 |_|
+    σ1 σ2 |_|
+   *)
+  Definition makeIdentityRulesSigSigBlank' (x : Sigma * Sigma) :=
     match x with (σ1, σ2) => makeIdentityRulesTemplate (Some σ1, Some σ2, |_|) end.
+  Definition makeIdentityRulesSigSigBlank := makeExhaustive makeIdentityRulesSigSigBlank'. 
+  Lemma identityRulesSigSigBlank_iff r : r el makeIdentityRulesSigSigBlank <-> exists p σ1 σ2, r = { inr p !! σ1, inr p !! σ2 , inr |_| } / { inr neutral !! σ1, inr neutral !! σ2, inr |_| }. 
+  Proof. 
+    unfold makeIdentityRulesSigSigBlank. rewrite makeExhaustive_correct. unfold makeIdentityRulesSigSigBlank'. split.
+    - intros [[σ1 σ2] ([] & ->)%identityRulesTemplate_iff]; cbn; eauto.
+    - intros (p & σ1 & σ2 &  ->). exists (σ1, σ2). rewrite identityRulesTemplate_iff; exists p; eauto.  
+  Qed. 
 
-  Definition makeIdentityBoth := makeIdentityRulesBlankBlankBlank ++ makeExhaustive makeIdentityRulesSigSigSig.
-  Definition makeIdentityRight := makeExhaustive makeIdentityRulesSigBlankBlank++ makeExhaustive makeIdentityRulesSigSigBlank. 
+  Hint Resolve -> identityRulesSigSigBlank_iff. 
+
+  Definition makeIdentityBoth := makeIdentityRulesBlankBlankBlank ++ makeIdentityRulesSigSigSig.
+  Definition makeIdentityRight := makeIdentityRulesSigBlankBlank++ makeIdentityRulesSigSigBlank. 
   Definition makeIdentityLeft := map polarityRevWin makeIdentityRight.  (*the left rules are symmetric to the right rules *)
 
   Definition makeIdentity := makeIdentityLeft ++ makeIdentityBoth ++ makeIdentityRight. 
-  (* Lemma makeIdentityRules_correct : forall a, a el makeIdentityRules <-> (exists (x y z : stateSigma), a el makeIdentityRules' (x, y, z)).  *)
-  (* Proof.  *)
-  (*   unfold makeIdentityRules. intros. rewrite makeExhaustive_correct. split. *)
-  (*   - intros ([[x y] z] & H). eauto.   *)
-  (*   - intros (x & y & z & H). eauto.  *)
-  (* Qed.  *)
 
 
   (** *shift right rules*)
   (*of the form {a, b, c} / {↑ d, ↑ a, ↑ b} *)
   Definition makeShiftRightRulesTemplate (x : stateSigma * stateSigma * stateSigma * stateSigma) :=
     match x with (((a, b), c), d) => makeRulesPol a b c (inr (positive ! d)) (inr (positive ! a)) (inr (positive ! b)) end. 
+  Lemma shiftRightRulesTemplate_iff (σ1 σ2 σ3 σ4 : stateSigma) r : r el makeShiftRightRulesTemplate (σ1, σ2, σ3, σ4) <-> exists p, r = { inr p ! σ1 , inr p ! σ2, inr p ! σ3} / { inr positive ! σ4, inr positive ! σ1, inr positive ! σ2}. 
+  Proof. 
+    unfold makeShiftRightRulesTemplate, makeRulesPol. cbn. split.
+    - orintro; eauto. 
+    - intros ([] & ->); eauto.
+  Qed. 
+
+  Hint Resolve -> shiftRightRulesTemplate_iff. 
 
   (* both halves*)
-  Definition makeShiftRightRulesSigSigSig1 (x : Sigma * Sigma * Sigma * Sigma) :=
+  (*
+      σ1 σ2 σ3
+      σ4 σ2 σ2
+   *)
+  Definition makeShiftRightRulesSigSigSigSig' (x : Sigma * Sigma * Sigma * Sigma) :=
     match x with (σ1, σ2, σ3, σ4) => makeShiftRightRulesTemplate (Some σ1, Some σ2, Some σ3, Some σ4) end. 
+  Definition makeShiftRightRulesSigSigSigSig := makeExhaustive makeShiftRightRulesSigSigSigSig'. 
+  Lemma shiftRightRulesSigSigSigSig_iff r : r el makeShiftRightRulesSigSigSigSig <-> exists p σ1 σ2 σ3 σ4, r = { inr p !! σ1, inr p !! σ2, inr p !! σ3} / {inr positive !! σ4, inr positive !! σ1, inr positive !! σ2}. 
+  Proof. 
+    unfold makeShiftRightRulesSigSigSigSig. rewrite makeExhaustive_correct. unfold makeShiftRightRulesSigSigSigSig'. split.
+    - intros [[[[σ1 σ2] σ3] σ4] ([] & ->)%shiftRightRulesTemplate_iff]; cbn; eauto 10. 
+    - intros (p & σ1 & σ2 & σ3 & σ4 & ->). exists (σ1, σ2, σ3, σ4); rewrite shiftRightRulesTemplate_iff; exists p; eauto. 
+  Qed. 
 
+  Hint Resolve -> shiftRightRulesSigSigSigSig_iff. 
 
   (* right half*)
-  Definition makeShiftRightRulesBlankBlankBlank (σ : Sigma) := makeShiftRightRulesTemplate (|_| , |_| , |_| , Some σ).
-  Definition makeShiftRightRulesSigBlankBlank (x : Sigma * Sigma) :=
+
+  (*
+    |_| |_| |_|
+    |_| |_| |_|
+   *)
+  Definition makeShiftRightRulesBlankBlankBlank' (σ : Sigma) := makeShiftRightRulesTemplate (|_| , |_| , |_| , Some σ).
+  Definition makeShiftRightRulesBlankBlankBlank := makeExhaustive makeShiftRightRulesBlankBlankBlank'. 
+  Lemma shiftRightRulesBlankBlankBlank_iff r : r el makeShiftRightRulesBlankBlankBlank <-> exists σ, r = { inr |_| , inr |_| , inr |_| } / { inr positive !! σ , inr |_| , inr |_|}. 
+  Proof. 
+    unfold makeShiftRightRulesBlankBlankBlank. rewrite makeExhaustive_correct. unfold makeShiftRightRulesBlankBlankBlank'. split. 
+    - intros [σ ([] & ->)%shiftRightRulesTemplate_iff]; cbn; eauto. 
+    - intros (σ & ->); exists σ; rewrite shiftRightRulesTemplate_iff; eauto. Unshelve. exact positive. 
+  Qed. 
+
+  Hint Resolve -> shiftRightRulesBlankBlankBlank_iff. 
+
+  (*
+    σ1 |_| |_|
+    σ2  σ1 |_|
+   *)
+  Definition makeShiftRightRulesSigBlankBlank' (x : Sigma * Sigma) :=
     match x with (σ1, σ2) => makeShiftRightRulesTemplate (Some σ1, |_| , |_| , Some σ2) end.
-  Definition makeShiftRightRulesSigSigBlank (x : Sigma * Sigma * Sigma) :=
+  Definition makeShiftRightRulesSigBlankBlank := makeExhaustive makeShiftRightRulesSigBlankBlank'. 
+  Lemma shiftRightRulesSigBlankBlank_iff r : r el makeShiftRightRulesSigBlankBlank <-> exists p σ1 σ2, r = {inr p !! σ1, inr |_| , inr |_| } / { inr positive !! σ2 , inr positive !! σ1, inr |_| }. 
+  Proof.
+    unfold makeShiftRightRulesSigBlankBlank. rewrite makeExhaustive_correct. unfold makeShiftRightRulesSigBlankBlank'. split.
+    - intros [[σ1 σ2] ([] & ->)%shiftRightRulesTemplate_iff]; cbn; eauto. 
+    - intros (p & σ1 & σ2 & ->); exists (σ1, σ2); rewrite shiftRightRulesTemplate_iff. exists p; eauto. 
+  Qed. 
+
+  Hint Resolve -> shiftRightRulesSigBlankBlank_iff. 
+
+  (*
+    σ1 σ2 |_|
+    σ3 σ1 σ2
+  *)
+  Definition makeShiftRightRulesSigSigBlank' (x : Sigma * Sigma * Sigma) :=
     match x with (σ1, σ2, σ3) => makeShiftRightRulesTemplate (Some σ1, Some σ2, |_| , Some σ3) end. 
+  Definition makeShiftRightRulesSigSigBlank := makeExhaustive makeShiftRightRulesSigSigBlank'. 
+  Lemma shiftRightRulesSigSigBlank_iff r : r el makeShiftRightRulesSigSigBlank <-> exists p σ1 σ2 σ3, r = {inr p !! σ1, inr p !! σ2, inr |_|} / {inr positive !! σ3, inr positive !! σ1, inr positive !! σ2}. 
+  Proof. 
+    unfold makeShiftRightRulesSigSigBlank. rewrite makeExhaustive_correct. unfold makeShiftRightRulesSigSigBlank'. split.
+    - intros [[[σ1 σ2] σ3] ([] & ->)%shiftRightRulesTemplate_iff]; cbn; eauto.
+    - intros (p & σ1 & σ2 & σ3 & ->); exists (σ1, σ2, σ3); rewrite shiftRightRulesTemplate_iff. exists p; eauto. 
+  Qed. 
+
+  Hint Resolve -> shiftRightRulesSigSigBlank_iff. 
 
   (*left half*)
-  Definition makeShiftRightRulesBlankBlankSig (σ : Sigma) := makeShiftRightRulesTemplate (|_| , |_| , Some σ , |_| ).
-  Definition makeShiftRightRulesBlankSigSig (x : Sigma * Sigma) :=
+
+  (*
+    |_| |_| σ1
+    |_| |_| |_|
+   *)
+  Definition makeShiftRightRulesBlankBlankSig' (σ : Sigma) := makeShiftRightRulesTemplate (|_| , |_| , Some σ , |_| ).
+  Definition makeShiftRightRulesBlankBlankSig := makeExhaustive makeShiftRightRulesBlankBlankSig'. 
+  Lemma shiftRightRulesBlankBlankSig_iff r : r el makeShiftRightRulesBlankBlankSig <-> exists p σ, r = {inr |_| , inr |_| , inr p !! σ} / { inr |_| , inr |_| , inr |_|}. 
+  Proof. 
+    unfold makeShiftRightRulesBlankBlankSig. rewrite makeExhaustive_correct. unfold makeShiftRightRulesBlankBlankSig'. split. 
+    - intros [σ ([] & ->)%shiftRightRulesTemplate_iff]; cbn; eauto. 
+    - intros (p & σ & ->); exists σ. rewrite shiftRightRulesTemplate_iff; exists p; eauto. 
+  Qed. 
+
+  Hint Resolve -> shiftRightRulesBlankBlankSig_iff. 
+
+  (*
+    |_| σ1 σ2
+    |_| |_| σ1
+   *)
+  Definition makeShiftRightRulesBlankSigSig' (x : Sigma * Sigma) :=
     match x with (σ1, σ2) => makeShiftRightRulesTemplate (|_| , Some σ1, Some σ2, |_|) end.
-  Definition makeShiftRightRulesSigSigSig2 (x : Sigma * Sigma * Sigma) :=
+  Definition makeShiftRightRulesBlankSigSig := makeExhaustive makeShiftRightRulesBlankSigSig'. 
+  Lemma shiftRightRulesBlankSigSig_iff r : r el makeShiftRightRulesBlankSigSig <-> exists p σ1 σ2, r = {inr |_|, inr p !! σ1, inr p !! σ2} / {inr |_| , inr |_|, inr positive !! σ1}. 
+  Proof.
+    unfold makeShiftRightRulesBlankSigSig. rewrite makeExhaustive_correct. unfold makeShiftRightRulesBlankSigSig'. split. 
+    - intros [[σ1 σ2] ([] & ->)%shiftRightRulesTemplate_iff]; cbn; eauto. 
+    - intros (p & σ1 & σ2 & ->); exists (σ1, σ2). rewrite shiftRightRulesTemplate_iff; exists p; eauto. 
+  Qed. 
+
+  Hint Resolve -> shiftRightRulesBlankSigSig_iff.
+
+  (*
+    σ1  σ2 σ3
+    |_| σ1 σ2
+   *)
+  Definition makeShiftRightRulesSigSigSigBlank' (x : Sigma * Sigma * Sigma) :=
     match x with (σ1, σ2, σ3) => makeShiftRightRulesTemplate (Some σ1, Some σ2, Some σ3, |_|) end. 
+  Definition makeShiftRightRulesSigSigSigBlank := makeExhaustive makeShiftRightRulesSigSigSigBlank'. 
 
-  Definition makeShiftRightBoth := makeExhaustive makeShiftRightRulesSigSigSig1. 
-  Definition makeShiftRightRight := makeExhaustive makeShiftRightRulesBlankBlankBlank ++ makeExhaustive makeShiftRightRulesSigBlankBlank ++ makeExhaustive makeShiftRightRulesSigSigBlank. 
-  Definition makeShiftRightLeft := makeExhaustive makeShiftRightRulesBlankBlankSig ++ makeExhaustive makeShiftRightRulesBlankSigSig ++ makeExhaustive makeShiftRightRulesSigSigSig2. 
-
+  Definition makeShiftRightBoth := makeShiftRightRulesSigSigSigSig. 
+  Definition makeShiftRightRight := makeShiftRightRulesBlankBlankBlank ++ makeShiftRightRulesSigBlankBlank ++ makeShiftRightRulesSigSigBlank. 
+  Definition makeShiftRightLeft := makeShiftRightRulesBlankBlankSig ++ makeShiftRightRulesBlankSigSig ++ makeShiftRightRulesSigSigSigBlank. 
   Definition makeShiftRight := makeShiftRightBoth ++ makeShiftRightRight ++ makeShiftRightLeft. 
                 
   (** *shift left rules *) 
@@ -251,13 +430,17 @@ Section fixTM.
   Qed. 
 
 
-  Definition wo := 3.
 
   Lemma E_w_step w : E (w + wo) = (inr |_|) :: E (w + wo -1).
   Proof.
     remember (w + wo). destruct n. 
     + unfold wo in Heqn; lia. 
     + now cbn. 
+  Qed. 
+
+  Lemma E_w_head w : E (w + wo) = (inr |_|) :: (inr |_|) :: (inr |_|) :: E w. 
+  Proof. 
+    remember (w + wo); unfold wo in Heqn; destruct n; [ lia | destruct n; [lia | destruct n; [lia | ]]]. now cbn. 
   Qed. 
 
   Definition mapPolarity p u : list Gamma := map (fun e => inr (withPolaritySigma p e)) u.
@@ -316,7 +499,7 @@ Section fixTM.
     2: destruct H as (h & H1 & H). 1-2: rewrite H; unfold getState; rewrite nth_error_app2; [ rewrite E_length; now rewrite Nat.sub_diag | rewrite E_length; lia]. 
     1: destruct H as (h1 & [p (H1 & H3 & H4)] & H2).
     2: destruct H as (p & h1 & h2 & ((H1 & H4 & H5) & (H3 & H6 & H7)& H2 )). 
-    all: rewrite H2; unfold getState; rewrite nth_error_app2; [ | unfold wo, z, z' in *; rewrite rev_length; rewrite H1; lia].
+    all: rewrite H2; unfold getState; rewrite nth_error_app2; [ | unfold z, z', wo in *; rewrite rev_length; rewrite H1; lia ].
     all: rewrite rev_length, H1; now rewrite Nat.sub_diag. 
   Qed. 
 
@@ -374,7 +557,12 @@ Section fixTM.
       destruct rule, conc. now cbn. 
    Qed. 
 
+  Lemma rewritesHead_rule_inv r a b (σ1 σ2 σ3 σ4 σ5 σ6 : Gamma) : rewritesHead r (σ1 :: σ2 :: σ3 :: a) (σ4 :: σ5 :: σ6 :: b) -> r = {σ1 , σ2 , σ3} / {σ4 , σ5, σ6}. 
+  Proof. 
+    unfold rewritesHead. unfold prefix. intros [(b' & H1) (b'' & H2)]. destruct r. destruct prem, conc. cbn in H1, H2. congruence. 
+  Qed. 
 
+ 
   (* Notation "a ⇝ b" := (valid a b) (at level 90, left associativity). *)
   Lemma tape_rewrite_symm1 u h p h' : u ≃t(p) h -> valid makeTapeRules h h' -> valid makeTapeRules (polarityRev h) (polarityRev h'). 
   Proof with try discr_tape.
@@ -395,9 +583,50 @@ Section fixTM.
              rewrite e1. admit.
           -- assert (0 <= i < (|polarityRev a|) -2) by lia. specialize (IH2 i H4) as (rule' & F1 & F2). clear H3 n0 H4.
              exists rule'; split; [assumption | ]. now apply rewritesAt_add_at_end. 
-    + destruct u... (*the unique a which satisfies this condition is E n-1 *)
+      + destruct u... apply (proj2(niltape_repr' n p)) in H2 as H3. rewrite E_w_head in H3.
+        assert (a = inr |_| :: inr |_| :: E n) as -> by congruence; clear H3.
+        (*rule is of the form |_| |_| |_| -> m |_| |_| *)
+        destruct y.
+        { (* this case cannot happen, because the rewrite rules do not allow the introduction of new state symbols *)
+          clear IHvalid H2 H0. specialize (rewritesHead_length_inv (windows := makeTapeRules) H1 H) as (_ & H3). 
+          destruct b; [cbn in H3; lia | destruct b; [cbn in H3; lia | ]]. 
+          apply rewritesHead_rule_inv in H1; clear H3. 
+          rewrite H1 in H; clear H1. 
 
+          (*the following part *should* be automated *)
+          unfold makeTapeRules in H. repeat rewrite in_app_iff in H. destruct H as [H | [H | H]]. 
+          * unfold makeIdentity in H. repeat rewrite in_app_iff in H. destruct H as [H | [H | H]]. 
+            -- unfold makeIdentityLeft in H. apply in_map_iff in H as (rule' & H2 & H).
+               apply polarityRevWin_inv in H2. cbn in H2. rewrite H2 in H.
+               unfold makeIdentityRight in H. rewrite in_app_iff in H. destruct H as [H | H]. 
+               ++ apply identityRulesSigBlankBlank_iff in H. destruct H as (p' & σ & H). congruence. 
+               ++ apply identityRulesSigSigBlank_iff in H. destruct H as (p' & σ1 & σ2 & H). congruence. 
+            -- unfold makeIdentityBoth in H. rewrite in_app_iff in H. destruct H as [H | H]. 
+               ++ apply identityRulesBlankBlankBlank_iff in H. congruence. 
+               ++ apply identityRulesSigSigSig_iff in H. destruct H as (p' & σ1 & σ2 & σ3 & H). congruence. 
+
+                  
+
+        }
+        destruct e. 
+        -- (*the rule is of the form |_| |_| |_| -> σ |_| |_| *)
+          admit. 
+        -- (* the rule is of the form |_| |_| |_| -> |_| |_| |_| *)
+          admit.
+
+       (*  destruct n. (*if n = 0, the inductive hypothesis doesn't give us anything useful *) *)
+       (*  * unfold wo. cbn. cbn in H0. apply valid_length_inv in H0. cbn in H0. cbn in H1. *)
+       (*    destruct b; [cbn in H0; congruence | destruct b; [cbn in H0; congruence | destruct b; [ | cbn in H0; congruence ]]].  *)
+       (*    cbn. apply valid_iff. split; [ now cbn | ].  *)
+       (*    cbn [length]; intros. assert (i = 0) by lia. clear H3. rewrite H4 in *.  *)
+       (*    exists (polarityRevWin rule). split; [ now rewrite <- tape_rules_revp | ]. *)
+       (*    rewrite <- rewritesAt_head.  *)
+       (*    (*now need a case distinction over the rule *) *)
+       (*    admit. *)
+       (* * replace (S n + wo -1) with (n + wo) in * by lia. specialize (IHvalid n []).  *)
+       (*   cbn [polarityRev polarityFlipGamma polarityFlipTapeSigma].  *)
   Admitted. 
+
 
   Lemma tape_rewrite_symm2 u h p h' : u ≃t(p) h -> valid makeTapeRules (polarityRev h) (polarityRev h') -> valid makeTapeRules h h'.
   Proof with simp_tape.
