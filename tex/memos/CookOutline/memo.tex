@@ -581,6 +581,7 @@ Finally, we formally define the final constraint as
 following the intuitive description given above.
 
 \subsubsection{Representation Relations}
+\TODO{mention somewhere that we need a generalised representation relation for the inductions}
 Now that we have described the construction on a high level, we turn towards formalising these intuitions. 
 Let us fix a Turing machine $M$ on an alphabet $\Sigma$  and the numbers $t$ and $k$. We set $w := 3$, $l := 2\cdot (t + k + 3) + 1$ and $o := 1$. 
 We use the letter $s$ to refer to configuration strings of fixed length $l$. 
@@ -1113,8 +1114,28 @@ for an input string $\mathit{input}$ with $\length{\mathit{input}} \le k$ for th
 \begin{proof}
   We have to show two directions:
   \begin{description}
-  	\item[$\Rightarrow$:]
-  	\item[$\Leftarrow$:]
+  	\item[Completeness:]
+      Let $x_0$ be an initial string such that there is a string $s$ with $\length{s} \le k$ and $x_0 = \textsf{initConf}~q~(\textsf{initTape}~s) = E_z \concat [q^\blank] \concat s \concat E_{z - \length{s}}$, where we implicitly lift the string $s$ from $\Sigma$ to $\Sigma'$. We have to show that the new initial string $x_0'$ can be rewritten to $x_0$, that is, $x_0' \strent{} x_0$, using the new rules $R'$. As for the simulation of deterministic Turing machines, we split the proof by showing that the rewrites for the two tape halves are valid.
+
+      For the left half, this is trivial, as all $\bot$'s can be replaced by \blank's (a simple inductive proof over the $z$ suffices). The hard part is the right tape half where the initial input string has to be placed.
+      We first show that 
+      \[ \forall w, \underbrace{\top \ldots \top}_{\length{s}} \underbrace{\top \ldots \top}_{w} \underbrace{\bot \ldots \bot}_{t + 3} \strent{} s \concat \underbrace{\blank \ldots \blank}_{w} \underbrace{\blank \ldots \blank}_{t+3} \]
+      by induction on $s$. The desired result that 
+      \[\underbrace{\top \ldots \top}_{k} \underbrace{\bot \ldots \bot}{t+3} \strent{} s \underbrace{\blank \ldots \blank}_{k-\length{s}} \underbrace{\blank \ldots \blank}_{t+3} \]
+      then follows by setting $w := k - \length{s}$. 
+
+      Finally, arguing about the center position proceeds as usual via case analyses.
+
+  	\item[Soundness:]
+      Let $x_0' \strent{} x_0$ using the rules in $R'$. We need to show that $p~x_0$ holds, i.e.\ there exists $s$ with $x_0 = \textsf{initConf}~q~(\textsf{initTape}~s)$ and $\length{s} \le k$. 
+      
+      The statement for the left tape half follows trivially from the available rewrite rules, by an induction on the length of the string. 
+
+      For the right tape half we have to show
+      \[\underbrace{\top \ldots \top}_{k} \underbrace{\bot \ldots \bot}_{t + 3} \strent{} w \rightarrow \exists s, \length{s} \le k \land w = s_1 \ldots s_{\length{s}} \underbrace{\blank \ldots \blank}_{k-\length{s}} \underbrace{\blank \ldots \blank}_{t + 3}. \]
+      If $k \ge 3$, it suffices to show that ${\bot}^{t+3} \strent{} w \rightarrow w = \blank \ldots \blank$ and ${\top}^k \strent{} w \rightarrow \exists s, w = s \concat \blank \ldots \blank$. Both statements follow by induction on the length of the first string. The overlapping windows then don't matter to us since the other windows already uniquely determine the string. 
+
+      In the case of $k < 3$, the statement for the $\top$ part falls apart since strings of length $< 3$ can be vacuously rewritten to any arbitrary string (since there is no rewrite rule with a matching premise). We then have to consider the overlapping rules to derive the statement.
   \end{description}
 \end{proof}
 
