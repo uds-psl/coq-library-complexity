@@ -74,13 +74,14 @@ Section fixTM.
   Definition States := FinType (EqType ((states * stateSigma)%type)). 
 
   Definition Gamma := FinType (EqType ((States + tapeSigma)%type)). 
+ 
 
   Implicit Type (q : states).
   Implicit Type (m : tapeSigma).
   Implicit Type (p : polarity).
 
-  (* Definition inra := @inr States tapeSigma.  *)
-  (* Coercion inra : tapeSigma >-> Gamma.  *)
+  (* Definition inra := @inr States tapeSigma. *)
+  (* Coercion inra : tapeSigma >-> Gamma. *)
 
   Notation "'|_|'" := (None). 
 
@@ -121,9 +122,10 @@ Section fixTM.
   Qed. 
 
   (*reverse a string + flip its polarities *)
-  Fixpoint polarityRev (x : list Gamma) : list Gamma := match x with [] => []
-                                                                | (x :: xr) => polarityRev xr ++ [polarityFlipGamma x]
-                                                         end. 
+  Fixpoint polarityRev (x : list Gamma) : list Gamma := rev (map polarityFlipGamma x).
+  (* match x with [] => [] *)
+  (*                                                               | (x :: xr) => polarityRev xr ++ [polarityFlipGamma x] *)
+  (*                                                        end.  *)
 
   (*the same for rewrite windows *)
   Definition polarityRevTCSRWinP (x : TCSRWinP Gamma) : TCSRWinP Gamma :=
@@ -341,7 +343,7 @@ Section fixTM.
     - intros (p & σ1 & σ2 & ->); exists (σ1, σ2). rewrite shiftRightRulesTemplate_iff; exists p; eauto. 
   Qed. 
 
-  Hint Resolve -> shiftRightRulesBlankSigSig_iff.
+  Hint Rewrite -> shiftRightRulesBlankSigSig_iff.
 
   (*
     σ1  σ2 σ3
@@ -562,18 +564,106 @@ Section fixTM.
     unfold rewritesHead. unfold prefix. intros [(b' & H1) (b'' & H2)]. destruct r. destruct prem, conc. cbn in H1, H2. congruence. 
   Qed. 
 
+
+  Ltac destruct_tape := repeat match goal with
+                        | [H : _ ≃t(?p, ?w) ?x :: ?h |- _] => is_var x; destruct x; try discr_tape
+                        | [H : _ ≃t(?p, ?w) (inr ?e) :: ?h |- _] => is_var e; destruct e; try discr_tape
+                        | [H : ?u ≃t(?p, ?w) inr _ :: ?h |- _] => is_var u; destruct u; try discr_tape
+                          end. 
+
+  Ltac discr_rewritesHead := repeat match goal with
+                            | [H : context[(prem ?rule)] |- _] => let a := fresh "prem" in let b := fresh "conc" in is_var rule; destruct rule as [a b]; destruct a, b
+                            | [H : context[prem (_ / _)] |- _] => cbn[prem] in H
+                            | [H : context[conc (_ / _)] |- _] => cbn [conc] in H
+                            | [H : prefix _ _ |- _] => destruct H; cbn [app] in H; congruence
+                            | [H : prefix _ _ |- _] => let a := fresh "H" in destruct H as [? H]; inv H
+                            | [H : rewritesHead _ _ _ |- _] => destruct H
+                            (* | [H : prefix _ _ |- _] => destruct H;cbn [conc prem polarityRevWin polarityRevTCSRWinP app TCSRWinP_to_list] in H; congruence *)
+                                                                                                                                                    end.
+
+  Ltac rewritesHead_inv := repeat match goal with
+                                   | [H : rewritesHead  _ ?a _ |- _] => is_var a; destruct a
+                                   | [H : rewritesHead  _ (_ :: ?a) _ |- _] => is_var a; destruct a
+                                   | [H : rewritesHead  _ (_ :: _ :: ?a) _ |- _] => is_var a; destruct a
+                                   | [H : rewritesHead  _ _ ?a |- _ ] => is_var a; destruct a
+                                   | [H : rewritesHead  _ _ (_ :: ?a) |-_ ] => is_var a; destruct a
+                                   | [H : rewritesHead  _ _ (_ :: _ :: ?a) |- _] => is_var a; destruct a
+                               end; discr_rewritesHead. 
+
+
+  Ltac inv2 H := inversion H; subst. 
+  Proposition fold_polarityFlipSigma σ p: (match p with | positive => ↓σ | negative => ↑ σ | neutral =>∘σ end) = polarityFlipSigma (p, σ).
+  Proof. now destruct p. Qed.
+    
  
   (* Notation "a ⇝ b" := (valid a b) (at level 90, left associativity). *)
   Lemma tape_rewrite_symm1 u h p h' : u ≃t(p) h -> valid makeTapeRules h h' -> valid makeTapeRules (polarityRev h) (polarityRev h'). 
   Proof with try discr_tape.
-    (* *TODO: need a non-trivial strengthening due to the static length constraint imposed by the ≃t relation*)
     intros.
     unfold reprTape in H. revert u H. generalize z'. 
     induction H0; intros. 
     - cbn; constructor. 
     - apply reprTape_length' in H1. cbn [length] in H1; unfold wo in H1. lia.  
-    - destruct x... destruct e...
-      + destruct u... destruct n; [ destruct H2; cbn in H3; lia | ]. apply tape_repr_step in H2 as H3. 
+    - (*the destruct rule approach *)
+      (* cbn.  *)
+
+      (* unfold makeTapeRules in H. repeat rewrite in_app_iff in H. destruct H as [H | [H | H]].  *)
+      (* + unfold makeIdentity in H. repeat rewrite in_app_iff in H. destruct H as [H | [H | H]]. *)
+      (*   * unfold makeIdentityLeft in H. apply in_map_iff in H as (rule' & <- & H). *)
+      (*     unfold makeIdentityRight in H. rewrite in_app_iff in H. destruct H as [H | H]. *)
+      (*     -- rewrite identityRulesSigBlankBlank_iff in H. destruct H as (p' & σ & ->). *)
+      (*        rewritesHead_inv. destruct H. cbn [conc prem polarityRevWin polarityRevTCSRWinP app TCSRWinP_to_list] in H. inv H. rewrite fold_polarityFlipSigma in *. destruct H1.  cbn [conc prem polarityRevWin polarityRevTCSRWinP app TCSRWinP_to_list] in H. inv H.  destruct u... *)
+      (*        destruct n. *)
+      (*        destruct x0. Focus 2. cbn in H2; destruct H2. cbn in H; unfold wo in *.  lia. *)
+      (*        destruct x. 2: {apply valid_length_inv in H0. cbn in H0; lia. } cbn.  *)
+      (*        constructor.  *)
+      (*        inv H0.  *)
+      (*        specialize (IHvalid ) *)
+
+
+      (*the destruct tape approach *)
+      rewritesHead_inv.  
+      rewrite valid_iff. unfold validExplicit. cbn [polarityRev]. repeat rewrite app_length. repeat rewrite rev_length, map_length. cbn [length]. split.
+        1: apply valid_length_inv in H0; now cbn in H0. 
+        replace ((|x0|) + 1 + 1 + 1 - 2) with (S (|x0|)) by lia. intros. destruct (nat_eq_dec i (|x1|)). 
+        * (*rewrite at the new position, cannot apply IH *)
+          rewrite e in *; clear e. exists (polarityRevWin ({e3, e4, e5}/{e6, e7, e8}) : TCSRWin (Gamma)).
+          apply tape_rules_revp in H.  split; [apply H | ]. unfold rewritesAt. cbn [rev map].
+          repeat rewrite <- app_assoc.
+          rewrite skipn_app with (xs := rev (map polarityFlipGamma x0)).
+          rewrite skipn_app with (xs := rev (map polarityFlipGamma x1)).
+          2, 3: rewrite rev_length, map_length. 2: reflexivity. 
+          2: { apply valid_length_inv in H0; cbn [length] in H0. lia. }
+          cbn. split; exists []; now cbn. 
+       * (*this follows by IH *)
+         destruct_tape.
+         + destruct n. { destruct H2 as [F1 [F3 F4]]. now cbn in F3. }
+           apply tape_repr_step in H2. specialize (IHvalid n u H2).
+           assert (0 <= i < (|x1|)) by lia. clear H1 n0 H. apply valid_iff in IHvalid as [_ IH].
+           cbn [length polarityRev rev map app] in IH. repeat rewrite app_length in IH; cbn [length] in IH.
+           rewrite rev_length, map_length in IH. replace (|x1| + 1 + 1 -2) with (|x1|) in IH by lia. 
+           specialize (IH i H3) as (rule & IH1 & IH2). 
+           cbn [rev map polarityFlipGamma]. exists rule; split; [apply IH1 | ].
+           now apply rewritesAt_add_at_end.
+         + destruct n.
+           -- cbn in H1. destruct x1. 2: { destruct H2 as [F1 [F3 F4]]. now cbn in F1. }
+              cbn in H1, n0. lia. 
+           -- cbn [Nat.sub] in H1. assert (0 <= i < (|x1|)) by lia. clear n0 H3. 
+              apply niltape_repr' in H2. cbn [E] in H2. rewrite Nat.add_comm in H2; unfold wo in H2. cbn [E Nat.add] in H2. inv H2.
+
+              
+              
+              
+
+              apply tape_repr_step in H2. specialize (IHvalid n u H2).
+           assert (0 <= i < (|x1|)) by lia. clear H1 n0 H. apply valid_iff in IHvalid as [_ IH].
+           cbn [length polarityRev rev map app] in IH. repeat rewrite app_length in IH; cbn [length] in IH.
+           rewrite rev_length, map_length in IH. replace (|x1| + 1 + 1 -2) with (|x1|) in IH by lia. 
+           specialize (IH i H3) as (rule & IH1 & IH2). 
+           cbn [rev map polarityFlipGamma]. exists rule; split; [apply IH1 | ].
+           now apply rewritesAt_add_at_end.
+
+        destruct n; [ destruct H2; cbn in H3; lia | ]. apply tape_repr_step in H2 as H3.
         specialize (IHvalid n u H3). clear H3. 
         apply valid_iff. apply valid_iff in IHvalid as (IH1 & IH2). repeat split. 
         * cbn [polarityRev]. repeat rewrite app_length. rewrite IH1. now cbn [length]. 
@@ -583,7 +673,7 @@ Section fixTM.
              rewrite e1. admit.
           -- assert (0 <= i < (|polarityRev a|) -2) by lia. specialize (IH2 i H4) as (rule' & F1 & F2). clear H3 n0 H4.
              exists rule'; split; [assumption | ]. now apply rewritesAt_add_at_end. 
-      + destruct u... apply (proj2(niltape_repr' n p)) in H2 as H3. rewrite E_w_head in H3.
+      + apply (proj2(niltape_repr' n p)) in H2 as H3. rewrite E_w_head in H3.
         assert (a = inr |_| :: inr |_| :: E n) as -> by congruence; clear H3.
         (*rule is of the form |_| |_| |_| -> m |_| |_| *)
         destruct y.
@@ -604,9 +694,9 @@ Section fixTM.
             -- unfold makeIdentityBoth in H. rewrite in_app_iff in H. destruct H as [H | H]. 
                ++ apply identityRulesBlankBlankBlank_iff in H. congruence. 
                ++ apply identityRulesSigSigSig_iff in H. destruct H as (p' & σ1 & σ2 & σ3 & H). congruence. 
-
-                  
-
+               --   admit.
+                    *admit. 
+                     * admit. 
         }
         destruct e. 
         -- (*the rule is of the form |_| |_| |_| -> σ |_| |_| *)
