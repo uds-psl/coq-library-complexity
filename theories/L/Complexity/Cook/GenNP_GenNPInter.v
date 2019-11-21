@@ -76,6 +76,7 @@ Section fixTM.
   Definition Gamma := FinType (EqType ((States + tapeSigma)%type)). 
  
 
+  Implicit Type (γ : Gamma).
   Implicit Type (q : states).
   Implicit Type (m : tapeSigma).
   Implicit Type (p : polarity).
@@ -99,15 +100,11 @@ Section fixTM.
 
   Definition setPolarity p (σ : polSigma) : polSigma := match σ with (_, σ) => (p, σ) end. 
 
-  (* Definition makeRulesPol (a b c : stateSigma) (d e f : Gamma) := *)
-  (*   [  { inr (negative ! a), inr (negative ! a), inr (negative ! c)} *)
-  (*    / { }] *)
-
   (*flip the polarity of a symbol *)
-  Definition polarityFlipSigma (x : polSigma) := match x with ↓ σ => ↑ σ
-                                                    | ↑ σ => ↓ σ
-                                                    | ∘ σ => ∘ σ
-                                             end.
+  Definition polarityFlip p := match p with negative => positive | positive => negative | neutral => neutral end. 
+  Lemma polarityFlip_involutive p : polarityFlip(polarityFlip p) = p.
+  Proof. now destruct p. Qed. 
+  Definition polarityFlipSigma (x : polSigma) := match x with (p, σ) => (polarityFlip p, σ) end. 
   Lemma polarityFlipSigma_involutive (x : polSigma) : polarityFlipSigma (polarityFlipSigma x) = x. 
   Proof. destruct x, p; now cbn. Qed.
 
@@ -115,17 +112,107 @@ Section fixTM.
   Definition polarityFlipGamma (x : Gamma) : Gamma := match x with inl s => inl s | inr x => inr (polarityFlipTapeSigma x) end.
 
   Notation "'~' x" := (polarityFlipGamma x). 
+  Notation "'#' x" := (polarityFlipTapeSigma x) (at level 30). 
 
+  Lemma polarityFlipTapeSigma_involutive (x :tapeSigma) : (##x) = x. 
+  Proof.
+    destruct x; [ | now cbn ]. cbn. now rewrite polarityFlipSigma_involutive.  
+  Qed. 
   Lemma polarityFlipGamma_involutive (x : Gamma) : (~~x) = x. 
   Proof. 
-    destruct x; [now cbn | ]. destruct e; cbn; [ | reflexivity]. now rewrite polarityFlipSigma_involutive. 
+    destruct x; [now cbn | ]. cbn. now rewrite polarityFlipTapeSigma_involutive.  
+  Qed. 
+
+  Lemma polarityFlipSigmaInv1 e p σ : polarityFlipSigma e = (p, σ) -> e = (polarityFlip p, σ). 
+  Proof. 
+    unfold polarityFlipSigma. destruct e. intros. inv H. now rewrite polarityFlip_involutive.
+  Qed. 
+
+  Lemma polarityFlipTapeSigmaInv1 e p σ : polarityFlipTapeSigma e = Some (p, σ) -> e = Some (polarityFlip p, σ). 
+  Proof.
+    unfold polarityFlipTapeSigma. destruct e.
+    - intros. inv H. destruct e. cbn in H1. inv H1. now rewrite polarityFlip_involutive.
+    - congruence. 
   Qed. 
 
   (*reverse a string + flip its polarities *)
-  Fixpoint polarityRev (x : list Gamma) : list Gamma := rev (map polarityFlipGamma x).
-  (* match x with [] => [] *)
-  (*                                                               | (x :: xr) => polarityRev xr ++ [polarityFlipGamma x] *)
-  (*                                                        end.  *)
+  Definition polarityRev (x : list Gamma) : list Gamma := rev (map polarityFlipGamma x).
+
+  Lemma polarityRev_involutive (x : list Gamma) : polarityRev(polarityRev x) = x. 
+  Proof. 
+    unfold polarityRev. rewrite map_rev, rev_involutive, map_map. setoid_rewrite polarityFlipGamma_involutive. 
+    induction x; [eauto | cbn [map]; now rewrite IHx]. 
+  Qed. 
+
+
+
+  (** *inductive rewriteHead predicates *)
+
+  Definition predTapeWindow := tapeSigma -> tapeSigma -> tapeSigma -> tapeSigma -> tapeSigma -> tapeSigma -> Prop. 
+
+  Inductive shiftRightWindow : predTapeWindow :=
+  | shiftRightSSSS σ1 σ2 σ3 σ4 p : shiftRightWindow (Some (p, σ1)) (Some (p, σ2)) (Some (p, σ3)) (Some (↑ σ4)) (Some (↑σ1)) (Some (↑ σ2))
+  | shiftRightBBB σ1 : shiftRightWindow |_| |_| |_| (Some (↑ σ1)) |_| |_|
+  | shiftRightSBB σ1 σ2 p : shiftRightWindow (Some (p, σ1)) |_| |_| (Some (↑ σ2)) (Some (↑ σ1)) |_|
+  | shiftRightSSB σ1 σ2 σ3 p : shiftRightWindow (Some (p, σ1)) (Some (p, σ2)) |_| (Some (↑ σ3)) (Some (↑ σ1)) (Some (↑ σ2))
+  | shiftRightBBS σ1 p : shiftRightWindow |_| |_| (Some (p, σ1)) |_| |_| |_|
+  | shiftRightBSS σ1 σ2 p : shiftRightWindow |_| (Some (p, σ1)) (Some (p, σ2)) |_| |_| (Some (↑ σ1))
+  | shiftRightSSSB σ1 σ2 σ3 p : shiftRightWindow (Some (p, σ1)) (Some (p, σ2)) (Some (p, σ3)) |_| (Some (↑ σ1)) (Some (↑ σ2)). 
+
+  Hint Constructors shiftRightWindow. 
+
+  Inductive identityWindow : predTapeWindow :=
+  | identityBBB : identityWindow (|_|) (|_|) (|_|) (|_|) (|_|) (|_|)
+  | identitySSS σ1 σ2 σ3 p: identityWindow (Some (p, σ1)) (Some (p, σ2)) (Some (p, σ3)) (Some (∘ σ1)) (Some (∘ σ2)) (Some (∘ σ3))
+  | identitySBB σ1 p : identityWindow (Some (p, σ1)) |_| |_| (Some (∘ σ1)) |_| |_|
+  | identitySSB σ1 σ2 p : identityWindow (Some (p, σ1)) (Some (p, σ2)) |_| (Some (∘ σ1)) (Some (∘ σ2)) |_|
+  | identityBBS σ1 p : identityWindow |_| |_| (Some (p, σ1)) |_| |_| (Some(∘ σ1))
+  | identityBSS σ1 σ2 p : identityWindow |_| (Some (p, σ1)) (Some (p, σ2)) |_| (Some (∘ σ1)) (Some (∘ σ2)).                                                               
+  Hint Constructors identityWindow.
+
+  Inductive rewHeadTape : string Gamma -> string Gamma -> Prop :=
+  | rewShiftLeftTapeC (σ1 σ2 σ3 σ4 σ5 σ6 : tapeSigma) u v: shiftRightWindow (#σ3) (#σ2) (#σ1) (#σ6) (#σ5) (#σ4) -> rewHeadTape ((inr σ1) :: (inr σ2) :: (inr σ3) :: u) ((inr σ4) :: (inr σ5) :: (inr σ6) :: v)
+  | rewShiftRightTapeC  (σ1 σ2 σ3 σ4 σ5 σ6 : tapeSigma) u v : shiftRightWindow σ1 σ2 σ3 σ4 σ5 σ6 -> rewHeadTape ((inr σ1) :: (inr σ2) :: (inr σ3) :: u) ((inr σ4) :: (inr σ5) :: (inr σ6) :: v)
+  | rewIdentityTapeC (σ1 σ2 σ3 σ4 σ5 σ6 : tapeSigma) u v : identityWindow σ1 σ2 σ3 σ4 σ5 σ6 -> rewHeadTape ((inr σ1) :: (inr σ2) :: (inr σ3) :: u) ((inr σ4) :: (inr σ5) :: (inr σ6) :: v).
+
+  Hint Constructors rewHeadTape. 
+
+  Lemma rewHeadTape_tail_invariant γ1 γ2 γ3 γ4 γ5 γ6 u v u' v' :
+    rewHeadTape (γ1 :: γ2 :: γ3 :: u) (γ4 :: γ5 :: γ6 :: v) <-> rewHeadTape (γ1 :: γ2 :: γ3 :: u') (γ4 :: γ5 :: γ6 :: v').
+  Proof. split; intros; inv H; eauto. Qed. 
+
+  Lemma rewHeadTape_append_invariant γ1 γ2 γ3 γ4 γ5 γ6 u v u' v' :
+    rewHeadTape (γ1 :: γ2 :: γ3 :: u) (γ4 :: γ5 :: γ6 :: v) <-> rewHeadTape (γ1 :: γ2 :: γ3 :: u ++ u') (γ4 :: γ5 :: γ6 :: v ++ v').
+  Proof. now apply rewHeadTape_tail_invariant. Qed. 
+
+
+
+  Lemma identityWindow_revp (σ1 σ2 σ3 σ4 σ5 σ6 : tapeSigma) : identityWindow σ1 σ2 σ3 σ4 σ5 σ6 <-> identityWindow (#σ3) (#σ2) (#σ1) (#σ6) (#σ5) (#σ4). 
+  Proof.
+    split; intros; inv H; cbn; try destruct p; try destruct σ1, σ2, σ3, σ4, σ5, σ6; eauto; cbn in *; try congruence.
+    all: repeat match goal with [H : Some (_, _) = Some (polarityFlipSigma _) |- _] => inv H end. 
+    all: repeat match goal with [H : (_, _) = polarityFlipSigma _ |- _] => symmetry in H; apply polarityFlipSigmaInv1 in H; rewrite H in * end; eauto. 
+  Qed. 
+
+  Lemma rewHeadTape_revp' γ1 γ2 γ3 γ4 γ5 γ6 : rewHeadTape [γ1; γ2; γ3] [γ4; γ5; γ6] -> rewHeadTape [~γ3; ~γ2; ~γ1] [~γ6; ~γ5; ~γ4]. 
+  Proof. 
+    intros. inv H. 
+    - apply rewShiftRightTapeC. apply H1.
+    - apply rewShiftLeftTapeC. now repeat rewrite polarityFlipTapeSigma_involutive.
+    - apply identityWindow_revp in H1. now apply rewIdentityTapeC. 
+  Qed. 
+
+  Lemma rewHeadTape_revp γ1 γ2 γ3 γ4 γ5 γ6 : rewHeadTape [γ1; γ2; γ3] [γ4; γ5; γ6] <-> rewHeadTape [~γ3; ~γ2; ~γ1] [~γ6; ~γ5; ~γ4].
+  Proof. 
+    split. apply rewHeadTape_revp'. intros H%rewHeadTape_revp'. now repeat rewrite polarityFlipGamma_involutive in H. 
+  Qed.
+
+  Lemma rewritesAt_rewHeadTape_add_at_end i a b u v : rewritesAt rewHeadTape i a b -> rewritesAt rewHeadTape i (a ++ u) (b ++ v).  
+  Proof. 
+    intros. unfold rewritesAt in *. inv H; symmetry in H0; symmetry in H1; repeat erewrite skipn_app2; eauto; try congruence; cbn; eauto. 
+  Qed. 
+
+  (** *equivalent string/rule based predicates*)
 
   (*the same for rewrite windows *)
   Definition polarityRevTCSRWinP (x : TCSRWinP Gamma) : TCSRWinP Gamma :=
@@ -160,7 +247,6 @@ Section fixTM.
     - intros ([] & ->); eauto. 
   Qed. 
 
-  Hint Resolve -> identityRulesTemplate_iff. 
 
   (*both halves *)
 
@@ -176,8 +262,6 @@ Section fixTM.
     - eauto. 
   Qed. 
 
-  Hint Resolve -> identityRulesBlankBlankBlank_iff. 
-
   (*
     σ1 σ2 σ3
     σ1 σ2 σ3
@@ -192,8 +276,6 @@ Section fixTM.
     - intros (p & σ1 & σ2 & σ3 & ->). exists (σ1, σ2, σ3). rewrite identityRulesTemplate_iff. exists p. eauto. 
   Qed. 
 
-  Hint Resolve -> identityRulesSigSigSig_iff. 
-      
   (*right half *)
 
   (*
@@ -207,8 +289,6 @@ Section fixTM.
     unfold makeIdentityRulesSigBlankBlank. rewrite makeExhaustive_correct. unfold makeIdentityRulesSigBlankBlank'. setoid_rewrite identityRulesTemplate_iff.
     cbn. split; intros [a [b H]]; eauto. 
   Qed. 
-
-  Hint Resolve -> identityRulesSigBlankBlank_iff.
 
   (*
     σ1 σ2 |_|
@@ -224,13 +304,11 @@ Section fixTM.
     - intros (p & σ1 & σ2 &  ->). exists (σ1, σ2). rewrite identityRulesTemplate_iff; exists p; eauto.  
   Qed. 
 
-  Hint Resolve -> identityRulesSigSigBlank_iff. 
-
   Definition makeIdentityBoth := makeIdentityRulesBlankBlankBlank ++ makeIdentityRulesSigSigSig.
   Definition makeIdentityRight := makeIdentityRulesSigBlankBlank++ makeIdentityRulesSigSigBlank. 
   Definition makeIdentityLeft := map polarityRevWin makeIdentityRight.  (*the left rules are symmetric to the right rules *)
 
-  Definition makeIdentity := makeIdentityLeft ++ makeIdentityBoth ++ makeIdentityRight. 
+  Definition makeIdentity := makeIdentityBoth ++ makeIdentityRight ++ makeIdentityLeft. 
 
 
   (** *shift right rules*)
@@ -243,8 +321,6 @@ Section fixTM.
     - orintro; eauto. 
     - intros ([] & ->); eauto.
   Qed. 
-
-  Hint Resolve -> shiftRightRulesTemplate_iff. 
 
   (* both halves*)
   (*
@@ -261,13 +337,11 @@ Section fixTM.
     - intros (p & σ1 & σ2 & σ3 & σ4 & ->). exists (σ1, σ2, σ3, σ4); rewrite shiftRightRulesTemplate_iff; exists p; eauto. 
   Qed. 
 
-  Hint Resolve -> shiftRightRulesSigSigSigSig_iff. 
-
   (* right half*)
 
   (*
     |_| |_| |_|
-    |_| |_| |_|
+    σ1  |_| |_|
    *)
   Definition makeShiftRightRulesBlankBlankBlank' (σ : Sigma) := makeShiftRightRulesTemplate (|_| , |_| , |_| , Some σ).
   Definition makeShiftRightRulesBlankBlankBlank := makeExhaustive makeShiftRightRulesBlankBlankBlank'. 
@@ -277,8 +351,6 @@ Section fixTM.
     - intros [σ ([] & ->)%shiftRightRulesTemplate_iff]; cbn; eauto. 
     - intros (σ & ->); exists σ; rewrite shiftRightRulesTemplate_iff; eauto. Unshelve. exact positive. 
   Qed. 
-
-  Hint Resolve -> shiftRightRulesBlankBlankBlank_iff. 
 
   (*
     σ1 |_| |_|
@@ -294,8 +366,6 @@ Section fixTM.
     - intros (p & σ1 & σ2 & ->); exists (σ1, σ2); rewrite shiftRightRulesTemplate_iff. exists p; eauto. 
   Qed. 
 
-  Hint Resolve -> shiftRightRulesSigBlankBlank_iff. 
-
   (*
     σ1 σ2 |_|
     σ3 σ1 σ2
@@ -309,8 +379,6 @@ Section fixTM.
     - intros [[[σ1 σ2] σ3] ([] & ->)%shiftRightRulesTemplate_iff]; cbn; eauto.
     - intros (p & σ1 & σ2 & σ3 & ->); exists (σ1, σ2, σ3); rewrite shiftRightRulesTemplate_iff. exists p; eauto. 
   Qed. 
-
-  Hint Resolve -> shiftRightRulesSigSigBlank_iff. 
 
   (*left half*)
 
@@ -327,8 +395,6 @@ Section fixTM.
     - intros (p & σ & ->); exists σ. rewrite shiftRightRulesTemplate_iff; exists p; eauto. 
   Qed. 
 
-  Hint Resolve -> shiftRightRulesBlankBlankSig_iff. 
-
   (*
     |_| σ1 σ2
     |_| |_| σ1
@@ -342,8 +408,6 @@ Section fixTM.
     - intros [[σ1 σ2] ([] & ->)%shiftRightRulesTemplate_iff]; cbn; eauto. 
     - intros (p & σ1 & σ2 & ->); exists (σ1, σ2). rewrite shiftRightRulesTemplate_iff; exists p; eauto. 
   Qed. 
-
-  Hint Rewrite -> shiftRightRulesBlankSigSig_iff.
 
   (*
     σ1  σ2 σ3
@@ -363,54 +427,9 @@ Section fixTM.
   Definition makeShiftLeft := map polarityRevWin makeShiftRight. 
 
   Definition makeTapeRules := makeIdentity ++ makeShiftRight ++ makeShiftLeft. 
-
-  Lemma polarityRevWinP_involutive a : a = polarityRevTCSRWinP (polarityRevTCSRWinP a). 
-  Proof. 
-    unfold polarityRevTCSRWinP. destruct a. cbn.
-    repeat (try destruct e; try destruct e0; try destruct e1; try destruct p; try destruct p0; try destruct p1); cbn; try reflexivity.
-  Qed. 
-
-  Lemma polarityRevWin_involutive rule : rule = polarityRevWin (polarityRevWin rule). 
-  Proof. unfold polarityRevWin. cbn. destruct rule. cbn. now repeat rewrite <- polarityRevWinP_involutive. Qed. 
-  
-  Lemma tape_rules_identity_revp rule : rule el makeIdentity -> polarityRevWin rule el makeIdentity. 
-  Proof.
-    unfold makeIdentity. repeat rewrite in_app_iff. intros [H | [H | H]]. 
-    - right; right. unfold makeIdentityLeft in H. apply in_map_iff in H as (x & H1 & H2).
-      now rewrite <- H1, <- polarityRevWin_involutive.
-    - right; left. unfold makeIdentityBoth in *. rewrite in_app_iff in *. destruct H as [H | H].
-      * left. unfold makeIdentityRulesBlankBlankBlank, makeIdentityRulesTemplate, makeRulesPol in *. 
-        cbn in H. destruct H as [H | [H | [H | H]]]; try rewrite <- H; cbn; now left. 
-      * right. unfold makeIdentityRulesSigSigSig, makeIdentityRulesTemplate, makeRulesPol in *. 
-        cbn in H. 
-  Admitted. 
-
-  Lemma tape_rules_revp' rule : rule el makeTapeRules -> polarityRevWin rule el makeTapeRules.
-  Proof. 
-    unfold makeTapeRules. repeat rewrite in_app_iff. intros [H | [H | H]]. 
-    - left. now apply tape_rules_identity_revp. 
-    - right; right. unfold makeShiftLeft. rewrite in_map_iff. now exists rule. 
-    - right; left. unfold makeShiftLeft in H. apply in_map_iff in H as (rule' & <- & H2). now rewrite <- polarityRevWin_involutive. 
-  Qed.
-
-  Corollary tape_rules_revp rule : rule el makeTapeRules <-> polarityRevWin rule el makeTapeRules. 
-  Proof. 
-    split.
-    - now apply tape_rules_revp'. 
-    - intros. specialize (tape_rules_revp' H). now rewrite <- polarityRevWin_involutive. 
-  Qed. 
-
  
   (** *automation *)
   (** *TODO*)
-  (* Hint Unfold makeIdentity. *)
-  (* Hint Unfold makeIdentityBoth makeIdentityRulesBlankBlankBlank makeIdentityRulesTemplate makeExhaustive.  *)
-  Lemma blank : {inr |_| , inr |_| , inr |_|} / {inr |_| , inr |_| , inr |_| } el makeIdentity. 
-  Proof. 
-    (* eauto.  *)
-    unfold makeIdentity. repeat rewrite in_app_iff. 
-    right; left. unfold makeIdentityBoth. rewrite in_app_iff. left. unfold makeIdentityRulesBlankBlankBlank. cbn. now left. 
-  Qed.  
 
 
   (** *representation of tapes *)
@@ -430,8 +449,6 @@ Section fixTM.
     - reflexivity.  
     - rewrite <- IHv at 2. reflexivity.  (*slightly hacky because of typeclass inference *)
   Qed. 
-
-
 
   Lemma E_w_step w : E (w + wo) = (inr |_|) :: E (w + wo -1).
   Proof.
@@ -455,7 +472,7 @@ Section fixTM.
 
   Notation "u '≃t(' p ',' w ')' h" := (reprTape' w u h p) (at level 80). 
 
-  Lemma niltape_repr' : forall w p, [] ≃t(p, w) (E (w + wo)) /\ forall a, [] ≃t(p, w) a -> a = E (w + wo). 
+  Lemma niltape_repr : forall w p, [] ≃t(p, w) (E (w + wo)) /\ forall a, [] ≃t(p, w) a -> a = E (w + wo). 
   Proof.
     intros. repeat split.
     - now apply E_length. 
@@ -464,15 +481,8 @@ Section fixTM.
     - intros. destruct H as (H1 & H2 & H3). rewrite H3. cbn. now rewrite Nat.sub_0_r. 
   Qed. 
 
-  Lemma niltape_repr : forall p, [] ≃t(p) E z /\ forall a, [] ≃t(p) a -> a = E z. 
-  Proof. apply niltape_repr'. Qed. 
-    
-  Lemma reprTape_length' w u h p : u ≃t(p, w) h -> (|h|) >= w + wo. 
+  Lemma reprTape_length w u h p : u ≃t(p, w) h -> (|h|) >= w + wo. 
   Proof. intros (H1 & H2 & H3). lia. Qed. 
-
-  Lemma reprTape_length u h p : u ≃t(p) h -> (|h|) >= z.
-  Proof. apply reprTape_length'. Qed. 
- 
 
   (** *representation of configurations *)
   Definition strconfig := list Gamma.
@@ -505,9 +515,17 @@ Section fixTM.
     all: rewrite rev_length, H1; now rewrite Nat.sub_diag. 
   Qed. 
 
-  (* Lemma getLeft_Some q tape s n : (q, tape) ≃c s -> n <= z -> getLeft s n = *)
 
-  (* Lemma tape_repr_step u us p σ h : (u :: us) ≃t(p) (inr (Some σ)) :: h ->  *)
+  (** *basic facts about tape rewriting *)
+  Lemma tape_repr_step u h a b p w : (a :: u) ≃t(p, S w) (b :: h) -> u ≃t(p, w) h. 
+  Proof. 
+    intros (H1 & H2 & H3). cbn [length] in *; repeat split.
+    - lia. 
+    - lia. 
+    - cbn [mapPolarity map] in H3. replace (S w + wo - S (|u|)) with (w + wo - (|u|)) in H3 by lia. 
+      replace (map (fun e => inr (withPolaritySigma p e)) u) with (mapPolarity p u) in H3 by now cbn.  
+      cbn [app] in H3. congruence. 
+  Qed. 
 
 
   Lemma tape_repr_inv w u p (x : States) a : u ≃t(p, w) (@inl States tapeSigma x) :: a -> False. 
@@ -533,196 +551,142 @@ Section fixTM.
                      | [ H : ?u :: ?us ≃t(?p, ?w) inr |_| :: ?a |- _] => now apply tape_repr_inv3 in H
                       end. 
 
-  Lemma tape_repr_step u h a b p w : (a :: u) ≃t(p, S w) (b :: h) -> u ≃t(p, w) h. 
-  Proof. 
-    intros (H1 & H2 & H3). cbn [length] in *; repeat split.
-    - lia. 
-    - lia. 
-    - cbn [mapPolarity map] in H3. replace (S w + wo - S (|u|)) with (w + wo - (|u|)) in H3 by lia. 
-      replace (map (fun e => inr (withPolaritySigma p e)) u) with (mapPolarity p u) in H3 by now cbn.  
-      cbn [app] in H3. congruence. 
-  Qed. 
-
-  (* Lemma rewritesHead_list_length *)
-
-
-
-
-  Lemma rewritesAt_add_at_end i sig rule (a b c d : string sig) : rewritesAt rule i a b -> rewritesAt rule i (a ++ c) (b ++ d). 
-  Proof. 
-    intros. unfold rewritesAt, rewritesHead in *. 
-    unfold Prelim.prefix in *. destruct H as ((b1 & H1) & (b2 & H2)). 
-    split.
-    - exists (b1 ++ c). rewrite app_assoc. apply skipn_app2 with (c := prem rule ++ b1); [ | assumption]. 
-      destruct rule, prem. now cbn.  
-    - exists (b2 ++ d). rewrite app_assoc. apply skipn_app2 with (c := conc rule ++ b2); [ | assumption]. 
-      destruct rule, conc. now cbn. 
-   Qed. 
-
-  Lemma rewritesHead_rule_inv r a b (σ1 σ2 σ3 σ4 σ5 σ6 : Gamma) : rewritesHead r (σ1 :: σ2 :: σ3 :: a) (σ4 :: σ5 :: σ6 :: b) -> r = {σ1 , σ2 , σ3} / {σ4 , σ5, σ6}. 
-  Proof. 
-    unfold rewritesHead. unfold prefix. intros [(b' & H1) (b'' & H2)]. destruct r. destruct prem, conc. cbn in H1, H2. congruence. 
-  Qed. 
-
-
   Ltac destruct_tape := repeat match goal with
                         | [H : _ ≃t(?p, ?w) ?x :: ?h |- _] => is_var x; destruct x; try discr_tape
                         | [H : _ ≃t(?p, ?w) (inr ?e) :: ?h |- _] => is_var e; destruct e; try discr_tape
                         | [H : ?u ≃t(?p, ?w) inr _ :: ?h |- _] => is_var u; destruct u; try discr_tape
                           end. 
 
-  Ltac discr_rewritesHead := repeat match goal with
-                            | [H : context[(prem ?rule)] |- _] => let a := fresh "prem" in let b := fresh "conc" in is_var rule; destruct rule as [a b]; destruct a, b
-                            | [H : context[prem (_ / _)] |- _] => cbn[prem] in H
-                            | [H : context[conc (_ / _)] |- _] => cbn [conc] in H
-                            | [H : prefix _ _ |- _] => destruct H; cbn [app] in H; congruence
-                            | [H : prefix _ _ |- _] => let a := fresh "H" in destruct H as [? H]; inv H
-                            | [H : rewritesHead _ _ _ |- _] => destruct H
-                            (* | [H : prefix _ _ |- _] => destruct H;cbn [conc prem polarityRevWin polarityRevTCSRWinP app TCSRWinP_to_list] in H; congruence *)
-                                                                                                                                                    end.
+  Ltac rewHeadTape_inv := repeat match goal with 
+                                   | [H : rewHeadTape  ?a _ |- _] => is_var a; destruct a; try (inv H; fail)
+                                   | [H : rewHeadTape  (_ :: ?a) _ |- _] => is_var a; destruct a; try (inv H; fail)
+                                   | [H : rewHeadTape  (_ :: _ :: ?a) _ |- _] => is_var a; destruct a; try (inv H; fail)
+                                   | [H : rewHeadTape  _ ?a |- _ ] => is_var a; destruct a; try (inv H; fail)
+                                   | [H : rewHeadTape  _ (_ :: ?a) |-_ ] => is_var a; destruct a; try (inv H; fail)
+                                   | [H : rewHeadTape  _ (_ :: _ :: ?a) |- _] => is_var a; destruct a; try (inv H; fail)
+                               end.
 
-  Ltac rewritesHead_inv := repeat match goal with
-                                   | [H : rewritesHead  _ ?a _ |- _] => is_var a; destruct a
-                                   | [H : rewritesHead  _ (_ :: ?a) _ |- _] => is_var a; destruct a
-                                   | [H : rewritesHead  _ (_ :: _ :: ?a) _ |- _] => is_var a; destruct a
-                                   | [H : rewritesHead  _ _ ?a |- _ ] => is_var a; destruct a
-                                   | [H : rewritesHead  _ _ (_ :: ?a) |-_ ] => is_var a; destruct a
-                                   | [H : rewritesHead  _ _ (_ :: _ :: ?a) |- _] => is_var a; destruct a
-                               end; discr_rewritesHead. 
-
-
-  Ltac inv2 H := inversion H; subst. 
-  Proposition fold_polarityFlipSigma σ p: (match p with | positive => ↓σ | negative => ↑ σ | neutral =>∘σ end) = polarityFlipSigma (p, σ).
-  Proof. now destruct p. Qed.
-    
+  Ltac rewHeadTape_inv2 := repeat match goal with
+                                  | [H : rewHeadTape _ _ |- _] => inv H
+                                  | [H : shiftRightWindow _ _ _ _ _ _ |- _ ] => inv H
+                                  | [H : identityWindow _ _ _ _ _ _ |- _] => inv H
+                                  | [H : |_| = # ?σ |- _] => is_var σ; destruct σ; cbn in H; try congruence
+                                  | [H : # ?σ = |_| |- _] => is_var σ; destruct σ; cbn in H; try congruence
+                                  | [H : Some (_, _) = # ?e |- _] => symmetry in H; apply polarityFlipTapeSigmaInv1 in H; rewrite H in *; clear H
+                                  | [H : # ?e = Some (_, _) |- _] => apply polarityFlipTapeSigmaInv1 in H; rewrite H in *; clear H
+                                  | [H : |_| = |_| |- _] => clear H
+                           end. 
  
-  (* Notation "a ⇝ b" := (valid a b) (at level 90, left associativity). *)
-  Lemma tape_rewrite_symm1 u h p h' : u ≃t(p) h -> valid makeTapeRules h h' -> valid makeTapeRules (polarityRev h) (polarityRev h'). 
-  Proof with try discr_tape.
+  Lemma tape_rewrite_symm1 u h p h' : u ≃t(p) h -> valid rewHeadTape h h' -> valid rewHeadTape (polarityRev h) (polarityRev h'). 
+  Proof.
     intros.
     unfold reprTape in H. revert u H. generalize z'. 
     induction H0; intros. 
     - cbn; constructor. 
-    - apply reprTape_length' in H1. cbn [length] in H1; unfold wo in H1. lia.  
-    - (*the destruct rule approach *)
-      (* cbn.  *)
+    - apply reprTape_length in H1. cbn [length] in H1; unfold wo in H1. lia.  
+    - rewHeadTape_inv. 
+      rewrite valid_iff. unfold validExplicit. cbn [polarityRev map rev]. repeat rewrite app_length.
+      repeat rewrite rev_length, map_length. cbn [length]. split.
+      1: apply valid_length_inv in H0; now cbn [length] in H0. 
+      replace ((|a|) + 1 + 1 + 1 - 2) with (S (|a|)) by lia. intros. destruct (nat_eq_dec i (|a|)). 
+      * (*rewrite at the new position, cannot apply IH *)
+        rewrite e3 in *; clear e3. unfold rewritesAt. 
+        apply rewHeadTape_tail_invariant with (u' := []) (v' := []) in H.
+        apply rewHeadTape_revp' in H. 
+        cbn [rev map].
+        repeat rewrite <- app_assoc.
+        rewrite skipn_app with (xs := rev (map polarityFlipGamma a)).
+        rewrite skipn_app with (xs := rev (map polarityFlipGamma b)).
+        2, 3: rewrite rev_length, map_length. 3: reflexivity. 
+        2: { apply valid_length_inv in H0; cbn [length] in H0. lia. }
+        cbn. apply H. 
+      * (*this follows by IH *)
+        destruct_tape.
+        + destruct n. { destruct H1 as [F1 [F3 F4]]. now cbn in F3. }
+          apply tape_repr_step in H1. specialize (IHvalid n u H1).
+          assert (0 <= i < (|a|)) by lia. clear H2 n0 H. apply valid_iff in IHvalid as [_ IH].
+          cbn [length polarityRev rev map app] in IH. repeat rewrite app_length in IH; cbn [length] in IH.
+          rewrite rev_length, map_length in IH. replace (|a| + 1 + 1 -2) with (|a|) in IH by lia. 
+          specialize (IH i H3) as IH. 
+          cbn [rev map polarityFlipGamma].
+          now apply rewritesAt_rewHeadTape_add_at_end. 
+        + destruct n.
+          -- cbn in H1. destruct a. 2: { destruct H1 as [F1 [F3 F4]]. now cbn in F1. }
+            cbn in H2, n0. lia. 
+          -- cbn [Nat.sub] in H2. assert (0 <= i < (|a|)) by lia. clear n0 H2. 
+            apply niltape_repr in H1 as H2. cbn [E] in H2. rewrite Nat.add_comm in H2; unfold wo in H2.
+            cbn [E Nat.add] in H2. inv H2.
+            specialize (niltape_repr n p) as (H4 & _). 
+            rewrite Nat.add_comm in H4; unfold wo in H4; cbn [Nat.add E] in H4. 
+            specialize (IHvalid n [] H4). apply valid_iff in IHvalid as (IH1 & IH2). 
+            cbn [length] in H3. cbn [polarityRev app rev map] in IH2. repeat rewrite app_length in IH2. 
+            cbn [length] in IH2. rewrite rev_length, map_length in IH2. replace (|E n| + 1 + 1 + 1 -2) with (S (|E n|)) in IH2 by lia. 
+            specialize (IH2 i H3). cbn [polarityRev app rev map].
+            now apply rewritesAt_rewHeadTape_add_at_end. 
+  Qed. 
 
-      (* unfold makeTapeRules in H. repeat rewrite in_app_iff in H. destruct H as [H | [H | H]].  *)
-      (* + unfold makeIdentity in H. repeat rewrite in_app_iff in H. destruct H as [H | [H | H]]. *)
-      (*   * unfold makeIdentityLeft in H. apply in_map_iff in H as (rule' & <- & H). *)
-      (*     unfold makeIdentityRight in H. rewrite in_app_iff in H. destruct H as [H | H]. *)
-      (*     -- rewrite identityRulesSigBlankBlank_iff in H. destruct H as (p' & σ & ->). *)
-      (*        rewritesHead_inv. destruct H. cbn [conc prem polarityRevWin polarityRevTCSRWinP app TCSRWinP_to_list] in H. inv H. rewrite fold_polarityFlipSigma in *. destruct H1.  cbn [conc prem polarityRevWin polarityRevTCSRWinP app TCSRWinP_to_list] in H. inv H.  destruct u... *)
-      (*        destruct n. *)
-      (*        destruct x0. Focus 2. cbn in H2; destruct H2. cbn in H; unfold wo in *.  lia. *)
-      (*        destruct x. 2: {apply valid_length_inv in H0. cbn in H0; lia. } cbn.  *)
-      (*        constructor.  *)
-      (*        inv H0.  *)
-      (*        specialize (IHvalid ) *)
+  Lemma polarityRev_eqn_move a b : a = polarityRev b -> b = polarityRev a. 
+  Proof. intros ->; symmetry; now apply polarityRev_involutive. Qed. 
 
+  Lemma tape_rewrite_symm2 u h p h' : u ≃t(p) h -> valid rewHeadTape (polarityRev h) (polarityRev h') -> valid rewHeadTape h h'.
+  Proof.
+    (*the proof is structurally very similar to the proof for tape_rewrite_symm1, *)
+    (*but not a direct consequence since the tape h is not reversed; *)
+    (*the reversion poses an additional challenge for tape inversion*)
+    intros. unfold reprTape in H. revert u H. generalize z'. 
+    remember (polarityRev h). remember (polarityRev h').
+    apply polarityRev_eqn_move in Heql0 as ->. apply polarityRev_eqn_move in Heql1 as ->. 
+    induction H0; intros.
+    - cbn; constructor. 
+    - apply reprTape_length in H1. cbn [length polarityRev map rev] in H1; unfold wo in H1.
+      rewrite app_length, rev_length, map_length in H1; cbn [length] in H1; lia.  
+    - rewHeadTape_inv. 
+      rewrite valid_iff. unfold validExplicit. cbn [polarityRev map rev]. repeat rewrite app_length.
+      repeat rewrite rev_length, map_length. cbn [length]. split.
+      1: apply valid_length_inv in H0; now cbn [length] in H0. 
+      replace ((|a|) + 1 + 1 + 1 - 2) with (S (|a|)) by lia. intros. destruct (nat_eq_dec i (|a|)). 
+      * (*rewrite at the new position, cannot apply IH *)
+        rewrite e3 in *; clear e3. unfold rewritesAt. 
+        apply rewHeadTape_tail_invariant with (u' := []) (v' := []) in H.
+        apply rewHeadTape_revp' in H. 
+        (* cbn [rev map]. *)
+        repeat rewrite <- app_assoc.
+        rewrite skipn_app with (xs := rev (map polarityFlipGamma a)).
+        rewrite skipn_app with (xs := rev (map polarityFlipGamma b)).
+        2, 3: rewrite rev_length, map_length. 3: reflexivity. 
+        2: { apply valid_length_inv in H0; cbn [length] in H0. lia. }
+        cbn. apply H. 
+      * (*this follows by IH *)
+        (* destruct_tape. *)
+        (* + destruct n. { destruct H1 as [F1 [F3 F4]]. now cbn in F3. } *)
+        (*   apply tape_repr_step in H1. specialize (IHvalid n u H1). *)
+        (*   assert (0 <= i < (|a|)) by lia. clear H2 n0 H. apply valid_iff in IHvalid as [_ IH]. *)
+        (*   cbn [length polarityRev rev map app] in IH. repeat rewrite app_length in IH; cbn [length] in IH. *)
+        (*   rewrite rev_length, map_length in IH. replace (|a| + 1 + 1 -2) with (|a|) in IH by lia.  *)
+        (*   specialize (IH i H3) as IH.  *)
+        (*   cbn [rev map polarityFlipGamma]. *)
+        (*   now apply rewritesAt_rewHeadTape_add_at_end.  *)
+        (* + destruct n. *)
+        (*   -- cbn in H1. destruct a. 2: { destruct H1 as [F1 [F3 F4]]. now cbn in F1. } *)
+        (*     cbn in H2, n0. lia.  *)
+        (*   -- cbn [Nat.sub] in H2. assert (0 <= i < (|a|)) by lia. clear n0 H2.  *)
+        (*     apply niltape_repr in H1 as H2. cbn [E] in H2. rewrite Nat.add_comm in H2; unfold wo in H2. *)
+        (*     cbn [E Nat.add] in H2. inv H2. *)
+        (*     specialize (niltape_repr n p) as (H4 & _).  *)
+        (*     rewrite Nat.add_comm in H4; unfold wo in H4; cbn [Nat.add E] in H4.  *)
+        (*     specialize (IHvalid n [] H4). apply valid_iff in IHvalid as (IH1 & IH2).  *)
+        (*     cbn [length] in H3. cbn [polarityRev app rev map] in IH2. repeat rewrite app_length in IH2.  *)
+        (*     cbn [length] in IH2. rewrite rev_length, map_length in IH2. replace (|E n| + 1 + 1 + 1 -2) with (S (|E n|)) in IH2 by lia.  *)
+        (*     specialize (IH2 i H3). cbn [polarityRev app rev map]. *)
+        (*     now apply rewritesAt_rewHeadTape_add_at_end.  *)
 
-      (*the destruct tape approach *)
-      rewritesHead_inv.  
-      rewrite valid_iff. unfold validExplicit. cbn [polarityRev]. repeat rewrite app_length. repeat rewrite rev_length, map_length. cbn [length]. split.
-        1: apply valid_length_inv in H0; now cbn in H0. 
-        replace ((|x0|) + 1 + 1 + 1 - 2) with (S (|x0|)) by lia. intros. destruct (nat_eq_dec i (|x1|)). 
-        * (*rewrite at the new position, cannot apply IH *)
-          rewrite e in *; clear e. exists (polarityRevWin ({e3, e4, e5}/{e6, e7, e8}) : TCSRWin (Gamma)).
-          apply tape_rules_revp in H.  split; [apply H | ]. unfold rewritesAt. cbn [rev map].
-          repeat rewrite <- app_assoc.
-          rewrite skipn_app with (xs := rev (map polarityFlipGamma x0)).
-          rewrite skipn_app with (xs := rev (map polarityFlipGamma x1)).
-          2, 3: rewrite rev_length, map_length. 2: reflexivity. 
-          2: { apply valid_length_inv in H0; cbn [length] in H0. lia. }
-          cbn. split; exists []; now cbn. 
-       * (*this follows by IH *)
-         destruct_tape.
-         + destruct n. { destruct H2 as [F1 [F3 F4]]. now cbn in F3. }
-           apply tape_repr_step in H2. specialize (IHvalid n u H2).
-           assert (0 <= i < (|x1|)) by lia. clear H1 n0 H. apply valid_iff in IHvalid as [_ IH].
-           cbn [length polarityRev rev map app] in IH. repeat rewrite app_length in IH; cbn [length] in IH.
-           rewrite rev_length, map_length in IH. replace (|x1| + 1 + 1 -2) with (|x1|) in IH by lia. 
-           specialize (IH i H3) as (rule & IH1 & IH2). 
-           cbn [rev map polarityFlipGamma]. exists rule; split; [apply IH1 | ].
-           now apply rewritesAt_add_at_end.
-         + destruct n.
-           -- cbn in H1. destruct x1. 2: { destruct H2 as [F1 [F3 F4]]. now cbn in F1. }
-              cbn in H1, n0. lia. 
-           -- cbn [Nat.sub] in H1. assert (0 <= i < (|x1|)) by lia. clear n0 H3. 
-              apply niltape_repr' in H2. cbn [E] in H2. rewrite Nat.add_comm in H2; unfold wo in H2. cbn [E Nat.add] in H2. inv H2.
-
-              
-              
-              
-
-              apply tape_repr_step in H2. specialize (IHvalid n u H2).
-           assert (0 <= i < (|x1|)) by lia. clear H1 n0 H. apply valid_iff in IHvalid as [_ IH].
-           cbn [length polarityRev rev map app] in IH. repeat rewrite app_length in IH; cbn [length] in IH.
-           rewrite rev_length, map_length in IH. replace (|x1| + 1 + 1 -2) with (|x1|) in IH by lia. 
-           specialize (IH i H3) as (rule & IH1 & IH2). 
-           cbn [rev map polarityFlipGamma]. exists rule; split; [apply IH1 | ].
-           now apply rewritesAt_add_at_end.
-
-        destruct n; [ destruct H2; cbn in H3; lia | ]. apply tape_repr_step in H2 as H3.
-        specialize (IHvalid n u H3). clear H3. 
-        apply valid_iff. apply valid_iff in IHvalid as (IH1 & IH2). repeat split. 
-        * cbn [polarityRev]. repeat rewrite app_length. rewrite IH1. now cbn [length]. 
-        * cbn [polarityRev]. rewrite app_length. cbn[length]. intros. 
-          destruct (Nat.eq_dec i ((|polarityRev a|) -2)). (*is it the position that we have to cover with a new rule? *)
-          -- apply tape_rules_revp in H. exists (polarityRevWin rule). split; [assumption | ].  
-             rewrite e1. admit.
-          -- assert (0 <= i < (|polarityRev a|) -2) by lia. specialize (IH2 i H4) as (rule' & F1 & F2). clear H3 n0 H4.
-             exists rule'; split; [assumption | ]. now apply rewritesAt_add_at_end. 
-      + apply (proj2(niltape_repr' n p)) in H2 as H3. rewrite E_w_head in H3.
-        assert (a = inr |_| :: inr |_| :: E n) as -> by congruence; clear H3.
-        (*rule is of the form |_| |_| |_| -> m |_| |_| *)
-        destruct y.
-        { (* this case cannot happen, because the rewrite rules do not allow the introduction of new state symbols *)
-          clear IHvalid H2 H0. specialize (rewritesHead_length_inv (windows := makeTapeRules) H1 H) as (_ & H3). 
-          destruct b; [cbn in H3; lia | destruct b; [cbn in H3; lia | ]]. 
-          apply rewritesHead_rule_inv in H1; clear H3. 
-          rewrite H1 in H; clear H1. 
-
-          (*the following part *should* be automated *)
-          unfold makeTapeRules in H. repeat rewrite in_app_iff in H. destruct H as [H | [H | H]]. 
-          * unfold makeIdentity in H. repeat rewrite in_app_iff in H. destruct H as [H | [H | H]]. 
-            -- unfold makeIdentityLeft in H. apply in_map_iff in H as (rule' & H2 & H).
-               apply polarityRevWin_inv in H2. cbn in H2. rewrite H2 in H.
-               unfold makeIdentityRight in H. rewrite in_app_iff in H. destruct H as [H | H]. 
-               ++ apply identityRulesSigBlankBlank_iff in H. destruct H as (p' & σ & H). congruence. 
-               ++ apply identityRulesSigSigBlank_iff in H. destruct H as (p' & σ1 & σ2 & H). congruence. 
-            -- unfold makeIdentityBoth in H. rewrite in_app_iff in H. destruct H as [H | H]. 
-               ++ apply identityRulesBlankBlankBlank_iff in H. congruence. 
-               ++ apply identityRulesSigSigSig_iff in H. destruct H as (p' & σ1 & σ2 & σ3 & H). congruence. 
-               --   admit.
-                    *admit. 
-                     * admit. 
-        }
-        destruct e. 
-        -- (*the rule is of the form |_| |_| |_| -> σ |_| |_| *)
-          admit. 
-        -- (* the rule is of the form |_| |_| |_| -> |_| |_| |_| *)
-          admit.
-
-       (*  destruct n. (*if n = 0, the inductive hypothesis doesn't give us anything useful *) *)
-       (*  * unfold wo. cbn. cbn in H0. apply valid_length_inv in H0. cbn in H0. cbn in H1. *)
-       (*    destruct b; [cbn in H0; congruence | destruct b; [cbn in H0; congruence | destruct b; [ | cbn in H0; congruence ]]].  *)
-       (*    cbn. apply valid_iff. split; [ now cbn | ].  *)
-       (*    cbn [length]; intros. assert (i = 0) by lia. clear H3. rewrite H4 in *.  *)
-       (*    exists (polarityRevWin rule). split; [ now rewrite <- tape_rules_revp | ]. *)
-       (*    rewrite <- rewritesAt_head.  *)
-       (*    (*now need a case distinction over the rule *) *)
-       (*    admit. *)
-       (* * replace (S n + wo -1) with (n + wo) in * by lia. specialize (IHvalid n []).  *)
-       (*   cbn [polarityRev polarityFlipGamma polarityFlipTapeSigma].  *)
   Admitted. 
 
-
-  Lemma tape_rewrite_symm2 u h p h' : u ≃t(p) h -> valid makeTapeRules (polarityRev h) (polarityRev h') -> valid makeTapeRules h h'.
-  Proof with simp_tape.
-  Admitted. 
-
-  Lemma tape_rewrite_symm3 u h p h' : u ≃t(p) h -> valid makeTapeRules h h' -> valid makeTapeRules (map polarityFlipGamma h) h'. 
+  Lemma tape_rewrite_symm3 u h p h' : u ≃t(p) h -> valid rewHeadTape h h' -> valid rewHeadTape (map polarityFlipGamma h) h'. 
+  Proof. 
+    intros. induction H0. 
+    - cbn; constructor. 
+    - 
   Admitted. 
 
   

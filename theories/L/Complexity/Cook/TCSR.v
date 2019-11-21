@@ -68,18 +68,10 @@ Section fixInstance.
   Definition satFinal s := exists subs, subs el final /\ substring subs s.
 
   (* rewrites inside a string *)
-  Definition rewritesHead rule a b :=
-    prefix (prem rule) a /\ prefix (conc rule) b.
-
-  Lemma rewritesHead_length_inv rule a b : rewritesHead rule a b -> isRule rule -> length a >= 3 /\ length b >= 3. 
-  Proof. 
-    intros. unfold rewritesHead, prefix in *. firstorder.
-    - rewrite H. rewrite app_length, (proj1 (isRule_length rule)). lia.  
-    - rewrite H1. rewrite app_length, (proj2 (isRule_length rule)). lia. 
-  Qed. 
-
-  Definition rewritesAt rule (i : nat) a b := rewritesHead rule (skipn i a) (skipn i b).
-  Lemma rewritesAt_head rule a b : rewritesHead rule a b <-> rewritesAt rule 0 a b. 
+  (*We define the following notions over an abstract rewritesHead predicate. A concrete instance can be obtained using rewritesHead_pred *)
+  Definition rewritesHeadAbstract := string -> string -> Prop. 
+  Definition rewritesAt (p : rewritesHeadAbstract) (i : nat) a b := p (skipn i a) (skipn i b).
+  Lemma rewritesAt_head p a b : p a b <-> rewritesAt p 0 a b. 
   Proof. 
     unfold rewritesAt.
     rewrite <- firstn_skipn with (n:= 0) (l:= a) at 1.
@@ -87,16 +79,17 @@ Section fixInstance.
     repeat rewrite firstn_O; now cbn. 
   Qed. 
 
-  Lemma rewritesAt_step rule a b x y (i:nat) : rewritesAt rule i a b <-> rewritesAt rule (S i) (x :: a) (y:: b). 
+  Lemma rewritesAt_step p a b x y (i:nat) : rewritesAt p i a b <-> rewritesAt p (S i) (x :: a) (y:: b). 
   Proof. intros. unfold rewritesAt. now cbn. Qed. 
 
-  (*validity of a rewrite *)
-  Inductive valid : string -> string -> Prop :=
-  | validB: valid [] [] 
-  | validSA a b x y: valid a b -> length a < 2 -> valid (x:: a) (y:: b)
-  | validS a b x y rule: valid a b -> rule el windows -> rewritesHead rule (x::a) (y::b) -> valid (x::a) (y::b). 
 
-  Lemma valid_length_inv a b : valid a b -> length a = length b. 
+  (*validity of a rewrite *)
+  Inductive valid (p : rewritesHeadAbstract): string -> string -> Prop :=
+  | validB: valid p [] [] 
+  | validSA a b x y: valid p a b -> length a < 2 -> valid p (x:: a) (y:: b)
+  | validS a b x y : valid p a b -> p (x::a) (y::b) -> valid p (x::a) (y::b). 
+
+  Lemma valid_length_inv p a b : valid p a b -> length a = length b. 
   Proof.
     induction 1. 
     - now cbn.
@@ -104,10 +97,29 @@ Section fixInstance.
     - cbn; congruence. 
   Qed. 
 
-  Definition validExplicit a b := length a = length b /\ forall i, 0 <= i < length a - 2  -> exists rule, rule el windows  /\ rewritesAt rule i a b.
+  (*valid is congruent for equivalent rewriteHead predicates *)
+  Lemma valid_congruent' p1 p2 : (forall u v, p1 u v <-> p2 u v) -> forall a b, valid p1 a b -> valid p2 a b. 
+  Proof. 
+    intros.
+    induction H0. 
+    - constructor. 
+    - now constructor. 
+    - constructor 3. apply IHvalid. 
+      now apply H. 
+  Qed.
 
-  Lemma valid_iff a b :
-    valid a b <-> validExplicit a b.
+  Corollary valid_congruent p1 p2 : (forall u v, p1 u v <-> p2 u v) -> forall a b, valid p1 a b <-> valid p2 a b.
+  Proof.
+    intros; split; [now apply valid_congruent' | ].
+    assert (forall u v, p2 u v <-> p1 u v) by (intros; now rewrite H).
+    now apply valid_congruent'. 
+  Qed.
+
+  (*the explicit characterisation using bounded quantification *)
+  Definition validExplicit p a b := length a = length b /\ forall i, 0 <= i < length a - 2  -> rewritesAt p i a b.
+
+  Lemma valid_iff p a b :
+    valid p a b <-> validExplicit p a b.
   Proof.
     unfold validExplicit. split.
     - induction 1. 
@@ -119,26 +131,52 @@ Section fixInstance.
         cbn [length]; intros.
         destruct i. 
         * eauto. 
-        * specialize (rewritesHead_length_inv H1) as (H3 & H4); [assumption | ]. cbn in H3.
-          assert (0 <= i < (|a|) - 2) by lia.
-          eauto. 
+        * assert (0 <= i < (|a|) - 2) by lia. eauto. 
     - revert b. induction a; intros b (H1 & H2). 
       + inv_list. constructor. 
       + inv_list. destruct (le_lt_dec 2 (length a0)). 
         * cbn [length] in H2.
-          assert (0 <= 0 < S (|a0|) - 2) by lia. destruct (H2 0 H) as (rule & H3 & H4). 
-          eapply (@validS a0 b a e rule). 2-3: assumption. 
+          assert (0 <= 0 < S (|a0|) - 2) by lia. specialize (H2 0 H) as H3. 
+          eapply (@validS p a0 b a e). 2-3: assumption. 
           apply IHa. split; [congruence | ]. 
           intros. assert (0 <= S i < S (|a0|) - 2) by lia. 
-          destruct (H2 (S i) H5) as (rule' & F1 & F2). 
-          eauto. 
+          specialize (H2 (S i) H4). eauto. 
         * constructor. 
           2: assumption. 
           apply IHa. split; [congruence | intros ]. 
           cbn [length] in H2. assert (0 <= S i < S(|a0|) - 2) by lia. 
-          destruct (H2 (S i) H0) as (rule & H3 & H4). 
-          eauto. 
+          specialize (H2 (S i) H0); eauto. 
   Qed. 
+
+  (*we now define a concrete rewrite predicate based on a set of rules *)
+  Definition rewritesHead rule a b :=
+    prefix (prem rule) a /\ prefix (conc rule) b.
+
+  Lemma rewritesHead_length_inv rule a b : rewritesHead rule a b -> isRule rule -> length a >= 3 /\ length b >= 3. 
+  Proof. 
+    intros. unfold rewritesHead, prefix in *. firstorder.
+    - rewrite H. rewrite app_length, (proj1 (isRule_length rule)). lia.  
+    - rewrite H1. rewrite app_length, (proj2 (isRule_length rule)). lia. 
+  Qed. 
+
+  Definition rewritesHead_pred ruleset a b := exists rule, rule el ruleset /\ rewritesHead rule a b. 
+
+  Lemma rewritesHead_rule_inv r a b (σ1 σ2 σ3 σ4 σ5 σ6 : Sigma) : rewritesHead r (σ1 :: σ2 :: σ3 :: a) (σ4 :: σ5 :: σ6 :: b) -> r = {σ1 , σ2 , σ3} / {σ4 , σ5, σ6}. 
+  Proof. 
+    unfold rewritesHead. unfold prefix. intros [(b' & H1) (b'' & H2)]. destruct r. destruct prem0, conc0. cbn in H1, H2. congruence. 
+  Qed. 
+
+  Lemma rewritesAt_Head_pred_add_at_end i ruleset (a b c d : string) : rewritesAt (rewritesHead_pred ruleset) i a b -> rewritesAt (rewritesHead_pred ruleset) i (a ++ c) (b ++ d). 
+  Proof. 
+    intros. unfold rewritesAt, rewritesHead_pred in *.
+    destruct H as (rule & H0 & H). exists rule; split; [assumption | ]. 
+    unfold Prelim.prefix in *. destruct H as ((b1 & H1) & (b2 & H2)). 
+    split.
+    - exists (b1 ++ c). rewrite app_assoc. apply skipn_app2 with (c := prem rule ++ b1); [ | assumption]. 
+      destruct rule, prem. now cbn.  
+    - exists (b2 ++ d). rewrite app_assoc. apply skipn_app2 with (c := conc rule ++ b2); [ | assumption]. 
+      destruct rule, conc. now cbn. 
+   Qed. 
 End fixInstance. 
 
 Arguments valid {Sigma}. 
@@ -146,4 +184,5 @@ Arguments valid {Sigma}.
 (* Notation "a ⇝ b" := (valid a b) (at level 90, left associativity).  *)
 (* Notation "a '⇝(' n ')' b" := (relpower valid n a b) (at level 90, left associativity, format "a '⇝(' n ')' b"). *)
 
-Definition TCSRLang (C : TCSR) :=  exists (sf : string (Sigma C)), relpower (valid (windows C)) (steps C) (init C) sf /\ satFinal (final C) sf. 
+(*we define it using the rewritesHead_pred rewrite predicate *)
+Definition TCSRLang (C : TCSR) :=  exists (sf : string (Sigma C)), relpower (valid (rewritesHead_pred(windows C))) (steps C) (init C) sf /\ satFinal (final C) sf. 
