@@ -35,6 +35,11 @@ Proof.
   intros. enough (f (f a) = f(f b)) by (now repeat rewrite H). easy. 
 Qed. 
 
+Lemma involution_invert_eqn2 (X : Type) (f : X -> X) : involution f -> forall a b, f a = b -> a = f b. 
+Proof. 
+  intros. rewrite <- (H a). now apply involution_invert_eqn with (f := f). 
+Qed. 
+
 Hint Resolve -> makeExhaustive_correct. 
 
 Section fixTM.
@@ -669,21 +674,14 @@ Section fixTM.
   Qed. 
 
   (*Lemma 18 *)
-  Definition setPolarityGamma p γ := match γ with inr (inr (Some (_, σ))) => inr (inr (Some (p, σ))) | _ => γ end. 
-  Notation "p '@' γ" := (setPolarityGamma p γ) (at level 60).
-
-  Lemma apply_fun_eqn {X Y : Type} (f : X -> Y) (a b : X) : a = b -> f a = f b. 
-  Proof. now intros ->. Qed. 
-
-
-
-
-  Lemma tape_repr_add_right rs σ h p w: rs ≃t(p, w) h -> length rs < w -> exists h', valid rewHeadTape h (inr (inr (Some (↑ σ))) :: h')  /\ σ :: rs ≃t(positive, w)  (inr (inr (Some (↑ σ))) :: h'). 
+  Lemma tape_repr_add_right rs σ h p w: rs ≃t(p, w) h -> length rs < w -> exists h', valid rewHeadTape h (inr (inr (Some (↑ σ))) :: h')  /\ (forall h0, valid rewHeadTape h (inr (inr (Some (↑ σ))) :: h0) -> h0 = h') /\ σ :: rs ≃t(positive, w)  (inr (inr (Some (↑ σ))) :: h'). 
   Proof. 
     intros. revert w h σ H H0. 
     induction rs.
-    - intros. apply niltape_repr in H as ->. exists (E (w + wo - 1)). split. 
-      + cbn in H0. destruct w; [lia | ]. unfold wo. replace (S w + 2) with (S (S (S w))) by lia. cbn [Nat.sub]. apply E_rewrite_sym.
+    - intros. apply niltape_repr in H as ->. exists (E (w + wo - 1)). rewrite <- and_assoc; split. 
+      + cbn in H0. destruct w; [lia | ]. unfold wo. replace (S w + 2) with (S (S (S w))) by lia. cbn [Nat.sub]. split.
+        * (*existence*) apply E_rewrite_sym.
+        * (*uniqueness*) intros. now eapply E_rewrite_sym_unique with (σ := σ). 
       + repeat split. 
         * cbn. rewrite E_length. lia. 
         * now cbn. 
@@ -692,10 +690,14 @@ Section fixTM.
       destruct rs; [ | destruct rs].
       + (*at the end of the used tape region *)
         destruct h'; [clear H2 | now cbn in H2]. clear H3. 
-        destruct n; [cbn in H0; cbn in H0; lia | ]. exists (inr (inr (Some (↑a))):: E (n + wo)). split.
-        * cbn [app]. rewrite Nat.add_comm. setoid_rewrite Nat.add_comm at 2. unfold wo. cbn [Nat.add Nat.sub]. constructor 3. 
-          -- apply E_rewrite_sym. 
-          -- cbn [E]. apply rewHeadTape_tail_invariant with (u' := []) (v' := []). eauto. 
+        destruct n; [cbn in H0; cbn in H0; lia | ]. exists (inr (inr (Some (↑a))):: E (n + wo)). rewrite <- and_assoc; split.
+        * cbn [app]. rewrite Nat.add_comm. setoid_rewrite Nat.add_comm at 2. unfold wo. cbn [Nat.add Nat.sub]. split.
+          ++ (*existence*) constructor 3. 
+             -- apply E_rewrite_sym. 
+             -- cbn [E]. apply rewHeadTape_tail_invariant with (u' := []) (v' := []). eauto. 
+          ++ (*uniqueness *) intros. inv H; [now cbn in * | ].
+             rewHeadTape_inv2. apply E_rewrite_sym_unique with (σ := a) in H4. cbn [E] in H4. rewrite Nat.add_comm; cbn [Nat.add E].
+             inv H4. reflexivity. 
         * repeat split. 
           -- cbn. rewrite E_length. cbn in H0. lia. 
           -- cbn; cbn in H0; lia. 
@@ -706,12 +708,18 @@ Section fixTM.
         cbn [app] in H3. destruct_tape. cbn [length] in *. 
         destruct n; [lia | ]. clear H0. 
         exists (inr(inr (Some (↑a))) :: inr (inr (Some (↑e))) :: E (n + wo)). 
-        cbn [app]; split. 
-        * constructor 3. 
-          -- unfold wo. replace (S n + 2) with (S(S (S n))) by lia. rewrite Nat.add_comm. constructor 3. 
-             ++ apply E_rewrite_sym. 
-             ++ cbn [E]. apply rewHeadTape_tail_invariant with (u' := [] ) (v' := []); eauto. 
-          -- cbn[E]. apply rewHeadTape_tail_invariant with (u' := []) (v' := []). eauto. 
+        cbn [app]; rewrite <- and_assoc; split. 
+        * split.
+          ** (*existence*) constructor 3. 
+              -- unfold wo. replace (S n + 2) with (S(S (S n))) by lia. rewrite Nat.add_comm. constructor 3. 
+                ++ apply E_rewrite_sym. 
+                ++ cbn [E]. apply rewHeadTape_tail_invariant with (u' := [] ) (v' := []); eauto. 
+              -- cbn[E]. apply rewHeadTape_tail_invariant with (u' := []) (v' := []). eauto. 
+          ** (*uniqueness*)
+            intros. inv H; [now cbn in * | ]. rewHeadTape_inv2. 
+            inv H4; [unfold wo in *; rewrite Nat.add_comm in H6; cbn in H6; lia | ]. rewHeadTape_inv2. 
+            rewrite Nat.add_comm in H2, H4; cbn [E Nat.add] in H2, H4. apply E_rewrite_sym_unique in H2. 
+            cbn [E] in H2. inv H2. inv H4. reflexivity.  
         * repeat split.
           -- cbn. rewrite E_length. lia. 
           -- cbn; lia. 
@@ -723,14 +731,17 @@ Section fixTM.
 
        (*we use the IH with h := inr (...e) :: inr (...e0) :: h' ++ E(n + wo); w := S (S (n + |h'|)); σ := a *)
        rewrite Nat.add_succ_r in H3. specialize (IHrs _ _ a H3). 
-       edestruct (IHrs) as (h'' & F1 & F2). lia. 
+       edestruct (IHrs) as (h'' & F1 & F3 & F2). lia. 
        exists (inr (inr (Some (↑a))) :: h'').
        (*we need to know one more symbol at the head of h'' for the proof *)
-       apply tape_repr_step in F2 as F3. destruct_tape. 
-       split.
-       * constructor 3.  
+       apply tape_repr_step in F2 as F4. destruct_tape. 
+       rewrite <- and_assoc; split; [split | ].
+       * (*existence*)constructor 3.  
          -- apply F1. 
          -- apply rewHeadTape_tail_invariant with (u' := []) (v' := []); eauto. 
+       * (*uniqueness*)
+         intros. clear IHrs. inv H; [now cbn in *| ]. 
+         rewHeadTape_inv2. apply F3 in H7. inv H7. reflexivity. 
        * repeat split.
          -- cbn. destruct F2 as (F2 & _ & _). cbn in F2. lia.  
          -- cbn. destruct F2 as (_ & F2 & _). cbn in F2. lia. 
@@ -748,20 +759,24 @@ Section fixTM.
       rewrite E_polarityFlip. easy. 
   Qed. 
 
-  Corollary tape_repr_add_left ls σ h p w: ls ≃t(p, w) h -> length ls < w -> exists h', valid rewHeadTape (rev h) (rev (inr (inr (Some (↓ σ))) :: h'))  /\ σ :: ls ≃t(negative, w)  (inr (inr (Some (↓ σ))) :: h').
+  Corollary tape_repr_add_left ls σ h p w: ls ≃t(p, w) h -> length ls < w -> exists h', valid rewHeadTape (rev h) (rev (inr (inr (Some (↓ σ))) :: h'))  /\ (forall h0, valid rewHeadTape (rev h) (rev (inr (inr (Some (↓ σ))) :: h0)) -> h0 = h') /\ σ :: ls ≃t(negative, w)  (inr (inr (Some (↓ σ))) :: h').
   Proof. 
-    intros. specialize (@tape_repr_add_right ls σ h p w H H0) as (h' & H1 & H2). 
-    eapply tape_rewrite_symm1 with (u:= ls) (p := p) (n:=w)in H1. 2: apply H. 
-    apply tape_rewrite_symm3 in H1.
-    exists (map polarityFlipGamma h'). split. 
-    - cbn [rev].
-      cbn[polarityRev map rev polarityFlipGamma polarityFlipTapeSigma polarityFlipTapeSigma' polarityFlipSigma polarityFlip] in H1.
-      unfold polarityRev in H1. rewrite map_rev in H1. rewrite map_involution in H1. 2: apply polarityFlipGamma_involution. 
-      apply H1. 
+    intros. specialize (@tape_repr_add_right ls σ h p w H H0) as (h' & H1 & H3 & H2). 
+    exists (map polarityFlipGamma h'). rewrite <- and_assoc. split. 
+    - eapply tape_rewrite_symm1 with (u:= ls) (p := p) (n:=w)in H1. 2: apply H. 
+      apply tape_rewrite_symm3 in H1.
+      split. 
+      + cbn [rev].
+        cbn[polarityRev map rev polarityFlipGamma polarityFlipTapeSigma polarityFlipTapeSigma' polarityFlipSigma polarityFlip] in H1.
+        unfold polarityRev in H1. rewrite map_rev in H1. rewrite map_involution in H1. 2: apply polarityFlipGamma_involution. 
+        apply H1. 
+      + intros. specialize (H3 (map polarityFlipGamma h0)).
+        rewrite <- involution_invert_eqn2 with (f := map polarityFlipGamma) (a := h0) (b := h'); [reflexivity | apply map_involution, polarityFlipGamma_involution | ]. 
+        apply H3. eapply tape_rewrite_symm2. apply H. 
+        unfold polarityRev. rewrite <- map_rev. apply tape_rewrite_symm3. 
+        cbn [map]. cbn_friendly. rewrite map_involution; [now apply H4 | apply polarityFlipGamma_involution]. 
    - apply tape_repr_polarityFlip in H2. cbn in H2. easy. 
   Qed. 
-
-  (**TODO: uniqueness*)
 
 End fixTM. 
 
