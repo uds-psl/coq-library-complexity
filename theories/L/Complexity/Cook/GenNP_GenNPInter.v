@@ -499,108 +499,46 @@ Section fixTM.
                            end; cbn_friendly. 
  
   (*Lemma 15 *)
-  Lemma tape_rewrite_symm1 u h p n h' : u ≃t(p, n) h -> valid rewHeadTape h h' -> valid rewHeadTape (polarityRev h) (polarityRev h'). 
+  Lemma tape_rewrite_symm1 h h' : valid rewHeadTape h h' -> valid rewHeadTape (polarityRev h) (polarityRev h'). 
   Proof.
-    intros. revert n u H. 
-    induction H0; intros. 
+    intros.  
+    induction H; intros. 
     - cbn; constructor. 
-    - apply reprTape_length in H1. cbn [length] in H1; unfold wo in H1. lia.  
+    - apply valid_length_inv in H.
+      destruct a, b; try destruct a; try destruct b; cbn in *; try lia. all: repeat constructor. 
     - rewHeadTape_inv. 
       rewrite valid_iff. unfold validExplicit. cbn [polarityRev map rev]. repeat rewrite app_length.
       repeat rewrite rev_length, map_length. cbn [length]. split.
-      1: apply valid_length_inv in H0; now cbn [length] in H0. 
+      1: apply valid_length_inv in H; now cbn [length] in H. 
       replace ((|a|) + 1 + 1 + 1 - 2) with (S (|a|)) by lia. intros. destruct (nat_eq_dec i (|a|)). 
       * (*rewrite at the new position, cannot apply IH *)
         rewrite e3 in *; clear e3. unfold rewritesAt. 
-        apply rewHeadTape_tail_invariant with (u' := []) (v' := []) in H.
-        apply rewHeadTape_revp' in H. 
+        apply rewHeadTape_tail_invariant with (u' := []) (v' := []) in H0.
+        apply rewHeadTape_revp' in H0. 
         cbn [rev map].
         repeat rewrite <- app_assoc.
         rewrite skipn_app with (xs := rev (map polarityFlipGamma a)).
         rewrite skipn_app with (xs := rev (map polarityFlipGamma b)).
         2, 3: rewrite rev_length, map_length. 3: reflexivity. 
-        2: { apply valid_length_inv in H0; cbn [length] in H0. lia. }
-        cbn. apply H. 
+        2: { apply valid_length_inv in H; cbn [length] in H. lia. }
+        cbn. apply H0. 
       * (*this follows by IH *)
-        destruct_tape.
-        + destruct n.
-          -- cbn in H1. destruct a. 2: { destruct H1 as [F1 [F3 F4]]. now cbn in F1. }
-            cbn in H2, n0. lia. 
-          -- cbn [Nat.sub] in H2. assert (0 <= i < (|a|)) by lia. clear n0 H2. 
-            apply niltape_repr in H1 as H2. cbn [E] in H2. rewrite Nat.add_comm in H2; unfold wo in H2.
-            cbn [E Nat.add] in H2. inv H2.
-            specialize (niltape_repr n p) as (H4 & _). 
-            rewrite Nat.add_comm in H4; unfold wo in H4; cbn [Nat.add E] in H4. 
-            specialize (IHvalid n [] H4). apply valid_iff in IHvalid as (IH1 & IH2). 
-            cbn [length] in H3. cbn [polarityRev app rev map] in IH2. repeat rewrite app_length in IH2. 
-            cbn [length] in IH2. rewrite rev_length, map_length in IH2. replace (|E n| + 1 + 1 -2) with ((|E n|)) in IH2 by lia. 
-            specialize (IH2 i H3). cbn [polarityRev app rev map].
-            now apply rewritesAt_rewHeadTape_add_at_end. 
-        + apply tape_repr_step in H1. specialize (IHvalid n u H1).
-          assert (0 <= i < (|a|)) by lia. clear H2 n0 H. apply valid_iff in IHvalid as [_ IH].
-          cbn [length polarityRev rev map app] in IH. repeat rewrite app_length in IH; cbn [length] in IH.
-          rewrite rev_length, map_length in IH. replace (|a| + 1 + 1 -2) with (|a|) in IH by lia. 
-          specialize (IH i H3) as IH. 
-          cbn [rev map polarityFlipGamma].
-          now apply rewritesAt_rewHeadTape_add_at_end. 
+        cbn [polarityRev map rev] in IHvalid. 
+        apply valid_iff in IHvalid as (IH1 & IH2). 
+        assert (0 <= i < |a|) by lia. 
+        repeat rewrite app_length in IH2. rewrite rev_length, map_length in IH2. cbn [length] in IH2.
+        replace ((|a|) + 1 + 1 - 2) with (|a|) in IH2 by lia. 
+        specialize (IH2 i H2).
+        apply rewritesAt_rewHeadTape_add_at_end. apply IH2. 
   Qed. 
 
   Lemma polarityRev_eqn_move a b : a = polarityRev b -> b = polarityRev a. 
   Proof. intros ->; symmetry; now apply polarityRev_involution. Qed. 
 
-  Lemma tape_rewrite_symm2 u h p n h' : u ≃t(p, n) h -> valid rewHeadTape (polarityRev h) (polarityRev h') -> valid rewHeadTape h h'.
+  Lemma tape_rewrite_symm2 h h' : valid rewHeadTape (polarityRev h) (polarityRev h') -> valid rewHeadTape h h'.
   Proof.
-    (*the proof is structurally very similar to the proof for tape_rewrite_symm1, *)
-    (*but not a direct consequence since the tape h is not reversed; *)
-    (*the reversion poses an additional challenge for tape inversion*)
-    intros. revert n u H.  
-    remember (polarityRev h). remember (polarityRev h').
-    apply polarityRev_eqn_move in Heql0 as ->. apply polarityRev_eqn_move in Heql1 as ->. 
-    induction H0; intros.
-    - cbn; constructor. 
-    - apply reprTape_length in H1. cbn [length polarityRev map rev] in H1; unfold wo in H1.
-      rewrite app_length, rev_length, map_length in H1; cbn [length] in H1; lia.  
-    - rewHeadTape_inv. 
-      rewrite valid_iff. unfold validExplicit. cbn [polarityRev map rev]. repeat rewrite app_length.
-      repeat rewrite rev_length, map_length. cbn [length]. split.
-      1: apply valid_length_inv in H0; now cbn [length] in H0. 
-      replace ((|a|) + 1 + 1 + 1 - 2) with (S (|a|)) by lia. intros. destruct (nat_eq_dec i (|a|)). 
-      * (*rewrite at the new position, cannot apply IH *)
-        rewrite e3 in *; clear e3. unfold rewritesAt. 
-        apply rewHeadTape_tail_invariant with (u' := []) (v' := []) in H.
-        apply rewHeadTape_revp' in H. 
-        (* cbn [rev map]. *)
-        repeat rewrite <- app_assoc.
-        rewrite skipn_app with (xs := rev (map polarityFlipGamma a)).
-        rewrite skipn_app with (xs := rev (map polarityFlipGamma b)).
-        2, 3: rewrite rev_length, map_length. 3: reflexivity. 
-        2: { apply valid_length_inv in H0; cbn [length] in H0. lia. }
-        cbn. apply H. 
-      * (*this follows by IH *)
-        (* destruct_tape. *)
-        (* + destruct n. { destruct H1 as [F1 [F3 F4]]. now cbn in F3. } *)
-        (*   apply tape_repr_step in H1. specialize (IHvalid n u H1). *)
-        (*   assert (0 <= i < (|a|)) by lia. clear H2 n0 H. apply valid_iff in IHvalid as [_ IH]. *)
-        (*   cbn [length polarityRev rev map app] in IH. repeat rewrite app_length in IH; cbn [length] in IH. *)
-        (*   rewrite rev_length, map_length in IH. replace (|a| + 1 + 1 -2) with (|a|) in IH by lia.  *)
-        (*   specialize (IH i H3) as IH.  *)
-        (*   cbn [rev map polarityFlipGamma]. *)
-        (*   now apply rewritesAt_rewHeadTape_add_at_end.  *)
-        (* + destruct n. *)
-        (*   -- cbn in H1. destruct a. 2: { destruct H1 as [F1 [F3 F4]]. now cbn in F1. } *)
-        (*     cbn in H2, n0. lia.  *)
-        (*   -- cbn [Nat.sub] in H2. assert (0 <= i < (|a|)) by lia. clear n0 H2.  *)
-        (*     apply niltape_repr in H1 as H2. cbn [E] in H2. rewrite Nat.add_comm in H2; unfold wo in H2. *)
-        (*     cbn [E Nat.add] in H2. inv H2. *)
-        (*     specialize (niltape_repr n p) as (H4 & _).  *)
-        (*     rewrite Nat.add_comm in H4; unfold wo in H4; cbn [Nat.add E] in H4.  *)
-        (*     specialize (IHvalid n [] H4). apply valid_iff in IHvalid as (IH1 & IH2).  *)
-        (*     cbn [length] in H3. cbn [polarityRev app rev map] in IH2. repeat rewrite app_length in IH2.  *)
-        (*     cbn [length] in IH2. rewrite rev_length, map_length in IH2. replace (|E n| + 1 + 1 + 1 -2) with (S (|E n|)) in IH2 by lia.  *)
-        (*     specialize (IH2 i H3). cbn [polarityRev app rev map]. *)
-        (*     now apply rewritesAt_rewHeadTape_add_at_end.  *)
-
-  Admitted. 
+    intros. specialize (tape_rewrite_symm1 H) as H1. now repeat rewrite polarityRev_involution in H1.
+  Qed. 
 
   Lemma tape_rewrite_symm3 h h' :valid rewHeadTape h h' -> valid rewHeadTape (map polarityFlipGamma h) h'. 
   Proof. 
@@ -672,12 +610,11 @@ Section fixTM.
   Proof. 
     (*follows using tape_rewrite_symm1, tape_rewrite_symm3 and E_rewrite_sym *)
     specialize (E_rewrite_sym σ n) as H1. 
-    eapply tape_rewrite_symm1 in H1. 2: replace ((S (S (S n)))) with ((S n + wo)) by (unfold wo; lia).
-    - eapply tape_rewrite_symm3 in H1.
-      unfold polarityRev in H1. rewrite map_rev, map_map in H1. setoid_rewrite polarityFlipGamma_involution in H1. rewrite map_id in H1. 
-      cbn [map polarityFlipGamma polarityFlipTapeSigma polarityFlipTapeSigma' polarityFlipSigma polarityFlip] in H1. 
-      now rewrite E_polarityFlip in H1. 
-    - eapply niltape_repr with (p := positive). 
+    eapply tape_rewrite_symm1 in H1. 
+    eapply tape_rewrite_symm3 in H1.
+    unfold polarityRev in H1. rewrite map_rev, map_map in H1. setoid_rewrite polarityFlipGamma_involution in H1. rewrite map_id in H1. 
+    cbn [map polarityFlipGamma polarityFlipTapeSigma polarityFlipTapeSigma' polarityFlipSigma polarityFlip] in H1. 
+    now rewrite E_polarityFlip in H1. 
   Qed. 
 
   Lemma E_rewrite_sym_rev_unique σ n : forall s, valid rewHeadTape (rev (E (S (S (S n))))) (rev (inr (inr (Some (↓ σ))) :: s)) -> s = E (S (S n)). 
@@ -689,11 +626,10 @@ Section fixTM.
       apply H. 
     }
     eapply tape_rewrite_symm2 in H0.
-    - apply E_rewrite_sym_unique in H0. 
-      enough (map polarityFlipGamma (E (S (S n))) = E (S (S n))).
-      { rewrite <- H1 in H0. apply involution_invert_eqn in H0. assumption. apply map_involution, polarityFlipGamma_involution. }
-      apply E_polarityFlip. 
-   - replace ((S (S (S n)))) with (S n + wo) by (unfold wo; lia). eapply niltape_repr with (p := positive). 
+    apply E_rewrite_sym_unique in H0. 
+    enough (map polarityFlipGamma (E (S (S n))) = E (S (S n))).
+    { rewrite <- H1 in H0. apply involution_invert_eqn in H0. assumption. apply map_involution, polarityFlipGamma_involution. }
+    apply E_polarityFlip. 
   Qed. 
 
   (*Lemma 18 *)
@@ -786,16 +722,15 @@ Section fixTM.
   Proof. 
     intros. specialize (@tape_repr_add_right ls σ h p w H H0) as (h' & H1 & H3 & H2). 
     exists (map polarityFlipGamma h'). rewrite <- and_assoc. split. 
-    - eapply tape_rewrite_symm1 with (u:= ls) (p := p) (n:=w)in H1. 2: apply H. 
-      apply tape_rewrite_symm3 in H1.
-      split. 
+    - eapply tape_rewrite_symm1 in H1.  
+      apply tape_rewrite_symm3 in H1. split. 
       + cbn [rev].
         cbn[polarityRev map rev polarityFlipGamma polarityFlipTapeSigma polarityFlipTapeSigma' polarityFlipSigma polarityFlip] in H1.
         unfold polarityRev in H1. rewrite map_rev in H1. rewrite map_involution in H1. 2: apply polarityFlipGamma_involution. 
         apply H1. 
       + intros. specialize (H3 (map polarityFlipGamma h0)).
         rewrite <- involution_invert_eqn2 with (f := map polarityFlipGamma) (a := h0) (b := h'); [reflexivity | apply map_involution, polarityFlipGamma_involution | ]. 
-        apply H3. eapply tape_rewrite_symm2. apply H. 
+        apply H3. eapply tape_rewrite_symm2. 
         unfold polarityRev. rewrite <- map_rev. apply tape_rewrite_symm3. 
         cbn [map]. cbn_friendly. rewrite map_involution; [now apply H4 | apply polarityFlipGamma_involution]. 
    - apply tape_repr_polarityFlip in H2. cbn in H2. easy. 
@@ -869,15 +804,14 @@ Section fixTM.
   Proof. 
     intros. specialize (@tape_repr_rem_right ls σ1 σ2 h p w H) as (h' & H1 & H3 & H2). 
     exists (map polarityFlipGamma h'). rewrite <- and_assoc. split. 
-    - eapply tape_rewrite_symm1 with (u:= σ1 :: σ2 :: ls) (p := p) (n:=w)in H1. 2: apply H. 
-      apply tape_rewrite_symm3 in H1.
+    - eapply tape_rewrite_symm1 in H1. apply tape_rewrite_symm3 in H1.
       split. 
       + cbn [rev].
         unfold polarityRev in H1. rewrite map_rev in H1. rewrite map_involution in H1. 2: apply polarityFlipGamma_involution. 
         apply H1. 
       + intros. specialize (H3 (map polarityFlipGamma h0)).
         rewrite <- involution_invert_eqn2 with (f := map polarityFlipGamma) (a := h0) (b := h'); [reflexivity | apply map_involution, polarityFlipGamma_involution | ]. 
-        apply H3. eapply tape_rewrite_symm2. apply H. 
+        apply H3. eapply tape_rewrite_symm2. 
         unfold polarityRev. rewrite <- map_rev. apply tape_rewrite_symm3. 
         cbn [map]. cbn_friendly. rewrite map_involution; [now apply H0 | apply polarityFlipGamma_involution]. 
    - apply tape_repr_polarityFlip in H2. cbn in H2. easy. 
@@ -928,7 +862,7 @@ Section fixTM.
   Proof. 
     intros. specialize (@tape_repr_stay_right ls σ h p w H) as (h' & H1 & H3 & H2). 
     exists (map polarityFlipGamma h'). rewrite <- and_assoc. split. 
-    - eapply tape_rewrite_symm1 with (u:= σ :: ls) (p := p) (n:=w)in H1. 2: apply H. 
+    - eapply tape_rewrite_symm1 in H1.
       apply tape_rewrite_symm3 in H1.
       split. 
       + cbn [rev].
@@ -936,7 +870,7 @@ Section fixTM.
         apply H1. 
       + intros. specialize (H3 (map polarityFlipGamma h0)).
         rewrite <- involution_invert_eqn2 with (f := map polarityFlipGamma) (a := h0) (b := h'); [reflexivity | apply map_involution, polarityFlipGamma_involution | ]. 
-        apply H3. eapply tape_rewrite_symm2. apply H. 
+        apply H3. eapply tape_rewrite_symm2. 
         unfold polarityRev. rewrite <- map_rev. apply tape_rewrite_symm3. 
         cbn [map]. cbn_friendly. rewrite map_involution; [now apply H0 | apply polarityFlipGamma_involution]. 
    - apply tape_repr_polarityFlip in H2. cbn in H2. easy. 
