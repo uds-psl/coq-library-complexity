@@ -89,8 +89,8 @@
 \end{abstract}
 
 \newcommand{\gennp}{\textbf{GenNP}}
-\newcommand{\strconrew}{\textbf{StrConRew}}
-\newcommand{\binstrconrew}{\textbf{BinStrConRew}}
+\newcommand{\strconrew}{\textbf{PR}}
+\newcommand{\binstrconrew}{\textbf{BinPR}}
 \newcommand{\csat}{\textbf{FSAT}}
 \newcommand{\sat}{\textbf{SAT}}
 \newcommand{\NP}{\textsf{NP}}
@@ -123,8 +123,8 @@ Our reduction has the following structure:
 \begin{center}
   \begin{tikzpicture}
     \node[rectangle, draw=black, minimum width = 10cm] (gennp) {Generic Turing Machine Simulation (\textbf{GenNP})};
-    \node[rectangle, draw=black, below = of gennp, minimum width = 10cm] (strrew1) {String Constraint Rewriting (\strconrew) on arbitrary $\Sigma$};
-    \node[rectangle, draw=black, below = of strrew1, minimum width = 10cm] (strrew2) {Binary String Constraint Rewriting: \binstrconrew};
+    \node[rectangle, draw=black, below = of gennp, minimum width = 10cm] (strrew1) {Parallel Rewriting (\strconrew) on arbitrary $\Sigma$};
+    \node[rectangle, draw=black, below = of strrew1, minimum width = 10cm] (strrew2) {Binary Parallel Rewriting: \binstrconrew};
     \node[rectangle, draw=black, below = of strrew2, minimum width = 10cm] (csat) {Propositional SAT (\csat{})};
     \node[rectangle, draw=black, below = of csat, minimum width = 10cm] (sat) {SAT on CNFs (\textbf{SAT})};
     \draw[->] 
@@ -185,7 +185,7 @@ The restriction to 1-tape Turing machines is without loss of generality, a fact 
 
 Using a classical definition of the complexity class \NP{} using Turing machines, one is easily convinced that \gennp{} is \NP{}-hard. For our definition using the call-by-value $\lambda$-calculus L, this isn't straightforward at all, though. We thus leave the problem of proving the \NP{}-hardness of \gennp{} open for now.
 
-\subsection{String Constraint Rewriting (\strconrew{})}
+\subsection{Parallel Rewriting (\strconrew{})}
 This problem works on strings of a fixed length $l$ over an alphabet $\Sigma$. Starting with an initial string $x_0$, the task is to determine whether there is a sequence of strings $x_1, \ldots, x_t$ such that $x_{i+1}$ validly follows from $x_i$, denoted by $x_i \strent x_{i+1}$, such that $x_t$ satisfies a final condition. The number $t$ is fixed. All of the strings in the sequence must have the same length $l$. The relation $x_i \strent x_{i+1}$ is described by a set $R$ of rewrite windows.
 
 Each window specifies a rewrite $a \constrent b$ for strings $a, b$ of a fixed length $w \le l$. In order for $x_i \strent x_{i+1}$ to hold, each of the characters of $x_{i+1}$ must be derived from $x_i$ using a rewrite window.
@@ -257,8 +257,8 @@ Finally, we establish a few properties about \strconrew{}. For the remainder of 
 \end{lemma}
 This lemma enables us to prove rewrites inductively. Note that we are already using the notational convention for $\strent{}$ established above.
 
-\subsection{Binary String Constraint Rewriting (\binstrconrew{})}
-
+\subsection{Binary Parallel Rewriting (\binstrconrew{})}
+\TODO{}
 
 \subsection{Propositional Satisfiability (\csat{})}
 \newcommand{\var}{\textsf{var}}
@@ -307,6 +307,11 @@ Evaluation functions $\mathcal{E}$ can be defined for literals, clauses and CNFs
 
 A more formal treatment of our definition of CNFs can be found in~\ref{memo1}.
 
+The problem \sat{} asks if a given CNF is satisfiable:
+\begin{definition}
+  \[\sat{}~N := \exists~a, \eval{a}{N} = \Some{\btrue} \]
+\end{definition}
+
 
 \section{Reducing \gennp{} to \strconrew{}}
 The basic idea of this reduction is very similar to the reduction in~\cite{Sipser:TheoryofComputation}, although we encode Turing machines using a constrained string rewriting system instead of logical formulas. We defer the handling of nondeterministically ``guessing'' an input of size at most $k$ to Section~\ref{sec:nondet} and instead first deal with a setting in which we are given a deterministic 1-tape Turing machine and a fixed input $\sigma_1, \ldots, \sigma_k$ of size $k$. 
@@ -344,14 +349,14 @@ Using the string rewriting problem, it is then determined whether there exists a
     %\draw (5.5, 3) -- (5.5, 2.5);
     %\draw (7.5, 3) -- (7.5, 2.5);
 
-    \node at (1.75, 2.75) {\blank};
-    \node at (1.75, 2.25) {\blank};
-    \node at (1.75, 1.75) {\blank};
-    %\node at (1.75, -3.75) {\blank};
-    \node at (9.75, 2.75) {\blank};
-    \node at (9.75, 2.25) {\blank};
-    \node at (9.75, 1.75) {\blank};
-    %\node at (9.75, -3.75) {\blank};
+    \node at (1.75, 2.75) {\#};
+    \node at (1.75, 2.25) {\#};
+    \node at (1.75, 1.75) {\#};
+    \node at (1.75, -3.75) {\#};
+    \node at (9.75, 2.75) {\#};
+    \node at (9.75, 2.25) {\#};
+    \node at (9.75, 1.75) {\#};
+    \node at (9.75, -3.75) {\#};
 
     \node at (2.25, 2.75) {\textvisiblespace};
     \node at (3.5, 2.75) {$\ldots$};
@@ -392,6 +397,8 @@ For the encoding of configurations, we directly follow the representation of tap
 At the center of the string, there is always a symbol $q^m$ encoding the current state $q$ and the symbol $m$ the head currently resides on (this symbol may also be a blank \blank{} if the tape is empty or the head resides to the left or right of the used tape region). 
 To the left of the center symbol, there will be the encoded left part of the tape, and to the right will be the encoded right part of the tape. 
 
+Finally, for technical reasons, each string contains a \# as its first and last character. 
+
 \newcommand{\polneg}[1]{\overleftarrow{#1}}
 \newcommand{\polpos}[1]{\overrightarrow{#1}}
 \newcommand{\polneut}[1]{\overline{#1}}
@@ -421,9 +428,9 @@ We now define the alphabet.
 Let $\Sigma$ be the finite type representing the Turing machine $M$'s alphabet and $Q$ the finite type of states. The alphabet $\Gamma$ for the string rewriting problem then is 
 \begin{align*}
   \Sigma' := \{\polneg{\sigma}, \polpos{\sigma}, \polneut{\sigma} | \sigma \in \Sigma\} \\
-  \Gamma := \{\blank\} \cup \{q^m | q \in Q, m \in \Sigma \cup \{\blank\}\} \cup \Sigma'. 
+  \Gamma := \{\blank, \#\} \cup \{q^m | q \in Q, m \in \Sigma \cup \{\blank\}\} \cup \Sigma'. 
 \end{align*}
-As mentioned above, the blank \blank{} is written in cells currently not in use by the simulation. Symbols of the form $q^m$ are pairs of the current state and the symbol currently under $M$'s head and will always reside at the center of the string.
+As mentioned above, the blank \blank{} is written in cells currently not in use by the simulation, while delimiters \#'s mark the first and last symbol of the string. Symbols of the form $q^m$ are pairs of the current state and the symbol currently under $M$'s head and will always reside at the center of the string.
 Finally, symbols $\sigma \in \Sigma'$ are used for ordinary elements of $M$'s tape. Each of these symbols is annotated with a polarity $p \in \{-1, 0, 1\}$ which annotates the last head movement (its sense will become clear when dealing with the transition function). We say that $\polneg{\sigma}$ has a \emph{negative} (or \emph{left}) polarity $-1$, $\polneut{\sigma}$ is \emph{neutral} (0) and $\polpos{\sigma}$ has a \emph{positive} (or \emph{right}) polarity 1\sarcasm{At this point I wondered about this common connotation of ``left'' $\eqsim$ ``negative'' and ``right'' $\eqsim$ ``positive''. Apparently it's all down to left-handedness and right-handedness, historically.}. 
 
 The key idea now is to use rewrite windows with a width of 3, just as in the original reduction~\cite{Sipser:TheoryofComputation}. 
@@ -442,7 +449,6 @@ Also remember that we are using an offset of 1. Thus, one of the windows has to 
 
 In the following, the letter $\sigma$ will range over $\Sigma$, $m$ will range over $\Sigma \cup \{\blank\}$. 
 We will also use $\sigma$ to refer to elements of $\Sigma'$ when we do not care about the polarity, and will use polarities with elements $m \in \Sigma \cup \{\blank\}$, e.g.\ $\polpos{m}$; in case that $m \in \Sigma$, this has the usual effect, while the polarity can be ignored if $m = \blank$. 
-
 
 The following windows are created for moving the tape. For the moment, the annotations stating to which half of the configuration string they can be applied can be disregarded.
 \paragraph*{Move Tape Right}
@@ -480,16 +486,25 @@ The following windows are created for moving the tape. For the moment, the annot
   \rewwin{\blank & \blank & \blank}{\blank & \blank & \blank} 
   \rewwin{\sigma_1 & \sigma_2 & \sigma_3}{\polneut{\sigma_1} & \polneut{\sigma_2} & \polneut{\sigma_3}}
   \quad{(both halves)}\\[3ex]
+  \rewwin{\# & \blank & \blank}{\# & \blank & \blank}
   \rewwin{\blank & \blank & \sigma_1}{\blank & \blank & \polneut{\sigma_1}}
   \rewwin{\blank & \sigma_1 & \sigma_2}{\blank & \polneut{\sigma_1} & \polneut{\sigma_2}}
   \quad{(left half)} \\[3ex]
   \rewwin{\sigma_1 & \sigma_2 & \blank}{\polneut{\sigma_1} & \polneut{\sigma_2} & \blank}
   \rewwin{\sigma_1 & \blank & \blank}{\polneut{\sigma_1} & \blank & \blank}
+  \rewwin{\blank & \blank & \#}{\blank & \blank & \#}
   \quad{(right half)}
 \end{center}
 
 Note that many of the rules are symmetric since we need left and right versions for most of them. 
 Also note that these rules explicitly encode the invariant that all elements of $M$'s tape are stored contiguously, without any blanks \blank{} between them.
+We only require rules where the delimiter \# is neighbouring blanks since each side of the string has a length of $t + k + 3$ symbols. As the Turing machine can only consume $t +k $ units of space during the simulation, it will never be the case that the last three cells of the tape are used. 
+
+Considering the rules for shifting a tape, it is now also apparent why the delimiters \# are needed: Otherwise, the rule 
+\begin{center}
+  \rewwin{\blank & \blank & \blank}{\blank & \blank & \polneg{\sigma_1}}
+\end{center}
+could, for instance, be used to introduce a new tape symbol at the right edge of the string, as no other overlapping rule could prevent this. 
 
 \paragraph*{Transitions}
 
@@ -630,14 +645,14 @@ Finally, we formally define the final constraint as
 following the intuitive description given above.
 
 \subsubsection{Representation Relations}
-\TODO{mention somewhere that we need a generalised representation relation for the inductions}
 Now that we have described the construction on a high level, we turn towards formalising these intuitions. 
-Let us fix a Turing machine $M$ on an alphabet $\Sigma$  and the numbers $t$ and $k$. We set $w := 3$, $l := 2\cdot (t + k + 3) + 1$ and $o := 1$. 
+Let us fix a Turing machine $M$ on an alphabet $\Sigma$ and the numbers $t$ and $k$. We set $w := 2$, $z := t + k$, $\hat{z} := z + w$, $l := 2\cdot (t + k + 3) + 1$ and $o := 1$. $z$ is the space that the Turing machine can effectively use on one side of the tape, while $\hat{z}$ is the length of ``one side'' of a configuration string (including the two excess blanks which are there for convenience, but not including the delimiter \#).  
+More generally, we also write $\hat{n} := n + w$ for any number $n$. 
+
 We use the letter $s$ to refer to configuration strings of fixed length $l$. 
 In line with the notion that in the center of the string, there will always be the cell containing the Turing machine's current state, we index into the string based on this center. 
 That is, $s[0]$ will refer to the cell containing the state. 
 We will use negative indices to access the left side of the string (and thus the left part of $M$'s tape) and positive indices to access the right side of the string.
-Moreover, let $z' := t + k$ and $z := t + k + 3$. $z'$ is the space that the Turing machine can effectively use on one side of the tape, while $z$ is the length of ``one side'' of a configuration string (including the three characters that are there for convenience). 
  
 \begin{center}
   \begin{tikzpicture}
@@ -669,16 +684,22 @@ Moreover, let $z' := t + k$ and $z := t + k + 3$. $z'$ is the space that the Tur
 \end{center}
 
 \newcommand{\reprt}[1]{\ensuremath{\sim_t^{#1}}}
+\newcommand{\reprtt}[2]{\ensuremath{\sim_t^{(#1, #2)}}}
 \newcommand{\reprc}{\ensuremath{\sim_c}}
 
-We define the string $E_k$ by the $k$-fold repetition of the blank \blank.
+We define the string $E_n$ by the $n$-fold repetition of the blank \blank, followed by the delimiter \#: 
+\[ E_n := \underbrace{\blank \ldots \blank}_{n~\text{times}} \#. \]
 
 \begin{definition}[Representation of Half-Tapes]
-  Let a part $u$ of a tape be given, i.e.\ $u \in \listsofb{\Sigma}$. The string $h \in \Gamma^{z}$ represents $u$ with polarity $p \in \{-1, 0, 1\}$, written $u \reprt{p} h$, if and only if $\length{u} \le z' $ and $h = (\textsf{mapPolarity}~p~u) \concat E_{z-\length{u}}$.
+  Let a part $u$ of a tape be given, i.e.\ $u \in \listsofb{\Sigma}$. The string $h \in \Gamma^{w}$ represents $u$ with polarity $p \in \{-1, 0, 1\}$ and length at most $n$, written $u \reprtt{p}{n} h$, if and only if $\length{u} \le n $ and $h = (\textsf{mapPolarity}~p~u) \concat E_{\hat{n}-\length{u}}$.
+
+  We write $u \reprt{p} h$ for $u \reprtt{p}{z} h$, since $z$ is the length relevant in practice. 
 \end{definition}
 
-Note that we require that $\length{u} \le z'$ instead of $\length{u} \le z$, which prohibits $M$ from using more space than allowed. 
-Obviously $\nil \reprt{p} E_{z}$ for any polarity $p$ (this stems from the fact that blanks are not annotated with polarities).
+The more general definition parameterised over the length $n$ is needed for our inductive proofs. 
+Note that for $u \reprt{p} h$, we require that $\length{u} \le z$ instead of $\length{u} \le \hat{z}$, which prohibits $M$ from using more space than allowed. 
+
+Obviously $\nil \reprtt{p}{n} E_{\hat{n}}$ for any polarity $p$ (this stems from the fact that blanks are not annotated with polarities).
 
 \begin{definition}[Representation of Configurations]
   Let a configuration $(q, \mathit{tape})$ be given. A string $s$ of length $l$ represents $(q, \mathit{tape})$, written $(q, \mathit{tape}) \reprc s$, if and only if: If
@@ -729,8 +750,7 @@ We now first take a look at the parts of a string encoding tape halves.
 
 \begin{definition}[Polarity Reversion]
   \begin{align*}
-    \textsf{pRev}~\nil := \nil \\
-    \textsf{pRev}~(r::rs) :=  (\textsf{pRev}~rs) \concat [\textsf{pFlip}(r)]
+    \textsf{pRev}~rs := \textsf{rev}~(\textsf{map}~\textsf{pFlip}~rs)
   \end{align*}
   where the function \textsf{pFlip} flips the polarity of elements annotated with a positive or negative polarity and leaves all other elements unchanged.
 \end{definition}
@@ -740,11 +760,11 @@ We now first take a look at the parts of a string encoding tape halves.
 \begin{lemma}\label{lem:taperev}
   Rewrites that are valid for right tape halves are valid for corresponding left tape halves and conversely, rewrites that are valid for left tape halves are valid for corresponding right tape halves.
 
-  Let $ls \reprt{p} s$ for some $ls \in \listsofb{\Sigma}$ and a polarity $p$.
+  In the following, we consider only the rewrite rules for the tape halves (identity, move left, move right). 
   \begin{enumerate}
-    \item If $s \strent{} s'$, then also $\pRev{s} \strent{} \pRev{s'}$. 
-    \item If $\pRev{s} \strent{} \pRev{s'}$, then also $s \strent{} s'$. 
-    \item If $s \strent{} s'$, then also $(\textsf{map}~\textsf{pFlip}~s) \strent{} s'$. 
+    \item If $h \strent{} h'$, then also $\pRev{h} \strent{} \pRev{h'}$. 
+    \item If $\pRev{h} \strent{} \pRev{h'}$, then also $h \strent{} h'$. 
+    \item If $h \strent{} h'$, then also $(\textsf{map}~\textsf{pFlip}~h) \strent{} h'$. 
   \end{enumerate}
 \end{lemma}
 \begin{proof}
@@ -754,56 +774,55 @@ We now first take a look at the parts of a string encoding tape halves.
 The previous lemma holds because of the symmetry of the rewrite rules for left and right tape halves. It is heavily used throughout the following proofs since it enables us to prove results only for the right tape half, immediately obtaining the symmetric result for the left half as a consequence.
 
 \begin{lemma}[Blank Rewriting]\label{lem:blankrew}
-  Let $k \ge 3$. Then $E_k \strent{} E_k$. Moreover, $E_{k-1}$ is the unique string with $E_k \strent{} \blank :: E_{k-1}$. 
+  Let $n \ge w$. Then $E_n \strent{} E_n$. Moreover, $E_{n-1}$ is the unique string with $E_n \strent{} \blank :: E_{n-1}$. 
 \end{lemma}
 
 \begin{lemma}\label{lem:blankshiftin}
-  Let $k \ge 3$ and $a \in \Sigma$. 
-  $E_{k-1}$ is the unique string $s$ satisfying the properties
+  Let $n \ge 3$ and $a \in \Sigma$. 
+  $E_{n-1}$ is the unique string $s$ satisfying the properties
   \begin{enumerate}
-    \item $E_k \strent{} (\polpos{a} :: s)$
-    \item $\rev{E_k} \strent{} \rev{(\polneg{a} :: s)}$
+    \item $E_n \strent{} (\polpos{a} :: s)$
+    \item $\rev{E_n} \strent{} \rev{(\polneg{a} :: s)}$
   \end{enumerate}
 \end{lemma}
 \begin{proof}
   The second statement follows immediately from the first one using Lemma~\ref{lem:taperev}.
-  For the first statement, since $k \ge 3$, we have to show that $\blank :: \blank :: \blank :: E_{k-3} \strent{} \polpos{a} :: \blank :: \blank :: E_{k-3}$. 
-  If $k -3 > 0$, then by Lemma~\ref{lem:blankrew} it holds that $\blank :: \blank :: E_{k-3} \strent{} \blank :: \blank :: E_{k-3}$, and there is no other string $s'$ with $\blank :: \blank :: E_{k-3} \strent{} \blank :: s'$. 
+  For the first statement, since $n \ge 3$, we have to show that $\blank :: \blank :: \blank :: E_{n-3} \strent{} \polpos{a} :: \blank :: \blank :: E_{n-3}$. 
+  By Lemma~\ref{lem:blankrew} it holds that $\blank :: \blank :: E_{n-3} \strent{} \blank :: \blank :: E_{n-3}$, and there is no other string $s'$ with $\blank :: \blank :: E_{n-3} \strent{} \blank :: s'$. 
   It therefore remains to show that $\blank\blank\blank \constrent{} \polpos{a}\blank\blank$, and that no other string $s'$ satisfies $\blank :: \blank :: \blank \strent{} \polpos{a} :: s'$. This follows from the rewrite rules given above. 
 \end{proof}
-
-\TODO{Uniqueness results are currently very informal/hard to reason formally about on paper}
 
 \begin{lemma}\label{lem:tapeadd}
   The rewriting system enables us to add one element at the head of one half of the configuration.
   \begin{align*}
-    \forall ls~a~h, h \reprt{} ls \rightarrow \length{h} < z' \rightarrow \exists!~ls', \rev{ls} \strent{} \rev{(\polneg{a} :: ls')} \land a :: h \reprt{-1} \polneg{a} :: ls' \\
-    \forall rs~a~h, h \reprt{} rs \rightarrow \length{h} < z' \rightarrow \exists!~rs', rs \strent{} \polpos{a} :: rs' \land a :: h \reprt{1} \polpos{a} :: rs'
+    \forall ls~a~h, ls \reprt{} h \rightarrow \length{ls} < z' \rightarrow \exists!~h', \rev{h} \strent{} \rev{(\polneg{a} :: h')} \land a :: ls \reprt{-1} \polneg{a} :: h' \\
+    \forall rs~a~h, rs \reprt{} h \rightarrow \length{rs} < z' \rightarrow \exists!~h', h \strent{} \polpos{a} :: h' \land a :: rs \reprt{1} \polpos{a} :: h'
   \end{align*}
 \end{lemma}
 \begin{proof}
-  We prove the second statement. The first statement can then be derived by applying parts 1 and 3 of Lemma~\ref{lem:taperev}. 
-  The proof is by induction on $h$ with $rs$ and $a$ quantified. 
+  We prove the second statement, in a generalised form using $\reprtt{p}{n}$ instead of $\reprt{p}$. 
+  The first statement can then be derived by applying parts 1 and 3 of Lemma~\ref{lem:taperev}. 
+  The proof is by induction on $rs$ with $h$ and $a$ quantified. 
 
-  In the base case, we have $\nil \reprt{} rs$, therefore $rs = E_z$. We have to show the existence of $rs'$ with $rs \strent{} \polpos{a} :: rs'$ and $[a] \reprt{1} \polpos{a} :: ls'$. $E_{z-1}$ does the job, using Lemma~\ref{lem:blankshiftin} for the first conjunct. 
+  In the base case, we have $\nil \reprtt{p}{n} h$, therefore $h = E_{\hat{n}}$. We have to show the existence of $h'$ with $h \strent{} \polpos{a} :: h'$ and $[a] \reprtt{1}{n} \polpos{a} :: h'$. $E_{\hat{n}-1}$ does the job, using Lemma~\ref{lem:blankshiftin} for the first conjunct. 
 
-  In the inductive case, we have $h_1 :: h \reprt{p} rs$ for some polarity $p$ and $\natS{\length{h}} < z'$. We do a case analysis on the length of $h$. The most interesting case happens when $\length{h} \ge 2$. Write $h = \sigma_1 :: \sigma_2 :: h'$. 
-  Since $h_1 :: \sigma_1 :: \sigma_2 ::h' \reprt{p} rs$, it holds that $rs = h_1^p :: \sigma_1^p :: \sigma_2^p :: rs''$ by inversion. 
-  We have to show the existence of a unique $rs_0$ with $h_1^p :: \sigma_1^p :: \sigma_2^p :: rs'' \strent{} \polpos{a} :: rs_0$ and $a::h_1 :: \sigma_1 :: \sigma_2 :: h \reprt{1} \polpos{a} :: rs_0$. 
+  In the inductive case, we have $r_1 :: rs \reprtt{p}{n} h$ for some polarity $p$ and $\natS{\length{rs}} < n$. We do a case analysis on $rs$. The most interesting case happens when $\length{rs} \ge 2$. Write $rs = \sigma_1 :: \sigma_2 :: rs'$. 
+  Since $r_1 :: \sigma_1 :: \sigma_2 ::rs' \reprt{p} h$, it holds that $h = rs_1^p :: \sigma_1^p :: \sigma_2^p :: h''$ by inversion. 
+  We have to show the existence of a unique $h_0$ with $r_1^p :: \sigma_1^p :: \sigma_2^p :: h'' \strent{} \polpos{a} :: h_0$ and $a::r_1 :: \sigma_1 :: \sigma_2 :: rs' \reprt{1} \polpos{a} :: h_0$. 
 
-  By the inductive hypothesis for $rs := \sigma_1^p :: \sigma_2^p :: rs''$ and $a := h_1$, there exists a unique $rs'$ with $\sigma_1^p :: \sigma_2^p :: rs'' \strent{} \polpos{h_1} :: rs'$ and $h_1 :: \sigma_1 :: \sigma_2 :: h \reprt{1} \polpos{h_1} :: rs'$. 
-  By an inspection of the rules and inversion, we obtain $rs' = \polpos{h_1} :: \polpos{\sigma_1} :: \polpos{\sigma_2} :: RS$. 
-  Picking $rs_0 := \polpos{h_1} :: \polpos{\sigma_1} :: \polpos{\sigma_2} :: RS$, we obtain the result with the rule
+  By the inductive hypothesis for $h := \sigma_1^p :: \sigma_2^p :: h''$ and $a := r_1$, there exists a unique $h'$ with $\sigma_1^p :: \sigma_2^p :: h'' \strent{} \polpos{r_1} :: h'$ and $r_1 :: \sigma_1 :: \sigma_2 :: rs \reprt{1} \polpos{r_1} :: h'$. 
+  By an inspection of the rules and inversion, we obtain $h' = \polpos{r_1} :: \polpos{\sigma_1} :: \polpos{\sigma_2} :: H$. 
+  Picking $h_0 := \polpos{r_1} :: \polpos{\sigma_1} :: \polpos{\sigma_2} :: H$, we obtain the result with the rule
   \begin{center}
-    \rewwin{h_1^p & \sigma_1^p & \sigma_2^p}{\polpos{a} & \polpos{h_1} & \polpos{\sigma_1}}
+    \rewwin{r_1^p & \sigma_1^p & \sigma_2^p}{\polpos{a} & \polpos{r_1} & \polpos{\sigma_1}}
   \end{center}
   Uniqueness follows by an examination of the rules and the insight that this is the only applicable rule. 
   \end{proof}
 \begin{lemma}\label{lem:taperem}
   The rewriting system enables us to remove one element at the head of one half of the configuration.
   \begin{align*}
-    \forall ls~a~b~h, a::b::h \reprt{} a::b::ls \rightarrow \exists!~ls', \rev{(a :: b :: ls)} \strent{} \rev{(\polpos{b} :: ls')} \land b :: h \reprt{1} \polpos{b} :: ls' \\
-    \forall rs~a~b~h, a :: b :: h \reprt{} a :: b :: rs \rightarrow \exists!~rs', a :: b :: rs \strent{} \polneg{b} :: rs' \land b :: h \reprt{-1} \polneg{b} :: rs'
+    \forall ls~a~b~h, a::b::ls \reprt{} a::b::h \rightarrow \exists!~h', \rev{(a :: b :: h)} \strent{} \rev{(\polpos{b} :: h')} \land b :: ls \reprt{1} \polpos{b} :: h' \\
+    \forall rs~a~b~h, a :: b :: rs \reprt{} a :: b :: h \rightarrow \exists!~h', a :: b :: h \strent{} \polneg{b} :: h' \land b :: rs \reprt{-1} \polneg{b} :: h'
   \end{align*}
 \end{lemma}
 \begin{proof}
@@ -813,8 +832,8 @@ The previous lemma holds because of the symmetry of the rewrite rules for left a
 \begin{lemma}\label{lem:tapeid}
   The rewriting system enables us to leave tape halves unchanged. 
   \begin{align*}
-    \forall ls~a~h, a :: h \reprt{} a :: ls \rightarrow \exists !~ls', \rev{(a::ls)} \strent{} \rev{(\polneut{a} :: ls')} \land a :: h \reprt{0} \polneut{a} :: ls'\\
-    \forall rs~a~h, a :: h \reprt{} a :: ls \rightarrow \exists !~rs', a :: rs \strent{} \polneut{a} :: rs' \land a :: h \reprt{0} \polneut{a} :: rs'
+    \forall ls~a~h, a :: ls \reprt{} a :: h \rightarrow \exists !~h', \rev{(a::h)} \strent{} \rev{(\polneut{a} :: h')} \land a :: ls \reprt{0} \polneut{a} :: h'\\
+    \forall rs~a~h, a :: rs \reprt{} a :: h \rightarrow \exists !~h', a :: h \strent{} \polneut{a} :: h' \land a :: rs \reprt{0} \polneut{a} :: h'
   \end{align*}
 \end{lemma}
 \begin{proof}
@@ -824,7 +843,7 @@ The previous lemma holds because of the symmetry of the rewrite rules for left a
 The key insight behind the proofs for these results is that the successor tape string is uniquely determined by the polarity of the symbol at the head of the successor string. 
 
 \begin{lemma}\label{lem:simstep}
-  Let $(q, \mathit{tape}) \reprc{} s$ and $(q, \mathit{tape}) \succ (q', \mathit{tape}')$ with $\length{\mathit{tape}} < z'$. There exists a uniquely determined string $s'$ with $s \strent{} s'$. $s'$ satsifies $(q', \mathit{tape}') \reprc{} s'$. 
+  Let $(q, \mathit{tape}) \reprc{} s$ and $(q, \mathit{tape}) \succ (q', \mathit{tape}')$ with $\length{\mathit{tape}} < z$. There exists a uniquely determined string $s'$ with $s \strent{} s'$. $s'$ satsifies $(q', \mathit{tape}') \reprc{} s'$. 
 \end{lemma}
 \begin{proof}
   By case analysis on the transition the Turing machine takes. This transition is uniquely determined. We then mimic this transition in the rewriting system using a suitable rewrite window with the state at the center cell. If the tape is moved, we'll have to look ahead at two neighbouring symbols in the opposite direction of the move; therefore we need further case analyses. We can then apply the previous two lemmas in order to obtain unique successors for the tapes. 
@@ -878,8 +897,8 @@ The key insight behind the proofs for these results is that the successor tape s
     \item[$\textsf{rightof}~l~ls$:]
     	Arguments are similar in style to the previous case. 
     \item[$\textsf{niltape}$:]
-      It is known by $(q, \mathit{tape}) \reprc s$ that $s = \rev{E_z} \concat [q^\blank] \concat E_z$. 
-      Of course, $[] \reprc{} E_z$.
+      It is known by $(q, \mathit{tape}) \reprc s$ that $s = \rev{E_{\hat{z}}} \concat [q^\blank] \concat E_{\hat{z}}$. 
+      Of course, $[] \reprc{} E_{\hat{z}}$.
       Case analysis on the transition. 
       \begin{description}
         \item[$\delta(q, \None) = (q', \Some{a}, \textsf{R})$:]
@@ -888,8 +907,8 @@ The key insight behind the proofs for these results is that the successor tape s
             \rewwin{\blank & q^\blank & \blank}{\polneg{a} & {q'}^\blank & \blank}
           \end{center}
           We only need to transform the left half of the tape. 
-          By Lemma~\ref{lem:tapeadd}, there exists a unique string $ls'$ with $\rev{E_z} \strent{} \rev{\polneg{a}:: ls'}$ and $[a] \reprt{-1} \polneg{a} :: ls'$. In fact, $ls' = E_{z-1}$. 
-          Moreover, by Lemma~\ref{lem:blankrew}, $E_z \strent{} E_z$ and $[] \reprt{-1} E_z$.
+          By Lemma~\ref{lem:tapeadd}, there exists a unique string $ls'$ with $\rev{E_{\hat{z}}} \strent{} \rev{\polneg{a}:: ls'}$ and $[a] \reprt{-1} \polneg{a} :: ls'$. In fact, $ls' = E_{\hat{z}-1}$. 
+          Moreover, by Lemma~\ref{lem:blankrew}, $E_{\hat{z}} \strent{} E_{\hat{z}}$ and $[] \reprt{-1} E_{\hat{z}}$.
           Thus, it again remains to consider the positions $-2$ and $0$. Both follow by a straightforward examination of the rules.
       \end{description}
   \end{description}
@@ -923,7 +942,7 @@ The other direction now follows from the uniqueness properties.
 
 The above results can be easily extended to multiple simulation steps. 
 \begin{lemma}[Multi-step Simulation]\label{lem:mssim}
-  Let $(q, \mathit{tape}) \reprc{} s$ and $(q, \mathit{tape}) \succ^k (q', \mathit{tape}')$ for some $k \ge 0$ and $\mathit{tape} \le z' - k$. There exists a uniquely determined string $s'$ with $s \strent^k s'$ and $(q', \mathit{tape}') \reprc{} s'$. 
+  Let $(q, \mathit{tape}) \reprc{} s$ and $(q, \mathit{tape}) \succ^k (q', \mathit{tape}')$ for some $k \ge 0$ and $\mathit{tape} \le z - k$. There exists a uniquely determined string $s'$ with $s \strent^k s'$ and $(q', \mathit{tape}') \reprc{} s'$. 
 \end{lemma}
 \begin{proof}
   By induction on $k$, using Lemma~\ref{lem:simstep} in the inductive step.
@@ -972,7 +991,7 @@ Now, it can be shown that the simulation is sound and complete.
   
 
 \begin{theorem}[Soundness]\label{thm:simsound}
-  Let a string $s$ be given such that there exists a configuration $(q, \mathit{tape})$ with $(q, \mathit{tape}) \reprc{} s$ and $\length{\mathit{tape}} \le k$. If $s \strent^t s'$ and $s' \models \Rfinal$, then there exists a configuration $(q', \mathit{tape}')$ with $(q', \mathit{tape}') \reprc{} s'$ such that $(q, \mathit{tape}) \rhd^{\le t} (q', \mathit{tape}')$ and $\length{\mathit{tape}'} \le z'$. 
+  Let a string $s$ be given such that there exists a configuration $(q, \mathit{tape})$ with $(q, \mathit{tape}) \reprc{} s$ and $\length{\mathit{tape}} \le k$. If $s \strent^t s'$ and $s' \models \Rfinal$, then there exists a configuration $(q', \mathit{tape}')$ with $(q', \mathit{tape}') \reprc{} s'$ such that $(q, \mathit{tape}) \rhd^{\le t} (q', \mathit{tape}')$ and $\length{\mathit{tape}'} \le z$. 
 \end{theorem}
 \begin{proof}
   By Lemma~\ref{lem:multiinv} and Lemma~\ref{lem:finalcond} for the final condition.
@@ -986,7 +1005,7 @@ We can now give a reduction from \gennp{} to a first variant of \strconrew{}, wh
   \[(\Gamma, 2 (t + k + 3) + 1, t, \textsf{initConf}~q~(\textsf{initTape}~\mathit{input}), 3, 1, R, \Rfinal) \in \strconrew{},\]
   where $\textsf{initConf}$ just computes a canonical string $s$ with $(q, \textsf{initTape}~\mathit{input}) \reprc{} s$. 
 \end{definition}
-\begin{theorem}[Reduction to Intermediate String Rewriting Problem]
+\begin{theorem}[Reduction to Intermediate Parallel Rewriting Problem]
   There is a polynomial-time reduction from \gennp{} to \textbf{GenNP-IntermediateTape}. 
 \end{theorem}
 \begin{proof}
@@ -999,7 +1018,7 @@ We can now give a reduction from \gennp{} to a first variant of \strconrew{}, wh
       Let $(M, k, t) \in \gennp{}$. Therefore, there is an input $x$ of length $\length{x} \le k$ such that there is a halting configuration $c$ with $(\mathit{start}, \textsf{initTape}~x) \rhd^{\le t} c$. Define $s := \textsf{initConf}~\mathit{start}~(\textsf{initTape}~x)$.  
 
       It holds that $(\mathit{start}, \textsf{initTape}~x) \reprc{} s$. 
-      Moreover, $c = (q', \mathit{tape}')$ with $\length{\mathit{tape}'} \le z'$, since $\mathit{tape}' \le t + k$ by ``time bounds space'' for Turing machines. By Theorem~\ref{thm:simcomplete}, there exists a string $s'$ with $s \strent{} s'$ and $(q', \mathit{tape}') \reprc{} s'$. Since $q'$ is a halting state by assumption and the symbol ${q'}^m$ is contained in $s'$ by definition of $\reprc{}$ for some $m \in \Sigma \cup \{\blank\}$, it holds by construction that $s' \models \Rfinal$, making the \textbf{GenNP-IntermediateTape} instance accepting.
+      Moreover, $c = (q', \mathit{tape}')$ with $\length{\mathit{tape}'} \le z$, since $\mathit{tape}' \le t + k$ by ``time bounds space'' for Turing machines. By Theorem~\ref{thm:simcomplete}, there exists a string $s'$ with $s \strent{} s'$ and $(q', \mathit{tape}') \reprc{} s'$. Since $q'$ is a halting state by assumption and the symbol ${q'}^m$ is contained in $s'$ by definition of $\reprc{}$ for some $m \in \Sigma \cup \{\blank\}$, it holds by construction that $s' \models \Rfinal$, making the \textbf{GenNP-IntermediateTape} instance accepting.
 
     \item[$\Leftarrow$:]
       Let there be $\mathit{input}$ over $\Sigma$ with $\length{\mathit{input}} \le k$, such that the given instance of \strconrew{} is contained in \strconrew{}. This means that there is $s'$ with $s \strent{}^t s'$ for $s := \textsf{initConf}~q~(\textsf{initTape}~\mathit{input})$ and $s' \models \Rfinal$.  
@@ -1085,7 +1104,7 @@ In this section we finally reduce \textbf{GenNP-IntermediateNormTape} to \strcon
 
 The basic idea is to take create an initial string containing special symbols $\top$ where input symbols for the Turing machine can be placed. Then, we add nondeterministic rewrite rules that allow these symbols to be guessed in a single rewrite step. Thus, after a single step, we end up with a valid initial configuration string for the Turing machine simulation.
 
-The new initial string $x_0'$ looks as follows, for symbols $\top, \bot, \underline{q^\blank}$ not contained in the alphabet $\Gamma$, where $q$ is the desired initial state:
+The new initial string $x_0'$ looks as follows, for symbols $\top, \bot, \underline{q^\blank}, \underline{\#}$ not contained in the alphabet $\Gamma$, where $q$ is the desired initial state:
 \begin{center}
   \begin{tikzpicture}
     \draw (0, 0.5) -- (10.5, 0.5);
@@ -1094,7 +1113,9 @@ The new initial string $x_0'$ looks as follows, for symbols $\top, \bot, \underl
     \draw (10.5, 0) -- (10.5, 0.5);
 
     \draw (0.5, 0.5) -- (0.5, 0);
+    \draw (1, 0.5) -- (1, 0);
     \draw (10, 0.5) -- (10, 0);
+    \draw (9.5, 0.5) -- (9.5, 0);
     \draw (5, 0.5) -- (5, 0);
     \draw (5.5, 0.5) -- (5.5, 0);
     \draw (4.5, 0.5) -- (4.5, 0);
@@ -1103,13 +1124,15 @@ The new initial string $x_0'$ looks as follows, for symbols $\top, \bot, \underl
     \draw (8, 0.5) -- (8, 0);
     \draw (8.5, 0.5) -- (8.5, 0);
    
-    \node at (0.25, 0.25) {$\bot$};
+    \node at (0.25, 0.25) {\#};
+    \node at (0.75, 0.24) {$\bot$};
     \node at (4.75, 0.25) {$\bot$};
     \node at (5.25, 0.25) {$\underline{q^\blank}$};
     \node at (5.75, 0.25) {$\top$};
     \node at (7.75, 0.25) {$\top$};
     \node at (8.25, 0.25) {$\bot$};
-    \node at (10.25, 0.25) {$\bot$};
+    \node at (9.75, 0.25) {$\bot$};
+    \node at (10.25, 0.25) {\#};
 
     \path[<->] (5.5, -0.5) edge node[fill=white, anchor=center, pos= 0.5] {\small $k$} (8, -0.5);
     \path[<->] (0, -0.5) edge node [fill = white, anchor=center, pos=0.5] {\small $t + k + 3$} (5, -0.5);
@@ -1122,6 +1145,8 @@ The symbol $\top$ denotes positions where elements of the tape alphabet $\Sigma$
 Designing the rewriting rules is now straightforward. The only part which takes some consideration is the fact that the input string may be shorter than $k$ symbols, but there may never be blanks inbetween elements of the tape alphabet. This difficulty is easily resolved due to the overlapping rewrite windows:
 \begin{center}
   \rewwin{\bot & \bot & \bot}{\blank & \blank & \blank}
+  \rewwin{\underline{\#} & \bot & \bot}{\# & \blank & \blank}
+  \rewwin{\bot & \bot & \underline{\#}}{\blank & \blank & \#} \\[3ex]
   \rewwin{\bot & \bot & \underline{q^\blank}} {\blank & \blank & q^\blank}
   \rewwin{\bot & \underline{q^\blank} & \top}{\blank & q^\blank & \polneut{m_1}}
   \rewwin{\bot & \underline{q^\blank} & \bot}{\blank & q^\blank & \blank} \\[3ex]
@@ -1135,7 +1160,7 @@ Designing the rewriting rules is now straightforward. The only part which takes 
   \rewwin{\top & \top & \bot}{\polneut{\sigma_1} & \polneut{m_1} & \blank}
   \rewwin{\top & \top & \bot}{\blank & \blank & \blank} 
   \rewwin{\top & \bot & \bot}{\polneut{m_1} & \blank & \blank}
-  \rewwin{\top & \bot & \bot}{\blank & \blank & \blank}
+  \rewwin{\top & \bot & \bot}{\blank & \blank & \blank} \\[3ex]
 \end{center}
 
 These rules enforce that if we decide to replace a $\top$ with a blank instead of an element from $\Sigma$, all $\top$'s to the right of it will also need to be replaced by blanks. After one step, a configuration with state $q$ and a tape which either represents a \textsf{niltape} or a \textsf{leftof} tape of length $\le k$ is generated. 
@@ -1157,20 +1182,20 @@ for an input string $\mathit{input}$ with $\length{\mathit{input}} \le k$ for th
 \end{proof}
 
 \begin{lemma}\label{lem:nondetsc}
-  $(\{\top, \bot, \underline{q^\blank}\}, R', 1, x_0')$ is sound and complete for $p$, where $p : \listsofb{\Gamma} \rightarrow \Prop$ is defined as follows: 
+  $(\{\top, \bot, \underline{q^\blank}, \underline{\#}\}, R', 1, x_0')$ is sound and complete for $p$, where $p : \listsofb{\Gamma} \rightarrow \Prop$ is defined as follows: 
   \[p~s := \exists \mathit{input}, \length{\mathit{input}} \le k \land s = \textsf{initConf}~q~(\textsf{initTape}~\mathit{input})\]
 \end{lemma}
 \begin{proof}
   We have to show two directions:
   \begin{description}
   	\item[Completeness:]
-      Let $x_0$ be an initial string such that there is a string $s$ with $\length{s} \le k$ and $x_0 = \textsf{initConf}~q~(\textsf{initTape}~s) = E_z \concat [q^\blank] \concat s \concat E_{z - \length{s}}$, where we implicitly lift the string $s$ from $\Sigma$ to $\Sigma'$. We have to show that the new initial string $x_0'$ can be rewritten to $x_0$, that is, $x_0' \strent{} x_0$, using the new rules $R'$. As for the simulation of deterministic Turing machines, we split the proof by showing that the rewrites for the two tape halves are valid.
+      Let $x_0$ be an initial string such that there is a string $s$ with $\length{s} \le k$ and $x_0 = \textsf{initConf}~q~(\textsf{initTape}~s) = E_{\hat{z}} \concat [q^\blank] \concat s \concat E_{\hat{z} - \length{s}}$, where we implicitly lift the string $s$ from $\Sigma$ to $\Sigma'$. We have to show that the new initial string $x_0'$ can be rewritten to $x_0$, that is, $x_0' \strent{} x_0$, using the new rules $R'$. As for the simulation of deterministic Turing machines, we split the proof by showing that the rewrites for the two tape halves are valid.
 
-      For the left half, this is trivial, as all $\bot$'s can be replaced by \blank's (a simple inductive proof over the $z$ suffices). The hard part is the right tape half where the initial input string has to be placed.
+      For the left half, this is trivial, as all $\bot$'s can be replaced by \blank's (a simple inductive proof over $z$ suffices). The hard part is the right tape half where the initial input string has to be placed.
       We first show that 
-      \[ \forall w, \underbrace{\top \ldots \top}_{\length{s}} \underbrace{\top \ldots \top}_{w} \underbrace{\bot \ldots \bot}_{t + 3} \strent{} s \concat \underbrace{\blank \ldots \blank}_{w} \underbrace{\blank \ldots \blank}_{t+3} \]
+      \[ \forall w, \underbrace{\top \ldots \top}_{\length{s}} \underbrace{\top \ldots \top}_{w} \underbrace{\bot \ldots \bot}_{t + 2}\underline{\#} \strent{} s \concat \underbrace{\blank \ldots \blank}_{w} \underbrace{\blank \ldots \blank}_{t+2}\# \]
       by induction on $s$. The desired result that 
-      \[\underbrace{\top \ldots \top}_{k} \underbrace{\bot \ldots \bot}{t+3} \strent{} s \underbrace{\blank \ldots \blank}_{k-\length{s}} \underbrace{\blank \ldots \blank}_{t+3} \]
+      \[\underbrace{\top \ldots \top}_{k} \underbrace{\bot \ldots \bot}_{t+2}\underline{\#} \strent{} s \underbrace{\blank \ldots \blank}_{k-\length{s}} \underbrace{\blank \ldots \blank}_{t+2}\# \]
       then follows by setting $w := k - \length{s}$. 
 
       Finally, arguing about the center position proceeds as usual via case analyses.
@@ -1181,8 +1206,8 @@ for an input string $\mathit{input}$ with $\length{\mathit{input}} \le k$ for th
       The statement for the left tape half follows trivially from the available rewrite rules, by an induction on the length of the string. 
 
       For the right tape half we have to show
-      \[\underbrace{\top \ldots \top}_{k} \underbrace{\bot \ldots \bot}_{t + 3} \strent{} w \rightarrow \exists s, \length{s} \le k \land w = s_1 \ldots s_{\length{s}} \underbrace{\blank \ldots \blank}_{k-\length{s}} \underbrace{\blank \ldots \blank}_{t + 3}. \]
-      If $k \ge 3$, it suffices to show that ${\bot}^{t+3} \strent{} w \rightarrow w = \blank \ldots \blank$ and ${\top}^k \strent{} w \rightarrow \exists s, w = s \concat \blank \ldots \blank$. Both statements follow by induction on the length of the first string. The overlapping windows then don't matter to us since the other windows already uniquely determine the string. 
+      \[\underbrace{\top \ldots \top}_{k} \underbrace{\bot \ldots \bot}_{t + 2}\underline{\#} \strent{} w \rightarrow \exists s, \length{s} \le k \land w = s_1 \ldots s_{\length{s}} \underbrace{\blank \ldots \blank}_{k-\length{s}} \underbrace{\blank \ldots \blank}_{t + 2}\#. \]
+      If $k \ge 3$, it suffices to show that ${\bot}^{t+2}\underline{\#} \strent{} w \rightarrow w = \blank \ldots \blank\#$ and ${\top}^k \strent{} w \rightarrow \exists s, w = s \concat \blank \ldots \blank$. Both statements follow by induction on the length of the first string. The overlapping windows then don't matter to us since the other windows already uniquely determine the string. 
 
       In the case of $k < 3$, the statement for the $\top$ part falls apart since strings of length $< 3$ can be vacuously rewritten to any arbitrary string (since there is no rewrite rule with a matching premise). We then have to consider the overlapping rules to derive the statement.
   \end{description}
@@ -1198,6 +1223,8 @@ for an input string $\mathit{input}$ with $\length{\mathit{input}} \le k$ for th
 \section{Reducing \strconrew{} to \binstrconrew{}}
 \TODO{outline the needed homomorphism and justification}
 
+Conjecture: Parallel Rewriting is invariant under injective homomorphisms which map all symbols to strings of the same length
+
 \section{Encoding Rewriting Systems as Circuits: Reduction to \csat{}}
 \TODO{give the main construction ideas}
 
@@ -1206,6 +1233,14 @@ for an input string $\mathit{input}$ with $\length{\mathit{input}} \le k$ for th
 
 \section{Related Work}
 \TODO{mainly Heiter's Bachelor thesis; comment on TM -> SR reduction and why their SR problem isn't suitable for our setting}
+
+\section{Formalisation}
+List of notes and TODOs:
+\begin{itemize}
+  \item might unfold the lists in definition of valid
+  \item maybe separate rules for 0, 1, 2 in valid
+  \item maybe length as parameter in valid
+\end{itemize}
 
 \appendix
 \section{Missing Rewrite Rules}
