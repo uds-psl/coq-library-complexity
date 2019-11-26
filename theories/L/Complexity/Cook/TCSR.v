@@ -115,6 +115,13 @@ Section fixInstance.
     now apply valid_congruent'. 
   Qed.
 
+  Lemma valid_base (p : rewritesHeadAbstract) (a b c d e f : Sigma) : valid p [a; b ; c] [d; e; f] <-> p [a; b; c] [d; e; f]. 
+  Proof. 
+    split.
+    - intros; inv H. cbn in H5; lia. apply H5.  
+    - constructor 3. 2: apply H. repeat constructor.
+  Qed. 
+
   (*the explicit characterisation using bounded quantification *)
   Definition validExplicit p a b := length a = length b /\ forall i, 0 <= i < length a - 2  -> rewritesAt p i a b.
 
@@ -178,6 +185,14 @@ Section fixInstance.
       destruct rule, conc. now cbn. 
    Qed. 
 End fixInstance. 
+
+
+Ltac inv_valid := match goal with
+                    | [ H : valid _ _ _ |- _] => inv H
+                  end;
+                  try match goal with
+                  | [ H : | _ | < 2 |- _] => now cbn in H
+                  end.
 
 Arguments valid {Sigma}. 
 (* Notation "s |= c" := (satFinal c s) (at level 60). *)

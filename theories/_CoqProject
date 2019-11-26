@@ -323,6 +323,9 @@ L/Complexity/Cook/Prelim.v
 L/Complexity/Cook/CSR.v
 L/Complexity/Cook/GenNP.v
 L/Complexity/Cook/TCSR.v
+L/Complexity/Cook/GenNP_GenNPInter_Basics.v
+L/Complexity/Cook/GenNP_GenNPInter_Tape.v
+L/Complexity/Cook/GenNP_GenNPInter_Transition.v
 
 L/AbstractMachines/Programs.v
 L/AbstractMachines/AbstractSubstMachine.v
