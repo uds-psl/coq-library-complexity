@@ -6,32 +6,32 @@ Require Import Lia.
 
 
 (*use an explicit representation instead of vectors of size 3 since this will make the problem closer to the flattened extractable problem *)
-Inductive TCSRWinP (Sigma : finType) := winp : Sigma -> Sigma -> Sigma -> TCSRWinP Sigma. 
-Record TCSRWin (Sigma : finType) := {
+Inductive TCSRWinP (Sigma : Type) := winp : Sigma -> Sigma -> Sigma -> TCSRWinP Sigma. 
+Record TCSRWin (Sigma : Type) := {
                                             prem : TCSRWinP Sigma;
                                             conc : TCSRWinP Sigma
                                    }.
 
-Definition TCSRWinP_to_list (sig : finType) (a : TCSRWinP sig) := match a with winp a b c => [a; b; c] end. 
+Definition TCSRWinP_to_list (sig : Type) (a : TCSRWinP sig) := match a with winp a b c => [a; b; c] end. 
 Coercion TCSRWinP_to_list : TCSRWinP >-> list. 
 
 Notation "'{' a ',' b ',' c '}'" := (winp a b c) (format "'{' a ',' b ',' c '}'"). 
 Notation "a / b" := ({|prem := a; conc := b|}). 
 
-Instance TCSRWinP_eqTypeC (Sigma : finType) : eq_dec (TCSRWinP Sigma). 
-Proof.
-  unfold dec. destruct Sigma. destruct type. decide equality. 
-  destruct (eqType_dec e1 e4); auto. 
-  destruct (eqType_dec e0 e3); auto. 
-  destruct (eqType_dec e e2); auto. 
-Defined. 
+(* Instance TCSRWinP_eqTypeC (Sigma : finType) : eq_dec (TCSRWinP Sigma).  *)
+(* Proof. *)
+(*   unfold dec. destruct Sigma. destruct type. decide equality.  *)
+(*   destruct (eqType_dec e1 e4); auto.  *)
+(*   destruct (eqType_dec e0 e3); auto.  *)
+(*   destruct (eqType_dec e e2); auto.  *)
+(* Defined.  *)
 
-Instance TCSRWin_eqTypeC (Sigma : finType) : eq_dec (TCSRWin Sigma). 
-Proof. 
-  unfold dec. decide equality.
-  destruct (TCSRWinP_eqTypeC conc0 conc1); auto. 
-  destruct (TCSRWinP_eqTypeC prem0 prem1); auto. 
-Defined. 
+(* Instance TCSRWin_eqTypeC (Sigma : finType) : eq_dec (TCSRWin Sigma).  *)
+(* Proof.  *)
+(*   unfold dec. decide equality. *)
+(*   destruct (TCSRWinP_eqTypeC conc0 conc1); auto.  *)
+(*   destruct (TCSRWinP_eqTypeC prem0 prem1); auto.  *)
+(* Defined.  *)
 
 Record TCSR := {
                Sigma : finType;
@@ -41,17 +41,18 @@ Record TCSR := {
                steps : nat
              }.
 
+
 Implicit Type (C : TCSR).
 
 Section fixInstance.
-  Variable (Sigma : finType).
+  Variable (Sigma : Type).
   Variable (init : list Sigma).
   Variable (windows : list (TCSRWin Sigma)).
   Variable (final : list (list Sigma)).
   Variable (steps : nat). 
 
   Definition string := list Sigma. 
-  Definition window := TCSRWin Sigma. 
+  Definition window := TCSRWin Sigma.
 
   Implicit Type (s a b: string). 
   Implicit Type (r rule : window).
@@ -89,6 +90,8 @@ Section fixInstance.
   | validSA a b x y: valid p a b -> length a < 2 -> valid p (x:: a) (y:: b)
   | validS a b x y : valid p a b -> p (x::a) (y::b) -> valid p (x::a) (y::b). 
 
+  Hint Constructors valid. 
+
   Lemma valid_length_inv p a b : valid p a b -> length a = length b. 
   Proof.
     induction 1. 
@@ -98,7 +101,7 @@ Section fixInstance.
   Qed. 
 
   (*valid is congruent for equivalent rewriteHead predicates *)
-  Lemma valid_congruent' p1 p2 : (forall u v, p1 u v <-> p2 u v) -> forall a b, valid p1 a b -> valid p2 a b. 
+  Lemma valid_congruent' (p1 p2 : rewritesHeadAbstract) : (forall u v, p1 u v -> p2 u v) -> forall a b, valid p1 a b -> valid p2 a b. 
   Proof. 
     intros.
     induction H0. 
@@ -110,9 +113,9 @@ Section fixInstance.
 
   Corollary valid_congruent p1 p2 : (forall u v, p1 u v <-> p2 u v) -> forall a b, valid p1 a b <-> valid p2 a b.
   Proof.
-    intros; split; [now apply valid_congruent' | ].
+    intros; split; [apply valid_congruent'; intros; now apply H | ].
     assert (forall u v, p2 u v <-> p1 u v) by (intros; now rewrite H).
-    now apply valid_congruent'. 
+    apply valid_congruent'. intros; now apply H. 
   Qed.
 
   Lemma valid_base (p : rewritesHeadAbstract) (a b c d e f : Sigma) : valid p [a; b ; c] [d; e; f] <-> p [a; b; c] [d; e; f]. 
@@ -144,7 +147,7 @@ Section fixInstance.
       + inv_list. destruct (le_lt_dec 2 (length a0)). 
         * cbn [length] in H2.
           assert (0 <= 0 < S (|a0|) - 2) by lia. specialize (H2 0 H) as H3. 
-          eapply (@validS p a0 b a e). 2-3: assumption. 
+          eapply (@validS p a0 b a s). 2-3: assumption. 
           apply IHa. split; [congruence | ]. 
           intros. assert (0 <= S i < S (|a0|) - 2) by lia. 
           specialize (H2 (S i) H4). eauto. 

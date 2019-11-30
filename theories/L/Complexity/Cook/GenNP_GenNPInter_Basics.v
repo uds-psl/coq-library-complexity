@@ -42,20 +42,79 @@ Qed.
 
 Hint Resolve -> makeExhaustive_correct. 
 
-Module Type TMSig. 
+Section fixTM. 
+  (*we use a variant of the Turing machine definitions fixed to a single tape *)
+
+  Variable (mstates : finType).
+  Variable (Sigma : finType).
+  Variable (mtrans : (mstates * Vector.t (option Sigma) 1) -> (mstates * Vector.t (option Sigma * move) 1)). 
+  Variable (start : eqType_X mstates). 
+  Variable (halt : mstates -> bool). 
+
+  Definition strans (a : mstates * option Sigma) : (mstates * (option Sigma * move)) :=
+    let (q, t) := a in let (q', ac) := mtrans (q, [| t |]) in (q', Vector.nth ac Fin.F1). 
+                                                                                            
+  Definition sconfig := (mstates * tape Sigma)%type. (* single-tape configuration*)
+  Implicit Type (c : sconfig). 
+  Definition sstep  (trans : mstates * option Sigma -> mstates * (option Sigma * move)) (c : sconfig): sconfig := let (q, tp) := c in let (q', act) := trans (q, current tp) in (q', doAct tp act).
+
+  Definition mconfig_for_sconfig c := let (q, tp) := c in mk_mconfig q [| tp |].
+  Definition sconfig_for_mconfig (c : mconfig Sigma mstates 1) := let (q, tps) := c in (q, Vector.nth tps Fin.F1).
+
+  Definition TM := @Build_mTM Sigma 1 mstates mtrans start halt. 
+  Lemma sstep_agree1 c : sconfig_for_mconfig (@step Sigma 1 TM (mconfig_for_sconfig c)) = sstep strans c.
+  Proof. 
+    destruct c. cbn.
+    destruct mtrans eqn:H1. unfold sconfig_for_mconfig.
+    unfold step. unfold doAct_multi. cbn. unfold current_chars. cbn. setoid_rewrite H1. 
+    eapply Vector.caseS with (n := 0). 
+    2 : apply t0. intros. cbn.  
+  Admitted.  
+
+  Lemma sstep_agree2 (c : mconfig Sigma mstates 1) : mconfig_for_sconfig (sstep strans (sconfig_for_mconfig c)) = step (c : mconfig Sigma (states TM) 1).  
+  Proof.
+  Admitted. 
+
+End fixTM.
+
+
+Module Type TMSig.
   Parameter (states : finType).
   Parameter (Sigma : finType).
-  Parameter (trans : (states * option Sigma) -> (states * (option Sigma * move))). 
-  Parameter (halt : states -> bool). 
+  Parameter (trans : (states * option Sigma) -> (states * (option Sigma * move))).
+  Parameter (halt : states -> bool).
+  Parameter (start : states).
   Parameter (t k : nat).
-End TMSig. 
+End TMSig.
 
 Module basics (sig : TMSig).
-  Export sig. 
+  Export sig.
 
-  Definition sconfig := (states * tape Sigma)%type. (* single-tape configuration*)
+(* Record GenNPInstance := { *)
+(*                          states : finType; *)
+(*                          Sigma : finType; *)
+(*                          trans : (states * option Sigma) -> (states * (option Sigma * move)); *)
+(*                          halt : states -> bool; *)
+(*                          start : states; *)
+(*                          t : nat; *)
+(*                          k : nat *)
+(*                        }. *)
+
+
+
+(* Section basics.  *)
+ 
+  (* Notation states := (states inst).  *)
+  (* Notation Sigma := (Sigma inst).  *)
+  (* Notation trans := (@trans inst). *)
+
+  (* Notation t := (t inst). *)
+  (* Notation k := (k inst).  *)
+
+  Notation sconfig := (sconfig states Sigma). 
   Implicit Type (c : sconfig). 
-
+  Notation sstep := (sstep trans). 
+  
   Definition z' := t + k. (*effectively available space on each tape side *)
   Definition wo := 2.     (*additional space for each side in order to make proofs more convenient *)
   Definition z := z' + wo. (*length of each tape side *)
@@ -63,24 +122,31 @@ Module basics (sig : TMSig).
 
   Hint Unfold z z' l. 
 
-  Inductive polarity := positive | negative | neutral. 
 
-  Hint Constructors polarity. 
+  Hint Constructors move.
+  Notation polarity := move. 
+  Notation positive := R. 
+  Notation negative := L. 
+  Notation neutral := N. 
 
-  Instance polarity_eqTypeC : eq_dec polarity. 
-  Proof. 
-    unfold dec. decide equality. 
-  Qed. 
 
-  Lemma polarity_Enum_Ok x : BasicDefinitions.count [positive; negative; neutral] x = 1. 
-  Proof. 
-    simpl; dec; destruct x; congruence. 
-  Qed. 
+  (* Inductive polarity := positive | negative | neutral.  *)
+  (* Hint Constructors polarity.  *)
 
-  Instance polarity_finTypeC : finTypeC (EqType polarity). 
-  Proof. 
-    econstructor. apply polarity_Enum_Ok. 
-  Defined. 
+  (* Instance polarity_eqTypeC : eq_dec polarity.  *)
+  (* Proof.  *)
+  (*   unfold dec. decide equality.  *)
+  (* Qed.  *)
+
+  (* Lemma polarity_Enum_Ok x : BasicDefinitions.count [positive; negative; neutral] x = 1.  *)
+  (* Proof.  *)
+  (*   simpl; dec; destruct x; congruence.  *)
+  (* Qed.  *)
+
+  (* Instance polarity_finTypeC : finTypeC (EqType polarity).  *)
+  (* Proof.  *)
+  (*   econstructor. apply polarity_Enum_Ok.  *)
+  (* Defined.  *)
 
   Implicit Type σ : Sigma. 
 
@@ -98,15 +164,15 @@ Module basics (sig : TMSig).
 
   Notation "$" := (inl delimC). 
 
-  Definition polSigma := FinType (EqType (polarity * Sigma)%type). 
-  Definition tapeSigma' := FinType (EqType (option polSigma)). 
-  Definition tapeSigma := FinType (EqType (sum delim tapeSigma')).
+  Definition polSigma := (polarity * Sigma)%type.
+  Definition tapeSigma' := option polSigma. 
+  Definition tapeSigma := sum delim tapeSigma'.
 
-  Definition stateSigma := FinType (EqType (option Sigma)). 
+  Definition stateSigma := option Sigma. 
 
-  Definition States := FinType (EqType ((states * stateSigma)%type)). 
+  Definition States := (states * stateSigma)%type. 
 
-  Definition Gamma := FinType (EqType ((States + tapeSigma)%type)). 
+  Definition Gamma := (States + tapeSigma)%type. 
  
 
   Implicit Type (γ : Gamma).
@@ -139,7 +205,7 @@ Module basics (sig : TMSig).
   Proof. intros p. now destruct p. Qed. 
   Definition polarityFlipSigma (x : polSigma) := match x with (p, σ) => (polarityFlip p, σ) end. 
   Lemma polarityFlipSigma_involution : involution polarityFlipSigma.
-  Proof. intros x. destruct x, p; now cbn. Qed.
+  Proof. intros x. destruct x as [[] σ]; now cbn. Qed.
 
   Definition polarityFlipTapeSigma' (x : tapeSigma') : tapeSigma' := match x with |_| => |_| | Some σ => Some (polarityFlipSigma σ) end. 
   Definition polarityFlipTapeSigma (x : tapeSigma) : tapeSigma := match x with inr a => inr (polarityFlipTapeSigma' a) | $ => $ end. 
@@ -163,21 +229,21 @@ Module basics (sig : TMSig).
 
   Lemma polarityFlipSigmaInv1 e p σ : polarityFlipSigma e = (p, σ) -> e = (polarityFlip p, σ). 
   Proof. 
-    unfold polarityFlipSigma. destruct e. intros. inv H. specialize (polarityFlip_involution p0). congruence. 
+    unfold polarityFlipSigma. destruct e as [p' e]. intros. inv H. specialize (polarityFlip_involution p'). congruence. 
   Qed. 
 
   Lemma polarityFlipTapeSigmaInv1 e p σ : polarityFlipTapeSigma e = inr (Some (p, σ)) -> e = inr (Some (polarityFlip p, σ)). 
   Proof.
-    unfold polarityFlipTapeSigma. destruct e.
+    unfold polarityFlipTapeSigma. destruct e as [ | e].
     + destruct d. congruence. 
-    + destruct e.  
-      - intros. inv H. destruct e. cbn in H1. inv H1. specialize (polarityFlip_involution p0) as ->. reflexivity.
+    + destruct e as [ e | ].  
+      - intros. inv H. destruct e as [p' e]. cbn in H1. inv H1. specialize (polarityFlip_involution p') as ->. reflexivity.
       - cbn; congruence. 
   Qed. 
   Lemma polarityFlipTapeSigma'Inv1 e p σ : polarityFlipTapeSigma' e = (Some (p, σ)) -> e = (Some (polarityFlip p, σ)). 
   Proof.
-    unfold polarityFlipTapeSigma'. destruct e.  
-    - intros. inv H. destruct e. cbn in H1. inv H1. specialize (polarityFlip_involution p0) as -> ;reflexivity. 
+    unfold polarityFlipTapeSigma'. destruct e as [ e| ].  
+    - intros. inv H. destruct e as [p' e]. cbn in H1. inv H1. specialize (polarityFlip_involution p') as -> ;reflexivity. 
     - cbn; congruence. 
   Qed.
 
@@ -263,13 +329,16 @@ Module basics (sig : TMSig).
   Implicit Type (s x : strconfig).
 
   Definition embedState (q : states) (m : stateSigma) : Gamma := inl (q, m). 
-  Definition reprConfig c (s : list Gamma) := match c with (q, tape) => match tape with
-                                                | niltape _ => s = rev (E z) ++ [embedState q |_|] ++ E z
-                                                | leftof r rs => exists h, (r :: rs) ≃t h /\ s = rev (E z) ++ [embedState q |_|] ++ h
-                                                | rightof r rs => exists h, (r :: rs) ≃t h /\ s = rev h ++ [embedState q |_|] ++ E z
-                                                | midtape ls m rs => exists p h1 h2, ls ≃t(p) h1 /\ rs ≃t(p) h2 /\ s = rev h1 ++ [embedState q (Some m)] ++ h2
-                                               end end. 
+  Definition reprConfig' c ls qm rs := match c with (q, tape) => exists p, qm = embedState q (current tape) /\ reprTape (left tape) ls p /\ reprTape (right tape) rs p end. 
+  Definition reprConfig c (s : list Gamma) := exists ls qm rs, s = rev ls ++ [qm] ++ rs /\ reprConfig' c ls qm rs. 
+  (* Definition reprConfig c (s : list Gamma) := match c with (q, tape) => match tape with *)
+  (*                                               | niltape _ => s = rev (E z) ++ [embedState q |_|] ++ E z *)
+  (*                                               | leftof r rs => exists h, (r :: rs) ≃t h /\ s = rev (E z) ++ [embedState q |_|] ++ h *)
+  (*                                               | rightof r rs => exists h, (r :: rs) ≃t h /\ s = rev h ++ [embedState q |_|] ++ E z *)
+  (*                                               | midtape ls m rs => exists p h1 h2, ls ≃t(p) h1 /\ rs ≃t(p) h2 /\ s = rev h1 ++ [embedState q (Some m)] ++ h2 *)
+  (*                                              end end.  *)
 
+  Notation "c '≃c' '(' ls ',' q ',' rs ')'" := (reprConfig' c ls q rs) (at level 80). 
   Notation "c '≃c' s" := (reprConfig c s) (at level 80). 
 
   Definition getState s : option States := match nth_error s (S z) with None => None | Some q => match q with inl q => Some q | inr _ => None end end.  
@@ -277,16 +346,14 @@ Module basics (sig : TMSig).
   Definition getLeft s n : option tapeSigma := match nth_error s (S z - n) with None => None |  Some q => match q with inr q => Some q | inl _ => None end end.
   Definition getRight s n : option tapeSigma := match nth_error s (S z + n) with None => None | Some q => match q with inr q => Some q | inl _ => None end end. 
 
-  Definition tape_getCurrent (tape : tape Sigma) : stateSigma := match tape with midtape _ m _ => Some m | _ => |_| end. 
-
-  Lemma getState_Some q tape s : (q, tape) ≃c s -> getState s = Some (q, tape_getCurrent tape). 
+  Lemma getState_Some q tape s : (q, tape) ≃c s -> getState s = Some (q, current tape). 
   Proof. 
-    intros. destruct tape; cbn [reprConfig] in H. 
-    2: destruct H as (h & H1 & H). 1-2: rewrite H; unfold getState; rewrite nth_error_app2; rewrite rev_length, E_length;  [ now rewrite Nat.sub_diag | lia]. 
-    1: destruct H as (h1 & [p (H1 & H3 & H4)] & H2).
-    2: destruct H as (p & h1 & h2 & ((H1 & H4 & H5) & (H3 & H6 & H7)& H2 )). 
-    all: rewrite H2; unfold getState; rewrite nth_error_app2; [ | unfold z, z', wo in *; rewrite rev_length; rewrite H1; lia ].
-    all: rewrite rev_length, H1; now rewrite Nat.sub_diag. 
+    intros. destruct H as (ls & qm & rs & -> & H).
+    destruct H as (p & -> & H1 & H2). 
+    unfold getState. destruct H1. rewrite nth_error_app2. 
+    all: rewrite rev_length, H; unfold z, z'.
+    2: lia. 
+    cbn. rewrite Nat.sub_diag. now cbn.
   Qed. 
 
 End basics. 

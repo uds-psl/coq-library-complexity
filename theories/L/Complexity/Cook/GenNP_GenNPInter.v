@@ -42,15 +42,8 @@ Qed.
 
 Hint Resolve -> makeExhaustive_correct. 
 
-Module Type TMSig. 
-  Parameter (states : finType).
-  Parameter (Sigma : finType).
-  Parameter (trans : (states * option Sigma) -> (states * (option Sigma * move))). 
-  Parameter (halt : states -> bool). 
-  Parameter (t k : nat).
-End TMSig. 
-
 Section fixTM. 
+     
 
 
 End fixTM. 
