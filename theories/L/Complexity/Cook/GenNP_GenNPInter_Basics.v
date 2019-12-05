@@ -117,7 +117,7 @@ Module basics (sig : TMSig).
   
   Definition z' := t + k. (*effectively available space on each tape side *)
   Definition wo := 2.     (*additional space for each side in order to make proofs more convenient *)
-  Definition z := z' + wo. (*length of each tape side *)
+  Definition z := wo + z'. (*length of each tape side *)
   Definition l := 2 * (z + 1) + 1. (*length of the whole string: two tape sides and the state symbol*)
 
   Hint Unfold z z' l. 
@@ -164,15 +164,15 @@ Module basics (sig : TMSig).
 
   Notation "$" := (inl delimC). 
 
-  Definition polSigma := (polarity * Sigma)%type.
-  Definition tapeSigma' := option polSigma. 
-  Definition tapeSigma := sum delim tapeSigma'.
+  Notation polSigma := ((polarity * Sigma)%type).
+  Notation tapeSigma' := (option polSigma). 
+  Notation tapeSigma := (sum delim tapeSigma').
 
-  Definition stateSigma := option Sigma. 
+  Notation stateSigma := (option Sigma). 
 
-  Definition States := (states * stateSigma)%type. 
+  Notation States := ((states * stateSigma)%type). 
 
-  Definition Gamma := (States + tapeSigma)%type. 
+  Notation Gamma := ((States + tapeSigma)%type). 
  
 
   Implicit Type (γ : Gamma).
@@ -278,14 +278,14 @@ Module basics (sig : TMSig).
     - rewrite <- IHv at 1. reflexivity.  (*slightly hacky because of typeclass inference *)
   Qed. 
 
-  Lemma E_w_step w : E (w + wo) = (inr (inr |_|)) :: E (w + wo -1).
+  Lemma E_w_step w : E (wo + w) = (inr (inr |_|)) :: E (wo + w -1).
   Proof.
     remember (w + wo). destruct n. 
     + unfold wo in Heqn; lia. 
     + now cbn. 
   Qed. 
 
-  Lemma E_w_head w : E (w + wo) = (inr (inr |_|)) :: (inr(inr |_|)) :: E w. 
+  Lemma E_w_head w : E (wo + w) = (inr (inr |_|)) :: (inr(inr |_|)) :: E w. 
   Proof. 
     remember (w + wo); unfold wo in Heqn. destruct n; [ lia | destruct n; [lia | ]]. now cbn. 
   Qed. 
@@ -294,7 +294,7 @@ Module basics (sig : TMSig).
   Proof. induction n; cbn; now f_equal. Qed. 
 
   Definition mapPolarity p u : list Gamma := map (fun e => inr (withPolaritySigma p e)) u.
-  Definition reprTape' w u h p:= length h = S w+wo /\ length u <= w /\ h = (mapPolarity p u) ++ E ( w + wo - (|u|)). 
+  Definition reprTape' w u h p:= length h = S wo + w /\ length u <= w /\ h = (mapPolarity p u) ++ E ( wo + w - (|u|)). 
 
   Definition reprTape := reprTape' z'. 
 
@@ -303,13 +303,12 @@ Module basics (sig : TMSig).
 
   Notation "u '≃t(' p ',' w ')' h" := (reprTape' w u h p) (at level 80). 
 
-  Lemma niltape_repr : forall w p, [] ≃t(p, w) (E (w + wo)) /\ forall a, [] ≃t(p, w) a -> a = E (w + wo). 
+  Lemma niltape_repr : forall w p, [] ≃t(p, w) (E (wo + w)) /\ forall a, [] ≃t(p, w) a -> a = E (wo + w). 
   Proof.
     intros. repeat split.
     - apply E_length. 
     - now cbn.
-    - cbn. now rewrite Nat.sub_0_r. 
-    - intros. destruct H as (H1 & H2 & H3). rewrite H3. cbn. now rewrite Nat.sub_0_r. 
+    - intros. destruct H as (H1 & H2 & H3). now rewrite H3.
   Qed. 
 
   Lemma reprTape_length w u h p : u ≃t(p, w) h -> (|h|) >= S w + wo. 
