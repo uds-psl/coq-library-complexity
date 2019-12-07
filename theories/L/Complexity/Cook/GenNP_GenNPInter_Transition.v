@@ -14,6 +14,7 @@ Module transition (sig : TMSig).
   Definition transRule := Gamma -> Gamma -> Gamma -> Gamma -> Gamma -> Gamma -> Prop.
 
   (*shift right rules *)
+  (*order of additional arguments: current state, next state, read symbol, written symbol (does not match output of transition function!) *)
   Inductive transSomeRightCenter :  states -> states -> stateSigma -> stateSigma -> transRule :=
   | tsrc1 q q' (a b : stateSigma) (m : stateSigma) p : transSomeRightCenter q q' a b (inr (inr |_|)) (inl (q, a)) (inr (p!m)) (inr (inr |_|)) (inl (q', |_|)) (inr (positive ! b))
   | tsrc2 q q' (a b : stateSigma) (σ : Sigma) (m1 m2 : stateSigma) p : transSomeRightCenter q q' a b (inr (p ! (Some σ))) (inl (q, a)) (inr (p ! m1)) (inr (positive ! m2)) (inl (q', Some σ)) (inr (positive ! b)). 
@@ -54,6 +55,7 @@ Module transition (sig : TMSig).
   Hint Constructors transSomeLeftRight : trans. 
 
   (*stay rules *)
+  
   Inductive transSomeStayCenter : states -> states -> stateSigma -> stateSigma -> transRule :=
     | tssc q q' (a b : stateSigma) (m1 m2 : stateSigma) p : transSomeStayCenter q q' a b (inr (p ! m1)) (inl (q, a)) (inr (p ! m2)) (inr (neutral ! m1)) (inl (q', b)) (inr (neutral ! m2)). 
 
@@ -72,45 +74,94 @@ Module transition (sig : TMSig).
   Hint Constructors transSomeStayRight : trans. 
 
   (* bundling predicates *)
-  Inductive transSomeLeft : states -> states -> stateSigma -> stateSigma -> transRule :=
-  | transSomeLeftLeftC q q' (a b : stateSigma)  γ1 γ2 γ3 γ4 γ5 γ6: transSomeLeftLeft q q' a γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeLeft q q' a b γ1 γ2 γ3 γ4 γ5 γ6
-  | transSomeLeftRightC q q' (a b : stateSigma)  γ1 γ2 γ3 γ4 γ5 γ6 : transSomeLeftRight q q' a b γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeLeft q q' a b γ1 γ2 γ3 γ4 γ5 γ6
-  | transSomeLeftCenterC q q' (a b : stateSigma)  γ1 γ2 γ3 γ4 γ5 γ6 : transSomeLeftCenter q q' a b γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeLeft q q' a b γ1 γ2 γ3 γ4 γ5 γ6. 
+  (*bundle according to where the state symbol is *)
 
-  Hint Constructors transSomeLeft : trans. 
+  (*Some, Some *)
+  Inductive transSomeSomeLeft : states -> transRule :=
+  | transSSLeftLeftC q q' (a b : Sigma) γ2 γ3 γ4 γ5 γ6: trans (q, Some a) = (q', (Some b, R)) -> transSomeLeftLeft q q' (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeSomeLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6
+  | transSSRightLeftC q q' (a b : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, L)) ->  transSomeRightLeft q q' (Some a) (Some b) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeSomeLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6
+  | transSSStayLeftC q q' (a b : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, N)) -> transSomeStayLeft q q' (Some a) (Some b) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeSomeLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6. 
 
-  Inductive transSomeRight : states -> states -> stateSigma -> stateSigma -> transRule :=
-  | transSomeRightLeftC q q' (a b: stateSigma)  γ1 γ2 γ3 γ4 γ5 γ6: transSomeRightLeft q q' a b γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeRight q q' a b γ1 γ2 γ3 γ4 γ5 γ6
-  | transSomeRightRightC q q' (a b : stateSigma)  γ1 γ2 γ3 γ4 γ5 γ6 : transSomeRightRight q q' a γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeRight q q' a b γ1 γ2 γ3 γ4 γ5 γ6
-  | transSomeRightCenterC q q' (a b : stateSigma)  γ1 γ2 γ3 γ4 γ5 γ6 : transSomeRightCenter q q' a b γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeRight q q' a b γ1 γ2 γ3 γ4 γ5 γ6. 
+  Hint Constructors transSomeSomeLeft : trans. 
 
-  Hint Constructors transSomeRight : trans. 
+  Inductive transSomeSomeRight : states -> transRule :=
+  | transSSLeftRightC q q' (a b: Sigma) γ1 γ2 γ4 γ5 γ6: trans (q, Some a) = (q', (Some b, R)) -> transSomeLeftRight q q' (Some a) (Some b) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeSomeRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6
+  | transSSRightRightC q q' (a b : Sigma) γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, L)) -> transSomeRightRight q q' (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeSomeRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6
+  | transSSStayRightC q q' (a b : Sigma)  γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, N)) -> transSomeStayRight q q' (Some a) (Some b) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeSomeRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6. 
 
-  Inductive transSomeStay : states -> states -> stateSigma -> stateSigma -> transRule :=
-  | transSomeStayLeftC q q' (a b: stateSigma) γ1 γ2 γ3 γ4 γ5 γ6: transSomeStayLeft q q' a b γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeStay q q' a b γ1 γ2 γ3 γ4 γ5 γ6
-  | transSomeStayRightC q q' (a b: stateSigma) γ1 γ2 γ3 γ4 γ5 γ6 : transSomeStayRight q q' a b γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeStay q q' a b γ1 γ2 γ3 γ4 γ5 γ6
-  | transSomeStayCenterC q q' (a b: stateSigma) γ1 γ2 γ3 γ4 γ5 γ6 : transSomeStayCenter q q' a b γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeStay q q' a b γ1 γ2 γ3 γ4 γ5 γ6. 
+  Hint Constructors transSomeSomeRight : trans. 
 
-  Hint Constructors transSomeStay : trans.
+  Inductive transSomeSomeCenter : states -> transRule :=
+  | transSSLeftCenterC q q' (a b: Sigma) γ1 γ3 γ4 γ5 γ6: trans (q, Some a) = (q', (Some b, R)) -> transSomeLeftCenter q q' (Some a) (Some b) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeSomeCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6
+  | transSSRightCenterC q q' (a b: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, L)) -> transSomeRightCenter q q' (Some a) (Some b) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeSomeCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6
+  | transSSStayCenterC q q' (a b: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, N)) -> transSomeStayCenter q q' (Some a) (Some b) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeSomeCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6. 
+
+  Hint Constructors transSomeSomeCenter : trans.
+
+  (*None, Some *)
+  Inductive transNoneSomeLeft : states -> transRule :=
+  | transNSLeftLeftC q q' (b : Sigma) γ2 γ3 γ4 γ5 γ6: trans (q, None) = (q', (Some b, R)) -> transSomeLeftLeft q q' |_| (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneSomeLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6
+  | transNSRightLeftC q q' (b : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, L)) ->  transSomeRightLeft q q' (|_|) (Some b) (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneSomeLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6
+  | transNSStayLeftC q q' (b : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, N)) -> transSomeStayLeft q q' (|_|) (Some b) (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneSomeLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6. 
+
+  Hint Constructors transNoneSomeLeft : trans. 
+
+  Inductive transNoneSomeRight : states -> transRule :=
+  | transNSLeftRightC q q' (b: Sigma) γ1 γ2 γ4 γ5 γ6: trans (q, |_|) = (q', (Some b, R)) -> transSomeLeftRight q q' (|_|) (Some b) γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneSomeRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6
+  | transNSRightRightC q q' (b : Sigma) γ1 γ2 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, L)) -> transSomeRightRight q q' (|_|) γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneSomeRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6
+  | transNSStayRightC q q' (b : Sigma)  γ1 γ2 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, N)) -> transSomeStayRight q q' (|_|) (Some b) γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneSomeRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6. 
+
+  Hint Constructors transNoneSomeRight : trans. 
+
+  Inductive transNoneSomeCenter : states -> transRule :=
+  | transNSLeftCenterC q q' (b: Sigma) γ1 γ3 γ4 γ5 γ6: trans (q, |_|) = (q', (Some b, R)) -> transSomeLeftCenter q q' (|_|) (Some b) γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneSomeCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6
+  | transNSRightCenterC q q' (b: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, L)) -> transSomeRightCenter q q' (|_|) (Some b) γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneSomeCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6
+  | transNSStayCenterC q q' (b: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, N)) -> transSomeStayCenter q q' (|_|) (Some b) γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneSomeCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6. 
+
+  Hint Constructors transNoneSomeCenter : trans.
+
+  (*Some, None  *)
+  Inductive transSomeNoneLeft : states -> transRule :=
+  | transSNLeftLeftC q q' (a : Sigma) γ2 γ3 γ4 γ5 γ6: trans (q, Some a) = (q', (None, R)) -> transSomeLeftLeft q q' (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeNoneLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6
+  | transSNRightLeftC q q' (a : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, L)) ->  transSomeRightLeft q q' (Some a) (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeNoneLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6
+  | transSNStayLeftC q q' (a : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, N)) -> transSomeStayLeft q q' (Some a) (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeNoneLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6. 
+
+  Hint Constructors transSomeNoneLeft : trans. 
+
+  Inductive transSomeNoneRight : states -> transRule :=
+  | transSNLeftRightC q q' (a : Sigma) γ1 γ2 γ4 γ5 γ6: trans (q, Some a) = (q', (None, R)) -> transSomeLeftRight q q' (Some a) (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeNoneRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6
+  | transSNRightRightC q q' (a : Sigma) γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, L)) -> transSomeRightRight q q' (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeNoneRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6
+  | transSNStayRightC q q' (a : Sigma)  γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, N)) -> transSomeStayRight q q' (Some a) (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeNoneRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6. 
+
+  Hint Constructors transSomeNoneRight : trans. 
+
+  Inductive transSomeNoneCenter : states -> transRule :=
+  | transSNLeftCenterC q q' (a: Sigma) γ1 γ3 γ4 γ5 γ6: trans (q, Some a) = (q', (None, R)) -> transSomeLeftCenter q q' (Some a) (Some a) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeNoneCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6
+  | transSNRightCenterC q q' (a: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, L)) -> transSomeRightCenter q q' (Some a) (Some a) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeNoneCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6
+  | transSNStayCenterC q q' (a: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, N)) -> transSomeStayCenter q q' (Some a) (Some a) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeNoneCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6. 
+
+  Hint Constructors transSomeNoneCenter : trans.
+
 
   Inductive transSomeSome : states -> transRule :=
-  | transSSLeft q q' (a b : Sigma) γ1 γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, R)) -> transSomeLeft q q' (Some a) (Some b) γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeSome q γ1 γ2 γ3 γ4 γ5 γ6
-  | transSSRight q q' (a b : Sigma) γ1 γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, L)) -> transSomeRight q q' (Some a) (Some b) γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeSome q γ1 γ2 γ3 γ4 γ5 γ6
-  | transSSStay q q' (a b : Sigma) γ1 γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, N)) -> transSomeStay q q' (Some a) (Some b) γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeSome q γ1 γ2 γ3 γ4 γ5 γ6.
+  | transSSLeft q γ1 γ2 γ3 γ4 γ5 γ6 : transSomeSomeLeft q γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeSome q γ1 γ2 γ3 γ4 γ5 γ6
+  | transSSRight q γ1 γ2 γ3 γ4 γ5 γ6 : transSomeSomeRight q γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeSome q γ1 γ2 γ3 γ4 γ5 γ6
+  | transSSCenter q γ1 γ2 γ3 γ4 γ5 γ6 : transSomeSomeCenter q γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeSome q γ1 γ2 γ3 γ4 γ5 γ6.
 
   Hint Constructors transSomeSome : trans.
 
   Inductive transNoneSome : states -> transRule :=
-  | transNSLeft q q' (b : Sigma) γ1 γ2 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (Some b, R)) -> transSomeLeft q q' None (Some b) γ1 γ2 γ3 γ4 γ5 γ6 -> transNoneSome q γ1 γ2 γ3 γ4 γ5 γ6
-  | transNSRight q q' (b : Sigma) γ1 γ2 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (Some b, L)) -> transSomeRight q q' None (Some b) γ1 γ2 γ3 γ4 γ5 γ6 -> transNoneSome q γ1 γ2 γ3 γ4 γ5 γ6
-  | transNSStay q q' (b : Sigma) γ1 γ2 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (Some b, N)) -> transSomeStay q q' None (Some b) γ1 γ2 γ3 γ4 γ5 γ6 -> transNoneSome q γ1 γ2 γ3 γ4 γ5 γ6.
+  | transNSLeft q γ1 γ2 γ3 γ4 γ5 γ6 : transNoneSomeLeft q γ1 γ2 γ3 γ4 γ5 γ6 -> transNoneSome q γ1 γ2 γ3 γ4 γ5 γ6
+  | transNSRight q γ1 γ2 γ3 γ4 γ5 γ6 : transNoneSomeRight q γ1 γ2 γ3 γ4 γ5 γ6 -> transNoneSome q γ1 γ2 γ3 γ4 γ5 γ6
+  | transNSCenter q γ1 γ2 γ3 γ4 γ5 γ6 : transNoneSomeCenter q γ1 γ2 γ3 γ4 γ5 γ6 -> transNoneSome q γ1 γ2 γ3 γ4 γ5 γ6.
 
   Hint Constructors transNoneSome : trans.
-
+  
+  (*transitions for the case that the written symbol is unchanged *)
   Inductive transSomeNone : states -> transRule :=
-  | transSNLeft q q' (a : Sigma) γ1 γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, R)) -> transSomeLeft q q' (Some a) (Some a) γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeNone q γ1 γ2 γ3 γ4 γ5 γ6
-  | transSNRight q q' (a : Sigma) γ1 γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, L)) -> transSomeRight q q' (Some a) (Some a) γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeNone q γ1 γ2 γ3 γ4 γ5 γ6
-  | transSNStay q q' (a : Sigma) γ1 γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, N)) -> transSomeStay q q' (Some a) (Some a) γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeNone q γ1 γ2 γ3 γ4 γ5 γ6.
+  | transSNLeft q γ1 γ2 γ3 γ4 γ5 γ6 : transSomeNoneLeft q γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeNone q γ1 γ2 γ3 γ4 γ5 γ6
+  | transSNRight q γ1 γ2 γ3 γ4 γ5 γ6 : transSomeNoneRight q γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeNone q γ1 γ2 γ3 γ4 γ5 γ6
+  | transSNCenter q γ1 γ2 γ3 γ4 γ5 γ6 : transSomeNoneCenter q γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeNone q γ1 γ2 γ3 γ4 γ5 γ6.
 
   Hint Constructors transSomeNone : trans.
 
@@ -175,31 +226,32 @@ Module transition (sig : TMSig).
 
   Hint Constructors transNoneStayRight : trans. 
 
-  Inductive transNoneLeft : states -> states -> transRule :=
-  | transNoneLeftLeftC q q' γ1 γ2 γ3 γ4 γ5 γ6: transNoneLeftLeft q q' γ1 γ2 γ3 γ4 γ5 γ6 -> transNoneLeft q q' γ1 γ2 γ3 γ4 γ5 γ6
-  | transNoneLeftRightC q q' γ1 γ2 γ3 γ4 γ5 γ6 : transNoneLeftRight q q' γ1 γ2 γ3 γ4 γ5 γ6 -> transNoneLeft q q' γ1 γ2 γ3 γ4 γ5 γ6
-  | transNoneLeftCenterC q q' γ1 γ2 γ3 γ4 γ5 γ6 : transNoneLeftCenter q q' γ1 γ2 γ3 γ4 γ5 γ6 -> transNoneLeft q q' γ1 γ2 γ3 γ4 γ5 γ6. 
 
-  Hint Constructors transNoneLeft : trans. 
+  Inductive transNoneNoneLeft : states -> transRule :=
+  | transNNLeftLeftC q q' γ2 γ3 γ4 γ5 γ6: trans (q, None) = (q', (None, R)) -> transNoneLeftLeft q q' (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneNoneLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6
+  | transNNRightLeftC q q' γ2 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (None, L)) ->  transNoneRightLeft q q' (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneNoneLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6
+  | transNNStayLeftC q q' γ2 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (None, N)) -> transNoneStayLeft q q' (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneNoneLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6. 
 
-  Inductive transNoneRight : states -> states -> transRule :=
-  | transNoneRightLeftC q q' γ1 γ2 γ3 γ4 γ5 γ6: transNoneRightLeft q q' γ1 γ2 γ3 γ4 γ5 γ6 -> transNoneRight q q' γ1 γ2 γ3 γ4 γ5 γ6
-  | transNoneRightRightC q q' γ1 γ2 γ3 γ4 γ5 γ6 : transNoneRightRight q q' γ1 γ2 γ3 γ4 γ5 γ6 -> transNoneRight q q' γ1 γ2 γ3 γ4 γ5 γ6
-  | transNoneRightCenterC q q' γ1 γ2 γ3 γ4 γ5 γ6 : transNoneRightCenter q q' γ1 γ2 γ3 γ4 γ5 γ6 -> transNoneRight q q' γ1 γ2 γ3 γ4 γ5 γ6. 
+  Hint Constructors transNoneNoneLeft : trans. 
 
-  Hint Constructors transNoneRight : trans. 
+  Inductive transNoneNoneRight : states -> transRule :=
+  | transNNLeftRightC q q' γ1 γ2 γ4 γ5 γ6: trans (q, None) = (q', (None, R)) -> transNoneLeftRight q q' γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneNoneRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6
+  | transNNRightRightC q q' γ1 γ2 γ4 γ5 γ6 : trans (q, None) = (q', (None, L)) -> transNoneRightRight q q' γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneNoneRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6
+  | transNNStayRightC q q' γ1 γ2 γ4 γ5 γ6 : trans (q, None) = (q', (None, N)) -> transNoneStayRight q q' γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneNoneRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6. 
 
-  Inductive transNoneStay : states -> states -> transRule :=
-  | transNoneStayLeftC q q'  γ1 γ2 γ3 γ4 γ5 γ6: transNoneStayLeft q q' γ1 γ2 γ3 γ4 γ5 γ6 -> transNoneStay q q' γ1 γ2 γ3 γ4 γ5 γ6
-  | transNoneStayRightC q q' γ1 γ2 γ3 γ4 γ5 γ6 : transNoneStayRight q q' γ1 γ2 γ3 γ4 γ5 γ6 -> transNoneStay q q' γ1 γ2 γ3 γ4 γ5 γ6
-  | transNoneStayCenterC q q' γ1 γ2 γ3 γ4 γ5 γ6 : transNoneStayCenter q q' γ1 γ2 γ3 γ4 γ5 γ6 -> transNoneStay q q' γ1 γ2 γ3 γ4 γ5 γ6.
+  Hint Constructors transNoneNoneRight : trans. 
 
-  Hint Constructors transNoneStay : trans. 
+  Inductive transNoneNoneCenter : states -> transRule :=
+  | transNNLeftCenterC q q' γ1 γ3 γ4 γ5 γ6: trans (q, None) = (q', (None, R)) -> transNoneLeftCenter q q' γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneNoneCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6
+  | transNNRightCenterC q q' γ1 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (None, L)) -> transNoneRightCenter q q' γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneNoneCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6
+  | transNNStayCenterC q q' γ1 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (None, N)) -> transNoneStayCenter q q' γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneNoneCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6. 
+
+  Hint Constructors transNoneNoneCenter : trans. 
 
   Inductive transNoneNone : states -> transRule :=
-  | transNNLeft q q' γ1 γ2 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (None, R)) -> transNoneLeft q q' γ1 γ2 γ3 γ4 γ5 γ6 -> transNoneNone q γ1 γ2 γ3 γ4 γ5 γ6
-  | transNNRight q q' γ1 γ2 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (None, L)) -> transNoneRight q q' γ1 γ2 γ3 γ4 γ5 γ6 -> transNoneNone q γ1 γ2 γ3 γ4 γ5 γ6
-  | transNNStay q q' γ1 γ2 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (None, N)) -> transNoneStay q q' γ1 γ2 γ3 γ4 γ5 γ6 -> transNoneNone q γ1 γ2 γ3 γ4 γ5 γ6.
+  | transNNLeft q γ1 γ2 γ3 γ4 γ5 γ6 : transNoneNoneLeft q γ1 γ2 γ3 γ4 γ5 γ6 -> transNoneNone q γ1 γ2 γ3 γ4 γ5 γ6
+  | transNNRight q γ1 γ2 γ3 γ4 γ5 γ6 : transNoneNoneRight q γ1 γ2 γ3 γ4 γ5 γ6 -> transNoneNone q γ1 γ2 γ3 γ4 γ5 γ6
+  | transNNStay q γ1 γ2 γ3 γ4 γ5 γ6 : transNoneNoneCenter q γ1 γ2 γ3 γ4 γ5 γ6 -> transNoneNone q γ1 γ2 γ3 γ4 γ5 γ6.
 
   Hint Constructors transNoneNone : trans. 
 
@@ -228,15 +280,21 @@ Module transition (sig : TMSig).
                                   | [H : rewHeadTrans _ (_ :: _ :: ?a) |- _ ] => is_var a; destruct a; try (inv H ; fail)
                              end. 
 
-  Ltac rewHeadTrans_inv2 := repeat match goal with
+  Ltac rewHeadTrans_inv2_once := match goal with
                                    | [H : context[rewHeadTrans] |- _] => inv H
                                    | [H : context[transSomeSome] |- _ ] => inv H
                                    | [H : context[transNoneSome] |- _ ] => inv H
                                    | [H : context[transSomeNone] |- _ ] => inv H
                                    | [H : context[transNoneNone] |- _ ] => inv H
-                                   | [H : context[transSomeLeft] |- _ ] => inv H
-                                   | [H : context[transSomeRight] |- _] => inv H
-                                   | [H : context[transSomeStay] |- _ ] => inv H
+                                   | [H : context[transSomeSomeLeft] |- _ ] => inv H
+                                   | [H : context[transSomeSomeRight] |- _] => inv H
+                                   | [H : context[transSomeSomeCenter] |- _ ] => inv H
+                                   | [H : context[transSomeNoneLeft] |- _ ] => inv H
+                                   | [H : context[transSomeNoneRight] |- _] => inv H
+                                   | [H : context[transSomeNoneCenter] |- _ ] => inv H
+                                   | [H : context[transNoneSomeLeft] |- _ ] => inv H
+                                   | [H : context[transNoneSomeRight] |- _] => inv H
+                                   | [H : context[transNoneSomeCenter] |- _ ] => inv H
                                    | [H : context[transSomeStayLeft] |- _] => inv H
                                    | [H : context[transSomeStayCenter] |- _ ] => inv H
                                    | [H : context[transSomeStayRight] |- _ ] => inv H
@@ -246,9 +304,9 @@ Module transition (sig : TMSig).
                                    | [H : context[transSomeRightLeft] |- _] => inv H
                                    | [H : context[transSomeRightRight] |- _] => inv H
                                    | [H : context[transSomeRightCenter] |- _] => inv H
-                                   | [H : context[transNoneLeft] |- _ ] => inv H
-                                   | [H : context[transNoneRight] |- _] => inv H
-                                   | [H : context[transNoneStay] |- _ ] => inv H
+                                   | [H : context[transNoneNoneLeft] |- _ ] => inv H
+                                   | [H : context[transNoneNoneRight] |- _] => inv H
+                                   | [H : context[transNoneNoneCenter] |- _ ] => inv H
                                    | [H : context[transNoneStayLeft] |- _] => inv H
                                    | [H : context[transNoneStayCenter] |- _ ] => inv H
                                    | [H : context[transNoneStayRight] |- _ ] => inv H
@@ -260,15 +318,23 @@ Module transition (sig : TMSig).
                                    | [H : context[transNoneRightCenter] |- _] => inv H
                               end. 
 
+  Ltac rewHeadTrans_inv2 := repeat rewHeadTrans_inv2_once. 
+
   Ltac rewHeadTrans_inv2_in H := repeat match type of H with
                                    | context[rewHeadTrans]  => inv H
                                    | context[transSomeSome] => inv H
                                    | context[transNoneSome]  => inv H
                                    | context[transSomeNone]  => inv H
                                    | context[transNoneNone]  => inv H
-                                   | context[transSomeLeft]  => inv H
-                                   | context[transSomeRight] => inv H
-                                   | context[transSomeStay]  => inv H
+                                   | context[transSomeSomeLeft]  => inv H
+                                   | context[transSomeSomeRight] => inv H
+                                   | context[transSomeSomeCenter]  => inv H
+                                   | context[transSomeNoneLeft]  => inv H
+                                   | context[transSomeNoneRight] => inv H
+                                   | context[transSomeNoneCenter]  => inv H
+                                   | context[transNoneSomeLeft]  => inv H
+                                   | context[transNoneSomeRight] => inv H
+                                   | context[transNoneSomeCenter]  => inv H
                                    | context[transSomeStayLeft]  => inv H
                                    | context[transSomeStayCenter]  => inv H
                                    | context[transSomeStayRight]  => inv H
@@ -278,9 +344,9 @@ Module transition (sig : TMSig).
                                    | context[transSomeRightLeft]  => inv H
                                    | context[transSomeRightRight] => inv H
                                    | context[transSomeRightCenter]  => inv H
-                                   | context[transNoneLeft] => inv H
-                                   | context[transNoneRight]  => inv H
-                                   | context[transNoneStay]  => inv H
+                                   | context[transNoneNoneLeft] => inv H
+                                   | context[transNoneNoneRight]  => inv H
+                                   | context[transNoneNoneCenter]  => inv H
                                    | context[transNoneStayLeft]  => inv H
                                    | context[transNoneStayCenter]  => inv H
                                    | context[transNoneStayRight]  => inv H
@@ -864,7 +930,7 @@ Module transition (sig : TMSig).
             | None => destruct (tape_repr_stay_right F2) as (h2 & W1 & W3 & W2); destruct_tape_in_tidy W2
             end
       | R => match type of F2 with
-              | [] ≃t(?p, ?w) _ => specialize (E_rewrite_blank w) as W1; specialize (proj1 (@niltape_repr w p)) as W2; specialize (E_rewrite_blank_unique w) as W3
+              | [] ≃t(?p, ?w) _ => specialize (E_rewrite_blank w) as W1; specialize (proj1 (@niltape_repr w p)) as W2; specialize (@E_rewrite_blank_unique w) as W3
               | _ => destruct (tape_repr_rem_right F2) as (h2 & W1 & W3 & W2);
                     (*need to have one more head symbol in that case *)
                     try match type of W2 with _ :: ?l ≃t(_, _) _ => is_var l; destruct l end; destruct_tape_in_tidy W2
@@ -893,29 +959,29 @@ Module transition (sig : TMSig).
                                         | trans (?q, ?mcsym) = (?q', (?mwsym, ?dir)) => solve_stepsim_goal' F1 F2 H2 mcsym mwsym q' dir
                                            end. 
 
-  Lemma transSomeSome_inv1 q q' σ σ' γ1 γ2 γ3 γ4 γ5 γ6 : transSomeSome q γ1 γ2 γ3 γ4 γ5 γ6 -> trans (q, Some σ) = (q', (Some σ', positive)) -> transSomeRight q q' (Some σ) (Some σ') γ1 γ2 γ3 γ4 γ5 γ6.
-  Proof. intros. inv H.  
-
- 
-  Lemma rewHeadTrans_inv_SS q q' m σ σ' : trans (q, Some σ) = (q', (Some σ', m)) -> forall a c a' b' c', rewHeadTrans [a; (inl (q, Some σ)); c] [a'; b'; c'] -> transSomeSome q a (inl (q, Some σ)) c a' b' c'.
+  Lemma transSomeSome_inv1 q q0 m γ2 γ3 γ4 γ5 γ6 : transSomeSome q (inl (q0, m)) γ2 γ3 γ4 γ5 γ6 -> q0 = q /\ exists q' m', γ4 = inl (q', m') /\ transSomeSomeLeft q (inl (q, m)) γ2 γ3 (inl (q', m')) γ5 γ6.
   Proof.
-    intros. inv H0. inv H10. rewHeadTrans_inv2. congruence. apply H2. all: rewHeadTrans_inv2; congruence.
-  Qed.
+    intros. inv H.
+    + inv H0; (split; [ reflexivity | ]; exists q'; rewHeadTrans_inv2_once; eauto with trans).  
+    + rewHeadTrans_inv2. 
+    + rewHeadTrans_inv2. 
+  Qed. 
 
-  Lemma rewHeadTrans_inv_SN q q' m σ : trans (q, Some σ) = (q', (None, m)) -> forall a c a' b' c', rewHeadTrans [a; inl (q, Some σ); c] [a'; b'; c'] -> transSomeNone a (inl (q, Some σ)) c a' b' c'.
+  Lemma transSomeSome_inv2 q q0 m γ1 γ3 γ4 γ5 γ6 : transSomeSome q γ1 (inl (q0, m)) γ3 γ4 γ5 γ6 -> q0 = q /\ exists q' m', γ5 = inl (q', m') /\ transSomeSomeCenter q γ1 (inl (q, m)) γ3 γ4 (inl (q', m')) γ6.
   Proof.
-    intros. inv H0. 2: apply H2. all: rewHeadTrans_inv2; congruence.
-  Qed.
+    intros. inv H. 
+    + rewHeadTrans_inv2. 
+    + rewHeadTrans_inv2.
+    + inv H0; (split; [ reflexivity | ]; exists q'; rewHeadTrans_inv2_once; eauto with trans).
+  Qed. 
 
-  Lemma rewHeadTrans_inv_NS q q' m σ : trans (q, None) = (q', (Some σ, m)) -> forall a c a' b' c', rewHeadTrans [a; (inl (q, None)); c] [a'; b'; c'] -> transNoneSome a (inl (q, None)) c a' b' c'.
-  Proof.
-    intros. inv H0. 3: apply H2. all: rewHeadTrans_inv2; congruence.
-  Qed.
-
-  Lemma rewHeadTrans_inv_NN q q' m : trans (q, None) = (q', (None, m)) -> forall a c a' b' c', rewHeadTrans [a; (inl (q, None)); c] [a'; b'; c'] -> transNoneNone a (inl (q, None)) c a' b' c'.
-  Proof.
-    intros. inv H0. 4: apply H2. all: rewHeadTrans_inv2; congruence.
-  Qed.
+  Lemma transSomeSome_inv3 q q0 m γ1 γ2 γ4 γ5 γ6 : transSomeSome q γ1 γ2 (inl (q0, m)) γ4 γ5 γ6 -> q0 = q /\ exists q' m', γ6 = inl (q', m') /\ transSomeSomeRight q γ1 γ2 (inl (q, m)) γ4 γ5 (inl (q', m')). 
+  Proof. 
+    intros. inv H. 
+    + rewHeadTrans_inv2. 
+    + inv H0; (split; [ reflexivity | ]; exists q'; rewHeadTrans_inv2_once; eauto with trans).
+    + rewHeadTrans_inv2.
+  Qed. 
 
   Hint Unfold isStateSym.
   Lemma stepsim q tp s q' tp' : (q, tp) ≃c s -> halt q = false -> (q, tp) ≻ (q', tp') -> (sizeOfTape tp) < z' -> exists s', valid rewHeadSim s s' /\ (forall s'', valid rewHeadSim s s'' -> s'' = s') /\ (q', tp') ≃c s'. 
@@ -930,7 +996,7 @@ Module transition (sig : TMSig).
     1-4: try match type of F2 with ?l1 ≃t(_, _) _ => is_var l1; destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end. 
     1-4: try match type of F2 with _ :: ?l1 ≃t(_, _) _ => destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end. 
     all: cbn in H1.
-    1: solve_stepsim_goal F1 F2 H2. 
+    1-4: try solve_stepsim_goal F1 F2 H2. 
     1: {
       intros.
       clear F1 F2 Z1 Z2 W1 W2. clear H1. 
@@ -945,6 +1011,22 @@ Module transition (sig : TMSig).
       eapply rewHeadSim_trans in K4. 2-3: eauto.
       eapply rewHeadSim_trans in K5. 2-3: eauto.
 
+      inv K3. 
+      eapply transSomeSome_inv3 in H10 as (<- & (? & ? & -> & ?)). 
+      inv K5. 
+      apply transSomeSome_inv1 in H12 as (<- & (? & ? & ? & ?)). inv H1. 
+      inv K4. 
+      inv H0. 
+      inv H0. 
+      inv H0. 
+      inv H0. 
+      inv H0. 
+      inv H0. 
+      inv H0. 
+      apply transSomeSome_
+
+      rewHeadTrans_inv2. 
+      inv K3. apply transSomeSome_
 
       apply rewHeadSim_trans' in K3; [ | right; right; eauto].
       apply rewHeadSim_trans' in K4; [ | right; left; eauto].
