@@ -40,6 +40,18 @@ Proof.
   intros. rewrite <- (H a). now apply involution_invert_eqn with (f := f). 
 Qed. 
 
+Smpl Create involution.
+Ltac involution_simpl := smpl involution; repeat (involution_simpl).
+
+Smpl Add (apply map_involution) : involution.
+
+Lemma rev_involution (X : Type): involution (@rev X).  
+Proof. 
+  unfold involution. apply rev_involutive. 
+Qed. 
+
+Smpl Add (apply rev_involution) : involution. 
+
 Hint Resolve -> makeExhaustive_correct. 
 
 Section fixTM. 
@@ -203,9 +215,14 @@ Module basics (sig : TMSig).
   Definition polarityFlip p := match p with negative => positive | positive => negative | neutral => neutral end. 
   Lemma polarityFlip_involution : involution polarityFlip. 
   Proof. intros p. now destruct p. Qed. 
+
+  Smpl Add (apply polarityFlip_involution) : involution. 
+
   Definition polarityFlipSigma (x : polSigma) := match x with (p, σ) => (polarityFlip p, σ) end. 
   Lemma polarityFlipSigma_involution : involution polarityFlipSigma.
   Proof. intros x. destruct x as [[] σ]; now cbn. Qed.
+
+  Smpl Add (apply polarityFlipSigma_involution) : involution. 
 
   Definition polarityFlipTapeSigma' (x : tapeSigma') : tapeSigma' := match x with |_| => |_| | Some σ => Some (polarityFlipSigma σ) end. 
   Definition polarityFlipTapeSigma (x : tapeSigma) : tapeSigma := match x with inr a => inr (polarityFlipTapeSigma' a) | $ => $ end. 
@@ -227,6 +244,10 @@ Module basics (sig : TMSig).
     intros x. destruct x; [now cbn | ]. cbn. now rewrite polarityFlipTapeSigma_involution.  
   Qed. 
 
+  Smpl Add (apply polarityFlipTapeSigma'_involution) : involution.
+  Smpl Add (apply polarityFlipTapeSigma_involution) : involution.
+  Smpl Add (apply polarityFlipGamma_involution) : involution.
+  
   Lemma polarityFlipSigmaInv1 e p σ : polarityFlipSigma e = (p, σ) -> e = (polarityFlip p, σ). 
   Proof. 
     unfold polarityFlipSigma. destruct e as [p' e]. intros. inv H. specialize (polarityFlip_involution p'). congruence. 
@@ -256,8 +277,10 @@ Module basics (sig : TMSig).
     induction x; [eauto | cbn [map]; now rewrite IHx]. 
   Qed. 
 
+  Smpl Add (apply polarityRev_involution) : involution. 
+
   Lemma polarityRev_eqn_move a b : a = polarityRev b -> b = polarityRev a. 
-  Proof. intros ->; symmetry; now apply polarityRev_involution. Qed. 
+  Proof. intros ->; symmetry. involution_simpl. Qed. 
 
 
   (** *representation of tapes *)

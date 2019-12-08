@@ -510,6 +510,14 @@ Module transition (sig : TMSig).
       + now eapply rewHeadTrans_tape'.
   Qed. 
 
+  Lemma rewHeadSim_tape_polarityRev u h h' p w : u ≃t(p, w) h -> valid rewHeadSim (polarityRev h) (polarityRev h') -> valid rewHeadTape (polarityRev h) (polarityRev h'). 
+  Proof. 
+    intros.
+    (*this does hold because of the used alphabet, but isn't straightforward to prove *)
+    (*main problem: need inductive proof because of the possible mixing of types of rewrite rules, but the rev does make that difficult *)
+    (*possible solution: define valid predicate that appends, i.e. validRev *)
+  Admitted. 
+
   Hint Unfold isStateSym.
   Hint Unfold isSpecStateSym. 
 
@@ -732,10 +740,10 @@ Module transition (sig : TMSig).
   Proof. 
     intros.
     assert (valid rewHeadTape (polarityRev (E (S (S w)))) (polarityRev (map polarityFlipGamma (inr (inr |_|) :: s)))). 
-    { unfold polarityRev. rewrite E_polarityFlip. rewrite map_involution. 2: apply polarityFlipGamma_involution. apply H.  }
+    { unfold polarityRev. rewrite E_polarityFlip. rewrite map_involution. 2: involution_simpl. apply H.  }
     apply tape_rewrite_symm2 in H0.
     cbn in H0. apply E_rewrite_blank_unique in H0. apply involution_invert_eqn2 with (a := s) (f:= (map polarityFlipGamma))  (b := E (S w)) in H0.
-    2: apply map_involution, polarityFlipGamma_involution. now rewrite H0, E_polarityFlip. 
+    2: involution_simpl. now rewrite H0, E_polarityFlip. 
   Qed. 
 
   (*the rewrite rules expect polarities at the outer level in expressions with ! or !!.*)
@@ -959,29 +967,377 @@ Module transition (sig : TMSig).
                                         | trans (?q, ?mcsym) = (?q', (?mwsym, ?dir)) => solve_stepsim_goal' F1 F2 H2 mcsym mwsym q' dir
                                            end. 
 
-  Lemma transSomeSome_inv1 q q0 m γ2 γ3 γ4 γ5 γ6 : transSomeSome q (inl (q0, m)) γ2 γ3 γ4 γ5 γ6 -> q0 = q /\ exists q' m', γ4 = inl (q', m') /\ transSomeSomeLeft q (inl (q, m)) γ2 γ3 (inl (q', m')) γ5 γ6.
+  Lemma transSomeSome_inv1 q q0 m γ2 γ3 γ4 γ5 γ6 : transSomeSome q (inl (q0, m)) γ2 γ3 γ4 γ5 γ6 -> q0 = q /\ (exists σ, m = Some σ) /\ exists q' m', γ4 = inl (q', m') /\ transSomeSomeLeft q (inl (q, m)) γ2 γ3 (inl (q', m')) γ5 γ6.
   Proof.
     intros. inv H.
-    + inv H0; (split; [ reflexivity | ]; exists q'; rewHeadTrans_inv2_once; eauto with trans).  
+    + inv H0; (split; [ reflexivity | split; [eauto | ] ]; exists q'; rewHeadTrans_inv2_once; eauto with trans).  
     + rewHeadTrans_inv2. 
     + rewHeadTrans_inv2. 
   Qed. 
 
-  Lemma transSomeSome_inv2 q q0 m γ1 γ3 γ4 γ5 γ6 : transSomeSome q γ1 (inl (q0, m)) γ3 γ4 γ5 γ6 -> q0 = q /\ exists q' m', γ5 = inl (q', m') /\ transSomeSomeCenter q γ1 (inl (q, m)) γ3 γ4 (inl (q', m')) γ6.
+  Lemma transSomeSome_inv2 q q0 m γ1 γ3 γ4 γ5 γ6 : transSomeSome q γ1 (inl (q0, m)) γ3 γ4 γ5 γ6 -> q0 = q /\ (exists σ, m = Some σ) /\ exists q' m', γ5 = inl (q', m') /\ transSomeSomeCenter q γ1 (inl (q, m)) γ3 γ4 (inl (q', m')) γ6.
   Proof.
     intros. inv H. 
     + rewHeadTrans_inv2. 
     + rewHeadTrans_inv2.
-    + inv H0; (split; [ reflexivity | ]; exists q'; rewHeadTrans_inv2_once; eauto with trans).
+    + inv H0; (split; [ reflexivity | split; [eauto | ]]; exists q'; rewHeadTrans_inv2_once; eauto with trans).
   Qed. 
 
-  Lemma transSomeSome_inv3 q q0 m γ1 γ2 γ4 γ5 γ6 : transSomeSome q γ1 γ2 (inl (q0, m)) γ4 γ5 γ6 -> q0 = q /\ exists q' m', γ6 = inl (q', m') /\ transSomeSomeRight q γ1 γ2 (inl (q, m)) γ4 γ5 (inl (q', m')). 
+  Lemma transSomeSome_inv3 q q0 m γ1 γ2 γ4 γ5 γ6 : transSomeSome q γ1 γ2 (inl (q0, m)) γ4 γ5 γ6 -> q0 = q /\ (exists σ, m = Some σ) /\ exists q' m', γ6 = inl (q', m') /\ transSomeSomeRight q γ1 γ2 (inl (q, m)) γ4 γ5 (inl (q', m')). 
   Proof. 
     intros. inv H. 
     + rewHeadTrans_inv2. 
-    + inv H0; (split; [ reflexivity | ]; exists q'; rewHeadTrans_inv2_once; eauto with trans).
+    + inv H0; (split; [ reflexivity | split; [eauto | ]]; exists q'; rewHeadTrans_inv2_once; eauto with trans).
     + rewHeadTrans_inv2.
   Qed. 
+
+  Lemma transSomeNone_inv1 q q0 m γ2 γ3 γ4 γ5 γ6 : transSomeNone q (inl (q0, m)) γ2 γ3 γ4 γ5 γ6 -> q0 = q /\ (exists σ, m = Some σ) /\ exists q' m', γ4 = inl (q', m') /\ transSomeNoneLeft q (inl (q, m)) γ2 γ3 (inl (q', m')) γ5 γ6.
+  Proof.
+    intros. inv H.
+    + inv H0; (split; [ reflexivity | split; [eauto | ] ]; exists q'; rewHeadTrans_inv2_once; eauto with trans).  
+    + rewHeadTrans_inv2. 
+    + rewHeadTrans_inv2. 
+  Qed. 
+
+  Lemma transSomeNone_inv2 q q0 m γ1 γ3 γ4 γ5 γ6 : transSomeNone q γ1 (inl (q0, m)) γ3 γ4 γ5 γ6 -> q0 = q /\ (exists σ, m = Some σ) /\ exists q' m', γ5 = inl (q', m') /\ transSomeNoneCenter q γ1 (inl (q, m)) γ3 γ4 (inl (q', m')) γ6.
+  Proof.
+    intros. inv H. 
+    + rewHeadTrans_inv2. 
+    + rewHeadTrans_inv2.
+    + inv H0; (split; [ reflexivity | split; [eauto | ]]; exists q'; rewHeadTrans_inv2_once; eauto with trans).
+  Qed. 
+
+  Lemma transSomeNone_inv3 q q0 m γ1 γ2 γ4 γ5 γ6 : transSomeNone q γ1 γ2 (inl (q0, m)) γ4 γ5 γ6 -> q0 = q /\ (exists σ, m = Some σ) /\ exists q' m', γ6 = inl (q', m') /\ transSomeNoneRight q γ1 γ2 (inl (q, m)) γ4 γ5 (inl (q', m')). 
+  Proof. 
+    intros. inv H. 
+    + rewHeadTrans_inv2. 
+    + inv H0; (split; [ reflexivity | split; [eauto | ]]; exists q'; rewHeadTrans_inv2_once; eauto with trans).
+    + rewHeadTrans_inv2.
+  Qed.
+
+  Lemma transNoneSome_inv1 q q0 m γ2 γ3 γ4 γ5 γ6 : transNoneSome q (inl (q0, m)) γ2 γ3 γ4 γ5 γ6 -> q0 = q /\ m = |_| /\ exists q' m', γ4 = inl (q', m') /\ transNoneSomeLeft q (inl (q, m)) γ2 γ3 (inl (q', m')) γ5 γ6.
+  Proof.
+    intros. inv H.
+    + inv H0; (split; [ reflexivity | split; [ reflexivity | ]]; exists q'; rewHeadTrans_inv2_once; eauto with trans).  
+    + rewHeadTrans_inv2. 
+    + rewHeadTrans_inv2. 
+  Qed. 
+
+  Lemma transNoneSome_inv2 q q0 m γ1 γ3 γ4 γ5 γ6 : transNoneSome q γ1 (inl (q0, m)) γ3 γ4 γ5 γ6 -> q0 = q /\ m = |_| /\  exists q' m', γ5 = inl (q', m') /\ transNoneSomeCenter q γ1 (inl (q, m)) γ3 γ4 (inl (q', m')) γ6.
+  Proof.
+    intros. inv H. 
+    + rewHeadTrans_inv2. 
+    + rewHeadTrans_inv2.
+    + inv H0; (split; [ reflexivity | split; [reflexivity | ]]; exists q'; rewHeadTrans_inv2_once; eauto with trans).
+  Qed. 
+
+  Lemma transNoneSome_inv3 q q0 m γ1 γ2 γ4 γ5 γ6 : transNoneSome q γ1 γ2 (inl (q0, m)) γ4 γ5 γ6 -> q0 = q /\ m = |_| /\ exists q' m', γ6 = inl (q', m') /\ transNoneSomeRight q γ1 γ2 (inl (q, m)) γ4 γ5 (inl (q', m')). 
+  Proof. 
+    intros. inv H. 
+    + rewHeadTrans_inv2. 
+    + inv H0; (split; [ reflexivity | split; [reflexivity | ]]; exists q'; rewHeadTrans_inv2_once; eauto with trans).
+    + rewHeadTrans_inv2.
+  Qed.
+
+Lemma transNoneNone_inv1 q q0 m γ2 γ3 γ4 γ5 γ6 : transNoneNone q (inl (q0, m)) γ2 γ3 γ4 γ5 γ6 -> q0 = q /\ m = |_| /\ exists q' m', γ4 = inl (q', m') /\ transNoneNoneLeft q (inl (q, m)) γ2 γ3 (inl (q', m')) γ5 γ6.
+  Proof.
+    intros. inv H.
+    + inv H0; (split; [ reflexivity | split; [reflexivity | ]]; exists q'; rewHeadTrans_inv2_once; eauto with trans).  
+    + rewHeadTrans_inv2. 
+    + rewHeadTrans_inv2. 
+  Qed. 
+
+  Lemma transNoneNone_inv2 q q0 m γ1 γ3 γ4 γ5 γ6 : transNoneNone q γ1 (inl (q0, m)) γ3 γ4 γ5 γ6 -> q0 = q /\ m = |_| /\ exists q' m', γ5 = inl (q', m') /\ transNoneNoneCenter q γ1 (inl (q, m)) γ3 γ4 (inl (q', m')) γ6.
+  Proof.
+    intros. inv H. 
+    + rewHeadTrans_inv2. 
+    + rewHeadTrans_inv2.
+    + inv H0; (split; [ reflexivity | split; [reflexivity | ]]; exists q'; rewHeadTrans_inv2_once; eauto with trans).
+  Qed. 
+
+  Lemma transNoneNone_inv3 q q0 m γ1 γ2 γ4 γ5 γ6 : transNoneNone q γ1 γ2 (inl (q0, m)) γ4 γ5 γ6 -> q0 = q /\ m = |_| /\ exists q' m', γ6 = inl (q', m') /\ transNoneNoneRight q γ1 γ2 (inl (q, m)) γ4 γ5 (inl (q', m')). 
+  Proof. 
+    intros. inv H. 
+    + rewHeadTrans_inv2. 
+    + inv H0; (split; [ reflexivity | split; [reflexivity | ]]; exists q'; rewHeadTrans_inv2_once; eauto with trans).
+    + rewHeadTrans_inv2.
+  Qed.
+
+  (*simplification tactic *)
+  Lemma prod_eq (X Y : Type) (a c : X) (b d : Y) : (a, b) = (c, d) -> a = c /\ b = d. 
+  Proof. intros; split; congruence. Qed. 
+
+  Lemma alphabet_inv1 p m : p ! m = inr |_| -> m = |_|. 
+  Proof. destruct m; now cbn. Qed.
+
+  Lemma alphabet_inv2 p1 σ p2 m : p1 !! σ = p2 ! m -> m = Some σ /\ p1 = p2. 
+  Proof. destruct m; cbn; unfold withPolaritySigma; intros; split; congruence. Qed. 
+
+  Lemma alphabet_inv3 p1 σ p2 m : p1 ! m = inr (Some (p2, σ)) -> p1 = p2 /\ m = Some σ. 
+  Proof. 
+    intros. unfold withPolarity, withPolaritySigma in H. destruct m; cbn in H; split; congruence.
+  Qed. 
+
+  Lemma alphabet_inv4 p1 m1 p2 m2 : p1 ! m1 = p2 ! m2 -> m1 = m2. 
+  Proof. unfold withPolarity, withPolaritySigma. destruct m1, m2;intros; congruence. Qed. 
+
+  Lemma alphabet_inv5 p1 σ1 p2 σ2 : p1 !! σ1 = p2 !! σ2 -> p1 = p2 /\ σ1 = σ2. 
+  Proof. unfold withPolaritySigma. intros; split; congruence. Qed.
+
+  Ltac simp_eqn := repeat match goal with
+                          | [H : ?p ! ?m = inr |_| |- _] => apply alphabet_inv1 in H
+                          | [H : inr |_| = ?p ! ?m |- _] => symmetry in H
+                          | [H : ?p1 !! ?σ = ?p2 ! ?m |- _] => apply alphabet_inv2 in H as (? & ?); clear H
+                          | [H : ?p2 ! ?m = ?p1 !! ?σ |- _] => symmetry in H
+                          | [H : ?p1 ! ?m = inr (Some (?p2, ?σ)) |- _] => apply alphabet_inv3 in H as (? & ?); clear H
+                          | [H : inr (Some (?p2, ?σ)) = ?p1 ! ?m |- _] => symmetry in H
+                          | [H : ?p1 ! ?m1 = ?p2 ! ?m2 |- _] => apply alphabet_inv4 in H as ?; clear H
+                          | [H : ?p1 !! ?m1 = ?p2 !! ?m2 |- _] => apply alphabet_inv5 in H as (? & ?); clear H
+                          | [H : trans (?a, ?b) = ?h1, H1 : trans (?a, ?b) = ?h2 |- _] => assert (h1 = h2) by congruence; clear H1
+                          | [H : (?a, ?b) = (?c, ?d) |- _] => specialize (prod_eq H) as (? & ?); clear H
+                          | [H : ?a = ?a |- _] => clear H
+                          | [H : ?a = _ |- _] => is_var a; rewrite H in *; clear H
+                          | [H : Some ?a = Some ?b |- _] => assert (a = b) by congruence; clear H
+                          | [H : inr ?a = inr ?b |- _] => assert (a = b) by congruence; clear H
+                          | [H : inl ?a = inl ?b |- _] => assert (a = b) by congruence; clear H
+                          | [H : ?h1 :: ?a = ?h2 :: ?b |- _] => assert (a = b) by congruence; assert (h1 = h2) by congruence; clear H
+                          | [H : rev ?A = _ |- _ ] => is_var A; apply involution_invert_eqn2 in H as ?; [ | involution_simpl]; clear H
+                          | [H : _ = rev ?A |- _ ] => is_var A; symmetry in H; apply involution_invert_eqn2 in H as ?; [ | involution_simpl]; clear H
+                          | [H : context[E (S _)] |- _] => cbn in H
+                          | [H : context[E (wo + _)] |- _] => cbn in H
+                    end; try congruence.
+
+  (*more inversions *)
+  Lemma transSomeSomeRight_inv1 q a b q' γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, positive)) -> transSomeSomeRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeLeftRight q q' (Some a) (Some b) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6. 
+  Proof. intros. inv H0; simp_eqn. Qed. 
+
+  Lemma transSomeSomeRight_inv2 q a b q' γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, negative)) -> transSomeSomeRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeRightRight q q' (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed.
+
+  Lemma transSomeSomeRight_inv3 q a b q' γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, neutral)) -> transSomeSomeRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeStayRight q q' (Some a) (Some b) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed.
+
+  Lemma transSomeSomeLeft_inv1 q a b q' γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, positive)) -> transSomeSomeLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeLeftLeft q q' (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed. 
+
+  Lemma transSomeSomeLeft_inv2 q a b q' γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, negative)) -> transSomeSomeLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeRightLeft q q' (Some a) (Some b) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed.
+
+  Lemma transSomeSomeLeft_inv3 q a b q' γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, neutral)) -> transSomeSomeLeft q  (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeStayLeft q q' (Some a) (Some b) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed.
+
+  Lemma transSomeSomeCenter_inv1 q a b q' γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, positive)) -> transSomeSomeCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeLeftCenter q q' (Some a) (Some b) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed. 
+
+  Lemma transSomeSomeCenter_inv2 q a b q' γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, negative)) -> transSomeSomeCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeRightCenter q q' (Some a) (Some b) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed.
+
+  Lemma transSomeSomeCenter_inv3 q a b q' γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, neutral)) -> transSomeSomeCenter q  γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeStayCenter q q' (Some a) (Some b) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed.
+
+  (*the same for None, Some *)
+  Lemma transNoneSomeRight_inv1 q b q' γ1 γ2 γ4 γ5 γ6 : trans (q, None) = (q', (Some b, positive)) -> transNoneSomeRight q γ1 γ2 (inl (q, None)) γ4 γ5 γ6 -> transSomeLeftRight q q' (None) (Some b) γ1 γ2 (inl (q, None)) γ4 γ5 γ6. 
+  Proof. intros. inv H0; simp_eqn. Qed. 
+
+  Lemma transNoneSomeRight_inv2 q b q' γ1 γ2 γ4 γ5 γ6 : trans (q, None) = (q', (Some b, negative)) -> transNoneSomeRight q γ1 γ2 (inl (q, None)) γ4 γ5 γ6 -> transSomeRightRight q q' (None) γ1 γ2 (inl (q, None)) γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed.
+
+  Lemma transNoneSomeRight_inv3 q b q' γ1 γ2 γ4 γ5 γ6 : trans (q, None) = (q', (Some b, neutral)) -> transNoneSomeRight q γ1 γ2 (inl (q, None)) γ4 γ5 γ6 -> transSomeStayRight q q' (None) (Some b) γ1 γ2 (inl (q, None)) γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed.
+
+  Lemma transNoneSomeLeft_inv1 q b q' γ2 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (Some b, positive)) -> transNoneSomeLeft q (inl (q, None)) γ2 γ3 γ4 γ5 γ6 -> transSomeLeftLeft q q' (None) (inl (q, None)) γ2 γ3 γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed. 
+
+  Lemma transNoneSomeLeft_inv2 q b q' γ2 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (Some b, negative)) -> transNoneSomeLeft q (inl (q, None)) γ2 γ3 γ4 γ5 γ6 -> transSomeRightLeft q q' (None) (Some b) (inl (q, None)) γ2 γ3 γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed.
+
+  Lemma transNoneSomeLeft_inv3 q b q' γ2 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (Some b, neutral)) -> transNoneSomeLeft q  (inl (q, None)) γ2 γ3 γ4 γ5 γ6 -> transSomeStayLeft q q' (None) (Some b) (inl (q, None)) γ2 γ3 γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed.
+
+  Lemma transNoneSomeCenter_inv1 q b q' γ1 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (Some b, positive)) -> transNoneSomeCenter q γ1 (inl (q, None)) γ3 γ4 γ5 γ6 -> transSomeLeftCenter q q' (None) (Some b) γ1 (inl (q, None)) γ3 γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed. 
+
+  Lemma transNoneSomeCenter_inv2 q b q' γ1 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (Some b, negative)) -> transNoneSomeCenter q γ1 (inl (q, None)) γ3 γ4 γ5 γ6 -> transSomeRightCenter q q' (None) (Some b) γ1 (inl (q, None)) γ3 γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed.
+
+  Lemma transNoneSomeCenter_inv3 q b q' γ1 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (Some b, neutral)) -> transNoneSomeCenter q  γ1 (inl (q, None)) γ3 γ4 γ5 γ6 -> transSomeStayCenter q q' (None) (Some b) γ1 (inl (q, None)) γ3 γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed.
+
+  (*Some, None*)
+  Lemma transSomeNoneRight_inv1 q a q' γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some a, positive)) -> transSomeNoneRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeLeftRight q q' (Some a) (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6. 
+  Proof. intros. inv H0; simp_eqn. Qed. 
+
+  Lemma transSomeNoneRight_inv2 q a q' γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some a, negative)) -> transSomeNoneRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeRightRight q q' (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed.
+
+  Lemma transSomeNoneRight_inv3 q a q' γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some a, neutral)) -> transSomeNoneRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeStayRight q q' (Some a) (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed.
+
+  Lemma transSomeNoneLeft_inv1 q a q' γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some a, positive)) -> transSomeNoneLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeLeftLeft q q' (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed. 
+
+  Lemma transSomeNoneLeft_inv2 q a q' γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some a, negative)) -> transSomeNoneLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeRightLeft q q' (Some a) (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed.
+
+  Lemma transSomeNoneLeft_inv3 q a q' γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some a, neutral)) -> transSomeNoneLeft q  (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeStayLeft q q' (Some a) (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed.
+
+  Lemma transSomeNoneCenter_inv1 q a q' γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some a, positive)) -> transSomeNoneCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeLeftCenter q q' (Some a) (Some a) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed. 
+
+  Lemma transSomeNoneCenter_inv2 q a q' γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some a, negative)) -> transSomeNoneCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeRightCenter q q' (Some a) (Some a) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed.
+
+  Lemma transSomeNoneCenter_inv3 q a q' γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some a, neutral)) -> transSomeNoneCenter q  γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeStayCenter q q' (Some a) (Some a) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed.
+
+  (* None, None*)
+  Lemma transNoneNoneRight_inv1 q q' γ1 γ2 γ4 γ5 γ6 : trans (q, None) = (q', (None, positive)) -> transNoneNoneRight q γ1 γ2 (inl (q, None)) γ4 γ5 γ6 -> transNoneLeftRight q q' γ1 γ2 (inl (q, None)) γ4 γ5 γ6. 
+  Proof. intros. inv H0; simp_eqn. Qed. 
+
+  Lemma transNoneNoneRight_inv2 q q' γ1 γ2 γ4 γ5 γ6 : trans (q, None) = (q', (None, negative)) -> transNoneNoneRight q γ1 γ2 (inl (q, None)) γ4 γ5 γ6 -> transNoneRightRight q q' γ1 γ2 (inl (q, None)) γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed.
+
+  Lemma transNoneNoneRight_inv3 q q' γ1 γ2 γ4 γ5 γ6 : trans (q, None) = (q', (None, neutral)) -> transNoneNoneRight q γ1 γ2 (inl (q, None)) γ4 γ5 γ6 -> transNoneStayRight q q' γ1 γ2 (inl (q, None)) γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed.
+
+  Lemma transNoneNoneLeft_inv1 q q' γ2 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (None, positive)) -> transNoneNoneLeft q (inl (q, None)) γ2 γ3 γ4 γ5 γ6 -> transNoneLeftLeft q q' (inl (q, None)) γ2 γ3 γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed. 
+
+  Lemma transNoneNoneLeft_inv2 q q' γ2 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (None, negative)) -> transNoneNoneLeft q (inl (q, None)) γ2 γ3 γ4 γ5 γ6 -> transNoneRightLeft q q' (inl (q, None)) γ2 γ3 γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed.
+
+  Lemma transNoneNoneLeft_inv3 q q' γ2 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (None, neutral)) -> transNoneNoneLeft q  (inl (q, None)) γ2 γ3 γ4 γ5 γ6 -> transNoneStayLeft q q' (inl (q, None)) γ2 γ3 γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed.
+
+  Lemma transNoneNoneCenter_inv1 q q' γ1 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (None, positive)) -> transNoneNoneCenter q γ1 (inl (q, None)) γ3 γ4 γ5 γ6 -> transNoneLeftCenter q q' γ1 (inl (q, None)) γ3 γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed. 
+
+  Lemma transNoneNoneCenter_inv2 q q' γ1 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (None, negative)) -> transNoneNoneCenter q γ1 (inl (q, None)) γ3 γ4 γ5 γ6 -> transNoneRightCenter q q' γ1 (inl (q, None)) γ3 γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed.
+
+  Lemma transNoneNoneCenter_inv3 q q' γ1 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (None, neutral)) -> transNoneNoneCenter q  γ1 (inl (q, None)) γ3 γ4 γ5 γ6 -> transNoneStayCenter q q' γ1 (inl (q, None)) γ3 γ4 γ5 γ6.
+  Proof. intros. inv H0; simp_eqn. Qed.
+
+
+
+
+  Ltac inv_eqn H := match type of H with
+                    | ?h = ?h' => is_var h; rewrite !H in *; clear H
+                    | ?h = ?h' => is_var h'; rewrite <- !H in *; clear H
+                    | _ => inv H
+                     end. 
+
+  Ltac inv_trans_prim := repeat match goal with
+        | [H : transSomeSome _ _ _ (inl (_, _)) _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transSomeSome_inv3 in H as (<- & (? & Heqn') & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
+        | [H : transSomeSome _ (inl (_, _)) _ _ _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transSomeSome_inv1 in H as (<- & (? & Heqn') & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
+        | [H : transSomeSome _ _ (inl (_, _)) _ _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transSomeSome_inv2 in H as (<- & (? & Heqn') & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
+        | [H : transSomeNone _ _ _ (inl (_, _)) _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transSomeNone_inv3 in H as (<- & (? & Heqn') & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
+        | [H : transSomeNone _ (inl (_, _)) _ _ _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transSomeNone_inv1 in H as (<- & (? & Heqn') & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
+        | [H : transSomeNone _ _ (inl (_, _)) _ _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transSomeNone_inv2 in H as (<- & (? & Heqn') & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
+        | [H : transNoneSome _ _ _ (inl (_, _)) _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transNoneSome_inv3 in H as (<- & Heqn' & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
+        | [H : transNoneSome _ (inl (_, _)) _ _ _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transNoneSome_inv1 in H as (<- & Heqn' & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
+        | [H : transNoneSome _ _ (inl (_, _)) _ _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transNoneSome_inv2 in H as (<- & Heqn' & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
+        | [H : transNoneNone _ _ _ (inl (_, _)) _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transNoneNone_inv3 in H as (<- & Heqn' & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
+        | [H : transNoneNone _ (inl (_, _)) _ _ _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transNoneNone_inv1 in H as (<- & Heqn' & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
+        | [H : transNoneNone _ _ (inl (_, _)) _ _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transNoneNone_inv2 in H as (<- & Heqn' & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
+      end.
+
+  Ltac inv_trans_sec :=
+          repeat match goal with
+          | [H : trans (_, _) = (_, (_, neutral)) |- _] =>
+            repeat match goal with
+                    | [H2 : context[transSomeSomeLeft] |- _] => first [eapply transSomeSomeLeft_inv3 in H2; [ | apply H] | inv H2; now simp_eqn] 
+                    | [H2 : context[transSomeSomeRight] |- _] => first [eapply transSomeSomeRight_inv3 in H2; [ | apply H] | inv H2; now simp_eqn]
+                    | [H2 : context[transSomeSomeCenter] |- _] => first [eapply transSomeSomeCenter_inv3 in H2; [ | apply H] | inv H2; now simp_eqn]
+                    | [H2 : context[transNoneSomeLeft] |- _] => first [eapply transNoneSomeLeft_inv3 in H2; [ | apply H] | inv H2; now simp_eqn] 
+                    | [H2 : context[transNoneSomeRight] |- _] => first [eapply transNoneSomeRight_inv3 in H2; [ | apply H] | inv H2; now simp_eqn]
+                    | [H2 : context[transNoneSomeCenter] |- _] => first [eapply transNoneSomeCenter_inv3 in H2; [ | apply H] | inv H2; now simp_eqn]
+                    | [H2 : context[transSomeNoneLeft] |- _] => first [eapply transSomeNoneLeft_inv3 in H2; [ | apply H] | inv H2; now simp_eqn] 
+                    | [H2 : context[transSomeNoneRight] |- _] => first [eapply transSomeNoneRight_inv3 in H2; [ | apply H] | inv H2; now simp_eqn]
+                    | [H2 : context[transSomeNoneCenter] |- _] => first [eapply transSomeNoneCenter_inv3 in H2; [ | apply H] | inv H2; now simp_eqn]
+                    | [H2 : context[transNoneNoneLeft] |- _] => first [eapply transNoneNoneLeft_inv3 in H2; [ | apply H] | inv H2; now simp_eqn] 
+                    | [H2 : context[transNoneNoneRight] |- _] => first [eapply transNoneNoneRight_inv3 in H2; [ | apply H] | inv H2; now simp_eqn]
+                    | [H2 : context[transNoneNoneCenter] |- _] => first [eapply transNoneNoneCenter_inv3 in H2; [ | apply H] | inv H2; now simp_eqn]
+            end
+          | [H : trans (_, _) = (_, (_, negative)) |- _] =>
+            repeat match goal with
+                    | [H2 : context[transSomeSomeLeft] |- _] => first [eapply transSomeSomeLeft_inv2 in H2; [ | apply H] | inv H2; now simp_eqn] 
+                    | [H2 : context[transSomeSomeRight] |- _] => first [eapply transSomeSomeRight_inv2 in H2; [ | apply H] | inv H2; now simp_eqn]
+                    | [H2 : context[transSomeSomeCenter] |- _] => first [eapply transSomeSomeCenter_inv2 in H2; [ | apply H] | inv H2; now simp_eqn]
+                    | [H2 : context[transNoneSomeLeft] |- _] => first [eapply transNoneSomeLeft_inv2 in H2; [ | apply H] | inv H2; now simp_eqn] 
+                    | [H2 : context[transNoneSomeRight] |- _] => first [eapply transNoneSomeRight_inv2 in H2; [ | apply H] | inv H2; now simp_eqn]
+                    | [H2 : context[transNoneSomeCenter] |- _] => first [eapply transNoneSomeCenter_inv2 in H2; [ | apply H] | inv H2; now simp_eqn]
+                    | [H2 : context[transSomeNoneLeft] |- _] => first [eapply transSomeNoneLeft_inv2 in H2; [ | apply H] | inv H2; now simp_eqn] 
+                    | [H2 : context[transSomeNoneRight] |- _] => first [eapply transSomeNoneRight_inv2 in H2; [ | apply H] | inv H2; now simp_eqn]
+                    | [H2 : context[transSomeNoneCenter] |- _] => first [eapply transSomeNoneCenter_inv2 in H2; [ | apply H] | inv H2; now simp_eqn]
+                    | [H2 : context[transNoneNoneLeft] |- _] => first [eapply transNoneNoneLeft_inv2 in H2; [ | apply H] | inv H2; now simp_eqn] 
+                    | [H2 : context[transNoneNoneRight] |- _] => first [eapply transNoneNoneRight_inv2 in H2; [ | apply H] | inv H2; now simp_eqn]
+                    | [H2 : context[transNoneNoneCenter] |- _] => first [eapply transNoneNoneCenter_inv2 in H2; [ | apply H] | inv H2; now simp_eqn]
+            end
+          | [H : trans (_, _) = (_, (_, positive)) |- _] =>
+            repeat match goal with
+                   | [H2 : context[transSomeSomeLeft] |- _] => first [eapply transSomeSomeLeft_inv1 in H2; [ | apply H] | inv H2; now simp_eqn] 
+                   | [H2 : context[transSomeSomeRight] |- _] => first [eapply transSomeSomeRight_inv1 in H2; [ | apply H] | inv H2; now simp_eqn]
+                   | [H2 : context[transSomeSomeCenter] |- _] => first [eapply transSomeSomeCenter_inv1 in H2; [ | apply H] | inv H2; now simp_eqn]
+                   | [H2 : context[transNoneSomeLeft] |- _] => first [eapply transNoneSomeLeft_inv1 in H2; [ | apply H] | inv H2; now simp_eqn] 
+                   | [H2 : context[transNoneSomeRight] |- _] => first [eapply transNoneSomeRight_inv1 in H2; [ | apply H] | inv H2; now simp_eqn]
+                   | [H2 : context[transNoneSomeCenter] |- _] => first [eapply transNoneSomeCenter_inv1 in H2; [ | apply H] | inv H2; now simp_eqn]
+                   | [H2 : context[transSomeNoneLeft] |- _] => first [eapply transSomeNoneLeft_inv1 in H2; [ | apply H] | inv H2; now simp_eqn] 
+                   | [H2 : context[transSomeNoneRight] |- _] => first [eapply transSomeNoneRight_inv1 in H2; [ | apply H] | inv H2; now simp_eqn]
+                   | [H2 : context[transSomeNoneCenter] |- _] => first [eapply transSomeNoneCenter_inv1 in H2; [ | apply H] | inv H2; now simp_eqn]
+                   | [H2 : context[transNoneNoneLeft] |- _] => first [eapply transNoneNoneLeft_inv1 in H2; [ | apply H] | inv H2; now simp_eqn] 
+                   | [H2 : context[transNoneNoneRight] |- _] => first [eapply transNoneNoneRight_inv1 in H2; [ | apply H] | inv H2; now simp_eqn]
+                   | [H2 : context[transNoneNoneCenter] |- _] => first [eapply transNoneNoneCenter_inv1 in H2; [ | apply H] | inv H2; now simp_eqn]
+            end
+      end. 
+
+
+  Lemma rev_fold (X : Type) (A B : list X) b: rev A ++ (b::B) = rev (b :: A) ++ B. 
+  Proof. 
+    cbn. rewrite <- app_assoc. now cbn. 
+  Qed. 
+
+  Lemma rev_polarityRev A : rev A = polarityRev (map polarityFlipGamma A). 
+  Proof. 
+    unfold polarityRev. rewrite map_involution. reflexivity. involution_simpl. 
+  Qed. 
+
+
+  Lemma rewHeadSim_unique_left A B A' a b a' b' u p w: valid rewHeadSim (rev A ++ [b; a]) (A' ++ [b'; a']) -> u ≃t(p, w) a :: b :: A -> (forall s, valid rewHeadTape (rev (a :: b :: A)) (rev (a' :: s)) -> s = B) -> b' :: rev A' = B.
+  Proof. 
+    intros. 
+    repeat rewrite rev_fold in H. rewrite app_nil_r in H. 
+    setoid_rewrite <- polarityRev_involution in H at 5. 
+    rewrite rev_polarityRev in H. 
+    eapply rewHeadSim_tape_polarityRev in H. 
+    2: { cbn; apply tape_repr_polarityFlip in H0. cbn in H0. apply H0. }
+    rewrite <- rev_polarityRev in H. rewrite polarityRev_involution in H. 
+    rewrite <- rev_involutive with (l := A') in H. 
+    repeat rewrite rev_fold in H. rewrite app_nil_r in H. 
+    apply H1 in H. easy. 
+  Qed. 
+
+  Ltac solve_stepsim_uniqueness H F1 F2 Z3 W3 := 
+      cbn in H; rewrite <- !app_assoc in H; cbn in H; 
+      rewrite app_fold in H; 
+      let X1 := fresh "X1" in let X2 := fresh "X2" in 
+      destruct (valid_rewHeadSim_conc_inv H) as (? & ? & ? & ? & ? & ? & ? & -> & X1 & X2);
+      normalise_conf_strings_in H; 
+      let K1 := fresh "K" in let K2 := fresh "K" in let K3 := fresh "K" in
+      let K4 := fresh "K" in let K5 := fresh "K" in
+      specialize (proj1 (valid_rewHeadSim_center  _  _ _ _ _ _ _ _ _ _ _ _ _ _) (conj H (conj X1 X2))) as (K1 & K2 & K3 & K4 & K5); 
+      eapply rewHeadSim_trans in K3; [ | eauto | eauto]; 
+      eapply rewHeadSim_trans in K4; [ | eauto | eauto];
+      eapply rewHeadSim_trans in K5; [ | eauto | eauto]; 
+      inv K3; inv_trans_prim; inv K4; inv_trans_prim; inv K5; inv_trans_prim;
+      inv_trans_sec; rewHeadTrans_inv2; simp_eqn; 
+      (specialize (rewHeadSim_unique_left K1 F1 Z3) as ?;
+      simp_eqn;
+      eapply rewHeadSim_tape in K2; [ | eapply F2]; apply W3 in K2; 
+      simp_eqn; 
+      cbn; try rewrite <- !app_assoc; cbn; reflexivity).
+ 
 
   Hint Unfold isStateSym.
   Lemma stepsim q tp s q' tp' : (q, tp) ≃c s -> halt q = false -> (q, tp) ≻ (q', tp') -> (sizeOfTape tp) < z' -> exists s', valid rewHeadSim s s' /\ (forall s'', valid rewHeadSim s s'' -> s'' = s') /\ (q', tp') ≃c s'. 
@@ -991,62 +1347,34 @@ Module transition (sig : TMSig).
     rewrite sizeOfTape_lcr in H1. 
     destruct H as (ls & qm & rs & -> & H). destruct H as (p & -> & F1 & F2). unfold embedState.
     destruct p' as ([wsym | ] & []); destruct tp as [ | ? l1 | ? l0 | l0 ? l1]; cbn in *; destruct_tape_in_tidy F1; destruct_tape_in_tidy F2. 
-    1-4: try match type of F1 with ?l0 ≃t(_, _) _ => is_var l0; destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end. 
-    1-4: try match type of F1 with _ :: ?l0 ≃t(_, _) _ => destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end. 
-    1-4: try match type of F2 with ?l1 ≃t(_, _) _ => is_var l1; destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end. 
-    1-4: try match type of F2 with _ :: ?l1 ≃t(_, _) _ => destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end. 
+    all: try match type of F1 with ?l0 ≃t(_, _) _ => is_var l0; destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end. 
+    all: try match type of F1 with _ :: ?l0 ≃t(_, _) _ => destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end. 
+    all: try match type of F2 with ?l1 ≃t(_, _) _ => is_var l1; destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end. 
+    all: try match type of F2 with _ :: ?l1 ≃t(_, _) _ => destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end. 
+    Optimize Proof. Optimize Heap. 
     all: cbn in H1.
-    1-4: try solve_stepsim_goal F1 F2 H2. 
-    1: {
-      intros.
-      clear F1 F2 Z1 Z2 W1 W2. clear H1. 
-      cbn in H. rewrite <- !app_assoc in H. cbn in H. 
-      rewrite app_fold in H. 
-      destruct (valid_rewHeadSim_conc_inv H) as (A' & B' & a' & b' & c' & d' & e' & -> & X1 & X2). 
-      normalise_conf_strings_in H. 
-
-      specialize (proj1 (valid_rewHeadSim_center  _  _ _ _ _ _ _ _ _ _ _ _ _ _) (conj H (conj X1 X2))) as (K1 & K2 & K3 & K4 & K5). 
-
-      eapply rewHeadSim_trans in K3. 2-3: eauto. 
-      eapply rewHeadSim_trans in K4. 2-3: eauto.
-      eapply rewHeadSim_trans in K5. 2-3: eauto.
-
-      inv K3. 
-      eapply transSomeSome_inv3 in H10 as (<- & (? & ? & -> & ?)). 
-      inv K5. 
-      apply transSomeSome_inv1 in H12 as (<- & (? & ? & ? & ?)). inv H1. 
-      inv K4. 
-      inv H0. 
-      inv H0. 
-      inv H0. 
-      inv H0. 
-      inv H0. 
-      inv H0. 
-      inv H0. 
-      apply transSomeSome_
-
-      rewHeadTrans_inv2. 
-      inv K3. apply transSomeSome_
-
-      apply rewHeadSim_trans' in K3; [ | right; right; eauto].
-      apply rewHeadSim_trans' in K4; [ | right; left; eauto].
-      apply rewHeadSim_trans' in K5; [ | left; eauto].
-      eapply rewHeadTrans_inv_NS in K4; [ | apply H2].  
-      rewHeadTrans_inv2_in K4. 
-      rewHeadTrans_inv2_in K4; rewHeadTrans_inv2_in K5.  
-      apply W3 in 
-      
-      inv H.
-      + admit.  
-      + admit. 
-      + inv H4. rewHeadTrans_inv2.  
-
-    }
+    all: try solve_stepsim_goal F1 F2 H2. 
+    Optimize Proof. Optimize Heap.
+    1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3.
+    Optimize Proof. Optimize Heap. 
+    1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3.
+    Optimize Proof. Optimize Heap.
+1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3.
+    Optimize Proof. Optimize Heap.
+1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3.
+    Optimize Proof. Optimize Heap.
+1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3.
+    Optimize Proof. Optimize Heap.
+1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3.
+    Optimize Proof. Optimize Heap.
+1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3.
+    Optimize Proof. Optimize Heap.
+1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3.
+    Optimize Proof. Optimize Heap.
+1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3.
+    Optimize Proof. Optimize Heap.
+all: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3.
+    Optimize Proof. Optimize Heap.
   Qed. 
-
-                                                                           
-
-  
-    
 End transition.
 

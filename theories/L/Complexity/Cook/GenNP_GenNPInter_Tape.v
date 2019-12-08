@@ -416,7 +416,7 @@ Module tape (sig : TMSig).
     intros.
     assert (valid rewHeadTape (polarityRev (E (S (S (S n))))) (polarityRev (inr (inr (Some (↑ σ))) :: map polarityFlipGamma s))). 
     {
-      unfold polarityRev. rewrite E_polarityFlip. cbn. rewrite map_involution. 2: apply polarityFlipGamma_involution.
+      unfold polarityRev. rewrite E_polarityFlip. cbn. rewrite map_involution. 2: involution_simpl.
       apply H. 
     }
     eapply tape_rewrite_symm2 in H0.
@@ -428,7 +428,7 @@ Module tape (sig : TMSig).
 
   Lemma E_rewrite_sym_rem σ n : valid rewHeadTape (inr (inr σ) :: E (S (S n))) (E (S (S (S n)))). 
   Proof. 
-    cbn. constructor 3. 
+    cbn. constructor 3.  
     - apply E_rewrite_blank.
     - destruct σ; try destruct p; try destruct m; eauto.
   Qed. 
