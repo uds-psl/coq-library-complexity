@@ -398,6 +398,21 @@ Module tape (sig : TMSig).
   Corollary E_rewrite_blank_unique n : forall s, valid rewHeadTape (E (S (S n))) (inr (inr |_|) :: s) -> s = E (S n).  
   Proof. intros; now apply E_rewrite_blank_unique'. Qed.
 
+  Lemma E_rewrite_blank_rev w : valid rewHeadTape (rev (E (S (S w)))) (rev (E (S (S w)))).  
+  Proof. 
+    rewrite <- E_polarityFlip. apply tape_rewrite_symm1, E_rewrite_blank.
+  Qed. 
+
+  Lemma E_rewrite_blank_rev_unique w s : valid rewHeadTape (rev (E (S (S w)))) (rev (inr (inr |_|) :: s)) -> s = (E (S (w))). 
+  Proof. 
+    intros.
+    assert (valid rewHeadTape (polarityRev (E (S (S w)))) (polarityRev (map polarityFlipGamma (inr (inr |_|) :: s)))). 
+    { unfold polarityRev. rewrite E_polarityFlip. rewrite map_involution. 2: involution_simpl. apply H.  }
+    apply tape_rewrite_symm2 in H0.
+    cbn in H0. apply E_rewrite_blank_unique in H0. apply involution_invert_eqn2 with (a := s) (f:= (map polarityFlipGamma))  (b := E (S w)) in H0.
+    2: involution_simpl. now rewrite H0, E_polarityFlip. 
+  Qed. 
+
   (*Lemma 17 *)
   Lemma E_rewrite_sym σ n: valid rewHeadTape (E (S (S (S n)))) (inr (inr (Some (↑σ))) :: E (S (S n))). 
   Proof. 

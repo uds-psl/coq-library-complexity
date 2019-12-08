@@ -2,6 +2,7 @@ From PslBase Require Import Base.
 From PslBase Require Import Vectors.Vectors. 
 From PslBase Require Import FiniteTypes. 
 Require Import Lia.
+Require Template.utils.
 
 Definition substring (X : Type) (a b : list X) := exists b1 b2, b = b1 ++ a ++ b2. 
 Definition prefix (X : Type) (a b : list X) := exists b', b = a ++ b'. 
@@ -39,6 +40,17 @@ Proof.
     + cbn. now rewrite <- H0. 
     + cbn. now apply IHa. 
 Qed. 
+
+Lemma skipn_app3 (X : Type) i (a b : list X) : i <= |a| -> exists a', skipn i (a ++ b) = a' ++ b /\ a = firstn i a ++ a'. 
+Proof. 
+  intros. exists (skipn i a). split.
+  + destruct (nat_eq_dec i (|a|)). 
+    - rewrite skipn_app. 2: apply e. rewrite Template.utils.skipn_all2. 2: lia. now cbn. 
+    - apply skipn_app2.
+      * enough (|skipn i a| <> 0) by (destruct skipn; cbn in *; congruence). rewrite skipn_length. lia. 
+      * reflexivity. 
+  + now rewrite firstn_skipn. 
+Qed.
 
 
 Lemma length_app_decompose (X : Type) (a : list X) i j : length a = i + j -> exists a1 a2, a = a1 ++ a2 /\ length a1 = i /\ length a2 = j. 

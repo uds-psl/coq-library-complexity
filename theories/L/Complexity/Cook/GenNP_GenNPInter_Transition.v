@@ -8,11 +8,74 @@ Module transition (sig : TMSig).
   Module tape' := tape sig. 
   Import tape'. 
 
+  (** *preliminaries *)
+  Notation "s '≻' s'" := (sstep s = s') (at level 40). 
+
+  Lemma tapeToList_lcr sig (tp : tape sig) : tapeToList tp = rev (left tp) ++ (match current tp with Some a => [a] | _ => [] end) ++ right tp. 
+  Proof.
+    destruct tp; cbn. all: firstorder. 
+  Qed. 
+
+  Lemma sizeOfTape_lcr sig (tp : tape sig) : sizeOfTape tp = |left tp| + |right tp| + (if current tp then 1 else 0). 
+  Proof. 
+    unfold sizeOfTape. rewrite tapeToList_lcr. rewrite !app_length. rewrite rev_length. destruct current; cbn; lia. 
+  Qed.
+
+  (*simplification tactic for equations that will arise from inversions*)
+  Lemma prod_eq (X Y : Type) (a c : X) (b d : Y) : (a, b) = (c, d) -> a = c /\ b = d. 
+  Proof. intros; split; congruence. Qed. 
+
+  Lemma alphabet_inv1 p m : p ! m = inr |_| -> m = |_|. 
+  Proof. destruct m; now cbn. Qed.
+
+  Lemma alphabet_inv2 p1 σ p2 m : p1 !! σ = p2 ! m -> m = Some σ /\ p1 = p2. 
+  Proof. destruct m; cbn; unfold withPolaritySigma; intros; split; congruence. Qed. 
+
+  Lemma alphabet_inv3 p1 σ p2 m : p1 ! m = inr (Some (p2, σ)) -> p1 = p2 /\ m = Some σ. 
+  Proof. 
+    intros. unfold withPolarity, withPolaritySigma in H. destruct m; cbn in H; split; congruence.
+  Qed. 
+
+  Lemma alphabet_inv4 p1 m1 p2 m2 : p1 ! m1 = p2 ! m2 -> m1 = m2. 
+  Proof. unfold withPolarity, withPolaritySigma. destruct m1, m2;intros; congruence. Qed. 
+
+  Lemma alphabet_inv5 p1 σ1 p2 σ2 : p1 !! σ1 = p2 !! σ2 -> p1 = p2 /\ σ1 = σ2. 
+  Proof. unfold withPolaritySigma. intros; split; congruence. Qed.
+
+  Ltac simp_eqn := repeat match goal with
+                          | [H : ?p ! ?m = inr |_| |- _] => apply alphabet_inv1 in H
+                          | [H : inr |_| = ?p ! ?m |- _] => symmetry in H
+                          | [H : ?p1 !! ?σ = ?p2 ! ?m |- _] => apply alphabet_inv2 in H as (? & ?); clear H
+                          | [H : ?p2 ! ?m = ?p1 !! ?σ |- _] => symmetry in H
+                          | [H : ?p1 ! ?m = inr (Some (?p2, ?σ)) |- _] => apply alphabet_inv3 in H as (? & ?); clear H
+                          | [H : inr (Some (?p2, ?σ)) = ?p1 ! ?m |- _] => symmetry in H
+                          | [H : ?p1 ! ?m1 = ?p2 ! ?m2 |- _] => apply alphabet_inv4 in H as ?; clear H
+                          | [H : ?p1 !! ?m1 = ?p2 !! ?m2 |- _] => apply alphabet_inv5 in H as (? & ?); clear H
+                          | [H : trans (?a, ?b) = ?h1, H1 : trans (?a, ?b) = ?h2 |- _] => assert (h1 = h2) by congruence; clear H1
+                          | [H : (?a, ?b) = (?c, ?d) |- _] => specialize (prod_eq H) as (? & ?); clear H
+                          | [H : ?a = ?a |- _] => clear H
+                          | [H : ?a = _ |- _] => is_var a; rewrite H in *; clear H
+                          | [H : Some ?a = Some ?b |- _] => assert (a = b) by congruence; clear H
+                          | [H : inr ?a = inr ?b |- _] => assert (a = b) by congruence; clear H
+                          | [H : inl ?a = inl ?b |- _] => assert (a = b) by congruence; clear H
+                          | [H : ?h1 :: ?a = ?h2 :: ?b |- _] => assert (a = b) by congruence; assert (h1 = h2) by congruence; clear H
+                          | [H : rev ?A = _ |- _ ] => is_var A; apply involution_invert_eqn2 in H as ?; [ | involution_simpl]; clear H
+                          | [H : _ = rev ?A |- _ ] => is_var A; symmetry in H; apply involution_invert_eqn2 in H as ?; [ | involution_simpl]; clear H
+                          | [H : context[E (S _)] |- _] => cbn in H
+                          | [H : context[E (wo + _)] |- _] => cbn in H
+                    end; try congruence.
+
+
 (** *transition rules *)
 
   Create HintDb trans discriminated. 
   Definition transRule := Gamma -> Gamma -> Gamma -> Gamma -> Gamma -> Gamma -> Prop.
 
+  (*We structure the rules in several layers: first of all, we have to differentiate whether, for a transition, the Turing machine writes a symbol or not *)
+  (*(note that we take the view that the TM can write a symbol even if our transition function returns None (this just means that the symbol under the head remains unchanged) if there is currently a symbol under the head: in this case the written symbol is just the current symbol) *)
+  (*in the cases (Some, Some), (Some, None), (None, Some) (denoting the read/write positions of the transition function) the TM writes a symbol; only in the (None, None) case it does not write one *)
+
+  (*rules for the case where the Turing machine writes a symbol *)
   (*shift right rules *)
   (*order of additional arguments: current state, next state, read symbol, written symbol (does not match output of transition function!) *)
   Inductive transSomeRightCenter :  states -> states -> stateSigma -> stateSigma -> transRule :=
@@ -74,7 +137,9 @@ Module transition (sig : TMSig).
   Hint Constructors transSomeStayRight : trans. 
 
   (* bundling predicates *)
-  (*bundle according to where the state symbol is *)
+
+  (*we first group together according to where the state symbol is: left/right/center *)
+  (*note that we have to differentiate between the three cases (Some, Some), (Some, None), (None, Some) *)
 
   (*Some, Some *)
   Inductive transSomeSomeLeft : states -> transRule :=
@@ -143,6 +208,7 @@ Module transition (sig : TMSig).
   Hint Constructors transSomeNoneCenter : trans.
 
 
+  (* finally, also group those three cases together *)
   Inductive transSomeSome : states -> transRule :=
   | transSSLeft q γ1 γ2 γ3 γ4 γ5 γ6 : transSomeSomeLeft q γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeSome q γ1 γ2 γ3 γ4 γ5 γ6
   | transSSRight q γ1 γ2 γ3 γ4 γ5 γ6 : transSomeSomeRight q γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeSome q γ1 γ2 γ3 γ4 γ5 γ6
@@ -157,7 +223,6 @@ Module transition (sig : TMSig).
 
   Hint Constructors transNoneSome : trans.
   
-  (*transitions for the case that the written symbol is unchanged *)
   Inductive transSomeNone : states -> transRule :=
   | transSNLeft q γ1 γ2 γ3 γ4 γ5 γ6 : transSomeNoneLeft q γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeNone q γ1 γ2 γ3 γ4 γ5 γ6
   | transSNRight q γ1 γ2 γ3 γ4 γ5 γ6 : transSomeNoneRight q γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeNone q γ1 γ2 γ3 γ4 γ5 γ6
@@ -166,6 +231,7 @@ Module transition (sig : TMSig).
   Hint Constructors transSomeNone : trans.
 
   (*the special case of (None, None) needs extra care as the Turing machine doesn't write any symbol *) 
+  (*the structure of the rules is the same for this case *)
 
   (*shift right rules *)
   Inductive transNoneRightCenter :  states -> states -> transRule :=
@@ -255,6 +321,7 @@ Module transition (sig : TMSig).
 
   Hint Constructors transNoneNone : trans. 
 
+  (*finally, group together all of the four cases *)
   Inductive rewHeadTrans : string Gamma -> string Gamma -> Prop :=
   | rewTransSomeSome q γ1 γ2 γ3 γ4 γ5 γ6 s1 s2 : halt q = false -> transSomeSome q γ1 γ2 γ3 γ4 γ5 γ6 -> rewHeadTrans (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2)
   | rewTransSomeNone q γ1 γ2 γ3 γ4 γ5 γ6 s1 s2 : halt q = false -> transSomeNone q γ1 γ2 γ3 γ4 γ5 γ6 -> rewHeadTrans (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2)
@@ -263,6 +330,7 @@ Module transition (sig : TMSig).
 
   Hint Constructors rewHeadTrans : trans. 
 
+  (*the usual lemmas *)
   Lemma rewHeadTrans_tail_invariant γ1 γ2 γ3 γ4 γ5 γ6 s1 s2 s1' s2' :
     rewHeadTrans (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2) <-> rewHeadTrans (γ1 :: γ2 :: γ3 :: s1') (γ4 :: γ5 :: γ6 :: s2').
   Proof. split; intros; inv H; eauto with trans. Qed. 
@@ -271,656 +339,58 @@ Module transition (sig : TMSig).
     rewHeadTrans (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2) <-> rewHeadTrans (γ1 :: γ2 :: γ3 :: s1 ++ s1') (γ4 :: γ5 :: γ6 :: s2 ++ s2').
   Proof. now apply rewHeadTrans_tail_invariant. Qed.
 
+  (*unfold symbols *)
   Ltac rewHeadTrans_inv := repeat match goal with
-                                  | [H : rewHeadTrans ?a _ |- _ ] => is_var a; destruct a; try (inv H; fail)
-                                  | [H : rewHeadTrans (_ :: ?a) _ |- _ ] => is_var a; destruct a; try (inv H; fail)
-                                  | [H : rewHeadTrans (_ :: _ :: ?a) _ |- _] => is_var a; destruct a; try (inv H; fail)
-                                  | [H : rewHeadTrans _ ?a |- _] => is_var a; destruct a; try (inv H; fail)
-                                  | [H : rewHeadTrans _ (_ :: ?a) |- _] => is_var a; destruct a; try (inv H; fail)
-                                  | [H : rewHeadTrans _ (_ :: _ :: ?a) |- _ ] => is_var a; destruct a; try (inv H ; fail)
-                             end. 
+      | [H : rewHeadTrans ?a _ |- _ ] => is_var a; destruct a; try (inv H; fail)
+      | [H : rewHeadTrans (_ :: ?a) _ |- _ ] => is_var a; destruct a; try (inv H; fail)
+      | [H : rewHeadTrans (_ :: _ :: ?a) _ |- _] => is_var a; destruct a; try (inv H; fail)
+      | [H : rewHeadTrans _ ?a |- _] => is_var a; destruct a; try (inv H; fail)
+      | [H : rewHeadTrans _ (_ :: ?a) |- _] => is_var a; destruct a; try (inv H; fail)
+      | [H : rewHeadTrans _ (_ :: _ :: ?a) |- _ ] => is_var a; destruct a; try (inv H ; fail)
+    end. 
 
+  (*full inverions - very (!) costly *)
   Ltac rewHeadTrans_inv2_once := match goal with
-                                   | [H : context[rewHeadTrans] |- _] => inv H
-                                   | [H : context[transSomeSome] |- _ ] => inv H
-                                   | [H : context[transNoneSome] |- _ ] => inv H
-                                   | [H : context[transSomeNone] |- _ ] => inv H
-                                   | [H : context[transNoneNone] |- _ ] => inv H
-                                   | [H : context[transSomeSomeLeft] |- _ ] => inv H
-                                   | [H : context[transSomeSomeRight] |- _] => inv H
-                                   | [H : context[transSomeSomeCenter] |- _ ] => inv H
-                                   | [H : context[transSomeNoneLeft] |- _ ] => inv H
-                                   | [H : context[transSomeNoneRight] |- _] => inv H
-                                   | [H : context[transSomeNoneCenter] |- _ ] => inv H
-                                   | [H : context[transNoneSomeLeft] |- _ ] => inv H
-                                   | [H : context[transNoneSomeRight] |- _] => inv H
-                                   | [H : context[transNoneSomeCenter] |- _ ] => inv H
-                                   | [H : context[transSomeStayLeft] |- _] => inv H
-                                   | [H : context[transSomeStayCenter] |- _ ] => inv H
-                                   | [H : context[transSomeStayRight] |- _ ] => inv H
-                                   | [H : context[transSomeLeftCenter] |- _ ] => inv H
-                                   | [H : context[transSomeLeftLeft] |- _] => inv H
-                                   | [H : context[transSomeLeftRight] |- _] => inv H
-                                   | [H : context[transSomeRightLeft] |- _] => inv H
-                                   | [H : context[transSomeRightRight] |- _] => inv H
-                                   | [H : context[transSomeRightCenter] |- _] => inv H
-                                   | [H : context[transNoneNoneLeft] |- _ ] => inv H
-                                   | [H : context[transNoneNoneRight] |- _] => inv H
-                                   | [H : context[transNoneNoneCenter] |- _ ] => inv H
-                                   | [H : context[transNoneStayLeft] |- _] => inv H
-                                   | [H : context[transNoneStayCenter] |- _ ] => inv H
-                                   | [H : context[transNoneStayRight] |- _ ] => inv H
-                                   | [H : context[transNoneLeftCenter] |- _ ] => inv H
-                                   | [H : context[transNoneLeftLeft] |- _] => inv H
-                                   | [H : context[transNoneLeftRight] |- _] => inv H
-                                   | [H : context[transNoneRightLeft] |- _] => inv H
-                                   | [H : context[transNoneRightRight] |- _] => inv H
-                                   | [H : context[transNoneRightCenter] |- _] => inv H
-                              end. 
+      | [H : context[rewHeadTrans] |- _] => inv H
+      | [H : context[transSomeSome] |- _ ] => inv H
+      | [H : context[transNoneSome] |- _ ] => inv H
+      | [H : context[transSomeNone] |- _ ] => inv H
+      | [H : context[transNoneNone] |- _ ] => inv H
+      | [H : context[transSomeSomeLeft] |- _ ] => inv H
+      | [H : context[transSomeSomeRight] |- _] => inv H
+      | [H : context[transSomeSomeCenter] |- _ ] => inv H
+      | [H : context[transSomeNoneLeft] |- _ ] => inv H
+      | [H : context[transSomeNoneRight] |- _] => inv H
+      | [H : context[transSomeNoneCenter] |- _ ] => inv H
+      | [H : context[transNoneSomeLeft] |- _ ] => inv H
+      | [H : context[transNoneSomeRight] |- _] => inv H
+      | [H : context[transNoneSomeCenter] |- _ ] => inv H
+      | [H : context[transSomeStayLeft] |- _] => inv H
+      | [H : context[transSomeStayCenter] |- _ ] => inv H
+      | [H : context[transSomeStayRight] |- _ ] => inv H
+      | [H : context[transSomeLeftCenter] |- _ ] => inv H
+      | [H : context[transSomeLeftLeft] |- _] => inv H
+      | [H : context[transSomeLeftRight] |- _] => inv H
+      | [H : context[transSomeRightLeft] |- _] => inv H
+      | [H : context[transSomeRightRight] |- _] => inv H
+      | [H : context[transSomeRightCenter] |- _] => inv H
+      | [H : context[transNoneNoneLeft] |- _ ] => inv H
+      | [H : context[transNoneNoneRight] |- _] => inv H
+      | [H : context[transNoneNoneCenter] |- _ ] => inv H
+      | [H : context[transNoneStayLeft] |- _] => inv H
+      | [H : context[transNoneStayCenter] |- _ ] => inv H
+      | [H : context[transNoneStayRight] |- _ ] => inv H
+      | [H : context[transNoneLeftCenter] |- _ ] => inv H
+      | [H : context[transNoneLeftLeft] |- _] => inv H
+      | [H : context[transNoneLeftRight] |- _] => inv H
+      | [H : context[transNoneRightLeft] |- _] => inv H
+      | [H : context[transNoneRightRight] |- _] => inv H
+      | [H : context[transNoneRightCenter] |- _] => inv H
+    end. 
 
   Ltac rewHeadTrans_inv2 := repeat rewHeadTrans_inv2_once. 
 
-  Ltac rewHeadTrans_inv2_in H := repeat match type of H with
-                                   | context[rewHeadTrans]  => inv H
-                                   | context[transSomeSome] => inv H
-                                   | context[transNoneSome]  => inv H
-                                   | context[transSomeNone]  => inv H
-                                   | context[transNoneNone]  => inv H
-                                   | context[transSomeSomeLeft]  => inv H
-                                   | context[transSomeSomeRight] => inv H
-                                   | context[transSomeSomeCenter]  => inv H
-                                   | context[transSomeNoneLeft]  => inv H
-                                   | context[transSomeNoneRight] => inv H
-                                   | context[transSomeNoneCenter]  => inv H
-                                   | context[transNoneSomeLeft]  => inv H
-                                   | context[transNoneSomeRight] => inv H
-                                   | context[transNoneSomeCenter]  => inv H
-                                   | context[transSomeStayLeft]  => inv H
-                                   | context[transSomeStayCenter]  => inv H
-                                   | context[transSomeStayRight]  => inv H
-                                   | context[transSomeLeftCenter]  => inv H
-                                   | context[transSomeLeftLeft] => inv H
-                                   | context[transSomeLeftRight]  => inv H
-                                   | context[transSomeRightLeft]  => inv H
-                                   | context[transSomeRightRight] => inv H
-                                   | context[transSomeRightCenter]  => inv H
-                                   | context[transNoneNoneLeft] => inv H
-                                   | context[transNoneNoneRight]  => inv H
-                                   | context[transNoneNoneCenter]  => inv H
-                                   | context[transNoneStayLeft]  => inv H
-                                   | context[transNoneStayCenter]  => inv H
-                                   | context[transNoneStayRight]  => inv H
-                                   | context[transNoneLeftCenter]  => inv H
-                                   | context[transNoneLeftLeft] => inv H
-                                   | context[transNoneLeftRight]  => inv H
-                                   | context[transNoneRightLeft]  => inv H
-                                   | context[transNoneRightRight]  => inv H
-                                   | context[transNoneRightCenter]  => inv H
-                              end. 
-
-  (** *predicate for halting extensions *)
-
-  Inductive haltCenter : states -> transRule :=
-  | haltCenter1 q (m1 m2 : stateSigma) σ p : haltCenter q (inr (p ! m1)) (inl (q, Some σ)) (inr (p ! m2)) (inr (neutral ! m1)) (inl (q, Some σ)) (inr (neutral ! m2))
-  | haltCenter2 q (m : stateSigma) p : haltCenter q (inr (p ! m)) (inl (q, |_|)) (inr (p ! |_|)) (inr (neutral ! m)) (inl (q, |_|)) (inr (neutral ! |_|))
-  | haltCenter3 q (m : stateSigma) p : haltCenter q (inr (p ! |_|)) (inl (q, |_|)) (inr (p ! m)) (inr (neutral ! |_|)) (inl (q, |_|)) (inr (neutral ! m)). 
-
-  Hint Constructors haltCenter : trans.
-
-  Inductive haltRight : states -> transRule :=
-  | haltRight1 q (m1 m2 : stateSigma) σ p : haltRight q (inr (p ! m1)) (inr (p ! (Some σ))) (inl (q, m2)) (inr (neutral ! m1)) (inr (neutral ! (Some σ))) (inl (q, m2))
-  | haltRight2 q (m : stateSigma) p : haltRight q (inr (p ! |_|)) (inr (p ! |_|)) (inl (q, m)) (inr (neutral ! |_|)) (inr (neutral ! |_|)) (inl (q, m)). 
-
-  Hint Constructors haltRight : trans.
-
-  Inductive haltLeft : states -> transRule :=
-  | haltLeft1 q (m1 m2 : stateSigma) σ p : haltLeft q (inl (q, m1)) (inr (p ! (Some σ))) (inr (p ! m2)) (inl (q, m1)) (inr (neutral ! (Some σ))) (inr (neutral ! m2))
-  | haltLeft2 q (m : stateSigma) p : haltLeft q (inl (q, m)) (inr (p ! |_|)) (inr (p ! |_|)) (inl (q, m)) (inr (neutral ! |_|)) (inr (neutral ! |_|)). 
-
-  Hint Constructors haltLeft : trans.
-
-  Inductive rewHeadHalt : string Gamma -> string Gamma -> Prop :=
-  | rewHaltCenter q γ1 γ2 γ3 γ4 γ5 γ6 s1 s2 : halt q = true -> haltCenter q γ1 γ2 γ3 γ4 γ5 γ6 -> rewHeadHalt (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2)
-  | rewHaltLeft q γ1 γ2 γ3 γ4 γ5 γ6 s1 s2 : halt q = true -> haltLeft q γ1 γ2 γ3 γ4 γ5 γ6 -> rewHeadHalt (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2)
-  | rewHaltRight q γ1 γ2 γ3 γ4 γ5 γ6 s1 s2 : halt q = true -> haltRight q γ1 γ2 γ3 γ4 γ5 γ6 -> rewHeadHalt (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2). 
-
-  Hint Constructors rewHeadHalt : trans. 
-
-
-  Lemma rewHeadHalt_tail_invariant γ1 γ2 γ3 γ4 γ5 γ6 s1 s2 s1' s2' :
-    rewHeadHalt (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2) <-> rewHeadHalt (γ1 :: γ2 :: γ3 :: s1') (γ4 :: γ5 :: γ6 :: s2').
-  Proof. split; intros; inv H; eauto with trans. Qed. 
-
-  Lemma rewHeadHalt_append_invariant γ1 γ2 γ3 γ4 γ5 γ6 s1 s2 s1' s2' :
-    rewHeadHalt (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2) <-> rewHeadHalt (γ1 :: γ2 :: γ3 :: s1 ++ s1') (γ4 :: γ5 :: γ6 :: s2 ++ s2').
-  Proof. now apply rewHeadHalt_tail_invariant. Qed.
-
-  Ltac rewHeadHalt_inv := repeat match goal with
-                                  | [H : rewHeadHalt ?a _ |- _ ] => is_var a; destruct a; try (inv H; fail)
-                                  | [H : rewHeadHalt (_ :: ?a) _ |- _ ] => is_var a; destruct a; try (inv H; fail)
-                                  | [H : rewHeadHalt (_ :: _ :: ?a) _ |- _] => is_var a; destruct a; try (inv H; fail)
-                                  | [H : rewHeadHalt _ ?a |- _] => is_var a; destruct a; try (inv H; fail)
-                                  | [H : rewHeadHalt _ (_ :: ?a) |- _] => is_var a; destruct a; try (inv H; fail)
-                                  | [H : rewHeadHalt _ (_ :: _ :: ?a) |- _ ] => is_var a; destruct a; try (inv H ; fail)
-                             end. 
-
-  Ltac rewHeadHalt_inv2 := repeat match goal with
-                                  | [H : context[rewHeadHalt] |- _] => inv H
-                                  | [H : context[haltLeft] |- _] => inv H
-                                  | [H : context[haltRight] |- _] => inv H
-                                  | [H : context[haltCenter] |- _] => inv H
-                            end. 
-
-  (** * combined predicate for tape + states *)
-
-  Inductive rewHeadSim : string Gamma -> string Gamma -> Prop :=
-  | rewHeadTransC a b : rewHeadTrans a b -> rewHeadSim a b
-  | rewHeadTapeC a b : rewHeadTape a b -> rewHeadSim a b
-  | rewHeadHaltC a b : rewHeadHalt a b -> rewHeadSim a b. 
-
-
-  Hint Constructors rewHeadSim : trans. 
-
-  Ltac rewHeadSim_inv := repeat match goal with
-                                  | [H : rewHeadSim ?a _ |- _ ] => is_var a; destruct a; try (inv H; rewHeadTrans_inv; rewHeadTape_inv; fail)
-                                  | [H : rewHeadSim (_ :: ?a) _ |- _ ] => is_var a; destruct a; try (inv H;rewHeadTrans_inv; rewHeadTape_inv; fail)
-                                  | [H : rewHeadSim (_ :: _ :: ?a) _ |- _] => is_var a; destruct a; try (inv H;rewHeadTrans_inv; rewHeadTape_inv; fail)
-                                  | [H : rewHeadSim _ ?a |- _] => is_var a; destruct a; try (inv H;rewHeadTrans_inv; rewHeadTape_inv; fail)
-                                  | [H : rewHeadSim _ (_ :: ?a) |- _] => is_var a; destruct a; try (inv H;rewHeadTrans_inv; rewHeadTape_inv; fail)
-                                  | [H : rewHeadSim _ (_ :: _ :: ?a) |- _ ] => is_var a; destruct a; try (inv H ;rewHeadTrans_inv; rewHeadTape_inv; fail)
-                             end. 
-
-  Lemma rewHeadSim_tail_invariant γ1 γ2 γ3 γ4 γ5 γ6 s1 s2 s1' s2' :
-    rewHeadSim (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2) <-> rewHeadSim (γ1 :: γ2 :: γ3 :: s1') (γ4 :: γ5 :: γ6 :: s2').
-  Proof.
-    split; intros; inv H.
-    + constructor. now eapply rewHeadTrans_tail_invariant. 
-    + constructor 2. now eapply rewHeadTape_tail_invariant. 
-    + constructor 3. now eapply rewHeadHalt_tail_invariant. 
-    + constructor; now eapply rewHeadTrans_tail_invariant. 
-    + constructor 2; now eapply rewHeadTape_tail_invariant. 
-    + constructor 3; now eapply rewHeadHalt_tail_invariant. 
-  Qed.
-
-  Lemma rewHeadSim_append_invariant γ1 γ2 γ3 γ4 γ5 γ6 s1 s2 s1' s2' :
-    rewHeadSim (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2) <-> rewHeadSim (γ1 :: γ2 :: γ3 :: s1 ++ s1') (γ4 :: γ5 :: γ6 :: s2 ++ s2').
-  Proof. now apply rewHeadSim_tail_invariant. Qed.
-
-  Hint Constructors valid : trans. 
-
-  Definition isStateSym (γ : Gamma) := exists η, γ = inl η. 
-  Definition isSpecStateSym (q : states) (γ : Gamma) := exists m, γ = inl (q, m). 
-
-  Hint Unfold isStateSym.
-  Hint Unfold isSpecStateSym.
-
-  (** * a few simple facts about applicability of rules *)
-  Lemma rewHead_tape_sim s s' : valid rewHeadTape s s' -> valid rewHeadSim s s'. 
-  Proof. intros. induction H; eauto with trans. Qed. 
-
-  Lemma rewHeadTrans_statesym1 γ1 γ2 γ3 γ4 γ5 γ6 : rewHeadTrans [γ1; γ2; γ3] [γ4; γ5; γ6] -> isStateSym γ1 -> not (isStateSym γ2) /\ not (isStateSym γ3).
-  Proof. unfold isStateSym. intros. destruct H0; split; intros []; rewHeadTrans_inv2; congruence. Qed. 
-
-  Lemma rewHeadTrans_statesym2 γ1 γ2 γ3 γ4 γ5 γ6 : rewHeadTrans [γ1; γ2; γ3] [γ4; γ5; γ6] -> isStateSym γ2 -> not (isStateSym γ1) /\ not (isStateSym γ3).
-  Proof. unfold isStateSym. intros. destruct H0; split; intros []; rewHeadTrans_inv2; congruence. Qed.
-
-  Lemma rewHeadTrans_statesym3 γ1 γ2 γ3 γ4 γ5 γ6 : rewHeadTrans [γ1; γ2; γ3] [γ4; γ5; γ6] -> isStateSym γ3 -> not (isStateSym γ1) /\ not (isStateSym γ2).
-  Proof. unfold isStateSym. intros. destruct H0; split; intros []; rewHeadTrans_inv2; congruence. Qed.
-
-  Lemma rewHeadHalt_statesym1 γ1 γ2 γ3 γ4 γ5 γ6 : rewHeadHalt [γ1; γ2; γ3] [γ4; γ5; γ6] -> isStateSym γ1 -> not (isStateSym γ2) /\ not (isStateSym γ3).
-  Proof. unfold isStateSym. intros. destruct H0; split; intros []; rewHeadHalt_inv2; congruence. Qed. 
-
-  Lemma rewHeadHalt_statesym2 γ1 γ2 γ3 γ4 γ5 γ6 : rewHeadHalt [γ1; γ2; γ3] [γ4; γ5; γ6] -> isStateSym γ2 -> not (isStateSym γ1) /\ not (isStateSym γ3).
-  Proof. unfold isStateSym. intros. destruct H0; split; intros []; rewHeadHalt_inv2; congruence. Qed.
-
-  Lemma rewHeadHalt_statesym3 γ1 γ2 γ3 γ4 γ5 γ6 : rewHeadHalt [γ1; γ2; γ3] [γ4; γ5; γ6] -> isStateSym γ3 -> not (isStateSym γ1) /\ not (isStateSym γ2).
-  Proof. unfold isStateSym. intros. destruct H0; split; intros []; rewHeadHalt_inv2; congruence. Qed.
-
-  Lemma rewHeadTrans_statesym γ1 γ2 γ3 γ4 γ5 γ6 : rewHeadTrans [γ1; γ2; γ3] [γ4; γ5; γ6] -> exists q, halt q = false /\ (isSpecStateSym q γ1 \/ isSpecStateSym q γ2 \/ isSpecStateSym q γ3). 
-  Proof. unfold isSpecStateSym. intros. rewHeadTrans_inv2; exists q; eauto. Qed. 
-
-
-  Lemma rewHeadHalt_statesym γ1 γ2 γ3 γ4 γ5 γ6 : rewHeadHalt [γ1; γ2; γ3] [γ4; γ5; γ6] -> exists q, halt q = true /\ (isSpecStateSym q γ1 \/ isSpecStateSym q γ2 \/ isSpecStateSym q γ3). 
-  Proof. unfold isSpecStateSym. intros. rewHeadHalt_inv2; exists q; eauto. Qed. 
-
-  Lemma rewHeadTrans_tape' u h h' p w: u ≃t(p, w) h -> rewHeadSim h h' -> rewHeadTape h h'. 
-  Proof. 
-    intros. inv H0.
-    + do 3 (destruct h; [try now inv H1 | ]). do 3 (destruct h'; [try now inv H1 | ]). 
-      apply rewHeadTrans_tail_invariant with (s1' := []) (s2' := []) in H1. 
-      apply rewHeadTrans_statesym in H1. specialize (tape_repr_inv12 H) as H2.
-      destruct H1 as (q & _ & [(x & -> ) | [(x & ->) | (x & ->)]]). all: destruct (H2 (inl (q, x))); [ eauto | congruence].  
-    + apply H1.  
-    + rewHeadHalt_inv. apply rewHeadHalt_tail_invariant with (s1' := []) (s2' := []) in H1.
-      apply rewHeadHalt_statesym in H1. specialize (tape_repr_inv12 H) as H2.
-      destruct H1 as (q & _ & [(x & -> ) | [(x & ->) | (x & ->)]]). all: destruct (H2 (inl (q, x))); [ eauto | congruence].
-  Qed. 
-
-  Lemma rewHeadSim_tape u h h' p w : u ≃t(p, w) h -> valid rewHeadSim h h' -> valid rewHeadTape h h'. 
-  Proof. 
-    intros. revert u w H. induction H0; intros. 
-    - eauto with trans. 
-    - constructor 2. 2: assumption. clear IHvalid.
-      do 2 (destruct a; destruct b; try now cbn in H; try now inv H0; eauto with trans).
-    - constructor 3.
-      + destruct_tape. destruct a; discr_tape. discr_tape. 
-        * destruct_tape_in_tidy H1. destruct w.
-          -- apply valid_length_inv in H0.
-             do 3 (destruct b; try now cbn in H0). repeat constructor.
-          -- apply IHvalid with (u := []) (w0 := w). apply niltape_repr. 
-        * apply tape_repr_step in H1. now apply IHvalid with (u := u) (w := w).
-      + now eapply rewHeadTrans_tape'.
-  Qed. 
-
-  Lemma rewHeadSim_tape_polarityRev u h h' p w : u ≃t(p, w) h -> valid rewHeadSim (polarityRev h) (polarityRev h') -> valid rewHeadTape (polarityRev h) (polarityRev h'). 
-  Proof. 
-    intros.
-    (*this does hold because of the used alphabet, but isn't straightforward to prove *)
-    (*main problem: need inductive proof because of the possible mixing of types of rewrite rules, but the rev does make that difficult *)
-    (*possible solution: define valid predicate that appends, i.e. validRev *)
-  Admitted. 
-
-  Lemma isStateSym_isSpecStateSym γ: isStateSym γ <-> exists q, isSpecStateSym q γ. 
-  Proof.  
-    split.
-    - intros ([q m] & ?). eauto. 
-    - intros (q & []). eauto. 
-  Qed. 
-
-  (** *TODO: doesn't work*)
-  (* Hint Resolve isStateSym_isSpecStateSym.  *)
-
-  Lemma rewHeadSim_trans q γ1 γ2 γ3 γ4 γ5 γ6 : (isSpecStateSym q γ1 \/ isSpecStateSym q γ2 \/ isSpecStateSym q γ3) -> halt q = false -> rewHeadSim [γ1; γ2; γ3] [γ4; γ5; γ6] -> rewHeadTrans [γ1; γ2; γ3] [γ4; γ5; γ6]. 
-  Proof. 
-    intros [H1 | [H1 | H1]]; (intros H0 H; inv H; [assumption | destruct H1; rewHeadTape_inv2; congruence | ]).
-    all: specialize (rewHeadHalt_statesym H2) as (q' & H & [H3 | [H3 | H3]]). 
-    all: try match goal with
-             | [ H : isSpecStateSym ?q1 ?g, H' : isSpecStateSym ?q2 ?g |- _ ] => destruct H, H'; congruence
-             | [H : rewHeadHalt [?g1; _; _] [_; _; _], H1 : isSpecStateSym _ ?g1, H2 : isSpecStateSym _ ?g2 |- _] =>
-               apply rewHeadHalt_statesym1 in H; [ rewrite !isStateSym_isSpecStateSym in H; destruct H; exfalso; eauto| apply isStateSym_isSpecStateSym; eauto ]
-             | [H : rewHeadHalt [_; ?g1; _] [_; _; _], H1 : isSpecStateSym _ ?g1, H2 : isSpecStateSym _ ?g2 |- _] =>
-               apply rewHeadHalt_statesym2 in H; [ rewrite !isStateSym_isSpecStateSym in H; destruct H; exfalso; eauto| apply isStateSym_isSpecStateSym; eauto ]
-             | [H : rewHeadHalt [_; _; ?g1] [_; _; _], H1 : isSpecStateSym _ ?g1, H2 : isSpecStateSym _ ?g2 |- _] =>
-               apply rewHeadHalt_statesym3 in H; [ rewrite !isStateSym_isSpecStateSym in H; destruct H; exfalso; eauto| apply isStateSym_isSpecStateSym; eauto ]
-              end. 
-  Qed. 
-
-  Lemma rewHeadSim_halt q γ1 γ2 γ3 γ4 γ5 γ6 : (isSpecStateSym q γ1 \/ isSpecStateSym q γ2 \/ isSpecStateSym q γ3) -> halt q = true -> rewHeadSim [γ1; γ2; γ3] [γ4; γ5; γ6] -> rewHeadHalt [γ1; γ2; γ3] [γ4; γ5; γ6]. 
-  Proof. 
-    intros [H1 | [H1 | H1]]; (intros H0 H; inv H; [ | destruct H1; rewHeadTape_inv2; congruence | assumption ]).
-    all: specialize (rewHeadTrans_statesym H2) as (q' & H & [H3 | [H3 | H3]]). 
-    all: try match goal with
-             | [ H : isSpecStateSym ?q1 ?g, H' : isSpecStateSym ?q2 ?g |- _ ] => destruct H, H'; congruence
-             | [H : rewHeadTrans [?g1; _; _] [_; _; _], H1 : isSpecStateSym _ ?g1, H2 : isSpecStateSym _ ?g2 |- _] =>
-               apply rewHeadTrans_statesym1 in H; [ rewrite !isStateSym_isSpecStateSym in H; destruct H; exfalso; eauto| apply isStateSym_isSpecStateSym; eauto ]
-             | [H : rewHeadTrans [_; ?g1; _] [_; _; _], H1 : isSpecStateSym _ ?g1, H2 : isSpecStateSym _ ?g2 |- _] =>
-               apply rewHeadTrans_statesym2 in H; [ rewrite !isStateSym_isSpecStateSym in H; destruct H; exfalso; eauto| apply isStateSym_isSpecStateSym; eauto ]
-             | [H : rewHeadTrans [_; _; ?g1] [_; _; _], H1 : isSpecStateSym _ ?g1, H2 : isSpecStateSym _ ?g2 |- _] =>
-               apply rewHeadTrans_statesym3 in H; [ rewrite !isStateSym_isSpecStateSym in H; destruct H; exfalso; eauto| apply isStateSym_isSpecStateSym; eauto ]
-              end. 
-  Qed. 
-
-
-  (** *simulation proofs *)
-  Notation "s '≻' s'" := (sstep s = s') (at level 40). 
-
-  Lemma valid_reprConfig_unfold pred s q tp : (exists s', valid pred s s' /\ (forall s'', valid pred s s'' -> s'' = s') /\ (q, tp) ≃c s') <-> (exists ls qm rs, valid pred s (rev ls ++ [qm] ++ rs) /\ (forall s'', valid pred s s'' -> s'' = rev ls ++ [qm] ++ rs) /\ (q, tp) ≃c (ls, qm, rs)). 
-  Proof. 
-    unfold reprConfig. 
-    split.
-    - intros (s' & H & H' & (ls & qm & rs & -> & H1)). exists ls, qm, rs. eauto. 
-    - intros (ls & qm & rs & H1 & H2 & H3). exists (rev ls ++ [qm] ++ rs). split; [ | split].
-      + apply H1. 
-      + apply H2.
-      + exists ls, qm, rs. eauto. 
-  Qed. 
-
-  Lemma tapeToList_lcr sig (tp : tape sig) : tapeToList tp = rev (left tp) ++ (match current tp with Some a => [a] | _ => [] end) ++ right tp. 
-  Proof.
-    destruct tp; cbn. all: firstorder. 
-  Qed. 
-
-  Lemma sizeOfTape_lcr sig (tp : tape sig) : sizeOfTape tp = |left tp| + |right tp| + (if current tp then 1 else 0). 
-  Proof. 
-    unfold sizeOfTape. rewrite tapeToList_lcr. rewrite !app_length. rewrite rev_length. destruct current; cbn; lia. 
-  Qed. 
-
-  Lemma skipn_app3 (X : Type) i (a b : list X) : i <= |a| -> exists a', skipn i (a ++ b) = a' ++ b /\ a = firstn i a ++ a'. 
-  Proof. 
-    intros. exists (skipn i a). split.
-    + destruct (nat_eq_dec i (|a|)). 
-      - rewrite skipn_app. 2: apply e. rewrite utils.skipn_all2. 2: lia. now cbn. 
-      - apply skipn_app2.
-        * enough (|skipn i a| <> 0) by (destruct skipn; cbn in *; congruence). rewrite skipn_length. lia. 
-        * reflexivity. 
-    + now rewrite firstn_skipn. 
-  Qed. 
-
-  Lemma rewritesAt_rewHeadSim_rem_at_end i a b h1 h2 : rewritesAt rewHeadSim i (a ++ h1) (b ++ h2) -> i < |a| - 2 -> i < |b| - 2 -> rewritesAt rewHeadSim i a b. 
-  Proof. 
-    intros. unfold rewritesAt in *.
-    assert (i <= |a|) by lia. destruct (skipn_app3 h1 H2) as (a' & H3 & H4). rewrite H3 in H. 
-    assert (i <= |b|) by lia. destruct (skipn_app3 h2 H5) as (b' & H6 & H7). rewrite H6 in H. 
-    clear H2 H5.
-    rewrite <- firstn_skipn with (l := a) (n := i) in H4 at 1. apply app_inv_head in H4 as <-. 
-    rewrite <- firstn_skipn with (l := b) (n := i) in H7 at 1. apply app_inv_head in H7 as <-. 
-    specialize (skipn_length i a) as H7. specialize (skipn_length i b) as H8. 
-    remember (skipn i a) as l. do 3 (destruct l as [ | ? l] ; [cbn in H7; lia | ]). 
-    remember (skipn i b) as l'. do 3 (destruct l' as [ | ? l']; [cbn in H8; lia | ]). 
-    cbn in H. rewrite rewHeadSim_tail_invariant in H. apply H. 
-  Qed. 
-
-  Lemma rewritesAt_rewHeadTrans_add_at_end i a b h1 h2 : rewritesAt rewHeadTrans i a b -> rewritesAt rewHeadTrans i (a ++ h1) (b ++ h2).
-  Proof.
-    intros. unfold rewritesAt in *. inv H; symmetry in H0; symmetry in H1; repeat erewrite skipn_app2; eauto with trans; try congruence; cbn; eauto with trans.
-  Qed. 
-
-  Lemma rewritesAt_rewHeadHalt_add_at_end i a b h1 h2 : rewritesAt rewHeadHalt i a b -> rewritesAt rewHeadHalt i (a ++ h1) (b ++ h2).
-  Proof.
-    intros. unfold rewritesAt in *. inv H; symmetry in H0; symmetry in H1; repeat erewrite skipn_app2; eauto with trans; try congruence; cbn; eauto with trans.
-  Qed.
-
-  Lemma rewritesAt_rewHeadSim_add_at_end i a b h1 h2 : rewritesAt rewHeadSim i a b -> rewritesAt rewHeadSim i (a ++ h1) (b ++ h2).  
-  Proof. 
-    intros. inv H.
-    + constructor 1. now apply rewritesAt_rewHeadTrans_add_at_end. 
-    + constructor 2. now apply rewritesAt_rewHeadTape_add_at_end.  
-    + constructor 3. now apply rewritesAt_rewHeadHalt_add_at_end. 
-  Qed. 
-
-
-  (*a somewhat ugly but necessary lemma...*)
-  Lemma valid_rewHeadSim_center A B c d e f g A' B' c' d' e' f' g' : (valid rewHeadSim (A ++ [c; d; e; f; g] ++ B) (A' ++ [c'; d'; e'; f'; g'] ++ B') /\ |A| = |A'| /\ |B| = |B'|) <-> (valid rewHeadSim (A ++ [c; d]) (A' ++ [c'; d']) /\ valid rewHeadSim (f :: g :: B) (f' :: g' :: B') /\ rewHeadSim [c; d; e] [c'; d'; e'] /\ rewHeadSim [d; e; f] [d'; e'; f'] /\ rewHeadSim [e; f; g] [e'; f'; g']). 
-  Proof. 
-    split; intros. 
-    - destruct H as (H1 & H2 & H3). apply valid_iff in H1 as (H0 & H1).
-      repeat rewrite app_length in H0. cbn in H0. 
-      repeat split.
-      + apply valid_iff. split; [rewrite !app_length; cbn; lia | ].  
-        intros. eapply rewritesAt_rewHeadSim_rem_at_end. 
-        1: rewrite <- !app_assoc; cbn; eapply H1. 
-        1: repeat rewrite app_length in *; cbn in *; lia. 
-        all: repeat rewrite app_length in *; cbn in *; lia. 
-      + apply valid_iff. split; [cbn ; lia | ].
-        intros. specialize (H1 (i + |A| + 3)).
-        rewrite !app_length in H1. replace (i + ((|A|) + 3)) with ((3 + |A|) + i) in H1 by lia.
-        replace (A ++ [c; d; e; f; g] ++ B) with (A ++ [c; d; e] ++ f :: g :: B) in H1 by auto. 
-        replace (A' ++ [c'; d'; e'; f'; g'] ++ B') with (A' ++ [c'; d'; e'] ++ f' :: g' :: B') in H1 by auto. 
-        unfold rewritesAt in H1. 
-        rewrite !app_assoc in H1. 
-        rewrite !skipn_add  in H1. 2, 3: rewrite app_length; cbn; lia. 
-        apply H1. cbn in *; lia. 
-      + specialize (H1 (|A|)). unfold rewritesAt in H1. rewrite !skipn_app in H1. 2, 3: lia. 
-        cbn in H1. rewrite rewHeadSim_tail_invariant with (s1' := []) (s2' := []) in H1.
-        apply H1. rewrite app_length; cbn; lia. 
-      + specialize (H1 (S (|A|))). unfold rewritesAt in H1.
-        replace (A ++ [c; d; e; f; g] ++ B) with ((A ++ [c]) ++ [d; e; f; g] ++ B) in H1 by (rewrite <- app_assoc; now cbn). 
-        replace (A' ++ [c'; d'; e'; f'; g'] ++ B') with ((A' ++ [c']) ++ [d';e';f';g'] ++ B') in H1 by (rewrite <- app_assoc; now cbn). 
-        rewrite !skipn_app in H1. 2, 3: rewrite app_length; cbn; lia.
-        cbn in H1. rewrite rewHeadSim_tail_invariant with (s1' := []) (s2' := []) in H1.
-        apply H1. rewrite !app_length; cbn; lia. 
-      + specialize (H1 (S (S (|A|)))). unfold rewritesAt in H1.
-        replace (A ++ [c; d; e; f; g] ++ B) with ((A ++ [c;d]) ++ [e; f; g] ++ B) in H1 by (rewrite <- app_assoc; now cbn). 
-        replace (A' ++ [c'; d'; e'; f'; g'] ++ B') with ((A' ++ [c'; d']) ++ [e';f';g'] ++ B') in H1 by (rewrite <- app_assoc; now cbn). 
-        rewrite !skipn_app in H1. 2, 3: rewrite app_length; cbn; lia.
-        cbn in H1. rewrite rewHeadSim_tail_invariant with (s1' := []) (s2' := []) in H1.
-        apply H1. rewrite !app_length; cbn; lia.
-   - destruct H as (H1 & H2 & H3 & H4 & H5).
-     assert (|A| = |A'|). { apply valid_length_inv in H1. rewrite !app_length in H1; cbn in H1; lia. }
-     assert (|B| = |B'|). { apply valid_length_inv in H2. cbn in H2; lia. }
-     repeat split.
-     2, 3: assumption. 
-     apply valid_iff. split. 
-     + rewrite !app_length. cbn. lia. 
-     + intros. rewrite !app_length in H6; cbn in H6.
-       destruct (le_lt_dec (|A|) i); [destruct (le_lt_dec (|A| + 3) i) | ].
-       * (*rhs*) assert (exists j, i = (|A|) + 3 + j) as (j & ->) by (exists (i - (|A|) - 3); lia). 
-          replace (A ++ [c; d; e; f; g] ++ B) with (A ++ [c; d; e] ++ [f; g] ++ B) by now cbn.
-          replace (A' ++ [c'; d'; e'; f'; g'] ++ B') with (A' ++ [c';d';e'] ++ [f';g'] ++ B') by now cbn. 
-          unfold rewritesAt. rewrite app_assoc. setoid_rewrite app_assoc at 2.
-          rewrite !skipn_add.
-          2,3: rewrite app_length; now cbn.
-          cbn. apply valid_iff in H2 as (H2' & H2). apply H2.
-          cbn. lia. 
-      * (* middle*)
-        destruct (nat_eq_dec i (|A|)); [ | destruct (nat_eq_dec i (S (|A|)))]. 
-        ++ unfold rewritesAt. rewrite !skipn_app. 2,3:lia. 
-           cbn. now apply rewHeadSim_tail_invariant with (s1' := []) (s2' := []).
-        ++ replace (A ++ [c; d; e; f; g] ++ B) with (A ++ [c] ++ [d; e; f; g] ++ B) by now cbn.
-           replace (A' ++ [c'; d'; e'; f'; g'] ++ B') with (A' ++ [c'] ++ [d'; e'; f';g'] ++ B') by now cbn. 
-           unfold rewritesAt. rewrite app_assoc. setoid_rewrite app_assoc at 2.
-           rewrite !skipn_app. 2, 3: rewrite app_length; now cbn. 
-           now apply rewHeadSim_tail_invariant with (s1' := []) (s2' := []).
-       ++ assert (i = S (S (|A|))) by lia. clear n n0 l1 l0. 
-          replace (A ++ [c; d; e; f; g] ++ B) with (A ++ [c; d] ++ [e; f; g] ++ B) by now cbn.
-           replace (A' ++ [c'; d'; e'; f'; g'] ++ B') with (A' ++ [c'; d'] ++ [e'; f';g'] ++ B') by now cbn. 
-           unfold rewritesAt. rewrite app_assoc. setoid_rewrite app_assoc at 2.
-           rewrite !skipn_app. 2, 3: rewrite app_length; now cbn. 
-           now apply rewHeadSim_tail_invariant with (s1' := []) (s2' := []).
-    * (*lhs*)
-      apply valid_iff in H1 as (H1' & H1). specialize (H1 i). 
-      rewrite app_length in H1; cbn in H1. replace ((|A|) + 2 - 2) with (|A|) in H1 by lia.  
-      replace (A ++ [c; d; e; f; g] ++ B) with (A ++ [c; d] ++ [e; f; g] ++ B) by now cbn.
-      replace (A' ++ [c'; d'; e'; f'; g'] ++ B') with (A' ++ [c'; d'] ++ [e'; f';g'] ++ B') by now cbn.
-      rewrite app_assoc. setoid_rewrite app_assoc at 2. 
-      eapply rewritesAt_rewHeadSim_add_at_end. 
-      now apply H1. 
-  Qed. 
-
-  Lemma valid_rewHeadSim_conc_inv (X : Type) pred s' A B a b c d e  : valid (Sigma := X) pred (A ++ [a; b; c; d; e] ++ B) s' -> exists A' B' a' b' c' d' e', s' = A' ++ [a'; b'; c'; d'; e'] ++ B' /\ |A| = |A'| /\ |B|= |B'|. 
-  Proof. 
-    intros. apply valid_length_inv in H.
-    rewrite <-  (firstn_skipn (|A|) s'). rewrite <- (firstn_skipn 5 (skipn (|A|) s')). 
-    exists (firstn (|A|) s').
-    specialize (skipn_length (|A|) s') as H1. specialize (firstn_length (|A|) s') as H2. 
-    specialize (firstn_length (5) (skipn (|A|) s')) as H3.
-    specialize (skipn_length (5) (skipn (|A|) s')) as H4. 
-    rewrite H1 in H3, H4. clear H1. 
-    rewrite !app_length in H. cbn [Nat.add length] in H. 
-    assert (Init.Nat.min 5 (|s'| - |A|) = 5)  by lia. rewrite H0 in H3. clear H0. 
-    exists (skipn 5 (skipn (|A|) s')). 
-    remember (firstn 5 (skipn (|A|) s')) as l. 
-    do 5 (destruct l as [ | ? l]; [now cbn in H3 | ]). destruct l; [ | now cbn in H3]. 
-    exists x, x0, x1, x2, x3. 
-    repeat split.
-    - rewrite H2. lia.  
-    - rewrite H4. lia. 
-  Qed. 
-
-  Lemma app_fold (X : Type) (a b c d e: X) (l : list X) : a :: b :: c :: d :: e :: l = [a; b; c; d; e] ++ l. 
-  Proof. now cbn. Qed. 
-
-  Lemma E_rewrite_blank_rev w : valid rewHeadTape (rev (E (S (S w)))) (rev (E (S (S w)))).  
-  Proof. 
-    rewrite <- E_polarityFlip. apply tape_rewrite_symm1, E_rewrite_blank.
-  Qed. 
-
-  Lemma E_rewrite_blank_rev_unique w s : valid rewHeadTape (rev (E (S (S w)))) (rev (inr (inr |_|) :: s)) -> s = (E (S (w))). 
-  Proof. 
-    intros.
-    assert (valid rewHeadTape (polarityRev (E (S (S w)))) (polarityRev (map polarityFlipGamma (inr (inr |_|) :: s)))). 
-    { unfold polarityRev. rewrite E_polarityFlip. rewrite map_involution. 2: involution_simpl. apply H.  }
-    apply tape_rewrite_symm2 in H0.
-    cbn in H0. apply E_rewrite_blank_unique in H0. apply involution_invert_eqn2 with (a := s) (f:= (map polarityFlipGamma))  (b := E (S w)) in H0.
-    2: involution_simpl. now rewrite H0, E_polarityFlip. 
-  Qed. 
-
-  (** *automation for the simultation proofs *)
-
-  (*the rewrite rules expect polarities at the outer level in expressions with ! or !!.*)
-  (*This tactic pulls the polarities out such that eauto can deal with them. *)
-  (*parts of the goal need to be remembered so that we can add polarity annotations to blanks only in the premise or conclusion *)
-  Ltac help_polarity' dir H := repeat match type of H with
-                                  | context[inr (inr (Some (?p, ?σ)))] => replace (inr (inr (Some (p, σ)))) with (inr (A := States) (p ! (Some σ))) in H by now cbn
-                                  | context[inr (?p !! ?e)] => replace (inr (A := States) ((p !! e))) with (inr (A:= States) (p ! (Some e))) in H by now cbn
-                            end; match type of H with 
-                                 | context[inr (?p ! _)] => replace (inr (A := States) (inr (A := delim) |_|)) with (inr (A:= States) (p ! |_|)) in H by now cbn
-                                 | context[inr (inr |_|)] => replace (inr (A:= States) (inr (A := delim) |_|)) with (inr (A := States) (dir ! |_|)) in H by now cbn
-                                 end.
-
-  Ltac help_polarity dir :=
-    let H1' := fresh in let H1'' := fresh in let H2' := fresh in let H2'' := fresh in
-    match goal with | [ |- rewHeadSim ?H1 ?H2] => remember H1 as H1'' eqn:H1'; help_polarity' neutral H1';
-                                                 remember H2 as H2'' eqn:H2'; help_polarity' dir H2'; subst 
-    end. 
-
-                              
-  Ltac normalise_conf_string H := cbn in H;
-                                  try match type of H with
-                                  | context[((_) ++ [_]) ++ (inl _) :: _] => do 2 (rewrite <- app_assoc in H); cbn in H
-                                  | context[((_) ++ [_]) ++ _ :: (inl _) :: _] => rewrite <- app_assoc in H; cbn in H
-                                  end.
-  (*brings the goal into a form in which valid_rewHeadSim_center can be applied *)
-  (*precondition: the tape strings have been destructed such that there are at least two symbols available in each direction, both in premise and conclusion *)
-  Ltac normalise_conf_strings := match goal with
-                                 | [ |- valid rewHeadSim ?h1 ?h2 ] => let H1 := fresh in let H2 := fresh in
-                                                                     let H1' := fresh "Heqn" in let H2' := fresh "Heqn" in
-                                   remember h1 as H1 eqn:H1'; remember h2 as H2 eqn:H2';
-                                   normalise_conf_string H1'; normalise_conf_string H2';
-                                   subst H1 H2
-                                 end. 
-
-  Ltac normalise_conf_strings_in H := match type of H with
-                                 | valid rewHeadSim ?h1 ?h2 => let H1 := fresh in let H2 := fresh in
-                                                              let H1' := fresh "Heqn" in let H2' := fresh "Heqn" in
-                                   remember h1 as H1 eqn:H1'; remember h2 as H2 eqn:H2';
-                                   normalise_conf_string H1'; normalise_conf_string H2';
-                                   subst H1 H2
-                                 end. 
-
-
-  (*pull out polarities so that the tape add/remove lemmas can be applied to a representation assumption *)
-  Ltac repr_tape_normalise H := cbn in H;
-                                repeat match type of H with
-                                 | context [inr (inr (Some (?p, ?e)))] => replace (inr (inr (Some (p, e) : tapeSigma') : tapeSigma) : Gamma) with (inr (p ! (Some e : stateSigma)) : Gamma) in H by now cbn
-                                 | _ ≃t(?p, _) ?h => match h with context[inr (inr |_|)] => replace (inr (inr |_|) : Gamma) with (inr (p ! |_|) : Gamma) in H by now cbn end
-                                 end. 
-
-  (*try to eliminate variables from the goal in the context of niltapes, i.e. substitute eqns such as S n = z' so that we have a z' in the goal again *)
-  Ltac clear_niltape_eqns := repeat match goal with
-                                      | [ H : ?n = z' |- context[?n]] => rewrite !H
-                                      | [ H : S ?n = z' |- context[inr(inr |_|) :: E ?n]] => replace (inr (inr |_|) :: E n) with (E (S n)) by (now cbn); rewrite !H
-                                      | [H : S (S ?n) = z' |- context[inr(inr |_|) :: inr (inr |_|) :: E ?n]] => replace (inr (inr |_|) :: inr (inr |_|) :: E n) with (E (S (S n))) by (now cbn); rewrite !H
-                                      | [H : S ?n = z' |- context[rev(E ?n) ++ inr (inr |_|) :: ?h]] => replace (rev (E n) ++ (inr (inr |_|) : Gamma) :: h) with (rev (E (S n) ++ h)) by (cbn; try rewrite <- app_assoc; easy); rewrite !H
-                                      | [H : S ?n = z' |- context[(rev (E ?n)) ++ [inr (inr |_|)] ++ ?h]] => rewrite app_assoc
-                                      | [H : S ?n = z' |- context[(rev (E ?n) ++ [inr (inr |_|)]) ++ ?h]] => replace (rev (E n) ++ [inr (inr |_|) : Gamma]) with (rev (E (S n))) by (cbn; try rewrite <- app_assoc; easy); rewrite !H
-                                      end.
-
-
-   Ltac get_next_headsym' F := match type of F with [] ≃t(_, _) _ => constr:(|_| : stateSigma) 
-                                              | ?σ :: _ ≃t(_, _) _ => constr:(Some σ : stateSigma)
-                                        end.
-   Ltac is_half_blank F := match type of F with [] ≃t(_,_) _ => constr:(true) |  _ => constr:(false) end. 
-   (*get the next symbol which will be under the head *)
-   Ltac get_next_headsym F1 F2 csym wsym dir := match wsym with
-                                                | Some ?wsym => match dir with
-                                                                  | L => get_next_headsym' F1
-                                                                  | R => get_next_headsym' F2
-                                                                  | N => constr:(Some wsym : stateSigma)
-                                                                end
-                                                | None => match dir with
-                                                             | L => match csym with Some ?csym => get_next_headsym' F1
-                                                                              | _ => match is_half_blank F2 with true => get_next_headsym' F1
-                                                                                                           | false => constr:(|_| : stateSigma)
-                                                                                    end
-                                                                   end
-                                                             | R => match csym with Some ?csym => get_next_headsym' F2
-                                                                              | _ => match is_half_blank F1 with true => get_next_headsym' F2
-                                                                                                              | false =>  constr:(|_| : stateSigma)
-                                                                                    end
-                                                                  end
-                                                             | N => constr:(csym : stateSigma)
-                                                            end
-                                                 end. 
-
-   (*we take the view that a Turing machine *always* writes a symbol: either a blank, a new symbol or the current unchanged symbol *)
-   Ltac get_written_sym csym wsym := match wsym with
-                                     | Some ?wsym => constr:(Some wsym : stateSigma)
-                                     | None => match csym with
-                                              | Some ?csym => constr:(Some csym : stateSigma)
-                                              | None => constr:(|_| : stateSigma)
-                                              end
-                                       end.
-
-   (*input written sym as computed by get_written_sym *)
-   Ltac get_shift_direction wsym dir F1 F2 := match dir with
-                                              | L => match wsym with None => match is_half_blank F1 with true => constr:(neutral)
-                                                                                                  | false => constr:(positive)
-                                                                           end
-                                                               | Some _ => constr:(positive)
-                                                    end
-                                              | R => match wsym with None => match is_half_blank F2 with true => constr:(neutral)
-                                                                                                  | false => constr:(negative)
-                                                                           end
-                                                               | Some _ => constr:(negative)
-                                                    end
-                                              | N => constr:(neutral)
-                                             end. 
-
-   Ltac solve_stepsim_rewrite_valid Z := apply rewHead_tape_sim; revert Z; try clear_niltape_eqns; cbn; try rewrite <- !app_assoc; auto.
-   Ltac solve_stepsim_rewrite dir Z1 W1 :=
-     normalise_conf_strings; apply valid_rewHeadSim_center; repeat split;
-     [solve_stepsim_rewrite_valid Z1 | solve_stepsim_rewrite_valid W1 | | | ];
-     match goal with
-       | [_ :  _ |- rewHeadSim _ _ ] => help_polarity dir; eauto with trans
-     end. 
-
-   Ltac solve_stepsim_repr shiftdir Z2 W2 := exists shiftdir; cbn; (split; [now cbn | split; [apply Z2 | apply W2]]).
-
-  (*solves a stepsim goal for a given transition *)
-  (*F1: tape representation of left half; F2 : tape let a := representation of right half; H2 : transition equation *)
-  (*csym: optional current symbol; wsym: optional symbol to write; q': next state; dir: direction in which to move *)
-   Ltac solve_stepsim_goal' F1 F2 H2 csym wsym q' dir :=
-      let nextsym := get_next_headsym F1 F2 csym wsym dir in
-      let writesym := get_written_sym csym wsym in
-      let shiftdir := get_shift_direction writesym dir F1 F2 in 
-      (*init next tape halves *)
-      let Z1 := fresh "Z1" in let Z2 := fresh "Z2" in let Z3 := fresh "Z3" in 
-      let W1 := fresh "W1" in let W2 := fresh "W2" in let W3 := fresh "W3" in 
-      let h1 := fresh "h1" in let h2 := fresh "h2" in 
-      cbn in F1; cbn in F2;
-      repr_tape_normalise F1; repr_tape_normalise F2;
-      match dir with
-      | L => match type of F1 with
-            | [] ≃t(?p, ?w) _ => specialize (E_rewrite_blank_rev w) as Z1; specialize (proj1 (@niltape_repr w p)) as Z2; specialize (@E_rewrite_blank_rev_unique w) as Z3
-            | _ => destruct (tape_repr_rem_left F1) as (h1 & Z1 & Z3 & Z2);
-                  (*need to have one more head symbol in that case *)
-                  try match type of Z2 with _ :: ?l ≃t(_, _) _ => is_var l; destruct l end; destruct_tape_in_tidy Z2
-            end;
-            match writesym with
-            | Some ?sym => (destruct (tape_repr_add_right sym F2) as (h2 & W1 & W3 & W2)); [cbn; lia | destruct_tape_in_tidy W2]
-            | None => destruct (tape_repr_stay_right F2) as (h2 & W1 & W3 & W2); destruct_tape_in_tidy W2
-            end
-      | R => match type of F2 with
-              | [] ≃t(?p, ?w) _ => specialize (E_rewrite_blank w) as W1; specialize (proj1 (@niltape_repr w p)) as W2; specialize (@E_rewrite_blank_unique w) as W3
-              | _ => destruct (tape_repr_rem_right F2) as (h2 & W1 & W3 & W2);
-                    (*need to have one more head symbol in that case *)
-                    try match type of W2 with _ :: ?l ≃t(_, _) _ => is_var l; destruct l end; destruct_tape_in_tidy W2
-            end;
-            match writesym with
-              Some ?sym => destruct (tape_repr_add_left sym F1) as (h1 & Z1 & Z3 & Z2); [cbn; lia | destruct_tape_in_tidy Z2]
-            | None => destruct (tape_repr_stay_left F1) as (h1 & Z1 & Z3 & Z2); destruct_tape_in_tidy Z2
-          end
-      | N => destruct (tape_repr_stay_left F1) as (h1 & Z1 & Z3 & Z2); destruct_tape_in_tidy Z2;
-            destruct (tape_repr_stay_right F2) as (h2 & W1 & W3 & W2); destruct_tape_in_tidy W2
-      end;
-
-     (*instantiate existenials *) 
-     match type of Z2 with _ ≃t(_, _) ?h => exists h end;
-     exists (inl (q', nextsym) : Gamma);
-     match type of W2 with _ ≃t(_, _) ?h => exists h end;
-
-     (*solve goals*)
-     (split; [solve_stepsim_rewrite shiftdir Z1 W1 | split; [  | solve_stepsim_repr shiftdir Z2 W2]]).
-
-
-
-  (*solves a stepsim goal after the tapes have been suitably destructed *)
-  (*F1: tape representation of left half; F2 : tape representation of right half; H2 : transition equation *)
-  Ltac solve_stepsim_goal F1 F2 H2 := match type of H2 with
-                                        | trans (?q, ?mcsym) = (?q', (?mwsym, ?dir)) => solve_stepsim_goal' F1 F2 H2 mcsym mwsym q' dir
-                                           end. 
-
+  (*manual inversion lemmas for reasons of performance *)
   Lemma transSomeSome_inv1 q q0 m γ2 γ3 γ4 γ5 γ6 : transSomeSome q (inl (q0, m)) γ2 γ3 γ4 γ5 γ6 -> q0 = q /\ (exists σ, m = Some σ) /\ exists q' m', γ4 = inl (q', m') /\ transSomeSomeLeft q (inl (q, m)) γ2 γ3 (inl (q', m')) γ5 γ6.
   Proof.
     intros. inv H.
@@ -1017,51 +487,29 @@ Lemma transNoneNone_inv1 q q0 m γ2 γ3 γ4 γ5 γ6 : transNoneNone q (inl (q0, 
     + rewHeadTrans_inv2.
   Qed.
 
-  (*simplification tactic *)
-  Lemma prod_eq (X Y : Type) (a c : X) (b d : Y) : (a, b) = (c, d) -> a = c /\ b = d. 
-  Proof. intros; split; congruence. Qed. 
+  Ltac inv_eqn H := match type of H with
+                    | ?h = ?h' => is_var h; rewrite !H in *; clear H
+                    | ?h = ?h' => is_var h'; rewrite <- !H in *; clear H
+                    | _ => inv H
+                     end. 
 
-  Lemma alphabet_inv1 p m : p ! m = inr |_| -> m = |_|. 
-  Proof. destruct m; now cbn. Qed.
+  (*inversions for the second level of the hierarchy of predicates *)
+  Ltac inv_trans_prim := repeat match goal with
+        | [H : transSomeSome _ _ _ (inl (_, _)) _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transSomeSome_inv3 in H as (<- & (? & Heqn') & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
+        | [H : transSomeSome _ (inl (_, _)) _ _ _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transSomeSome_inv1 in H as (<- & (? & Heqn') & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
+        | [H : transSomeSome _ _ (inl (_, _)) _ _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transSomeSome_inv2 in H as (<- & (? & Heqn') & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
+        | [H : transSomeNone _ _ _ (inl (_, _)) _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transSomeNone_inv3 in H as (<- & (? & Heqn') & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
+        | [H : transSomeNone _ (inl (_, _)) _ _ _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transSomeNone_inv1 in H as (<- & (? & Heqn') & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
+        | [H : transSomeNone _ _ (inl (_, _)) _ _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transSomeNone_inv2 in H as (<- & (? & Heqn') & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
+        | [H : transNoneSome _ _ _ (inl (_, _)) _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transNoneSome_inv3 in H as (<- & Heqn' & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
+        | [H : transNoneSome _ (inl (_, _)) _ _ _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transNoneSome_inv1 in H as (<- & Heqn' & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
+        | [H : transNoneSome _ _ (inl (_, _)) _ _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transNoneSome_inv2 in H as (<- & Heqn' & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
+        | [H : transNoneNone _ _ _ (inl (_, _)) _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transNoneNone_inv3 in H as (<- & Heqn' & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
+        | [H : transNoneNone _ (inl (_, _)) _ _ _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transNoneNone_inv1 in H as (<- & Heqn' & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
+        | [H : transNoneNone _ _ (inl (_, _)) _ _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transNoneNone_inv2 in H as (<- & Heqn' & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
+      end.
 
-  Lemma alphabet_inv2 p1 σ p2 m : p1 !! σ = p2 ! m -> m = Some σ /\ p1 = p2. 
-  Proof. destruct m; cbn; unfold withPolaritySigma; intros; split; congruence. Qed. 
-
-  Lemma alphabet_inv3 p1 σ p2 m : p1 ! m = inr (Some (p2, σ)) -> p1 = p2 /\ m = Some σ. 
-  Proof. 
-    intros. unfold withPolarity, withPolaritySigma in H. destruct m; cbn in H; split; congruence.
-  Qed. 
-
-  Lemma alphabet_inv4 p1 m1 p2 m2 : p1 ! m1 = p2 ! m2 -> m1 = m2. 
-  Proof. unfold withPolarity, withPolaritySigma. destruct m1, m2;intros; congruence. Qed. 
-
-  Lemma alphabet_inv5 p1 σ1 p2 σ2 : p1 !! σ1 = p2 !! σ2 -> p1 = p2 /\ σ1 = σ2. 
-  Proof. unfold withPolaritySigma. intros; split; congruence. Qed.
-
-  Ltac simp_eqn := repeat match goal with
-                          | [H : ?p ! ?m = inr |_| |- _] => apply alphabet_inv1 in H
-                          | [H : inr |_| = ?p ! ?m |- _] => symmetry in H
-                          | [H : ?p1 !! ?σ = ?p2 ! ?m |- _] => apply alphabet_inv2 in H as (? & ?); clear H
-                          | [H : ?p2 ! ?m = ?p1 !! ?σ |- _] => symmetry in H
-                          | [H : ?p1 ! ?m = inr (Some (?p2, ?σ)) |- _] => apply alphabet_inv3 in H as (? & ?); clear H
-                          | [H : inr (Some (?p2, ?σ)) = ?p1 ! ?m |- _] => symmetry in H
-                          | [H : ?p1 ! ?m1 = ?p2 ! ?m2 |- _] => apply alphabet_inv4 in H as ?; clear H
-                          | [H : ?p1 !! ?m1 = ?p2 !! ?m2 |- _] => apply alphabet_inv5 in H as (? & ?); clear H
-                          | [H : trans (?a, ?b) = ?h1, H1 : trans (?a, ?b) = ?h2 |- _] => assert (h1 = h2) by congruence; clear H1
-                          | [H : (?a, ?b) = (?c, ?d) |- _] => specialize (prod_eq H) as (? & ?); clear H
-                          | [H : ?a = ?a |- _] => clear H
-                          | [H : ?a = _ |- _] => is_var a; rewrite H in *; clear H
-                          | [H : Some ?a = Some ?b |- _] => assert (a = b) by congruence; clear H
-                          | [H : inr ?a = inr ?b |- _] => assert (a = b) by congruence; clear H
-                          | [H : inl ?a = inl ?b |- _] => assert (a = b) by congruence; clear H
-                          | [H : ?h1 :: ?a = ?h2 :: ?b |- _] => assert (a = b) by congruence; assert (h1 = h2) by congruence; clear H
-                          | [H : rev ?A = _ |- _ ] => is_var A; apply involution_invert_eqn2 in H as ?; [ | involution_simpl]; clear H
-                          | [H : _ = rev ?A |- _ ] => is_var A; symmetry in H; apply involution_invert_eqn2 in H as ?; [ | involution_simpl]; clear H
-                          | [H : context[E (S _)] |- _] => cbn in H
-                          | [H : context[E (wo + _)] |- _] => cbn in H
-                    end; try congruence.
-
-  (*more inversions *)
+  (*third-level inversions *)
   Lemma transSomeSomeRight_inv1 q a b q' γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, positive)) -> transSomeSomeRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeLeftRight q q' (Some a) (Some b) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6. 
   Proof. intros. inv H0; simp_eqn. Qed. 
 
@@ -1176,77 +624,594 @@ Lemma transNoneNone_inv1 q q0 m γ2 γ3 γ4 γ5 γ6 : transNoneNone q (inl (q0, 
 
 
 
-  Ltac inv_eqn H := match type of H with
-                    | ?h = ?h' => is_var h; rewrite !H in *; clear H
-                    | ?h = ?h' => is_var h'; rewrite <- !H in *; clear H
-                    | _ => inv H
-                     end. 
-
-  Ltac inv_trans_prim := repeat match goal with
-        | [H : transSomeSome _ _ _ (inl (_, _)) _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transSomeSome_inv3 in H as (<- & (? & Heqn') & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
-        | [H : transSomeSome _ (inl (_, _)) _ _ _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transSomeSome_inv1 in H as (<- & (? & Heqn') & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
-        | [H : transSomeSome _ _ (inl (_, _)) _ _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transSomeSome_inv2 in H as (<- & (? & Heqn') & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
-        | [H : transSomeNone _ _ _ (inl (_, _)) _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transSomeNone_inv3 in H as (<- & (? & Heqn') & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
-        | [H : transSomeNone _ (inl (_, _)) _ _ _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transSomeNone_inv1 in H as (<- & (? & Heqn') & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
-        | [H : transSomeNone _ _ (inl (_, _)) _ _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transSomeNone_inv2 in H as (<- & (? & Heqn') & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
-        | [H : transNoneSome _ _ _ (inl (_, _)) _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transNoneSome_inv3 in H as (<- & Heqn' & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
-        | [H : transNoneSome _ (inl (_, _)) _ _ _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transNoneSome_inv1 in H as (<- & Heqn' & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
-        | [H : transNoneSome _ _ (inl (_, _)) _ _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transNoneSome_inv2 in H as (<- & Heqn' & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
-        | [H : transNoneNone _ _ _ (inl (_, _)) _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transNoneNone_inv3 in H as (<- & Heqn' & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
-        | [H : transNoneNone _ (inl (_, _)) _ _ _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transNoneNone_inv1 in H as (<- & Heqn' & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
-        | [H : transNoneNone _ _ (inl (_, _)) _ _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transNoneNone_inv2 in H as (<- & Heqn' & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn'
-      end.
-
   Ltac inv_trans_sec :=
-          repeat match goal with
-          | [H : trans (_, _) = (_, (_, neutral)) |- _] =>
-            repeat match goal with
-                    | [H2 : context[transSomeSomeLeft] |- _] => first [eapply transSomeSomeLeft_inv3 in H2; [ | apply H] | inv H2; now simp_eqn] 
-                    | [H2 : context[transSomeSomeRight] |- _] => first [eapply transSomeSomeRight_inv3 in H2; [ | apply H] | inv H2; now simp_eqn]
-                    | [H2 : context[transSomeSomeCenter] |- _] => first [eapply transSomeSomeCenter_inv3 in H2; [ | apply H] | inv H2; now simp_eqn]
-                    | [H2 : context[transNoneSomeLeft] |- _] => first [eapply transNoneSomeLeft_inv3 in H2; [ | apply H] | inv H2; now simp_eqn] 
-                    | [H2 : context[transNoneSomeRight] |- _] => first [eapply transNoneSomeRight_inv3 in H2; [ | apply H] | inv H2; now simp_eqn]
-                    | [H2 : context[transNoneSomeCenter] |- _] => first [eapply transNoneSomeCenter_inv3 in H2; [ | apply H] | inv H2; now simp_eqn]
-                    | [H2 : context[transSomeNoneLeft] |- _] => first [eapply transSomeNoneLeft_inv3 in H2; [ | apply H] | inv H2; now simp_eqn] 
-                    | [H2 : context[transSomeNoneRight] |- _] => first [eapply transSomeNoneRight_inv3 in H2; [ | apply H] | inv H2; now simp_eqn]
-                    | [H2 : context[transSomeNoneCenter] |- _] => first [eapply transSomeNoneCenter_inv3 in H2; [ | apply H] | inv H2; now simp_eqn]
-                    | [H2 : context[transNoneNoneLeft] |- _] => first [eapply transNoneNoneLeft_inv3 in H2; [ | apply H] | inv H2; now simp_eqn] 
-                    | [H2 : context[transNoneNoneRight] |- _] => first [eapply transNoneNoneRight_inv3 in H2; [ | apply H] | inv H2; now simp_eqn]
-                    | [H2 : context[transNoneNoneCenter] |- _] => first [eapply transNoneNoneCenter_inv3 in H2; [ | apply H] | inv H2; now simp_eqn]
-            end
-          | [H : trans (_, _) = (_, (_, negative)) |- _] =>
-            repeat match goal with
-                    | [H2 : context[transSomeSomeLeft] |- _] => first [eapply transSomeSomeLeft_inv2 in H2; [ | apply H] | inv H2; now simp_eqn] 
-                    | [H2 : context[transSomeSomeRight] |- _] => first [eapply transSomeSomeRight_inv2 in H2; [ | apply H] | inv H2; now simp_eqn]
-                    | [H2 : context[transSomeSomeCenter] |- _] => first [eapply transSomeSomeCenter_inv2 in H2; [ | apply H] | inv H2; now simp_eqn]
-                    | [H2 : context[transNoneSomeLeft] |- _] => first [eapply transNoneSomeLeft_inv2 in H2; [ | apply H] | inv H2; now simp_eqn] 
-                    | [H2 : context[transNoneSomeRight] |- _] => first [eapply transNoneSomeRight_inv2 in H2; [ | apply H] | inv H2; now simp_eqn]
-                    | [H2 : context[transNoneSomeCenter] |- _] => first [eapply transNoneSomeCenter_inv2 in H2; [ | apply H] | inv H2; now simp_eqn]
-                    | [H2 : context[transSomeNoneLeft] |- _] => first [eapply transSomeNoneLeft_inv2 in H2; [ | apply H] | inv H2; now simp_eqn] 
-                    | [H2 : context[transSomeNoneRight] |- _] => first [eapply transSomeNoneRight_inv2 in H2; [ | apply H] | inv H2; now simp_eqn]
-                    | [H2 : context[transSomeNoneCenter] |- _] => first [eapply transSomeNoneCenter_inv2 in H2; [ | apply H] | inv H2; now simp_eqn]
-                    | [H2 : context[transNoneNoneLeft] |- _] => first [eapply transNoneNoneLeft_inv2 in H2; [ | apply H] | inv H2; now simp_eqn] 
-                    | [H2 : context[transNoneNoneRight] |- _] => first [eapply transNoneNoneRight_inv2 in H2; [ | apply H] | inv H2; now simp_eqn]
-                    | [H2 : context[transNoneNoneCenter] |- _] => first [eapply transNoneNoneCenter_inv2 in H2; [ | apply H] | inv H2; now simp_eqn]
-            end
-          | [H : trans (_, _) = (_, (_, positive)) |- _] =>
-            repeat match goal with
-                   | [H2 : context[transSomeSomeLeft] |- _] => first [eapply transSomeSomeLeft_inv1 in H2; [ | apply H] | inv H2; now simp_eqn] 
-                   | [H2 : context[transSomeSomeRight] |- _] => first [eapply transSomeSomeRight_inv1 in H2; [ | apply H] | inv H2; now simp_eqn]
-                   | [H2 : context[transSomeSomeCenter] |- _] => first [eapply transSomeSomeCenter_inv1 in H2; [ | apply H] | inv H2; now simp_eqn]
-                   | [H2 : context[transNoneSomeLeft] |- _] => first [eapply transNoneSomeLeft_inv1 in H2; [ | apply H] | inv H2; now simp_eqn] 
-                   | [H2 : context[transNoneSomeRight] |- _] => first [eapply transNoneSomeRight_inv1 in H2; [ | apply H] | inv H2; now simp_eqn]
-                   | [H2 : context[transNoneSomeCenter] |- _] => first [eapply transNoneSomeCenter_inv1 in H2; [ | apply H] | inv H2; now simp_eqn]
-                   | [H2 : context[transSomeNoneLeft] |- _] => first [eapply transSomeNoneLeft_inv1 in H2; [ | apply H] | inv H2; now simp_eqn] 
-                   | [H2 : context[transSomeNoneRight] |- _] => first [eapply transSomeNoneRight_inv1 in H2; [ | apply H] | inv H2; now simp_eqn]
-                   | [H2 : context[transSomeNoneCenter] |- _] => first [eapply transSomeNoneCenter_inv1 in H2; [ | apply H] | inv H2; now simp_eqn]
-                   | [H2 : context[transNoneNoneLeft] |- _] => first [eapply transNoneNoneLeft_inv1 in H2; [ | apply H] | inv H2; now simp_eqn] 
-                   | [H2 : context[transNoneNoneRight] |- _] => first [eapply transNoneNoneRight_inv1 in H2; [ | apply H] | inv H2; now simp_eqn]
-                   | [H2 : context[transNoneNoneCenter] |- _] => first [eapply transNoneNoneCenter_inv1 in H2; [ | apply H] | inv H2; now simp_eqn]
-            end
+  repeat match goal with
+  | [H : trans (_, _) = (_, (_, neutral)) |- _] =>
+    repeat match goal with
+            | [H2 : context[transSomeSomeLeft] |- _] => first [eapply transSomeSomeLeft_inv3 in H2; [ | apply H] | inv H2; now simp_eqn] 
+            | [H2 : context[transSomeSomeRight] |- _] => first [eapply transSomeSomeRight_inv3 in H2; [ | apply H] | inv H2; now simp_eqn]
+            | [H2 : context[transSomeSomeCenter] |- _] => first [eapply transSomeSomeCenter_inv3 in H2; [ | apply H] | inv H2; now simp_eqn]
+            | [H2 : context[transNoneSomeLeft] |- _] => first [eapply transNoneSomeLeft_inv3 in H2; [ | apply H] | inv H2; now simp_eqn] 
+            | [H2 : context[transNoneSomeRight] |- _] => first [eapply transNoneSomeRight_inv3 in H2; [ | apply H] | inv H2; now simp_eqn]
+            | [H2 : context[transNoneSomeCenter] |- _] => first [eapply transNoneSomeCenter_inv3 in H2; [ | apply H] | inv H2; now simp_eqn]
+            | [H2 : context[transSomeNoneLeft] |- _] => first [eapply transSomeNoneLeft_inv3 in H2; [ | apply H] | inv H2; now simp_eqn] 
+            | [H2 : context[transSomeNoneRight] |- _] => first [eapply transSomeNoneRight_inv3 in H2; [ | apply H] | inv H2; now simp_eqn]
+            | [H2 : context[transSomeNoneCenter] |- _] => first [eapply transSomeNoneCenter_inv3 in H2; [ | apply H] | inv H2; now simp_eqn]
+            | [H2 : context[transNoneNoneLeft] |- _] => first [eapply transNoneNoneLeft_inv3 in H2; [ | apply H] | inv H2; now simp_eqn] 
+            | [H2 : context[transNoneNoneRight] |- _] => first [eapply transNoneNoneRight_inv3 in H2; [ | apply H] | inv H2; now simp_eqn]
+            | [H2 : context[transNoneNoneCenter] |- _] => first [eapply transNoneNoneCenter_inv3 in H2; [ | apply H] | inv H2; now simp_eqn]
+    end
+  | [H : trans (_, _) = (_, (_, negative)) |- _] =>
+    repeat match goal with
+            | [H2 : context[transSomeSomeLeft] |- _] => first [eapply transSomeSomeLeft_inv2 in H2; [ | apply H] | inv H2; now simp_eqn] 
+            | [H2 : context[transSomeSomeRight] |- _] => first [eapply transSomeSomeRight_inv2 in H2; [ | apply H] | inv H2; now simp_eqn]
+            | [H2 : context[transSomeSomeCenter] |- _] => first [eapply transSomeSomeCenter_inv2 in H2; [ | apply H] | inv H2; now simp_eqn]
+            | [H2 : context[transNoneSomeLeft] |- _] => first [eapply transNoneSomeLeft_inv2 in H2; [ | apply H] | inv H2; now simp_eqn] 
+            | [H2 : context[transNoneSomeRight] |- _] => first [eapply transNoneSomeRight_inv2 in H2; [ | apply H] | inv H2; now simp_eqn]
+            | [H2 : context[transNoneSomeCenter] |- _] => first [eapply transNoneSomeCenter_inv2 in H2; [ | apply H] | inv H2; now simp_eqn]
+            | [H2 : context[transSomeNoneLeft] |- _] => first [eapply transSomeNoneLeft_inv2 in H2; [ | apply H] | inv H2; now simp_eqn] 
+            | [H2 : context[transSomeNoneRight] |- _] => first [eapply transSomeNoneRight_inv2 in H2; [ | apply H] | inv H2; now simp_eqn]
+            | [H2 : context[transSomeNoneCenter] |- _] => first [eapply transSomeNoneCenter_inv2 in H2; [ | apply H] | inv H2; now simp_eqn]
+            | [H2 : context[transNoneNoneLeft] |- _] => first [eapply transNoneNoneLeft_inv2 in H2; [ | apply H] | inv H2; now simp_eqn] 
+            | [H2 : context[transNoneNoneRight] |- _] => first [eapply transNoneNoneRight_inv2 in H2; [ | apply H] | inv H2; now simp_eqn]
+            | [H2 : context[transNoneNoneCenter] |- _] => first [eapply transNoneNoneCenter_inv2 in H2; [ | apply H] | inv H2; now simp_eqn]
+    end
+  | [H : trans (_, _) = (_, (_, positive)) |- _] =>
+    repeat match goal with
+            | [H2 : context[transSomeSomeLeft] |- _] => first [eapply transSomeSomeLeft_inv1 in H2; [ | apply H] | inv H2; now simp_eqn] 
+            | [H2 : context[transSomeSomeRight] |- _] => first [eapply transSomeSomeRight_inv1 in H2; [ | apply H] | inv H2; now simp_eqn]
+            | [H2 : context[transSomeSomeCenter] |- _] => first [eapply transSomeSomeCenter_inv1 in H2; [ | apply H] | inv H2; now simp_eqn]
+            | [H2 : context[transNoneSomeLeft] |- _] => first [eapply transNoneSomeLeft_inv1 in H2; [ | apply H] | inv H2; now simp_eqn] 
+            | [H2 : context[transNoneSomeRight] |- _] => first [eapply transNoneSomeRight_inv1 in H2; [ | apply H] | inv H2; now simp_eqn]
+            | [H2 : context[transNoneSomeCenter] |- _] => first [eapply transNoneSomeCenter_inv1 in H2; [ | apply H] | inv H2; now simp_eqn]
+            | [H2 : context[transSomeNoneLeft] |- _] => first [eapply transSomeNoneLeft_inv1 in H2; [ | apply H] | inv H2; now simp_eqn] 
+            | [H2 : context[transSomeNoneRight] |- _] => first [eapply transSomeNoneRight_inv1 in H2; [ | apply H] | inv H2; now simp_eqn]
+            | [H2 : context[transSomeNoneCenter] |- _] => first [eapply transSomeNoneCenter_inv1 in H2; [ | apply H] | inv H2; now simp_eqn]
+            | [H2 : context[transNoneNoneLeft] |- _] => first [eapply transNoneNoneLeft_inv1 in H2; [ | apply H] | inv H2; now simp_eqn] 
+            | [H2 : context[transNoneNoneRight] |- _] => first [eapply transNoneNoneRight_inv1 in H2; [ | apply H] | inv H2; now simp_eqn]
+            | [H2 : context[transNoneNoneCenter] |- _] => first [eapply transNoneNoneCenter_inv1 in H2; [ | apply H] | inv H2; now simp_eqn]
+    end
+ end. 
+
+
+  (** *predicates for halting extensions *)
+  (*these are the rules that leave the configuration unchanged in a halting configuration *)
+  (*usual split according to position of state symbol *)
+
+  Inductive haltCenter : states -> transRule :=
+  | haltCenter1 q (m1 m2 : stateSigma) σ p : haltCenter q (inr (p ! m1)) (inl (q, Some σ)) (inr (p ! m2)) (inr (neutral ! m1)) (inl (q, Some σ)) (inr (neutral ! m2))
+  | haltCenter2 q (m : stateSigma) p : haltCenter q (inr (p ! m)) (inl (q, |_|)) (inr (p ! |_|)) (inr (neutral ! m)) (inl (q, |_|)) (inr (neutral ! |_|))
+  | haltCenter3 q (m : stateSigma) p : haltCenter q (inr (p ! |_|)) (inl (q, |_|)) (inr (p ! m)) (inr (neutral ! |_|)) (inl (q, |_|)) (inr (neutral ! m)). 
+
+  Hint Constructors haltCenter : trans.
+
+  Inductive haltRight : states -> transRule :=
+  | haltRight1 q (m1 m2 : stateSigma) σ p : haltRight q (inr (p ! m1)) (inr (p ! (Some σ))) (inl (q, m2)) (inr (neutral ! m1)) (inr (neutral ! (Some σ))) (inl (q, m2))
+  | haltRight2 q (m : stateSigma) p : haltRight q (inr (p ! |_|)) (inr (p ! |_|)) (inl (q, m)) (inr (neutral ! |_|)) (inr (neutral ! |_|)) (inl (q, m)). 
+
+  Hint Constructors haltRight : trans.
+
+  Inductive haltLeft : states -> transRule :=
+  | haltLeft1 q (m1 m2 : stateSigma) σ p : haltLeft q (inl (q, m1)) (inr (p ! (Some σ))) (inr (p ! m2)) (inl (q, m1)) (inr (neutral ! (Some σ))) (inr (neutral ! m2))
+  | haltLeft2 q (m : stateSigma) p : haltLeft q (inl (q, m)) (inr (p ! |_|)) (inr (p ! |_|)) (inl (q, m)) (inr (neutral ! |_|)) (inr (neutral ! |_|)). 
+
+  Hint Constructors haltLeft : trans.
+
+  Inductive rewHeadHalt : string Gamma -> string Gamma -> Prop :=
+  | rewHaltCenter q γ1 γ2 γ3 γ4 γ5 γ6 s1 s2 : halt q = true -> haltCenter q γ1 γ2 γ3 γ4 γ5 γ6 -> rewHeadHalt (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2)
+  | rewHaltLeft q γ1 γ2 γ3 γ4 γ5 γ6 s1 s2 : halt q = true -> haltLeft q γ1 γ2 γ3 γ4 γ5 γ6 -> rewHeadHalt (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2)
+  | rewHaltRight q γ1 γ2 γ3 γ4 γ5 γ6 s1 s2 : halt q = true -> haltRight q γ1 γ2 γ3 γ4 γ5 γ6 -> rewHeadHalt (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2). 
+
+  Hint Constructors rewHeadHalt : trans. 
+
+
+  Lemma rewHeadHalt_tail_invariant γ1 γ2 γ3 γ4 γ5 γ6 s1 s2 s1' s2' :
+    rewHeadHalt (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2) <-> rewHeadHalt (γ1 :: γ2 :: γ3 :: s1') (γ4 :: γ5 :: γ6 :: s2').
+  Proof. split; intros; inv H; eauto with trans. Qed. 
+
+  Lemma rewHeadHalt_append_invariant γ1 γ2 γ3 γ4 γ5 γ6 s1 s2 s1' s2' :
+    rewHeadHalt (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2) <-> rewHeadHalt (γ1 :: γ2 :: γ3 :: s1 ++ s1') (γ4 :: γ5 :: γ6 :: s2 ++ s2').
+  Proof. now apply rewHeadHalt_tail_invariant. Qed.
+
+  Ltac rewHeadHalt_inv := repeat match goal with
+        | [H : rewHeadHalt ?a _ |- _ ] => is_var a; destruct a; try (inv H; fail)
+        | [H : rewHeadHalt (_ :: ?a) _ |- _ ] => is_var a; destruct a; try (inv H; fail)
+        | [H : rewHeadHalt (_ :: _ :: ?a) _ |- _] => is_var a; destruct a; try (inv H; fail)
+        | [H : rewHeadHalt _ ?a |- _] => is_var a; destruct a; try (inv H; fail)
+        | [H : rewHeadHalt _ (_ :: ?a) |- _] => is_var a; destruct a; try (inv H; fail)
+        | [H : rewHeadHalt _ (_ :: _ :: ?a) |- _ ] => is_var a; destruct a; try (inv H ; fail)
+    end. 
+
+  Ltac rewHeadHalt_inv2 := repeat match goal with
+      | [H : context[rewHeadHalt] |- _] => inv H
+      | [H : context[haltLeft] |- _] => inv H
+      | [H : context[haltRight] |- _] => inv H
+      | [H : context[haltCenter] |- _] => inv H
+    end. 
+
+  (** * combined predicate for tape + states *)
+
+  Inductive rewHeadSim : string Gamma -> string Gamma -> Prop :=
+  | rewHeadTransC a b : rewHeadTrans a b -> rewHeadSim a b
+  | rewHeadTapeC a b : rewHeadTape a b -> rewHeadSim a b
+  | rewHeadHaltC a b : rewHeadHalt a b -> rewHeadSim a b. 
+
+  Hint Constructors rewHeadSim : trans. 
+
+  Ltac rewHeadSim_inv := repeat match goal with
+    | [H : rewHeadSim ?a _ |- _ ] => is_var a; destruct a; try (inv H; rewHeadTrans_inv; rewHeadTape_inv; fail)
+    | [H : rewHeadSim (_ :: ?a) _ |- _ ] => is_var a; destruct a; try (inv H;rewHeadTrans_inv; rewHeadTape_inv; fail)
+    | [H : rewHeadSim (_ :: _ :: ?a) _ |- _] => is_var a; destruct a; try (inv H;rewHeadTrans_inv; rewHeadTape_inv; fail)
+    | [H : rewHeadSim _ ?a |- _] => is_var a; destruct a; try (inv H;rewHeadTrans_inv; rewHeadTape_inv; fail)
+    | [H : rewHeadSim _ (_ :: ?a) |- _] => is_var a; destruct a; try (inv H;rewHeadTrans_inv; rewHeadTape_inv; fail)
+    | [H : rewHeadSim _ (_ :: _ :: ?a) |- _ ] => is_var a; destruct a; try (inv H ;rewHeadTrans_inv; rewHeadTape_inv; fail)
+end. 
+
+  Lemma rewHeadSim_tail_invariant γ1 γ2 γ3 γ4 γ5 γ6 s1 s2 s1' s2' :
+    rewHeadSim (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2) <-> rewHeadSim (γ1 :: γ2 :: γ3 :: s1') (γ4 :: γ5 :: γ6 :: s2').
+  Proof.
+    split; intros; inv H.
+    + constructor. now eapply rewHeadTrans_tail_invariant. 
+    + constructor 2. now eapply rewHeadTape_tail_invariant. 
+    + constructor 3. now eapply rewHeadHalt_tail_invariant. 
+    + constructor; now eapply rewHeadTrans_tail_invariant. 
+    + constructor 2; now eapply rewHeadTape_tail_invariant. 
+    + constructor 3; now eapply rewHeadHalt_tail_invariant. 
+  Qed.
+
+  Lemma rewHeadSim_append_invariant γ1 γ2 γ3 γ4 γ5 γ6 s1 s2 s1' s2' :
+    rewHeadSim (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2) <-> rewHeadSim (γ1 :: γ2 :: γ3 :: s1 ++ s1') (γ4 :: γ5 :: γ6 :: s2 ++ s2').
+  Proof. now apply rewHeadSim_tail_invariant. Qed.
+
+  Hint Constructors valid : trans. 
+
+  Definition isStateSym (γ : Gamma) := exists η, γ = inl η. 
+  Definition isSpecStateSym (q : states) (γ : Gamma) := exists m, γ = inl (q, m). 
+
+  Hint Unfold isStateSym.
+  Hint Unfold isSpecStateSym.
+
+  (** * a few simple facts about applicability of rules *)
+
+  Lemma rewHead_tape_sim s s' : valid rewHeadTape s s' -> valid rewHeadSim s s'. 
+  Proof. intros. induction H; eauto with trans. Qed. 
+
+  (*exactly one of the symbols for transitions or halting rewrites is a state symbol *)
+  Lemma rewHeadTrans_statesym1 γ1 γ2 γ3 γ4 γ5 γ6 : rewHeadTrans [γ1; γ2; γ3] [γ4; γ5; γ6] -> isStateSym γ1 -> not (isStateSym γ2) /\ not (isStateSym γ3).
+  Proof. unfold isStateSym. intros. destruct H0; split; intros []; rewHeadTrans_inv2; congruence. Qed. 
+
+  Lemma rewHeadTrans_statesym2 γ1 γ2 γ3 γ4 γ5 γ6 : rewHeadTrans [γ1; γ2; γ3] [γ4; γ5; γ6] -> isStateSym γ2 -> not (isStateSym γ1) /\ not (isStateSym γ3).
+  Proof. unfold isStateSym. intros. destruct H0; split; intros []; rewHeadTrans_inv2; congruence. Qed.
+
+  Lemma rewHeadTrans_statesym3 γ1 γ2 γ3 γ4 γ5 γ6 : rewHeadTrans [γ1; γ2; γ3] [γ4; γ5; γ6] -> isStateSym γ3 -> not (isStateSym γ1) /\ not (isStateSym γ2).
+  Proof. unfold isStateSym. intros. destruct H0; split; intros []; rewHeadTrans_inv2; congruence. Qed.
+
+  Lemma rewHeadHalt_statesym1 γ1 γ2 γ3 γ4 γ5 γ6 : rewHeadHalt [γ1; γ2; γ3] [γ4; γ5; γ6] -> isStateSym γ1 -> not (isStateSym γ2) /\ not (isStateSym γ3).
+  Proof. unfold isStateSym. intros. destruct H0; split; intros []; rewHeadHalt_inv2; congruence. Qed. 
+
+  Lemma rewHeadHalt_statesym2 γ1 γ2 γ3 γ4 γ5 γ6 : rewHeadHalt [γ1; γ2; γ3] [γ4; γ5; γ6] -> isStateSym γ2 -> not (isStateSym γ1) /\ not (isStateSym γ3).
+  Proof. unfold isStateSym. intros. destruct H0; split; intros []; rewHeadHalt_inv2; congruence. Qed.
+
+  Lemma rewHeadHalt_statesym3 γ1 γ2 γ3 γ4 γ5 γ6 : rewHeadHalt [γ1; γ2; γ3] [γ4; γ5; γ6] -> isStateSym γ3 -> not (isStateSym γ1) /\ not (isStateSym γ2).
+  Proof. unfold isStateSym. intros. destruct H0; split; intros []; rewHeadHalt_inv2; congruence. Qed.
+
+  Lemma rewHeadTrans_statesym γ1 γ2 γ3 γ4 γ5 γ6 : rewHeadTrans [γ1; γ2; γ3] [γ4; γ5; γ6] -> exists q, halt q = false /\ (isSpecStateSym q γ1 \/ isSpecStateSym q γ2 \/ isSpecStateSym q γ3). 
+  Proof. unfold isSpecStateSym. intros. rewHeadTrans_inv2; exists q; eauto. Qed. 
+
+  Lemma rewHeadHalt_statesym γ1 γ2 γ3 γ4 γ5 γ6 : rewHeadHalt [γ1; γ2; γ3] [γ4; γ5; γ6] -> exists q, halt q = true /\ (isSpecStateSym q γ1 \/ isSpecStateSym q γ2 \/ isSpecStateSym q γ3). 
+  Proof. unfold isSpecStateSym. intros. rewHeadHalt_inv2; exists q; eauto. Qed. 
+
+  (* string representing a tape half cannot contain a state symbol *)
+  Lemma rewHeadTrans_tape' u h h' p w: u ≃t(p, w) h -> rewHeadSim h h' -> rewHeadTape h h'. 
+  Proof. 
+    intros. inv H0.
+    + do 3 (destruct h; [try now inv H1 | ]). do 3 (destruct h'; [try now inv H1 | ]). 
+      apply rewHeadTrans_tail_invariant with (s1' := []) (s2' := []) in H1. 
+      apply rewHeadTrans_statesym in H1. specialize (tape_repr_inv12 H) as H2.
+      destruct H1 as (q & _ & [(x & -> ) | [(x & ->) | (x & ->)]]). all: destruct (H2 (inl (q, x))); [ eauto | congruence].  
+    + apply H1.  
+    + rewHeadHalt_inv. apply rewHeadHalt_tail_invariant with (s1' := []) (s2' := []) in H1.
+      apply rewHeadHalt_statesym in H1. specialize (tape_repr_inv12 H) as H2.
+      destruct H1 as (q & _ & [(x & -> ) | [(x & ->) | (x & ->)]]). all: destruct (H2 (inl (q, x))); [ eauto | congruence].
+  Qed. 
+
+  Lemma rewHeadSim_tape u h h' p w : u ≃t(p, w) h -> valid rewHeadSim h h' -> valid rewHeadTape h h'. 
+  Proof. 
+    intros. revert u w H. induction H0; intros. 
+    - eauto with trans. 
+    - constructor 2. 2: assumption. clear IHvalid.
+      do 2 (destruct a; destruct b; try now cbn in H; try now inv H0; eauto with trans).
+    - constructor 3.
+      + destruct_tape. destruct a; discr_tape. discr_tape. 
+        * destruct_tape_in_tidy H1. destruct w.
+          -- apply valid_length_inv in H0.
+             do 3 (destruct b; try now cbn in H0). repeat constructor.
+          -- apply IHvalid with (u := []) (w0 := w). apply niltape_repr. 
+        * apply tape_repr_step in H1. now apply IHvalid with (u := u) (w := w).
+      + now eapply rewHeadTrans_tape'.
+  Qed. 
+
+  Lemma rewHeadSim_tape_polarityRev u h h' p w : u ≃t(p, w) h -> valid rewHeadSim (polarityRev h) (polarityRev h') -> valid rewHeadTape (polarityRev h) (polarityRev h'). 
+  Proof. 
+    intros.
+    (*this does hold because of the used alphabet, but isn't straightforward to prove *)
+    (*main problem: need inductive proof because of the possible mixing of types of rewrite rules, but the rev does make that difficult *)
+    (*possible solution: define valid predicate that appends, i.e. validRev *)
+  Admitted. 
+
+  Lemma isStateSym_isSpecStateSym γ: isStateSym γ <-> exists q, isSpecStateSym q γ. 
+  Proof.  
+    split.
+    - intros ([q m] & ?). eauto. 
+    - intros (q & []). eauto. 
+  Qed. 
+
+  (** *TODO: doesn't work*)
+  (* Hint Resolve isStateSym_isSpecStateSym.  *)
+
+  (*if we are not in a halting state, but have a state symbol, the rewrite must be due to a transition rule *)
+  Lemma rewHeadSim_trans q γ1 γ2 γ3 γ4 γ5 γ6 : (isSpecStateSym q γ1 \/ isSpecStateSym q γ2 \/ isSpecStateSym q γ3) -> halt q = false -> rewHeadSim [γ1; γ2; γ3] [γ4; γ5; γ6] -> rewHeadTrans [γ1; γ2; γ3] [γ4; γ5; γ6]. 
+  Proof. 
+    intros [H1 | [H1 | H1]]; (intros H0 H; inv H; [assumption | destruct H1; rewHeadTape_inv2; congruence | ]).
+    all: specialize (rewHeadHalt_statesym H2) as (q' & H & [H3 | [H3 | H3]]). 
+    all: try match goal with
+             | [ H : isSpecStateSym ?q1 ?g, H' : isSpecStateSym ?q2 ?g |- _ ] => destruct H, H'; congruence
+             | [H : rewHeadHalt [?g1; _; _] [_; _; _], H1 : isSpecStateSym _ ?g1, H2 : isSpecStateSym _ ?g2 |- _] =>
+               apply rewHeadHalt_statesym1 in H; [ rewrite !isStateSym_isSpecStateSym in H; destruct H; exfalso; eauto| apply isStateSym_isSpecStateSym; eauto ]
+             | [H : rewHeadHalt [_; ?g1; _] [_; _; _], H1 : isSpecStateSym _ ?g1, H2 : isSpecStateSym _ ?g2 |- _] =>
+               apply rewHeadHalt_statesym2 in H; [ rewrite !isStateSym_isSpecStateSym in H; destruct H; exfalso; eauto| apply isStateSym_isSpecStateSym; eauto ]
+             | [H : rewHeadHalt [_; _; ?g1] [_; _; _], H1 : isSpecStateSym _ ?g1, H2 : isSpecStateSym _ ?g2 |- _] =>
+               apply rewHeadHalt_statesym3 in H; [ rewrite !isStateSym_isSpecStateSym in H; destruct H; exfalso; eauto| apply isStateSym_isSpecStateSym; eauto ]
+              end. 
+  Qed. 
+
+  (*if we are in a halting state and have a state symbol, the rewrite must be due to a halting rule *)
+  Lemma rewHeadSim_halt q γ1 γ2 γ3 γ4 γ5 γ6 : (isSpecStateSym q γ1 \/ isSpecStateSym q γ2 \/ isSpecStateSym q γ3) -> halt q = true -> rewHeadSim [γ1; γ2; γ3] [γ4; γ5; γ6] -> rewHeadHalt [γ1; γ2; γ3] [γ4; γ5; γ6]. 
+  Proof. 
+    intros [H1 | [H1 | H1]]; (intros H0 H; inv H; [ | destruct H1; rewHeadTape_inv2; congruence | assumption ]).
+    all: specialize (rewHeadTrans_statesym H2) as (q' & H & [H3 | [H3 | H3]]). 
+    all: try match goal with
+             | [ H : isSpecStateSym ?q1 ?g, H' : isSpecStateSym ?q2 ?g |- _ ] => destruct H, H'; congruence
+             | [H : rewHeadTrans [?g1; _; _] [_; _; _], H1 : isSpecStateSym _ ?g1, H2 : isSpecStateSym _ ?g2 |- _] =>
+               apply rewHeadTrans_statesym1 in H; [ rewrite !isStateSym_isSpecStateSym in H; destruct H; exfalso; eauto| apply isStateSym_isSpecStateSym; eauto ]
+             | [H : rewHeadTrans [_; ?g1; _] [_; _; _], H1 : isSpecStateSym _ ?g1, H2 : isSpecStateSym _ ?g2 |- _] =>
+               apply rewHeadTrans_statesym2 in H; [ rewrite !isStateSym_isSpecStateSym in H; destruct H; exfalso; eauto| apply isStateSym_isSpecStateSym; eauto ]
+             | [H : rewHeadTrans [_; _; ?g1] [_; _; _], H1 : isSpecStateSym _ ?g1, H2 : isSpecStateSym _ ?g2 |- _] =>
+               apply rewHeadTrans_statesym3 in H; [ rewrite !isStateSym_isSpecStateSym in H; destruct H; exfalso; eauto| apply isStateSym_isSpecStateSym; eauto ]
+              end. 
+  Qed. 
+
+  (** *a few more technical facts regarding rewrites *)
+
+  Lemma valid_reprConfig_unfold pred s q tp : (exists s', valid pred s s' /\ (forall s'', valid pred s s'' -> s'' = s') /\ (q, tp) ≃c s') <-> (exists ls qm rs, valid pred s (rev ls ++ [qm] ++ rs) /\ (forall s'', valid pred s s'' -> s'' = rev ls ++ [qm] ++ rs) /\ (q, tp) ≃c (ls, qm, rs)). 
+  Proof. 
+    unfold reprConfig. 
+    split.
+    - intros (s' & H & H' & (ls & qm & rs & -> & H1)). exists ls, qm, rs. eauto. 
+    - intros (ls & qm & rs & H1 & H2 & H3). exists (rev ls ++ [qm] ++ rs). split; [ | split].
+      + apply H1. 
+      + apply H2.
+      + exists ls, qm, rs. eauto. 
+  Qed. 
+
+  Lemma rewritesAt_rewHeadSim_rem_at_end i a b h1 h2 : rewritesAt rewHeadSim i (a ++ h1) (b ++ h2) -> i < |a| - 2 -> i < |b| - 2 -> rewritesAt rewHeadSim i a b. 
+  Proof. 
+    intros. unfold rewritesAt in *.
+    assert (i <= |a|) by lia. destruct (skipn_app3 h1 H2) as (a' & H3 & H4). rewrite H3 in H. 
+    assert (i <= |b|) by lia. destruct (skipn_app3 h2 H5) as (b' & H6 & H7). rewrite H6 in H. 
+    clear H2 H5.
+    rewrite <- firstn_skipn with (l := a) (n := i) in H4 at 1. apply app_inv_head in H4 as <-. 
+    rewrite <- firstn_skipn with (l := b) (n := i) in H7 at 1. apply app_inv_head in H7 as <-. 
+    specialize (skipn_length i a) as H7. specialize (skipn_length i b) as H8. 
+    remember (skipn i a) as l. do 3 (destruct l as [ | ? l] ; [cbn in H7; lia | ]). 
+    remember (skipn i b) as l'. do 3 (destruct l' as [ | ? l']; [cbn in H8; lia | ]). 
+    cbn in H. rewrite rewHeadSim_tail_invariant in H. apply H. 
+  Qed. 
+
+  Lemma rewritesAt_rewHeadTrans_add_at_end i a b h1 h2 : rewritesAt rewHeadTrans i a b -> rewritesAt rewHeadTrans i (a ++ h1) (b ++ h2).
+  Proof.
+    intros. unfold rewritesAt in *. inv H; symmetry in H0; symmetry in H1; repeat erewrite skipn_app2; eauto with trans; try congruence; cbn; eauto with trans.
+  Qed. 
+
+  Lemma rewritesAt_rewHeadHalt_add_at_end i a b h1 h2 : rewritesAt rewHeadHalt i a b -> rewritesAt rewHeadHalt i (a ++ h1) (b ++ h2).
+  Proof.
+    intros. unfold rewritesAt in *. inv H; symmetry in H0; symmetry in H1; repeat erewrite skipn_app2; eauto with trans; try congruence; cbn; eauto with trans.
+  Qed.
+
+  Lemma rewritesAt_rewHeadSim_add_at_end i a b h1 h2 : rewritesAt rewHeadSim i a b -> rewritesAt rewHeadSim i (a ++ h1) (b ++ h2).  
+  Proof. 
+    intros. inv H.
+    + constructor 1. now apply rewritesAt_rewHeadTrans_add_at_end. 
+    + constructor 2. now apply rewritesAt_rewHeadTape_add_at_end.  
+    + constructor 3. now apply rewritesAt_rewHeadHalt_add_at_end. 
+  Qed. 
+
+  (*a somewhat ugly but necessary lemma...*)
+  (*this enables us to justify a configuration string rewrite by rewriting the two tape halves and then apply three rules at the center *)
+  Lemma valid_rewHeadSim_center A B c d e f g A' B' c' d' e' f' g' : (valid rewHeadSim (A ++ [c; d; e; f; g] ++ B) (A' ++ [c'; d'; e'; f'; g'] ++ B') /\ |A| = |A'| /\ |B| = |B'|) <-> (valid rewHeadSim (A ++ [c; d]) (A' ++ [c'; d']) /\ valid rewHeadSim (f :: g :: B) (f' :: g' :: B') /\ rewHeadSim [c; d; e] [c'; d'; e'] /\ rewHeadSim [d; e; f] [d'; e'; f'] /\ rewHeadSim [e; f; g] [e'; f'; g']). 
+  Proof. 
+    split; intros. 
+    - destruct H as (H1 & H2 & H3). apply valid_iff in H1 as (H0 & H1).
+      repeat rewrite app_length in H0. cbn in H0. 
+      repeat split.
+      + apply valid_iff. split; [rewrite !app_length; cbn; lia | ].  
+        intros. eapply rewritesAt_rewHeadSim_rem_at_end. 
+        1: rewrite <- !app_assoc; cbn; eapply H1. 
+        1: repeat rewrite app_length in *; cbn in *; lia. 
+        all: repeat rewrite app_length in *; cbn in *; lia. 
+      + apply valid_iff. split; [cbn ; lia | ].
+        intros. specialize (H1 (i + |A| + 3)).
+        rewrite !app_length in H1. replace (i + ((|A|) + 3)) with ((3 + |A|) + i) in H1 by lia.
+        replace (A ++ [c; d; e; f; g] ++ B) with (A ++ [c; d; e] ++ f :: g :: B) in H1 by auto. 
+        replace (A' ++ [c'; d'; e'; f'; g'] ++ B') with (A' ++ [c'; d'; e'] ++ f' :: g' :: B') in H1 by auto. 
+        unfold rewritesAt in H1. 
+        rewrite !app_assoc in H1. 
+        rewrite !skipn_add  in H1. 2, 3: rewrite app_length; cbn; lia. 
+        apply H1. cbn in *; lia. 
+      + specialize (H1 (|A|)). unfold rewritesAt in H1. rewrite !skipn_app in H1. 2, 3: lia. 
+        cbn in H1. rewrite rewHeadSim_tail_invariant with (s1' := []) (s2' := []) in H1.
+        apply H1. rewrite app_length; cbn; lia. 
+      + specialize (H1 (S (|A|))). unfold rewritesAt in H1.
+        replace (A ++ [c; d; e; f; g] ++ B) with ((A ++ [c]) ++ [d; e; f; g] ++ B) in H1 by (rewrite <- app_assoc; now cbn). 
+        replace (A' ++ [c'; d'; e'; f'; g'] ++ B') with ((A' ++ [c']) ++ [d';e';f';g'] ++ B') in H1 by (rewrite <- app_assoc; now cbn). 
+        rewrite !skipn_app in H1. 2, 3: rewrite app_length; cbn; lia.
+        cbn in H1. rewrite rewHeadSim_tail_invariant with (s1' := []) (s2' := []) in H1.
+        apply H1. rewrite !app_length; cbn; lia. 
+      + specialize (H1 (S (S (|A|)))). unfold rewritesAt in H1.
+        replace (A ++ [c; d; e; f; g] ++ B) with ((A ++ [c;d]) ++ [e; f; g] ++ B) in H1 by (rewrite <- app_assoc; now cbn). 
+        replace (A' ++ [c'; d'; e'; f'; g'] ++ B') with ((A' ++ [c'; d']) ++ [e';f';g'] ++ B') in H1 by (rewrite <- app_assoc; now cbn). 
+        rewrite !skipn_app in H1. 2, 3: rewrite app_length; cbn; lia.
+        cbn in H1. rewrite rewHeadSim_tail_invariant with (s1' := []) (s2' := []) in H1.
+        apply H1. rewrite !app_length; cbn; lia.
+   - destruct H as (H1 & H2 & H3 & H4 & H5).
+     assert (|A| = |A'|). { apply valid_length_inv in H1. rewrite !app_length in H1; cbn in H1; lia. }
+     assert (|B| = |B'|). { apply valid_length_inv in H2. cbn in H2; lia. }
+     repeat split.
+     2, 3: assumption. 
+     apply valid_iff. split. 
+     + rewrite !app_length. cbn. lia. 
+     + intros. rewrite !app_length in H6; cbn in H6.
+       destruct (le_lt_dec (|A|) i); [destruct (le_lt_dec (|A| + 3) i) | ].
+       * (*rhs*) assert (exists j, i = (|A|) + 3 + j) as (j & ->) by (exists (i - (|A|) - 3); lia). 
+          replace (A ++ [c; d; e; f; g] ++ B) with (A ++ [c; d; e] ++ [f; g] ++ B) by now cbn.
+          replace (A' ++ [c'; d'; e'; f'; g'] ++ B') with (A' ++ [c';d';e'] ++ [f';g'] ++ B') by now cbn. 
+          unfold rewritesAt. rewrite app_assoc. setoid_rewrite app_assoc at 2.
+          rewrite !skipn_add.
+          2,3: rewrite app_length; now cbn.
+          cbn. apply valid_iff in H2 as (H2' & H2). apply H2.
+          cbn. lia. 
+      * (* middle*)
+        destruct (nat_eq_dec i (|A|)); [ | destruct (nat_eq_dec i (S (|A|)))]. 
+        ++ unfold rewritesAt. rewrite !skipn_app. 2,3:lia. 
+           cbn. now apply rewHeadSim_tail_invariant with (s1' := []) (s2' := []).
+        ++ replace (A ++ [c; d; e; f; g] ++ B) with (A ++ [c] ++ [d; e; f; g] ++ B) by now cbn.
+           replace (A' ++ [c'; d'; e'; f'; g'] ++ B') with (A' ++ [c'] ++ [d'; e'; f';g'] ++ B') by now cbn. 
+           unfold rewritesAt. rewrite app_assoc. setoid_rewrite app_assoc at 2.
+           rewrite !skipn_app. 2, 3: rewrite app_length; now cbn. 
+           now apply rewHeadSim_tail_invariant with (s1' := []) (s2' := []).
+       ++ assert (i = S (S (|A|))) by lia. clear n n0 l1 l0. 
+          replace (A ++ [c; d; e; f; g] ++ B) with (A ++ [c; d] ++ [e; f; g] ++ B) by now cbn.
+           replace (A' ++ [c'; d'; e'; f'; g'] ++ B') with (A' ++ [c'; d'] ++ [e'; f';g'] ++ B') by now cbn. 
+           unfold rewritesAt. rewrite app_assoc. setoid_rewrite app_assoc at 2.
+           rewrite !skipn_app. 2, 3: rewrite app_length; now cbn. 
+           now apply rewHeadSim_tail_invariant with (s1' := []) (s2' := []).
+    * (*lhs*)
+      apply valid_iff in H1 as (H1' & H1). specialize (H1 i). 
+      rewrite app_length in H1; cbn in H1. replace ((|A|) + 2 - 2) with (|A|) in H1 by lia.  
+      replace (A ++ [c; d; e; f; g] ++ B) with (A ++ [c; d] ++ [e; f; g] ++ B) by now cbn.
+      replace (A' ++ [c'; d'; e'; f'; g'] ++ B') with (A' ++ [c'; d'] ++ [e'; f';g'] ++ B') by now cbn.
+      rewrite app_assoc. setoid_rewrite app_assoc at 2. 
+      eapply rewritesAt_rewHeadSim_add_at_end. 
+      now apply H1. 
+  Qed. 
+
+  (*basically the converse: if we start with a string of such a form, then the resulting string will also have ths form *)
+  Lemma valid_rewHeadSim_conc_inv (X : Type) pred s' A B a b c d e  : valid (Sigma := X) pred (A ++ [a; b; c; d; e] ++ B) s' -> exists A' B' a' b' c' d' e', s' = A' ++ [a'; b'; c'; d'; e'] ++ B' /\ |A| = |A'| /\ |B|= |B'|. 
+  Proof. 
+    intros. apply valid_length_inv in H.
+    rewrite <-  (firstn_skipn (|A|) s'). rewrite <- (firstn_skipn 5 (skipn (|A|) s')). 
+    exists (firstn (|A|) s').
+    specialize (skipn_length (|A|) s') as H1. specialize (firstn_length (|A|) s') as H2. 
+    specialize (firstn_length (5) (skipn (|A|) s')) as H3.
+    specialize (skipn_length (5) (skipn (|A|) s')) as H4. 
+    rewrite H1 in H3, H4. clear H1. 
+    rewrite !app_length in H. cbn [Nat.add length] in H. 
+    assert (Init.Nat.min 5 (|s'| - |A|) = 5)  by lia. rewrite H0 in H3. clear H0. 
+    exists (skipn 5 (skipn (|A|) s')). 
+    remember (firstn 5 (skipn (|A|) s')) as l. 
+    do 5 (destruct l as [ | ? l]; [now cbn in H3 | ]). destruct l; [ | now cbn in H3]. 
+    exists x, x0, x1, x2, x3. 
+    repeat split.
+    - rewrite H2. lia.  
+    - rewrite H4. lia. 
+  Qed. 
+
+  Lemma app_fold (X : Type) (a b c d e: X) (l : list X) : a :: b :: c :: d :: e :: l = [a; b; c; d; e] ++ l. 
+  Proof. now cbn. Qed. 
+
+
+  (** *automation for the simultation proofs *)
+
+  (*the rewrite rules expect polarities at the outer level in expressions with ! or !!.*)
+  (*This tactic pulls the polarities out such that eauto can deal with them. *)
+  (*parts of the goal need to be remembered so that we can add polarity annotations to blanks only in the premise or conclusion *)
+  Ltac help_polarity' dir H := repeat match type of H with
+                                  | context[inr (inr (Some (?p, ?σ)))] => replace (inr (inr (Some (p, σ)))) with (inr (A := States) (p ! (Some σ))) in H by now cbn
+                                  | context[inr (?p !! ?e)] => replace (inr (A := States) ((p !! e))) with (inr (A:= States) (p ! (Some e))) in H by now cbn
+                            end; match type of H with 
+                                 | context[inr (?p ! _)] => replace (inr (A := States) (inr (A := delim) |_|)) with (inr (A:= States) (p ! |_|)) in H by now cbn
+                                 | context[inr (inr |_|)] => replace (inr (A:= States) (inr (A := delim) |_|)) with (inr (A := States) (dir ! |_|)) in H by now cbn
+                                 end.
+
+  Ltac help_polarity dir :=
+    let H1' := fresh in let H1'' := fresh in let H2' := fresh in let H2'' := fresh in
+    match goal with | [ |- rewHeadSim ?H1 ?H2] => remember H1 as H1'' eqn:H1'; help_polarity' neutral H1';
+                                                 remember H2 as H2'' eqn:H2'; help_polarity' dir H2'; subst 
+    end. 
+
+  (*brings the goal into a form in which valid_rewHeadSim_center can be applied *)
+  (*precondition: the tape strings have been destructed such that there are at least two symbols available in each direction, both in premise and conclusion *)
+  Ltac normalise_conf_string H := cbn in H;
+                                  try match type of H with
+                                  | context[((_) ++ [_]) ++ (inl _) :: _] => do 2 (rewrite <- app_assoc in H); cbn in H
+                                  | context[((_) ++ [_]) ++ _ :: (inl _) :: _] => rewrite <- app_assoc in H; cbn in H
+                                  end.
+
+  Ltac normalise_conf_strings := match goal with
+                                 | [ |- valid rewHeadSim ?h1 ?h2 ] => let H1 := fresh in let H2 := fresh in
+                                                                     let H1' := fresh "Heqn" in let H2' := fresh "Heqn" in
+                                   remember h1 as H1 eqn:H1'; remember h2 as H2 eqn:H2';
+                                   normalise_conf_string H1'; normalise_conf_string H2';
+                                   subst H1 H2
+                                 end. 
+
+  Ltac normalise_conf_strings_in H := match type of H with
+                                 | valid rewHeadSim ?h1 ?h2 => let H1 := fresh in let H2 := fresh in
+                                                              let H1' := fresh "Heqn" in let H2' := fresh "Heqn" in
+                                   remember h1 as H1 eqn:H1'; remember h2 as H2 eqn:H2';
+                                   normalise_conf_string H1'; normalise_conf_string H2';
+                                   subst H1 H2
+                                 end. 
+
+
+  (*pull out polarities so that the tape add/remove lemmas can be applied to a representation assumption *)
+  Ltac repr_tape_normalise H := cbn in H;
+                                repeat match type of H with
+                                 | context [inr (inr (Some (?p, ?e)))] => replace (inr (inr (Some (p, e) : tapeSigma') : tapeSigma) : Gamma) with (inr (p ! (Some e : stateSigma)) : Gamma) in H by now cbn
+                                 | _ ≃t(?p, _) ?h => match h with context[inr (inr |_|)] => replace (inr (inr |_|) : Gamma) with (inr (p ! |_|) : Gamma) in H by now cbn end
+                                 end. 
+
+  (*try to eliminate variables from the goal in the context of niltapes, i.e. substitute eqns such as S n = z' so that we have a z' in the goal again *)
+  Ltac clear_niltape_eqns := repeat match goal with
+                                      | [ H : ?n = z' |- context[?n]] => rewrite !H
+                                      | [ H : S ?n = z' |- context[inr(inr |_|) :: E ?n]] => replace (inr (inr |_|) :: E n) with (E (S n)) by (now cbn); rewrite !H
+                                      | [H : S (S ?n) = z' |- context[inr(inr |_|) :: inr (inr |_|) :: E ?n]] => replace (inr (inr |_|) :: inr (inr |_|) :: E n) with (E (S (S n))) by (now cbn); rewrite !H
+                                      | [H : S ?n = z' |- context[rev(E ?n) ++ inr (inr |_|) :: ?h]] => replace (rev (E n) ++ (inr (inr |_|) : Gamma) :: h) with (rev (E (S n) ++ h)) by (cbn; try rewrite <- app_assoc; easy); rewrite !H
+                                      | [H : S ?n = z' |- context[(rev (E ?n)) ++ [inr (inr |_|)] ++ ?h]] => rewrite app_assoc
+                                      | [H : S ?n = z' |- context[(rev (E ?n) ++ [inr (inr |_|)]) ++ ?h]] => replace (rev (E n) ++ [inr (inr |_|) : Gamma]) with (rev (E (S n))) by (cbn; try rewrite <- app_assoc; easy); rewrite !H
+                                      end.
+
+
+   (*get the next symbol which will be under the head *)
+   Ltac get_next_headsym' F := match type of F with [] ≃t(_, _) _ => constr:(|_| : stateSigma) 
+                                              | ?σ :: _ ≃t(_, _) _ => constr:(Some σ : stateSigma)
+                                        end.
+   Ltac is_half_blank F := match type of F with [] ≃t(_,_) _ => constr:(true) |  _ => constr:(false) end. 
+   Ltac get_next_headsym F1 F2 csym wsym dir := match wsym with
+    | Some ?wsym => match dir with
+                      | L => get_next_headsym' F1
+                      | R => get_next_headsym' F2
+                      | N => constr:(Some wsym : stateSigma)
+                    end
+    | None => match dir with
+                  | L => match csym with Some ?csym => get_next_headsym' F1
+                                  | _ => match is_half_blank F2 with true => get_next_headsym' F1
+                                                                | false => constr:(|_| : stateSigma)
+                                        end
+                        end
+                  | R => match csym with Some ?csym => get_next_headsym' F2
+                                  | _ => match is_half_blank F1 with true => get_next_headsym' F2
+                                                                  | false =>  constr:(|_| : stateSigma)
+                                        end
+                      end
+                  | N => constr:(csym : stateSigma)
+                end
       end. 
 
+   (*find out the symbol which the TM writes*)
+   (*remember that we take the view that a Turing machine *always* writes a symbol: either a blank, a new symbol or the current unchanged symbol *)
+   (*csym = current symbol under head; wsym: symbol given by the transition function *)
+   Ltac get_written_sym csym wsym := match wsym with
+    | Some ?wsym => constr:(Some wsym : stateSigma)
+    | None => match csym with
+            | Some ?csym => constr:(Some csym : stateSigma)
+            | None => constr:(|_| : stateSigma)
+            end
+      end.
 
+
+   (*get the direction in which the tape must be shifted *)
+   (*wsym: written sym as computed by get_written_sym *)
+   Ltac get_shift_direction wsym dir F1 F2 := match dir with
+    | L => match wsym with None => match is_half_blank F1 with true => constr:(neutral)
+                                                        | false => constr:(positive)
+                                  end
+                      | Some _ => constr:(positive)
+          end
+    | R => match wsym with None => match is_half_blank F2 with true => constr:(neutral)
+                                                        | false => constr:(negative)
+                                  end
+                      | Some _ => constr:(negative)
+          end
+    | N => constr:(neutral)
+    end. 
+
+   (*solve the part of the goal where we have to prove that the rewrite is valid *)
+   Ltac solve_stepsim_rewrite_valid Z := apply rewHead_tape_sim; revert Z; try clear_niltape_eqns; cbn; try rewrite <- !app_assoc; auto.
+   Ltac solve_stepsim_rewrite dir Z1 W1 :=
+     normalise_conf_strings; apply valid_rewHeadSim_center; repeat split;
+     [solve_stepsim_rewrite_valid Z1 | solve_stepsim_rewrite_valid W1 | | | ];
+     match goal with
+       | [_ :  _ |- rewHeadSim _ _ ] => help_polarity dir; eauto with trans
+     end. 
+
+   Ltac solve_stepsim_repr shiftdir Z2 W2 := exists shiftdir; cbn; (split; [now cbn | split; [apply Z2 | apply W2]]).
+
+  (*solve a stepsim goal for a given transition *)
+  (*F1: tape representation of left half; F2 : tape let a := representation of right half; H2 : transition equation *)
+  (*csym: optional current symbol; wsym: optional symbol to write; q': next state; dir: direction in which to move *)
+   Ltac solve_stepsim_goal' F1 F2 H2 csym wsym q' dir :=
+      let nextsym := get_next_headsym F1 F2 csym wsym dir in
+      let writesym := get_written_sym csym wsym in
+      let shiftdir := get_shift_direction writesym dir F1 F2 in 
+      (*init next tape halves *)
+      let Z1 := fresh "Z1" in let Z2 := fresh "Z2" in let Z3 := fresh "Z3" in 
+      let W1 := fresh "W1" in let W2 := fresh "W2" in let W3 := fresh "W3" in 
+      let h1 := fresh "h1" in let h2 := fresh "h2" in 
+      cbn in F1; cbn in F2;
+      repr_tape_normalise F1; repr_tape_normalise F2;
+      match dir with
+      | L => match type of F1 with
+            | [] ≃t(?p, ?w) _ => specialize (E_rewrite_blank_rev w) as Z1; specialize (proj1 (@niltape_repr w p)) as Z2; specialize (@E_rewrite_blank_rev_unique w) as Z3
+            | _ => destruct (tape_repr_rem_left F1) as (h1 & Z1 & Z3 & Z2);
+                  (*need to have one more head symbol in that case *)
+                  try match type of Z2 with _ :: ?l ≃t(_, _) _ => is_var l; destruct l end; destruct_tape_in_tidy Z2
+            end;
+            match writesym with
+            | Some ?sym => (destruct (tape_repr_add_right sym F2) as (h2 & W1 & W3 & W2)); [cbn; lia | destruct_tape_in_tidy W2]
+            | None => destruct (tape_repr_stay_right F2) as (h2 & W1 & W3 & W2); destruct_tape_in_tidy W2
+            end
+      | R => match type of F2 with
+              | [] ≃t(?p, ?w) _ => specialize (E_rewrite_blank w) as W1; specialize (proj1 (@niltape_repr w p)) as W2; specialize (@E_rewrite_blank_unique w) as W3
+              | _ => destruct (tape_repr_rem_right F2) as (h2 & W1 & W3 & W2);
+                    (*need to have one more head symbol in that case *)
+                    try match type of W2 with _ :: ?l ≃t(_, _) _ => is_var l; destruct l end; destruct_tape_in_tidy W2
+            end;
+            match writesym with
+              Some ?sym => destruct (tape_repr_add_left sym F1) as (h1 & Z1 & Z3 & Z2); [cbn; lia | destruct_tape_in_tidy Z2]
+            | None => destruct (tape_repr_stay_left F1) as (h1 & Z1 & Z3 & Z2); destruct_tape_in_tidy Z2
+          end
+      | N => destruct (tape_repr_stay_left F1) as (h1 & Z1 & Z3 & Z2); destruct_tape_in_tidy Z2;
+            destruct (tape_repr_stay_right F2) as (h2 & W1 & W3 & W2); destruct_tape_in_tidy W2
+      end;
+
+     (*instantiate existenials *) 
+     match type of Z2 with _ ≃t(_, _) ?h => exists h end;
+     exists (inl (q', nextsym) : Gamma);
+     match type of W2 with _ ≃t(_, _) ?h => exists h end;
+
+     (*solve goals, except for the uniqueness goal (factored out due to performance)*)
+     (split; [solve_stepsim_rewrite shiftdir Z1 W1 | split; [  | solve_stepsim_repr shiftdir Z2 W2]]).
+
+
+
+  (*solve a stepsim goal after the tapes have been suitably destructed, excluding the uniqueness part *)
+  (*F1: tape representation of left half; F2 : tape representation of right half; H2 : transition equation *)
+  Ltac solve_stepsim_goal F1 F2 H2 := match type of H2 with
+                                        | trans (?q, ?mcsym) = (?q', (?mwsym, ?dir)) => solve_stepsim_goal' F1 F2 H2 mcsym mwsym q' dir
+                                           end. 
+
+  (*automation for the uniqueness part *)
   Lemma rev_fold (X : Type) (A B : list X) b: rev A ++ (b::B) = rev (b :: A) ++ B. 
   Proof. 
     cbn. rewrite <- app_assoc. now cbn. 
