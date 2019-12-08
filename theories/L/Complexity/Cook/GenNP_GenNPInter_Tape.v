@@ -234,25 +234,17 @@ Module tape (sig : TMSig).
                      | [H : ?us ≃t(?p, ?w) _ |- _] => try (apply tape_repr_inv10 in H; cbn in H; lia)
                       end. 
 
-
-  (*inversions that do not change the assumption and thus should not be used in loops *)
-  Ltac inv_tape_once_in H := try match type of H with
-                          | [] ≃t(_, _) ?h  => assert_fails (is_var h); let H' := fresh in specialize (proj2 (niltape_repr _ _ ) _ H) as H'
-                          end.
-
-
-  Ltac inv_tape' H := inv_tape_once_in H; repeat match type of H with
-                        | _ ≃t(?p, ?w) ?x :: ?h => is_var x; destruct x; try discr_tape     
-                        | _ ≃t(?p, ?w) (inr ?e) :: ?h => is_var e; destruct e; try discr_tape
-                        | [] ≃t(?p, ?w) (inr (inr ?e)) :: ?h => is_var e; destruct e; try discr_tape
-                        | ?u ≃t(?p, ?w) inr (inr |_|) :: ?h => is_var u; destruct u; [discr_tape | ] 
-                        | ?u :: ?us ≃t(?p, ?w) ?h => is_var h; destruct h; try discr_tape
+  Ltac inv_tape' H := repeat match type of H with
+                        | _ ≃t(?p, ?w) ?x :: ?h => is_var x; destruct x; [discr_tape | ]     
+                        | _ ≃t(?p, ?w) (inr ?e) :: ?h => is_var e; destruct e; [discr_tape | ]
+                        | [] ≃t(?p, ?w) (inr (inr ?e)) :: ?h => is_var e; destruct e; [ | discr_tape ]
+                        | ?u ≃t(?p, ?w) inr (inr |_|) :: ?h => is_var u; destruct u; [ | discr_tape] 
+                        | ?u :: ?us ≃t(?p, ?w) ?h => is_var h; destruct h; [ discr_tape | ]
                         | ?u :: ?us ≃t(?p, ?w) ?h' ++ ?h'' => is_var h'; destruct h'; try discr_tape
                         | ?u :: ?us ≃t(?p, ?w) inr(inr ?e) :: _ => is_var e; specialize (tape_repr_inv8 H) as ->  
                         | ?u1 :: _ ≃t(?p, ?w) _  => is_var w; destruct w; try discr_tape
                         | ?u1 :: [] ≃t(_, S ?w) _ :: ?h  => specialize (tape_repr_inv9 H) as ->
                         | ?u ≃t(_, _) inr (inr (Some (_, _))) :: _ => is_var u; specialize (tape_repr_inv13 H) as (? & ->)
-                        | [] ≃t(_, _) ?h => is_var h; specialize (proj2 (niltape_repr _ _) _ H) as -> 
                         end;
                         (*if we can, we go into recursion after applying tape_repr_step *)
                         match type of H with
@@ -260,27 +252,47 @@ Module tape (sig : TMSig).
                          | _ => idtac
                         end.
 
-  (* Ltac inv_tape_once := match goal with *)
-  (*                         | [H : [] ≃t(_, _) ?h |- _]  => assert_fails (is_var h); let H' := fresh in specialize (proj2 (niltape_repr _ _ ) _ H) as H' *)
-  (*                         end. *)
-  
+  (*the destruct_tape_in tactic generates equations for subtapes which are equal to E _. *)
+  (*We do not want to call inv on those equations since they might contain non-trivial equalities which cannot be resolved with a rewrite and would thus be lost with inv*)
+  Ltac clear_trivial_niltape H := cbn in H; match type of H with
+                                            | inr (inr |_|) :: ?h = inr (inr |_|) :: ?h' => let H' := fresh in assert (h = h') as H' by congruence;
+                                                                                     tryif clear_trivial_niltape H' then clear H else clear H'
+                                            | ?h = inr (inr _) :: _ => is_var h; rewrite H in *; clear H
+                                            | ?h = E _ => is_var h; rewrite H in *; clear H
+                                      end.
+
+  Ltac destruct_tape_in H := unfold reprTape in H;
+                             inv_tape' H;
+                             try match type of H with
+                                 | [] ≃t(_, _) ?h => let H' := fresh in specialize (proj2 (niltape_repr _ _ ) _ H) as H'; clear_trivial_niltape H'
+                                 | ?u ≃t(?p, ?w) inr _ :: ?h  => is_var u; destruct u; try discr_tape
+                                 end;
+                             inv_tape' H;
+                             repeat match goal with [H : ?h = ?h |- _] => clear H end.
+
+  Ltac destruct_tape_in_tidy H := unfold reprTape in H;
+                             try match type of H with
+                                 | _ ≃t(_, z') _ => let H' := fresh "n" in let H'' := fresh H' "Zeqn" in
+                                                    remember z' as H' eqn:H'' in H; destruct_tape_in H;
+                                                    repeat match goal with [H2 : context[wo + H'] |- _]=> cbn [wo Nat.add] in H2 end; rewrite !H'' in *; try clear H' H'' 
+                                 | _ => destruct_tape_in H
+                             end. 
+ 
   Ltac inv_tape := match goal with
                         | [H : _ ≃t(_, _) _ |- _] => inv_tape' H
                    end. 
 
   Ltac unfold_tape := unfold reprTape in *. 
                         
-  Ltac destruct_tape := unfold_tape; inv_tape; try match goal with
+  Ltac destruct_tape := unfold_tape; inv_tape;
+                        try match goal with
                         | [H: ?u ≃t(?p, ?w) inr _ :: ?h |- _] => is_var u; destruct u; try discr_tape
-                            end; inv_tape; repeat match goal with [H : ?h = ?h |- _] => clear H end. 
+                            end;
+                        inv_tape;
+                        repeat match goal with [H : ?h = ?h |- _] => clear H end.
 
 
-  Ltac destruct_tape_in H := unfold reprTape in H; inv_tape' H; try match type of H with
-                        | [] ≃t(_, _) ?h => assert_fails (is_var h); let H' := fresh in specialize (proj2 (niltape_repr _ _ ) _ H) as H'
-                        | ?u ≃t(?p, ?w) inr _ :: ?h  => is_var u; destruct u; try discr_tape
-                            end; inv_tape' H; repeat match goal with [H : ?h = ?h |- _] => clear H end.
-
-  (* Ltac cbn_friendly := cbn [polarityFlipGamma polarityFlipSigma polarityFlipTapeSigma polarityFlipTapeSigma' polarityFlip ]. *)
+  (** rewHeadTape specific automation *)
   Ltac rewHeadTape_inv := repeat match goal with 
                                    | [H : rewHeadTape  ?a _ |- _] => is_var a; destruct a; try (inv H; fail)
                                    | [H : rewHeadTape  (_ :: ?a) _ |- _] => is_var a; destruct a; try (inv H; fail)
@@ -474,7 +486,7 @@ Module tape (sig : TMSig).
   Proof. 
     intros. revert w h σ H H0. 
     induction rs.
-    - intros. destruct_tape.  exists (E (wo + w - 1)). rewrite <- and_assoc; split. 
+    - intros. destruct_tape_in_tidy H.  exists (E (wo + w - 1)). rewrite <- and_assoc; split. 
       + cbn in H0. destruct w; [lia | ]. unfold wo. replace (2 + S w) with (S (S (S w))) by lia. cbn [Nat.sub]. split.
         * (*existence*) apply E_rewrite_sym.
         * (*uniqueness*) intros. now eapply E_rewrite_sym_unique with (σ := σ). 
@@ -619,7 +631,8 @@ Module tape (sig : TMSig).
   Proof. 
     intros. destruct σ2 as [σ2 | ].
     + cbn [withPolarity] in *. unfold withPolaritySigma in *. inv_tape' H. now apply tape_repr_rem_right'. 
-    + cbn [withPolarity] in *. destruct_tape_in H. inv H1.
+    + cbn [withPolarity] in *. destruct_tape_in_tidy H.
+      apply tape_repr_step in H as H'. destruct_tape_in_tidy H'. clear H'.
       exists (E (wo + w)). repeat split. 
       * constructor 3. apply E_rewrite_blank. eauto. 
       * intros. inv_valid. rewHeadTape_inv2. 
@@ -686,7 +699,7 @@ Module tape (sig : TMSig).
   Proof.
     intros. destruct e. 
     - cbn in H. unfold withPolaritySigma in H. destruct_tape_in H. now apply tape_repr_stay_right'. 
-    - cbn in H. destruct_tape_in H. inv H0. exists (inr (inr |_|) :: E w). split; [ | split]. 
+    - cbn in H. destruct_tape_in_tidy H. exists (inr (inr |_|) :: E w). split; [ | split]. 
       + apply E_rewrite_blank. 
       + intros. apply E_rewrite_blank_unique in H0. now inv H0. 
       + repeat split; cbn; [rewrite E_length | ]; lia.

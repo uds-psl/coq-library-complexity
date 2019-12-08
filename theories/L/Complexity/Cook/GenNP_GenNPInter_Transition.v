@@ -451,6 +451,8 @@ Module transition (sig : TMSig).
   Definition isStateSym (γ : Gamma) := exists η, γ = inl η. 
   Definition isSpecStateSym (q : states) (γ : Gamma) := exists m, γ = inl (q, m). 
 
+  Hint Unfold isStateSym.
+  Hint Unfold isSpecStateSym.
 
   (** * a few simple facts about applicability of rules *)
   Lemma rewHead_tape_sim s s' : valid rewHeadTape s s' -> valid rewHeadSim s s'. 
@@ -501,11 +503,11 @@ Module transition (sig : TMSig).
     - constructor 2. 2: assumption. clear IHvalid.
       do 2 (destruct a; destruct b; try now cbn in H; try now inv H0; eauto with trans).
     - constructor 3.
-      + destruct_tape. destruct a; discr_tape.
-        * destruct_tape. destruct w.
-          -- unfold wo in H2; cbn in H2; inv H2. apply valid_length_inv in H0.
+      + destruct_tape. destruct a; discr_tape. discr_tape. 
+        * destruct_tape_in_tidy H1. destruct w.
+          -- apply valid_length_inv in H0.
              do 3 (destruct b; try now cbn in H0). repeat constructor.
-          -- cbn in H2; inv H2. apply IHvalid with (u := []) (w0 := w). apply niltape_repr. 
+          -- apply IHvalid with (u := []) (w0 := w). apply niltape_repr. 
         * apply tape_repr_step in H1. now apply IHvalid with (u := u) (w := w).
       + now eapply rewHeadTrans_tape'.
   Qed. 
@@ -517,9 +519,6 @@ Module transition (sig : TMSig).
     (*main problem: need inductive proof because of the possible mixing of types of rewrite rules, but the rev does make that difficult *)
     (*possible solution: define valid predicate that appends, i.e. validRev *)
   Admitted. 
-
-  Hint Unfold isStateSym.
-  Hint Unfold isSpecStateSym. 
 
   Lemma isStateSym_isSpecStateSym γ: isStateSym γ <-> exists q, isSpecStateSym q γ. 
   Proof.  
@@ -746,6 +745,8 @@ Module transition (sig : TMSig).
     2: involution_simpl. now rewrite H0, E_polarityFlip. 
   Qed. 
 
+  (** *automation for the simultation proofs *)
+
   (*the rewrite rules expect polarities at the outer level in expressions with ! or !!.*)
   (*This tactic pulls the polarities out such that eauto can deal with them. *)
   (*parts of the goal need to be remembered so that we can add polarity annotations to blanks only in the premise or conclusion *)
@@ -759,58 +760,11 @@ Module transition (sig : TMSig).
 
   Ltac help_polarity dir :=
     let H1' := fresh in let H1'' := fresh in let H2' := fresh in let H2'' := fresh in
-    match goal with | [ |- rewHeadSim ?H1 ?H2] => remember H1 as H1'' eqn:H1';
-                                                 remember H2 as H2'' eqn:H2';
-                                                 help_polarity' neutral H1'; help_polarity' dir H2'; subst 
+    match goal with | [ |- rewHeadSim ?H1 ?H2] => remember H1 as H1'' eqn:H1'; help_polarity' neutral H1';
+                                                 remember H2 as H2'' eqn:H2'; help_polarity' dir H2'; subst 
     end. 
 
-
-
-  Ltac inv_tape' H := repeat match type of H with
-                        | _ ≃t(?p, ?w) ?x :: ?h => is_var x; destruct x; [discr_tape | ]     
-                        | _ ≃t(?p, ?w) (inr ?e) :: ?h => is_var e; destruct e; [discr_tape | ]
-                        | [] ≃t(?p, ?w) (inr (inr ?e)) :: ?h => is_var e; destruct e; [ | discr_tape ]
-                        | ?u ≃t(?p, ?w) inr (inr |_|) :: ?h => is_var u; destruct u; [ | discr_tape] 
-                        | ?u :: ?us ≃t(?p, ?w) ?h => is_var h; destruct h; [ discr_tape | ]
-                        | ?u :: ?us ≃t(?p, ?w) ?h' ++ ?h'' => is_var h'; destruct h'; try discr_tape
-                        | ?u :: ?us ≃t(?p, ?w) inr(inr ?e) :: _ => is_var e; specialize (tape_repr_inv8 H) as ->  
-                        | ?u1 :: _ ≃t(?p, ?w) _  => is_var w; destruct w; try discr_tape
-                        | ?u1 :: [] ≃t(_, S ?w) _ :: ?h  => specialize (tape_repr_inv9 H) as ->
-                        | ?u ≃t(_, _) inr (inr (Some (_, _))) :: _ => is_var u; specialize (tape_repr_inv13 H) as (? & ->)
-                        (* | [] ≃t(_, _) ?h => is_var h; specialize (proj2 (niltape_repr _ _) _ H) as -> *)
-                        end;
-                        (*if we can, we go into recursion after applying tape_repr_step *)
-                        match type of H with
-                        |  ?u1 :: _ ≃t(?p, S ?w) ?e :: _  => let H' := fresh in specialize (tape_repr_step H) as H'; inv_tape' H'; clear H' 
-                         | _ => idtac
-                        end.
-
-  (*the destruct_tape_in tactic generates equations for subtapes which are equal to E _. *)
-  (*We do not want to call inv on those equations since they might contain non-trivial equalities which cannot be resolved with a rewrite and would thus be lost with inv*)
-  Ltac clear_trivial_niltape H := cbn in H; match type of H with
-                                            | inr (inr |_|) :: ?h = inr (inr |_|) :: ?h' => let H' := fresh in assert (h = h') as H' by congruence;
-                                                                                     tryif clear_trivial_niltape H' then clear H else clear H'
-                                            | ?h = inr (inr _) :: _ => is_var h; rewrite H in *; clear H
-                                            | ?h = E _ => is_var h; rewrite H in *; clear H
-                                      end.
-
-  Ltac destruct_tape_in H := unfold reprTape in H;
-                             inv_tape' H;
-                             try match type of H with
-                                 | [] ≃t(_, _) ?h => let H' := fresh in specialize (proj2 (niltape_repr _ _ ) _ H) as H'; clear_trivial_niltape H'
-                                 | ?u ≃t(?p, ?w) inr _ :: ?h  => is_var u; destruct u; try discr_tape
-                                 end;
-                             inv_tape' H;
-                             repeat match goal with [H : ?h = ?h |- _] => clear H end.
-
-  Ltac destruct_tape_in_tidy H := unfold reprTape in H;
-                             try match type of H with
-                                 | _ ≃t(_, z') _ => let H' := fresh "n" in let H'' := fresh H' "Zeqn" in
-                                                    remember z' as H' eqn:H'' in H; destruct_tape_in H;
-                                                    repeat match goal with [H2 : context[wo + H'] |- _]=> cbn [wo Nat.add] in H2 end; rewrite !H'' in *; try clear H' H'' 
-                                 | _ => destruct_tape_in H
-                             end. 
-                             
+                              
   Ltac normalise_conf_string H := cbn in H;
                                   try match type of H with
                                   | context[((_) ++ [_]) ++ (inl _) :: _] => do 2 (rewrite <- app_assoc in H); cbn in H
@@ -1339,42 +1293,92 @@ Lemma transNoneNone_inv1 q q0 m γ2 γ3 γ4 γ5 γ6 : transNoneNone q (inl (q0, 
       cbn; try rewrite <- !app_assoc; cbn; reflexivity).
  
 
-  Hint Unfold isStateSym.
+
+  (*proof takes roughly 45mins + >12 gigs of RAM... *)
   Lemma stepsim q tp s q' tp' : (q, tp) ≃c s -> halt q = false -> (q, tp) ≻ (q', tp') -> (sizeOfTape tp) < z' -> exists s', valid rewHeadSim s s' /\ (forall s'', valid rewHeadSim s s'' -> s'' = s') /\ (q', tp') ≃c s'. 
   Proof. 
-    intros H H0' H0 H1. unfold sstep in H0. destruct trans eqn:H2 in H0. inv H0. rename p into p'.
-    apply valid_reprConfig_unfold. 
-    rewrite sizeOfTape_lcr in H1. 
-    destruct H as (ls & qm & rs & -> & H). destruct H as (p & -> & F1 & F2). unfold embedState.
-    destruct p' as ([wsym | ] & []); destruct tp as [ | ? l1 | ? l0 | l0 ? l1]; cbn in *; destruct_tape_in_tidy F1; destruct_tape_in_tidy F2. 
-    all: try match type of F1 with ?l0 ≃t(_, _) _ => is_var l0; destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end. 
-    all: try match type of F1 with _ :: ?l0 ≃t(_, _) _ => destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end. 
-    all: try match type of F2 with ?l1 ≃t(_, _) _ => is_var l1; destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end. 
-    all: try match type of F2 with _ :: ?l1 ≃t(_, _) _ => destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end. 
-    Optimize Proof. Optimize Heap. 
-    all: cbn in H1.
-    all: try solve_stepsim_goal F1 F2 H2. 
-    Optimize Proof. Optimize Heap.
-    1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3.
-    Optimize Proof. Optimize Heap. 
-    1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3.
-    Optimize Proof. Optimize Heap.
-1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3.
-    Optimize Proof. Optimize Heap.
-1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3.
-    Optimize Proof. Optimize Heap.
-1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3.
-    Optimize Proof. Optimize Heap.
-1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3.
-    Optimize Proof. Optimize Heap.
-1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3.
-    Optimize Proof. Optimize Heap.
-1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3.
-    Optimize Proof. Optimize Heap.
-1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3.
-    Optimize Proof. Optimize Heap.
-all: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3.
-    Optimize Proof. Optimize Heap.
+(*     intros H H0' H0 H1. unfold sstep in H0. destruct trans eqn:H2 in H0. inv H0. rename p into p'. *)
+(*     apply valid_reprConfig_unfold.  *)
+(*     rewrite sizeOfTape_lcr in H1.  *)
+(*     destruct H as (ls & qm & rs & -> & H). destruct H as (p & -> & F1 & F2). unfold embedState. *)
+(*     destruct p' as ([wsym | ] & []); destruct tp as [ | ? l1 | ? l0 | l0 ? l1]; cbn in *; destruct_tape_in_tidy F1; destruct_tape_in_tidy F2.  *)
+(*     all: try match type of F1 with ?l0 ≃t(_, _) _ => is_var l0; destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end.  *)
+(*     all: try match type of F1 with _ :: ?l0 ≃t(_, _) _ => destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end.  *)
+(*     all: try match type of F2 with ?l1 ≃t(_, _) _ => is_var l1; destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end.  *)
+(*     all: try match type of F2 with _ :: ?l1 ≃t(_, _) _ => destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end.  *)
+(*     Optimize Proof. Optimize Heap.  *)
+(*     all: cbn in H1. *)
+(*     all: try solve_stepsim_goal F1 F2 H2.  *)
+(*     Optimize Proof. Optimize Heap. *)
+(*     1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3. *)
+(*     Optimize Proof. Optimize Heap.  *)
+(*     1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3. *)
+(*     Optimize Proof. Optimize Heap. *)
+(* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3. *)
+(*     Optimize Proof. Optimize Heap. *)
+(* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3. *)
+(*     Optimize Proof. Optimize Heap. *)
+(* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3. *)
+(*     Optimize Proof. Optimize Heap. *)
+(* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3. *)
+(*     Optimize Proof. Optimize Heap. *)
+(* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3. *)
+(*     Optimize Proof. Optimize Heap. *)
+(* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3. *)
+(*     Optimize Proof. Optimize Heap. *)
+(* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3. *)
+(*     Optimize Proof. Optimize Heap. *)
+(* all: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3. *)
+(*     Optimize Proof. Optimize Heap. *)
+  (* Qed.  *)
+Admitted. 
+
+
+  (*mostly matches the corresponding stepsim tactic above, but uses different inversions and *)
+  (*needs some additional plumbing with rev in Z3 *)
+  Ltac solve_haltsim_uniqueness H F1 F2 Z3 W3 := 
+      cbn in H; rewrite <- !app_assoc in H; cbn in H; 
+      rewrite app_fold in H; 
+      let X1 := fresh "X1" in let X2 := fresh "X2" in 
+      destruct (valid_rewHeadSim_conc_inv H) as (? & ? & ? & ? & ? & ? & ? & -> & X1 & X2);
+      normalise_conf_strings_in H; 
+      let K1 := fresh "K" in let K2 := fresh "K" in let K3 := fresh "K" in
+      let K4 := fresh "K" in let K5 := fresh "K" in
+      specialize (proj1 (valid_rewHeadSim_center  _  _ _ _ _ _ _ _ _ _ _ _ _ _) (conj H (conj X1 X2))) as (K1 & K2 & K3 & K4 & K5); 
+      eapply rewHeadSim_halt in K3; [ | eauto | eauto]; 
+      eapply rewHeadSim_halt in K4; [ | eauto | eauto];
+      eapply rewHeadSim_halt in K5; [ | eauto | eauto]; 
+      rewHeadHalt_inv2; simp_eqn;
+      try rewrite <- app_assoc in Z3; cbn in Z3; try rewrite !rev_fold in Z3; try rewrite app_nil_r in Z3;
+      (specialize (rewHeadSim_unique_left K1 F1 Z3) as ?;
+      simp_eqn;
+      eapply rewHeadSim_tape in K2; [ | eapply F2]; apply W3 in K2; 
+      simp_eqn; 
+      cbn; try rewrite <- !app_assoc; cbn; reflexivity).
+ 
+
+  Lemma haltsim q tp s : (q, tp) ≃c s -> halt q = true -> exists s', valid rewHeadSim s s' /\ (forall s'', valid rewHeadSim s s'' -> s'' = s') /\ (q, tp) ≃c s'. 
+  Proof. 
+    intros. apply valid_reprConfig_unfold.
+    destruct H as (ls & qm & rs & H1 & H2). 
+    destruct H2 as (p & F0 & F1 & F2). 
+    unfold reprTape in F1, F2. unfold embedState in F0. 
+    destruct tp as [ | ? l1 | ? l0 | l0 ? l1]; cbn in *.
+    all: destruct_tape_in F1; destruct_tape_in F2. 
+    all: try match type of F1 with ?l0 ≃t(_, _) _ => is_var l0; destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end.
+    all: try match type of F1 with _ :: ?l0 ≃t(_, _) _ => destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end.
+    all: try match type of F2 with ?l1 ≃t(_, _) _ => is_var l1; destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end.
+    all: try match type of F2 with _ :: ?l1 ≃t(_, _) _ => destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end.
+    all: repr_tape_normalise F1; repr_tape_normalise F2. 
+    all: specialize (tape_repr_stay_left F1) as (h1 & Z1 & Z3 & Z2). 
+    all: specialize (tape_repr_stay_right F2) as (h2 & W1 & W3 & W2).
+    all: destruct_tape_in_tidy Z2; destruct_tape_in_tidy W2. 
+    all: match type of Z1 with valid _ _ (rev ?h) => exists h end. 
+    all: exists qm. 
+    all: match type of W1 with valid _ _ ?h => exists h end. 
+    all: subst. 
+    all: split; [solve_stepsim_rewrite neutral Z1 W1 | split; [intros s H; clear Z1 W1 W2 Z2; solve_haltsim_uniqueness H F1 F2 Z3 W3 |solve_stepsim_repr neutral Z2 W2 ] ]. 
   Qed. 
+
 End transition.
 
