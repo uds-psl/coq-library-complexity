@@ -6,10 +6,12 @@ Require Import Lia.
 
 Module transition (sig : TMSig). 
   Module tape' := tape sig. 
-  Import tape'. 
+  Export tape'. 
 
   (** *preliminaries *)
-  Notation "s '≻' s'" := (sstep s = s') (at level 40). 
+
+  Definition configState (c : sconfig) := match c with (q, _) => q end. 
+  Notation "s '≻' s'" := (halt (configState s) = false /\ sstep s = s') (at level 40). 
 
   Lemma tapeToList_lcr sig (tp : tape sig) : tapeToList tp = rev (left tp) ++ (match current tp with Some a => [a] | _ => [] end) ++ right tp. 
   Proof.
@@ -1260,21 +1262,21 @@ end.
 
 
   (*proof takes roughly 45mins + >12 gigs of RAM... *)
-  Lemma stepsim q tp s q' tp' : (q, tp) ≃c s -> halt q = false -> (q, tp) ≻ (q', tp') -> (sizeOfTape tp) < z' -> exists s', valid rewHeadSim s s' /\ (forall s'', valid rewHeadSim s s'' -> s'' = s') /\ (q', tp') ≃c s'. 
+  Lemma stepsim q tp s q' tp' : (q, tp) ≃c s -> (q, tp) ≻ (q', tp') -> (sizeOfTape tp) < z' -> exists s', valid rewHeadSim s s' /\ (forall s'', valid rewHeadSim s s'' -> s'' = s') /\ (q', tp') ≃c s'. 
   Proof. 
-(*     intros H H0' H0 H1. unfold sstep in H0. destruct trans eqn:H2 in H0. inv H0. rename p into p'. *)
-(*     apply valid_reprConfig_unfold.  *)
-(*     rewrite sizeOfTape_lcr in H1.  *)
-(*     destruct H as (ls & qm & rs & -> & H). destruct H as (p & -> & F1 & F2). unfold embedState. *)
-(*     destruct p' as ([wsym | ] & []); destruct tp as [ | ? l1 | ? l0 | l0 ? l1]; cbn in *; destruct_tape_in_tidy F1; destruct_tape_in_tidy F2.  *)
-(*     all: try match type of F1 with ?l0 ≃t(_, _) _ => is_var l0; destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end.  *)
-(*     all: try match type of F1 with _ :: ?l0 ≃t(_, _) _ => destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end.  *)
-(*     all: try match type of F2 with ?l1 ≃t(_, _) _ => is_var l1; destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end.  *)
-(*     all: try match type of F2 with _ :: ?l1 ≃t(_, _) _ => destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end.  *)
-(*     Optimize Proof. Optimize Heap.  *)
-(*     all: cbn in H1. *)
-(*     all: try solve_stepsim_goal F1 F2 H2.  *)
-(*     Optimize Proof. Optimize Heap. *)
+    (* intros H (H0' &  H0) H1. cbn in H0'. unfold sstep in H0. destruct trans eqn:H2 in H0. inv H0. rename p into p'. *)
+    (* apply valid_reprConfig_unfold. *)
+    (* rewrite sizeOfTape_lcr in H1. *)
+    (* destruct H as (ls & qm & rs & -> & H). destruct H as (p & -> & F1 & F2). unfold embedState. *)
+    (* destruct p' as ([wsym | ] & []); destruct tp as [ | ? l1 | ? l0 | l0 ? l1]; cbn in *; destruct_tape_in_tidy F1; destruct_tape_in_tidy F2. *)
+    (* all: try match type of F1 with ?l0 ≃t(_, _) _ => is_var l0; destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end. *)
+    (* all: try match type of F1 with _ :: ?l0 ≃t(_, _) _ => destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end. *)
+    (* all: try match type of F2 with ?l1 ≃t(_, _) _ => is_var l1; destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end. *)
+    (* all: try match type of F2 with _ :: ?l1 ≃t(_, _) _ => destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end. *)
+    (* Optimize Proof. Optimize Heap. *)
+    (* all: cbn in H1. *)
+    (* all: try solve_stepsim_goal F1 F2 H2. *)
+    (* Optimize Proof. Optimize Heap. *)
 (*     1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3. *)
 (*     Optimize Proof. Optimize Heap.  *)
 (*     1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3. *)
@@ -1324,26 +1326,27 @@ Admitted.
 
   Lemma haltsim q tp s : (q, tp) ≃c s -> halt q = true -> exists s', valid rewHeadSim s s' /\ (forall s'', valid rewHeadSim s s'' -> s'' = s') /\ (q, tp) ≃c s'. 
   Proof. 
-    intros. apply valid_reprConfig_unfold.
-    destruct H as (ls & qm & rs & H1 & H2). 
-    destruct H2 as (p & F0 & F1 & F2). 
-    unfold reprTape in F1, F2. unfold embedState in F0. 
-    destruct tp as [ | ? l1 | ? l0 | l0 ? l1]; cbn in *.
-    all: destruct_tape_in F1; destruct_tape_in F2. 
-    all: try match type of F1 with ?l0 ≃t(_, _) _ => is_var l0; destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end.
-    all: try match type of F1 with _ :: ?l0 ≃t(_, _) _ => destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end.
-    all: try match type of F2 with ?l1 ≃t(_, _) _ => is_var l1; destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end.
-    all: try match type of F2 with _ :: ?l1 ≃t(_, _) _ => destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end.
-    all: repr_tape_normalise F1; repr_tape_normalise F2. 
-    all: specialize (tape_repr_stay_left F1) as (h1 & Z1 & Z3 & Z2). 
-    all: specialize (tape_repr_stay_right F2) as (h2 & W1 & W3 & W2).
-    all: destruct_tape_in_tidy Z2; destruct_tape_in_tidy W2. 
-    all: match type of Z1 with valid _ _ (rev ?h) => exists h end. 
-    all: exists qm. 
-    all: match type of W1 with valid _ _ ?h => exists h end. 
-    all: subst. 
-    all: split; [solve_stepsim_rewrite neutral Z1 W1 | split; [intros s H; clear Z1 W1 W2 Z2; solve_haltsim_uniqueness H F1 F2 Z3 W3 |solve_stepsim_repr neutral Z2 W2 ] ]. 
-  Qed. 
+  (*   intros. apply valid_reprConfig_unfold. *)
+  (*   destruct H as (ls & qm & rs & H1 & H2).  *)
+  (*   destruct H2 as (p & F0 & F1 & F2).  *)
+  (*   unfold reprTape in F1, F2. unfold embedState in F0.  *)
+  (*   destruct tp as [ | ? l1 | ? l0 | l0 ? l1]; cbn in *. *)
+  (*   all: destruct_tape_in F1; destruct_tape_in F2.  *)
+  (*   all: try match type of F1 with ?l0 ≃t(_, _) _ => is_var l0; destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end. *)
+  (*   all: try match type of F1 with _ :: ?l0 ≃t(_, _) _ => destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end. *)
+  (*   all: try match type of F2 with ?l1 ≃t(_, _) _ => is_var l1; destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end. *)
+  (*   all: try match type of F2 with _ :: ?l1 ≃t(_, _) _ => destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end. *)
+  (*   all: repr_tape_normalise F1; repr_tape_normalise F2.  *)
+  (*   all: specialize (tape_repr_stay_left F1) as (h1 & Z1 & Z3 & Z2).  *)
+  (*   all: specialize (tape_repr_stay_right F2) as (h2 & W1 & W3 & W2). *)
+  (*   all: destruct_tape_in_tidy Z2; destruct_tape_in_tidy W2.  *)
+  (*   all: match type of Z1 with valid _ _ (rev ?h) => exists h end.  *)
+  (*   all: exists qm.  *)
+  (*   all: match type of W1 with valid _ _ ?h => exists h end.  *)
+  (*   all: subst.  *)
+  (*   all: split; [solve_stepsim_rewrite neutral Z1 W1 | split; [intros s H; clear Z1 W1 W2 Z2; solve_haltsim_uniqueness H F1 F2 Z3 W3 |solve_stepsim_repr neutral Z2 W2 ] ].  *)
+  (* Qed.  *)
+  Admitted. 
 
 End transition.
 
