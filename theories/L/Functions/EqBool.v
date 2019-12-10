@@ -40,7 +40,7 @@ Class eqbCompT X {R:registered X} eqb {H:eqbClass (X:=X) eqb} :=
 Arguments eqbCompT _ {_ _ _}.
 Arguments c__eqbComp _ {_ _ _ _}.
 
-Hint Mode eqbCompT + - - -: typeclass_instances.
+Hint Mode eqbCompT - + - -: typeclass_instances.
 
 Existing Instance comp_eqb.
 

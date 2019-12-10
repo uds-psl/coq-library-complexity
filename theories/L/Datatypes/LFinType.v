@@ -34,7 +34,7 @@ Section finType_eqb.
     intros ? ?. eapply finType_eqb_reflect. 
   Qed.
 
-  Local Instance eqbFinType (X:finType): eqbCompT X.
+  Global Instance eqbFinType (X:finType): eqbCompT X.
   Proof.
     evar (c:nat). exists c. unfold finType_eqb.
     unfold enc;cbn.

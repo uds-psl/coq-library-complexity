@@ -35,11 +35,17 @@ Section loopM.
   Context (sig : finType).
   Let reg_sig := @registered_finType sig.
   Existing Instance reg_sig.
+  
+  Let eqb_sig := eqbFinType_inst (X:=sig).
+  Existing Instance eqb_sig.
   Variable n : nat.
   Variable M : mTM sig n.
 
   Let reg_states := @registered_finType (states M).
   Existing Instance reg_states.
+
+  Let eqb_states := eqbFinType_inst (X:=states M).
+  Existing Instance eqb_states.
 
   Definition transTime := (length (elem (states M) )*17 + n * 17 * (length ( elem sig )+ 4) + 71) * length (funTable (trans (m:=M))) + 16.
 
@@ -47,12 +53,16 @@ Section loopM.
   Instance term_trans : computableTime' (trans (m:=M)) (fun _ _ => (transTime,tt)).
   Proof.
     pose (t:= (funTable (trans (m:=M)))).
+    
     apply computableTimeExt with (x:= fun c => lookup EqBool.eqb c t (start M,Vector.const (None,N) _)).
-    2:{Typeclasses eauto := debug. (*** TODO: instantiatte eqb-instance? **) extract.
+    2:{(*Set Printing Implicit. Typeclasses eauto := debug.*) (*** TODO: instantiatte eqb-instance? **) Import EqBool. extract.
        cbn [fst snd]. intuition ring_simplify.
 
 
-       rewrite lookupTime_leq with (k:=(17* length (elem (states M)) + 17 * n * (length (elem sig) + 4) + 52)).
+       rewrite lookupTime_leq with (k:=(4 * (| elem (states M) |) * c__eqbComp (finType_CS (states M * VectorDef.t (option sig) n)) +
+  4 * n * (| elem sig |) * c__eqbComp (finType_CS (states M * VectorDef.t (option sig) n)) +
+  14 * n * c__eqbComp (finType_CS (states M * VectorDef.t (option sig) n)) +
+  12 * c__eqbComp (finType_CS (states M * VectorDef.t (option sig) n)) + 5)).
        -unfold transTime.
 
         repeat match goal with
@@ -61,7 +71,29 @@ Section loopM.
         ring_simplify.  omega.
        -intros y. unfold callTime2.
         cbn [fst snd]. ring_simplify.
-        setoid_rewrite index_leq at 1 2. rewrite Nat.min_id.
+        unfold eqbTime. rewrite Nat.le_min_l.
+        setoid_rewrite size_prod at 1. cbn [fst snd].
+
+        Lemma enc_finType_eq (X:finType) (x:X):
+          enc (registered := registered_finType) x = enc (index x).
+        Proof.
+          reflexivity.
+        Qed.
+
+        Lemma enc_vector_eq X `{registered X} m (x:Vector.t X m):
+          enc x = enc (Vector.to_list x).
+        Proof.
+          reflexivity.
+        Qed.
+        
+        rewrite enc_finType_eq,enc_vector_eq.
+        rewrite size_list,sumn_le_bound with (c:=(| elem sig |) * 4 + 14).
+        2:{
+          intros ? (?&<-&?)%in_map_iff. rewrite LOptions.size_option. destruct x.
+          rewrite enc_finType_eq. rewrite size_nat_enc. rewrite index_leq. lia. lia. }
+        rewrite map_length,to_list_length.
+        rewrite size_nat_enc.
+        setoid_rewrite index_leq. ring_simplify. rewrite Nat.min_id.
         rewrite list_eqbTime_leq with (k:= | elem sig| * 17 + 29).
         +rewrite to_list_length. ring_simplify. omega.
         +intros [] [];unfold callTime2;cbn [fst snd].

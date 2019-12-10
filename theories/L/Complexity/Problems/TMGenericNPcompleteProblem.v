@@ -19,6 +19,13 @@ From Undecidability.L Require Import Tactics.LTactics Functions.Decoding TMflatF
 From Undecidability Require Import L.Functions.EqBool.
 
 From Undecidability Require Import L.Datatypes.LNat.
+
+Lemma size_list_enc_r X `{registered X} (l:list X):
+  length l <= size (enc l)*5 + 4.
+Proof.
+  rewrite size_list. induction l;cbn. all:lia.
+Qed.
+
 Instance term_isValidFlatTM : computableTime' isValidFlatTM (fun M _ => (size (enc M) ^ 2 * (c__eqbComp nat + c__eqbComp (nat * list (option nat)) +  c__eqbComp (nat * list (option nat * move)) + 20)*9,tt)).
 Proof.
   unfold isValidFlatTM. unfold Nat.ltb.
@@ -38,11 +45,6 @@ Proof.
   (* assert (H1:size (enc (trans M)) <= size (enc M)) by (rewrite size_TM;destruct M;cbn;lia). *)
 
 
-  Lemma size_list_enc_r X `{registered X} (l:list X):
-    length l <= size (enc l)*5 + 4.
-  Proof.
-    rewrite size_list. induction l;cbn. all:lia.
-  Qed.
 
   rewrite !size_list_enc_r with (l:=trans M). Unshelve. 2:exact _.
   rewrite !H1. rewrite !H2. ring_simplify.
