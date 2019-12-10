@@ -22,38 +22,6 @@ Proof.
     eapply countIn. rewrite enum_ok. lia. 
 Qed. 
 
-
-Definition involution (X : Type) (f : X -> X) := forall (x : X), f (f x) = x. 
-
-Lemma map_involution (X : Type)(f : X -> X) : involution f -> involution (map f). 
-Proof. 
-  intros. intros l. rewrite map_map. setoid_rewrite H. now rewrite map_id. 
-Qed. 
-
-Lemma involution_invert_eqn (X : Type) (f : X -> X) : involution f -> forall a b, f a = f b -> a = b. 
-Proof. 
-  intros. enough (f (f a) = f(f b)) by (now repeat rewrite H). easy. 
-Qed. 
-
-Lemma involution_invert_eqn2 (X : Type) (f : X -> X) : involution f -> forall a b, f a = b -> a = f b. 
-Proof. 
-  intros. rewrite <- (H a). now apply involution_invert_eqn with (f := f). 
-Qed. 
-
-Smpl Create involution.
-Ltac involution_simpl := smpl involution; repeat (involution_simpl).
-
-Smpl Add (apply map_involution) : involution.
-
-Lemma rev_involution (X : Type): involution (@rev X).  
-Proof. 
-  unfold involution. apply rev_involutive. 
-Qed. 
-
-Smpl Add (apply rev_involution) : involution. 
-
-Hint Resolve -> makeExhaustive_correct. 
-
 Section fixTM. 
   (*we use a variant of the Turing machine definitions fixed to a single tape *)
 

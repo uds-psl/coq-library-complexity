@@ -740,14 +740,6 @@ Lemma transNoneNone_inv1 q q0 m γ2 γ3 γ4 γ5 γ6 : transNoneNone q (inl (q0, 
 
   Hint Constructors rewHeadSim : trans. 
 
-  Ltac rewHeadSim_inv := repeat match goal with
-    | [H : rewHeadSim ?a _ |- _ ] => is_var a; destruct a; try (inv H; rewHeadTrans_inv; rewHeadTape_inv; fail)
-    | [H : rewHeadSim (_ :: ?a) _ |- _ ] => is_var a; destruct a; try (inv H;rewHeadTrans_inv; rewHeadTape_inv; fail)
-    | [H : rewHeadSim (_ :: _ :: ?a) _ |- _] => is_var a; destruct a; try (inv H;rewHeadTrans_inv; rewHeadTape_inv; fail)
-    | [H : rewHeadSim _ ?a |- _] => is_var a; destruct a; try (inv H;rewHeadTrans_inv; rewHeadTape_inv; fail)
-    | [H : rewHeadSim _ (_ :: ?a) |- _] => is_var a; destruct a; try (inv H;rewHeadTrans_inv; rewHeadTape_inv; fail)
-    | [H : rewHeadSim _ (_ :: _ :: ?a) |- _ ] => is_var a; destruct a; try (inv H ;rewHeadTrans_inv; rewHeadTape_inv; fail)
-end. 
 
   Lemma rewHeadSim_tail_invariant γ1 γ2 γ3 γ4 γ5 γ6 s1 s2 s1' s2' :
     rewHeadSim (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2) <-> rewHeadSim (γ1 :: γ2 :: γ3 :: s1') (γ4 :: γ5 :: γ6 :: s2').
@@ -765,6 +757,25 @@ end.
     rewHeadSim (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2) <-> rewHeadSim (γ1 :: γ2 :: γ3 :: s1 ++ s1') (γ4 :: γ5 :: γ6 :: s2 ++ s2').
   Proof. now apply rewHeadSim_tail_invariant. Qed.
 
+
+  Lemma rewritesAt_rewHeadTrans_add_at_end i a b h1 h2 : rewritesAt rewHeadTrans i a b -> rewritesAt rewHeadTrans i (a ++ h1) (b ++ h2).
+  Proof.
+    intros. unfold rewritesAt in *. inv H; symmetry in H0; symmetry in H1; repeat erewrite skipn_app2; eauto with trans; try congruence; cbn; eauto with trans.
+  Qed. 
+
+  Lemma rewritesAt_rewHeadHalt_add_at_end i a b h1 h2 : rewritesAt rewHeadHalt i a b -> rewritesAt rewHeadHalt i (a ++ h1) (b ++ h2).
+  Proof.
+    intros. unfold rewritesAt in *. inv H; symmetry in H0; symmetry in H1; repeat erewrite skipn_app2; eauto with trans; try congruence; cbn; eauto with trans.
+  Qed.
+
+  Lemma rewritesAt_rewHeadSim_add_at_end i a b h1 h2 : rewritesAt rewHeadSim i a b -> rewritesAt rewHeadSim i (a ++ h1) (b ++ h2).  
+  Proof. 
+    intros. inv H.
+    + constructor 1. now apply rewritesAt_rewHeadTrans_add_at_end. 
+    + constructor 2. now apply rewritesAt_rewHeadTape_add_at_end.  
+    + constructor 3. now apply rewritesAt_rewHeadHalt_add_at_end. 
+  Qed. 
+
   Hint Constructors valid : trans. 
 
   Definition isStateSym (γ : Gamma) := exists η, γ = inl η. 
@@ -772,6 +783,29 @@ end.
 
   Hint Unfold isStateSym.
   Hint Unfold isSpecStateSym.
+
+
+  Lemma isStateSym_isSpecStateSym γ: isStateSym γ <-> exists q, isSpecStateSym q γ. 
+  Proof.  
+    split.
+    - intros ([q m] & ?). eauto. 
+    - intros (q & []). eauto. 
+  Qed. 
+ 
+  Lemma E_alphabet a w : a el (E w) -> a = inr (inr |_|) \/ a = inr $. 
+  Proof. 
+    intros. induction w.  
+    - cbn in H. firstorder. 
+    - cbn in H. destruct H as [H | H]; firstorder.
+  Qed.
+
+  Lemma reprTape_no_isStateSym u p w h e : e el h -> u ≃t(p, w) h -> not (isStateSym e). 
+  Proof. 
+    intros. destruct H0 as (_ & _ & ->). 
+    apply in_app_or in H. destruct H as [H | H]. 
+    - unfold mapPolarity in H. apply in_map_iff in H as (m & H & _). intros (? & ->). congruence. 
+    - apply E_alphabet in H. intros (? & ->). destruct H; congruence. 
+  Qed. 
 
   (** * a few simple facts about applicability of rules *)
 
@@ -833,21 +867,48 @@ end.
       + now eapply rewHeadTrans_tape'.
   Qed. 
 
+  (*we would also like to obtain the other direction for this result, i.e. for polarityRev h *)
+  (*this is a bit more tricky because we cannot reverse h in the ≃t predicate - thus, a straightforward induction will not go through *)
+  (*instead, we use the equivalent characterisation via rewritesAt *)
   Lemma rewHeadSim_tape_polarityRev u h h' p w : u ≃t(p, w) h -> valid rewHeadSim (polarityRev h) (polarityRev h') -> valid rewHeadTape (polarityRev h) (polarityRev h'). 
   Proof. 
-    intros.
-    (*this does hold because of the used alphabet, but isn't straightforward to prove *)
-    (*main problem: need inductive proof because of the possible mixing of types of rewrite rules, but the rev does make that difficult *)
-    (*possible solution: define valid predicate that appends, i.e. validRev *)
-  Admitted. 
-
-  Lemma isStateSym_isSpecStateSym γ: isStateSym γ <-> exists q, isSpecStateSym q γ. 
-  Proof.  
+    intros. apply valid_iff. apply valid_iff in H0 as (H1 & H2).  
     split.
-    - intros ([q m] & ?). eauto. 
-    - intros (q & []). eauto. 
-  Qed. 
+    { apply H1. }
+    intros. specialize (H2 i H0). 
+    unfold rewritesAt in *. 
+    rewrite <- (firstn_skipn (|h| - i) h) in H. 
+    apply tape_repr_polarityFlip in H. rewrite map_app in H. 
+    rewrite map_firstn, map_skipn in H.
 
+    assert (0 <= i < (|h|)) as H3 by (unfold polarityRev in H0; rewrite rev_length, map_length in H0; lia). 
+    rewrite firstn_skipn_rev in H.
+    rewrite map_length in H. replace ((|h|) - (|h| - i)) with i in H by lia. 
+    clear H3. 
+
+    specialize (skipn_length i (polarityRev h) ) as H3. 
+    specialize (skipn_length i (polarityRev h')) as H4. 
+
+    remember (skipn i (polarityRev h)) as h1. 
+    remember (skipn i (polarityRev h')) as h2.
+    do 3 (destruct h1 as [ | ? h1]; cbn in *; [lia | ]). 
+    do 3 (destruct h2 as [ | ? h2]; cbn in *; [lia | ]).
+    unfold polarityRev in Heqh1, Heqh2. rewrite <- Heqh1 in H. clear Heqh1 Heqh2 H1 H0 H3 H4. 
+
+    apply rewHeadSim_tail_invariant with (s1' := []) (s2' := []) in H2. 
+    apply rewHeadTape_tail_invariant with (h1' := []) (h2' := []). 
+    inv H2. 
+    - apply rewHeadTrans_statesym in H0 as (q & _ & [H1 | [H1 | H1]]). 
+      all: match type of H1 with isSpecStateSym ?q ?s => assert (exists q, isSpecStateSym q s) as H2 by eauto; apply isStateSym_isSpecStateSym in H2; 
+      eapply (reprTape_no_isStateSym) with (e := s) in H; [ congruence | ] end. 
+      all: apply in_or_app; left; rewrite <- in_rev; eauto. 
+    - apply H0. 
+    - apply rewHeadHalt_statesym in H0 as (q & _ & [H1 | [H1 | H1]]). 
+      all: match type of H1 with isSpecStateSym ?q ?s => assert (exists q, isSpecStateSym q s) as H2 by eauto; apply isStateSym_isSpecStateSym in H2; 
+      eapply (reprTape_no_isStateSym) with (e := s) in H; [ congruence | ] end. 
+      all: apply in_or_app; left; rewrite <- in_rev; eauto.
+   Qed. 
+      
   (** *TODO: doesn't work*)
   (* Hint Resolve isStateSym_isSpecStateSym.  *)
 
@@ -910,23 +971,6 @@ end.
     cbn in H. rewrite rewHeadSim_tail_invariant in H. apply H. 
   Qed. 
 
-  Lemma rewritesAt_rewHeadTrans_add_at_end i a b h1 h2 : rewritesAt rewHeadTrans i a b -> rewritesAt rewHeadTrans i (a ++ h1) (b ++ h2).
-  Proof.
-    intros. unfold rewritesAt in *. inv H; symmetry in H0; symmetry in H1; repeat erewrite skipn_app2; eauto with trans; try congruence; cbn; eauto with trans.
-  Qed. 
-
-  Lemma rewritesAt_rewHeadHalt_add_at_end i a b h1 h2 : rewritesAt rewHeadHalt i a b -> rewritesAt rewHeadHalt i (a ++ h1) (b ++ h2).
-  Proof.
-    intros. unfold rewritesAt in *. inv H; symmetry in H0; symmetry in H1; repeat erewrite skipn_app2; eauto with trans; try congruence; cbn; eauto with trans.
-  Qed.
-
-  Lemma rewritesAt_rewHeadSim_add_at_end i a b h1 h2 : rewritesAt rewHeadSim i a b -> rewritesAt rewHeadSim i (a ++ h1) (b ++ h2).  
-  Proof. 
-    intros. inv H.
-    + constructor 1. now apply rewritesAt_rewHeadTrans_add_at_end. 
-    + constructor 2. now apply rewritesAt_rewHeadTape_add_at_end.  
-    + constructor 3. now apply rewritesAt_rewHeadHalt_add_at_end. 
-  Qed. 
 
   (*a somewhat ugly but necessary lemma...*)
   (*this enables us to justify a configuration string rewrite by rewriting the two tape halves and then apply three rules at the center *)
@@ -1349,4 +1393,71 @@ Admitted.
   Admitted. 
 
 End transition.
+
+(** *results that might be needed at a later point and are too good to just throw away *)
+
+(*   Ltac rewHeadSim_inv := repeat match goal with *)
+(*     | [H : rewHeadSim ?a _ |- _ ] => is_var a; destruct a *)
+(*     | [H : rewHeadSim (_ :: ?a) _ |- _ ] => is_var a; destruct a *)
+(*     | [H : rewHeadSim (_ :: _ :: ?a) _ |- _] => is_var a; destruct a *)
+(*     | [H : rewHeadSim _ ?a |- _] => is_var a; destruct a *)
+(*     | [H : rewHeadSim _ (_ :: ?a) |- _] => is_var a; destruct a *)
+(*     | [H : rewHeadSim _ (_ :: _ :: ?a) |- _ ] => is_var a; destruct a *)
+(* end.  *)
+
+  (*this is basically a generalised version of Lemma 15 (rewHeadTape_symm1): instead of restricting ourselves to rewHeadTape, we have the ≃t assumption *)
+  (* Lemma rewHeadSim_polarityRev u h h' p w : u ≃t(p, w) h -> valid rewHeadSim h h' -> valid rewHeadSim (polarityRev h) (polarityRev h').  *)
+  (* Proof.  *)
+  (*   intros. revert u w H. induction H0; intros.  *)
+  (*   - cbn. constructor.  *)
+  (*   - apply valid_length_inv in H0. *)
+  (*     destruct a, b; try destruct a; try destruct b; cbn in *; try lia. all: repeat constructor. *)
+  (*   - cbn. destruct u; [ destruct w | destruct u; [ | destruct u]]; cbn in *; destruct_tape_in_tidy H1; discr_tape; cbn in *.  *)
+  (*     1: {  *)
+  (*         rewHeadSim_inv; [now apply valid_length_inv in H0 | now apply valid_length_inv in H0 | destruct b; try now apply valid_length_inv in H0]. *)
+  (*         inv H.  *)
+  (*         -- apply rewHeadTrans_statesym in H2 as (? & _ &  [[] | [[] | []]]); congruence. *)
+  (*         -- rewHeadTape_inv2. constructor 3. *)
+  (*            ++ repeat constructor.  *)
+  (*            ++ eauto with trans.  *)
+  (*         -- apply rewHeadHalt_statesym in H2 as (? & _ &  [[] | [[] | []]]); congruence. *)
+  (*      }  *)
+  (*     (* for the other cases, we need the IH *) *)
+  (*      all:   *)
+  (*       match goal with [ H : [] ≃t(_, _) _ |- _] => clear H1; assert ([] ≃t(p, w) E (S (S w))) as H1 by apply niltape_repr *)
+  (*                 | [ H : _ :: _ ≃t(_, _) _ |- _] => apply tape_repr_step in H *)
+  (*       end;  *)
+  (*       specialize (IHvalid _ _ H1); clear H1; *)
+  (*       rewHeadSim_inv; [now apply valid_length_inv in H0 | now apply valid_length_inv in H0 | ]; *)
+  (*       apply rewHeadSim_tail_invariant with (s1' := []) (s2' := []) in H;  *)
+  (*       inv H; [ apply rewHeadTrans_statesym in H1 as (? & _ &  [[] | [[] | []]]); congruence *)
+  (*             | *)
+  (*             | apply rewHeadHalt_statesym in H1 as (? & _ &  [[] | [[] | []]]); congruence ];  *)
+  (*       (*we use the explicit characterisation of valid to deal with the tail *) *)
+  (*       apply valid_iff; apply valid_iff in IHvalid as (IH1 & IH2);  *)
+  (*       split; [ rewrite !app_length; rewrite !app_length in IH1; cbn in *; easy| ];  *)
+  (*       intros; rewrite !app_length in H; rewrite rev_length, map_length in H; *)
+  (*       rewrite !app_length in IH2; rewrite rev_length, map_length in IH2; cbn in *; *)
+  (*       match type of H with *)
+  (*       | context[(|?a|) + 1 + 1 + 1 -2] => replace ((|a|) + 1 + 1 + 1 -2) with (S (|a|)) in H by lia *)
+  (*       | context[(|?a|) + 1 + 1 + 1 + 1 -2] => replace ((|a|) + 1 + 1 + 1 + 1 -2) with (S (S (|a|))) in H by lia *)
+  (*       end; *)
+  (*       match type of IH2 with *)
+  (*       | context[(|?a|) + 1 + 1 - 2] => replace ((|a|) + 1 + 1 - 2) with (|a|) in IH2 by lia *)
+  (*       | context[(|?a|) + 1 + 1 + 1 - 2] => replace ((|a|) + 1 + 1 + 1 - 2) with (S (|a|)) in IH2 by lia *)
+  (*       end;  *)
+  (*       match type of H with 0 <= ?i < S (?a) => destruct (nat_eq_dec i a); [ subst | assert (0 <= i < a) as H' by lia] end;  *)
+  (*       [ | clear H n; specialize (IH2 i H'); now apply rewritesAt_rewHeadSim_add_at_end].  *)
+  (*       1,2,4:  *)
+  (*       unfold rewritesAt; rewrite <- !app_assoc; rewrite !skipn_app;  *)
+  (*       [ cbn; constructor 2; rewHeadTape_inv2; eauto *)
+  (*       |rewrite !app_length in IH1; rewrite rev_length, map_length in IH1; cbn in IH1; lia *)
+  (*       | now rewrite rev_length, map_length ]. *)
+
+  (*       (*the third goal needs a special treatment *) *)
+  (*       unfold rewritesAt.  do 2 rewrite <- app_assoc. do 2 setoid_rewrite <- app_assoc at 2. rewrite !skipn_app;  *)
+  (*        [ cbn; constructor 2; rewHeadTape_inv2; eauto  *)
+  (*       |rewrite !app_length in IH1; rewrite rev_length, map_length in IH1; cbn in IH1; lia *)
+  (*       | rewrite app_length; cbn; now rewrite rev_length, map_length ]. *)
+  (* Qed.  *)
 

@@ -3,6 +3,46 @@ From PslBase Require Import Vectors.Vectors.
 From PslBase Require Import FiniteTypes. 
 Require Import Lia.
 Require Template.utils.
+From Undecidability.TM Require Import TM.
+From Undecidability.TM Require Import TM.
+From Undecidability.L.TM Require Import TMflat TMflatEnc TMflatFun TMEncoding TapeDecode TMunflatten.
+
+Require Import Lia. 
+
+
+
+
+
+Definition involution (X : Type) (f : X -> X) := forall (x : X), f (f x) = x. 
+
+Lemma map_involution (X : Type)(f : X -> X) : involution f -> involution (map f). 
+Proof. 
+  intros. intros l. rewrite map_map. setoid_rewrite H. now rewrite map_id. 
+Qed. 
+
+Lemma involution_invert_eqn (X : Type) (f : X -> X) : involution f -> forall a b, f a = f b -> a = b. 
+Proof. 
+  intros. enough (f (f a) = f(f b)). { now rewrite  !H in H1. } now rewrite H0. 
+Qed. 
+
+Lemma involution_invert_eqn2 (X : Type) (f : X -> X) : involution f -> forall a b, f a = b -> a = f b. 
+Proof. 
+  intros. rewrite <- (H a). now apply involution_invert_eqn with (f := f). 
+Qed. 
+
+Smpl Create involution.
+Ltac involution_simpl := smpl involution; repeat (involution_simpl).
+
+Smpl Add (apply map_involution) : involution.
+
+Lemma rev_involution (X : Type): involution (@rev X).  
+Proof. 
+  unfold involution. apply rev_involutive. 
+Qed. 
+
+Smpl Add (apply rev_involution) : involution. 
+
+
 
 Definition substring (X : Type) (a b : list X) := exists b1 b2, b = b1 ++ a ++ b2. 
 Definition prefix (X : Type) (a b : list X) := exists b', b = a ++ b'. 
@@ -52,6 +92,40 @@ Proof.
   + now rewrite firstn_skipn. 
 Qed.
 
+Lemma firstn_skipn_rev (X : Type) i (h : list X) : firstn i h = rev (skipn (|h| - i) (rev h)). 
+Proof. 
+  rewrite <- (firstn_skipn i h) at 3. 
+  rewrite rev_app_distr.
+  rewrite skipn_app. 
+  - now rewrite rev_involution.
+  - rewrite rev_length. now rewrite skipn_length.
+Qed. 
+
+Lemma skipn_firstn_rev (X : Type) i (h : list X) : skipn i h = rev (firstn (|h| - i) (rev h)). 
+Proof. 
+  intros. 
+  destruct (le_lt_dec i (|h|)). 
+  - rewrite firstn_skipn_rev. 
+    rewrite !rev_involution.
+    rewrite rev_length.
+    replace ((|h|) - (|h| - i)) with i by  lia. easy. 
+  - specialize (skipn_length i h) as H1. assert (|skipn i h| = 0) by lia. 
+    specialize (firstn_le_length (|h| - i) (rev h)) as H2. assert (|firstn (|h| - i) (rev h)| = 0)  as H3 by lia. 
+    destruct skipn, firstn; cbn in *; try congruence. 
+Qed. 
+
+Lemma map_firstn (X Y : Type) i (h : list X) (f : X -> Y) : map f (firstn i h) = firstn i (map f h). 
+  revert i; induction h; intros; cbn. 
+  - now rewrite !firstn_nil. 
+  - destruct i; cbn; [reflexivity | now rewrite IHh].
+Qed.
+
+Lemma map_skipn (X Y : Type) i (h : list X) (f : X -> Y) : map f (skipn i h) = skipn i (map f h). 
+  revert i; induction h; intros; cbn. 
+  - now rewrite !skipn_nil. 
+  - destruct i; cbn; [reflexivity | now rewrite IHh ]. 
+Qed.
+
 
 Lemma length_app_decompose (X : Type) (a : list X) i j : length a = i + j -> exists a1 a2, a = a1 ++ a2 /\ length a1 = i /\ length a2 = j. 
 Proof. 
@@ -59,7 +133,7 @@ Proof.
   induction i. 
   - cbn. intros. now exists [], a. 
   - cbn. intros. inv_list. assert (|a| = i + j) by lia. destruct (IHi a H0) as (a1 & a2 & H2 & H3). 
-    exists (x :: a1), a2. firstorder. all: cbn. 1: rewrite H2. all: firstorder.
+    exists (x :: a1), a2. firstorder. 
 Qed. 
 
 

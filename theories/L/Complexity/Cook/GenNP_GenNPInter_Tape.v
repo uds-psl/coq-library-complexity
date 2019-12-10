@@ -154,8 +154,8 @@ Module tape (sig : TMSig).
   Lemma tape_repr_inv3 w p (u : Sigma) (us : list Sigma) h : u :: us ≃t(p, w) (inr (inr |_|) :: h) -> False. 
   Proof. intros (H1 & H2 & H3). cbn in H3. unfold withPolaritySigma in H3. congruence. Qed. 
 
-  Lemma tape_repr_inv4 w p (u : Sigma) (us : list Sigma) h : u :: us ≃t(p, w) (inr $) :: h -> False. 
-  Proof. intros (H1 & H2 & H3). cbn in H3. unfold withPolaritySigma in H3; congruence. Qed. 
+  Lemma tape_repr_inv4 w p (u : list Sigma) h : u ≃t(p, w) (inr $) :: h -> False. 
+  Proof. intros (H1 & H2 & H3). cbn in H3. destruct u; cbn in H3; unfold withPolaritySigma in H3; congruence. Qed. 
 
   Lemma tape_repr_inv5 w p u h e : u ≃t(p, w) (inr $) :: e:: h -> False. 
   Proof.
@@ -226,7 +226,7 @@ Module tape (sig : TMSig).
                      | [ H : [] ≃t(?p, ?w) (inr (inr (Some ?e))) :: ?a |- _] => now apply tape_repr_inv2 in H
                      | [ H : ?u :: ?us ≃t(?p, ?w) inr (inr |_|):: ?a |- _] => now apply tape_repr_inv3 in H
                      | [H : _ ≃t(_, _) _ :: inr $ :: _ |- _ ] => now apply tape_repr_inv14 in H
-                     | [ H : ?u :: ?us ≃t(?p, ?w) inr $ :: ?a |- _] => now apply tape_repr_inv4 in H
+                     | [ H : ?us ≃t(?p, ?w) inr $ :: ?a |- _] => now apply tape_repr_inv4 in H
                      | [H : _ ≃t(?p, ?w) inr $ :: ?e :: ?a |- _] => now apply tape_repr_inv5 in H
                      | [H : ?u :: ?us ≃t(?p, 0) _ |- _] => destruct H; cbn in *; lia
                      | [H : ?us ≃t(?p, ?w) ?a |- _] => let H1 := fresh in apply tape_repr_inv11 in H as H1; unfold wo in H1; cbn [length] in H1; lia
