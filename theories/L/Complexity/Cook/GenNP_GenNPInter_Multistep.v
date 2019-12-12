@@ -144,12 +144,6 @@ Module multistep (sig : TMSig).
   (*there exists the symbol of a halting state in the string s *)
   Definition containsHaltingState s := exists q qs, halt q = true /\ isSpecStateSym q qs /\ qs el s.  
   
-  Lemma E_alphabet a w : a el (E w) -> a = inr (inr |_|) \/ a = inr $. 
-  Proof. 
-    intros. induction w.  
-    - cbn in H. firstorder. 
-    - cbn in H. destruct H as [H | H]; firstorder.
-  Qed. 
 
 
   (*Lemma 27 *)

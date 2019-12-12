@@ -48,13 +48,27 @@ Section fixTM.
     destruct mtrans eqn:H1. unfold sconfig_for_mconfig.
     unfold step. unfold doAct_multi. cbn. unfold current_chars. cbn. setoid_rewrite H1. 
     eapply Vector.caseS with (n := 0). 
-    2 : apply t0. intros. cbn.  
-  Admitted.  
+    2 : apply t0.
+    intros.
+    erewrite Vector.nth_map2 with (p2 := Fin0) (p3 := Fin0). 2-3: reflexivity. cbn. reflexivity.  
+  Qed. 
 
   Lemma sstep_agree2 (c : mconfig Sigma mstates 1) : mconfig_for_sconfig (sstep strans (sconfig_for_mconfig c)) = step (c : mconfig Sigma (states TM) 1).  
   Proof.
-  Admitted. 
-
+    destruct c. cbn. unfold step. cbn. unfold current_chars.
+    assert ([| current ctapes[@Fin0]|] = Vector.map (current (sig := Sigma)) ctapes). 
+    {
+      apply VectorDef.caseS' with (v := ctapes). intros. apply VectorDef.case0 with (v := t). cbn. reflexivity. 
+    }
+    rewrite H. destruct mtrans eqn:H1. 
+    cbn. 
+    apply VectorDef.caseS' with (v := t). 
+    intros. 
+    apply VectorDef.case0 with (v := t0). cbn. 
+    apply VectorDef.caseS' with (v := ctapes). 
+    intros. 
+    apply VectorDef.case0 with (v := t1). cbn. reflexivity. 
+ Qed. 
 End fixTM.
 
 
@@ -221,20 +235,23 @@ Module basics (sig : TMSig).
     unfold polarityFlipSigma. destruct e as [p' e]. intros. inv H. specialize (polarityFlip_involution p'). congruence. 
   Qed. 
 
-  Lemma polarityFlipTapeSigmaInv1 e p σ : polarityFlipTapeSigma e = inr (Some (p, σ)) -> e = inr (Some (polarityFlip p, σ)). 
-  Proof.
-    unfold polarityFlipTapeSigma. destruct e as [ | e].
-    + destruct d. congruence. 
-    + destruct e as [ e | ].  
-      - intros. inv H. destruct e as [p' e]. cbn in H1. inv H1. specialize (polarityFlip_involution p') as ->. reflexivity.
-      - cbn; congruence. 
-  Qed. 
   Lemma polarityFlipTapeSigma'Inv1 e p σ : polarityFlipTapeSigma' e = (Some (p, σ)) -> e = (Some (polarityFlip p, σ)). 
   Proof.
-    unfold polarityFlipTapeSigma'. destruct e as [ e| ].  
-    - intros. inv H. destruct e as [p' e]. cbn in H1. inv H1. specialize (polarityFlip_involution p') as -> ;reflexivity. 
-    - cbn; congruence. 
-  Qed.
+    intros; destruct e; cbn in H; [ | congruence]. inv H.
+    now apply polarityFlipSigmaInv1 in H1.  
+  Qed. 
+
+  Lemma polarityFlipTapeSigmaInv1 e p σ : polarityFlipTapeSigma e = inr (Some (p, σ)) -> e = inr (Some (polarityFlip p, σ)). 
+  Proof.
+    intros. destruct e; cbn in H; [destruct d; congruence | ].
+    inv H. now apply polarityFlipTapeSigma'Inv1 in H1. 
+  Qed. 
+
+  Lemma polarityFlipGammaInv1 e p σ : polarityFlipGamma e = inr (inr (Some (p, σ))) -> e = inr (inr (Some (polarityFlip p, σ))). 
+  Proof. 
+    intros. destruct e; cbn in H; [ congruence | ]. 
+    inv H. now apply polarityFlipTapeSigmaInv1 in H1.
+  Qed. 
 
   (*reverse a string + flip its polarities *)
   Definition polarityRev (x : list Gamma) : list Gamma := rev (map polarityFlipGamma x).
