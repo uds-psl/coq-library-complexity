@@ -558,33 +558,36 @@ For the cases where the current symbol is a blank, it must hold that there is a 
 \paragraph*{$\delta(q, \None) = (p, \Some{b}, \textsf{L})$:}
 \begin{center}
   \rewwin{\blank & q^\blank & m_1}{\blank & p^\blank & \polpos{b}} 
-  \rewwin{\sigma_1 & q^\blank & \blank}{\polpos{m_1} & q^{\sigma_1} & \polpos{b}} \\[3ex]
-  \rewwin{\sigma_1 & \sigma_2 & q^\blank}{\polpos{m_1} & \polpos{\sigma_1} & p^{\sigma_2}}
+  \rewwin{\sigma_1 & q^\blank & \blank}{\polpos{m_1} & p^{\sigma_1} & \polpos{b}} \\[3ex]
+  \rewwin{\blank & \blank & q^\blank}{\blank & \blank & p^\blank}
   \rewwin{\blank & \sigma_1 & q^{\blank}}{\blank & \blank & p^{\sigma_1}}
-  \rewwin{\blank & \blank & q^\blank}{\blank & \blank & p^\blank} \\[3ex]
-  \rewwin{q^\blank & \sigma_1 & m_1}{q^{m_2} & \polpos{b} & \polpos{\sigma_1}}
-  \rewwin{q^\blank & \blank & \blank}{q^{m_1} & \polpos{b} & \blank}
-\end{center}
-
-\paragraph*{$\delta(q, \None) = (p, \Some{b}, \textsf{N})$:}
-\begin{center}
-  \rewwin{m_1 & q^\blank & \blank}{\polneut{m_1} & q^b & \blank}
-  \rewwin{\blank & q^\blank & m_1}{\blank & q^b & \polneut{m_1}} \\[3ex]
-  \rewwin{m_1 & \sigma_1 & q^\blank}{\polneut{m_1} & \polneut{\sigma_1} & q^b}
-  \rewwin{\blank & \blank & q^{\blank}}{\blank & \blank & q^b} \\[3ex]
-  \rewwin{q^{\blank} & \sigma_1 & m_1}{q^b & \polneut{\sigma_1} & \polneut{m_1}} 
-  \rewwin{q^\blank & \blank & \blank}{q^b & \blank & \blank}
+  \rewwin{\sigma_1 & \sigma_2 & q^\blank}{\polpos{m_1} & \polpos{\sigma_1} & p^{\sigma_2}}
+   \\[3ex]
+  \rewwin{q^\blank & \blank & \blank}{p^{m_1} & \polpos{b} & \blank}
+  \rewwin{q^\blank & \sigma_1 & m_1}{p^{m_2} & \polpos{b} & \polpos{\sigma_1}}
 \end{center}
 
 \paragraph*{$\delta(q, \None) = (p, \Some{b}, \textsf{R})$:}
 \begin{center}
   \rewwin{m_1 & q^\blank & \blank}{\polneg{b} & p^\blank & \blank} 
   \rewwin{\blank & q^\blank & \sigma_1}{\polneg{b} & p^{\sigma_1} & \polneg{m_1}} \\[3ex]
-  \rewwin{q^\blank & \sigma_1 & \sigma_2}{p^{\sigma_1} & \polneg{\sigma_2} & \polneg{m_1}} 
+  \rewwin{q^\blank & \blank & \blank}{p^\blank & \blank & \blank} 
   \rewwin{q^\blank & \sigma_1 & \blank}{p^{\sigma_1} & \blank & \blank} 
-  \rewwin{q^\blank & \blank & \blank}{p^\blank & \blank & \blank} \\[3ex]
-  \rewwin{m_1 & \sigma_1 & q^\blank}{\polneg{\sigma_1} & \polneg{b} & q^{m_2}}
-  \rewwin{\blank & \blank & q^\blank}{\blank & \polneg{b} & q^{m_2}}
+  \rewwin{q^\blank & \sigma_1 & \sigma_2}{p^{\sigma_1} & \polneg{\sigma_2} & \polneg{m_1}} 
+  \\[3ex]
+  \rewwin{\blank & \blank & q^\blank}{\blank & \polneg{b} & p^{m_2}}
+  \rewwin{m_1 & \sigma_1 & q^\blank}{\polneg{\sigma_1} & \polneg{b} & p^{m_2}}
+\end{center}
+
+\paragraph*{$\delta(q, \None) = (p, \Some{b}, \textsf{N})$:}
+\begin{center}
+  \rewwin{m_1 & q^\blank & \blank}{\polneut{m_1} & p^b & \blank}
+  \rewwin{\blank & q^\blank & m_1}{\blank & p^b & \polneut{m_1}} \\[3ex]
+  \rewwin{q^{\blank} & \sigma_1 & m_1}{p^b & \polneut{\sigma_1} & \polneut{m_1}} 
+  \rewwin{q^\blank & \blank & \blank}{p^b & \blank & \blank} \\[3ex]
+  \rewwin{m_1 & \sigma_1 & q^\blank}{\polneut{m_1} & \polneut{\sigma_1} & p^b}
+  \rewwin{\blank & \blank & q^{\blank}}{\blank & \blank & p^b}
+
 \end{center}
 
 If the head is currently on a blank (i.e.\ the head is beyond the currently used tape region), the tape is not moved if again a blank is written, meaning that no new cell is required.
@@ -593,16 +596,16 @@ If the head is currently on a blank (i.e.\ the head is beyond the currently used
   \rewwin{\blank & q^\blank & m_1}{\blank & p^\blank & \polneut{m_1}} 
   \rewwin{\sigma_1 & q^\blank & \blank}{\polpos{m_1} & p^{\sigma_1} & \blank} \\[3ex]
   \rewwin{\blank & \blank & q^\blank}{\blank & \blank & p^\blank}
-  \rewwin{\blank & \sigma_1 & q^\blank}{\blank & \blank & q^{\sigma_1}}
-  \rewwin{\sigma_2 & \sigma_1 & q^\blank}{\polpos{m_1} & \polpos{\sigma_2} & q^{\sigma_1}} \\[3ex]
+  \rewwin{\blank & \sigma_1 & q^\blank}{\blank & \blank & p^{\sigma_1}}
+  \rewwin{\sigma_2 & \sigma_1 & q^\blank}{\polpos{m_1} & \polpos{\sigma_2} & p^{\sigma_1}} \\[3ex]
   \rewwin{q^\blank & \blank & \blank}{p^{m_1} & \blank & \blank}
   \rewwin{q^\blank & \sigma_1 & m_1}{p^\blank & \polneut{\sigma_1} & \polneut{m_1}}
 \end{center}
 
 \paragraph*{$\delta(q, \None) = (p, \None, \textsf{N})$:}
 \begin{center}
-  \rewwin{\sigma_1 & q^\blank & \blank}{\polneut{\sigma_1} & p^{\blank} & \blank}
-  \rewwin{\blank & q^{\blank} & \sigma_1} {\blank & q^{\blank} & \polneut{\sigma_1}} \\[3ex]
+  \rewwin{m & q^\blank & \blank}{\polneut{m} & p^{\blank} & \blank}
+  \rewwin{\blank & q^{\blank} & m} {\blank & p^{\blank} & \polneut{m}} \\[3ex]
   \rewwin{\blank & \blank & q^\blank}{\blank & \blank & p^\blank}
   \rewwin{m_1 & \sigma_1 & q^\blank}{\polneut{m_1} & \polneut{\sigma_1} & p^{\blank}} \\[3ex]
   \rewwin{q^{\blank} & \blank & \blank}{p^\blank & \blank & \blank} 
@@ -626,7 +629,7 @@ Finally, we need to account for the case where the Turing machine halts in less 
   \rewwin{m_1 & q^{\sigma_1} & m_2}{\polneut{m_1} & q^{\sigma_1} & \polneut{m_2}} 
   \rewwin{m_1 & q^\blank & \blank}{\polneut{m_1} & q^\blank & \blank} 
   \rewwin{\blank & q^\blank & m_1}{\blank & q^\blank & \polneut{m_1}} \\[3ex]
-  \rewwin{m_1 & \sigma_1 & q^{m_2}}{\polneut{m_1} & \polneut{\sigma_1} & q^{m_1}} 
+  \rewwin{m_1 & \sigma_1 & q^{m_2}}{\polneut{m_1} & \polneut{\sigma_1} & q^{m_2}} 
   \rewwin{\blank & \blank & q^{m_1}}{\blank & \blank & q^{m_1}} \\[3ex]
   \rewwin{q^{m_1} & \sigma_1 & m_2}{q^{m_1} & \polneut{\sigma_1} & \polneut{m_2}} 
   \rewwin{q^{m_1} & \blank & \blank}{q^{m_1} & \blank & \blank}
@@ -942,7 +945,7 @@ The other direction now follows from the uniqueness properties.
 
 The above results can be easily extended to multiple simulation steps. 
 \begin{lemma}[Multi-step Simulation]\label{lem:mssim}
-  Let $(q, \mathit{tape}) \reprc{} s$ and $(q, \mathit{tape}) \succ^k (q', \mathit{tape}')$ for some $k \ge 0$ and $\mathit{tape} \le z - k$. There exists a uniquely determined string $s'$ with $s \strent^k s'$ and $(q', \mathit{tape}') \reprc{} s'$. 
+  Let $(q, \mathit{tape}) \reprc{} s$ and $(q, \mathit{tape}) \succ^k (q', \mathit{tape}')$ for some $k \ge 0$ and $\length{\mathit{tape}} \le z - k$, $k \le z$. There exists a uniquely determined string $s'$ with $s \strent^k s'$ and $(q', \mathit{tape}') \reprc{} s'$. 
 \end{lemma}
 \begin{proof}
   By induction on $k$, using Lemma~\ref{lem:simstep} in the inductive step.
@@ -979,7 +982,7 @@ The above results can be easily extended to multiple simulation steps.
 Now, it can be shown that the simulation is sound and complete.
 
 \begin{theorem}[Completeness]\label{thm:simcomplete}
-  Let a configuration $(q, \mathit{tape})$ be given with $\length{\mathit{tape}} \le k$. Then there exists a string $s$ with $(q, \mathit{tape}) \reprc{} s$. If $(q, \mathit{tape}) \rhd^{\le t} (q', \mathit{tape}')$, then there exists a string $s'$ with $s \strent{}^t s'$ and $(q', \mathit{tape}') \reprc{} s'$.  
+  Let a configuration $(q, \mathit{tape})$ be given with $\length{\mathit{tape}} \le k$. Then there exists a string $s$ with $(q, \mathit{tape}) \reprc{} s$. If $(q, \mathit{tape}) \rhd^{\le t} (q', \mathit{tape}')$, then there exists a string $s'$ with $s \strent{}^t s'$, $(q', \mathit{tape}') \reprc{} s'$ and $s' \models \Rfinal$.
 \end{theorem}
 \begin{proof}
   The existence of the string $s$ follows by the definition of $\reprc{}$ (the relation directly induces a functional definition).  
@@ -1124,7 +1127,7 @@ The new initial string $x_0'$ looks as follows, for symbols $\top, \bot, \underl
     \draw (8, 0.5) -- (8, 0);
     \draw (8.5, 0.5) -- (8.5, 0);
    
-    \node at (0.25, 0.25) {\#};
+    \node at (0.25, 0.25) {\underline{\#}};
     \node at (0.75, 0.24) {$\bot$};
     \node at (4.75, 0.25) {$\bot$};
     \node at (5.25, 0.25) {$\underline{q^\blank}$};
@@ -1132,7 +1135,7 @@ The new initial string $x_0'$ looks as follows, for symbols $\top, \bot, \underl
     \node at (7.75, 0.25) {$\top$};
     \node at (8.25, 0.25) {$\bot$};
     \node at (9.75, 0.25) {$\bot$};
-    \node at (10.25, 0.25) {\#};
+    \node at (10.25, 0.25) {\underline{\#}};
 
     \path[<->] (5.5, -0.5) edge node[fill=white, anchor=center, pos= 0.5] {\small $k$} (8, -0.5);
     \path[<->] (0, -0.5) edge node [fill = white, anchor=center, pos=0.5] {\small $t + k + 3$} (5, -0.5);
@@ -1145,8 +1148,8 @@ The symbol $\top$ denotes positions where elements of the tape alphabet $\Sigma$
 Designing the rewriting rules is now straightforward. The only part which takes some consideration is the fact that the input string may be shorter than $k$ symbols, but there may never be blanks inbetween elements of the tape alphabet. This difficulty is easily resolved due to the overlapping rewrite windows:
 \begin{center}
   \rewwin{\bot & \bot & \bot}{\blank & \blank & \blank}
-  \rewwin{\underline{\#} & \bot & \bot}{\# & \blank & \blank}
-  \rewwin{\bot & \bot & \underline{\#}}{\blank & \blank & \#} \\[3ex]
+  \rewwin{\underline{\#} & \bot & \bot}{\underline{\#} & \blank & \blank}
+  \rewwin{\bot & \bot & \underline{\#}}{\blank & \blank & \underline{\#}} \\[3ex]
   \rewwin{\bot & \bot & \underline{q^\blank}} {\blank & \blank & q^\blank}
   \rewwin{\bot & \underline{q^\blank} & \top}{\blank & q^\blank & \polneut{m_1}}
   \rewwin{\bot & \underline{q^\blank} & \bot}{\blank & q^\blank & \blank} \\[3ex]
