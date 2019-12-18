@@ -59,6 +59,8 @@
 
 \include{macros}
 
+\newcommand{\TODO}[1]{}
+
 \begin{document}
 
 \maketitle
@@ -293,7 +295,7 @@ We give Boolean deciders for node and edge containment:
 While our definition of the type \textsf{edge} works with pairs, we are giving it the semantics of an undirected graph.
 
 \subsection{Clique}
-TODO: add well-formedness as a requirement
+\TODO{add well-formedness as a requirement}
 A $k$-clique is a duplicate-free list of $k$ nodes such that all pairwise-distinct nodes are connected.
 
 \begin{align*}
@@ -346,7 +348,7 @@ In order to reason about the reduction, we have to somehow connect a CNF with th
   \[\normalfont\textsf{inverseOn}~p~q~f~g := (\forall x. p~x \rightarrow q(f~x) \land x = g(f~x)) \land (\forall y. q~y \rightarrow p(f~y) \land y = f(g~y)) \]
 \end{definition}
 
-TODO: maybe add technical statements regarding map + inverseOn
+\TODO{ maybe add technical statements regarding map + inverseOn}
 
 \begin{definition}[Labellings of graphs]
   A labelling assigns to each node of a graph a corresponding literal, and vice versa.
@@ -395,7 +397,7 @@ We first define a relation $\redrel$ which connects positive \textbf{3SAT} insta
 \end{definition}
 
 This relation exactly captures the construction described above, with the minor technical nuisance of having to convert between literal positions and syntactical literals.
-TODO: maybe add well-formedness explicitly
+\TODO{ maybe add well-formedness explicitly}
 
 We show the above equivalence for related instances constructively, by explicitly constructing a clique for a satisfying assignment, and a satisfying assignment for a clique. 
 
@@ -453,9 +455,10 @@ While the above result isn't very helpful on its own, we get two important corol
   All literals determined by \normalfont\textsf{constrCliCnf} are satisfied by the assignment.
   \[ pos \in \normalfont\textsf{constrCliCnf}~a~N \rightarrow \exists~L. \normalfont\textsf{enumLiteral}~N~pos = \Some{L} \land \eval{a}{L} = \Some{\btrue} \]
 \end{lemma}
+\TODO{
 \begin{proof}
-  TODO
 \end{proof}
+}
 
 \begin{proposition}
   Every two literals determined by \normalfont\textsf{constrCliCnf} are non-conflicting.
@@ -650,7 +653,7 @@ Now it is easy to show that $\redrel$ is satisfied:
 
 It remains to show that a) \textsf{red} runs in polynomial time and b) the output produced by \textsf{red} has a size polynomial in the size of the input CNF\footnote{It does not suffice to show that \textsf{red} runs in polynomial time, since ``space bounds time'' does not hold for L, in contrast to Turing machines.}. Both proofs are straightforward.
 
-\section{Running-time Bounds and Coq formalisation}
+\section{Running-time Bounds and Coq Formalisation}
 In this section, we briefly comment on the derivation of the running time bounds. As mentioned in the introduction, the extraction mechanism developed by Forster and Kunze~\cite{ForsterKunze:2019:Certifying-extraction} enables us to give running time bounds solving automatically generated recurrences. These running time functions need not be in a closed form, but can be recursive. Moreover, the bounds are not functions of the encoding size of the arguments, but functions of the arguments themselves. 
 In the end, though, we need to show that some function runs in polynomial time in the encoding size of its arguments. 
 
@@ -678,9 +681,9 @@ The running time lemma we then prove is\footnote{The definitions of \textsf{inOP
 
 The proofs are usually relatively mechanical, but require an induction on the object the function recurses on, using rewriting with facts about the encoding size of objects. We believe that most of the proofs could be automated, but this would entail a considerable effort for developing suitable procedures.
 
-Some functions need additional assumptions in order to derive bounds. For instance, for \textsf{foldr} we assume that the output size of the aggregation function is only growing by an additive constant:
-\[ \exists~c. \forall acc, el, env. size(enc (step~env~el~acc)) \le size(enc~acc) + size(enc~el) + size(enc~env) + c \]
-Even a relaxation to linear functions would not work since the size could then be doubled in each step.
+Some functions need additional assumptions in order to derive bounds. For instance, for \textsf{foldr} we assume that the output size of the aggregation function is only growing by a linear function (not including the accumulator): 
+\[ \exists~c~c'. \forall acc, el, env. size(enc (step~env~el~acc)) \le size(enc~acc) + c' \cdot (size(enc~el) + size(enc~env)) + c \]
+Even a relaxation to linear functions in the size of the accumulator would not work since the size could then be doubled in each step.
 The derivation of bounds for tail-recursive functions like \textsf{foldl} is, for this reason, rather unpleasant and requires a non-trivial strengthening of the inductive statement.
 
 \section{Closing Remarks}
@@ -690,7 +693,7 @@ One reason for the technical overhead is the fact that literals in a CNF are not
 
 We don't believe the approach taken here will scale well to more complex reductions. Some reductions admit a nice ``gadget structure'', allowing to build and verify individual gadgets and composition functions. Of course, such a fine-grained approach is not possible for all constructions -- for instance, due to the ``global'' character of the construction of the graph for the reduction to \textbf{Clique}, we don't believe that a significantly more clever approach is possible for formalising the construction presented here.
 
-Another path for improvement lies in abstracting away from specific representations and the iteration over these presentations. One possible approach would be to use abstract iterator functions taking relations as argument which describe the desired output in a more abstract way. The challenge with such abstractions lies with ensuring extractability to L and nice running time bounds. 
+Another path for improvement lies in abstracting away from specific representations and the iteration over these representations. One possible approach would be to use abstract iterator functions taking relations as argument which describe the desired output in a more abstract way. The challenge with such abstractions lies with ensuring extractability to L and nice running time bounds. 
 
 \bibliography{memo}{}
 
