@@ -7,6 +7,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 \usepackage[english]{babel}
 \usepackage{lipsum}
 \usepackage{pifont}
+\usepackage{wasysym}
 \usepackage{booktabs}
 \usepackage{multirow}
 \usepackage[absolute,overlay]{textpos}
@@ -226,7 +227,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 \title{Towards a Formalisation of Cook's Theorem in Coq}
 
 \institute{Saarland University}
-\date{10 January 2020}
+\date{10 January 2020\\[1ex]Second Bachelor Seminar Talk}
 \author{Lennard Gäher\\[1mm] {\small{Advisor: Fabian Kunze}}}
 
 \begin{document}
@@ -236,40 +237,59 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 
 \section{Introduction}
 
-\begin{frame}{Cook's Theorem (1971)}
+\begin{frame}{Cook's Theorem\footnote{\emph{The complexity of theorem-proving procedures}\cite{Cook:1971:CTP:800157.805047}}}
 
   \begin{block}{\vspace*{-3ex}}
     The satisfiability problem on CNFs \sat{} is NP-hard.
   \end{block}
-  \begin{center}
-    \color{gray}
+  \vspace{3ex}
+  \begin{block}{SAT}
     Given a Boolean formula in conjunctive normal form, does there exist a satisfying assignment?
+  \end{block}
+
+  \vspace{3ex}
+  \begin{center}
+    No \emph{formal} proof available\footnote{At least none that I am aware of}
   \end{center}
 \end{frame}
 
-\begin{frame}{Generic NP-hard Problem on Turing Machines}
-  \begin{block}{GenNP}
-    \begin{overlayarea}{\textwidth}{0.25\textwidth}
-      \only<1>{
-        \begin{align*}
-          \textbf{GenNP}~(M, \mathit{input}, t) := &M \text{ is a nondet.\ 1-tape TM} \\
-          \land & M \text{ accepts on } \mathit{input} \text{ in } \le t \text{ steps}
-        \end{align*}
-      }
-      \only<2->{
-        \begin{align*}
-          \textbf{GenNP}~(M, k, t) := &M \text{ is a det.\ 1-tape TM} \\
-          \land & \exists~\mathit{input}, \length{input} \le k \\
-                &\quad \land M \text{ accepts on } \mathit{input} \text{ in } \le t \text{ steps}
-        \end{align*}
-      }
-    \end{overlayarea}
-  \end{block}
+\begin{frame}{Generic NP-hard Problem}
+  Idea: encode computation as logical formula
 
-  \onslide<3->
-  \[ 
-    (M, k, t) \in \gennp{} \leftrightarrow f(M, k, t) \in \sat{}
-  \]
+  \only<2->{\frametitle{Generic NP-hard Problem on Turing Machines}}
+
+  \begin{overlayarea}{\textwidth}{0.4\textwidth}
+    \only<1> {
+      \vspace{3ex}
+      \begin{center}
+        L: non-local computations, too high-level \frownie{}
+      \end{center}
+    }
+    \only<2->{
+      \begin{block}{GenNP}
+        \begin{overlayarea}{\textwidth}{0.25\textwidth}
+          \only<2>{
+            \begin{align*}
+              \textbf{GenNP}~(M, \mathit{input}, t) := &M \text{ is a nondet.\ 1-tape TM} \\
+              \land & M \text{ accepts on } \mathit{input} \text{ in } \le t \text{ steps}
+            \end{align*}
+          }
+          \only<3->{
+            \begin{align*}
+              \textbf{GenNP}~(M, k, t) := &M \text{ is a det.\ 1-tape TM} \\
+              \land & \exists~\mathit{input}, \length{input} \le k \\
+                    &\quad \land M \text{ accepts on } \mathit{input} \text{ in } \le t \text{ steps}
+            \end{align*}
+          }
+        \end{overlayarea}
+      \end{block}
+    }
+
+    \onslide<4->
+    \[ 
+      (M, k, t) \in \gennp{} \leftrightarrow f(M, k, t) \in \sat{}
+    \]
+  \end{overlayarea}
 \end{frame}
 
 \begin{frame}{Challenges}
@@ -285,16 +305,88 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
   %tackle these problems with a sequence of intermediate languages
 \end{frame}
 
+\begin{frame}<1>[label=tableau]{Tableau\footnote{based on\cite{Sipser:TheoryofComputation}}}
+  \begin{center}
+    \begin{tikzpicture}[scale=0.8, every node/.style={scale=0.8}]
+      \draw[thick] (1.5, -4) -- (1.5, 3) -- (10, 3) -- (10, -4) -- (1.5, -4);
+      \draw (2, -4) -- (2, 3);
+      \draw (2.5, 3) -- (2.5, 2);
+      \draw (9.5, -4) -- (9.5, 3);
+      \draw[thick] (1.5, 2.5) -- (10, 2.5);
+      \draw[thick] (1.5, -3.5) -- (10, -3.5);
+      \draw[thick] (1.5, 2) -- (10, 2);
+      \draw[thick] (1.5, 1.5) -- (2, 1.5);
+      \draw[thick] (9.5, 1.5) -- (10, 1.5);
+
+      \draw (4.5, 3) -- (4.5, 2);
+      \draw (5, 3) -- (5, 2);
+      \draw (5.5, 3) -- (5.5, 2);
+      \draw (6, 3) -- (6, 2);
+      \draw (7, 3) -- (7, 2);
+      \draw (7.5, 3) -- (7.5, 2);
+      \draw (8, 3) -- (8, 2);
+      \draw (9, 3) -- (9, 2);
+      %\draw (2.5, 3) -- (2.5, 2);
+      %\draw (3, 3) -- (3, 2.5);
+      %\draw (4.5, 3) -- (4.5, 2.5);
+      %\draw (5, 3) -- (5, 2.5);
+      %\draw (5.5, 3) -- (5.5, 2.5);
+      %\draw (7.5, 3) -- (7.5, 2.5);
+
+      \node at (1.75, 2.75) {\#};
+      \node at (1.75, 2.25) {\#};
+      \node at (1.75, 1.75) {\#};
+      \node at (1.75, -3.75) {\#};
+      \node at (9.75, 2.75) {\#};
+      \node at (9.75, 2.25) {\#};
+      \node at (9.75, 1.75) {\#};
+      \node at (9.75, -3.75) {\#};
+
+      \node at (2.25, 2.75) {\textvisiblespace};
+      \node at (3.5, 2.75) {$\ldots$};
+      \node at (4.75, 2.75) {\textvisiblespace};
+      \node at (5.25, 2.75) {\small $q_0^{\blank}$};
+      \node at (5.75, 2.75) {\small $\sigma_1$};
+      \node at (6.5, 2.75) {$\ldots$};
+      \node at (7.25, 2.75) {\small $\sigma_k$};
+      \node at (7.75, 2.75) {\textvisiblespace};
+      \node at (8.5, 2.75) {$\ldots$};
+      \node at (9.25, 2.75) {\textvisiblespace};
+
+      %\node at (6.5, 2.75) {$\ldots$};
+      %\node at (5, 2.25) {$\ldots$};
+
+      \node at (1.75, -0.375) {$\vdots$};
+      \node at (9.75, -0.375) {$\vdots$};
+
+      \draw (4, -0.5) -- (4, 0.5) -- (5.5, 0.5) -- (5.5, -0.5) -- (4, -0.5);
+      \draw (4.5, -0.5) -- (4.5, 0.5);
+      \draw (5, -0.5) -- (5, 0.5);
+      \draw (4, 0) -- (5.5, 0);
+
+      \path[<->] (1, -4) edge node[fill=white, anchor=center, pos= 0.5] {\small t} (1, 3);
+      \path[<->] (1.5, -4.5) edge node[fill=white, anchor=center, pos=0.5] {\small \only<1>{ $l$}\only<2>{ $2z + 1$}} (10, -4.5);
+      \path[<->] (5.5, 3.5) edge node[fill=white, anchor=center, pos=0.5] {\small $k$} (7.5, 3.5);
+
+      \node at (11, 2.75) {\small 1\textsuperscript{st} config};
+      \node at (11, 2.25) {\small 2\textsuperscript{nd} config};
+      \node at (11, 1.75) {\small 3\textsuperscript{rd} config};
+    \end{tikzpicture}
+  \end{center} 
+\end{frame}
+
 \section{Parallel Rewriting}
 \begin{frame}[t]{String-based Configurations}
   \begin{overlayarea}{\textwidth}{0.08\textwidth}
-    \color{gray}
+    %\color{gray}
     \begin{minipage}{0.48\textwidth}
       $\Sigma = \{a, b, c\}$
     \end{minipage}
     \begin{minipage}{0.48\textwidth}
       \raggedleft
-      $\delta(q_1, a) = (q_2, \Some{b}, \textsf{L})$
+      \only<2-> {
+        $\delta(q_1, a) = (q_2, \Some{b}, \textsf{L})$
+      }
     \end{minipage}
   \end{overlayarea}
   \begin{overlayarea}{\textwidth}{0.3\textwidth}
@@ -358,68 +450,72 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
           \node at (4.125, -0.375) {$q_2^c$};
           \node at (3.375, -0.375) {\blank};
         }
+
+        \onslide<3-> {
+          \draw[->, dashed] (3.75, -0.75) -- (4.5, -2.25);
+          \draw[->, dashed] (6.75, -0.75) -- (7.5, -2.25);
+
+          \draw (0, -2.25) -- (9.75, -2.25);
+          \draw (0, -3) -- (9.75, -3);
+          \draw (0, -3) -- (0, -2.25);
+          \draw (9.75, -3) -- (9.75, -2.25);
+
+          \draw (4.5, -3) -- (4.5, -2.25);
+          \draw (5.25, -3) -- (5.25, -2.25);
+          \draw (3.75, -3) -- (3.75, -2.25);
+          \draw (3, -3) -- (3, -2.25);
+          \draw (6, -3) -- (6, -2.25);
+          \draw (6.75, -3) -- (6.75, -2.25);
+          \draw (7.5, -3) -- (7.5, -2.25);
+          \draw (8.25, -3) -- (8.25, -2.25);
+
+          \node at (1.5, -2.625) {$\cdots$};
+          \node at (9.125, -2.625) {$\cdots$};
+          \node at (5.6125, -2.625) {$q_1^a$};
+          \node at (6.375, -2.625) {$b$};
+          \node at (7.125, -2.625) {$a$};
+          \node at (7.875, -2.625) {\blank};
+          \node at (4.875, -2.625) {$c$};
+          \node at (4.125, -2.625) {\blank};
+          \node at (3.375, -2.625) {\blank};
+
+          \draw (0, -3.75) -- (9.75, -3.75);
+          \draw (0, -3.75) -- (0, -3);
+          \draw (9.75, -3.75) -- (9.75, -3);
+
+          \draw (4.5, -3) -- (4.5, -3.75);
+          \draw (5.25, -3) -- (5.25, -3.75);
+          \draw (3.75, -3) -- (3.75, -3.75);
+          \draw (3, -3) -- (3, -3.75);
+          \draw (6, -3) -- (6, -3.75);
+          \draw (6.75, -3) -- (6.75, -3.75);
+          \draw (7.5, -3) -- (7.5, -3.75);
+          \draw (8.25, -3) -- (8.25, -3.75);
+
+          \node at (1.5, -3.375) {$\cdots$};
+          \node at (9.125, -3.375) {$\cdots$};
+          \node at (5.6125, -3.375) {$b$};
+          \node at (6.375, -3.375) {$b$};
+          \node at (7.125, -3.375) {$a$};
+          \node at (7.875, -3.375) {\blank};
+          \node at (4.875, -3.375) {$q_2^c$};
+          \node at (4.125, -3.375) {\blank};
+          \node at (3.375, -3.375) {\blank};
+
+        }
       \end{tikzpicture}
     \end{center}
   \end{overlayarea}
 
-  \onslide<4-> {
+  \onslide<3-> {
     {\colorHOne{} Non-unique representation: }
-    \begin{center}
-      \begin{tikzpicture}
-        \draw (0, 0.75) -- (9.75, 0.75);
-        \draw (0, 0) -- (9.75, 0);
-        \draw (0, 0) -- (0, 0.75);
-        \draw (9.75, 0) -- (9.75, 0.75);
 
-        \draw (4.5, 0) -- (4.5, 0.75);
-        \draw (5.25, 0) -- (5.25, 0.75);
-        \draw (3.75, 0) -- (3.75, 0.75);
-        \draw (3, 0) -- (3, 0.75);
-        \draw (6, 0) -- (6, 0.75);
-        \draw (6.75, 0) -- (6.75, 0.75);
-        \draw (7.5, 0) -- (7.5, 0.75);
-        \draw (8.25, 0) -- (8.25, 0.75);
-
-        \node at (1.5, 0.375) {$\cdots$};
-        \node at (9.125, 0.375) {$\cdots$};
-        \node at (5.6125, 0.375) {$q_1^a$};
-        \node at (6.375, 0.375) {$b$};
-        \node at (7.125, 0.375) {$a$};
-        \node at (7.875, 0.375) {\blank};
-        \node at (4.875, 0.375) {$c$};
-        \node at (4.125, 0.375) {\blank};
-        \node at (3.375, 0.375) {\blank};
-
-        \draw (0, -0.75) -- (9.75, -0.75);
-        \draw (0, -0.75) -- (0, 0);
-        \draw (9.75, -0.75) -- (9.75, 0);
-
-        \draw (4.5, 0) -- (4.5, -0.75);
-        \draw (5.25, 0) -- (5.25, -0.75);
-        \draw (3.75, 0) -- (3.75, -0.75);
-        \draw (3, 0) -- (3, -0.75);
-        \draw (6, 0) -- (6, -0.75);
-        \draw (6.75, 0) -- (6.75, -0.75);
-        \draw (7.5, 0) -- (7.5, -0.75);
-        \draw (8.25, 0) -- (8.25, -0.75);
-
-        \node at (1.5, -0.375) {$\cdots$};
-        \node at (9.125, -0.375) {$\cdots$};
-        \node at (5.6125, -0.375) {$b$};
-        \node at (6.375, -0.375) {$b$};
-        \node at (7.125, -0.375) {$a$};
-        \node at (7.875, -0.375) {\blank};
-        \node at (4.875, -0.375) {$q_2^c$};
-        \node at (4.125, -0.375) {\blank};
-        \node at (3.375, -0.375) {\blank};
-      \end{tikzpicture}
-    \end{center}
   }
 \end{frame}
 
 \begin{frame}[t]{Fixed State Position}
   \begin{overlayarea}{\textwidth}{0.08\textwidth}
-    \color{gray}
+    %\color{gray}
     \begin{minipage}{0.48\textwidth}
       $\Sigma = \{a, b, c\}$
     \end{minipage}
@@ -502,15 +598,15 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 
 \begin{frame}[t]{Rewrite Windows: Force Valid Configuration Changes}
   \begin{overlayarea}{\textwidth}{0.08\textwidth}
-    \color{gray}
+    %\color{gray}
     \begin{minipage}{0.48\textwidth}
       $\Sigma = \{a, b, c\}$
     \end{minipage}
     \begin{minipage}{0.48\textwidth}
       \onslide<1->{
-      \raggedleft
-      $\delta(q_1, a) = (q_2, \Some{b}, \textsf{L})$
-    }
+        \raggedleft
+        $\delta(q_1, a) = (q_2, \Some{b}, \textsf{L})$
+      }
     \end{minipage}
   \end{overlayarea}
   \begin{overlayarea}{\textwidth}{0.3\textwidth}
@@ -551,28 +647,28 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
         \node[color=white] at (4.75, 1.5) {l};
         \path[<->] (5.25, 1.5) edge node[fill=white, anchor=center, pos =0.5] {\small $z$} (9.75, 1.5);
 
-          \draw (0, -0.75) -- (9.75, -0.75);
-          \draw (0, -0.75) -- (0, 0);
-          \draw (9.75, -0.75) -- (9.75, 0);
+        \draw (0, -0.75) -- (9.75, -0.75);
+        \draw (0, -0.75) -- (0, 0);
+        \draw (9.75, -0.75) -- (9.75, 0);
 
-          \draw (4.5, 0) -- (4.5, -0.75);
-          \draw (5.25, 0) -- (5.25, -0.75);
-          \draw (3.75, 0) -- (3.75, -0.75);
-          \draw (3, 0) -- (3, -0.75);
-          \draw (6, 0) -- (6, -0.75);
-          \draw (6.75, 0) -- (6.75, -0.75);
-          \draw (7.5, 0) -- (7.5, -0.75);
-          \draw (8.25, 0) -- (8.25, -0.75);
+        \draw (4.5, 0) -- (4.5, -0.75);
+        \draw (5.25, 0) -- (5.25, -0.75);
+        \draw (3.75, 0) -- (3.75, -0.75);
+        \draw (3, 0) -- (3, -0.75);
+        \draw (6, 0) -- (6, -0.75);
+        \draw (6.75, 0) -- (6.75, -0.75);
+        \draw (7.5, 0) -- (7.5, -0.75);
+        \draw (8.25, 0) -- (8.25, -0.75);
 
-          \node at (1.5, -0.375) {$\cdots$};
-          \node at (9.125, -0.375) {$\cdots$};
-          \node at (5.6125, -0.375) {\only<2-4>{\colorHTwo}$b$};
-          \node at (6.375, -0.375) {\only<3-4>{\colorHTwo}$b$};
-          \node at (7.125, -0.375) {\only<4>{\colorHTwo}$a$};
-          \node at (7.875, -0.375) {\blank};
-          \node at (4.875, -0.375) {\only<2-3>{\colorHTwo}$q_2^c$};
-          \node at (4.125, -0.375) {\only<2>{\colorHTwo}\blank};
-          \node at (3.375, -0.375) {\blank};
+        \node at (1.5, -0.375) {$\cdots$};
+        \node at (9.125, -0.375) {$\cdots$};
+        \node at (5.6125, -0.375) {\only<2-4>{\colorHTwo}$b$};
+        \node at (6.375, -0.375) {\only<3-4>{\colorHTwo}$b$};
+        \node at (7.125, -0.375) {\only<4>{\colorHTwo}$a$};
+        \node at (7.875, -0.375) {\blank};
+        \node at (4.875, -0.375) {\only<2-3>{\colorHTwo}$q_2^c$};
+        \node at (4.125, -0.375) {\only<2>{\colorHTwo}\blank};
+        \node at (3.375, -0.375) {\blank};
 
         \only<2>{
           \draw[color=\colorTikzC] (4.5, -0.75) -- (4.5, 0.75);
@@ -778,6 +874,12 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
       \draw (7.5, 0) -- (7.5, -0.75);
       \draw (8.25, 0) -- (8.25, -0.75);
 
+      \only<5-> {
+        \draw[color=\colorTikzA] (5.25, 0) -- (7.5, 0);
+        \draw[color=\colorTikzA] (6, -0.75) -- (6, 0.75);
+        \draw[color=\colorTikzA] (6.75, -0.75) -- (6.75, 0.75);
+      }
+
       \node at (1.5, -0.375) {$\cdots$};
       \node at (9.125, -0.375) {$\cdots$};
       \node at (5.6125, -0.375) {\only<5->{\colorHOne{}} $b$};
@@ -956,95 +1058,30 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
   \end{center}
 \end{frame}
 
-\begin{frame}{Tableau}
-  \begin{center}
-    \begin{tikzpicture}[scale=0.8, every node/.style={scale=0.8}]
-      \draw (1.5, -4) -- (1.5, 3) -- (10, 3) -- (10, -4) -- (1.5, -4);
-      \draw (2, -4) -- (2, 3);
-      \draw (2.5, 3) -- (2.5, 2);
-      \draw (9.5, -4) -- (9.5, 3);
-      \draw (1.5, 2.5) -- (10, 2.5);
-      \draw (1.5, -3.5) -- (10, -3.5);
-      \draw (1.5, 2) -- (10, 2);
-      \draw (1.5, 1.5) -- (2, 1.5);
-      \draw (9.5, 1.5) -- (10, 1.5);
+\againframe<2>{tableau}
 
-      \draw (4.5, 3) -- (4.5, 2);
-      \draw (5, 3) -- (5, 2);
-      \draw (5.5, 3) -- (5.5, 2);
-      \draw (6, 3) -- (6, 2);
-      \draw (7, 3) -- (7, 2);
-      \draw (7.5, 3) -- (7.5, 2);
-      \draw (8, 3) -- (8, 2);
-      \draw (9, 3) -- (9, 2);
-      %\draw (2.5, 3) -- (2.5, 2);
-      %\draw (3, 3) -- (3, 2.5);
-      %\draw (4.5, 3) -- (4.5, 2.5);
-      %\draw (5, 3) -- (5, 2.5);
-      %\draw (5.5, 3) -- (5.5, 2.5);
-      %\draw (7.5, 3) -- (7.5, 2.5);
-
-      \node at (1.75, 2.75) {\#};
-      \node at (1.75, 2.25) {\#};
-      \node at (1.75, 1.75) {\#};
-      \node at (1.75, -3.75) {\#};
-      \node at (9.75, 2.75) {\#};
-      \node at (9.75, 2.25) {\#};
-      \node at (9.75, 1.75) {\#};
-      \node at (9.75, -3.75) {\#};
-
-      \node at (2.25, 2.75) {\textvisiblespace};
-      \node at (3.5, 2.75) {$\ldots$};
-      \node at (4.75, 2.75) {\textvisiblespace};
-      \node at (5.25, 2.75) {\small $q_0^{\blank}$};
-      \node at (5.75, 2.75) {\small $\sigma_1$};
-      \node at (6.5, 2.75) {$\ldots$};
-      \node at (7.25, 2.75) {\small $\sigma_k$};
-      \node at (7.75, 2.75) {\textvisiblespace};
-      \node at (8.5, 2.75) {$\ldots$};
-      \node at (9.25, 2.75) {\textvisiblespace};
-
-      %\node at (6.5, 2.75) {$\ldots$};
-      %\node at (5, 2.25) {$\ldots$};
-
-      \node at (1.75, -0.375) {$\vdots$};
-      \node at (9.75, -0.375) {$\vdots$};
-
-      \draw (4, -0.5) -- (4, 0.5) -- (5.5, 0.5) -- (5.5, -0.5) -- (4, -0.5);
-      \draw (4.5, -0.5) -- (4.5, 0.5);
-      \draw (5, -0.5) -- (5, 0.5);
-      \draw (4, 0) -- (5.5, 0);
-
-      \path[<->] (1, -4) edge node[fill=white, anchor=center, pos= 0.5] {\small t} (1, 3);
-      \path[<->] (1.5, -4.5) edge node[fill=white, anchor=center, pos=0.5] {\small $2z + 1$} (10, -4.5);
-      \path[<->] (5.5, 3.5) edge node[fill=white, anchor=center, pos=0.5] {\small $k$} (7.5, 3.5);
-
-      \node at (11, 2.75) {\small 1\textsuperscript{st} config};
-      \node at (11, 2.25) {\small 2\textsuperscript{nd} config};
-      \node at (11, 1.75) {\small 3\textsuperscript{rd} config};
-    \end{tikzpicture}
-  \end{center} 
-\end{frame}
-
-\begin{frame}{Parallel Rewriting (\PR{})}
+\begin{frame}<1>[label=prdef]{Parallel Rewriting (\PR{})}
   Given: 
   \begin{itemize}
     \item an alphabet $\Sigma$ and a string length $l$
     \item an initial string $x_0 \in \Sigma^l$ and a step count $t$
-    \item a width $w$ of rewrite windows 
-      %and a rewriting offset $o$
+    \item a width $w$  of rewrite windows 
+      {\only<2>{\colorHTwo{}and a rewriting offset $o$}}
     \item a set of rewrite windows $R$
     \item a set of final substring constraints $R_{\mathit{final}}$
   \end{itemize}
-  Determine if there exists a sequence of strings $x_1, \ldots, x_t \in \Sigma^l$ s.t.\ 
+  Determine: $\exists$ $x_1, \ldots, x_t \in \Sigma^l$ s.t.\ 
   \begin{itemize}
-    \item for every $0 \le i < t$ the rewrite is valid for $R$, denoted $x_i \rightsquigarrow x_{i+1}$: ``for all offsets, there exists a rewrite window''
+    \item $x_i \rightsquigarrow x_{i+1}$: ``for all offsets, there exists a rewrite window''
     \item there exists an element $x \in R_{\mathit{final}}$ which is a substring of $x_t$
   \end{itemize}
 \end{frame}
 
 \begin{frame}{Nondeterminism}
-  ``Guess'' an input string of length $\le k$ with a single rewrite step
+  \begin{itemize}
+    \item ``Guess'' input string of length $\le k$ with a single rewrite step
+    \item Add symbols $\{\underline{\#}, \underline{\blank}, \underline{*}, \underline{q^{\blank}}\}$ for initial state $q$
+  \end{itemize}
 
   \vspace{2ex}
   Initial string: 
@@ -1069,52 +1106,51 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 
       \node at (9, 0.25) {$\cdots$};
       \node at (6.75, 0.25) {$\cdots$};
-      \node at (2.25, 0.25) {$\cdots$};
+      \node at (2.75, 0.25) {$\cdots$};
 
       \node at (0.25, 0.25) {\underline{\#}};
-      \node at (0.75, 0.24) {$\bot$};
-      \node at (4.75, 0.25) {$\bot$};
+      \node at (0.75, 0.24) {$\underline{\blank}$};
+      \node at (4.75, 0.25) {$\underline{\blank}$};
       \node at (5.25, 0.25) {$\underline{q^{\blank}}$};
-      \node at (5.75, 0.25) {$\top$};
-      \node at (7.75, 0.25) {$\top$};
-      \node at (8.25, 0.25) {$\bot$};
-      \node at (9.75, 0.25) {$\bot$};
+      \node at (5.75, 0.25) {$\underline{*}$};
+      \node at (7.75, 0.25) {$\underline{*}$};
+      \node at (8.25, 0.25) {$\underline{\blank}$};
+      \node at (9.75, 0.25) {$\underline{\blank}$};
       \node at (10.25, 0.25) {\underline{\#}};
 
-      \onslide<2-> {
-        \draw (0, -0.5) -- (10.5, -0.5);
-        \draw (0, 0) -- (0, -0.5);
-        \draw (10.5, 0) -- (10.5, -0.5);
+      \draw (0, -0.5) -- (10.5, -0.5);
+      \draw (0, 0) -- (0, -0.5);
+      \draw (10.5, 0) -- (10.5, -0.5);
 
-        \draw (0.5, -0.5) -- (0.5, 0);
-        \draw (1, -0.5) -- (1, 0);
-        \draw (10, -0.5) -- (10, 0);
-        \draw (9.5, -0.5) -- (9.5, 0);
-        \draw (5, -0.5) -- (5, 0);
-        \draw (5.5, -0.5) -- (5.5, 0);
-        \draw (4.5, -0.5) -- (4.5, 0);
-        \draw (6, -0.5) -- (6, 0);
-        \draw (6.5, -0.5) -- (6.5, 0);
-        \draw (7, -0.5) -- (7, 0);
-        %\draw (7.5, -0.5) -- (7.5, 0);
-        %\draw (8, -0.5) -- (8, 0);
-        %\draw (8.5, -0.5) -- (8.5, 0);
+      \draw (0.5, -0.5) -- (0.5, 0);
+      \draw (1, -0.5) -- (1, 0);
+      \draw (10, -0.5) -- (10, 0);
+      \draw (9.5, -0.5) -- (9.5, 0);
+      \draw (5, -0.5) -- (5, 0);
+      \draw (5.5, -0.5) -- (5.5, 0);
+      \draw (4.5, -0.5) -- (4.5, 0);
+      \draw (6, -0.5) -- (6, 0);
+      \draw (6.5, -0.5) -- (6.5, 0);
+      \draw (7, -0.5) -- (7, 0);
+      %\draw (7.5, -0.5) -- (7.5, 0);
+      %\draw (8, -0.5) -- (8, 0);
+      %\draw (8.5, -0.5) -- (8.5, 0);
 
-        \node at (0.25, -0.25) {\#};
-        \node at (0.75, -0.25) {\blank};
-        \node at (4.75, -0.25) {\blank};
-        \node at (5.25, -0.25) {$q^{\blank}$};
-        \node at (5.75, -0.25) {$\sigma_1$};
-        \node at (6.25, -0.25) {$\sigma_2$};
-        \node at (6.75, -0.25) {\blank};
-        \node at (8.25, -0.25) {$\cdots$};
-        \node at (9.75, -0.25) {\blank};
-        \node at (10.25, -0.25) {\#};
-      }
+      \node at (2.75, -0.25) {$\cdots$};
+      \node at (0.25, -0.25) {\#};
+      \node at (0.75, -0.25) {\blank};
+      \node at (4.75, -0.25) {\blank};
+      \node at (5.25, -0.25) {$q^{\blank}$};
+      \node at (5.75, -0.25) {$\sigma_1$};
+      \node at (6.25, -0.25) {$\sigma_2$};
+      \node at (6.75, -0.25) {\blank};
+      \node at (8.25, -0.25) {$\cdots$};
+      \node at (9.75, -0.25) {\blank};
+      \node at (10.25, -0.25) {\#};
 
       \path[<->] (5.5, 1) edge node[fill=white, anchor=center, pos= 0.5] {\small $k$} (8, 1);
-      \path[<->] (0, 1) edge node [fill = white, anchor=center, pos=0.5] {\small $t + k + 3$} (5, 1);
-      \path[<->] (8, 1) edge node [fill = white, anchor =center, pos=0.5] {\small $t + 3$} (10.5, 1);
+      \path[<->] (0, 1) edge node [fill = white, anchor=center, pos=0.5] {\small $z$} (5, 1);
+      \path[<->] (8, 1) edge node [fill = white, anchor =center, pos=0.5] {\small $z-k$} (10.5, 1);
     \end{tikzpicture}
   \end{center}
 \end{frame}
@@ -1122,74 +1158,177 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 \section{Formalisation}
 
 \begin{frame}{Representation Relations}
-  Representation of half-tapes $u \reprtt{p}{n} h$:
-  \begin{itemize}
-    \item $\length{u} \le n$
-    \item $h = \textsf{mapPolarity}~p~u \con E_{\hat{n} - \length{u}}$
-  \end{itemize}
-  where $\hat{n} = n + 2$ and $E_n := \blank^n \#$. 
-  \vspace{2ex}
+  Representation of tape halves: 
+  \begin{center}
+    $u \sim_t^{n} $
+    \begin{tikzpicture}[scale=0.5, every node/.style={scale=0.9}, baseline=(base), inner sep = 0pt]
+      \node (base) at (0, 0.3) {};
+      \draw (0, 0) -- (0, 1) -- (10, 1) -- (10, 0) -- (0, 0);
+      \draw (3, 0) -- (3, 1);
+      \draw (4, 0) -- (4, 1);
+      \draw (5, 0) -- (5, 1);
+      \draw (7, 0) -- (7, 1);
+      \draw (8, 0) -- (8, 1);
+      \draw (9, 0) -- (9, 1);
 
-  Representation of configurations $(q, \mathit{tape}) \reprc{} (ls, qm, rs)$: 
+      \node at (1.5, 0.5) {$u$};
+      \node at (3.5, 0.5) {\blank};
+      \node at (4.5, 0.5) {\blank};
+      \node at (6, 0.5) {$\cdots$};
+      \node at (7.5, 0.5) {\blank};
+      \node at (8.5, 0.5) {\blank};
+      \node at (9.5, 0.5) {\#};
+
+    \end{tikzpicture}\\
+    \begin{tikzpicture}[remember picture, overlay]
+      \draw[decorate, decoration={brace, mirror}, xshift=-2cm, yshift=0.7cm] (0, -0.5) -- (3.5, -0.5) node[midway, yshift=-0.4cm] {$n$};
+    \end{tikzpicture}
+  \end{center}
+
+  \vspace{3ex}
+
+  Representation of configurations:
+
+  \begin{center}
+  $q; (ls, \sigma, rs) \sim_c $
+  \begin{tikzpicture}[scale=0.5, every node/.style={scale=0.9}, baseline=(base), inner sep = 0pt]
+    \node (base) at (0, 0.3) {};
+    \draw (0, 0) -- (7, 0);
+    \draw (0, 1) -- (7, 1);
+    \draw (0, 0) -- (0, 1);
+    \draw (7, 0) -- (7, 1);
+
+    \draw (3, 0) -- (3, 1);
+    \draw (4, 0) -- (4, 1);
+
+    \node at (1.5, 0.5) { $\rev~\mathit{left}$ };
+    \node at (5.5, 0.5) { $\mathit{right}$ };
+    \node at (3.5, 0.5) { $q^\sigma$ };
+  \end{tikzpicture}, where: 
+\end{center}
   \begin{itemize}
-    \item $\textsf{left}~\mathit{tape} \reprtt{p}{z} ls$
-    \item $qm = q^{\textsf{current}~\mathit{tape}}$
-    \item $\textsf{right}~\mathit{tape} \reprtt{p}{z} rs$
+    \item $ls \sim_t^{z'} \mathit{left}$
+    \item $rs \sim_t^{z'} \mathit{right}$
   \end{itemize}
 
-  \begin{align*}
-    (q, \mathit{tp}) \reprc{} s := \exists ls~qm~rs,& s = \rev{(ls)} \con [qm] \con rs \\
-    \land &(q, \mathit{tp}) \reprc{} (ls, qm, rs)
-  \end{align*}
+  %\TODO{the annotation $z$ isn't consistent with the usage of $z$ in the other graphics (off-by-three)}
 \end{frame}
+
+
+%\begin{frame}{Representation Relations}
+%Representation of half-tapes $u \reprtt{p}{n} h$:
+%\begin{itemize}
+%\item $\length{u} \le n$
+%\item $h = \textsf{mapPolarity}~p~u \con E_{\hat{n} - \length{u}}$
+%\end{itemize}
+%where $\hat{n} = n + 2$ and $E_n := \blank^n \#$. 
+%\vspace{2ex}
+
+%Representation of configurations $(q, \mathit{tape}) \reprc{} (ls, qm, rs)$: 
+%\begin{itemize}
+%\item $\textsf{left}~\mathit{tape} \reprtt{p}{z} ls$
+%\item $qm = q^{\textsf{current}~\mathit{tape}}$
+%\item $\textsf{right}~\mathit{tape} \reprtt{p}{z} rs$
+%\end{itemize}
+
+%\begin{align*}
+%(q, \mathit{tp}) \reprc{} s := \exists ls~qm~rs,& s = \rev{(ls)} \con [qm] \con rs \\
+%\land &(q, \mathit{tp}) \reprc{} (ls, qm, rs)
+%\end{align*}
+%\end{frame}
 
 
 \begin{frame}{Deterministic Simulation}
   \begin{center}
-  \begin{tikzpicture}
-    \draw (0, 0) -- (11, 0);
-    \draw (0, 1) -- (11, 1);
-    \draw (0, 0) -- (0, 1);
-    \draw (11, 0) -- (11, 1);
+    \begin{tikzpicture}
+      \node at (0, 0.5) {$q; (ls, \sigma, rs)$};
+      \node at (0, -0.5) {$q'; (ls', \sigma', rs')$};
+      \node[rotate=270] at (0, 0) {$\succ$};
 
-    \draw (4, 0) -- (4, 1);
-    \draw (5, 0) -- (5, 1);
-    \draw (6, 0) -- (6, 1);
-    \draw (7, 0) -- (7, 1);
+      \draw[scale=0.5] (4, 0.5) -- (11, 0.5);
+      \draw[scale=0.5] (4, 1.5) -- (11, 1.5);
+      \draw[scale=0.5] (4, 0.5) -- (4, 1.5);
+      \draw[scale=0.5] (11, 0.5) -- (11, 1.5);
 
-    \node at (2, 0.5) {$\mathit{tape}_{\mathit{left}}$};
-    \node at (9, 0.5) {$\mathit{tape}_{\mathit{right}}$};
-    \node at (4.5, 0.5) {$h_l$};
-    \node at (6.5, 0.5) {$h_r$};
-    \node at (5.5, 0.5) {$q^m$};
+      \draw[scale=0.5] (7, 0.5) -- (7, 1.5);
+      \draw[scale=0.5] (8, 0.5) -- (8, 1.5);
 
-    \onslide<2-> {
-      \draw (4, -1) -- (7, -1);
-      \draw (4, -1) -- (4, 0);
-      \draw (5, -1) -- (5, 0);
-      \draw (6, -1) -- (6, 0);
-      \draw (7, -1) -- (7, 0);
+      \node[scale=0.8] at (2.75, 0.5) { $\rev~\mathit{left}$ };
+      \node[scale=0.8] at (4.75, 0.5) { $\mathit{right}$ };
+      \node[scale=0.8] at (3.75, 0.5) { $q^\sigma$ };
 
-      \node at (4.5, -0.5) {$h_l'$};
-      \node at (6.5, -0.5) {$h_r'$};
-      \node at (5.5, -0.5) {${q'}^{s'}$};
-    }
+      \node[rotate=270] at (3.75, 0) {$\rightsquigarrow$};
 
-    \onslide<3-> {
-      \draw (0, -1) -- (0, 0);
-      \draw (11, -1) -- (11, 0);
-      \draw (0, -1) -- (4, -1);
-      \draw (7, -1) -- (11, -1);
+      \draw[scale=0.5] (4, -0.5) -- (11, -0.5);
+      \draw[scale=0.5] (4, -1.5) -- (11, -1.5);
+      \draw[scale=0.5] (4, -0.5) -- (4, -1.5);
+      \draw[scale=0.5] (11, -0.5) -- (11, -1.5);
 
-      \node at (2, -0.5) {$\exists! \mathit{tape}_{\mathit{left}}'$};
-      \node at (9, -0.5) {$\exists! \mathit{tape}_{\mathit{right}}'$};
-    }
+      \draw[scale=0.5] (7, -0.5) -- (7, -1.5);
+      \draw[scale=0.5] (8, -0.5) -- (8, -1.5);
 
-  \end{tikzpicture}
-\end{center}
-  %Somehow portray the idea that everything (flow of information) is propagated from the center of the string; the rewrite is determined uniquely by the head.
+      \node[scale=0.8] at (2.75, -0.5) { $\rev~\mathit{left'}$ };
+      \node[scale=0.8] at (4.75, -0.5) { $\mathit{right'}$ };
+      \node[scale=0.8] at (3.75, -0.5) { ${q'}^{\sigma'}$ };
 
-  %Then: rewrites for tape halves can be proven separately using only a subset of the rules
+      \node at (1.5, 0.5) {$\sim_c$};
+      \node at (1.5, -0.5) {$\sim_c$};
+    \end{tikzpicture}
+  \end{center}
+  where $ls \sim_t^{z'} \mathit{left}, rs \sim_t^{z'} \mathit{right}$ and $ls' \sim_t^{z'} \mathit{left'}, rs' \sim_t^{z'} \mathit{right'}$
+
+
+  \onslide<2->{
+    \begin{center}
+      \begin{tikzpicture}
+        \draw (0, 0) -- (11, 0);
+        \draw (0, 1) -- (11, 1);
+        \draw (0, 0) -- (0, 1);
+        \draw (11, 0) -- (11, 1);
+
+        \draw (5, 0) -- (5, 1);
+        \draw (6, 0) -- (6, 1);
+
+        \onslide<3->{
+          \draw[dashed] (7, 0) -- (7, 1);
+          \draw[dashed] (4, 0) -- (4, 1);
+          \node at (4.5, 0.5) {$h_l$};
+          \node at (6.5, 0.5) {$h_r$};
+        }
+
+        \node at (2, 0.5) {$\mathit{left}$};
+        \node at (9, 0.5) {$\mathit{right}$};
+        \node at (5.5, 0.5) {$q^m$};
+
+        \onslide<4-> {
+          \draw (4, -1) -- (7, -1);
+          \draw (5, -1) -- (5, 0);
+          \draw (6, -1) -- (6, 0);
+
+          \draw[dashed] (7, -1) -- (7, 0);
+          \draw[dashed] (4, -1) -- (4, 0);
+
+          \node at (4.5, -0.5) {$h_l'$};
+          \node at (6.5, -0.5) {$h_r'$};
+          \node at (5.5, -0.5) {${q'}^{s'}$};
+        }
+
+        \onslide<5-> {
+          \draw (0, -1) -- (0, 0);
+          \draw (11, -1) -- (11, 0);
+          \draw (0, -1) -- (4, -1);
+          \draw (7, -1) -- (11, -1);
+
+          \node at (2, -0.5) {$\exists! \mathit{left}'$};
+          \node at (9, -0.5) {$\exists! \mathit{right}'$};
+        }
+
+    \end{tikzpicture}
+  \end{center}
+}
+%Somehow portray the idea that everything (flow of information) is propagated from the center of the string; the rewrite is determined uniquely by the head.
+
+%Then: rewrites for tape halves can be proven separately using only a subset of the rules
 \end{frame}
 
 \begin{frame}{Challenges}
@@ -1206,29 +1345,81 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 \end{frame}
 
 \section{Context}
-\begin{frame}{Reduction of \PR{} to \sat{}}
+\begin{frame}[label=contextslide]{Reduction of \gennp{} to \sat{}}
   \begin{center}
-    \begin{tikzpicture}
-      \node[rectangle, draw=black, minimum width = 10cm] (strrew1) {Parallel Rewriting (\PR{}) on arbitrary $\Sigma$};
+    \begin{tikzpicture}[scale=0.9, every node/.style={scale=0.9}]
+      \node[rectangle, draw=black, minimum width=10cm] (gennp) {Generic Problem on Turing Machines (\gennp{})}; 
+      \node[rectangle, draw=black, minimum width = 10cm, below = of gennp] (strrew1) {Parallel Rewriting (\PR{}) on arbitrary $\Sigma$};
       \node[rectangle, draw=black, below = of strrew1, minimum width = 10cm] (strrew2) {Binary Parallel Rewriting};
       \node[rectangle, draw=black, below = of strrew2, minimum width = 10cm] (csat) {Propositional SAT (\fsat{})};
       \node[rectangle, draw=black, below = of csat, minimum width = 10cm] (sat) {SAT on CNFs (\sat{})};
       \draw[->] 
+        (gennp) edge (strrew1)
         (strrew1) edge node[right] {homomorphism} (strrew2)
-        (strrew2) edge node[right] {encode bits using APs} (csat)
+        (strrew2) edge node[right] {encode bits using boolean variables} (csat)
         (csat) edge node[right] {Tseytin transformation} (sat);
     \end{tikzpicture}
   \end{center}
 \end{frame}
 
+\begin{frame}{Reduction to Binary Alphabet}
+  $\Sigma = \{\sigma_1, \ldots, \sigma_n\}$
+
+  Homomorphism: $f : \Sigma \rightarrow {\{0, 1\}}^n, \sigma_i \mapsto 0^{i-1} 1 0^{n-i}$
+
+  \vspace{2ex}
+  Example ($\length{\Sigma} = 2$):
+  \begin{center}
+    \begin{tikzpicture}
+      \draw (0, 0) -- (4, 0);
+      \draw (0, 1) -- (4, 1);
+      \draw (0, 0) -- (0, 1); 
+      \draw (4, 0) -- (4, 1);
+
+      \draw (1, 0) -- (1, 1);
+      \draw (2, 0) -- (2, 1);
+      \draw (3, 0) -- (3, 1);
+
+      \draw[dashed, thick, color=\colorTikzB] (0, -1) -- (0, 1) -- (3, 1) -- (3, -1) -- (0, -1);
+      \draw[dotted, thick, color=\colorTikzD] (1,-1) -- (1, 1) -- (4, 1) -- (4, -1) -- (1, -1);
+
+      \draw (-2, -2.5) -- (6, -2.5);
+      \draw (-2, -1.5) -- (6, -1.5);
+      \draw (-2, -2.5) -- (-2, -1.5); 
+      \draw (6, -2.5) -- (6, -1.5);
+
+      \draw[dashed] (1, -2.5) -- (1, -1.5);
+      \draw (2, -2.5) -- (2, -1.5);
+      \draw[dashed] (3, -2.5) -- (3, -1.5);
+      \draw (4, -2.5) -- (4, -1.5);
+      \draw[dashed] (5, -2.5) -- (5, -1.5);
+      \draw (0, -2.5) -- (0, -1.5);
+      \draw[dashed] (-1, -2.5) -- (-1, -1.5);
+
+      \draw[dashed, thick, color=\colorTikzB] (-2, -3.5) -- (-2, -1.5) -- (4, -1.5) -- (4, -3.5) -- (-2, -3.5);
+      \draw[dotted, thick, color=\colorTikzD] (0, -3.5) -- (0, -1.5) -- (6, -1.5) -- (6, -3.5) -- (0, -3.5);
+
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\againframe<2>[noframenumbering]{prdef}
+
+\againframe[noframenumbering]{contextslide}
+
 \begin{frame}{Conclusion}
   Contributions: 
   \begin{itemize}
-    \item functional formalisation of Turing machine simulation in \PR{}
-    \item heavy changes to the original proof\footnote{\cite{Sipser:TheoryofComputation}} to make inductive arguments work formally
+    \item verified correctness of Turing machine simulation in \PR{}
+    \item factorisation of proof\footnote{\cite{Sipser:TheoryofComputation}} into tractable parts
+    \item changes to the original construction\ldots
+      \begin{itemize}
+        \item \ldots to fit our notion of Turing machines
+        \item \ldots to make inductive proofs work formally
+      \end{itemize}
   \end{itemize}
 
-  \vspace{5ex}
+  \vspace{3ex}
 
   Roadmap:
   \begin{itemize}
@@ -1247,7 +1438,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 \end{frame}
 
 \begin{frame}{Tape Transformations}
-  
+
 \end{frame}
 
 \begin{frame}{Step Simulation}
