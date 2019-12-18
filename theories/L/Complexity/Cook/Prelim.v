@@ -10,9 +10,6 @@ From Undecidability.L.TM Require Import TMflat TMflatEnc TMflatFun TMEncoding Ta
 Require Import Lia. 
 
 
-
-
-
 Definition involution (X : Type) (f : X -> X) := forall (x : X), f (f x) = x. 
 
 Lemma map_involution (X : Type)(f : X -> X) : involution f -> involution (map f). 
@@ -132,7 +129,8 @@ Proof.
   revert a. 
   induction i. 
   - cbn. intros. now exists [], a. 
-  - cbn. intros. inv_list. assert (|a| = i + j) by lia. destruct (IHi a H0) as (a1 & a2 & H2 & H3). 
+  - cbn. intros. 
+inv_list. assert (|a| = i + j) by lia. destruct (IHi a H0) as (a1 & a2 & H2 & H3). 
     exists (x :: a1), a2. firstorder. 
 Qed. 
 
@@ -146,4 +144,57 @@ Proof.
   induction 1. 
   - now cbn. 
   - intros. apply relpowerS with (b := b). assumption. now apply IHrelpower. 
+Qed. 
+
+Notation injective := Prelim.Injective.
+
+Lemma getPosition_map (X Y : eqType) (f : X -> Y) (l : list X) (x : X) : injective f -> getPosition (map f l) (f x) = getPosition l x. 
+Proof.
+  intros.
+  induction l; cbn. 
+  - reflexivity. 
+  - destruct Dec; destruct Dec; try congruence.
+    now apply H in e.
+Qed. 
+
+Lemma getPosition_app1 (X : eqType) (A B : list X) x k : k < |A| -> getPosition A x = k -> getPosition (A ++ B) x = k.
+Proof.
+  revert k. induction A; intros; cbn in *.
+  - lia. 
+  - destruct Dec; [assumption | destruct k; [ lia | erewrite IHA]]. 
+    + reflexivity. 
+    + lia. 
+    + easy. 
+Qed. 
+
+Lemma getPosition_app2 (X : eqType) (A B : list X) x k : k < |B| -> not (x el A) -> getPosition B x = k -> getPosition (A ++ B) x = |A| + k. 
+Proof. 
+  revert k. induction A; intros; cbn in *. 
+  - apply H1. 
+  - destruct Dec; [ exfalso ; auto | ]. 
+    erewrite IHA; eauto. 
+Qed. 
+
+
+Lemma prodLists_length (X Y : Type) (A : list X) (B : list Y) : |prodLists A B| = |A| * |B|. 
+Proof.
+  induction A; cbn. 
+  - reflexivity.
+  - rewrite app_length. rewrite map_length, IHA. lia. 
+Qed. 
+
+Lemma getPosition_prodLists (X Y : eqType) (A : list X) (B : list Y) x1 x2 k1 k2 : getPosition A x1 = k1 -> k1 < |A| -> getPosition B x2 = k2 -> k2 < |B| -> getPosition (prodLists A B) (x1, x2) = (k1 * |B|) + k2. 
+Proof. 
+  revert k1. induction A; intros; cbn in *. 
+  - lia. 
+  - destruct k1. 
+    + destruct Dec; [ | congruence].
+      rewrite getPosition_app1 with (k := k2); [reflexivity | now rewrite map_length| ].
+      rewrite e; now rewrite getPosition_map. 
+    + destruct Dec; [ congruence | ]. 
+      rewrite getPosition_app2 with (k := (k1 * |B|) + k2). 
+      * rewrite map_length. lia. 
+      * setoid_rewrite prodLists_length. nia. 
+      * intros (? & ? &?)%in_map_iff. congruence. 
+      * apply IHA; eauto. lia.  
 Qed. 

@@ -2,6 +2,8 @@
 From Undecidability.L.Complexity Require Import Cook.GenNP Cook.TCSR Cook.Prelim.
 From PslBase Require Import FiniteTypes. 
 From Undecidability.TM Require Import TM.
+
+
 Require Import Lia. 
 
 
@@ -145,16 +147,16 @@ Module basics (sig : TMSig).
   Implicit Type σ : Sigma. 
 
   Notation "'↓' σ" := ((negative, σ)) (at level 30). 
-  Notation "'↑' σ" := ((positive, σ)) (at level 30).
+  Notation "'↑' σ" := ((positive, σ)) (at level 10).
   Notation "'∘' σ" := ((neutral, σ)) (at level 30). 
 
   Inductive delim := delimC. 
   Hint Constructors delim.
   Instance delim_eqTypeC : eq_dec delim.
-  Proof. unfold dec. decide equality. Qed. 
+  Proof. unfold dec. decide equality. Defined. 
 
   Instance delim_finTypeC : finTypeC (EqType delim). 
-  Proof. exists [delimC]. intros []. simpl. dec; congruence. Qed. 
+  Proof. exists [delimC]. intros []. simpl. dec; congruence. Defined. 
 
   Notation "$" := (inl delimC). 
 
@@ -211,7 +213,7 @@ Module basics (sig : TMSig).
   Definition polarityFlipGamma (x : Gamma) : Gamma := match x with inl s => inl s | inr x => inr (polarityFlipTapeSigma x) end.
 
   Notation "'~' x" := (polarityFlipGamma x). 
-  Notation "'#' x" := (polarityFlipTapeSigma' x) (at level 30). 
+  Notation "'#' x" := (polarityFlipTapeSigma' x) (at level 1). 
   Notation "'%' x" := (polarityFlipTapeSigma x) (at level 30). 
 
   Lemma polarityFlipTapeSigma'_involution : involution polarityFlipTapeSigma'.

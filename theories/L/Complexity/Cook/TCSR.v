@@ -6,16 +6,21 @@ Require Import Lia.
 
 
 (*use an explicit representation instead of vectors of size 3 since this will make the problem closer to the flattened extractable problem *)
-Inductive TCSRWinP (Sigma : Type) := winp : Sigma -> Sigma -> Sigma -> TCSRWinP Sigma. 
+Record TCSRWinP (Sigma : Type) := {
+                                   winEl1 : Sigma;
+                                   winEl2 : Sigma;
+                                   winEl3 : Sigma
+                                 }.
+
 Record TCSRWin (Sigma : Type) := {
                                             prem : TCSRWinP Sigma;
                                             conc : TCSRWinP Sigma
                                    }.
 
-Definition TCSRWinP_to_list (sig : Type) (a : TCSRWinP sig) := match a with winp a b c => [a; b; c] end. 
+Definition TCSRWinP_to_list (sig : Type) (a : TCSRWinP sig) := match a with Build_TCSRWinP a b c => [a; b; c] end. 
 Coercion TCSRWinP_to_list : TCSRWinP >-> list. 
 
-Notation "'{' a ',' b ',' c '}'" := (winp a b c) (format "'{' a ',' b ',' c '}'"). 
+Notation "'{' a ',' b ',' c '}'" := (Build_TCSRWinP a b c) (format "'{' a ',' b ',' c '}'").
 Notation "a / b" := ({|prem := a; conc := b|}). 
 
 (* Instance TCSRWinP_eqTypeC (Sigma : finType) : eq_dec (TCSRWinP Sigma).  *)
@@ -171,7 +176,7 @@ Section fixInstance.
 
   Definition rewritesHead_pred ruleset a b := exists rule, rule el ruleset /\ rewritesHead rule a b. 
 
-  Lemma rewritesHead_rule_inv r a b (σ1 σ2 σ3 σ4 σ5 σ6 : Sigma) : rewritesHead r (σ1 :: σ2 :: σ3 :: a) (σ4 :: σ5 :: σ6 :: b) -> r = {σ1 , σ2 , σ3} / {σ4 , σ5, σ6}. 
+  Lemma rewritesHead_rule_inv r a b (σ1 σ2 σ3 σ4 σ5 σ6 : Sigma) : rewritesHead r (σ1 :: σ2 :: σ3 :: a) (σ4 :: σ5 :: σ6 :: b) -> r = {σ1, σ2 , σ3} / {σ4 , σ5, σ6}. 
   Proof. 
     unfold rewritesHead. unfold prefix. intros [(b' & H1) (b'' & H2)]. destruct r. destruct prem0, conc0. cbn in H1, H2. congruence. 
   Qed. 
