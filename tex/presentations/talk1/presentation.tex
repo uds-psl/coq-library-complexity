@@ -1003,6 +1003,13 @@
   {\color{gray}\{x_0 \mapsto \btrue, x_1 \mapsto \bfalse, x_2 \mapsto \bfalse, x_3 \mapsto \bfalse\}}\qquad 
   [\btrue, \bfalse, \bfalse, \bfalse] 
 \end{align*}
+
+\pagebreak
+\begin{block}{$k$-CNF}
+\begin{align*}
+\infer{\textsf{$k$-CNF}~[]}{} && \infer{\textsf{$k$-CNF}~(C::N)}{\textsf{$k$-CNF}~N \quad \length{C} = k} 
+\end{align*}
+\end{block}
 \end{frame}
 
 \begin{frame}[t]{Correctness}
@@ -1129,19 +1136,6 @@
   \begin{align*}
     \mathit{labF}~n := (n/3, n \mod 3) && \mathit{labF}^{-1}~(cl, l) := 3 \cdot cl + l
   \end{align*}
-\end{frame}
-
-\begin{frame}{L:\ Size Explosion}
-  \begin{center}
-    Church encoding of numbers: $\overline{n} := \lambda~f~x. (f(f(f \cdots (f~x)\cdots)))$\\[4ex]
-    $c := \lambda~x. x~\overline{2}~(\lambda~x.x)$\\
-    
-  \begin{align*}
-    c~\overline{n} &\succ^3 (\overline{2}(\overline{2}(\overline{2} \cdots (\overline{2} (\lambda~x.x)) \cdots))) \\
-      &\succ (\overline{2}(\overline{2}(\overline{2}\cdots (\lambda~x. (\lambda~x.x) ((\lambda~x.x)~x)) \cdots)))\\
-      &\succ \cdots
-  \end{align*}
-  \end{center}
 \end{frame}
 
 \begin{frame}[allowframebreaks]{References}
