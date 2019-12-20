@@ -12,6 +12,7 @@ Module stringbased (sig : TMSig).
 
   Definition FGamma := FinType (EqType (Gamma)). 
   Definition FstateSigma := FinType (EqType (stateSigma)). 
+  Definition Fpolarity := FinType (EqType polarity).
 
   (*the same for rewrite windows *)
   Definition polarityRevTCSRWinP (x : TCSRWinP Gamma) : TCSRWinP Gamma :=
@@ -451,11 +452,11 @@ Module stringbased (sig : TMSig).
     Inductive sigVar := Sig1 | Sig2 | Sig3 | Sig4.
 
     Inductive fpolSigma := psConsC : polarity -> sigVar -> fpolSigma | psConsV : sigVar -> fpolSigma. 
-    Inductive fstateSigma := ssNone : fstateSigma | ssSome : sigVar -> fstateSigma. 
-    Inductive ftapeSigma' := tsNone : ftapeSigma' | tsSome : fpolSigma -> ftapeSigma'. 
-    Inductive ftapeSigma := tsInl : delim -> ftapeSigma | tsInr : ftapeSigma' -> ftapeSigma. 
-    Inductive fStates := sCons : fstateSigma -> fStates. 
-    Inductive fGamma := gInl : fStates -> fGamma | gInr : ftapeSigma -> fGamma. 
+    Definition fstateSigma := option sigVar.
+    Definition ftapeSigma' := option fpolSigma.
+    Definition ftapeSigma := sum delim ftapeSigma'. 
+    Definition fStates := fstateSigma.
+    Definition fGamma := sum fStates ftapeSigma. 
 
 
     Record evalEnv X Y Z := {
@@ -474,34 +475,31 @@ Module stringbased (sig : TMSig).
                                                 | Sig4 => sV4 env
                                                 end. 
 
-    Definition reifyPolSigmaFin (env : evalEnv polarity states Sigma) c :=
+    Definition reifyPolSigmaFin (env : evalEnv polarity states Sigma) (c : fpolSigma) :=
       match c with
         | psConsC p sv => (p, reifySigVar env sv)
         | psConsV sv => (pV env, reifySigVar env sv)
       end. 
-    Definition reifyStateSigmaFin (env : evalEnv polarity states Sigma) c :=
+    Definition reifyStateSigmaFin (env : evalEnv polarity states Sigma) (c : fstateSigma) :=
       match c with
-      | ssNone => None
-      | ssSome sv => Some (reifySigVar env sv)
+      | None => None
+      | Some sv => Some (reifySigVar env sv)
       end. 
-    Definition reifyTapeSigma'Fin (env : evalEnv polarity states Sigma) c : tapeSigma' :=
+    Definition reifyTapeSigma'Fin (env : evalEnv polarity states Sigma) (c : ftapeSigma') : tapeSigma' :=
       match c with
-      | tsNone => None
-      | tsSome c => Some (reifyPolSigmaFin env c)
+      | None => None
+      | Some c => Some (reifyPolSigmaFin env c)
       end. 
-    Definition reifyTapeSigmaFin (env : evalEnv polarity states Sigma) c : tapeSigma :=
+    Definition reifyTapeSigmaFin (env : evalEnv polarity states Sigma) (c : ftapeSigma) : tapeSigma :=
       match c with
-      | tsInl delimC => inl delimC
-      | tsInr c => inr (reifyTapeSigma'Fin env c)
+      | inl delimC => inl delimC
+      | inr c => inr (reifyTapeSigma'Fin env c)
       end. 
-    Definition reifyStatesFin (env : evalEnv polarity states Sigma) c : States :=
+    Definition reifyStatesFin (env : evalEnv polarity states Sigma) (c : fStates) : States := (stateV env, reifyStateSigmaFin env c).
+    Definition reifyGammaFin (env : evalEnv polarity states Sigma) (c : fGamma) : Gamma :=
       match c with
-      | sCons c => (stateV env, reifyStateSigmaFin env c)
-      end. 
-    Definition reifyGammaFin (env : evalEnv polarity states Sigma) c : Gamma :=
-      match c with
-      | gInl c => inl (reifyStatesFin env c)
-      | gInr c => inr (reifyTapeSigmaFin env c)
+      | inl c => inl (reifyStatesFin env c)
+      | inr c => inr (reifyTapeSigmaFin env c)
       end. 
 
 
@@ -528,27 +526,24 @@ Module stringbased (sig : TMSig).
     end. 
     Definition reifyStateSigmaFlat (env : evalEnv nat nat nat) c :=
       match c with
-      | ssNone => flatNone
-      | ssSome sv => flatSome (reifySigVar env sv)
+      | None => flatNone
+      | Some sv => flatSome (reifySigVar env sv)
       end. 
     Definition reifyTapeSigma'Flat (env : evalEnv nat nat nat) c :=
       match c with
-      | tsNone => flatNone
-      | tsSome c => flatSome (reifyPolSigmaFlat env c)
+      | None => flatNone
+      | Some c => flatSome (reifyPolSigmaFlat env c)
       end. 
     Definition reifyTapeSigmaFlat (env : evalEnv nat nat nat) c :=
       match c with
-      | tsInl delimC => flatInl flatDelimC
-      | tsInr c => flatInr flatDelim (reifyTapeSigma'Flat env c)
+      | inl delimC => flatInl flatDelimC
+      | inr c => flatInr flatDelim (reifyTapeSigma'Flat env c)
     end. 
-    Definition reifyStatesFlat (env : evalEnv nat nat nat) c :=
-      match c with
-      | sCons c => flatPair flatstates flatStateSigma (stateV env) (reifyStateSigmaFlat env c)
-      end. 
+    Definition reifyStatesFlat (env : evalEnv nat nat nat) c := flatPair flatstates flatStateSigma (stateV env) (reifyStateSigmaFlat env c).
     Definition reifyGammaFlat (env : evalEnv nat nat nat) c :=
       match c with
-      | gInl c => flatInl (reifyStatesFlat env c)
-      | gInr c => flatInr flatStates (reifyTapeSigmaFlat env c)
+      | inl c => flatInl (reifyStatesFlat env c)
+      | inr c => flatInr flatStates (reifyTapeSigmaFlat env c)
       end. 
 
     Lemma flattenPolarity_reprEl p : finReprEl flatPolarity (flattenPolarity p) p. 
@@ -637,7 +632,7 @@ Module stringbased (sig : TMSig).
 
     Lemma reifyStates_reprEl a b c : isFlatEnvOf a b -> finReprEl flatStates (reifyStatesFlat a c) (reifyStatesFin b c). 
     Proof.
-      intros. destruct c. cbn [reifyStatesFlat reifyStatesFin]. now finRepr_simpl.
+      intros. now finRepr_simpl. 
     Qed.
 
     Smpl Add (apply reifyStates_reprEl) : finRepr.
@@ -909,10 +904,75 @@ Module stringbased (sig : TMSig).
     Qed. 
 
 
-    Definition mtrRules :=
-      [ {gInr (tsInr (tsSome (psConsV Sig1))), gInr (tsInr (tsSome (psConsV Sig2))), gInr (tsInr (tsSome (psConsV Sig3)))}/
-         {gInr (tsInr (tsSome (psConsC positive Sig4))), gInr (tsInr (tsSome (psConsC positive Sig1))), gInr (tsInr (tsSome (psConsC positive Sig2)))}
+    Require Import PslBase.FiniteTypes.FinTypes.
+    Definition mtrRules : list (window fGamma):=
+      [ {inr (inr (Some (psConsV Sig1))), inr (inr (Some (psConsV Sig2))), inr (inr (Some (psConsV Sig3)))}/ {inr (inr (Some (psConsC positive Sig4))), inr (inr (Some (psConsC positive Sig1))), inr (inr (Some (psConsC positive Sig2)))};
+          {inr (inr |_|), inr (inr |_|), inr (inr |_|)}/{inr (inr (Some (psConsC positive Sig1))), inr (inr |_|), inr (inr |_|)};
+          {inr (inr (Some (psConsV Sig1))), inr (inr |_|), inr (inr |_|)}/{inr (inr (Some (psConsC positive Sig2))), inr (inr (Some (psConsC positive Sig1))), inr (inr |_|)};
+          {inr (inr (Some (psConsV Sig1))), inr (inr (Some (psConsV Sig2))), inr (inr |_|)}/{inr (inr (Some (psConsC positive Sig3))), inr (inr (Some (psConsC positive Sig1))), inr (inr (Some (psConsC positive Sig2)))}
       ].
+
+    Definition finMTRRules := makeRulesFin (elem Fpolarity) (elem states) (elem Sigma) mtrRules. 
+
+    Ltac destruct_or H := match type of H with
+                          | ?a \/ ?b => destruct H as [H | H]; try destruct_or H
+                            end. 
+
+    Lemma makeAllEnv_finType (A B C : finType) env : env el makeAllEnv (elem A) (elem B) (elem C). 
+    Proof. 
+      destruct env. apply makeAllEnv_correct. repeat split. 
+      all: apply elem_spec. 
+    Qed. 
+
+  Ltac rewHeadTape_inv2 := repeat match goal with
+                                  | [H : rewHeadTape _ _ |- _] => inv H
+                                  | [H : shiftRightWindow _ _ _ _ _ _ |- _ ] => inv H
+                                  | [H : identityWindow _ _ _ _ _ _ |- _] => inv H
+                                  | [d : delim |- _] => destruct d
+                                  | [H : |_| = # ?σ |- _] => is_var σ; destruct σ; cbn in H; try congruence
+                                  | [H : # ?σ = |_| |- _] => is_var σ; destruct σ; cbn in H; try congruence
+                                  | [H : Some (_, _) = % ?e |- _] => symmetry in H; apply polarityFlipTapeSigmaInv1 in H; rewrite H in *; clear H
+                                  | [H : % ?e = Some (_, _) |- _] => apply polarityFlipTapeSigmaInv1 in H; rewrite H in *; clear H
+                                  | [H : Some (_, _) = # ?e |- _] => symmetry in H; apply polarityFlipTapeSigma'Inv1 in H; rewrite H in *; clear H
+                                  | [H : # ?e = Some (_, _) |- _] => apply polarityFlipTapeSigma'Inv1 in H; rewrite H in *; clear H
+                                  | [H : inr _ = (~ _) |- _] => symmetry in H
+                                  | [H : (~ ?a) = inr (inr |_|) |- _] => is_var a; destruct a; cbn in H; [ congruence | ]
+                                  | [H : (~?e) = inr (inr (Some (_, _))) |- _] => apply polarityFlipGammaInv1 in H; try rewrite H in *; clear H
+                                  | [H : inr (inr (Some (_, _))) = (~?e) |- _] => symmetry in H; apply polarityFlipGammaInv1 in H; try rewrite H in *; clear H
+                                  | [H : % ?a = inr |_| |- _] => is_var a; destruct a; cbn in H; try congruence 
+                                  | [H : $ = $ |- _] => clear H
+                                  | [H : inr _ = inr _ |- _] => inv H
+                                  | [H : inl _ = inl _ |- _] => inv H
+                                  | [H : |_| = |_| |- _] => clear H
+                                  | [ |- context [inr (inr (# ?e))]] => rewrite polarityFlip_push_in
+                           end; try congruence. 
+ 
+
+    Lemma agreement a b : rewHeadTape a b <-> rewritesHead_pred finMTRRules a b.  
+    Proof. 
+      split. 
+      - intros.
+        rewHeadTape_inv2;match goal with
+            [ |- rewritesHead_pred _ (?a :: ?b :: ?c :: _) (?d :: ?e :: ?f :: _)] => exists ({a, b, c} /{d, e, f})
+          end.
+        + split. 
+          2: split; unfold prefix; cbn; eauto. 
+
+          unfold finMTRRules. unfold makeRulesFin. unfold makeRules, mtrRules. cbn [map concat]. 
+            rewrite !in_app_iff.
+            unfold makeRules'. rewrite !in_map_iff.
+            left. exists (Build_evalEnv (polarityFlip p) (defstate) )
+            evar (env : evalEnv polarity states Sigma). exists env. split; [ | apply makeAllEnv_finType]. cbn. subst env. reflexivity.
+            subst rule. reflexivity. 
+          * 
+            
+
+        rewHeadTape_inv2.
+      - intros. unfold rewritesHead_pred in H. destruct H as (rule & H1 & H2). 
+        unfold finMTRRules in H1. unfold makeRulesFin in H1. unfold makeRules in H1. unfold mtrRules in H1.  cbn [map concat] in H1. 
+        repeat rewrite in_app_iff in H1. unfold makeRules' in H1. rename H1 into H. destruct_or H. 5: destruct H. 
+        all : apply in_map_iff in H as (env & <- & _); cbn in H2; destruct H2 as (H1 & H2); cbn in *; destruct H1 as (? & ->); destruct H2 as (? & ->); cbn; eauto. 
+
 
 
 End stringbased.

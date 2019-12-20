@@ -48,12 +48,12 @@ Module transition (sig : TMSig).
   Ltac simp_eqn := repeat match goal with
                           | [H : ?p ! ?m = inr |_| |- _] => apply alphabet_inv1 in H
                           | [H : inr |_| = ?p ! ?m |- _] => symmetry in H
-                          | [H : ?p1 !! ?σ = ?p2 ! ?m |- _] => apply alphabet_inv2 in H as (? & ?); clear H
+                          | [H : ?p1 !! ?σ = ?p2 ! ?m |- _] => apply alphabet_inv2 in H as (? & ?)
                           | [H : ?p2 ! ?m = ?p1 !! ?σ |- _] => symmetry in H
-                          | [H : ?p1 ! ?m = inr (Some (?p2, ?σ)) |- _] => apply alphabet_inv3 in H as (? & ?); clear H
+                          | [H : ?p1 ! ?m = inr (Some (?p2, ?σ)) |- _] => apply alphabet_inv3 in H as (? & ?)
                           | [H : inr (Some (?p2, ?σ)) = ?p1 ! ?m |- _] => symmetry in H
-                          | [H : ?p1 ! ?m1 = ?p2 ! ?m2 |- _] => apply alphabet_inv4 in H as ?; clear H
-                          | [H : ?p1 !! ?m1 = ?p2 !! ?m2 |- _] => apply alphabet_inv5 in H as (? & ?); clear H
+                          | [H : ?p1 ! ?m1 = ?p2 ! ?m2 |- _] => apply alphabet_inv4 in H
+                          | [H : ?p1 !! ?m1 = ?p2 !! ?m2 |- _] => apply alphabet_inv5 in H as (? & ?)
                           | [H : trans (?a, ?b) = ?h1, H1 : trans (?a, ?b) = ?h2 |- _] => assert (h1 = h2) by congruence; clear H1
                           | [H : (?a, ?b) = (?c, ?d) |- _] => specialize (prod_eq H) as (? & ?); clear H
                           | [H : ?a = ?a |- _] => clear H
@@ -63,7 +63,7 @@ Module transition (sig : TMSig).
                           | [H : inl ?a = inl ?b |- _] => assert (a = b) by congruence; clear H
                           | [H : ?h1 :: ?a = ?h2 :: ?b |- _] => assert (a = b) by congruence; assert (h1 = h2) by congruence; clear H
                           | [H : rev ?A = _ |- _ ] => is_var A; apply involution_invert_eqn2 in H as ?; [ | involution_simpl]; clear H
-                          | [H : _ = rev ?A |- _ ] => is_var A; symmetry in H; apply involution_invert_eqn2 in H as ?; [ | involution_simpl]; clear H
+                          | [H : _ = rev ?A |- _ ] => is_var A; symmetry in H; apply involution_invert_eqn2 in H; [ | involution_simpl]
                           | [H : context[E (S _)] |- _] => cbn in H
                           | [H : context[E (wo + _)] |- _] => cbn in H
                     end; try congruence.
@@ -82,41 +82,47 @@ Module transition (sig : TMSig).
   (*shift right rules *)
   (*order of additional arguments: current state, next state, read symbol, written symbol (does not match output of transition function!) *)
   Inductive transSomeRightCenter :  states -> states -> stateSigma -> stateSigma -> transRule :=
-  | tsrc1 q q' (a b : stateSigma) (m : stateSigma) p : transSomeRightCenter q q' a b (inr (inr |_|)) (inl (q, a)) (inr (p!m)) (inr (inr |_|)) (inl (q', |_|)) (inr (positive ! b))
-  | tsrc2 q q' (a b : stateSigma) (σ : Sigma) (m1 m2 : stateSigma) p : transSomeRightCenter q q' a b (inr (p ! (Some σ))) (inl (q, a)) (inr (p ! m1)) (inr (positive ! m2)) (inl (q', Some σ)) (inr (positive ! b)). 
+    | tsrc q q' (a b : stateSigma) (m1 m2 m3 : stateSigma) p : transSomeRightCenter q q' a b (inr (p ! m1)) (inl (q, a)) (inr (p ! m2)) (inr (positive ! m3)) (inl (q', m1)) (inr (positive ! b)).  
+  (* | tsrc1 q q' (a b : stateSigma) (m : stateSigma) p : transSomeRightCenter q q' a b (inr (inr |_|)) (inl (q, a)) (inr (p!m)) (inr (inr |_|)) (inl (q', |_|)) (inr (positive ! b)) *)
+  (* | tsrc2 q q' (a b : stateSigma) (σ : Sigma) (m1 m2 : stateSigma) p : transSomeRightCenter q q' a b (inr (p ! (Some σ))) (inl (q, a)) (inr (p ! m1)) (inr (positive ! m2)) (inl (q', Some σ)) (inr (positive ! b)).  *)
 
   Hint Constructors transSomeRightCenter : trans. 
 
   Inductive transSomeRightRight : states -> states -> stateSigma -> transRule :=
-  | tsrr1 q q' (a : stateSigma) : transSomeRightRight q q' a (inr (inr |_|)) (inr (inr |_|)) (inl (q, a)) (inr (inr |_|)) (inr (inr |_|)) (inl (q', |_|))
-  | tsrr2 q q' (a : stateSigma) σ p: transSomeRightRight q q' a (inr (inr |_|)) (inr (p ! (Some σ))) (inl (q, a)) (inr (inr |_|)) (inr (inr |_|)) (inl (q', Some σ))
-  | tsrr3 q q' (a : stateSigma) σ1 σ2 (m1 : stateSigma) p : transSomeRightRight q q' a (inr (p ! (Some σ1))) (inr (p ! (Some σ2))) (inl (q, a)) (inr (positive ! m1)) (inr (positive ! (Some σ1))) (inl (q', Some σ2)). 
+    | tsrr q q' (a : stateSigma) (m1 m2 m3 : stateSigma) p : transSomeRightRight q q' a (inr (p ! m1)) (inr (p ! m2)) (inl (q, a)) (inr (positive ! m3)) (inr (positive ! m1)) (inl (q', m2)). 
+  (* | tsrr1 q q' (a : stateSigma) : transSomeRightRight q q' a (inr (inr |_|)) (inr (inr |_|)) (inl (q, a)) (inr (inr |_|)) (inr (inr |_|)) (inl (q', |_|)) *)
+  (* | tsrr2 q q' (a : stateSigma) σ p: transSomeRightRight q q' a (inr (inr |_|)) (inr (p ! (Some σ))) (inl (q, a)) (inr (inr |_|)) (inr (inr |_|)) (inl (q', Some σ)) *)
+  (* | tsrr3 q q' (a : stateSigma) σ1 σ2 (m1 : stateSigma) p : transSomeRightRight q q' a (inr (p ! (Some σ1))) (inr (p ! (Some σ2))) (inl (q, a)) (inr (positive ! m1)) (inr (positive ! (Some σ1))) (inl (q', Some σ2)).  *)
 
   Hint Constructors transSomeRightRight : trans. 
 
   Inductive transSomeRightLeft : states -> states -> stateSigma -> stateSigma -> transRule :=
-  | tsrl1 q q' (a b : stateSigma) (m : stateSigma) : transSomeRightLeft q q' a b (inl (q, a)) (inr (inr |_|)) (inr (inr |_|)) (inl (q', m)) (inr (positive ! b)) (inr (inr |_|))
-  | tsrl2 q q' (a b : stateSigma) (m1 m2 : stateSigma) σ p : transSomeRightLeft q q' a b (inl (q, a)) (inr (p !! σ)) (inr (p ! m1)) (inl (q', m2)) (inr (positive ! b)) (inr (positive !! σ)). 
+    | tsrl q q' (a b : stateSigma) (m1 m2 m3 : stateSigma) p: transSomeRightLeft q q' a b (inl (q, a)) (inr (p ! m1)) (inr (p ! m2)) (inl (q', m3)) (inr (positive ! b)) (inr (positive ! m1)). 
+  (* | tsrl1 q q' (a b : stateSigma) (m : stateSigma) : transSomeRightLeft q q' a b (inl (q, a)) (inr (inr |_|)) (inr (inr |_|)) (inl (q', m)) (inr (positive ! b)) (inr (inr |_|)) *)
+  (* | tsrl2 q q' (a b : stateSigma) (m1 m2 : stateSigma) σ p : transSomeRightLeft q q' a b (inl (q, a)) (inr (p !! σ)) (inr (p ! m1)) (inl (q', m2)) (inr (positive ! b)) (inr (positive !! σ)).  *)
 
   Hint Constructors transSomeRightLeft : trans. 
 
   (*shift left rules *)
   Inductive transSomeLeftCenter : states -> states -> stateSigma -> stateSigma -> transRule :=
-  | tslc1 q q' (a b : stateSigma) (m : stateSigma) p : transSomeLeftCenter q q' a b (inr (p ! m)) (inl (q, a)) (inr (inr |_|)) (inr (negative ! b)) (inl (q', |_|)) (inr (inr |_|))
-  | tslc2 q q' (a b : stateSigma) (m1 m2 : stateSigma) σ p : transSomeLeftCenter q q' a b (inr (p ! m1)) (inl (q, a)) (inr (p !! σ)) (inr (negative ! b)) (inl (q', Some σ)) (inr (negative ! m2)). 
+    | tslc q q' (a b : stateSigma) (m1 m2 m3 : stateSigma) p : transSomeLeftCenter q q' a b (inr (p ! m1)) (inl (q, a)) (inr (p ! m2)) (inr (negative ! b)) (inl (q', m2)) (inr (negative ! m3)). 
+  (* | tslc1 q q' (a b : stateSigma) (m : stateSigma) p : transSomeLeftCenter q q' a b (inr (p ! m)) (inl (q, a)) (inr (inr |_|)) (inr (negative ! b)) (inl (q', |_|)) (inr (inr |_|)) *)
+  (* | tslc2 q q' (a b : stateSigma) (m1 m2 : stateSigma) σ p : transSomeLeftCenter q q' a b (inr (p ! m1)) (inl (q, a)) (inr (p !! σ)) (inr (negative ! b)) (inl (q', Some σ)) (inr (negative ! m2)).  *)
 
   Hint Constructors transSomeLeftCenter : trans. 
 
   Inductive transSomeLeftLeft : states -> states -> stateSigma -> transRule :=
-  | tsll1 q q' (a : stateSigma) : transSomeLeftLeft q q' a (inl (q, a)) (inr (inr |_|)) (inr (inr |_|)) (inl (q', |_|)) (inr (inr |_|)) (inr (inr |_|))
-  | tsll2 q q' (a : stateSigma) σ p : transSomeLeftLeft q q' a (inl (q, a)) (inr (p ! (Some σ))) (inr (inr |_|)) (inl (q', Some σ)) (inr (inr |_|)) (inr (inr |_|))
-  | tsll3 q q' (a : stateSigma) σ1 σ2 (m : stateSigma) p : transSomeLeftLeft q q' a (inl (q, a)) (inr (p ! (Some σ1))) (inr (p ! (Some σ2))) (inl (q', Some σ1)) (inr (negative ! (Some σ2))) (inr (negative ! m)). 
+    | tsll q q' (a : stateSigma) (m1 m2 m3 : stateSigma) p : transSomeLeftLeft q q' a (inl (q, a)) (inr (p ! m1)) (inr (p ! m2)) (inl (q', m1)) (inr (negative ! m2)) (inr (negative ! m3)). 
+  (* | tsll1 q q' (a : stateSigma) : transSomeLeftLeft q q' a (inl (q, a)) (inr (inr |_|)) (inr (inr |_|)) (inl (q', |_|)) (inr (inr |_|)) (inr (inr |_|)) *)
+  (* | tsll2 q q' (a : stateSigma) σ p : transSomeLeftLeft q q' a (inl (q, a)) (inr (p ! (Some σ))) (inr (inr |_|)) (inl (q', Some σ)) (inr (inr |_|)) (inr (inr |_|)) *)
+  (* | tsll3 q q' (a : stateSigma) σ1 σ2 (m : stateSigma) p : transSomeLeftLeft q q' a (inl (q, a)) (inr (p ! (Some σ1))) (inr (p ! (Some σ2))) (inl (q', Some σ1)) (inr (negative ! (Some σ2))) (inr (negative ! m)).  *)
 
   Hint Constructors transSomeLeftLeft : trans. 
 
   Inductive transSomeLeftRight : states -> states -> stateSigma -> stateSigma -> transRule :=
-  | tslr1 q q' (a b : stateSigma) (m : stateSigma) : transSomeLeftRight q q' a b (inr (inr |_|)) (inr (inr |_|)) (inl (q, a)) (inr (inr |_|)) (inr (negative ! b)) (inl (q', m))
-  | tslr2 q q' ( a b: stateSigma) (m1 m2 : stateSigma) σ p : transSomeLeftRight q q' a b (inr (p ! m1)) (inr (p ! (Some σ))) (inl (q, a)) (inr (negative ! (Some σ))) (inr (negative ! b)) (inl (q', m2)). 
+    | tslr q q' (a b : stateSigma) (m1 m2 m3 : stateSigma) p : transSomeLeftRight q q' a b (inr (p ! m1)) (inr (p ! m2)) (inl (q, a)) (inr (negative ! m2)) (inr (negative ! b)) (inl (q', m3)).
+  (* | tslr1 q q' (a b : stateSigma) (m : stateSigma) : transSomeLeftRight q q' a b (inr (inr |_|)) (inr (inr |_|)) (inl (q, a)) (inr (inr |_|)) (inr (negative ! b)) (inl (q', m)) *)
+  (* | tslr2 q q' ( a b: stateSigma) (m1 m2 : stateSigma) σ p : transSomeLeftRight q q' a b (inr (p ! m1)) (inr (p ! (Some σ))) (inl (q, a)) (inr (negative ! (Some σ))) (inr (negative ! b)) (inl (q', m2)).  *)
 
   Hint Constructors transSomeLeftRight : trans. 
 
@@ -128,14 +134,16 @@ Module transition (sig : TMSig).
   Hint Constructors transSomeStayCenter : trans. 
 
   Inductive transSomeStayLeft : states -> states -> stateSigma -> stateSigma -> transRule :=
-  | tssl1 q q' (a b : stateSigma) σ (m : stateSigma) p : transSomeStayLeft q q' a b (inl (q, a)) (inr (p ! (Some σ))) (inr (p ! m)) (inl (q', b)) (inr (neutral ! (Some σ))) (inr (neutral ! m))
-  | tssl2 q q' (a b : stateSigma) : transSomeStayLeft q q' a b (inl (q, a)) (inr (inr |_|)) (inr (inr |_|)) (inl (q', b)) (inr (inr |_|)) (inr (inr |_|)).
+    | tssl q q' (a b : stateSigma) (m1 m2 : stateSigma) p : transSomeStayLeft q q' a b (inl (q, a)) (inr (p ! m1)) (inr (p ! m2)) (inl (q', b)) (inr (neutral ! m1)) (inr (neutral ! m2)). 
+  (* | tssl1 q q' (a b : stateSigma) σ (m : stateSigma) p : transSomeStayLeft q q' a b (inl (q, a)) (inr (p ! (Some σ))) (inr (p ! m)) (inl (q', b)) (inr (neutral ! (Some σ))) (inr (neutral ! m)) *)
+  (* | tssl2 q q' (a b : stateSigma) : transSomeStayLeft q q' a b (inl (q, a)) (inr (inr |_|)) (inr (inr |_|)) (inl (q', b)) (inr (inr |_|)) (inr (inr |_|)). *)
 
   Hint Constructors transSomeStayLeft : trans. 
 
   Inductive transSomeStayRight : states -> states -> stateSigma -> stateSigma -> transRule :=
-  | tssr1 q q' (a b : stateSigma) σ (m : stateSigma) p : transSomeStayRight q q' a b (inr (p ! m)) (inr (p !! σ)) (inl (q, a)) (inr (neutral ! m)) (inr (neutral ! (Some σ))) (inl (q', b))
-  | tssr2 q q' (a b: stateSigma) : transSomeStayRight q q' a b (inr (inr |_|)) (inr (inr |_|)) (inl (q, a)) (inr (inr |_|)) (inr (inr |_|)) (inl (q', b)). 
+    | tssr q q' (a b : stateSigma) (m1 m2 : stateSigma) p : transSomeStayRight q q' a b (inr (p ! m1)) (inr (p ! m2)) (inl (q, a)) (inr (neutral ! m1)) (inr (neutral ! m2)) (inl (q', b)). 
+  (* | tssr1 q q' (a b : stateSigma) σ (m : stateSigma) p : transSomeStayRight q q' a b (inr (p ! m)) (inr (p !! σ)) (inl (q, a)) (inr (neutral ! m)) (inr (neutral ! (Some σ))) (inl (q', b)) *)
+  (* | tssr2 q q' (a b: stateSigma) : transSomeStayRight q q' a b (inr (inr |_|)) (inr (inr |_|)) (inl (q, a)) (inr (inr |_|)) (inr (inr |_|)) (inl (q', b)).  *)
 
   Hint Constructors transSomeStayRight : trans. 
 
@@ -244,9 +252,10 @@ Module transition (sig : TMSig).
   Hint Constructors transNoneRightCenter : trans. 
 
   Inductive transNoneRightRight : states -> states -> transRule :=
-  | tnrr1 q q' p p': transNoneRightRight q q' (inr (p ! |_|)) (inr (p ! |_|)) (inl (q, |_|)) (inr (p' ! |_|)) (inr (p' ! |_|)) (inl (q', |_|))
-  | tnrr2 q q' σ p p': transNoneRightRight q q' (inr (p ! |_|)) (inr (p ! (Some σ))) (inl (q, |_|)) (inr (p' ! |_|)) (inr (p' ! |_|)) (inl (q', Some σ))
-  | tnrr3 q q' σ1 σ2 (m1 : stateSigma) p : transNoneRightRight q q' (inr (p ! (Some σ1))) (inr (p ! (Some σ2))) (inl (q, |_|)) (inr (positive ! m1)) (inr (positive ! (Some σ1))) (inl (q', Some σ2)). 
+    tnrr q q' (m1 m2 m3 : stateSigma) p : transNoneRightRight q q' (inr (p ! m1)) (inr (p ! m2)) (inl (q, |_|)) (inr (positive ! m3)) (inr (positive ! m1)) (inl (q', m2)). 
+  (* | tnrr1 q q' p p': transNoneRightRight q q' (inr (p ! |_|)) (inr (p ! |_|)) (inl (q, |_|)) (inr (p' ! |_|)) (inr (p' ! |_|)) (inl (q', |_|)) *)
+  (* | tnrr2 q q' σ p p': transNoneRightRight q q' (inr (p ! |_|)) (inr (p ! (Some σ))) (inl (q, |_|)) (inr (p' ! |_|)) (inr (p' ! |_|)) (inl (q', Some σ)) *)
+  (* | tnrr3 q q' σ1 σ2 (m1 : stateSigma) p : transNoneRightRight q q' (inr (p ! (Some σ1))) (inr (p ! (Some σ2))) (inl (q, |_|)) (inr (positive ! m1)) (inr (positive ! (Some σ1))) (inl (q', Some σ2)).  *)
 
   Hint Constructors transNoneRightRight : trans. 
 
@@ -1323,29 +1332,32 @@ end.
 (*     Optimize Proof. Optimize Heap. *)
 (*     all: cbn in H1. *)
 (*     all: try solve_stepsim_goal F1 F2 H2. *)
-(*     Optimize Proof. Optimize Heap. *)
-(* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3. *)
-(*     Optimize Proof. Optimize Heap. *)
-(* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3. *)
-(*     Optimize Proof. Optimize Heap. *)
-(* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3. *)
-(*     Optimize Proof. Optimize Heap. *)
-(* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3. *)
-(*     Optimize Proof. Optimize Heap. *)
-(* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3. *)
-(*     Optimize Proof. Optimize Heap. *)
-(* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3. *)
-(*     Optimize Proof. Optimize Heap. *)
-(* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3. *)
-(*     Optimize Proof. Optimize Heap. *)
-(* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3. *)
-(*     Optimize Proof. Optimize Heap. *)
-(* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3. *)
-(*     Optimize Proof. Optimize Heap. *)
-(* all: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; solve_stepsim_uniqueness H F1 F2 Z3 W3. *)
-(*     Optimize Proof. Optimize Heap. *)
+(*     Optimize Proof.  *)
+(*     1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; *)
+(*       abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). *)
+(*     Optimize Proof. *)
+(* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). *)
+(* Optimize Proof. *)
+(* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). *)
+(* Optimize Proof. *)
+(* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). *)
+(* Optimize Proof. *)
+(* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). *)
+(* Optimize Proof. *)
+(* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). *)
+(* Optimize Proof. *)
+(* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). *)
+(* Optimize Proof. *)
+(* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). *)
+(* Optimize Proof. *)
+(* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). *)
+(* Optimize Proof. *)
+(* all: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). *)
+(* Optimize Proof. *)
 (*   Qed. *)
-Admitted. 
+Admitted.
+
+
 
   (*mostly matches the corresponding stepsim tactic above, but uses different inversions and *)
   (*needs some additional plumbing with rev in Z3 *)
@@ -1372,7 +1384,7 @@ Admitted.
 
   Lemma haltsim q tp s : (q, tp) ≃c s -> halt q = true -> exists s', valid rewHeadSim s s' /\ (forall s'', valid rewHeadSim s s'' -> s'' = s') /\ (q, tp) ≃c s'. 
   Proof. 
-    Admitted. 
+    Admitted.
   (*   intros. apply valid_reprConfig_unfold. *)
   (*   destruct H as (ls & qm & rs & H1 & H2). *)
   (*   destruct H2 as (p & F0 & F1 & F2). *)
