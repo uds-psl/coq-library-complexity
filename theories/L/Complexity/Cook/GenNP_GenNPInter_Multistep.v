@@ -193,7 +193,7 @@ Module multistep (sig : TMSig).
   (*Theorem 29 *)
   Lemma reprTape_exists u p w : |u| <= w -> exists s, u ≃t(p, w) s. 
   Proof. 
-    intros. exists (mapPolarity p u ++ E (wo + w - |u|)). 
+    intros. exists (mapPolarity p u ++ E p (wo + w - |u|)). 
     repeat split.
     + rewrite app_length. unfold mapPolarity. rewrite E_length, map_length. lia. 
     + apply H. 

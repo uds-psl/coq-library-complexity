@@ -43,26 +43,22 @@ Module tape (sig : TMSig).
 
 
   (** *inductive rewriteHead predicates *)
-  Inductive shiftRightWindow : Gamma -> Gamma -> Gamma -> Gamma -> Gamma -> Gamma -> Prop :=
-  | shiftRightSSSS σ1 σ2 σ3 σ4 p : shiftRightWindow (inr (inr (Some (p, σ1)))) (inr (inr (Some (p, σ2)))) (inr (inr (Some (p, σ3)))) (inr (inr (Some (↑ σ4)))) (inr (inr (Some (↑σ1)))) (inr (inr (Some (↑ σ2))))
-  | shiftRightBBB σ1 : shiftRightWindow (inr (inr |_|)) (inr (inr |_|)) (inr (inr |_|)) (inr (inr (Some (↑ σ1)))) (inr (inr |_|)) (inr (inr |_|))
-  | shiftRightSBB σ1 σ2 p : shiftRightWindow (inr (inr (Some (p, σ1)))) (inr (inr |_|)) (inr (inr |_|)) (inr (inr (Some (↑ σ2)))) (inr (inr (Some (↑ σ1)))) (inr (inr |_|))
-  | shiftRightSSB σ1 σ2 σ3 p : shiftRightWindow (inr (inr (Some (p, σ1)))) (inr (inr (Some (p, σ2)))) (inr (inr |_|)) (inr (inr (Some (↑ σ3)))) (inr (inr (Some (↑ σ1)))) (inr (inr (Some (↑ σ2))))
-  | shiftRightBBS σ1 p : shiftRightWindow (inr (inr |_|)) (inr (inr |_|)) (inr (inr (Some (p, σ1)))) (inr (inr |_|)) (inr (inr |_|)) (inr (inr |_|))
-  | shiftRightBSS σ1 σ2 p : shiftRightWindow (inr (inr |_|)) (inr (inr (Some (p, σ1)))) (inr (inr (Some (p, σ2)))) (inr (inr |_|)) (inr (inr |_|)) (inr (inr (Some (↑ σ1))))
-  | shiftRightSSSB σ1 σ2 σ3 p : shiftRightWindow (inr (inr (Some (p, σ1)))) (inr (inr (Some (p, σ2)))) (inr (inr (Some (p, σ3)))) (inr (inr |_|)) (inr (inr (Some (↑ σ1)))) (inr (inr (Some (↑ σ2)))). 
+Inductive shiftRightWindow : Gamma -> Gamma -> Gamma -> Gamma -> Gamma -> Gamma -> Prop :=
+  | shiftRightSSSS σ1 σ2 σ3 σ4 p : shiftRightWindow (inr (inr (p, Some σ1))) (inr (inr (p, Some σ2))) (inr (inr (p, Some σ3))) (inr (inr (positive, Some σ4))) (inr (inr (positive, Some σ1))) (inr (inr (positive, Some σ2))) 
+  | shiftRightBBBS p σ1 : shiftRightWindow (inr (inr (p, |_|))) (inr (inr (p, |_|))) (inr (inr (p, |_|))) (inr (inr (positive, Some σ1))) (inr (inr (positive, |_|))) (inr (inr (positive, |_|)))
+  | shiftRightBBBB p : shiftRightWindow (inr (inr (p, |_|))) (inr (inr (p, |_|))) (inr (inr (p, |_|))) (inr (inr (positive, |_|))) (inr (inr (positive, |_|))) (inr (inr (positive, |_|)))
+  | shiftRightSBB σ1 σ2 p : shiftRightWindow (inr (inr (p, Some σ1))) (inr (inr (p, |_|))) (inr (inr (p, |_|))) (inr (inr (positive, Some σ2))) (inr (inr (positive, Some σ1))) (inr (inr (positive, |_|)))
+  | shiftRightSSB σ1 σ2 σ3 p : shiftRightWindow (inr (inr (p, Some σ1))) (inr (inr (p, Some σ2))) (inr (inr (p, |_|))) (inr (inr (positive, Some σ3))) (inr (inr (positive, Some σ1))) (inr (inr (positive, Some σ2))) 
+  | shiftRightBBS σ1 p : shiftRightWindow (inr (inr (p, |_|))) (inr (inr (p, |_|))) (inr (inr (p, Some σ1))) (inr (inr (positive, |_|))) (inr (inr (positive, |_|))) (inr (inr (positive, |_|)))
+  | shiftRightBSS σ1 σ2 p : shiftRightWindow (inr (inr (p, |_|))) (inr (inr (p, Some σ1))) (inr (inr (p, Some σ2))) (inr (inr (positive, |_|))) (inr (inr (positive, |_|))) (inr (inr (positive, Some σ1)))
+  | shiftRightSSSB σ1 σ2 σ3 p : shiftRightWindow (inr (inr (p, Some σ1))) (inr (inr (p, Some σ2))) (inr (inr (p, Some σ3))) (inr (inr (positive, |_|))) (inr (inr (positive, Some σ1))) (inr (inr (positive, Some σ2))).
 
   Hint Constructors shiftRightWindow. 
 
   Inductive identityWindow : Gamma -> Gamma -> Gamma -> Gamma -> Gamma -> Gamma -> Prop :=
-  | identityBBB : identityWindow (inr (inr |_|)) (inr (inr |_|))(inr (inr |_|)) (inr (inr |_|)) (inr (inr |_|)) (inr (inr |_|))
-  | identitySSS σ1 σ2 σ3 p: identityWindow (inr (inr (Some (p, σ1)))) (inr (inr (Some (p, σ2)))) (inr (inr (Some (p, σ3)))) (inr (inr (Some (∘ σ1)))) (inr (inr (Some (∘ σ2)))) (inr (inr (Some (∘ σ3))))
-  | identitySBB σ1 p : identityWindow (inr (inr (Some (p, σ1)))) (inr (inr |_|)) (inr (inr |_|)) (inr (inr (Some (∘ σ1)))) (inr (inr |_|)) (inr (inr |_|))
-  | identitySSB σ1 σ2 p : identityWindow (inr (inr (Some (p, σ1)))) (inr (inr (Some (p, σ2)))) (inr (inr |_|)) (inr (inr (Some (∘ σ1)))) (inr (inr (Some (∘ σ2)))) (inr (inr |_|))
-  | identityBBS σ1 p : identityWindow (inr (inr |_|)) (inr (inr |_|)) (inr (inr (Some (p, σ1)))) (inr (inr |_|)) (inr (inr |_|)) (inr (inr (Some(∘ σ1))))
-  | identityBSS σ1 σ2 p : identityWindow (inr (inr |_|)) (inr (inr (Some (p, σ1)))) (inr (inr (Some (p, σ2)))) (inr (inr |_|)) (inr (inr (Some (∘ σ1)))) (inr (inr (Some (∘ σ2))))
-  | identityDBB : identityWindow (inr $) (inr (inr |_|)) (inr (inr |_|)) (inr $) (inr (inr |_|)) (inr (inr |_|))
-  | identityBBD : identityWindow (inr (inr |_|)) (inr (inr |_|)) (inr $) (inr (inr |_|)) (inr (inr |_|)) (inr $). 
+    | identityC (m1 m2 m3 : stateSigma) p : identityWindow (inr (inr (p, m1))) (inr (inr (p, m2))) (inr (inr (p, m3))) (inr (inr (neutral, m1))) (inr (inr (neutral, m2))) (inr (inr (neutral, m3)))
+  | identityDBB p p' : identityWindow (inr $) (inr (inr (p, |_|))) (inr (inr (p, |_|))) (inr $) (inr (inr (p', |_|))) (inr (inr (p', |_|)))
+  | identityBBD p p' : identityWindow (inr (inr (p, |_|))) (inr (inr (p, |_|))) (inr $) (inr (inr (p', |_|))) (inr (inr (p', |_|))) (inr $). 
 
   Hint Constructors identityWindow.
 
@@ -86,25 +82,17 @@ Module tape (sig : TMSig).
     rewHeadTape (γ1 :: γ2 :: γ3 :: h1) (γ4 :: γ5 :: γ6 :: h2) <-> rewHeadTape (γ1 :: γ2 :: γ3 :: h1 ++ h1') (γ4 :: γ5 :: γ6 :: h2 ++ h2').
   Proof. now apply rewHeadTape_tail_invariant. Qed. 
 
-
-
   Lemma identityWindow_revp (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) : identityWindow γ1 γ2 γ3 γ4 γ5 γ6 <-> identityWindow (~γ3) (~γ2) (~γ1) (~γ6) (~γ5) (~γ4).
   Proof.
     split; intros; inv H; cbn.
     all: repeat match goal with
            | [H : delim |- _] => destruct H
-           | [H : inr _ = % _ |- _] => symmetry in H
            | [H : inr _ = (~ _) |- _] => symmetry in H
-           | [H : (~ ?a) = inr (inr |_|) |- _] => is_var a; destruct a; cbn in H; [ congruence | ]
-           | [H : % ?a = inr |_| |- _] => is_var a; destruct a; cbn in H; try congruence 
-           | [H : inr (# ?a) = inr |_| |- _] => is_var a; destruct a; cbn in H; try congruence
-           | [H : $ = $ |- _] => clear H
-           | [H : |_| = |_| |- _] => clear H
            | [H : inr _ = inr _ |- _] => inv H
            | [H : inl _ = inl _ |- _] => inv H
            | [H : (~ ?a) = inr ($) |- _ ] => is_var a; destruct a; cbn in H; [congruence | ]
            | [H : % ?a = $ |- _] => is_var a; destruct a; cbn in H; try congruence
-           | [H : (~ _)= inr(inr (Some (_, _))) |- _] => apply polarityFlipGammaInv1 in H as ->
+           | [H : (~ _)= inr(inr ((_, _))) |- _] => apply polarityFlipGammaInv1 in H as ->
                 end; try congruence.
     all: eauto. 
   Qed. 
@@ -135,36 +123,31 @@ Module tape (sig : TMSig).
     - lia. 
     - lia. 
     - cbn [mapPolarity map] in H3. replace (wo + S w - S (|u|)) with (wo + w - (|u|)) in H3 by lia. 
-      replace (map (fun e => inr (withPolaritySigma p e)) u) with (mapPolarity p u) in H3 by now cbn.  
+      replace (map (fun e => inr (inr (p, Some e))) u) with (mapPolarity p u) in H3 by now cbn.  
       cbn [app] in H3. congruence. 
   Qed. 
-
 
   Lemma tape_repr_inv w u p (x : States) a : u ≃t(p, w) (@inl States tapeSigma x) :: a -> False. 
   Proof. 
     intros []. destruct H0. destruct u; now cbn in H1. 
   Qed. 
 
-  Lemma tape_repr_inv2 w p (σ : polSigma) a : [] ≃t(p, w) (@inr States tapeSigma (inr (Some σ)))::a -> False. 
+  Lemma tape_repr_inv2 w p p' (σ : Sigma) a : [] ≃t(p, w) (@inr States tapeSigma (inr (p', Some σ)))::a -> False. 
   Proof. 
     intros (H1 & H2 & H3).
     cbn in H3. congruence. 
   Qed. 
 
-  Lemma tape_repr_inv3 w p (u : Sigma) (us : list Sigma) h : u :: us ≃t(p, w) (inr (inr |_|) :: h) -> False. 
-  Proof. intros (H1 & H2 & H3). cbn in H3. unfold withPolaritySigma in H3. congruence. Qed. 
+  Lemma tape_repr_inv3 w p p' (u : Sigma) (us : list Sigma) h : u :: us ≃t(p, w) (inr (inr (p', |_|)) :: h) -> False. 
+  Proof. intros (H1 & H2 & H3). cbn in H3. congruence. Qed. 
 
   Lemma tape_repr_inv4 w p (u : list Sigma) h : u ≃t(p, w) (inr $) :: h -> False. 
-  Proof. intros (H1 & H2 & H3). cbn in H3. destruct u; cbn in H3; unfold withPolaritySigma in H3; congruence. Qed. 
+  Proof. intros (H1 & H2 & H3). cbn in H3. destruct u; cbn in H3;  congruence. Qed. 
 
   Lemma tape_repr_inv5 w p u h e : u ≃t(p, w) (inr $) :: e:: h -> False. 
-  Proof.
-    intros (H1 & H2 & H3). destruct u; cbn in H3.
-    + congruence. 
-    + unfold withPolaritySigma in H3; congruence. 
-  Qed. 
+  Proof. intros (H1 & H2 & H3). destruct u; cbn in H3; congruence. Qed. 
 
-  Lemma tape_repr_inv6 w p u us h : us :: u ≃t(p, w) h -> exists h' n, h = (inr (inr (Some (p, us)))):: h' ++ E (wo + n) /\ w = n + S (|h'|) /\ |h'| = |u| /\ u ≃t(p, w -1) h' ++ E (wo + n). 
+  Lemma tape_repr_inv6 w p u us h : us :: u ≃t(p, w) h -> exists h' n, h = (inr (inr (p, Some us))):: h' ++ E p (wo + n) /\ w = n + S (|h'|) /\ |h'| = |u| /\ u ≃t(p, w -1) h' ++ E p (wo + n). 
   Proof.
     intros.
     destruct h. { destruct H. cbn in H; lia. }
@@ -179,13 +162,13 @@ Module tape (sig : TMSig).
     - cbn in H2. easy.
   Qed.
 
-  Lemma tape_repr_inv7 w p u us n : us :: u ≃t(p, w) E n -> False. 
-  Proof. intros (H1 & H2 & H3). destruct n; cbn in H3; unfold withPolaritySigma in H3; congruence. Qed.
+  Lemma tape_repr_inv7 w p p' u us n : us :: u ≃t(p, w) E p' n -> False. 
+  Proof. intros (H1 & H2 & H3). destruct n; cbn in H3; congruence. Qed.
 
-  Lemma tape_repr_inv8 u us p w e rs : us :: u ≃t(p, w) inr(inr e) :: rs -> e = Some (p, us). 
-  Proof. intros (H1 & H2 & H3). cbn in H3. unfold withPolaritySigma in H3. congruence. Qed. 
+  Lemma tape_repr_inv8 u us p w e rs : us :: u ≃t(p, w) inr(inr e) :: rs -> e = (p, Some us). 
+  Proof. intros (H1 & H2 & H3). cbn in H3. congruence. Qed. 
 
-  Lemma tape_repr_inv9 us1 p w e1 rs : [us1] ≃t(p, S w) e1 :: rs -> rs = E (wo + w). 
+  Lemma tape_repr_inv9 us1 p w e1 rs : [us1] ≃t(p, S w) e1 :: rs -> rs = E p (wo + w). 
   Proof. 
     intros (H1 & H2 & H3). cbn in H3. inv H3. easy. 
   Qed. 
@@ -206,16 +189,16 @@ Module tape (sig : TMSig).
     + revert H1. generalize (wo + w - |u|). induction n; intros [H | H]; eauto. 
   Qed. 
 
-  Lemma tape_repr_inv13 u p w rs σ: u ≃t(p, w) (inr (inr (Some (p, σ))) :: rs) -> exists u', u = σ :: u'. 
+  Lemma tape_repr_inv13 u p p' w rs σ: u ≃t(p, w) (inr (inr (p', Some σ)) :: rs) -> p' = p /\ exists u', u = σ :: u'. 
   Proof. 
     intros (H1 & H2 & H3). destruct u; cbn in *. 
     + congruence. 
-    + exists u. unfold withPolaritySigma in H3. congruence. 
+    + split; [ | exists u];  congruence. 
   Qed. 
 
   Lemma tape_repr_inv14 u p w rs e: u ≃t(p, w) e :: inr ($) :: rs -> False. 
   Proof. 
-    intros (H1 & H2 & H3). destruct u; unfold wo in H3; cbn in H3; unfold withPolaritySigma in H3; try congruence.
+    intros (H1 & H2 & H3). destruct u; unfold wo in H3; cbn in H3; try congruence.
     destruct u; cbn in H3; try congruence.
   Qed. 
 
@@ -229,13 +212,13 @@ Module tape (sig : TMSig).
                      | [H : ?u ≃t(?p, ?w) [] |- _] => now apply tape_repr_inv15 in H
                      | [ H : ?u ≃t(?p, ?w) (inl ?e) :: ?a |- _] => now apply tape_repr_inv in H
                      
-                     | [ H : [] ≃t(?p, ?w) (inr (inr (Some ?e))) :: ?a |- _] => now apply tape_repr_inv2 in H
-                     | [ H : ?u :: ?us ≃t(?p, ?w) inr (inr |_|):: ?a |- _] => now apply tape_repr_inv3 in H
+                     | [ H : [] ≃t(?p, ?w) (inr (inr (_, Some ?e))) :: ?a |- _] => now apply tape_repr_inv2 in H
+                     | [ H : ?u :: ?us ≃t(?p, ?w) inr (inr (_, |_|)):: ?a |- _] => now apply tape_repr_inv3 in H
                      | [H : _ ≃t(_, _) _ :: inr $ :: _ |- _ ] => now apply tape_repr_inv14 in H
                      | [ H : ?us ≃t(?p, ?w) inr $ :: ?a |- _] => now apply tape_repr_inv4 in H
                      | [H : _ ≃t(?p, ?w) inr $ :: ?e :: ?a |- _] => now apply tape_repr_inv5 in H
                      | [H : ?u :: ?us ≃t(?p, 0) _ |- _] => destruct H; cbn in *; lia
-                     | [H : ?u :: ?us ≃t(?p, ?w) E ?n |- _] => now apply tape_repr_inv7 in H
+                     | [H : ?u :: ?us ≃t(?p, ?w) E _ ?n |- _] => now apply tape_repr_inv7 in H
                      | [H : ?us ≃t(?p, ?w) ?a |- _] => let H1 := fresh in apply tape_repr_inv11 in H as H1; unfold wo in H1; cbn [length] in H1; lia (*this is really expensive, but in some cases desirable to have *)
                      (* | [H : ?us ≃t(?p, ?w) _ |- _] => try (apply tape_repr_inv10 in H; cbn in H; lia) *)
                       end. 
@@ -243,14 +226,16 @@ Module tape (sig : TMSig).
   Ltac inv_tape' H := repeat match type of H with
                         | _ ≃t(?p, ?w) ?x :: ?h => is_var x; destruct x; [discr_tape | ]     
                         | _ ≃t(?p, ?w) (inr ?e) :: ?h => is_var e; destruct e; [discr_tape | ]
-                        | [] ≃t(?p, ?w) (inr (inr ?e)) :: ?h => is_var e; destruct e; [ | discr_tape ]
-                        | ?u ≃t(?p, ?w) inr (inr |_|) :: ?h => is_var u; destruct u; [ | discr_tape] 
+                        | [] ≃t(?p, ?w) (inr (inr ?e)) :: ?h => is_var e; destruct e
+                        | ?u ≃t(?p, ?w) inr (inr (_, |_|)) :: ?h => is_var u; destruct u; [ | discr_tape] 
                         | ?u :: ?us ≃t(?p, ?w) ?h => is_var h; destruct h; [ discr_tape | ]
                         | ?u :: ?us ≃t(?p, ?w) ?h' ++ ?h'' => is_var h'; destruct h'; cbn in H; try discr_tape
                         | ?u :: ?us ≃t(?p, ?w) inr(inr ?e) :: _ => is_var e; specialize (tape_repr_inv8 H) as ->  
                         | ?u1 :: _ ≃t(?p, ?w) _  => is_var w; destruct w; [ discr_tape | ]
                         | ?u1 :: [] ≃t(_, S ?w) _ :: ?h  => specialize (tape_repr_inv9 H) as ->
-                        | ?u ≃t(_, _) inr (inr (Some (_, _))) :: _ => is_var u; specialize (tape_repr_inv13 H) as (? & ->)
+                        | ?u ≃t(_, _) inr (inr (_, Some _)) :: _ => is_var u;
+                                                                  let Heqn := fresh "Hpeqn" in
+                                                                  specialize (tape_repr_inv13 H) as (Heqn & (? & ->)); inv Heqn
                         end;
                         (*if we can, we go into recursion after applying tape_repr_step *)
                         match type of H with
@@ -261,11 +246,10 @@ Module tape (sig : TMSig).
   (*the destruct_tape_in tactic generates equations for subtapes which are equal to E _. *)
   (*We do not want to call inv on those equations since they might contain non-trivial equalities which cannot be resolved with a rewrite and would thus be lost with inv*)
   Ltac clear_trivial_niltape H := cbn in H; match type of H with
-                                            | inr (inr |_|) :: ?h = inr (inr |_|) :: ?h' => let H' := fresh in assert (h = h') as H' by congruence;
-                                                                                     tryif clear_trivial_niltape H' then clear H else clear H'
-                                            | ?h = inr (inr _) :: _ => is_var h; rewrite H in *; clear H
-                                            | ?h = E _ => is_var h; rewrite H in *; clear H
-                                      end.
+        | inr (inr (?p, |_|)) :: ?h = inr (inr (?p, |_|)) :: ?h' => let H' := fresh in assert (h = h') as H' by congruence; tryif clear_trivial_niltape H' then clear H else clear H'
+        | ?h = inr (inr _) :: _ => is_var h; rewrite H in *; clear H
+        | ?h = E _ _ => is_var h; rewrite H in *; clear H
+  end.
 
   Ltac destruct_tape_in H := unfold reprTape in H;
                              inv_tape' H;
@@ -309,30 +293,30 @@ Module tape (sig : TMSig).
                                                              
                                end; cbn.
 
-  Lemma polarityFlip_push_in (σ : tapeSigma') : inr (inr (polarityFlipTapeSigma' σ)) = polarityFlipGamma (inr (inr σ)). 
-  Proof. now cbn. Qed. 
+  (* Lemma polarityFlip_push_in (σ : tapeSigma') : inr (inr (polarityFlipTapeSigma' σ)) = polarityFlipGamma (inr (inr σ)).  *)
+  (* Proof. now cbn. Qed.  *)
 
   Ltac rewHeadTape_inv2 := repeat match goal with
                                   | [H : rewHeadTape _ _ |- _] => inv H
                                   | [H : shiftRightWindow _ _ _ _ _ _ |- _ ] => inv H
                                   | [H : identityWindow _ _ _ _ _ _ |- _] => inv H
                                   | [d : delim |- _] => destruct d
-                                  | [H : |_| = # ?σ |- _] => is_var σ; destruct σ; cbn in H; try congruence
-                                  | [H : # ?σ = |_| |- _] => is_var σ; destruct σ; cbn in H; try congruence
-                                  | [H : Some (_, _) = % ?e |- _] => symmetry in H; apply polarityFlipTapeSigmaInv1 in H; rewrite H in *; clear H
-                                  | [H : % ?e = Some (_, _) |- _] => apply polarityFlipTapeSigmaInv1 in H; rewrite H in *; clear H
-                                  | [H : Some (_, _) = # ?e |- _] => symmetry in H; apply polarityFlipTapeSigma'Inv1 in H; rewrite H in *; clear H
-                                  | [H : # ?e = Some (_, _) |- _] => apply polarityFlipTapeSigma'Inv1 in H; rewrite H in *; clear H
-                                  | [H : inr _ = (~ _) |- _] => symmetry in H
-                                  | [H : (~ ?a) = inr (inr |_|) |- _] => is_var a; destruct a; cbn in H; [ congruence | ]
-                                  | [H : (~?e) = inr (inr (Some (_, _))) |- _] => apply polarityFlipGammaInv1 in H; try rewrite H in *; clear H
-                                  | [H : inr (inr (Some (_, _))) = (~?e) |- _] => symmetry in H; apply polarityFlipGammaInv1 in H; try rewrite H in *; clear H
-                                  | [H : % ?a = inr |_| |- _] => is_var a; destruct a; cbn in H; try congruence 
-                                  | [H : $ = $ |- _] => clear H
+                                  (* | [H : |_| = # ?σ |- _] => is_var σ; destruct σ; cbn in H; try congruence *)
+                                  (* | [H : # ?σ = |_| |- _] => is_var σ; destruct σ; cbn in H; try congruence *)
+                                  (* | [H : Some (_, _) = % ?e |- _] => symmetry in H; apply polarityFlipTapeSigmaInv1 in H; rewrite H in *; clear H *)
+                                  (* | [H : % ?e = Some (_, _) |- _] => apply polarityFlipTapeSigmaInv1 in H; rewrite H in *; clear H *)
+                                  (* | [H : Some (_, _) = # ?e |- _] => symmetry in H; apply polarityFlipTapeSigma'Inv1 in H; rewrite H in *; clear H *)
+                                  (* | [H : # ?e = Some (_, _) |- _] => apply polarityFlipTapeSigma'Inv1 in H; rewrite H in *; clear H *)
+                                  (* | [H : inr _ = (~ _) |- _] => symmetry in H *)
+                                  (* | [H : (~ ?a) = inr (inr |_|) |- _] => is_var a; destruct a; cbn in H; [ congruence | ] *)
+                                  | [H : (~?e) = inr (inr (_, _)) |- _] => apply polarityFlipGammaInv1 in H; try rewrite H in *; clear H
+                                  | [H : inr (inr (_, _)) = (~?e) |- _] => symmetry in H; apply polarityFlipGammaInv1 in H; try rewrite H in *; clear H
+                                  (* | [H : % ?a = inr |_| |- _] => is_var a; destruct a; cbn in H; try congruence  *)
+                                  (* | [H : $ = $ |- _] => clear H *)
                                   | [H : inr _ = inr _ |- _] => inv H
                                   | [H : inl _ = inl _ |- _] => inv H
-                                  | [H : |_| = |_| |- _] => clear H
-                                  | [ |- context [inr (inr (# ?e))]] => rewrite polarityFlip_push_in
+                                  (* | [H : |_| = |_| |- _] => clear H *)
+                                  (* | [ |- context [inr (inr (# ?e))]] => rewrite polarityFlip_push_in *)
                            end; try congruence. 
  
   (*Lemma 15 *)
@@ -376,7 +360,7 @@ Module tape (sig : TMSig).
   Qed. 
 
 
-  Hint Extern 4 (rewHeadTape _ _) => apply rewShiftLeftTapeC; cbn [polarityFlipGamma polarityFlipTapeSigma' polarityFlipTapeSigma polarityFlipSigma polarityFlip]. 
+  Hint Extern 4 (rewHeadTape _ _) => apply rewShiftLeftTapeC; cbn [polarityFlipGamma polarityFlipTapeSigma polarityFlipSigma polarityFlip]. 
 
   Lemma tape_rewrite_symm3 h h' :valid rewHeadTape h h' -> valid rewHeadTape (map polarityFlipGamma h) h'. 
   Proof. 
@@ -387,52 +371,51 @@ Module tape (sig : TMSig).
       + (* want to apply the IH *)
         apply IHvalid. 
       + cbn [map polarityFlipGamma]. apply rewHeadTape_rem_tail.
-        specialize (polarityFlip_involution) as H'. unfold involution in H'. 
-        rewHeadTape_inv2; cbn; try rewrite H';eauto 100.
+        rewHeadTape_inv2; cbn; eauto 100.
   Qed.
 
-
   (*Lemma 16 *)
-  Lemma E_rewrite_blank n : valid rewHeadTape (E (S (S n))) (E (S (S n))). 
+  Lemma E_rewrite_blank p p' n: valid rewHeadTape (E p (S (S n))) (E p' (S (S n))). 
   Proof. 
     intros. induction n. 
     + apply valid_base. eauto. 
     + constructor 3. 
       - cbn [E] in IHn. now apply IHn. 
-      - eauto. 
+      - destruct p'; eauto. 
   Qed. 
 
-
-  Lemma E_rewrite_blank_unique' n : n >= 1 -> forall s, valid rewHeadTape (E (S n)) (inr (inr |_|) :: s) -> s = E n. 
+  Lemma E_rewrite_blank_unique' p p' n : n >= 1 -> forall s, valid rewHeadTape (E p' (S n)) (inr (inr (p, |_|)) :: s) -> s = E p n. 
   Proof. 
     intros H. induction n; intros; [lia | ]. 
     destruct n; cbn [E] in *. 
     + inv_valid. rewHeadTape_inv2. 
       apply valid_length_inv in H4. inv H4. now (destruct h2; cbn in H1).
-    + inv_valid. rewHeadTape_inv2. 
-      * eapply IHn in H4. congruence. lia. 
-      * f_equal. now eapply IHn. 
+    + inv_valid. rewHeadTape_inv2.
+      1-2: cbn in *; destruct p; cbn in H5; try congruence; clear H5.
+      all: apply IHn in H4; [congruence | lia]. 
   Qed. 
-  Corollary E_rewrite_blank_unique n : forall s, valid rewHeadTape (E (S (S n))) (inr (inr |_|) :: s) -> s = E (S n).  
-  Proof. intros; now apply E_rewrite_blank_unique'. Qed.
 
-  Lemma E_rewrite_blank_rev w : valid rewHeadTape (rev (E (S (S w)))) (rev (E (S (S w)))).  
+  Corollary E_rewrite_blank_unique p p' n : forall s, valid rewHeadTape (E p (S (S n))) (inr (inr (p', |_|)) :: s) -> s = E p' (S n).  
+  Proof. intros; now eapply E_rewrite_blank_unique'. Qed.
+
+  Lemma E_rewrite_blank_rev p p' w : valid rewHeadTape (rev (E p (S (S w)))) (rev (E p' (S (S w)))).  
   Proof. 
-    rewrite <- E_polarityFlip. apply tape_rewrite_symm1, E_rewrite_blank.
+    rewrite <- polarityFlip_involution with (x := p). rewrite <- polarityFlip_involution with (x := p'). 
+    rewrite <- !E_polarityFlip. apply tape_rewrite_symm1. rewrite !E_polarityFlip. apply E_rewrite_blank.
   Qed. 
 
-  Lemma E_rewrite_blank_rev_unique w s : valid rewHeadTape (rev (E (S (S w)))) (rev (inr (inr |_|) :: s)) -> s = (E (S (w))). 
+  Lemma E_rewrite_blank_rev_unique p p' w s : valid rewHeadTape (rev (E p (S (S w)))) (rev (inr (inr (p', |_|)) :: s)) -> s = (E p' (S (w))). 
   Proof. 
     intros.
-    assert (valid rewHeadTape (polarityRev (E (S (S w)))) (polarityRev (map polarityFlipGamma (inr (inr |_|) :: s)))). 
-    { unfold polarityRev. rewrite E_polarityFlip. rewrite map_involution. 2: involution_simpl. apply H.  }
+    assert (valid rewHeadTape (polarityRev (E (polarityFlip p) (S (S w)))) (polarityRev (map polarityFlipGamma (inr (inr (p', |_|)) :: s)))). 
+    { unfold polarityRev. rewrite E_polarityFlip. rewrite map_involution. 2: involution_simpl. rewrite polarityFlip_involution. apply H.  }
     apply tape_rewrite_symm2 in H0.
-    cbn in H0. apply E_rewrite_blank_unique in H0. apply involution_invert_eqn2 with (a := s) (f:= (map polarityFlipGamma))  (b := E (S w)) in H0.
-    2: involution_simpl. now rewrite H0, E_polarityFlip. 
+    cbn in H0. apply E_rewrite_blank_unique in H0. apply involution_invert_eqn2 with (a := s) (f:= (map polarityFlipGamma))  (b := E (polarityFlip p') (S w)) in H0.
+    2: involution_simpl. now rewrite H0, E_polarityFlip, polarityFlip_involution. 
   Qed. 
 
   (*Lemma 17 *)
-  Lemma E_rewrite_sym σ n: valid rewHeadTape (E (S (S (S n)))) (inr (inr (Some (↑σ))) :: E (S (S n))). 
+  Lemma E_rewrite_sym p σ n: valid rewHeadTape (E p (S (S (S n)))) (inr (inr (positive, Some σ)) :: E positive (S (S n))). 
   Proof. 
     cbn [E].
     constructor 3. 
@@ -440,89 +423,95 @@ Module tape (sig : TMSig).
     - eauto. 
   Qed. 
 
-  Lemma E_rewrite_sym_unique σ n : forall (s : string Gamma), valid rewHeadTape (E (S (S (S n)))) (inr (inr (Some (↑ σ))) :: s) -> s = E (S (S n)). 
+  Lemma E_rewrite_sym_unique p σ n : forall (s : string Gamma), valid rewHeadTape (E p (S (S (S n)))) (inr (inr (positive, σ)) :: s) -> s = E positive (S (S n)). 
   Proof. 
-    intros. inv_valid. rewHeadTape_inv2. cbn [E]. f_equal. apply E_rewrite_blank_unique in H3. auto. 
+    intros. inv_valid. rewHeadTape_inv2.
+    all: cbn [E]; f_equal; apply E_rewrite_blank_unique in H3; auto. 
   Qed. 
 
-  Lemma E_rewrite_sym_rev σ n : valid rewHeadTape (rev (E (S (S (S n))))) (rev (inr (inr (Some (↓ σ))) :: E (S (S n)))). 
+  Lemma E_rewrite_sym_rev p σ n : valid rewHeadTape (rev (E p (S (S (S n))))) (rev (inr (inr (negative, Some σ)) :: E negative (S (S n)))). 
   Proof. 
     (*follows using tape_rewrite_symm1, tape_rewrite_symm3 and E_rewrite_sym *)
-    specialize (E_rewrite_sym σ n) as H1. 
+    specialize (E_rewrite_sym p σ n) as H1. 
     eapply tape_rewrite_symm1 in H1. 
     eapply tape_rewrite_symm3 in H1.
     unfold polarityRev in H1. rewrite map_rev, map_map in H1. setoid_rewrite polarityFlipGamma_involution in H1. rewrite map_id in H1. 
-    cbn [map polarityFlipGamma polarityFlipTapeSigma polarityFlipTapeSigma' polarityFlipSigma polarityFlip] in H1. 
+    cbn [map polarityFlipGamma polarityFlipTapeSigma polarityFlipSigma polarityFlip] in H1. 
     now rewrite E_polarityFlip in H1. 
   Qed. 
 
-  Lemma E_rewrite_sym_rev_unique σ n : forall s, valid rewHeadTape (rev (E (S (S (S n))))) (rev (inr (inr (Some (↓ σ))) :: s)) -> s = E (S (S n)). 
+  Lemma E_rewrite_sym_rev_unique p σ n : forall s, valid rewHeadTape (rev (E p (S (S (S n))))) (rev (inr (inr (negative, Some σ)) :: s)) -> s = E negative (S (S n)). 
   Proof. 
     intros.
-    assert (valid rewHeadTape (polarityRev (E (S (S (S n))))) (polarityRev (inr (inr (Some (↑ σ))) :: map polarityFlipGamma s))). 
+    assert (valid rewHeadTape (polarityRev (E (polarityFlip p) (S (S (S n))))) (polarityRev (inr (inr (positive, Some σ)) :: map polarityFlipGamma s))). 
     {
       unfold polarityRev. rewrite E_polarityFlip. cbn. rewrite map_involution. 2: involution_simpl.
-      apply H. 
+      specialize (polarityFlip_involution p) as H1. rewrite H1. apply H. 
     }
     eapply tape_rewrite_symm2 in H0.
     apply E_rewrite_sym_unique in H0. 
-    enough (map polarityFlipGamma (E (S (S n))) = E (S (S n))).
+    enough (map polarityFlipGamma (E negative (S (S n))) = E positive (S (S n))).
     { rewrite <- H1 in H0. apply involution_invert_eqn in H0. assumption. apply map_involution, polarityFlipGamma_involution. }
     apply E_polarityFlip. 
   Qed. 
 
-  Lemma E_rewrite_sym_rem σ n : valid rewHeadTape (inr (inr σ) :: E (S (S n))) (E (S (S (S n)))). 
+  Lemma E_rewrite_sym_rem p σ n : valid rewHeadTape (inr (inr (p, Some σ)) :: E p (S (S n))) (E negative (S (S (S n)))). 
   Proof. 
     cbn. constructor 3.  
     - apply E_rewrite_blank.
-    - destruct σ; try destruct p; try destruct m; eauto.
+    - eauto. 
   Qed. 
 
-  Lemma  E_rewrite_sym_rem_unique σ n : forall s, valid rewHeadTape (inr (inr σ) :: E (S (S n))) (inr (inr |_|) :: s) -> s = E (S (S n)). 
+  Lemma  E_rewrite_sym_rem_unique p p' σ n : forall s, valid rewHeadTape (inr (inr (p, Some σ)) :: E p (S (S n))) (inr (inr (p', |_|)):: s) -> p' = negative /\ s = E negative (S (S n)). 
   Proof. 
     intros. inv_valid. rewHeadTape_inv2.
-    + inv_valid. destruct n; cbn in H5; lia. rewHeadTape_inv2. destruct n; cbn in H3; congruence. 
-    + apply E_rewrite_blank_unique in H3. inv H3. reflexivity. 
-    + apply E_rewrite_blank_unique in H3. now inv H3. 
+    destruct p'; cbn in H5; try congruence; clear H5.
+    split; [reflexivity | ]. 
+    inv_valid. 1: destruct n; cbn in H5; lia.
+    rewHeadTape_inv2.
+    3: { destruct n; cbn in *; inv H3. apply valid_length_inv in H2; destruct h0; cbn in H2; congruence.   }
+    all: destruct n; cbn in H3; [congruence | ];
+      apply E_rewrite_blank_unique in H2;
+      rewrite H2; easy.   
   Qed. 
 
-  Lemma E_rewrite_sym_rem_rev σ n : valid rewHeadTape (rev (inr (inr σ) :: E (S (S n)))) (rev (E (S (S (S n))))). 
+  Lemma E_rewrite_sym_rem_rev p σ n : valid rewHeadTape (rev (inr (inr (p, Some σ)) :: E p (S (S n)))) (rev (E positive (S (S (S n))))). 
   Proof. 
-    specialize (E_rewrite_sym_rem σ n) as H1. 
+    specialize (E_rewrite_sym_rem p σ n) as H1. 
     eapply tape_rewrite_symm1 in H1. 
     eapply tape_rewrite_symm3 in H1.
     unfold polarityRev in H1. rewrite map_rev, map_map in H1. setoid_rewrite polarityFlipGamma_involution in H1. rewrite map_id in H1. 
-    cbn [map polarityFlipGamma polarityFlipTapeSigma polarityFlipTapeSigma' polarityFlipSigma polarityFlip] in H1. 
+    cbn [map polarityFlipGamma polarityFlipTapeSigma polarityFlipSigma polarityFlip] in H1. 
     now rewrite E_polarityFlip in H1. 
   Qed. 
 
-  Lemma E_rewrite_sym_rem_rev_unique σ n : forall s, valid rewHeadTape (rev (inr (inr σ) :: E (S (S n)))) (rev (inr (inr |_|) :: s)) -> s = E (S (S n)). 
+  Lemma E_rewrite_sym_rem_rev_unique p p' σ n : forall s, valid rewHeadTape (rev (inr (inr (p, Some σ)) :: E p (S (S n)))) (rev (inr (inr (p', |_|)) :: s)) -> p' = positive /\ s = E p' (S (S n)). 
   Proof. 
     intros.
-    assert (valid rewHeadTape (polarityRev (inr (inr (polarityFlipTapeSigma' σ)) :: E (S (S n)))) (polarityRev (inr (inr |_|) :: map polarityFlipGamma s))). 
+    assert (valid rewHeadTape (polarityRev (inr (inr (polarityFlip p, Some σ)) :: E (polarityFlip p) (S (S n)))) (polarityRev (inr (inr (polarityFlip p', |_|)) :: map polarityFlipGamma s))). 
     {
       unfold polarityRev. cbn [map]. rewrite E_polarityFlip. cbn. rewrite map_involution. 2: apply polarityFlipGamma_involution.
-      specialize polarityFlipTapeSigma'_involution as H1. unfold involution in H1.
-      rewrite H1.
-      apply H. 
+      specialize (polarityFlip_involution) as H1. unfold involution in H1. 
+      rewrite !H1. apply H. 
     }
     eapply tape_rewrite_symm2 in H0.
-    apply E_rewrite_sym_rem_unique in H0. 
-    enough (map polarityFlipGamma (E (S (S n))) = E (S (S n))).
-    { rewrite <- H1 in H0. apply involution_invert_eqn in H0. assumption. apply map_involution, polarityFlipGamma_involution. }
+    apply E_rewrite_sym_rem_unique in H0 as (H0 & H1). 
+    destruct p'; cbn in H0; try congruence; clear H0. 
+    split; [reflexivity | ]. 
+    enough (map polarityFlipGamma (E negative (S (S n))) = E positive (S (S n))).
+    { rewrite <- H1 in H0. rewrite map_involution in H0; [apply H0 | involution_simpl]. }
     apply E_polarityFlip. 
   Qed. 
 
-
   (*Lemma 18 *)
-  Lemma tape_repr_add_right rs σ h p w: rs ≃t(p, w) h -> length rs < w -> exists h', valid rewHeadTape h (inr (inr (Some (↑ σ))) :: h')  /\ (forall h0, valid rewHeadTape h (inr (inr (Some (↑ σ))) :: h0) -> h0 = h') /\ σ :: rs ≃t(positive, w)  (inr (inr (Some (↑ σ))) :: h'). 
+  Lemma tape_repr_add_right rs σ h p w: rs ≃t(p, w) h -> length rs < w -> exists h', valid rewHeadTape h (inr (inr (↑ (Some σ))) :: h')  /\ (forall h0, valid rewHeadTape h (inr (inr (↑ (Some σ))) :: h0) -> h0 = h') /\ σ :: rs ≃t(positive, w)  (inr (inr (↑ (Some σ))) :: h'). 
   Proof. 
     intros. revert w h σ H H0. 
     induction rs.
-    - intros. destruct_tape_in_tidy H.  exists (E (wo + w - 1)). rewrite <- and_assoc; split. 
+    - intros. destruct_tape_in_tidy H.  exists (E positive (wo + w - 1)). rewrite <- and_assoc; split. 
       + cbn in H0. destruct w; [lia | ]. unfold wo. replace (2 + S w) with (S (S (S w))) by lia. cbn [Nat.sub]. split.
         * (*existence*) apply E_rewrite_sym.
-        * (*uniqueness*) intros. now eapply E_rewrite_sym_unique with (σ := σ). 
+        * (*uniqueness*) intros. eapply E_rewrite_sym_unique with (σ := Some σ). apply H1. 
       + repeat split. 
         * cbn. rewrite E_length. lia. 
         * now cbn. 
@@ -531,24 +520,23 @@ Module tape (sig : TMSig).
       destruct rs; [ | destruct rs].
       + (*at the end of the used tape region *)
         destruct h'; [clear H2 | now cbn in H2]. clear H3. destruct n; [cbn in H0; cbn in H0; lia | ].
-        exists (inr (inr (Some (↑a))):: E (wo + n)). rewrite <- and_assoc; split.
+        exists (inr (inr ((↑ (Some a)))):: E positive (wo + n)). rewrite <- and_assoc; split.
         * cbn [app]. cbn [Nat.add Nat.sub]. split.
           ++ (*existence*) constructor 3. 
              -- apply E_rewrite_sym. 
              -- cbn [E]. apply rewHeadTape_rem_tail. eauto. 
           ++ (*uniqueness *) intros. inv_valid.
-             rewHeadTape_inv2. apply E_rewrite_sym_unique with (σ := a) in H4. cbn [E] in H4. cbn [Nat.add E].
-             inv H4. reflexivity. 
+             rewHeadTape_inv2. apply E_rewrite_sym_unique with (σ := Some a) in H4. now inv H4. 
         * repeat split. 
           -- cbn. rewrite E_length. cbn in H0. lia. 
           -- cbn; cbn in H0; lia. 
-          -- cbn. unfold withPolaritySigma. now rewrite Nat.add_comm.
+          -- cbn. now rewrite Nat.add_comm.
       + (* rs has length 1*)
         destruct_tape. cbn [app] in H3. 
-        destruct h'; [ | now cbn in H2]. clear H2. 
-        cbn [app] in H3. destruct_tape. cbn [length] in *. 
+        destruct h'; [ | now cbn in H2]. clear H2.
+        cbn [app] in H3. destruct_tape. cbn [length] in *.
         destruct n; [lia | ]. clear H0. 
-        exists (inr(inr (Some (↑a))) :: inr (inr (Some (↑e))) :: E (wo + n)). 
+        exists (inr(inr (↑ (Some a))) :: inr (inr (↑ (Some e))) :: E positive (wo + n)). 
         cbn [app]; rewrite <- and_assoc; split. 
         * split.
           ** (*existence*) constructor 3. 
@@ -573,7 +561,7 @@ Module tape (sig : TMSig).
        (*we use the IH with h := inr (...e) :: inr (...e0) :: h' ++ E(n + wo); w := S (S (n + |h'|)); σ := a *)
        rewrite Nat.add_succ_r in H3. specialize (IHrs _ _ a H3). 
        edestruct (IHrs) as (h'' & F1 & F3 & F2). lia. 
-       exists (inr (inr (Some (↑a))) :: h'').
+       exists (inr (inr (↑(Some a))) :: h'').
        (*we need to know one more symbol at the head of h'' for the proof *)
        destruct_tape_in F2. 
        rewrite <- and_assoc; split; [split | ].
@@ -591,14 +579,14 @@ Module tape (sig : TMSig).
   Qed. 
 
 
-  Corollary tape_repr_add_left ls σ h p w: ls ≃t(p, w) h -> length ls < w -> exists h', valid rewHeadTape (rev h) (rev (inr (inr (Some (↓ σ))) :: h'))  /\ (forall h0, valid rewHeadTape (rev h) (rev (inr (inr (Some (↓ σ))) :: h0)) -> h0 = h') /\ σ :: ls ≃t(negative, w)  (inr (inr (Some (↓ σ))) :: h').
+  Corollary tape_repr_add_left ls σ h p w: ls ≃t(p, w) h -> length ls < w -> exists h', valid rewHeadTape (rev h) (rev (inr (inr (↓ (Some σ))) :: h'))  /\ (forall h0, valid rewHeadTape (rev h) (rev (inr (inr (↓ (Some σ))) :: h0)) -> h0 = h') /\ σ :: ls ≃t(negative, w)  (inr (inr (↓ (Some σ))) :: h').
   Proof. 
     intros. specialize (@tape_repr_add_right ls σ h p w H H0) as (h' & H1 & H3 & H2). 
     exists (map polarityFlipGamma h'). rewrite <- and_assoc. split. 
     - eapply tape_rewrite_symm1 in H1.  
       apply tape_rewrite_symm3 in H1. split. 
       + cbn [rev].
-        cbn[polarityRev map rev polarityFlipGamma polarityFlipTapeSigma polarityFlipTapeSigma' polarityFlipSigma polarityFlip] in H1.
+        cbn[polarityRev map rev polarityFlipGamma polarityFlipTapeSigma polarityFlipSigma polarityFlip] in H1.
         unfold polarityRev in H1. rewrite map_rev in H1. rewrite map_involution in H1. 2: apply polarityFlipGamma_involution. 
         apply H1. 
       + intros. specialize (H3 (map polarityFlipGamma h0)).
@@ -610,11 +598,11 @@ Module tape (sig : TMSig).
   Qed. 
 
   (*Lemma 19*)
-  Lemma tape_repr_rem_right' rs σ1 σ2 (h : list Gamma) p w : σ1 :: σ2 :: rs ≃t(p, w) inr (inr (Some (p, σ1))) :: inr (inr (Some (p, σ2))) :: h -> exists (h' : list Gamma), valid rewHeadTape (inr (inr (Some (p, σ1))) :: inr (inr (Some (p, σ2))) :: h) (inr (inr (Some (↓ σ2))) :: h') /\ (forall h0, valid rewHeadTape (inr (inr (Some (p, σ1))) :: inr (inr (Some (p, σ2))) :: h) (inr (inr (Some (↓ σ2))) :: h0) -> h0 = h') /\ σ2 :: rs ≃t(negative, w) (inr (inr (Some (↓ σ2))) :: h').   
+  Lemma tape_repr_rem_right' rs σ1 σ2 (h : list Gamma) p w : σ1 :: σ2 :: rs ≃t(p, w) inr (inr (p, Some σ1)) :: inr (inr (p, Some σ2)) :: h -> exists (h' : list Gamma), valid rewHeadTape (inr (inr (p, Some σ1)) :: inr (inr (p, Some σ2)) :: h) (inr (inr (↓ (Some σ2))) :: h') /\ (forall h0, valid rewHeadTape (inr (inr (p, Some σ1)) :: inr (inr (p, Some σ2)) :: h) (inr (inr (↓ (Some σ2))) :: h0) -> h0 = h') /\ σ2 :: rs ≃t(negative, w) (inr (inr (↓ (Some σ2))) :: h').   
   Proof. 
     revert w h σ1 σ2. 
     induction rs. 
-    - intros. destruct_tape. exists (E (S wo + w)). rewrite <- and_assoc; split. 
+    - intros. destruct_tape. exists (E negative (S wo + w)). rewrite <- and_assoc; split. 
       + (* existence*) split.
         * constructor 3.
           -- constructor 3.
@@ -630,7 +618,7 @@ Module tape (sig : TMSig).
   - intros. destruct_tape_in H. 
     destruct rs. 
     + destruct_tape_in H. 
-      exists (inr (inr (Some (↓ a))) :: E (S wo + w)). rewrite <- and_assoc; split. 
+      exists (inr (inr (↓ (Some a))) :: E negative (S wo + w)). rewrite <- and_assoc; split. 
       * split. 
         -- constructor 3.
            ++ constructor 3. { apply E_rewrite_sym_rem. }
@@ -648,7 +636,7 @@ Module tape (sig : TMSig).
       (*need IH *)
       apply tape_repr_step in H. 
       specialize (IHrs _ _ σ2 a H) as (h0 & F1 & F2 & F3). destruct_tape. 
-      exists (inr (inr (Some (↓ a))) :: (inr (inr (Some (↓ e)))) :: h0). 
+      exists (inr (inr (↓ (Some a))) :: (inr (inr (↓ (Some e)))) :: h0). 
       rewrite <- and_assoc; split; [split | ]. 
       * constructor 3.
         -- apply F1. 
@@ -660,21 +648,22 @@ Module tape (sig : TMSig).
         -- inv H3. easy. 
   Qed.      
 
-  Lemma tape_repr_rem_right rs σ1 (σ2 : stateSigma) h p w : σ1 :: rs ≃t(p, w) inr (inr (Some (p, σ1))) :: inr ( (p ! σ2)) :: h -> exists h', valid rewHeadTape (inr (inr (Some (p, σ1))) :: inr ((p ! σ2)) :: h) (inr ((negative ! σ2)) :: h') /\ (forall h0, valid rewHeadTape (inr (inr (Some (p, σ1))) :: inr ( (p ! σ2)) :: h) (inr ((negative ! σ2)) :: h0) -> h0 = h' ) /\ rs ≃t(negative, w) (inr ((negative ! σ2)) :: h'). 
+  Lemma tape_repr_rem_right rs σ1 (σ2 : stateSigma) h p w : σ1 :: rs ≃t(p, w) inr (inr (p, Some σ1)) :: inr (inr (p, σ2)) :: h -> exists h', valid rewHeadTape (inr (inr (p, Some σ1)) :: inr (inr (p, σ2)) :: h) (inr (inr (negative, σ2)) :: h') /\ (forall h0, valid rewHeadTape (inr (inr (p, Some σ1)) :: inr (inr (p, σ2)) :: h) (inr (inr (negative, σ2)) :: h0) -> h0 = h' ) /\ rs ≃t(negative, w) (inr (inr (negative, σ2)) :: h'). 
   Proof. 
     intros. destruct σ2 as [σ2 | ].
-    + cbn [withPolarity] in *. unfold withPolaritySigma in *. inv_tape' H. now apply tape_repr_rem_right'. 
-    + cbn [withPolarity] in *. destruct_tape_in_tidy H.
+    + inv_tape' H.
+      now apply tape_repr_rem_right'.
+    + destruct_tape_in_tidy H.
       apply tape_repr_step in H as H'. destruct_tape_in_tidy H'. clear H'.
-      exists (E (wo + w)). repeat split. 
-      * constructor 3. apply E_rewrite_blank. eauto. 
+      exists (E negative (wo + w)). repeat split. 
+      * constructor 3; [apply E_rewrite_blank | eauto ].
       * intros. inv_valid. rewHeadTape_inv2. 
         apply E_rewrite_blank_unique in H4. now inv H4.  
       * cbn; now rewrite E_length. 
       * now cbn. 
   Qed.
 
-  Corollary tape_repr_rem_left ls σ1 (σ2 : stateSigma) h p w : σ1 :: ls ≃t(p, w) inr (inr (Some (p, σ1))) :: inr ((p ! σ2)) :: h -> exists h', valid rewHeadTape (rev (inr (inr (Some (p, σ1))) :: inr ((p ! σ2)) :: h)) (rev (inr (positive! σ2) :: h')) /\ (forall h0, valid rewHeadTape (rev (inr (inr (Some (p, σ1))) :: inr ((p ! σ2)) :: h)) (rev (inr (positive ! σ2) :: h0)) -> h0 = h') /\ ls ≃t(positive, w) (inr (positive ! σ2) :: h').
+  Corollary tape_repr_rem_left ls σ1 (σ2 : stateSigma) h p w : σ1 :: ls ≃t(p, w) inr (inr (p, Some σ1)) :: inr (inr (p, σ2)) :: h -> exists h', valid rewHeadTape (rev (inr (inr (p, Some σ1)) :: inr (inr (p, σ2)) :: h)) (rev (inr (inr (positive, σ2)) :: h')) /\ (forall h0, valid rewHeadTape (rev (inr (inr (p, Some σ1)) :: inr (inr (p, σ2)) :: h)) (rev (inr (inr (positive, σ2)) :: h0)) -> h0 = h') /\ ls ≃t(positive, w) (inr (inr (positive, σ2)) :: h').
   Proof. 
     intros. specialize (@tape_repr_rem_right ls σ1 σ2 h p w H) as (h' & H1 & H3 & H2). 
     exists (map polarityFlipGamma h'). rewrite <- and_assoc. split. 
@@ -691,18 +680,18 @@ Module tape (sig : TMSig).
 
 
   (*Lemma 20*)
-  Lemma E_rewrite_sym_stay p σ n : valid rewHeadTape (inr (inr (Some (p, σ))) :: E (S (S n))) (inr (inr (Some (∘ σ))) :: E (S (S n))).  
+  Lemma E_rewrite_sym_stay p σ n : valid rewHeadTape (inr (inr (p, Some σ)) :: E p (S (S n))) (inr (inr (∘ (Some σ))) :: E neutral (S (S n))).  
   Proof. 
     constructor 3. 
     - apply E_rewrite_blank. 
     - cbn[E]. apply rewHeadTape_rem_tail. eauto. 
   Qed. 
 
-  Lemma tape_repr_stay_right' rs σ h p w : σ :: rs ≃t(p, w) inr(inr (Some (p, σ))) :: h -> exists h', valid rewHeadTape (inr (inr (Some (p, σ))) :: h) (inr (inr (Some (∘σ))) :: h') /\ (forall h0, valid rewHeadTape (inr (inr (Some (p, σ))) :: h) (inr (inr (Some (∘ σ))) :: h0) -> h0 = h') /\ σ :: rs ≃t(neutral, w) (inr (inr (Some (∘σ)))) :: h'. 
+  Lemma tape_repr_stay_right' rs σ h p w : σ :: rs ≃t(p, w) inr(inr (p, Some σ)) :: h -> exists h', valid rewHeadTape (inr (inr (p, Some σ)) :: h) (inr (inr (neutral, Some σ)) :: h') /\ (forall h0, valid rewHeadTape (inr (inr (p, Some σ)) :: h) (inr (inr (∘ (Some σ))) :: h0) -> h0 = h') /\ σ :: rs ≃t(neutral, w) (inr (inr (∘ (Some σ)))) :: h'. 
   Proof. 
     revert w h σ.  
     induction rs. 
-    - intros. destruct_tape. exists (E (wo + w)). 
+    - intros. destruct_tape. exists (E neutral (wo + w)). 
       rewrite <- and_assoc. split. 
       + split.
         * constructor 3. apply E_rewrite_blank.
@@ -711,7 +700,7 @@ Module tape (sig : TMSig).
           rewHeadTape_inv2. apply E_rewrite_blank_unique in H4. inv H4. easy. 
       + repeat split; cbn in *; try rewrite E_length; cbn in *; easy. 
     - intros. destruct_tape_in H. destruct rs; destruct_tape_in H. 
-      + exists (inr (inr (Some (∘ a))) :: E (wo + w)). rewrite <- and_assoc; split. 
+      + exists (inr (inr (∘ (Some a))) :: E neutral (wo + w)). rewrite <- and_assoc; split. 
         * split.
           -- constructor 3. 2: { apply rewHeadTape_rem_tail. eauto. }
              apply E_rewrite_sym_stay. 
@@ -719,7 +708,7 @@ Module tape (sig : TMSig).
              apply E_rewrite_blank_unique in H3. inv H3. easy. 
         * repeat split; cbn in *; try rewrite E_length; cbn in *; easy.  
      + apply tape_repr_step in H. specialize (IHrs _ _ a H) as (h0 & F1 & F2 & F3). destruct_tape_in F3. 
-       exists (inr (inr (Some (∘ a))) :: inr (inr (Some (∘e))) :: h0). rewrite <- and_assoc; split.
+       exists (inr (inr (∘ (Some a))) :: inr (inr (∘ (Some e))) :: h0). rewrite <- and_assoc; split.
        * split.
          -- constructor 3.
             ++ apply F1. 
@@ -728,17 +717,17 @@ Module tape (sig : TMSig).
        * clear F2 F1 H. destruct F3 as (H1 & H2 & H3). cbn in H1, H2. repeat split; cbn. 1-2: lia. inv H3. easy. 
   Qed. 
 
-  Lemma tape_repr_stay_right rs e h p w : rs ≃t(p, w) inr (p ! e) :: h -> exists h', valid rewHeadTape (inr (p ! e) :: h) (inr (neutral ! e) :: h') /\ (forall h0, valid rewHeadTape (inr (p ! e) :: h) (inr (neutral ! e) :: h0) -> h0 = h') /\ rs ≃t(neutral, w) (inr (neutral ! e) :: h').  
+  Lemma tape_repr_stay_right rs e h p w : rs ≃t(p, w) inr (inr (p, e)) :: h -> exists h', valid rewHeadTape (inr (inr (p, e)) :: h) (inr (inr (neutral, e)) :: h') /\ (forall h0, valid rewHeadTape (inr (inr (p, e)) :: h) (inr (inr (neutral, e)) :: h0) -> h0 = h') /\ rs ≃t(neutral, w) (inr (inr (neutral, e)) :: h').  
   Proof.
     intros. destruct e. 
-    - cbn in H. unfold withPolaritySigma in H. destruct_tape_in H. now apply tape_repr_stay_right'. 
-    - cbn in H. destruct_tape_in_tidy H. exists (inr (inr |_|) :: E w). split; [ | split]. 
-      + apply E_rewrite_blank. 
+    - cbn in H. destruct_tape_in H. now apply tape_repr_stay_right'. 
+    - cbn in H. destruct_tape_in_tidy H. exists (inr (inr (neutral, |_|)) :: E neutral w). split; [ | split]. 
+      + apply E_rewrite_blank.
       + intros. apply E_rewrite_blank_unique in H0. now inv H0. 
       + repeat split; cbn; [rewrite E_length | ]; lia.
   Qed. 
 
-  Corollary tape_repr_stay_left ls e h p w : ls ≃t(p, w) inr(p ! e) :: h -> exists h', valid rewHeadTape (rev (inr (p ! e) :: h)) (rev (inr (neutral ! e) :: h')) /\ (forall h0, valid rewHeadTape (rev (inr (p ! e) :: h)) (rev (inr (neutral ! e) :: h0)) -> h0 = h') /\ ls ≃t(neutral, w) (inr (neutral ! e)) :: h'. 
+  Corollary tape_repr_stay_left ls e h p w : ls ≃t(p, w) inr(inr (p, e)) :: h -> exists h', valid rewHeadTape (rev (inr (inr (p, e)) :: h)) (rev (inr (inr (neutral, e)) :: h')) /\ (forall h0, valid rewHeadTape (rev (inr (inr (p, e)) :: h)) (rev (inr (inr (neutral, e)) :: h0)) -> h0 = h') /\ ls ≃t(neutral, w) (inr (inr (neutral, e))) :: h'. 
   Proof. 
     intros. specialize (@tape_repr_stay_right ls e h p w H) as (h' & H1 & H3 & H2). 
     exists (map polarityFlipGamma h'). rewrite <- and_assoc. split. 
