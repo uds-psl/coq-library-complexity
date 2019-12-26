@@ -139,7 +139,7 @@ Module basics (sig : TMSig).
   Instance delim_finTypeC : finTypeC (EqType delim). 
   Proof. exists [delimC]. intros []. simpl. dec; congruence. Defined. 
 
-  Notation "$" := (inl delimC). 
+  Notation "#" := (inl delimC). 
 
   Notation stateSigma := (option Sigma). 
   Notation polSigma := ((polarity * stateSigma)%type).
@@ -169,12 +169,8 @@ Module basics (sig : TMSig).
 
   Smpl Add (apply polarityFlipSigma_involution) : involution. 
 
-  Definition polarityFlipTapeSigma (x : tapeSigma) : tapeSigma := match x with inr a => inr (polarityFlipSigma a) | $ => $ end. 
+  Definition polarityFlipTapeSigma (x : tapeSigma) : tapeSigma := match x with inr a => inr (polarityFlipSigma a) | # => # end. 
   Definition polarityFlipGamma (x : Gamma) : Gamma := match x with inl s => inl s | inr x => inr (polarityFlipTapeSigma x) end.
-
-  Notation "'~' x" := (polarityFlipGamma x). 
-  Notation "'!' x" := (polarityFlipSigma x) (at level 1). 
-  Notation "'%' x" := (polarityFlipTapeSigma x) (at level 30). 
 
   Lemma polarityFlipTapeSigma_involution : involution polarityFlipTapeSigma.
   Proof.
@@ -184,6 +180,10 @@ Module basics (sig : TMSig).
   Proof. 
     intros x. destruct x; [now cbn | ]. cbn. now rewrite polarityFlipTapeSigma_involution.  
   Qed. 
+
+  Notation "'~' x" := (polarityFlipGamma x). 
+  Notation "'!' x" := (polarityFlipSigma x) (at level 1). 
+  Notation "'%' x" := (polarityFlipTapeSigma x) (at level 30).
 
   Smpl Add (apply polarityFlipTapeSigma_involution) : involution.
   Smpl Add (apply polarityFlipGamma_involution) : involution.
@@ -229,7 +229,7 @@ Module basics (sig : TMSig).
 
 
   (*a string consisting of k blanks*)
-  Fixpoint E p k : halftape := match k with 0 => [inr $] | S k => inr (inr (p, |_|)) :: E p k end. 
+  Fixpoint E p k : halftape := match k with 0 => [inr #] | S k => inr (inr (p, |_|)) :: E p k end. 
   Lemma E_length p n: |(E p n)| = S n. 
   Proof. 
     induction n; cbn.

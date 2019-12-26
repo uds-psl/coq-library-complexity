@@ -57,8 +57,8 @@ Inductive shiftRightWindow : Gamma -> Gamma -> Gamma -> Gamma -> Gamma -> Gamma 
 
   Inductive identityWindow : Gamma -> Gamma -> Gamma -> Gamma -> Gamma -> Gamma -> Prop :=
     | identityC (m1 m2 m3 : stateSigma) p : identityWindow (inr (inr (p, m1))) (inr (inr (p, m2))) (inr (inr (p, m3))) (inr (inr (neutral, m1))) (inr (inr (neutral, m2))) (inr (inr (neutral, m3)))
-  | identityDBB p p' : identityWindow (inr $) (inr (inr (p, |_|))) (inr (inr (p, |_|))) (inr $) (inr (inr (p', |_|))) (inr (inr (p', |_|)))
-  | identityBBD p p' : identityWindow (inr (inr (p, |_|))) (inr (inr (p, |_|))) (inr $) (inr (inr (p', |_|))) (inr (inr (p', |_|))) (inr $). 
+  | identityDBB p p' : identityWindow (inr #) (inr (inr (p, |_|))) (inr (inr (p, |_|))) (inr #) (inr (inr (p', |_|))) (inr (inr (p', |_|)))
+  | identityBBD p p' : identityWindow (inr (inr (p, |_|))) (inr (inr (p, |_|))) (inr #) (inr (inr (p', |_|))) (inr (inr (p', |_|))) (inr #). 
 
   Hint Constructors identityWindow.
 
@@ -90,8 +90,8 @@ Inductive shiftRightWindow : Gamma -> Gamma -> Gamma -> Gamma -> Gamma -> Gamma 
            | [H : inr _ = (~ _) |- _] => symmetry in H
            | [H : inr _ = inr _ |- _] => inv H
            | [H : inl _ = inl _ |- _] => inv H
-           | [H : (~ ?a) = inr ($) |- _ ] => is_var a; destruct a; cbn in H; [congruence | ]
-           | [H : % ?a = $ |- _] => is_var a; destruct a; cbn in H; try congruence
+           | [H : (~ ?a) = inr (#) |- _ ] => is_var a; destruct a; cbn in H; [congruence | ]
+           | [H : % ?a = # |- _] => is_var a; destruct a; cbn in H; try congruence
            | [H : (~ _)= inr(inr ((_, _))) |- _] => apply polarityFlipGammaInv1 in H as ->
                 end; try congruence.
     all: eauto. 
@@ -141,10 +141,10 @@ Inductive shiftRightWindow : Gamma -> Gamma -> Gamma -> Gamma -> Gamma -> Gamma 
   Lemma tape_repr_inv3 w p p' (u : Sigma) (us : list Sigma) h : u :: us ≃t(p, w) (inr (inr (p', |_|)) :: h) -> False. 
   Proof. intros (H1 & H2 & H3). cbn in H3. congruence. Qed. 
 
-  Lemma tape_repr_inv4 w p (u : list Sigma) h : u ≃t(p, w) (inr $) :: h -> False. 
+  Lemma tape_repr_inv4 w p (u : list Sigma) h : u ≃t(p, w) (inr #) :: h -> False. 
   Proof. intros (H1 & H2 & H3). cbn in H3. destruct u; cbn in H3;  congruence. Qed. 
 
-  Lemma tape_repr_inv5 w p u h e : u ≃t(p, w) (inr $) :: e:: h -> False. 
+  Lemma tape_repr_inv5 w p u h e : u ≃t(p, w) (inr #) :: e:: h -> False. 
   Proof. intros (H1 & H2 & H3). destruct u; cbn in H3; congruence. Qed. 
 
   Lemma tape_repr_inv6 w p u us h : us :: u ≃t(p, w) h -> exists h' n, h = (inr (inr (p, Some us))):: h' ++ E p (wo + n) /\ w = n + S (|h'|) /\ |h'| = |u| /\ u ≃t(p, w -1) h' ++ E p (wo + n). 
@@ -196,7 +196,7 @@ Inductive shiftRightWindow : Gamma -> Gamma -> Gamma -> Gamma -> Gamma -> Gamma 
     + split; [ | exists u];  congruence. 
   Qed. 
 
-  Lemma tape_repr_inv14 u p w rs e: u ≃t(p, w) e :: inr ($) :: rs -> False. 
+  Lemma tape_repr_inv14 u p w rs e: u ≃t(p, w) e :: inr (#) :: rs -> False. 
   Proof. 
     intros (H1 & H2 & H3). destruct u; unfold wo in H3; cbn in H3; try congruence.
     destruct u; cbn in H3; try congruence.
@@ -214,9 +214,9 @@ Inductive shiftRightWindow : Gamma -> Gamma -> Gamma -> Gamma -> Gamma -> Gamma 
                      
                      | [ H : [] ≃t(?p, ?w) (inr (inr (_, Some ?e))) :: ?a |- _] => now apply tape_repr_inv2 in H
                      | [ H : ?u :: ?us ≃t(?p, ?w) inr (inr (_, |_|)):: ?a |- _] => now apply tape_repr_inv3 in H
-                     | [H : _ ≃t(_, _) _ :: inr $ :: _ |- _ ] => now apply tape_repr_inv14 in H
-                     | [ H : ?us ≃t(?p, ?w) inr $ :: ?a |- _] => now apply tape_repr_inv4 in H
-                     | [H : _ ≃t(?p, ?w) inr $ :: ?e :: ?a |- _] => now apply tape_repr_inv5 in H
+                     | [H : _ ≃t(_, _) _ :: inr # :: _ |- _ ] => now apply tape_repr_inv14 in H
+                     | [ H : ?us ≃t(?p, ?w) inr # :: ?a |- _] => now apply tape_repr_inv4 in H
+                     | [H : _ ≃t(?p, ?w) inr # :: ?e :: ?a |- _] => now apply tape_repr_inv5 in H
                      | [H : ?u :: ?us ≃t(?p, 0) _ |- _] => destruct H; cbn in *; lia
                      | [H : ?u :: ?us ≃t(?p, ?w) E _ ?n |- _] => now apply tape_repr_inv7 in H
                      | [H : ?us ≃t(?p, ?w) ?a |- _] => let H1 := fresh in apply tape_repr_inv11 in H as H1; unfold wo in H1; cbn [length] in H1; lia (*this is really expensive, but in some cases desirable to have *)

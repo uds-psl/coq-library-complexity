@@ -25,337 +25,6 @@ Module stringbased (sig : TMSig).
     inv H. now repeat rewrite polarityFlipGamma_involution. 
   Qed. 
     
-  (*a rule template which instantiates the symbols with the three possible consistent polarities*)
-  Definition makeRulesPol (a b c : stateSigma ) (d e f : Gamma): list (TCSRWin Gamma) :=
-    [  {     inr (negative ! a) , inr(negative ! b), inr (negative ! c) }
-         / { d,  e, f };
-       {     inr (neutral ! a), inr (neutral ! b), inr (neutral ! c) }
-         / { d, e, f};
-       {     inr (positive ! a), inr (positive ! b), inr (positive ! c) }
-         / { d, e, f}
-    ].
-
-  Ltac orintro := intros; repeat match goal with [H : ?a \/ ?b |- _ ] => destruct H end. 
-
-  (** *Identity rules*)
-  Definition makeIdentityRulesTemplate (x : FstateSigma * FstateSigma * FstateSigma) : list (TCSRWin Gamma) :=
-    match x with (a, b, c) => makeRulesPol a b c (inr (neutral ! a)) (inr (neutral ! b)) (inr (neutral ! c)) end. 
-  Lemma identityRulesTemplate_iff (σ1 σ2 σ3 :stateSigma) r : r el makeIdentityRulesTemplate (σ1, σ2, σ3) <-> exists p, r = {inr p ! σ1, inr p ! σ2, inr p ! σ3} / {inr neutral ! σ1, inr neutral ! σ2, inr neutral ! σ3}. 
-  Proof.
-    unfold makeIdentityRulesTemplate, makeRulesPol. split.
-    - cbn; orintro; eauto. 
-    - intros ([] & ->); eauto. 
-  Qed. 
-
-
-  (*both halves *)
-
-  (*
-    |_| |_| |_|
-    |_| |_| |_|
-   *)
-  Definition makeIdentityRulesBlankBlankBlank := makeIdentityRulesTemplate (|_| , |_| , |_| ). 
-  Lemma identityRulesBlankBlankBlank_iff r : r el makeIdentityRulesBlankBlankBlank <-> r = { inr (inr |_|) , inr (inr |_|) , inr (inr |_|) } / { inr (inr |_|) , inr (inr |_|) , inr (inr |_|) }. 
-  Proof. 
-    unfold makeIdentityRulesBlankBlankBlank. rewrite identityRulesTemplate_iff. cbn. split.
-    - intros (_ & -> ); reflexivity. 
-    - eauto. 
-  Qed. 
-
-  (* Lemma agree (γ1 γ2 γ3 γ4 γ5 γ6 : tapeSigma) : { inr γ1 , inr (γ2), inr (γ3) } / {inr (γ4) , inr (γ5) , inr (γ6)} el makeIdentityRulesBlankBlankBlank <-> identityWindow γ1 γ2 γ3 γ4 γ5 γ6. *)
-  (* Proof. *)
-  (*   rewrite identityRulesBlankBlankBlank_iff.  *)
-  (*   split. *)
-  (*   - intros. inv H. eauto.  *)
-  (*   - intros. inv H. *) 
-
-  (*
-    σ1 σ2 σ3
-    σ1 σ2 σ3
-   *)
-  Definition makeIdentityRulesSigSigSig' (x : Sigma * Sigma * Sigma) :=
-    match x with (σ1, σ2, σ3) => makeIdentityRulesTemplate (Some σ1, Some σ2, Some σ3) end.
-  Definition makeIdentityRulesSigSigSig := makeExhaustive makeIdentityRulesSigSigSig'.
-  Lemma identityRulesSigSigSig_iff r : r el makeIdentityRulesSigSigSig <-> exists p σ1 σ2 σ3, r = { inr p !! σ1, inr p !! σ2, inr p !! σ3} / { inr neutral !! σ1, inr neutral !! σ2, inr neutral !! σ3}.
-  Proof. 
-    unfold makeIdentityRulesSigSigSig. rewrite makeExhaustive_correct. unfold makeIdentityRulesSigSigSig'. split.
-    - intros ([[σ1 σ2] σ3] & ([] & ->)%identityRulesTemplate_iff); cbn; eauto. 
-    - intros (p & σ1 & σ2 & σ3 & ->). exists (σ1, σ2, σ3). rewrite identityRulesTemplate_iff. exists p. eauto. 
-  Qed. 
-
-  (*right half *)
-
-  (*
-    σ1 |_| |_|
-    σ1 |_| |_|
-   *)
-  Definition makeIdentityRulesSigBlankBlank' σ := makeIdentityRulesTemplate (Some σ , |_| , |_|). 
-  Definition makeIdentityRulesSigBlankBlank := makeExhaustive makeIdentityRulesSigBlankBlank'. 
-  Lemma identityRulesSigBlankBlank_iff r : r el makeIdentityRulesSigBlankBlank <-> exists p σ, r = { inr p !! σ, inr (inr |_|) , inr (inr |_|) } / { inr neutral !! σ , inr (inr |_|) , inr (inr |_|) }. 
-  Proof. 
-    unfold makeIdentityRulesSigBlankBlank. rewrite makeExhaustive_correct. unfold makeIdentityRulesSigBlankBlank'. setoid_rewrite identityRulesTemplate_iff.
-    cbn. split; intros [a [b H]]; eauto. 
-  Qed. 
-
-  (*
-    σ1 σ2 |_|
-    σ1 σ2 |_|
-   *)
-  Definition makeIdentityRulesSigSigBlank' (x : Sigma * Sigma) :=
-    match x with (σ1, σ2) => makeIdentityRulesTemplate (Some σ1, Some σ2, |_|) end.
-  Definition makeIdentityRulesSigSigBlank := makeExhaustive makeIdentityRulesSigSigBlank'. 
-  Lemma identityRulesSigSigBlank_iff r : r el makeIdentityRulesSigSigBlank <-> exists p σ1 σ2, r = { inr p !! σ1, inr p !! σ2 , inr (inr |_|) } / { inr neutral !! σ1, inr neutral !! σ2, inr (inr |_|) }. 
-  Proof. 
-    unfold makeIdentityRulesSigSigBlank. rewrite makeExhaustive_correct. unfold makeIdentityRulesSigSigBlank'. split.
-    - intros [[σ1 σ2] ([] & ->)%identityRulesTemplate_iff]; cbn; eauto.
-    - intros (p & σ1 & σ2 &  ->). exists (σ1, σ2). rewrite identityRulesTemplate_iff; exists p; eauto.  
-  Qed. 
-
-  Definition makeIdentityBoth := makeIdentityRulesBlankBlankBlank ++ makeIdentityRulesSigSigSig.
-  Definition makeIdentityRight := makeIdentityRulesSigBlankBlank++ makeIdentityRulesSigSigBlank. 
-  Definition makeIdentityLeft := map polarityRevWin makeIdentityRight.  (*the left rules are symmetric to the right rules *)
-
-  Definition makeIdentity := makeIdentityBoth ++ makeIdentityRight ++ makeIdentityLeft. 
-
-
-  (** *shift right rules*)
-  (*of the form {a, b, c} / {↑ d, ↑ a, ↑ b} *)
-  Definition makeShiftRightRulesTemplate (x : stateSigma * stateSigma * stateSigma * stateSigma) :=
-    match x with (((a, b), c), d) => makeRulesPol a b c (inr (positive ! d)) (inr (positive ! a)) (inr (positive ! b)) end. 
-  Lemma shiftRightRulesTemplate_iff (σ1 σ2 σ3 σ4 : stateSigma) r : r el makeShiftRightRulesTemplate (σ1, σ2, σ3, σ4) <-> exists p, r = { inr p ! σ1 , inr p ! σ2, inr p ! σ3} / { inr positive ! σ4, inr positive ! σ1, inr positive ! σ2}. 
-  Proof. 
-    unfold makeShiftRightRulesTemplate, makeRulesPol. cbn. split.
-    - orintro; eauto. 
-    - intros ([] & ->); eauto.
-  Qed. 
-
-  (* both halves*)
-  (*
-      σ1 σ2 σ3
-      σ4 σ2 σ2
-   *)
-  Definition makeShiftRightRulesSigSigSigSig' (x : Sigma * Sigma * Sigma * Sigma) :=
-    match x with (σ1, σ2, σ3, σ4) => makeShiftRightRulesTemplate (Some σ1, Some σ2, Some σ3, Some σ4) end. 
-  Definition makeShiftRightRulesSigSigSigSig := makeExhaustive makeShiftRightRulesSigSigSigSig'. 
-  Lemma shiftRightRulesSigSigSigSig_iff r : r el makeShiftRightRulesSigSigSigSig <-> exists p σ1 σ2 σ3 σ4, r = { inr p !! σ1, inr p !! σ2, inr p !! σ3} / {inr positive !! σ4, inr positive !! σ1, inr positive !! σ2}. 
-  Proof. 
-    unfold makeShiftRightRulesSigSigSigSig. rewrite makeExhaustive_correct. unfold makeShiftRightRulesSigSigSigSig'. split.
-    - intros [[[[σ1 σ2] σ3] σ4] ([] & ->)%shiftRightRulesTemplate_iff]; cbn; eauto 10. 
-    - intros (p & σ1 & σ2 & σ3 & σ4 & ->). exists (σ1, σ2, σ3, σ4); rewrite shiftRightRulesTemplate_iff; exists p; eauto. 
-  Qed. 
-
-  (* right half*)
-
-  (*
-    |_| |_| |_|
-    σ1  |_| |_|
-   *)
-  Definition makeShiftRightRulesBlankBlankBlank' (σ : Sigma) := makeShiftRightRulesTemplate (|_| , |_| , |_| , Some σ).
-  Definition makeShiftRightRulesBlankBlankBlank := makeExhaustive makeShiftRightRulesBlankBlankBlank'. 
-  Lemma shiftRightRulesBlankBlankBlank_iff r : r el makeShiftRightRulesBlankBlankBlank <-> exists σ, r = { inr (inr |_|) , inr (inr |_|) , inr (inr |_|) } / { inr positive !! σ , inr (inr |_|) , inr (inr |_|)}. 
-  Proof. 
-    unfold makeShiftRightRulesBlankBlankBlank. rewrite makeExhaustive_correct. unfold makeShiftRightRulesBlankBlankBlank'. split. 
-    - intros [σ ([] & ->)%shiftRightRulesTemplate_iff]; cbn; eauto. 
-    - intros (σ & ->); exists σ; rewrite shiftRightRulesTemplate_iff; eauto. Unshelve. exact positive. 
-  Qed. 
-
-  (*
-    σ1 |_| |_|
-    σ2  σ1 |_|
-   *)
-  Definition makeShiftRightRulesSigBlankBlank' (x : Sigma * Sigma) :=
-    match x with (σ1, σ2) => makeShiftRightRulesTemplate (Some σ1, |_| , |_| , Some σ2) end.
-  Definition makeShiftRightRulesSigBlankBlank := makeExhaustive makeShiftRightRulesSigBlankBlank'. 
-  Lemma shiftRightRulesSigBlankBlank_iff r : r el makeShiftRightRulesSigBlankBlank <-> exists p σ1 σ2, r = {inr p !! σ1, inr (inr |_|) , inr (inr |_|) } / { inr positive !! σ2 , inr positive !! σ1, inr (inr |_|) }. 
-  Proof.
-    unfold makeShiftRightRulesSigBlankBlank. rewrite makeExhaustive_correct. unfold makeShiftRightRulesSigBlankBlank'. split.
-    - intros [[σ1 σ2] ([] & ->)%shiftRightRulesTemplate_iff]; cbn; eauto. 
-    - intros (p & σ1 & σ2 & ->); exists (σ1, σ2); rewrite shiftRightRulesTemplate_iff. exists p; eauto. 
-  Qed. 
-
-  (*
-    σ1 σ2 |_|
-    σ3 σ1 σ2
-  *)
-  Definition makeShiftRightRulesSigSigBlank' (x : Sigma * Sigma * Sigma) :=
-    match x with (σ1, σ2, σ3) => makeShiftRightRulesTemplate (Some σ1, Some σ2, |_| , Some σ3) end. 
-  Definition makeShiftRightRulesSigSigBlank := makeExhaustive makeShiftRightRulesSigSigBlank'. 
-  Lemma shiftRightRulesSigSigBlank_iff r : r el makeShiftRightRulesSigSigBlank <-> exists p σ1 σ2 σ3, r = {inr p !! σ1, inr p !! σ2, inr (inr |_|)} / {inr positive !! σ3, inr positive !! σ1, inr positive !! σ2}. 
-  Proof. 
-    unfold makeShiftRightRulesSigSigBlank. rewrite makeExhaustive_correct. unfold makeShiftRightRulesSigSigBlank'. split.
-    - intros [[[σ1 σ2] σ3] ([] & ->)%shiftRightRulesTemplate_iff]; cbn; eauto.
-    - intros (p & σ1 & σ2 & σ3 & ->); exists (σ1, σ2, σ3); rewrite shiftRightRulesTemplate_iff. exists p; eauto. 
-  Qed. 
-
-  (*left half*)
-
-  (*
-    |_| |_| σ1
-    |_| |_| |_|
-   *)
-  Definition makeShiftRightRulesBlankBlankSig' (σ : Sigma) := makeShiftRightRulesTemplate (|_| , |_| , Some σ , |_| ).
-  Definition makeShiftRightRulesBlankBlankSig := makeExhaustive makeShiftRightRulesBlankBlankSig'. 
-  Lemma shiftRightRulesBlankBlankSig_iff r : r el makeShiftRightRulesBlankBlankSig <-> exists p σ, r = {inr (inr |_|) , inr (inr |_|) , inr p !! σ} / { inr (inr |_|) , inr (inr |_|) , inr (inr |_|)}. 
-  Proof. 
-    unfold makeShiftRightRulesBlankBlankSig. rewrite makeExhaustive_correct. unfold makeShiftRightRulesBlankBlankSig'. split. 
-    - intros [σ ([] & ->)%shiftRightRulesTemplate_iff]; cbn; eauto. 
-    - intros (p & σ & ->); exists σ. rewrite shiftRightRulesTemplate_iff; exists p; eauto. 
-  Qed. 
-
-  (*
-    |_| σ1 σ2
-    |_| |_| σ1
-   *)
-  Definition makeShiftRightRulesBlankSigSig' (x : Sigma * Sigma) :=
-    match x with (σ1, σ2) => makeShiftRightRulesTemplate (|_| , Some σ1, Some σ2, |_|) end.
-  Definition makeShiftRightRulesBlankSigSig := makeExhaustive makeShiftRightRulesBlankSigSig'. 
-  Lemma shiftRightRulesBlankSigSig_iff r : r el makeShiftRightRulesBlankSigSig <-> exists p σ1 σ2, r = {inr (inr |_|), inr p !! σ1, inr p !! σ2} / {inr (inr |_|) , inr (inr |_|), inr positive !! σ1}. 
-  Proof.
-    unfold makeShiftRightRulesBlankSigSig. rewrite makeExhaustive_correct. unfold makeShiftRightRulesBlankSigSig'. split. 
-    - intros [[σ1 σ2] ([] & ->)%shiftRightRulesTemplate_iff]; cbn; eauto. 
-    - intros (p & σ1 & σ2 & ->); exists (σ1, σ2). rewrite shiftRightRulesTemplate_iff; exists p; eauto. 
-  Qed. 
-
-  (*
-    σ1  σ2 σ3
-    |_| σ1 σ2
-   *)
-  Definition makeShiftRightRulesSigSigSigBlank' (x : Sigma * Sigma * Sigma) :=
-    match x with (σ1, σ2, σ3) => makeShiftRightRulesTemplate (Some σ1, Some σ2, Some σ3, |_|) end. 
-  Definition makeShiftRightRulesSigSigSigBlank := makeExhaustive makeShiftRightRulesSigSigSigBlank'. 
-
-  Lemma shiftRightRulesSigSigSigBlank_iff r : r el makeShiftRightRulesSigSigSigBlank <-> exists p σ1 σ2 σ3, r = {inr p !! σ1, inr p !! σ2, inr p !! σ3} / {inr (inr |_|), inr positive !! σ1, inr positive !! σ2}. 
-  Proof. 
-    unfold makeShiftRightRulesSigSigSigBlank. rewrite makeExhaustive_correct. unfold makeShiftRightRulesSigSigSigBlank'. split. 
-    - intros [[[σ1 σ2] σ3] ([] & ->)%shiftRightRulesTemplate_iff]; cbn; eauto. 
-    - intros (p & σ1 & σ2 & σ3 & ->); exists (σ1, σ2, σ3). rewrite shiftRightRulesTemplate_iff; exists p; eauto.
-  Qed. 
-
-  Definition makeShiftRightBoth := makeShiftRightRulesSigSigSigSig. 
-  Definition makeShiftRightRight := makeShiftRightRulesBlankBlankBlank ++ makeShiftRightRulesSigBlankBlank ++ makeShiftRightRulesSigSigBlank. 
-  Definition makeShiftRightLeft := makeShiftRightRulesBlankBlankSig ++ makeShiftRightRulesBlankSigSig ++ makeShiftRightRulesSigSigSigBlank. 
-  Definition makeShiftRight := makeShiftRightBoth ++ makeShiftRightRight ++ makeShiftRightLeft. 
-                
-  (** *shift left rules *) 
-  (*these can be derived from the rules for shifting right due to symmetry *)
-  Definition makeShiftLeft := map polarityRevWin makeShiftRight. 
-
-  Definition makeTapeRules := makeIdentity ++ makeShiftRight ++ makeShiftLeft. 
-
-
-  Ltac rewHeadTape_inv2 := repeat match goal with
-                                  | [H : rewHeadTape _ _ |- _] => inv H
-                                  | [H : shiftRightWindow _ _ _ _ _ _ |- _ ] => inv H
-                                  | [H : identityWindow _ _ _ _ _ _ |- _] => inv H
-                                  | [H : |_| = # ?σ |- _] => is_var σ; destruct σ; cbn in H; try congruence
-                                  | [H : # ?σ = |_| |- _] => is_var σ; destruct σ; cbn in H; try congruence
-                                  | [H : Some (_, _) = % ?e |- _] => symmetry in H; apply polarityFlipTapeSigmaInv1 in H; rewrite H in *; clear H
-                                  | [H : % ?e = Some (_, _) |- _] => apply polarityFlipTapeSigmaInv1 in H; rewrite H in *; clear H
-                                  | [H : Some (_, _) = # ?e |- _] => symmetry in H; apply polarityFlipTapeSigma'Inv1 in H; rewrite H in *; clear H
-                                  | [H : # ?e = Some (_, _) |- _] => apply polarityFlipTapeSigma'Inv1 in H; rewrite H in *; clear H
-                                  | [H : |_| = |_| |- _] => clear H
-                                  | [ |- context [inr (inr (# ?e))]] => rewrite polarityFlip_push_in
-                           end. 
- 
-  Hint Extern 1 => apply in_or_app. 
-  Hint Extern 1 => rewrite identityRulesSigSigSig_iff. 
-
-  Lemma shift_right_agree (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) : shiftRightWindow γ1 γ2 γ3 γ4 γ5 γ6 <-> { γ1, γ2, γ3} / { γ4, γ5, γ6} el makeShiftRight. 
-  Proof with apply in_or_app. 
-    split. 
-    - intros. inv H; unfold makeShiftRight... 
-      + left. unfold makeShiftRightBoth. 
-        apply shiftRightRulesSigSigSigSig_iff. exists p. exists σ1, σ2, σ3, σ4. eauto. 
-      + right... left. unfold makeShiftRightRight... 
-        left. apply shiftRightRulesBlankBlankBlank_iff. exists σ1. eauto. 
-      + right... left. unfold makeShiftRightRight...
-        right... left. apply shiftRightRulesSigBlankBlank_iff. exists p, σ1, σ2. eauto. 
-      + right... left. unfold makeShiftRightRight... 
-        right... right. apply shiftRightRulesSigSigBlank_iff. exists p, σ1, σ2, σ3. eauto.
-      + right... right. unfold makeShiftRightLeft...
-        left. apply shiftRightRulesBlankBlankSig_iff. exists p, σ1. eauto. 
-      + right... right. unfold makeShiftRightLeft...
-        right... left. apply shiftRightRulesBlankSigSig_iff. exists p, σ1, σ2. eauto. 
-      + right... right. unfold makeShiftRightLeft...
-        right... right. apply shiftRightRulesSigSigSigBlank_iff. exists p, σ1, σ2, σ3. eauto. 
-    - intros.
-      repeat match goal with
-             | [ H : _ el _ |- _] => apply in_app_or in H
-             | [H : _ \/ _ |- _] => destruct H as [H | H]
-             end. 
-      1: unfold makeShiftRightBoth in H; apply shiftRightRulesSigSigSigSig_iff in H. 
-      2: apply shiftRightRulesBlankBlankBlank_iff in H. 
-      3: apply shiftRightRulesSigBlankBlank_iff in H.
-      4: apply shiftRightRulesSigSigBlank_iff in H. 
-      5: apply shiftRightRulesBlankBlankSig_iff in H.
-      6: apply shiftRightRulesBlankSigSig_iff in H.
-      7: apply shiftRightRulesSigSigSigBlank_iff in H. 
-
-      all: repeat match goal with
-      | [H: exists _, _ |- _ ] => destruct H as (? & H)
-      end; inv H; cbn; unfold withPolaritySigma; eauto. 
-  Qed. 
-
-  Lemma identity_agree (σ1 σ2 σ3 σ4 σ5 σ6 : Gamma) : identityWindow σ1 σ2 σ3 σ4 σ5 σ6 <-> { σ1, σ2, σ3} / { σ4, σ5, σ6 } el makeIdentity.
-  Proof with apply in_or_app. 
-    (* split.  *)
-  Admitted.  
-
-  Lemma string_agree a b : rewritesHead_pred makeTapeRules a b <-> rewHeadTape a b.
-  Proof. 
-    (* split.  *)
-    (* - intros. unfold rewritesHead_pred in H. destruct H as (r & H1 & H2). *)
-    (*   unfold makeTapeRules in H1. apply in_app_or in H1; destruct H1 as [H1 | H1]; [ | apply in_app_or in H1; destruct H1 as [H1 | H1]].  *)
-    (*   + destruct r. destruct prem, conc. *)
-
-    (*     apply identity_agree in H1. *)
-
-    (* 2: { *)
-    (*   intros.  *)
-    (*   unfold rewritesHead_pred. *)
-    (*   rewHeadTape_inv2.  *)
-    (*   + evar (γ1 : Gamma). evar (γ2 : Gamma). evar (γ3 : Gamma). evar (γ4 : Gamma). evar (γ5 : Gamma). evar (γ6 : Gamma). *)
-    (*     exists ({γ1, γ2, γ3} / {γ4, γ5, γ6}). *)
-    (*     split.  *)
-    (*     2: { *)
-    (*       unfold rewritesHead. split.  *)
-    (*       unfold prefix. exists h1. subst γ1 γ2 γ3 γ4 γ5 γ6. cbn. reflexivity.  *)
-    (*       subst γ1 γ2 γ3 γ4 γ5 γ6. unfold prefix. exists h2. cbn. reflexivity.  *)
-    (*     } *)
-    (*     subst γ1 γ2 γ3 γ4 γ5 γ6.   *)
-    (*     unfold makeTapeRules.  *)
-    (*     apply in_or_app. right. apply in_or_app. right.  *)
-    (*     unfold makeShiftLeft.  *)
-    (*     unfold makeIdentityBoth. apply in_or_app. right.  *)
-    (*     rewrite identityRulesSigSigSig_iff. exists (polarityFlip p). eauto 12.  *)
-    (*     Set Debug Eauto.  *)
-    (*     eauto 8.  *)
-
-      
-    (*   - split.  *)
-    (*     +  *)
-    (* } *)
-    (* - unfold rewritesHead_pred. intros (r & H1 & H2).  *)
-    (*   destruct H2 as (H2 & H3).  *)
-    (*   unfold makeTapeRules in H1. *)
-    (*   apply in_app_or in H1; destruct H1 as [H1 | H1]; [ | apply in_app_or in H1; destruct H1]. *)
-    (*   + unfold makeIdentity in H1. *)
-    (*     apply in_app_or in H1; destruct H1 as [H1 | H1]; [ | apply in_app_or in H1; destruct H1]. *)
-    (*     * unfold makeIdentityBoth in H1.  *)
-    (*       apply in_app_or in H1; destruct H1 as [H1 | H1].  *)
-    (*       -- apply identityRulesBlankBlankBlank_iff in H1. subst. cbn in *.  *)
-    (*          unfold prefix in *. destruct H2 as (b' & ->). destruct H3 as (a' & ->).  *)
-    (*          apply rewHeadTape_tail_invariant with (h1' := []) (h2' := []).  *)
-    (*          eauto.  *)
-    (*      -- apply identityRulesSigSigSig_iff in H1. destruct H1 as (? & ? & ? & ? & H1).  *)
-    (*         subst.  *)
-    (*         unfold prefix in *. destruct H2 as (b' & ->). destruct H3 as (a' & ->).  *)
-    (*          apply rewHeadTape_tail_invariant with (h1' := []) (h2' := []). *)
-    (*          unfold withPolaritySigma. eauto.  *)
-    (*          eauto.  *)
-  Admitted. 
-
-
   Section finTypeRepr.
     Definition finRepr (X : finType) (n : nat) := n = length (elem X ). 
     Definition finReprEl (X : finType) (n : nat) k (x : X) := finRepr X n /\ k < n /\ index x = k.  
@@ -448,61 +117,145 @@ Module stringbased (sig : TMSig).
 
   Section finTypeExpressions. 
 
-    (*this basically mirrors the structure of the alphabet, but using abstract constructors that can be replaced with either the usual Coq constructors or flat constructors for L *)
-    Inductive sigVar := Sig1 | Sig2 | Sig3 | Sig4.
-
-    Inductive fpolSigma := psConsC : polarity -> sigVar -> fpolSigma | psConsV : sigVar -> fpolSigma. 
-    Definition fstateSigma := option sigVar.
-    Definition ftapeSigma' := option fpolSigma.
-    Definition ftapeSigma := sum delim ftapeSigma'. 
-    Definition fStates := fstateSigma.
+    Inductive fstateSigma := blank | someSigmaVar : nat -> fstateSigma | stateSigmaVar : nat -> fstateSigma. 
+    Inductive fpolarity := polConst : polarity -> fpolarity | polVar : nat -> fpolarity.
+    Definition fpolSigma := prod fpolarity fstateSigma.
+    Definition ftapeSigma := sum delim fpolSigma.
+    Definition fStates := prod nat fstateSigma.
     Definition fGamma := sum fStates ftapeSigma. 
 
 
-    Record evalEnv X Y Z := {
-                          pV : X;
-                          stateV : Y;
-                          sV1 : Z;
-                          sV2 : Z;
-                          sV3 : Z;
-                          sV4 : Z
+    (*this basically mirrors the structure of the alphabet, but using abstract constructors that can be replaced with either the usual Coq constructors or flat constructors for L *)
+
+    Record evalEnv X Y Z W := {
+                               polarityEnv : list X;
+                               sigmaEnv : list Y;
+                               stateSigmaEnv : list Z;
+                               stateEnv : list W
                         }.
 
-    Definition reifySigVar {X Y Z : Type} (env : evalEnv X Y Z) v := match v with
-                                                | Sig1 => sV1 env
-                                                | Sig2 => sV2 env
-                                                | Sig3 => sV3 env 
-                                                | Sig4 => sV4 env
-                                                end. 
 
-    Definition reifyPolSigmaFin (env : evalEnv polarity states Sigma) (c : fpolSigma) :=
-      match c with
-        | psConsC p sv => (p, reifySigVar env sv)
-        | psConsV sv => (pV env, reifySigVar env sv)
-      end. 
-    Definition reifyStateSigmaFin (env : evalEnv polarity states Sigma) (c : fstateSigma) :=
-      match c with
+    Definition boundVar (X : Type) (l : list X) (n : nat) := n < length l. 
+    Section fixEnv. 
+      Context {X Y Z W : Type}.
+      Context (env : evalEnv X Y Z W). 
+
+      Definition reifySigVar v := nth_error (sigmaEnv env) v.  
+      Definition reifyPolarityVar v := nth_error (polarityEnv env) v.
+      Definition reifyStateSigmaVar v := nth_error (stateSigmaEnv env) v.
+      Definition reifyStateVar v := nth_error (stateEnv env) v. 
+
+      Definition bound_polarity (c : fpolarity) := match c with
+                                                   | polConst _ => True
+                                                   | polVar v => boundVar (polarityEnv env) v
+                                                   end. 
+
+      Definition bound_stateSigma (c : fstateSigma) := match c with
+                                                      | blank => True
+                                                      | someSigmaVar v => boundVar (sigmaEnv env) v
+                                                      | stateSigmaVar v => boundVar (stateSigmaEnv env) v
+                                                      end.
+
+      Definition bound_polSigma (c : fpolSigma) :=
+        match c with (p, s) => bound_polarity p /\ bound_stateSigma s end. 
+
+      Definition bound_tapeSigma (c : ftapeSigma) :=
+        match c with
+        | inl _ => True
+        | inr s => bound_polSigma s
+       end. 
+
+      Definition bound_States (c : fStates) :=
+        match c with (v, t) => boundVar (stateEnv env) v /\ bound_stateSigma t end. 
+
+      Definition bound_Gamma (c : fGamma) :=
+        match c with
+        | inl s => bound_States s
+        | inr s => bound_tapeSigma s
+        end. 
+
+    End fixEnv. 
+
+    Definition evalEnvFin := evalEnv Fpolarity Sigma FstateSigma states. 
+    Definition evalEnvFlat := evalEnv nat nat nat nat.
+
+
+    Definition reifyCanonical {X Y Z W M : Type} (reify : evalEnv X Y Z W -> fGamma -> option M) := 
+               forall (env : evalEnv X Y Z W) (c : fGamma), bound_Gamma env c <-> exists e, reify env c = Some e. 
+
+
+    Definition optReturn := @Some.
+    Definition optBind {X Y : Type} (x : option X) (f : X -> option Y) :=
+      match x with
       | None => None
-      | Some sv => Some (reifySigVar env sv)
-      end. 
-    Definition reifyTapeSigma'Fin (env : evalEnv polarity states Sigma) (c : ftapeSigma') : tapeSigma' :=
-      match c with
-      | None => None
-      | Some c => Some (reifyPolSigmaFin env c)
-      end. 
-    Definition reifyTapeSigmaFin (env : evalEnv polarity states Sigma) (c : ftapeSigma) : tapeSigma :=
-      match c with
-      | inl delimC => inl delimC
-      | inr c => inr (reifyTapeSigma'Fin env c)
-      end. 
-    Definition reifyStatesFin (env : evalEnv polarity states Sigma) (c : fStates) : States := (stateV env, reifyStateSigmaFin env c).
-    Definition reifyGammaFin (env : evalEnv polarity states Sigma) (c : fGamma) : Gamma :=
-      match c with
-      | inl c => inl (reifyStatesFin env c)
-      | inr c => inr (reifyTapeSigmaFin env c)
+      | Some x => f x
       end. 
 
 
+    (*notations from https://pdp7.org/blog/2011/01/the-maybe-monad-in-coq/ *)
+    Notation "A >>= F" := (optBind A F) (at level 40, left associativity).
+    Notation "'do' X <- A ; B" := (optBind A (fun X => B)) (at level 200, X ident, A at level 100, B at level 200).
+
+
+    Definition reifyPolarityFin (env : evalEnvFin) (c : fpolarity) :=
+      match c with
+      | polConst c => Some c
+      | polVar n => nth_error (polarityEnv env) n
+      end. 
+    Definition reifyStateSigmaFin (env : evalEnvFin) (c : fstateSigma) :=
+      match c with
+      | blank => Some |_|
+      | someSigmaVar v => option_map Some (nth_error (sigmaEnv env) v)
+      | stateSigmaVar v => nth_error (stateSigmaEnv env) v
+    end. 
+
+    Definition reifyPolSigmaFin (env : evalEnvFin) (c : fpolSigma) :=
+      match c with
+      | (p, s) => do p <- reifyPolarityFin env p;
+                 do s <- reifyStateSigmaFin env s;
+                 optReturn (p, s)
+      end. 
+
+    Definition reifyTapeSigmaFin (env : evalEnvFin) (c : ftapeSigma) :=
+      match c with
+      | inl delimC => Some (inl delimC)
+      | inr c => option_map inr (reifyPolSigmaFin env c)
+      end.
+
+    Definition reifyStatesFin (env : evalEnvFin) (c : fStates) :=
+      match c with
+      | (v, s) => do p <- nth_error (stateEnv env) v;
+                 do s <- reifyStateSigmaFin env s;
+                 optReturn (p, s)
+      end. 
+
+    Definition reifyGammaFin (env : evalEnvFin) (c : fGamma) :=
+      match c with
+      | inl s => option_map inl (reifyStatesFin env s)
+      | inr c => option_map inr (reifyTapeSigmaFin env c)
+      end. 
+
+
+    Lemma reifyGammaFin_canonical : reifyCanonical reifyGammaFin. 
+    Proof. 
+      unfold reifyCanonical. intros; split; [intros | intros (e & H)] ;  
+        repeat match goal with
+               | [H : fStates |- _ ] => destruct H; cbn in *
+               | [H : fGamma |- _ ] => destruct H; cbn in *
+               | [H : fpolarity |- _] => destruct H; cbn in *
+               | [H : fpolSigma |- _] => destruct H; cbn in *
+               | [H : fstateSigma |- _] => destruct H; cbn in *
+               | [H : ftapeSigma |- _] => destruct H; cbn in *
+               | [H : delim |- _ ] => destruct H; cbn in *
+               | [H : _ /\ _ |- _] => destruct H
+               | [H : boundVar _ _ |- _ ] => apply nth_error_Some in H
+               | [ |- context[nth_error ?a ?b ]] => destruct (nth_error a b) eqn:?; cbn in *
+               | [ |- _ /\ _] => split 
+               | _ => match type of H with context[nth_error ?a ?b ] => destruct (nth_error a b) eqn:?; cbn in * end 
+               | [H : nth_error _ _ = Some _ |- _ ] => apply MoreBase.nth_error_Some_lt in H
+        end; eauto; try congruence. 
+    Qed. 
+        
     Definition flatPolarity := 3.
     Definition flatDelim := 1. 
     Definition flatDelimC := 0.
@@ -511,40 +264,76 @@ Module stringbased (sig : TMSig).
 
     Definition flattenPolarity (p : polarity) := index p. 
 
-    Notation flatPolSigma := (flatProd flatPolarity flatSigma).
-    Notation flatTapeSigma' := (flatOption flatPolSigma).
-    Notation flatTapeSigma := (flatSum flatDelim flatTapeSigma').
     Notation flatStateSigma := (flatOption flatSigma).
+    Notation flatPolSigma := (flatProd flatPolarity flatStateSigma).
+    Notation flatTapeSigma := (flatSum flatDelim flatPolSigma).
     Notation flatStates := (flatProd flatstates flatStateSigma).
     Notation flatGamma := (flatSum flatStates flatTapeSigma). 
-                            
 
-    Definition reifyPolSigmaFlat (env : evalEnv nat nat nat) c :=
+    Definition reifyPolarityFlat (env : evalEnvFlat) (c : fpolarity) :=
       match c with
-      | psConsC p sv => flatPair flatPolarity flatSigma (flattenPolarity p) (reifySigVar env sv)
-      | psConsV sv => flatPair flatPolarity flatSigma (pV env) (reifySigVar env sv)
+      | polConst c => Some (flattenPolarity c)
+      | polVar n => nth_error (polarityEnv env) n
+      end. 
+    Definition reifyStateSigmaFlat (env : evalEnvFlat) (c : fstateSigma) :=
+      match c with
+      | blank => Some (flatNone)
+      | someSigmaVar v => option_map flatSome (nth_error (sigmaEnv env) v)
+      | stateSigmaVar v => nth_error (stateSigmaEnv env) v
     end. 
-    Definition reifyStateSigmaFlat (env : evalEnv nat nat nat) c :=
+
+    Definition reifyPolSigmaFlat (env : evalEnvFlat) (c : fpolSigma) :=
       match c with
-      | None => flatNone
-      | Some sv => flatSome (reifySigVar env sv)
+      | (p, s) => do p <- reifyPolarityFlat env p;
+                 do s <- reifyStateSigmaFlat env s;
+                 optReturn (flatPair flatPolarity flatStateSigma p s)
       end. 
-    Definition reifyTapeSigma'Flat (env : evalEnv nat nat nat) c :=
+
+    Definition reifyTapeSigmaFlat (env : evalEnvFlat) (c : ftapeSigma) :=
       match c with
-      | None => flatNone
-      | Some c => flatSome (reifyPolSigmaFlat env c)
+      | inl delimC => Some (flatDelimC)
+      | inr c => option_map (flatInr flatDelim) (reifyPolSigmaFlat env c)
+      end.
+
+    Definition reifyStatesFlat (env : evalEnvFlat) (c : fStates) :=
+      match c with
+      | (v, s) => do p <- nth_error (stateEnv env) v;
+                 do s <- reifyStateSigmaFlat env s;
+                 optReturn (flatPair flatstates flatStateSigma p s)
       end. 
-    Definition reifyTapeSigmaFlat (env : evalEnv nat nat nat) c :=
+
+    Definition reifyGammaFlat (env : evalEnvFlat) (c : fGamma) :=
       match c with
-      | inl delimC => flatInl flatDelimC
-      | inr c => flatInr flatDelim (reifyTapeSigma'Flat env c)
-    end. 
-    Definition reifyStatesFlat (env : evalEnv nat nat nat) c := flatPair flatstates flatStateSigma (stateV env) (reifyStateSigmaFlat env c).
-    Definition reifyGammaFlat (env : evalEnv nat nat nat) c :=
-      match c with
-      | inl c => flatInl (reifyStatesFlat env c)
-      | inr c => flatInr flatStates (reifyTapeSigmaFlat env c)
+      | inl s => option_map (flatInl) (reifyStatesFlat env s)
+      | inr c => option_map (flatInr flatStates) (reifyTapeSigmaFlat env c)
       end. 
+
+    Ltac destruct_fGamma :=
+      match goal with
+        | [H : fStates |- _ ] => destruct H
+        | [H : fGamma |- _ ] => destruct H
+        | [H : fpolarity |- _] => destruct H
+        | [H : fpolSigma |- _] => destruct H
+        | [H : fstateSigma |- _] => destruct H
+        | [H : ftapeSigma |- _] => destruct H
+        | [H : delim |- _ ] => destruct H
+       end. 
+          
+    Lemma reifyGammaFlat_canonical : reifyCanonical reifyGammaFlat.
+    Proof.
+      (*TODO: currently c&p from reifyGammaFin_canonical *)
+      unfold reifyCanonical.
+      intros; split; [intros | intros (e & H)] ;
+      repeat match goal with
+        | _ => destruct_fGamma; cbn in *
+        | [H : _ /\ _ |- _] => destruct H
+        | [H : boundVar _ _ |- _ ] => apply nth_error_Some in H
+        | [ |- context[nth_error ?a ?b ]] => destruct (nth_error a b) eqn:?; cbn in *
+        | [ |- _ /\ _] => split 
+        | _ => match type of H with context[nth_error ?a ?b ] => destruct (nth_error a b) eqn:?; cbn in * end 
+        | [H : nth_error _ _ = Some _ |- _ ] => apply MoreBase.nth_error_Some_lt in H
+        end; eauto; try congruence. 
+    Qed.
 
     Lemma flattenPolarity_reprEl p : finReprEl flatPolarity (flattenPolarity p) p. 
     Proof. 
@@ -555,26 +344,23 @@ Module stringbased (sig : TMSig).
       - destruct p; cbn; lia.
     Qed. 
 
-    Definition isFlatEnvOf (a : evalEnv nat nat nat) (b : evalEnv polarity states Sigma) :=
-      finReprEl flatPolarity (pV a) (pV b)
-      /\ finReprEl flatstates (stateV a) (stateV b)
-      /\ finReprEl flatSigma (sV1 a) (sV1 b)
-      /\ finReprEl flatSigma (sV2 a) (sV2 b)
-      /\ finReprEl flatSigma (sV3 a) (sV3 b)
-      /\ finReprEl flatSigma (sV4 a) (sV4 b). 
+    Definition isFlatListOf (X : finType) (l : list nat) (l' : list X) := l = map index l'. 
 
-    Lemma reifySigVar_reprEl a b c : isFlatEnvOf a b -> finReprEl flatSigma (reifySigVar a c) (reifySigVar b c). 
-    Proof. 
-      intros (_ & _ & H1 & H2 & H3 & H4). destruct c; cbn; assumption. 
-    Qed.
+    Definition isFlatEnvOf (a : evalEnvFlat) (b : evalEnvFin) :=
+      isFlatListOf (polarityEnv a) (polarityEnv b)
+      /\ isFlatListOf (sigmaEnv a) (sigmaEnv b)
+      /\ isFlatListOf (stateSigmaEnv a) (stateSigmaEnv b)
+      /\ isFlatListOf (stateEnv a) (stateEnv b).
 
-    Lemma isFlatEnv_polarity a b : isFlatEnvOf a b -> finReprEl flatPolarity (pV a) (pV b). 
-    Proof. intros. apply H. Qed. 
+    Lemma Sigma_finRepr : finRepr Sigma flatSigma. 
+    Proof. easy. Qed. 
 
-    Lemma isFlatEnv_states a b : isFlatEnvOf a b -> finReprEl flatstates (stateV a) (stateV b). 
-    Proof. intros. apply H. Qed. 
+    Lemma states_finRepr : finRepr states flatstates. 
+    Proof. easy. Qed. 
 
     Smpl Create finRepr. 
+    Smpl Add (apply Sigma_finRepr) : finRepr.
+    Smpl Add (apply states_finRepr) : finRepr.
     Smpl Add (apply finReprElPair) : finRepr.
     Smpl Add (apply finReprElNone) : finRepr. 
     Smpl Add (apply finReprElSome) : finRepr.
@@ -585,10 +371,10 @@ Module stringbased (sig : TMSig).
     Smpl Add (apply finReprOption) : finRepr.
     Smpl Add (apply finReprSum) : finRepr. 
 
-    Smpl Add (apply reifySigVar_reprEl) : finRepr.
+    (* Smpl Add (apply reifySigVar_reprEl) : finRepr. *)
     Smpl Add (apply flattenPolarity_reprEl) : finRepr. 
-    Smpl Add (apply isFlatEnv_polarity) : finRepr.
-    Smpl Add (apply isFlatEnv_states) : finRepr. 
+    (* Smpl Add (apply isFlatEnv_polarity) : finRepr. *)
+    (* Smpl Add (apply isFlatEnv_states) : finRepr.  *)
 
     Ltac finRepr_simpl := smpl finRepr; repeat smpl finRepr. 
 
@@ -602,50 +388,108 @@ Module stringbased (sig : TMSig).
 
     Smpl Add (apply delimC_reprEl) : finRepr. 
 
-    Lemma reifyPolSigma_reprEl a b c: isFlatEnvOf a b -> finReprEl flatPolSigma (reifyPolSigmaFlat a c) (reifyPolSigmaFin b c). 
-    Proof.
-      intros. destruct c; cbn [reifyPolSigmaFlat reifyPolSigmaFin]; unfold flatPolSigma; now finRepr_simpl.
-    Qed. 
-
-    Smpl Add (apply reifyPolSigma_reprEl) : finRepr.
-
-    Lemma reifyStateSigma_reprEl a b c : isFlatEnvOf a b -> finReprEl flatStateSigma (reifyStateSigmaFlat a c) (reifyStateSigmaFin b c). 
-    Proof.
-      intros. destruct c; cbn [reifyStateSigmaFin reifyStateSigmaFlat]; now finRepr_simpl.
-    Qed. 
-
-    Smpl Add (apply reifyStateSigma_reprEl) : finRepr. 
-
-    Lemma reifyTapeSigma'_reprEl a b c : isFlatEnvOf a b -> finReprEl flatTapeSigma' (reifyTapeSigma'Flat a c) (reifyTapeSigma'Fin b c). 
-    Proof.
-      intros. destruct c; cbn [reifyTapeSigma'Flat reifyTapeSigma'Fin]; now finRepr_simpl.
-    Qed.
-
-    Smpl Add (apply reifyTapeSigma'_reprEl) : finRepr. 
-
-    Lemma reifyTapeSigma_reprEl a b c : isFlatEnvOf a b -> finReprEl flatTapeSigma (reifyTapeSigmaFlat a c) (reifyTapeSigmaFin b c). 
+    Lemma isFlatEnvOf_bound_Gamma_transfer (envFlat : evalEnvFlat) (envFin : evalEnvFin) (c : fGamma) :
+      isFlatEnvOf envFlat envFin -> bound_Gamma envFin c <-> bound_Gamma envFlat c. 
     Proof. 
-      intros. destruct c; cbn [reifyTapeSigmaFlat reifyTapeSigmaFin]; try destruct d; now finRepr_simpl.
+      intros (H1 & H2 & H3 & H4). 
+      destruct c; cbn in *.
+      - destruct f; cbn. destruct f; cbn.
+        + rewrite H4. unfold boundVar. rewrite map_length. tauto.
+        + rewrite H4, H2; unfold boundVar. rewrite !map_length. tauto.
+        + rewrite H4, H3; unfold boundVar. rewrite !map_length; tauto.
+     - destruct f; cbn; [tauto | ]. 
+       destruct f; cbn. destruct f, f0; cbn. 
+       all: try rewrite H1; try rewrite H2; try rewrite H3; try rewrite H4.
+       all: unfold boundVar; try rewrite !map_length; tauto.  
     Qed. 
 
-    Smpl Add (apply reifyTapeSigma_reprEl) : finRepr.
 
-    Lemma reifyStates_reprEl a b c : isFlatEnvOf a b -> finReprEl flatStates (reifyStatesFlat a c) (reifyStatesFin b c). 
+    Lemma isFlatListOf_Some1 (T : finType) (t : nat) (a : list nat) (b : list T) (n : nat) (x : nat):
+      finRepr T t -> isFlatListOf a b -> nth_error a n = Some x -> exists x', nth_error b n = Some x' /\ finReprEl t x x'.
+    Proof. 
+      intros. rewrite H0 in H1. rewrite utils.nth_error_map in H1. 
+      destruct (nth_error b n); cbn in H1; [ | congruence ]. 
+      inv H1. exists e.
+      split; [reflexivity | repeat split]. 
+      + apply H. 
+      + rewrite H. apply index_le. 
+    Qed. 
+
+    Lemma reifyGamma_reprEl a b c :
+      isFlatEnvOf a b -> bound_Gamma a c
+      -> exists e1 e2, reifyGammaFin b c = Some e1 /\ reifyGammaFlat a c = Some e2 /\ finReprEl flatGamma e2 e1. 
     Proof.
-      intros. now finRepr_simpl. 
+      intros.
+      specialize (proj1 (reifyGammaFlat_canonical _ _ ) H0 ) as (e1 & H1). 
+      eapply (isFlatEnvOf_bound_Gamma_transfer ) in H0. 2: apply H. 
+      specialize (proj1 (reifyGammaFin_canonical _ _ ) H0) as (e2 & H2). 
+      exists e2, e1. split; [apply H2 | split; [ apply H1 | ]]. 
+      destruct H as (F1 & F2 & F3 & F4).
+      repeat match goal with
+        | _ => destruct_fGamma; cbn -[Nat.mul flatSum flatGamma index] in *
+        | _ => match type of H1 with context[nth_error ?a ?b ] =>
+              let Heqn := fresh "H" "eqn" in 
+              let Heqn2 := fresh "H" "eqn" in 
+              destruct (nth_error a b) eqn:Heqn; cbn -[Nat.mul flatSum flatGamma index] in *;
+                try (eapply isFlatListOf_Some1 in Heqn as (? & Heqn2 & ?);
+                     [ | | eauto ];
+                     [ setoid_rewrite Heqn2 in H2; cbn -[Nat.mul flatSum flatGamma index] in *
+                     | finRepr_simpl]
+                    )
+              end
+             | [H : Some _ = Some _ |- _] => inv H
+      end; try congruence. 
+      all: eauto; finRepr_simpl; eauto. 
+    Qed. 
+
+
+    Definition reifyWindow (X Y Z W M: Type) (r : evalEnv X Y Z W -> fGamma -> option M) (env : evalEnv X Y Z W) rule :=
+      match rule with {a, b, c} / {d, e, f} =>
+                        do a <- r env a;
+                        do b <- r env b;
+                        do c <- r env c;
+                        do d <- r env d;
+                        do e <- r env e;
+                        do f <- r env f;
+                        optReturn ({a, b, c} / {d, e, f})
+      end.
+
+    Definition bound_WinP {X Y Z W : Type} (env : evalEnv X Y Z W) (c : TCSRWinP fGamma) :=
+      bound_Gamma env (winEl1 c) /\ bound_Gamma env (winEl2 c) /\ bound_Gamma env (winEl3 c). 
+    Definition bound_window {X Y Z W : Type} (env : evalEnv X Y Z W) (c : window fGamma) :=
+      bound_WinP env (prem c) /\ bound_WinP env (conc c).
+
+    Lemma isFlatEnvOf_bound_window_transfer (envFlat : evalEnvFlat) (envFin : evalEnvFin) (c : window fGamma) :
+      isFlatEnvOf envFlat envFin -> (bound_window envFlat c <-> bound_window envFin c). 
+    Proof. 
+      intros H. destruct c, prem, conc; cbn. unfold bound_window, bound_WinP; cbn.  
+      split; intros ((F1 & F2 & F3) & (F4 & F5 & F6)); repeat split.
+      all: now apply (isFlatEnvOf_bound_Gamma_transfer _ H). 
     Qed.
 
-    Smpl Add (apply reifyStates_reprEl) : finRepr.
-
-    Lemma reifyGamma_reprEl a b c : isFlatEnvOf a b -> finReprEl flatGamma (reifyGammaFlat a c) (reifyGammaFin b c). 
+    Lemma reifyWindow_Some (X Y Z W M : Type) (r : evalEnv X Y Z W -> fGamma -> option M) (env : evalEnv X Y Z W) rule :
+      reifyCanonical r
+      -> (bound_window env rule <-> exists w, reifyWindow r env rule = Some w). 
     Proof.
-      intros. destruct c; cbn [reifyGammaFlat reifyGammaFin]; now finRepr_simpl. 
+      intros. split.
+      + intros ((H1 & H2 & H3) & (H4 & H5 & H6)).
+        unfold reifyWindow. 
+        destruct rule, prem, conc; cbn in *. 
+        apply H in H1 as (? & ->).
+        apply H in H2 as (? & ->).
+        apply H in H3 as (? & ->).
+        apply H in H4 as (? & ->).
+        apply H in H5 as (? & ->).
+        apply H in H6 as (? & ->).
+        cbn. eauto.
+     + intros (w & H1). 
+       unfold bound_window, bound_WinP.
+       destruct rule, prem, conc. cbn in *.
+       repeat match type of H1 with
+                | context[r ?h0 ?h1] => let H := fresh "H" in destruct (r h0 h1) eqn:H
+       end; cbn in *; try congruence. 
+       repeat split; apply H; eauto. 
     Qed. 
-
-    Smpl Add (apply reifyGamma_reprEl) : finRepr.
-
-    Definition reifyWindow (Y : Type) (r : fGamma -> Y) rule := match rule with {a, b, c} / {d, e, f} => {r a, r b, r c} / {r d, r e, r f} end. 
-
 
     Definition isFlatWinPOf (X : finType) (x : nat)(b : TCSRWinP nat) (a : TCSRWinP X) :=
       finReprEl x (winEl1 b) (winEl1 a) /\ finReprEl x (winEl2 b) (winEl2 a) /\ finReprEl x (winEl3 b) (winEl3 a).  
@@ -653,24 +497,88 @@ Module stringbased (sig : TMSig).
     Definition isFlatWindowOf (X : finType) (x : nat) (b : window nat) (a : window X):=
       isFlatWinPOf x (prem b) (prem a) /\ isFlatWinPOf x (conc b) (conc a) . 
 
-    Lemma reifyWindow_reprEl (X : finType) x reifyFlat reifyFin w : (forall c, finReprEl x (reifyFlat c) (reifyFin c)) -> @isFlatWindowOf X x (reifyWindow reifyFlat w) (reifyWindow reifyFin w). 
-    Proof. 
-      intros. 
-      destruct w. cbn. destruct prem, conc. split; cbn. 
-      + split; [ | split]; cbn; auto.
-      + split; [ | split]; cbn; auto.
+    Lemma reifyWindow_isFlatWindowOf envFlat envFin rule :
+      bound_window envFlat rule -> isFlatEnvOf envFlat envFin -> exists e1 e2, reifyWindow reifyGammaFlat envFlat rule = Some e1 /\ reifyWindow reifyGammaFin envFin rule = Some e2 /\ isFlatWindowOf flatGamma e1 e2. 
+    Proof.
+      intros.
+      specialize (proj1 (isFlatEnvOf_bound_window_transfer _ H0) H) as H'.
+      destruct (proj1 (reifyWindow_Some _ _ reifyGammaFin_canonical) H') as (win & H1).  
+      clear H'. 
+      destruct (proj1 (reifyWindow_Some _ _ reifyGammaFlat_canonical) H) as (win' & H2).
+      exists win', win. split; [apply H2 | split; [apply H1 | ]]. 
+      destruct rule, prem, conc.
+      cbn in H1, H2. 
+      destruct H as ((F1 & F2 & F3) & (F4 & F5 & F6)); cbn in *. 
+      repeat match goal with
+      | [H : bound_Gamma _ _ |- _] =>
+        let H1 := fresh "H" in let H2 := fresh "H" in
+          destruct (reifyGamma_reprEl H0 H) as (? & ? & H1 & H2 & ?);
+          rewrite H1 in *; rewrite H2 in *;
+          clear H1 H2 H
+      end. 
+      cbn in *. inv H1. inv H2. 
+      split; (split; [ | split]); cbn; eauto.
     Qed. 
 
-    Lemma reifyWindow_Gamma_isFlatWindowOf evalFlat evalFin w: isFlatEnvOf evalFlat evalFin -> isFlatWindowOf flatGamma (reifyWindow (reifyGammaFlat evalFlat) w) (reifyWindow (reifyGammaFin evalFin) w).
+
+    Fixpoint list_prod (X : Type) (l : list X) (l' : list (list X)) : list (list X) :=
+      match l with [] => []
+              | (h :: l) => map (fun l => h :: l) l' ++ list_prod l l'
+      end. 
+
+    Lemma list_prod_correct (X : Type) (l : list X) (l' : list (list X)) l0:
+      l0 el list_prod l l' <-> exists h l1, l0 = h :: l1 /\ h el l /\ l1 el l'. 
     Proof. 
-      intros. apply reifyWindow_reprEl. intros. now apply reifyGamma_reprEl. 
+      induction l; cbn. 
+      - split; [auto | intros (? & ? & _ & [] & _)].
+      - rewrite in_app_iff. split; intros. 
+        + destruct H as [H | H].
+          * apply in_map_iff in H as (? & <- & H2). eauto 10.
+          * apply IHl in H as (? & ? & -> & H1 & H2). eauto 10.
+        + destruct H as (? & ? & -> & [-> | H] & H2).
+          * left. apply in_map_iff. eauto 10.
+          * right. apply IHl; eauto 10.
     Qed. 
 
+    Compute (list_prod [1; 2] [[3; 4]]). 
 
-    (*create all evaluation environments for listable types *)
-    Definition tupToEvalEnv (X Y Z : Type) tup := match tup with (a, b, c, d, e, f) => @Build_evalEnv X Y Z a b c d e f end. 
-    Definition makeAllEnv (X Y Z : Type) (allX : list X) (allY : list Y) (allZ : list Z) :=
-      map (@tupToEvalEnv X Y Z) (prodLists (prodLists (prodLists (prodLists (prodLists allX allY) allZ) allZ) allZ) allZ). 
+    Definition mkVarEnv (X : Type) (l : list X) (n : nat) :=
+      it (fun acc => list_prod l acc ++ acc) n [[]].
+
+    Lemma mkVarEnv_correct (X : Type) (l : list X) (n : nat) (l' : list X) :
+      l' el mkVarEnv l n <-> |l'| <= n /\ l' <<= l. 
+    Proof.
+      revert l'. 
+      induction n; intros l'; cbn. 
+      - split.
+        + intros [<- | []]. eauto.
+        + intros (H1 & H2); destruct l'; [eauto | cbn in H1; lia]. 
+      - rewrite in_app_iff. rewrite list_prod_correct. split.
+        + intros [(? & ? & -> & H1 & H2) | H1].
+          * unfold mkVarEnv in IHn. apply IHn in H2 as (H2 & H3).
+            split; [now cbn | cbn; intros a [-> | H4]; eauto ].  
+          * apply IHn in H1 as (H1 & H2). split; eauto. 
+        + intros (H1 & H2).
+          destruct (nat_eq_dec (|l'|) (S n)). 
+          * destruct l'; cbn in *; [congruence | ].
+            apply incl_lcons in H2 as (H2 & H3).
+            assert (|l'| <= n) as H1' by lia. clear H1. 
+            specialize (proj2 (IHn l') (conj H1' H3)) as H4.
+            left. exists x, l'. eauto. 
+          * right. apply IHn. split; [lia | eauto]. 
+    Qed. 
+
+    Compute (mkVarEnv [1; 2] 3). 
+
+
+    Definition tupToEvalEnv (X Y Z W : Type) (t : (list X) * (list Y) * (list Z) * (list W)) :=
+      match t with
+      | (t1, t2, t3, t4) => Build_evalEnv t1 t2 t3 t4
+      end.
+
+    Definition makeAllEvalEnv (X Y Z W : Type) (l1 : list X) (l2 : list Y) (l3 : list Z) (l4 : list W) (n1 n2 n3 n4 : nat) :=
+      let allenv := prodLists (prodLists (prodLists (mkVarEnv l1 n1) (mkVarEnv l2 n2)) (mkVarEnv l3 n3)) (mkVarEnv l4 n4) in
+      map (@tupToEvalEnv X Y Z W) allenv. 
 
     Lemma prodLists_correct (X Y : Type) (A : list X) (B : list Y) a b : (a, b) el prodLists A B <-> a el A /\ b el B. 
     Proof. 
@@ -684,80 +592,228 @@ Module stringbased (sig : TMSig).
           * apply in_app_iff. left. apply in_map_iff. exists b. firstorder. 
           * apply in_app_iff. right. now apply IHA. 
     Qed. 
-
-    Lemma makeAllEnv_correct (X Y Z : Type) (listX : list X) (listY : list Y) (listZ : list Z) a b c d e f: (Build_evalEnv a b c d e f) el makeAllEnv listX listY listZ <-> a el listX /\ b el listY /\ c el listZ /\ d el listZ /\ e el listZ /\ f el listZ. 
-    Proof. 
-      unfold makeAllEnv. rewrite in_map_iff. split.
-      + intros ([[[[[]]]]] & H1 & H2). inv H1. repeat apply prodLists_correct in H2 as [H2  ?]. tauto.
-      + intros (? & ? & ? & ? & ? & ?). exists (a, b, c, d, e, f). split.
-        * now cbn. 
-        * repeat (apply prodLists_correct; split); auto.
-    Qed. 
     
+    Lemma makeAllEvalEnv_correct (X Y Z W : Type) (l1 : list X) (l2 : list Y) (l3 : list Z) (l4 : list W) n1 n2 n3 n4 :
+      forall a b c d, Build_evalEnv a b c d el makeAllEvalEnv l1 l2 l3 l4 n1 n2 n3 n4 <->
+                 (|a| <= n1 /\ a <<= l1)
+                 /\ (|b| <= n2 /\ b <<= l2)
+                 /\ (|c| <= n3 /\ c <<= l3)
+                 /\ (|d| <= n4 /\ d <<= l4). 
+    Proof. 
+      intros. unfold makeAllEvalEnv. rewrite in_map_iff.
+      split.
+      - intros ([[[]]] & H1 & H2). 
+        cbn in H1. inv H1.  
+        repeat match type of H2 with
+               | _ el prodLists _ _ => apply prodLists_correct in H2 as (H2 & ?%mkVarEnv_correct)
+               end. 
+        apply mkVarEnv_correct in H2. eauto 10.
+     - intros (H1 & H2 & H3 & H4). 
+       exists (a, b, c, d). split; [now cbn | ]. 
+       repeat match goal with
+              | [ |- _ el prodLists _ _ ]=> apply prodLists_correct; split
+              end. 
+       all: apply mkVarEnv_correct; eauto. 
+    Qed. 
+
     (*instantiate all rules - the resulting list is ordered by rules *)
 
-    Definition makeRules' (X Y Z W : Type) (reify : evalEnv X Y Z -> fGamma -> W)  (l : list (evalEnv X Y Z)) rule:= map (fun env => reifyWindow (reify env) rule) l. 
-    Definition makeRules (X Y Z W : Type) (reify : evalEnv X Y Z -> fGamma -> W) (allX : list X) (allY : list Y) (allZ : list Z) (rules : list (window fGamma)) :=
-      let listEnv := makeAllEnv allX allY allZ in concat (map (makeRules' reify listEnv) rules). 
+    Fixpoint filterSome (X : Type) (l : list (option X)) := match l with
+                                                            | [] => []
+                                                            | (Some x :: l) => x :: filterSome l
+                                                            | None :: l => filterSome l
+                                                            end. 
+
+    Lemma filterSome_correct (X : Type) (l : list (option X)) a:
+      a el filterSome l <-> Some a el l.
+    Proof.
+      induction l as [ | []]; cbn.  
+      - tauto.
+      - split.
+        + intros [-> | H]; [eauto | right; now apply IHl]. 
+        + intros [H1 | H]; [eauto | ]. inv H1. 
+          * eauto. 
+          * right; now apply IHl. 
+     - rewrite IHl. split; intros H; [ eauto | now destruct H]. 
+    Qed. 
+
+    Definition makeRules' (X Y Z W M : Type) (reify : evalEnv X Y Z W -> fGamma -> option M)  (l : list (evalEnv X Y Z W)) rule :=
+      filterSome (map (fun env => reifyWindow reify env  rule) l).
+
+    Definition makeRules (X Y Z W M : Type) (reify : evalEnv X Y Z W -> fGamma -> option M) (allX : list X) (allY : list Y) (allZ : list Z) (allW : list W) n1 n2 n3 n4 (rules : list (window fGamma)) :=
+      let listEnv := makeAllEvalEnv allX allY allZ allW n1 n2 n3 n4 in
+      concat (map (makeRules' reify listEnv) rules).
+
+    Lemma makeRules'_correct (X Y Z W M : Type) (reify : evalEnv X Y Z W -> fGamma -> option M) (l : list (evalEnv X Y Z W)) rule window :
+      window el makeRules' reify l rule <-> exists env, env el l /\ Some window = reifyWindow reify env rule. 
+    Proof.
+      unfold makeRules'. rewrite filterSome_correct. rewrite in_map_iff. split.
+      - intros (? & H1 & H2). exists x. now rewrite H1. 
+      - intros (env & H1 & ->). now exists env. 
+    Qed. 
+
+    Lemma makeRules_correct (X Y Z W M : Type) (reify : evalEnv X Y Z W -> fGamma -> option M) (allX : list X) (allY : list Y) (allZ : list Z) (allW : list W) n1 n2 n3 n4 rules window :
+      window el makeRules reify allX allY allZ allW n1 n2 n3 n4 rules <-> exists rule env, rule el rules /\ env el makeAllEvalEnv allX allY allZ allW n1 n2 n3 n4 /\ Some window = reifyWindow reify env rule. 
+    Proof.
+      unfold makeRules. rewrite in_concat_iff. split.
+      - intros (l' & H1 & (rule & <- & H2)%in_map_iff). 
+        apply makeRules'_correct in H1 as (env & H3 & H4).
+        exists rule, env. eauto.
+      - intros (rule & env & H1 & H2 & H3).
+        setoid_rewrite in_map_iff.
+        exists (makeRules' reify (makeAllEvalEnv allX allY allZ allW n1 n2 n3 n4) rule). 
+        split.
+        + apply makeRules'_correct. eauto.
+        + eauto.  
+    Qed. 
 
     Definition makeRulesFin := makeRules reifyGammaFin. 
     Definition makeRulesFlat := makeRules reifyGammaFlat. 
 
-    (*we now prove our main result: if we plug lists whose elements are related by finReprEl into makeRulesFlat and makeRulesFin, both procedures do produce exactly the same rules up to finReprEl *)
+    Definition list_finReprEl (X : finType) (x : nat) (A : list nat) (B : list X)  :=
+      (forall n, n el A -> exists a, finReprEl x n a /\ a el B) /\ (forall b, b el B -> exists n, finReprEl x n b /\ n el A). 
 
-    Definition list_finReprEl (X : finType) (x : nat) (A : list X) (B : list nat) :=
-      (forall n, n el B -> exists a, finReprEl x n a /\ a el A) /\ (forall a, a el A -> exists n, finReprEl x n a /\ n el B). 
+    Lemma isFlatListOf_list_finReprEl (X : finType) (x : nat) (A : list nat) (B : list X) :
+      finRepr X x
+      -> isFlatListOf A B
+      -> list_finReprEl x A B. 
+    Proof.
+      intros. rewrite H0; clear H0. unfold list_finReprEl. split.
+      - intros. apply in_map_iff in H0 as (x' & <- & H0).
+        exists x'. split; [ repeat split | apply H0].
+        + apply H.
+        + rewrite H. apply index_le. 
+      - intros. exists (index b). split; [ | apply in_map_iff; eauto]. 
+        split; [ apply H| split; [ | reflexivity]]. 
+        rewrite H. apply index_le. 
+    Qed.  
 
-    Definition list_isFlatEnvOf (envFinList : list (evalEnv polarity states Sigma)) (envFlatList : list (evalEnv nat nat nat)) :=
+    Definition list_isFlatEnvOf (envFlatList : list evalEnvFlat) (envFinList : list evalEnvFin) :=
       (forall envFlat, envFlat el envFlatList -> exists envFin, isFlatEnvOf envFlat envFin /\ envFin el envFinList)
       /\ (forall envFin, envFin el envFinList -> exists envFlat, isFlatEnvOf envFlat envFin /\ envFlat el envFlatList).
-                                                    
-    Lemma makeEnv_isFlatEnvOf (Afin : list polarity) (Bfin : list states) (Cfin : list Sigma) (Aflat Bflat Cflat : list nat):
-      list_finReprEl flatPolarity Afin Aflat -> list_finReprEl flatstates Bfin Bflat -> list_finReprEl flatSigma Cfin Cflat ->
-      list_isFlatEnvOf (makeAllEnv Afin Bfin Cfin) (makeAllEnv Aflat Bflat Cflat).
+
+    Lemma isFlatListOf_incl1 (X : finType) (fin : list X) flat l:
+      isFlatListOf flat fin -> l <<= flat -> exists l', isFlatListOf (X := X) l l' /\ l' <<= fin.
+    Proof.
+      intros. revert fin H. induction l; cbn in *; intros. 
+      - exists []; split; eauto. unfold isFlatListOf. now cbn.
+      - apply incl_lcons in H0 as (H0 & H1).
+        apply IHl with (fin := fin) in H1 as (l' & H2 & H3). 
+        2: apply H. 
+        rewrite H in H0. apply in_map_iff in H0 as (a' & H4 & H5).
+        exists (a' :: l'). split. 
+        + unfold isFlatListOf. cbn. now rewrite <- H4, H2. 
+        + cbn. intros ? [-> | H6]; eauto.
+    Qed.
+
+    Lemma isFlatListOf_incl2 (X : finType) (fin : list X) flat l':
+      isFlatListOf flat fin -> l' <<= fin -> exists l, isFlatListOf (X := X) l l' /\ l <<= flat.
+    Proof.
+      intros.
+      exists (map index l'). split.
+      - reflexivity.
+      - induction l'; cbn. 
+        + eauto.
+        + apply incl_lcons in H0 as (H0 & H1).
+          apply IHl' in H1. intros ? [<- | H2].
+          * rewrite H. apply in_map_iff; eauto. 
+          * now apply H1.  
+    Qed. 
+       
+    Lemma makeAllEvalEnv_isFlatEnvOf (Afin : list polarity) (Bfin : list Sigma) (Cfin : list stateSigma) (Dfin : list states) (Aflat Bflat Cflat Dflat : list nat) n1 n2 n3 n4:
+      isFlatListOf Aflat Afin 
+      -> isFlatListOf Bflat Bfin
+      -> isFlatListOf Cflat Cfin
+      -> isFlatListOf Dflat Dfin
+      -> list_isFlatEnvOf (makeAllEvalEnv Aflat Bflat Cflat Dflat n1 n2 n3 n4) (makeAllEvalEnv Afin Bfin Cfin Dfin n1 n2 n3 n4).
     Proof. 
-      intros.  split.
-      all: intros [] (F1 & F2 & F3 & F4 & F5 & F6)%makeAllEnv_correct. 
-      all:  apply H in F1 as (a & F1 & F1').
-      all:  apply H0 in F2 as (b & F2 & F2').
-      all:  apply H1 in F3 as (c & F3 & F3').
-      all:  apply H1 in F4 as (d & F4 & F4').
-      all:  apply H1 in F5 as (e & F5 & F5').
-      all:  apply H1 in F6 as (f & F6 & F6'). 
-      all: exists (Build_evalEnv a b c d e f); split; 
-        [unfold isFlatEnvOf; split; [ | split; [ | split; [ | split; [ | split]]]]; cbn; auto
-         | apply makeAllEnv_correct; tauto ].
-    Qed.  
+      intros. split; intros []; intros. 
+      - apply makeAllEvalEnv_correct in H3 as ((G1 & F1) & (G2 & F2) & (G3 & F3) & (G4 & F4)).
+        apply (isFlatListOf_incl1 H) in F1 as (polarityEnv0' & M1 & N1).    
+        apply (isFlatListOf_incl1 H0) in F2 as (sigmaEnv0' & M2 & N2). 
+        apply (isFlatListOf_incl1 H1) in F3 as (stateSigmaEnv0' & M3 & N3). 
+        apply (isFlatListOf_incl1 H2) in F4 as (stateEnv0' & M4 & N4). 
+        exists (Build_evalEnv polarityEnv0' sigmaEnv0' stateSigmaEnv0' stateEnv0').
+        split; [unfold isFlatEnvOf; cbn; eauto | ]. 
+        apply makeAllEvalEnv_correct.
+        rewrite M1, map_length in G1.
+        rewrite M2, map_length in G2.
+        rewrite M3, map_length in G3.
+        rewrite M4, map_length in G4.
+        eauto 10.
+    - apply makeAllEvalEnv_correct in H3 as ((G1 & F1) & (G2 & F2) & (G3 & F3) & (G4 & F4)).
+      apply (isFlatListOf_incl2 H) in F1 as (polarityEnv0' & M1 & N1).    
+      apply (isFlatListOf_incl2 H0) in F2 as (sigmaEnv0' & M2 & N2). 
+      apply (isFlatListOf_incl2 H1) in F3 as (stateSigmaEnv0' & M3 & N3). 
+      apply (isFlatListOf_incl2 H2) in F4 as (stateEnv0' & M4 & N4). 
+      exists (Build_evalEnv polarityEnv0' sigmaEnv0' stateSigmaEnv0' stateEnv0').
+      split; [unfold isFlatEnvOf; cbn; eauto | ]. 
+      apply makeAllEvalEnv_correct.
+      rewrite M1, M2, M3, M4 at 1. rewrite !map_length.
+      eauto 10.
+   Qed. 
  
-    Definition list_isFlatWindowOf (windowFinList : list (window Gamma)) (windowFlatList : list (window nat)) :=
+    Definition list_isFlatWindowOf (windowFlatList : list (window nat)) (windowFinList : list (window Gamma)) :=
       (forall w, w el windowFlatList -> exists w', isFlatWindowOf flatGamma w w' /\ w' el windowFinList) /\ (forall w', w' el windowFinList -> exists w, isFlatWindowOf flatGamma w w' /\ w el windowFlatList). 
 
-    Lemma makeRules'_isFlatWindowOf (envFinList : list (evalEnv polarity states Sigma)) (envFlatList : list (evalEnv nat nat nat)) rule :
-      list_isFlatEnvOf envFinList envFlatList ->
-      list_isFlatWindowOf (makeRules' reifyGammaFin envFinList rule) (makeRules' reifyGammaFlat envFlatList rule).
+    Lemma makeRules'_isFlatWindowOf  (envFlatList : list evalEnvFlat) (envFinList : list evalEnvFin) rule :
+      list_isFlatEnvOf envFlatList envFinList ->
+      list_isFlatWindowOf (makeRules' reifyGammaFlat envFlatList rule) (makeRules' reifyGammaFin envFinList rule).
     Proof. 
-      intros. split. 
-      + intros. unfold makeRules' in *. apply in_map_iff in H0 as (env & <- & H0). 
-        apply H in H0 as (env' & H1 & H2). exists (reifyWindow (reifyGammaFin env') rule). 
-        split. 
-        - now apply reifyWindow_Gamma_isFlatWindowOf. 
-        - apply in_map_iff. exists env'. split; auto. 
-     + intros. unfold makeRules' in *. apply in_map_iff in H0 as (env & <- & H0). 
-        apply H in H0 as (env' & H1 & H2). exists (reifyWindow (reifyGammaFlat env') rule). 
-        split. 
-        - now apply reifyWindow_Gamma_isFlatWindowOf. 
-        - apply in_map_iff. exists env'. split; auto.
-     Qed. 
+      intros. split; intros. 
+      - apply makeRules'_correct in H0 as (env & H1 & H2).
+        symmetry in H2.
+        apply H in H1 as (env' & H3 & H4). 
+        assert (exists w, reifyWindow reifyGammaFlat env rule = Some w) by eauto.
+        eapply (reifyWindow_Some env rule reifyGammaFlat_canonical) in H0. 
+        eapply isFlatEnvOf_bound_window_transfer  in H0 as H0'. 
+        2: apply H3. 
+        specialize (proj1 (reifyWindow_Some env' rule reifyGammaFin_canonical) H0') as (w' & H1). 
+        exists w'. split.
+        + destruct (reifyWindow_isFlatWindowOf H0 H3) as (? & ? & F1 & F2 & F3).  
+          rewrite F1 in H2. rewrite F2 in H1. inv H2. inv H1. apply F3. 
+        + apply makeRules'_correct. exists env'. eauto.
+    - apply makeRules'_correct in H0 as (env & H1 & H2). 
+      symmetry in H2.
+        apply H in H1 as (env' & H3 & H4). 
+        assert (exists w, reifyWindow reifyGammaFin env rule = Some w) by eauto.
+        eapply (reifyWindow_Some env rule reifyGammaFin_canonical) in H0. 
+        eapply isFlatEnvOf_bound_window_transfer  in H0 as H0'. 
+        2: apply H3. 
+        specialize (proj1 (reifyWindow_Some env' rule reifyGammaFlat_canonical) H0') as (w & H1). 
+        exists w. split.
+        + destruct (reifyWindow_isFlatWindowOf H0' H3) as (? & ? & F1 & F2 & F3).  
+          rewrite F1 in H1. rewrite F2 in H2. inv H2. inv H1. apply F3. 
+        + apply makeRules'_correct. exists env'. eauto.
+    Qed. 
 
-    Lemma makeRules_isFlatWindowOf (Afin : list polarity) (Bfin : list states) (Cfin : list Sigma) (Aflat Bflat Cflat : list nat) rules :
-      list_finReprEl flatPolarity Afin Aflat -> list_finReprEl flatstates Bfin Bflat -> list_finReprEl flatSigma Cfin Cflat ->
-      list_isFlatWindowOf (makeRulesFin Afin Bfin Cfin rules) (makeRulesFlat Aflat Bflat Cflat rules).
+    Lemma makeRules_isFlatWindowOf (Afin : list polarity) (Bfin : list Sigma) (Cfin : list stateSigma) (Dfin : list states) (Aflat Bflat Cflat Dflat : list nat) n1 n2 n3 n4 rules :
+      isFlatListOf Aflat Afin
+      -> isFlatListOf Bflat Bfin
+      -> isFlatListOf Cflat Cfin
+      -> isFlatListOf Dflat Dfin
+      -> list_isFlatWindowOf (makeRulesFlat Aflat Bflat Cflat Dflat n1 n2 n3 n4 rules) (makeRulesFin Afin Bfin Cfin Dfin n1 n2 n3 n4 rules).
     Proof. 
       intros. split. 
-      all: repeat setoid_rewrite in_concat_iff; repeat setoid_rewrite in_map_iff.
-      all: intros w (lrules & H2 & (rule & <- & H4)). 
-      all: eapply makeRules'_isFlatWindowOf in H2; [ | eapply makeEnv_isFlatEnvOf; eauto ].
-      all: destruct H2 as (w' & H2 & H3); eauto 10. 
+      - intros. unfold makeRulesFlat, makeRulesFin, makeRules in H3. 
+        apply in_concat_iff in H3 as (windows & H3 & H4). 
+        apply in_map_iff in H4 as (rule & <- & H5). 
+        specialize (makeAllEvalEnv_isFlatEnvOf n1 n2 n3 n4 H H0 H1 H2) as F.
+        apply (makeRules'_isFlatWindowOf rule) in F.
+        apply F in H3 as (w' & F1 & F2). exists w'.  
+        split; [ apply F1 | ]. 
+        unfold makeRulesFin, makeRules. apply in_concat_iff. 
+        eauto 10.
+      - intros. unfold makeRulesFin, makeRules in H3. 
+        apply in_concat_iff in H3 as (windows & H3 & H4). 
+        apply in_map_iff in H4 as (rule & <- & H5). 
+        specialize (makeAllEvalEnv_isFlatEnvOf n1 n2 n3 n4 H H0 H1 H2) as F.
+        apply (makeRules'_isFlatWindowOf rule) in F.
+        unfold list_isFlatWindowOf in F. 
+        apply F in H3 as (w & F1 & F2). exists w.  
+        split; [ apply F1 | ]. 
+        unfold makeRulesFin, makeRulesFlat, makeRules. apply in_concat_iff. 
+        eauto 10. 
     Qed. 
 
     Lemma nth_error_nth (X : Type) x (l : list X) n : nth_error l n = Some x -> nth n l x = x.  
@@ -774,7 +830,7 @@ Module stringbased (sig : TMSig).
       apply dupfree_countOne. destruct t. destruct class. cbn. intros x; specialize (enum_ok x) as H2. lia.
     Qed. 
 
-    Lemma finType_enum_list_finReprEl (t : finType) : list_finReprEl (length (elem t)) (elem t) (seq 0 (length (elem t))). 
+    Lemma finType_enum_list_finReprEl (t : finType) : list_finReprEl (length (elem t))  (seq 0 (length (elem t))) (elem t). 
     Proof. 
       unfold list_finReprEl. split.
       - intros. apply in_seq in H. destruct (nth_error (elem t) n ) eqn:H1.  
@@ -785,7 +841,7 @@ Module stringbased (sig : TMSig).
           * apply nth_error_nth in H1. rewrite <- H1. apply getPosition_nth. 2: easy.
             apply finType_elem_dupfree.   
        + destruct H. cbn in H0. apply nth_error_Some in H0. congruence. 
-      - intros. exists (getPosition (elem t) a). apply In_nth with (d := a) in H as (n & H1 & <-). split.
+      - intros. exists (getPosition (elem t) b). apply In_nth with (d := b) in H as (n & H1 & <-). split.
         + split; [ | split]. 
           * easy. 
           * rewrite getPosition_nth; auto. apply finType_elem_dupfree. 
@@ -794,11 +850,6 @@ Module stringbased (sig : TMSig).
           * apply in_seq.  lia. 
           * apply finType_elem_dupfree. 
     Qed. 
-
-    (*next steps: validity of rewrites transfers *)
-    (*for that: use list_finReprEl to define relation between configuration strings  *)
-    (*show that on related strings, the rewrites predicate rewritesHead_pred agrees *)
-    Definition reprStringFin (X : finType) (x : nat) (s : list X) (s' : list nat) := s' = map index s. 
 
     Lemma isFlatWindowOf_map_index (X : finType) (x : nat) (win : window X) (win' : window nat) :
       isFlatWindowOf x win' win -> (prem win' : list nat) = map index (prem win) /\ (conc win' : list nat) = map index (conc win). 
@@ -826,15 +877,15 @@ Module stringbased (sig : TMSig).
 
     
     Lemma rewritesHead_pred_flat_agree rulesFin rulesFlat finStr finStr' flatStr flatStr' :
-      reprStringFin flatGamma finStr flatStr
-      -> reprStringFin flatGamma finStr' flatStr'
-      -> list_isFlatWindowOf rulesFin rulesFlat 
+      isFlatListOf flatStr finStr
+      -> isFlatListOf flatStr' finStr'
+      -> list_isFlatWindowOf rulesFlat rulesFin 
       -> (rewritesHead_pred rulesFin finStr finStr' <-> rewritesHead_pred rulesFlat flatStr flatStr'). 
     Proof. 
       intros. unfold rewritesHead_pred. split; intros (rule & H2 & H3).
       - apply H1 in H2 as (rule' & F1 & F2). exists rule'. split; [apply F2 | ]. 
         unfold rewritesHead, prefix in *. destruct H3 as ((b1 & ->) & (b2 & ->)). 
-        unfold reprStringFin in H, H0.
+        unfold isFlatListOf in H, H0.
         rewrite map_app in H, H0. split.
         + exists (map index b1). rewrite H. enough (map index (prem rule) = prem rule') as H2.
           { now setoid_rewrite H2. }
@@ -848,7 +899,7 @@ Module stringbased (sig : TMSig).
           rewrite (proj2 F1). now cbn. 
      - apply H1 in H2 as (rule' & F1 & F2). exists rule'. split; [ apply F2 | ].
        unfold rewritesHead, prefix in *. destruct H3 as ((b1 & ->) & (b2 & ->)).
-       unfold reprStringFin in H, H0. split.
+       unfold isFlatListOf in H, H0. split.
        + symmetry in H. apply map_eq_app in H as (finStr1  & finStr2 & -> & ? & ?). 
          exists finStr2.
          enough (finStr1 = prem rule') as H3 by (now setoid_rewrite H3).
@@ -862,9 +913,9 @@ Module stringbased (sig : TMSig).
     Qed. 
 
     Lemma valid_flat_agree rulesFin rulesFlat finStr finStr' flatStr flatStr' :
-      reprStringFin flatGamma finStr flatStr
-      -> reprStringFin flatGamma finStr' flatStr'
-      -> list_isFlatWindowOf rulesFin rulesFlat 
+      isFlatListOf flatStr finStr
+      -> isFlatListOf flatStr' finStr'
+      -> list_isFlatWindowOf rulesFlat rulesFin 
       -> valid (rewritesHead_pred rulesFin) finStr finStr' <-> valid (rewritesHead_pred rulesFlat) flatStr flatStr'. 
     Proof.
       intros. 
@@ -882,16 +933,16 @@ Module stringbased (sig : TMSig).
             -- apply H1. 
             -- apply H. 
       - intros H2. revert finStr finStr' H0 H. induction H2; intros. 
-        + destruct finStr; [ | now unfold reprStringFin in H].
-          destruct finStr'; [ | now unfold reprStringFin in H0].
+        + destruct finStr; [ | now unfold isFlatListOf in H].
+          destruct finStr'; [ | now unfold isFlatListOf in H0].
           constructor. 
-        + unfold reprStringFin in H0, H3. 
+        + unfold isFlatListOf in H0, H3. 
           destruct finStr; cbn [map] in H3; [ congruence | ].
           destruct finStr'; cbn [map] in H0; [congruence | ]. 
           inv H0; inv H3. constructor 2. 
           2: now rewrite map_length in H. 
           apply IHvalid; easy. 
-        + unfold reprStringFin in H0, H3.
+        + unfold isFlatListOf in H0, H3.
           destruct finStr; cbn [map] in H3; [ congruence | ].
           destruct finStr'; cbn [map] in H0; [congruence | ]. 
           inv H0; inv H3. constructor 3. 
@@ -903,52 +954,172 @@ Module stringbased (sig : TMSig).
             -- apply H1. 
     Qed. 
 
+    Notation "f $ x" := (f x) (at level 60, right associativity, only parsing).
 
     Require Import PslBase.FiniteTypes.FinTypes.
     Definition mtrRules : list (window fGamma):=
-      [ {inr (inr (Some (psConsV Sig1))), inr (inr (Some (psConsV Sig2))), inr (inr (Some (psConsV Sig3)))}/ {inr (inr (Some (psConsC positive Sig4))), inr (inr (Some (psConsC positive Sig1))), inr (inr (Some (psConsC positive Sig2)))};
-          {inr (inr |_|), inr (inr |_|), inr (inr |_|)}/{inr (inr (Some (psConsC positive Sig1))), inr (inr |_|), inr (inr |_|)};
-          {inr (inr (Some (psConsV Sig1))), inr (inr |_|), inr (inr |_|)}/{inr (inr (Some (psConsC positive Sig2))), inr (inr (Some (psConsC positive Sig1))), inr (inr |_|)};
-          {inr (inr (Some (psConsV Sig1))), inr (inr (Some (psConsV Sig2))), inr (inr |_|)}/{inr (inr (Some (psConsC positive Sig3))), inr (inr (Some (psConsC positive Sig1))), inr (inr (Some (psConsC positive Sig2)))}
+      [
+        {inr $ inr (polVar 0, someSigmaVar 0), inr (inr (polVar 0, someSigmaVar 1)), inr (inr (polVar 0, someSigmaVar 2))} / {inr (inr (polConst positive, someSigmaVar 3)), inr (inr (polConst positive, someSigmaVar 0)), inr (inr (polConst positive, someSigmaVar 1))};
+        {inr (inr (polVar 0, blank)), inr (inr (polVar 0, blank)), inr (inr (polVar 0, blank))} / {inr (inr (polConst positive, someSigmaVar 0)), inr (inr (polConst positive, blank)), inr (inr (polConst positive, blank))};
+        { inr (inr (polVar 0, someSigmaVar 0)), inr (inr (polVar 0, blank)), inr (inr (polVar 0, blank))} / {inr (inr (polConst positive, someSigmaVar 1)), inr (inr (polConst positive, someSigmaVar 0)), inr (inr (polConst positive, blank))};
+        { inr (inr (polVar 0, blank)), inr (inr (polVar 0, blank)), inr (inr (polVar 0, blank))} / {inr (inr (polConst positive, blank)), inr (inr (polConst positive, blank)), inr (inr (polConst positive, blank))};
+        { inr (inr (polVar 0, someSigmaVar 0)), inr (inr (polVar 0, someSigmaVar 1)), inr (inr (polVar 0, blank)) } / {inr (inr (polConst positive, someSigmaVar 2)), inr (inr (polConst positive, someSigmaVar 0)), inr (inr (polConst positive, someSigmaVar 1))};
+        { inr (inr (polVar 0, blank)), inr (inr (polVar 0, blank)), inr (inr (polVar 0, someSigmaVar 0))} / { inr (inr (polConst positive, blank)), inr (inr (polConst positive, blank)), inr (inr (polConst positive, blank))};
+        { inr (inr (polVar 0, blank)), inr (inr (polVar 0, someSigmaVar 0)), inr (inr (polVar 0, someSigmaVar 1))} / { inr (inr (polConst positive, blank)), inr (inr (polConst positive, blank)), inr (inr (polConst positive, someSigmaVar 0))};
+        { inr (inr (polVar 0, someSigmaVar 0)), inr (inr (polVar 0, someSigmaVar 1)), inr (inr (polVar 0, someSigmaVar 2))} / {inr (inr (polConst positive, blank)), inr (inr (polConst positive, someSigmaVar 0)), inr (inr (polConst positive, someSigmaVar 1))}
       ].
 
-    Definition finMTRRules := makeRulesFin (elem Fpolarity) (elem states) (elem Sigma) mtrRules. 
+    Definition mtiRules : list (window fGamma) :=
+      [
+        {inr (inr (polVar 0, stateSigmaVar 0)), inr (inr (polVar 0, stateSigmaVar 1)), inr (inr (polVar 0, stateSigmaVar 2))} / {inr (inr (polConst neutral, stateSigmaVar 0)), inr (inr (polConst neutral, stateSigmaVar 1)), inr (inr (polConst neutral, stateSigmaVar 2))};
+          {inr (inl (delimC)), inr (inr (polVar 0, blank)), inr (inr (polVar 0, blank))} / {inr (inl (delimC)), inr (inr (polVar 1, blank)), inr (inr (polVar 1, blank))};
+          {inr (inr (polVar 0, blank)), inr (inr (polVar 0, blank)), inr (inl delimC)} / {inr (inr (polVar 1, blank)), inr (inr (polVar 1, blank)), inr (inl delimC)}
+      ].
+
+    Definition finMTRRules := makeRulesFin (elem Fpolarity) (elem Sigma) (elem FstateSigma) (elem states) 1 4 0 0 mtrRules. 
+    Definition finMTIRules := makeRulesFin (elem Fpolarity) (elem Sigma) (elem FstateSigma) (elem states) 2 0 4 0 mtiRules.
+    Definition finMTLRules := map polarityRevWin finMTRRules. 
+
+    Definition finTapeRules := finMTRRules ++ finMTIRules ++ finMTLRules. 
 
     Ltac destruct_or H := match type of H with
                           | ?a \/ ?b => destruct H as [H | H]; try destruct_or H
-                            end. 
+                            end.
 
-    Lemma makeAllEnv_finType (A B C : finType) env : env el makeAllEnv (elem A) (elem B) (elem C). 
+    (* Lemma makeAllEnv_finType (A B C : finType) env : env el makeAllEnv (elem A) (elem B) (elem C).  *)
+    (* Proof.  *)
+    (*   destruct env. apply makeAllEnv_correct. repeat split.  *)
+    (*   all: apply elem_spec.  *)
+    (* Qed.  *)
+
+    Lemma singleton_incl (X : Type) (a : X) (h : list X) :
+      [a] <<= h <-> a el h. 
     Proof. 
-      destruct env. apply makeAllEnv_correct. repeat split. 
-      all: apply elem_spec. 
+      split; intros. 
+      - now apply H. 
+      - now intros a' [-> | []]. 
     Qed. 
 
-  Ltac rewHeadTape_inv2 := repeat match goal with
-                                  | [H : rewHeadTape _ _ |- _] => inv H
-                                  | [H : shiftRightWindow _ _ _ _ _ _ |- _ ] => inv H
-                                  | [H : identityWindow _ _ _ _ _ _ |- _] => inv H
-                                  | [d : delim |- _] => destruct d
-                                  | [H : |_| = # ?σ |- _] => is_var σ; destruct σ; cbn in H; try congruence
-                                  | [H : # ?σ = |_| |- _] => is_var σ; destruct σ; cbn in H; try congruence
-                                  | [H : Some (_, _) = % ?e |- _] => symmetry in H; apply polarityFlipTapeSigmaInv1 in H; rewrite H in *; clear H
-                                  | [H : % ?e = Some (_, _) |- _] => apply polarityFlipTapeSigmaInv1 in H; rewrite H in *; clear H
-                                  | [H : Some (_, _) = # ?e |- _] => symmetry in H; apply polarityFlipTapeSigma'Inv1 in H; rewrite H in *; clear H
-                                  | [H : # ?e = Some (_, _) |- _] => apply polarityFlipTapeSigma'Inv1 in H; rewrite H in *; clear H
-                                  | [H : inr _ = (~ _) |- _] => symmetry in H
-                                  | [H : (~ ?a) = inr (inr |_|) |- _] => is_var a; destruct a; cbn in H; [ congruence | ]
-                                  | [H : (~?e) = inr (inr (Some (_, _))) |- _] => apply polarityFlipGammaInv1 in H; try rewrite H in *; clear H
-                                  | [H : inr (inr (Some (_, _))) = (~?e) |- _] => symmetry in H; apply polarityFlipGammaInv1 in H; try rewrite H in *; clear H
-                                  | [H : % ?a = inr |_| |- _] => is_var a; destruct a; cbn in H; try congruence 
-                                  | [H : $ = $ |- _] => clear H
-                                  | [H : inr _ = inr _ |- _] => inv H
-                                  | [H : inl _ = inl _ |- _] => inv H
-                                  | [H : |_| = |_| |- _] => clear H
-                                  | [ |- context [inr (inr (# ?e))]] => rewrite polarityFlip_push_in
-                           end; try congruence. 
- 
+    Lemma duoton_incl (X : Type) (a b : X) (h : list X) : 
+      [a; b] <<= h <-> a el h /\ b el h.
+    Proof. 
+      split; intros.
+      - split; now apply H. 
+      - destruct H. now intros a' [-> | [-> | []]]. 
+    Qed.
 
-    Lemma agreement a b : rewHeadTape a b <-> rewritesHead_pred finMTRRules a b.  
+    Ltac force_in := match goal with
+                     | [ |- ?a el ?a :: ?h] => now left
+                     | [ |- ?a el ?b :: ?h] => right; force_in
+                     | [ |- [?a] <<= ?h] => apply singleton_incl; force_in
+                     | [ |- [?a; ?b] <<= ?h] => apply duoton_incl; split; force_in
+                     end. 
+
+    Ltac solve_agreement_incl :=
+      match goal with
+        | [ |- [] <<= _] => eauto
+        | [ |- ?a <<= elem Sigma] => eauto
+        | [ |- [?p] <<= [negative; positive; neutral]] => destruct p; force_in
+        | [ |- _ <= _] => lia
+      end. 
+
+    Ltac solve_agreement_in_env :=
+      split; [unfold mtrRules; force_in | split; [ apply makeAllEvalEnv_correct; cbn; repeat split; solve_agreement_incl| easy] ]. 
+
+    Ltac destruct_var_env H :=
+      repeat match type of H with
+       | |?h| <= 0 => is_var h; destruct h; cbn in H; [clear H | now apply Nat.nle_succ_0 in H]
+       | |?h| <= S ?n => is_var h; destruct h; cbn in H; [clear H | apply le_S_n in H]; destruct_var_env H
+       end. 
+
+    Lemma agreement_mtr γ1 γ2 γ3 γ4 γ5 γ6 :
+      shiftRightWindow γ1 γ2 γ3 γ4 γ5 γ6 <-> {γ1, γ2, γ3} / {γ4, γ5, γ6} el finMTRRules. 
+    Proof.
+      split.
+      - intros. rewHeadTape_inv2; apply makeRules_correct. 
+        + exists ({inr (inr (polVar 0, someSigmaVar 0)), inr (inr (polVar 0, someSigmaVar 1)), inr (inr (polVar 0, someSigmaVar 2))} / {inr (inr (polConst positive, someSigmaVar 3)), inr (inr (polConst positive, someSigmaVar 0)), inr (inr (polConst positive, someSigmaVar 1))}).
+          exists (Build_evalEnv [p] [σ1; σ2; σ3; σ4] [] []).
+          solve_agreement_in_env. 
+       + exists ({inr $ inr (polVar 0, blank), inr $ inr (polVar 0, blank), inr $ inr (polVar 0, blank)} / {inr $ inr (polConst positive, someSigmaVar 0), inr $ inr (polConst positive, blank), inr $ inr (polConst positive, blank)}). 
+         exists (Build_evalEnv [p] [σ1; σ1; σ1; σ1] [] []). 
+         solve_agreement_in_env. 
+       + exists ({inr $ inr (polVar 0, blank), inr $ inr (polVar 0, blank), inr $ inr (polVar 0, blank)} / {inr $ inr (polConst positive, blank), inr $ inr (polConst positive, blank), inr $ inr (polConst positive, blank)}).  
+         exists (Build_evalEnv [p] [] [] []). 
+         solve_agreement_in_env. 
+       + exists ({inr $ inr (polVar 0, someSigmaVar 0), inr $ inr (polVar 0, blank), inr $ inr (polVar 0, blank)} / { inr $ inr (polConst positive, someSigmaVar 1), inr $ inr (polConst positive, someSigmaVar 0), inr $ inr (polConst positive, blank)}). 
+         exists (Build_evalEnv [p] [σ1; σ2] [] []). 
+         solve_agreement_in_env.
+       + exists ({inr $ inr (polVar 0, someSigmaVar 0), inr $ inr (polVar 0, someSigmaVar 1), inr $ inr (polVar 0, blank)} / {inr $ inr (polConst positive, someSigmaVar 2), inr $ inr (polConst positive, someSigmaVar 0), inr $ inr (polConst positive, someSigmaVar 1)}). 
+         exists (Build_evalEnv [p] [σ1; σ2; σ3] [] []). 
+         solve_agreement_in_env. 
+       + exists ({inr $ inr (polVar 0, blank), inr $ inr (polVar 0, blank), inr $ inr (polVar 0, someSigmaVar 0)} / {inr $ inr (polConst positive, blank), inr $ inr (polConst positive, blank), inr $ inr (polConst positive, blank)}).
+         exists (Build_evalEnv [p] [σ1] [] []). 
+         solve_agreement_in_env. 
+       + exists ({inr $ inr (polVar 0, blank), inr $ inr (polVar 0, someSigmaVar 0), inr $ inr (polVar 0, someSigmaVar 1)} / {inr $ inr (polConst positive, blank), inr $ inr (polConst positive, blank), inr $ inr (polConst positive, someSigmaVar 0)}).  
+         exists (Build_evalEnv [p] [σ1; σ2] [] []).
+         solve_agreement_in_env. 
+       + exists ({inr $ inr (polVar 0, someSigmaVar 0), inr $ inr (polVar 0, someSigmaVar 1), inr $ inr (polVar 0, someSigmaVar 2)} / { inr $ inr (polConst positive, blank), inr $ inr (polConst positive, someSigmaVar 0), inr $ inr (polConst positive, someSigmaVar 1)}). 
+         exists (Build_evalEnv [p] [σ1; σ2; σ3] [] []).
+         solve_agreement_in_env. 
+     - intros. apply makeRules_correct in H as (rule & env & H1 & H2 & H3).  
+       destruct env. apply makeAllEvalEnv_correct in H2. 
+       destruct H2 as ((F1 & _) & (F2 & _) & (F3 & _) & (F4 & _)). 
+       destruct_var_env F1; destruct_var_env F3; destruct_var_env F4; destruct_var_env F2.  
+       all: cbn in H1; destruct_or H1; subst; cbn in H3; inv H3; eauto. 
+    Qed. 
+
+    Lemma bound_Gamma_polReplace (X Y Z W : Type) (pl : list X) (l2 : list Y) (l3 : list Z) (l4 : list W) c:
+      bound_Gamma (Build_evalEnv pl l2 l3 l4) c -> forall (pl' : list polarity), |pl| = |pl'| -> bound_Gamma (Build_evalEnv pl' l2 l3 l4) c. 
+    Proof. 
+      intros. repeat destruct_fGamma; cbn in *; eauto.
+      - split; [ | tauto]. destruct H as (H & _). 
+        unfold boundVar. rewrite <- H0. apply H. 
+      - split; [ | tauto]. unfold boundVar. rewrite <- H0. apply H.
+      - split; [ | tauto]. unfold boundVar. rewrite <- H0. apply H.
+    Qed. 
+
+    Lemma mtrRules_polarityRev γ1 γ2 γ3 γ4 γ5 γ6 :
+      {γ1, γ2, γ3} / {γ4, γ5, γ6} el finMTRRules -> {~γ3, ~γ2, ~γ1} / {~γ6, ~γ5, ~γ4} el finMTRRules. 
+    Proof. 
+      intros. 
+      apply makeRules_correct in H as (rule & env & H1 & H2 & H3). 
+      destruct env. apply makeAllEvalEnv_correct in H2.
+      destruct polarityEnv0; [ | destruct polarityEnv0]. 
+      - destruct H2 as ((F1 & _) & (F2 & _) & (F3 & _) & (F4 & _)). 
+       destruct_var_env F1; destruct_var_env F3; destruct_var_env F4; destruct_var_env F2.  
+       all: cbn in H1; destruct_or H1; subst; cbn in H3; inv H3; eauto.
+      - apply makeRules_correct.
+        exists rule. exists (Build_evalEnv [polarityFlip e] sigmaEnv0 stateSigmaEnv0 stateEnv0). 
+        split; [apply H1 | split ]. 
+        + apply makeAllEvalEnv_correct.
+          destruct H2 as (_ & (? & ?) & (? & ?) & (? & ?));
+          cbn; repeat split; eauto 2.
+          destruct e; cbn; solve_agreement_incl. 
+        + clear H2. destruct rule, prem, conc. cbn. 
+          destruct reifyGammaFin eqn:F1.
+          2: {
+            
+          match type of F1 with 
+            ?h = Some ?s => rename F1 into F1'; assert (exists s, h = Some s) as F1 by eauto; clear F1'
+           | ?h = None => assert (not (exists s, h = Some s)) as F1' by (intros (? & ?); congruence)
+          end. 
+          
+          rewrite <- reifyGammaFin_canonical in F1. 
+          eapply bound_Gamma_polReplace with (pl' := [e]) in F1. 2: now cbn.
+          cbn in H3. 
+          apply reifyGammaFin_canonical in F1 as (? & F1). setoid_rewrite F1 in H3. 
+
+          2: {cbn in H3. congruence. }
+      - cbn in H2. destruct H2 as ((H2 & _) & _ & _ & _). lia. 
+    
+
+    Lemma agreement_mtl γ1 γ2 γ3 γ4 γ5 γ6 :
+      shiftRightWindow (~γ1) (~γ2) (~γ3) (~γ4) (~γ5) (~γ6) <-> {γ1, γ2, γ3} / {γ4, γ5, γ6} el finMTRRules.
+    Proof. 
+      split. 
+      - intros. apply 
+
+    Lemma agreement a b : rewHeadTape a b <-> rewritesHead_pred finTapeRules a b.  
     Proof. 
       split. 
       - intros.
@@ -957,8 +1128,9 @@ Module stringbased (sig : TMSig).
           end.
         + split. 
           2: split; unfold prefix; cbn; eauto. 
+          unfold finTapeRules. apply makeRules_correct.
 
-          unfold finMTRRules. unfold makeRulesFin. unfold makeRules, mtrRules. cbn [map concat]. 
+          unfold makeRulesFin. unfold makeRules, mtrRules. cbn [map concat].
             rewrite !in_app_iff.
             unfold makeRules'. rewrite !in_map_iff.
             left. exists (Build_evalEnv (polarityFlip p) (defstate) )

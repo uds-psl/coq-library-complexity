@@ -755,7 +755,7 @@ Lemma transNoneNone_inv1 q q0 m γ2 γ3 γ4 γ5 γ6 : transNoneNone q (inl (q0, 
     - intros (q & []). eauto. 
   Qed. 
  
-  Lemma E_alphabet a p w : a el (E p w) -> a = inr (inr (p, |_|)) \/ a = inr $. 
+  Lemma E_alphabet a p w : a el (E p w) -> a = inr (inr (p, |_|)) \/ a = inr #. 
   Proof. 
     intros. induction w.  
     - cbn in H. firstorder. 
