@@ -644,21 +644,17 @@ Lemma transNoneNone_inv1 q q0 m γ2 γ3 γ4 γ5 γ6 : transNoneNone q (inl (q0, 
   (*usual split according to position of state symbol *)
 
   Inductive haltCenter : states -> transRule :=
-  | haltCenter1 q (m1 m2 : stateSigma) σ p : haltCenter q (inr (inr (p, m1))) (inl (q, Some σ)) (inr (inr (p, m2))) (inr (inr (neutral, m1))) (inl (q, Some σ)) (inr (inr (neutral, m2)))
-  | haltCenter2 q (m : stateSigma) p : haltCenter q (inr (inr (p, m))) (inl (q, |_|)) (inr (inr (p, |_|))) (inr (inr (neutral, m))) (inl (q, |_|)) (inr (inr (neutral, |_|)))
-  | haltCenter3 q (m : stateSigma) p : haltCenter q (inr (inr (p, |_|))) (inl (q, |_|)) (inr (inr (p, m))) (inr (inr (neutral, |_|))) (inl (q, |_|)) (inr (inr (neutral, m))). 
-
+  | haltCenter1 q (m1 m2 : stateSigma) m p : haltCenter q (inr (inr (p, m1))) (inl (q, m)) (inr (inr (p, m2))) (inr (inr (neutral, m1))) (inl (q, m)) (inr (inr (neutral, m2))).
+  
   Hint Constructors haltCenter : trans.
 
   Inductive haltRight : states -> transRule :=
-  | haltRight1 q (m1 m2 : stateSigma) σ p : haltRight q (inr (inr (p, m1))) (inr (inr (p, Some σ))) (inl (q, m2)) (inr (inr (neutral, m1))) (inr (inr (neutral, Some σ))) (inl (q, m2))
-  | haltRight2 q (m : stateSigma) p : haltRight q (inr (inr (p, |_|))) (inr (inr (p, |_|))) (inl (q, m)) (inr (inr (neutral, |_|))) (inr (inr (neutral, |_|))) (inl (q, m)). 
+    | haltRight1 q (m1 m2 m : stateSigma) p : haltRight q (inr (inr (p, m1))) (inr (inr (p, m2))) (inl (q, m)) (inr (inr (neutral, m1))) (inr (inr (neutral, m2))) (inl (q, m)). 
 
   Hint Constructors haltRight : trans.
 
   Inductive haltLeft : states -> transRule :=
-  | haltLeft1 q (m1 m2 : stateSigma) σ p : haltLeft q (inl (q, m1)) (inr (inr (p, Some σ))) (inr (inr (p, m2))) (inl (q, m1)) (inr (inr (neutral, Some σ))) (inr (inr (neutral, m2)))
-  | haltLeft2 q (m : stateSigma) p : haltLeft q (inl (q, m)) (inr (inr (p, |_|))) (inr (inr (p, |_|))) (inl (q, m)) (inr (inr (neutral, |_|))) (inr (inr (neutral, |_|))). 
+    | haltLeft1 q (m1 m2 m : stateSigma) p : haltLeft q (inl (q, m)) (inr (inr (p, m1))) (inr (inr (p, m2))) (inl (q, m)) (inr (inr (neutral, m1))) (inr (inr (neutral, m2))). 
 
   Hint Constructors haltLeft : trans.
 
