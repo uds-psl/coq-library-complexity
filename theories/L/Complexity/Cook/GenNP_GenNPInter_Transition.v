@@ -59,50 +59,50 @@ Module transition (sig : TMSig).
   Inductive transSomeRightCenter :  states -> states -> stateSigma -> stateSigma -> transRule :=
     | tsrc q q' (a b : stateSigma) (m1 m2 m3 : stateSigma) p : transSomeRightCenter q q' a b (inr (inr (p, m1))) (inl (q, a)) (inr (inr (p, m2))) (inr (inr (positive, m3))) (inl (q', m1)) (inr (inr (positive, b))).  
 
-  Hint Constructors transSomeRightCenter : trans. 
+  Global Hint Constructors transSomeRightCenter : trans. 
 
   Inductive transSomeRightRight : states -> states -> stateSigma -> transRule :=
     | tsrr q q' (a : stateSigma) (m1 m2 m3 : stateSigma) p : transSomeRightRight q q' a (inr (inr (p, m1))) (inr (inr (p, m2))) (inl (q, a)) (inr (inr (positive, m3))) (inr (inr (positive, m1))) (inl (q', m2)). 
 
-  Hint Constructors transSomeRightRight : trans. 
+  Global Hint Constructors transSomeRightRight : trans. 
 
   Inductive transSomeRightLeft : states -> states -> stateSigma -> stateSigma -> transRule :=
     | tsrl q q' (a b : stateSigma) (m1 m2 m3 : stateSigma) p: transSomeRightLeft q q' a b (inl (q, a)) (inr (inr (p, m1))) (inr (inr (p, m2))) (inl (q', m3)) (inr (inr (positive, b))) (inr (inr (positive, m1))). 
 
-  Hint Constructors transSomeRightLeft : trans. 
+  Global Hint Constructors transSomeRightLeft : trans. 
 
   (*shift left rules *)
   Inductive transSomeLeftCenter : states -> states -> stateSigma -> stateSigma -> transRule :=
     | tslc q q' (a b : stateSigma) (m1 m2 m3 : stateSigma) p : transSomeLeftCenter q q' a b (inr (inr (p, m1))) (inl (q, a)) (inr (inr (p, m2))) (inr (inr (negative, b))) (inl (q', m2)) (inr (inr (negative, m3))). 
 
-  Hint Constructors transSomeLeftCenter : trans. 
+  Global Hint Constructors transSomeLeftCenter : trans. 
 
   Inductive transSomeLeftLeft : states -> states -> stateSigma -> transRule :=
     | tsll q q' (a : stateSigma) (m1 m2 m3 : stateSigma) p : transSomeLeftLeft q q' a (inl (q, a)) (inr (inr (p, m1))) (inr (inr (p, m2))) (inl (q', m1)) (inr (inr (negative, m2))) (inr (inr(negative, m3))). 
 
-  Hint Constructors transSomeLeftLeft : trans. 
+  Global Hint Constructors transSomeLeftLeft : trans. 
 
   Inductive transSomeLeftRight : states -> states -> stateSigma -> stateSigma -> transRule :=
     | tslr q q' (a b : stateSigma) (m1 m2 m3 : stateSigma) p : transSomeLeftRight q q' a b (inr (inr (p, m1))) (inr (inr (p, m2))) (inl (q, a)) (inr (inr (negative, m2))) (inr (inr (negative, b))) (inl (q', m3)).
 
-  Hint Constructors transSomeLeftRight : trans. 
+  Global Hint Constructors transSomeLeftRight : trans. 
 
   (*stay rules *)
   
   Inductive transSomeStayCenter : states -> states -> stateSigma -> stateSigma -> transRule :=
     | tssc q q' (a b : stateSigma) (m1 m2 : stateSigma) p : transSomeStayCenter q q' a b (inr (inr (p, m1))) (inl (q, a)) (inr (inr (p, m2))) (inr (inr (neutral, m1))) (inl (q', b)) (inr (inr (neutral, m2))). 
 
-  Hint Constructors transSomeStayCenter : trans. 
+  Global Hint Constructors transSomeStayCenter : trans. 
 
   Inductive transSomeStayLeft : states -> states -> stateSigma -> stateSigma -> transRule :=
     | tssl q q' (a b : stateSigma) (m1 m2 : stateSigma) p : transSomeStayLeft q q' a b (inl (q, a)) (inr (inr (p, m1))) (inr (inr (p, m2))) (inl (q', b)) (inr (inr (neutral, m1))) (inr (inr (neutral, m2))). 
 
-  Hint Constructors transSomeStayLeft : trans. 
+  Global Hint Constructors transSomeStayLeft : trans. 
 
   Inductive transSomeStayRight : states -> states -> stateSigma -> stateSigma -> transRule :=
     | tssr q q' (a b : stateSigma) (m1 m2 : stateSigma) p : transSomeStayRight q q' a b (inr (inr (p, m1))) (inr (inr (p, m2))) (inl (q, a)) (inr (inr (neutral, m1))) (inr (inr (neutral, m2))) (inl (q', b)). 
 
-  Hint Constructors transSomeStayRight : trans. 
+  Global Hint Constructors transSomeStayRight : trans. 
 
   (* bundling predicates *)
 
@@ -115,21 +115,21 @@ Module transition (sig : TMSig).
   | transSSRightLeftC q q' (a b : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, L)) ->  transSomeRightLeft q q' (Some a) (Some b) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeSomeLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6
   | transSSStayLeftC q q' (a b : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, N)) -> transSomeStayLeft q q' (Some a) (Some b) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeSomeLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6. 
 
-  Hint Constructors transSomeSomeLeft : trans. 
+  Global Hint Constructors transSomeSomeLeft : trans. 
 
   Inductive transSomeSomeRight : states -> transRule :=
   | transSSLeftRightC q q' (a b: Sigma) γ1 γ2 γ4 γ5 γ6: trans (q, Some a) = (q', (Some b, R)) -> transSomeLeftRight q q' (Some a) (Some b) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeSomeRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6
   | transSSRightRightC q q' (a b : Sigma) γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, L)) -> transSomeRightRight q q' (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeSomeRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6
   | transSSStayRightC q q' (a b : Sigma)  γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, N)) -> transSomeStayRight q q' (Some a) (Some b) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeSomeRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6. 
 
-  Hint Constructors transSomeSomeRight : trans. 
+  Global Hint Constructors transSomeSomeRight : trans. 
 
   Inductive transSomeSomeCenter : states -> transRule :=
   | transSSLeftCenterC q q' (a b: Sigma) γ1 γ3 γ4 γ5 γ6: trans (q, Some a) = (q', (Some b, R)) -> transSomeLeftCenter q q' (Some a) (Some b) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeSomeCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6
   | transSSRightCenterC q q' (a b: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, L)) -> transSomeRightCenter q q' (Some a) (Some b) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeSomeCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6
   | transSSStayCenterC q q' (a b: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, N)) -> transSomeStayCenter q q' (Some a) (Some b) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeSomeCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6. 
 
-  Hint Constructors transSomeSomeCenter : trans.
+  Global Hint Constructors transSomeSomeCenter : trans.
 
   (*None, Some *)
   Inductive transNoneSomeLeft : states -> transRule :=
@@ -137,21 +137,21 @@ Module transition (sig : TMSig).
   | transNSRightLeftC q q' (b : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, L)) ->  transSomeRightLeft q q' (|_|) (Some b) (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneSomeLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6
   | transNSStayLeftC q q' (b : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, N)) -> transSomeStayLeft q q' (|_|) (Some b) (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneSomeLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6. 
 
-  Hint Constructors transNoneSomeLeft : trans. 
+  Global Hint Constructors transNoneSomeLeft : trans. 
 
   Inductive transNoneSomeRight : states -> transRule :=
   | transNSLeftRightC q q' (b: Sigma) γ1 γ2 γ4 γ5 γ6: trans (q, |_|) = (q', (Some b, R)) -> transSomeLeftRight q q' (|_|) (Some b) γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneSomeRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6
   | transNSRightRightC q q' (b : Sigma) γ1 γ2 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, L)) -> transSomeRightRight q q' (|_|) γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneSomeRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6
   | transNSStayRightC q q' (b : Sigma)  γ1 γ2 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, N)) -> transSomeStayRight q q' (|_|) (Some b) γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneSomeRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6. 
 
-  Hint Constructors transNoneSomeRight : trans. 
+  Global Hint Constructors transNoneSomeRight : trans. 
 
   Inductive transNoneSomeCenter : states -> transRule :=
   | transNSLeftCenterC q q' (b: Sigma) γ1 γ3 γ4 γ5 γ6: trans (q, |_|) = (q', (Some b, R)) -> transSomeLeftCenter q q' (|_|) (Some b) γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneSomeCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6
   | transNSRightCenterC q q' (b: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, L)) -> transSomeRightCenter q q' (|_|) (Some b) γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneSomeCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6
   | transNSStayCenterC q q' (b: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, N)) -> transSomeStayCenter q q' (|_|) (Some b) γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneSomeCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6. 
 
-  Hint Constructors transNoneSomeCenter : trans.
+  Global Hint Constructors transNoneSomeCenter : trans.
 
   (*Some, None  *)
   Inductive transSomeNoneLeft : states -> transRule :=
@@ -159,21 +159,21 @@ Module transition (sig : TMSig).
   | transSNRightLeftC q q' (a : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, L)) ->  transSomeRightLeft q q' (Some a) (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeNoneLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6
   | transSNStayLeftC q q' (a : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, N)) -> transSomeStayLeft q q' (Some a) (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeNoneLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6. 
 
-  Hint Constructors transSomeNoneLeft : trans. 
+  Global Hint Constructors transSomeNoneLeft : trans. 
 
   Inductive transSomeNoneRight : states -> transRule :=
   | transSNLeftRightC q q' (a : Sigma) γ1 γ2 γ4 γ5 γ6: trans (q, Some a) = (q', (None, R)) -> transSomeLeftRight q q' (Some a) (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeNoneRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6
   | transSNRightRightC q q' (a : Sigma) γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, L)) -> transSomeRightRight q q' (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeNoneRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6
   | transSNStayRightC q q' (a : Sigma)  γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, N)) -> transSomeStayRight q q' (Some a) (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeNoneRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6. 
 
-  Hint Constructors transSomeNoneRight : trans. 
+  Global Hint Constructors transSomeNoneRight : trans. 
 
   Inductive transSomeNoneCenter : states -> transRule :=
   | transSNLeftCenterC q q' (a: Sigma) γ1 γ3 γ4 γ5 γ6: trans (q, Some a) = (q', (None, R)) -> transSomeLeftCenter q q' (Some a) (Some a) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeNoneCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6
   | transSNRightCenterC q q' (a: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, L)) -> transSomeRightCenter q q' (Some a) (Some a) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeNoneCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6
   | transSNStayCenterC q q' (a: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, N)) -> transSomeStayCenter q q' (Some a) (Some a) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeNoneCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6. 
 
-  Hint Constructors transSomeNoneCenter : trans.
+  Global Hint Constructors transSomeNoneCenter : trans.
 
 
   (* finally, also group those three cases together *)
@@ -182,21 +182,21 @@ Module transition (sig : TMSig).
   | transSSRight q γ1 γ2 γ3 γ4 γ5 γ6 : transSomeSomeRight q γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeSome q γ1 γ2 γ3 γ4 γ5 γ6
   | transSSCenter q γ1 γ2 γ3 γ4 γ5 γ6 : transSomeSomeCenter q γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeSome q γ1 γ2 γ3 γ4 γ5 γ6.
 
-  Hint Constructors transSomeSome : trans.
+  Global Hint Constructors transSomeSome : trans.
 
   Inductive transNoneSome : states -> transRule :=
   | transNSLeft q γ1 γ2 γ3 γ4 γ5 γ6 : transNoneSomeLeft q γ1 γ2 γ3 γ4 γ5 γ6 -> transNoneSome q γ1 γ2 γ3 γ4 γ5 γ6
   | transNSRight q γ1 γ2 γ3 γ4 γ5 γ6 : transNoneSomeRight q γ1 γ2 γ3 γ4 γ5 γ6 -> transNoneSome q γ1 γ2 γ3 γ4 γ5 γ6
   | transNSCenter q γ1 γ2 γ3 γ4 γ5 γ6 : transNoneSomeCenter q γ1 γ2 γ3 γ4 γ5 γ6 -> transNoneSome q γ1 γ2 γ3 γ4 γ5 γ6.
 
-  Hint Constructors transNoneSome : trans.
+  Global Hint Constructors transNoneSome : trans.
   
   Inductive transSomeNone : states -> transRule :=
   | transSNLeft q γ1 γ2 γ3 γ4 γ5 γ6 : transSomeNoneLeft q γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeNone q γ1 γ2 γ3 γ4 γ5 γ6
   | transSNRight q γ1 γ2 γ3 γ4 γ5 γ6 : transSomeNoneRight q γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeNone q γ1 γ2 γ3 γ4 γ5 γ6
   | transSNCenter q γ1 γ2 γ3 γ4 γ5 γ6 : transSomeNoneCenter q γ1 γ2 γ3 γ4 γ5 γ6 -> transSomeNone q γ1 γ2 γ3 γ4 γ5 γ6.
 
-  Hint Constructors transSomeNone : trans.
+  Global Hint Constructors transSomeNone : trans.
 
   (*the special case of (None, None) needs extra care as the Turing machine doesn't write any symbol *) 
   (*the structure of the rules is the same for this case *)
@@ -206,59 +206,59 @@ Module transition (sig : TMSig).
   | tnrc1 q q' (m : stateSigma) p : transNoneRightCenter q q' (inr (inr (p, |_|))) (inl (q, |_|)) (inr (inr (p, m))) (inr (inr (neutral, |_|))) (inl (q', |_|)) (inr (inr (neutral, m)))
   | tnrc2 q q' (σ : Sigma) (m: stateSigma) p : transNoneRightCenter q q' (inr (inr (p, Some σ))) (inl (q, |_|)) (inr (inr (p, |_|))) (inr (inr (positive, m))) (inl (q', Some σ)) (inr (inr (positive, |_|))). 
 
-  Hint Constructors transNoneRightCenter : trans. 
+  Global Hint Constructors transNoneRightCenter : trans. 
 
   Inductive transNoneRightRight : states -> states -> transRule :=
   | tnrr1 q q' p p': transNoneRightRight q q' (inr (inr (p, |_|))) (inr (inr (p, |_|))) (inl (q, |_|)) (inr (inr (p', |_|))) (inr (inr (p', |_|))) (inl (q', |_|))
   | tnrr2 q q' σ p p': transNoneRightRight q q' (inr (inr (p, |_|))) (inr (inr (p,Some σ))) (inl (q, |_|)) (inr (inr (p', |_|))) (inr (inr (p', |_|))) (inl (q', Some σ))
   | tnrr3 q q' σ1 σ2 (m1 : stateSigma) p : transNoneRightRight q q' (inr (inr (p, Some σ1))) (inr (inr (p, Some σ2))) (inl (q, |_|)) (inr (inr (positive, m1))) (inr (inr (positive, Some σ1))) (inl (q', Some σ2)).
 
-  Hint Constructors transNoneRightRight : trans. 
+  Global Hint Constructors transNoneRightRight : trans. 
 
   Inductive transNoneRightLeft : states -> states -> transRule :=
   | tnrl1 q q' (m : stateSigma) p p': transNoneRightLeft q q' (inl (q, |_|)) (inr (inr (p, |_|))) (inr (inr (p, |_|))) (inl (q', m)) (inr (inr (p', |_|))) (inr (inr (p', |_|)))
   | tnrl2 q q' (m : stateSigma) σ p p' : transNoneRightLeft q q' (inl (q, |_|)) (inr (inr (p, Some σ))) (inr (inr (p, m))) (inl (q', |_|)) (inr (inr (p', Some σ))) (inr (inr (p', m))).  
 
-  Hint Constructors transNoneRightLeft : trans. 
+  Global Hint Constructors transNoneRightLeft : trans. 
 
   (*shift left rules *)
   Inductive transNoneLeftCenter : states -> states -> transRule :=
   | tnlc1 q q' (m : stateSigma) p : transNoneLeftCenter q q' (inr (inr (p, m))) (inl (q, |_|)) (inr (inr (p, |_|))) (inr (inr (neutral, m))) (inl (q', |_|)) (inr (inr (neutral, |_|)))
   | tnlc2 q q' (m : stateSigma) σ p : transNoneLeftCenter q q' (inr (inr (p, |_|))) (inl (q, |_|)) (inr (inr (p, Some σ))) (inr (inr (negative, |_|))) (inl (q', Some σ)) (inr (inr (negative, m))). 
 
-  Hint Constructors transNoneLeftCenter : trans. 
+  Global Hint Constructors transNoneLeftCenter : trans. 
 
   Inductive transNoneLeftLeft : states -> states -> transRule :=
   | tnll1 q q' p p': transNoneLeftLeft q q' (inl (q, |_|)) (inr (inr (p, |_|))) (inr (inr (p, |_|))) (inl (q', |_|)) (inr (inr (p', |_|))) (inr (inr (p', |_|)))
   | tnll2 q q' σ p p': transNoneLeftLeft q q' (inl (q, |_|)) (inr (inr (p, Some σ))) (inr (inr (p, |_|))) (inl (q', Some σ)) (inr (inr (p', |_|))) (inr (inr (p', |_|)))
-  | tnll3 q q' σ1 σ2 (m : stateSigma) p : transNoneLeftLeft q q' (inl (q, |_|)) (inr (inr (p, Some σ1))) (inr (inr (p, Some σ2))) (inl (q', Some σ1)) (inr (inr (negative, Some σ2))) (inr (inr (negative, m))). 
+  | tnll3 q q' σ1 σ2 (m : stateSigma) p : transNoneLeftLeft q q' (inl (q, |_|)) (inr (inr (p, Some σ1))) (inr (inr (p, Some σ2))) (inl (q', Some σ1)) (inr (inr (negative, Some σ2))) (inr (inr (negative, m))).
 
-  Hint Constructors transNoneLeftLeft : trans. 
+  Global Hint Constructors transNoneLeftLeft : trans. 
 
   Inductive transNoneLeftRight : states -> states -> transRule :=
   | tnlr1 q q' (m : stateSigma) p p': transNoneLeftRight q q' (inr (inr (p,  |_|))) (inr (inr (p, |_|))) (inl (q, |_|)) (inr (inr (p', |_|))) (inr (inr (p', |_|))) (inl (q', m))
   | tnlr2 q q' (m1 : stateSigma) σ p : transNoneLeftRight q q' (inr (inr (p, m1))) (inr (inr (p, Some σ))) (inl (q, |_|)) (inr (inr (neutral, m1))) (inr (inr (neutral, Some σ))) (inl (q', |_|)). 
 
-  Hint Constructors transNoneLeftRight : trans. 
+  Global Hint Constructors transNoneLeftRight : trans. 
 
   (*stay rules *)
   Inductive transNoneStayCenter : states -> states -> transRule :=
   | tnsc1 q q' (m : stateSigma) p : transNoneStayCenter q q' (inr (inr (p, m))) (inl (q, |_|)) (inr (inr (p, |_|))) (inr (inr (neutral, m))) (inl (q', |_|)) (inr (inr (neutral, |_|)))
   | tnsc2 q q' (m : stateSigma) p : transNoneStayCenter q q' (inr (inr (p, |_|))) (inl (q, |_|)) (inr (inr (p, m))) (inr (inr (neutral, |_|))) (inl (q', |_|)) (inr (inr (neutral, m))). 
 
-  Hint Constructors transNoneStayCenter : trans. 
+  Global Hint Constructors transNoneStayCenter : trans. 
 
   Inductive transNoneStayLeft : states -> states -> transRule :=
   | tnsl1 q q' σ (m : stateSigma) p : transNoneStayLeft q q' (inl (q, |_|)) (inr (inr (p, Some σ))) (inr (inr (p, m))) (inl (q', |_|)) (inr (inr (neutral, Some σ))) (inr (inr (neutral, m)))
   | tnsl2 q q' p: transNoneStayLeft q q' (inl (q, |_|)) (inr (inr (p, |_|))) (inr (inr (p, |_|))) (inl (q', |_|)) (inr (inr (neutral, |_|))) (inr (inr (neutral, |_|))).
 
-  Hint Constructors transNoneStayLeft : trans. 
+  Global Hint Constructors transNoneStayLeft : trans. 
 
   Inductive transNoneStayRight : states -> states ->  transRule :=
   | tnsr1 q q' σ (m : stateSigma) p : transNoneStayRight q q' (inr (inr (p, m))) (inr (inr (p, Some σ))) (inl (q, |_|)) (inr (inr (neutral, m))) (inr (inr (neutral, Some σ))) (inl (q', |_|))
   | tnsr2 q q' p : transNoneStayRight q q' (inr (inr (p, |_|))) (inr (inr (p, |_|))) (inl (q, |_|)) (inr (inr (neutral, |_|))) (inr (inr (neutral, |_|))) (inl (q', |_|)). 
 
-  Hint Constructors transNoneStayRight : trans. 
+  Global Hint Constructors transNoneStayRight : trans. 
 
 
   Inductive transNoneNoneLeft : states -> transRule :=
@@ -266,28 +266,28 @@ Module transition (sig : TMSig).
   | transNNRightLeftC q q' γ2 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (None, L)) ->  transNoneRightLeft q q' (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneNoneLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6
   | transNNStayLeftC q q' γ2 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (None, N)) -> transNoneStayLeft q q' (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneNoneLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6. 
 
-  Hint Constructors transNoneNoneLeft : trans. 
+  Global Hint Constructors transNoneNoneLeft : trans. 
 
   Inductive transNoneNoneRight : states -> transRule :=
   | transNNLeftRightC q q' γ1 γ2 γ4 γ5 γ6: trans (q, None) = (q', (None, R)) -> transNoneLeftRight q q' γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneNoneRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6
   | transNNRightRightC q q' γ1 γ2 γ4 γ5 γ6 : trans (q, None) = (q', (None, L)) -> transNoneRightRight q q' γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneNoneRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6
   | transNNStayRightC q q' γ1 γ2 γ4 γ5 γ6 : trans (q, None) = (q', (None, N)) -> transNoneStayRight q q' γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneNoneRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6. 
 
-  Hint Constructors transNoneNoneRight : trans. 
+  Global Hint Constructors transNoneNoneRight : trans. 
 
   Inductive transNoneNoneCenter : states -> transRule :=
   | transNNLeftCenterC q q' γ1 γ3 γ4 γ5 γ6: trans (q, None) = (q', (None, R)) -> transNoneLeftCenter q q' γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneNoneCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6
   | transNNRightCenterC q q' γ1 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (None, L)) -> transNoneRightCenter q q' γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneNoneCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6
   | transNNStayCenterC q q' γ1 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (None, N)) -> transNoneStayCenter q q' γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneNoneCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6. 
 
-  Hint Constructors transNoneNoneCenter : trans. 
+  Global Hint Constructors transNoneNoneCenter : trans. 
 
   Inductive transNoneNone : states -> transRule :=
   | transNNLeft q γ1 γ2 γ3 γ4 γ5 γ6 : transNoneNoneLeft q γ1 γ2 γ3 γ4 γ5 γ6 -> transNoneNone q γ1 γ2 γ3 γ4 γ5 γ6
   | transNNRight q γ1 γ2 γ3 γ4 γ5 γ6 : transNoneNoneRight q γ1 γ2 γ3 γ4 γ5 γ6 -> transNoneNone q γ1 γ2 γ3 γ4 γ5 γ6
   | transNNStay q γ1 γ2 γ3 γ4 γ5 γ6 : transNoneNoneCenter q γ1 γ2 γ3 γ4 γ5 γ6 -> transNoneNone q γ1 γ2 γ3 γ4 γ5 γ6.
 
-  Hint Constructors transNoneNone : trans. 
+  Global Hint Constructors transNoneNone : trans. 
 
   (*finally, group together all of the four cases *)
   Inductive rewHeadTrans : string Gamma -> string Gamma -> Prop :=
@@ -296,7 +296,7 @@ Module transition (sig : TMSig).
   | rewTransNoneSome q γ1 γ2 γ3 γ4 γ5 γ6 s1 s2 : halt q = false -> transNoneSome q γ1 γ2 γ3 γ4 γ5 γ6 -> rewHeadTrans (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2)
   | rewTransNoneNone q γ1 γ2 γ3 γ4 γ5 γ6 s1 s2 : halt q = false -> transNoneNone q γ1 γ2 γ3 γ4 γ5 γ6 -> rewHeadTrans (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2).
 
-  Hint Constructors rewHeadTrans : trans. 
+  Global Hint Constructors rewHeadTrans : trans. 
 
   (*the usual lemmas *)
   Lemma rewHeadTrans_tail_invariant γ1 γ2 γ3 γ4 γ5 γ6 s1 s2 s1' s2' :
@@ -643,27 +643,17 @@ Lemma transNoneNone_inv1 q q0 m γ2 γ3 γ4 γ5 γ6 : transNoneNone q (inl (q0, 
   (*these are the rules that leave the configuration unchanged in a halting configuration *)
   (*usual split according to position of state symbol *)
 
-  Inductive haltCenter : states -> transRule :=
-  | haltCenter1 q (m1 m2 : stateSigma) m p : haltCenter q (inr (inr (p, m1))) (inl (q, m)) (inr (inr (p, m2))) (inr (inr (neutral, m1))) (inl (q, m)) (inr (inr (neutral, m2))).
-  
-  Hint Constructors haltCenter : trans.
+  Inductive haltRules : states -> transRule := 
+  | haltCenter q (m1 m2 : stateSigma) m p : haltRules q (inr (inr (p, m1))) (inl (q, m)) (inr (inr (p, m2))) (inr (inr (neutral, m1))) (inl (q, m)) (inr (inr (neutral, m2)))
+    | haltRight q (m1 m2 m : stateSigma) p : haltRules q (inr (inr (p, m1))) (inr (inr (p, m2))) (inl (q, m)) (inr (inr (neutral, m1))) (inr (inr (neutral, m2))) (inl (q, m)) 
+    | haltLeft q (m1 m2 m : stateSigma) p : haltRules q (inl (q, m)) (inr (inr (p, m1))) (inr (inr (p, m2))) (inl (q, m)) (inr (inr (neutral, m1))) (inr (inr (neutral, m2))).
 
-  Inductive haltRight : states -> transRule :=
-    | haltRight1 q (m1 m2 m : stateSigma) p : haltRight q (inr (inr (p, m1))) (inr (inr (p, m2))) (inl (q, m)) (inr (inr (neutral, m1))) (inr (inr (neutral, m2))) (inl (q, m)). 
-
-  Hint Constructors haltRight : trans.
-
-  Inductive haltLeft : states -> transRule :=
-    | haltLeft1 q (m1 m2 m : stateSigma) p : haltLeft q (inl (q, m)) (inr (inr (p, m1))) (inr (inr (p, m2))) (inl (q, m)) (inr (inr (neutral, m1))) (inr (inr (neutral, m2))). 
-
-  Hint Constructors haltLeft : trans.
+  Global Hint Constructors haltRules : trans.
 
   Inductive rewHeadHalt : string Gamma -> string Gamma -> Prop :=
-  | rewHaltCenter q γ1 γ2 γ3 γ4 γ5 γ6 s1 s2 : halt q = true -> haltCenter q γ1 γ2 γ3 γ4 γ5 γ6 -> rewHeadHalt (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2)
-  | rewHaltLeft q γ1 γ2 γ3 γ4 γ5 γ6 s1 s2 : halt q = true -> haltLeft q γ1 γ2 γ3 γ4 γ5 γ6 -> rewHeadHalt (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2)
-  | rewHaltRight q γ1 γ2 γ3 γ4 γ5 γ6 s1 s2 : halt q = true -> haltRight q γ1 γ2 γ3 γ4 γ5 γ6 -> rewHeadHalt (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2). 
+  | rewHalt q γ1 γ2 γ3 γ4 γ5 γ6 s1 s2 : halt q = true -> haltRules q γ1 γ2 γ3 γ4 γ5 γ6 -> rewHeadHalt (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2). 
 
-  Hint Constructors rewHeadHalt : trans. 
+  Global Hint Constructors rewHeadHalt : trans. 
 
 
   Lemma rewHeadHalt_tail_invariant γ1 γ2 γ3 γ4 γ5 γ6 s1 s2 s1' s2' :
@@ -685,9 +675,7 @@ Lemma transNoneNone_inv1 q q0 m γ2 γ3 γ4 γ5 γ6 : transNoneNone q (inl (q0, 
 
   Ltac rewHeadHalt_inv2 := repeat match goal with
       | [H : context[rewHeadHalt] |- _] => inv H
-      | [H : context[haltLeft] |- _] => inv H
-      | [H : context[haltRight] |- _] => inv H
-      | [H : context[haltCenter] |- _] => inv H
+      | [H : context[haltRules] |- _] => inv H
     end. 
 
   (** * combined predicate for tape + states *)
@@ -782,13 +770,13 @@ Lemma transNoneNone_inv1 q q0 m γ2 γ3 γ4 γ5 γ6 : transNoneNone q (inl (q0, 
   Proof. unfold isStateSym. intros. destruct H0; split; intros []; rewHeadTrans_inv2; congruence. Qed.
 
   Lemma rewHeadHalt_statesym1 γ1 γ2 γ3 γ4 γ5 γ6 : rewHeadHalt [γ1; γ2; γ3] [γ4; γ5; γ6] -> isStateSym γ1 -> not (isStateSym γ2) /\ not (isStateSym γ3).
-  Proof. unfold isStateSym. intros. destruct H0; split; intros []; rewHeadHalt_inv2; congruence. Qed. 
+  Proof. unfold isStateSym. intros. destruct H0; split; intros []; rewHeadHalt_inv2; eauto. Qed.
 
   Lemma rewHeadHalt_statesym2 γ1 γ2 γ3 γ4 γ5 γ6 : rewHeadHalt [γ1; γ2; γ3] [γ4; γ5; γ6] -> isStateSym γ2 -> not (isStateSym γ1) /\ not (isStateSym γ3).
-  Proof. unfold isStateSym. intros. destruct H0; split; intros []; rewHeadHalt_inv2; congruence. Qed.
+  Proof. unfold isStateSym. intros. destruct H0; split; intros []; rewHeadHalt_inv2; eauto. Qed.
 
   Lemma rewHeadHalt_statesym3 γ1 γ2 γ3 γ4 γ5 γ6 : rewHeadHalt [γ1; γ2; γ3] [γ4; γ5; γ6] -> isStateSym γ3 -> not (isStateSym γ1) /\ not (isStateSym γ2).
-  Proof. unfold isStateSym. intros. destruct H0; split; intros []; rewHeadHalt_inv2; congruence. Qed.
+  Proof. unfold isStateSym. intros. destruct H0; split; intros []; rewHeadHalt_inv2; eauto. Qed.
 
   Lemma rewHeadTrans_statesym γ1 γ2 γ3 γ4 γ5 γ6 : rewHeadTrans [γ1; γ2; γ3] [γ4; γ5; γ6] -> exists q, halt q = false /\ (isSpecStateSym q γ1 \/ isSpecStateSym q γ2 \/ isSpecStateSym q γ3). 
   Proof. unfold isSpecStateSym. intros. rewHeadTrans_inv2; exists q; eauto. Qed. 
@@ -1294,7 +1282,7 @@ end.
 (* Optimize Proof. *)
 (* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). *)
 (* Optimize Proof. *)
-(* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). *)
+(* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns. intros s H; clear Z1 W1 W2 Z2; clear H1; abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). *)
 (* Optimize Proof. *)
 (* 1-10: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). *)
 (* Optimize Proof. *)

@@ -176,6 +176,11 @@ Section fixInstance.
 
   Definition rewritesHead_pred ruleset a b := exists rule, rule el ruleset /\ rewritesHead rule a b. 
 
+  Lemma rewritesHead_pred_subset ruleset1 ruleset2 a b :
+    ruleset1 <<= ruleset2 -> rewritesHead_pred ruleset1 a b -> rewritesHead_pred ruleset2 a b.
+  Proof. intros H (r & H1 & H2). exists r. split; [ apply H, H1 | apply H2]. Qed. 
+
+
   Lemma rewritesHead_rule_inv r a b (σ1 σ2 σ3 σ4 σ5 σ6 : Sigma) : rewritesHead r (σ1 :: σ2 :: σ3 :: a) (σ4 :: σ5 :: σ6 :: b) -> r = {σ1, σ2 , σ3} / {σ4 , σ5, σ6}. 
   Proof. 
     unfold rewritesHead. unfold prefix. intros [(b' & H1) (b'' & H2)]. destruct r. destruct prem0, conc0. cbn in H1, H2. congruence. 
