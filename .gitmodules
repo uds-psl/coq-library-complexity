@@ -6,4 +6,4 @@
 	url = git@github.com:fakusb/template-coq.git
 [submodule "external/base-library"]
 	path = external/uds-psl-base
-	url = https://github.com/uds-psl/base-library.git
+	url = git@github.com:lgaeher/base-library.git
