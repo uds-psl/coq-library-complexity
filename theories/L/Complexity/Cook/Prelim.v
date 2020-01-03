@@ -135,15 +135,33 @@ inv_list. assert (|a| = i + j) by lia. destruct (IHi a H0) as (a1 & a2 & H2 & H3
 Qed. 
 
 
+Inductive relpowerRev (X : Type) (R : X -> X -> Prop) : nat -> X -> X -> Prop :=
+| relpowerRevB x : relpowerRev R 0 x x
+| relpowerRevS x y y' n: relpowerRev R n x y -> R y y' -> relpowerRev R (S n) x y'. 
+Hint Constructors relpowerRev. 
+
 Inductive relpower (A : Type) (R : A -> A -> Prop) : nat -> A -> A -> Prop :=
 | relpowerB (a : A) : relpower R 0 a a
 | relpowerS (a b c : A) n : R a b -> relpower R n b c -> relpower R (S n) a c. 
+Hint Constructors relpower.
 
 Lemma relpower_trans A R n m (x y z : A) : relpower R n x y -> relpower R m y z -> relpower R (n + m) x z.
 Proof. 
   induction 1. 
   - now cbn. 
   - intros. apply relpowerS with (b := b). assumption. now apply IHrelpower. 
+Qed. 
+
+Lemma relpowerRev_trans (X : Type) (R : X -> X -> Prop) n m x y z : relpowerRev R n x y -> relpowerRev R m y z -> relpowerRev R (n + m) x z.
+Proof. 
+  rewrite Nat.add_comm. induction 2; cbn; eauto. 
+Qed. 
+
+Lemma relpower_relpowerRev (X : Type) (R : X -> X -> Prop) n x y : relpower R n x y <-> relpowerRev R n x y.
+Proof. 
+  split; induction 1; eauto. 
+  - replace (S n) with (1 + n) by lia. eauto using relpowerRev_trans. 
+  - replace (S n) with (n + 1) by lia. eauto using relpower_trans. 
 Qed. 
 
 Notation injective := Prelim.Injective.
@@ -183,6 +201,19 @@ Proof.
   - rewrite app_length. rewrite map_length, IHA. lia. 
 Qed. 
 
+Lemma in_prodLists_iff (X Y : Type) (A : list X) (B : list Y) a b : (a, b) el prodLists A B <-> a el A /\ b el B. 
+Proof. 
+  induction A; cbn.
+  - tauto.
+  - split; intros.
+    + apply in_app_iff in H. destruct H as [H | H].
+      * apply in_map_iff in H; destruct H as (? & H1 & H2). inv H1. auto. 
+      * apply IHA in H. tauto. 
+    + destruct H as [[H1 | H1] H2].
+      * apply in_app_iff. left. apply in_map_iff. exists b. firstorder. 
+      * apply in_app_iff. right. now apply IHA. 
+Qed. 
+
 Lemma getPosition_prodLists (X Y : eqType) (A : list X) (B : list Y) x1 x2 k1 k2 : getPosition A x1 = k1 -> k1 < |A| -> getPosition B x2 = k2 -> k2 < |B| -> getPosition (prodLists A B) (x1, x2) = (k1 * |B|) + k2. 
 Proof. 
   revert k1. induction A; intros; cbn in *. 
@@ -198,3 +229,32 @@ Proof.
       * intros (? & ? &?)%in_map_iff. congruence. 
       * apply IHA; eauto. lia.  
 Qed. 
+
+Fixpoint filterSome (X : Type) (l : list (option X)) := match l with
+                                                        | [] => []
+                                                        | (Some x :: l) => x :: filterSome l
+                                                        | None :: l => filterSome l
+                                                        end. 
+
+Lemma in_filterSome_iff (X : Type) (l : list (option X)) a:
+  a el filterSome l <-> Some a el l.
+Proof.
+  induction l as [ | []]; cbn.  
+  - tauto.
+  - split.
+    + intros [-> | H]; [eauto | right; now apply IHl]. 
+    + intros [H1 | H]; [eauto | ]. inv H1. 
+      * eauto. 
+      * right; now apply IHl. 
+  - rewrite IHl. split; intros H; [ eauto | now destruct H]. 
+Qed. 
+
+
+Lemma nth_error_nth (X : Type) x (l : list X) n : nth_error l n = Some x -> nth n l x = x.  
+Proof. 
+  revert n; induction l; intros; cbn. 
+  - now destruct n. 
+  - destruct n; cbn in H.
+    * congruence. 
+    * now apply IHl. 
+Qed.

@@ -1,5 +1,5 @@
 (* -*- company-coq-local-symbols: (("|_|" .?␣)); -*- *)
-From Undecidability.L.Complexity.Cook Require Import GenNP TCSR Prelim GenNP_GenNPInter_Basics GenNP_GenNPInter_Tape GenNP_GenNPInter_Transition.
+From Undecidability.L.Complexity.Cook Require Import GenNP TCSR Prelim GenNP_PR_Basics GenNP_PR_Tape GenNP_PR_Transition.
 From PslBase Require Import FiniteTypes. 
 From Undecidability.TM Require Import TM.
 Require Import Lia. 
@@ -8,50 +8,20 @@ Module multistep (sig : TMSig).
   Module trans' := transition sig. 
   Export trans'. 
 
-  Inductive Rpower (X : Type) (R : X -> X -> Prop) : nat -> X -> X -> Prop :=
-  | RpowerO x : Rpower R 0 x x
-  | RpowerS x x' y n : R x x' -> Rpower R n x' y -> Rpower R (S n) x y. 
-
-  Hint Constructors Rpower.
-
-  Inductive RpowerRev (X : Type) (R : X -> X -> Prop) : nat -> X -> X -> Prop :=
-  | RpowerRevO x : RpowerRev R 0 x x
-  | RpowerRevS x y y' n: RpowerRev R n x y -> R y y' -> RpowerRev R (S n) x y'. 
-
-  Hint Constructors RpowerRev. 
-
-  Lemma Rpower_trans (X : Type) (R : X -> X -> Prop) n m x y z : Rpower R n x y -> Rpower R m y z -> Rpower R (n + m) x z. 
-  Proof. 
-    induction 1; cbn; eauto. 
-  Qed. 
-
-  Lemma RpowerRev_trans (X : Type) (R : X -> X -> Prop) n m x y z : RpowerRev R n x y -> RpowerRev R m y z -> RpowerRev R (n + m) x z.
-  Proof. 
-    rewrite Nat.add_comm. induction 2; cbn; eauto. 
-  Qed. 
-
-  Lemma Rpower_RpowerRev (X : Type) (R : X -> X -> Prop) n x y : Rpower R n x y <-> RpowerRev R n x y.
-  Proof. 
-    split; induction 1; eauto. 
-    - replace (S n) with (1 + n) by lia. eauto using RpowerRev_trans. 
-    - replace (S n) with (n + 1) by lia. eauto using Rpower_trans. 
-  Qed. 
-
   Definition sstepRel s s' := halt (configState s) = false /\ sstep s = s'.
 
-  Notation "s '≻(' k ')' s'" := (Rpower sstepRel k s s') (at level 40). 
+  Notation "s '≻(' k ')' s'" := (relpower sstepRel k s s') (at level 40). 
 
   (*this is similar to what loopM does, but using the unfolded TM *)
   Notation "s '▷(' k ')' s'" := (s ≻(k) s' /\ halt (configState s') = true) (at level 40).
 
   Notation "s '▷(≤' k ')' s'" := (exists l, l <= k /\ s ▷(l) s') (at level 40).
 
-
-
   Notation "s '⇝' s'" := (valid rewHeadSim s s') (at level 40). 
-  Notation "s '⇝(' k ')' s'" := (Rpower (valid rewHeadSim) k s s') (at level 40).
+  Notation "s '⇝(' k ')' s'" := (relpower (valid rewHeadSim) k s s') (at level 40).
 
   (** *multi-step simulation *)
+  (*with each step, a Turing machine needs at most one additional cell *)
   Lemma tm_step_size q tp q' tp' k: (q, tp) ≻ (q', tp') -> sizeOfTape tp = k -> sizeOfTape tp' <= S k. 
   Proof. 
     intros. 
@@ -109,15 +79,15 @@ Module multistep (sig : TMSig).
     revert s H1. 
     remember (q, tp) as c1.  remember (q', tp') as c2. 
     revert q tp q' tp' Heqc1 Heqc2. 
-    induction H2; intros q tp q' tp' -> -> s H1 H3. 
+    induction H2 as [ | a b c n H H2 IH]; intros q tp q' tp' -> -> s H1 H3. 
     - exists s. repeat split. 
       + constructor. 
       + intros. now inv H. 
       + apply H1. 
-    - destruct x' as (q''& tp''). assert (z' >= n) as X by lia. specialize (IHRpower X q'' tp'' q' tp' eq_refl eq_refl). clear X.
+    - destruct b as (q''& tp''). assert (z' >= n) as X by lia. specialize (IH X q'' tp'' q' tp' eq_refl eq_refl). clear X.
       unfold sstepRel in H. 
       assert (sizeOfTape tp < z') as X by lia. specialize (stepsim H1 H X) as (s' & F1 & F2 & F3). clear X.
-      specialize (IHRpower s' F3) as (s'' & G1 & G2 & G3). 
+      specialize (IH s' F3) as (s'' & G1 & G2 & G3). 
       apply tm_step_size with (k := sizeOfTape tp)in H. 2: reflexivity. lia. 
       exists s''. repeat split. 
       + eauto.  
@@ -130,10 +100,10 @@ Module multistep (sig : TMSig).
   Proof. 
     intros. 
     revert s H.
-    induction k0; intros s H.
+    induction k0 as [ | k0 IH]; intros s H.
     - exists s. repeat split; eauto. intros. now inv H1. 
     - specialize (haltsim H H0) as (s' & F1 & F2 & F3). 
-      destruct (IHk0 s' F3) as (s'' & G1 & G2 & G3). exists s''. repeat split.
+      destruct (IH s' F3) as (s'' & G1 & G2 & G3). exists s''. repeat split.
       + eauto. 
       + intros. inv H1. apply F2 in H3. rewrite H3 in *; clear H3. now apply G2. 
       + apply G3. 
@@ -151,7 +121,7 @@ Module multistep (sig : TMSig).
   (*the additional assumption z' >= j is needed for the same reason *)
   Lemma multistep_inversion q tp s s' j: (q, tp) ≃c s -> s ⇝(j) s' -> sizeOfTape tp <= z' - j -> z' >= j -> exists q' tp' j', (q', tp') ≃c s' /\ j' <= j /\ (q, tp) ≻(j') (q', tp') /\ sizeOfTape tp' <= sizeOfTape tp + j'. 
   Proof. 
-    intros. apply Rpower_RpowerRev in H0.
+    intros. apply relpower_relpowerRev in H0.
     induction H0 as [ | s y y' j H0 IH].  
     - exists q, tp, 0. rewrite Nat.add_0_r. repeat split; eauto.  
     - assert (sizeOfTape tp <= z' - j) as H4 by lia.  assert (z' >= j) as H5 by lia. 
@@ -164,8 +134,8 @@ Module multistep (sig : TMSig).
         specialize (step_inversion' F1 H6 H4 H3) as (q'' & tp'' & G1 & G2). 
         exists q'', tp'', (S j'). repeat split; eauto. 
         * lia.  
-        * apply Rpower_RpowerRev. econstructor.
-          -- apply Rpower_RpowerRev in F3; eauto.
+        * apply relpower_relpowerRev. econstructor.
+          -- apply relpower_relpowerRev in F3; eauto.
           -- apply G2.  
         * apply tm_step_size with (k := sizeOfTape tp') in G2; [lia | reflexivity ].  
   Qed. 
@@ -220,7 +190,7 @@ Module multistep (sig : TMSig).
     specialize (multistep_simulation H0 H2 H4 H5) as (s' & F1 & _ & F3). 
     specialize (multistep_halt F3 H3 (t - t')) as (s'' & G1 & _ & G3).
     exists s''. repeat split. 
-    + replace t with (t' + (t - t')) by lia. eauto using Rpower_trans. 
+    + replace t with (t' + (t - t')) by lia. eauto using relpower_trans. 
     + apply G3. 
     + eapply finalCondition; eauto. 
   Qed. 

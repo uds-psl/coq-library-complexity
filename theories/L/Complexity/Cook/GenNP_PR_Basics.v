@@ -10,20 +10,6 @@ Require Import Lia.
 (*TODO: too many dependent pairs because of alphabet and states.. *)
 (* Definition GenNP_Intermediate : {Sigma : finType & {Gamma' : finType & nat * list (TCSRWin Sigma) * list (list (Sigma + Gamma')) *  *)
 
-
-Definition makeExhaustive (t : finType) (X : Type) (f : t -> list X) := concat (map (fun e => f e) (@FinTypes.enum t _)).  
-
-Lemma makeExhaustive_correct (t : finType) (X : Type) (f : t -> list X) :
-  forall e, e el (makeExhaustive f) <-> (exists (a : t), e el f a). 
-Proof.
-  intros.
-  unfold makeExhaustive. rewrite in_concat_iff. 
-  split.
-  - intros (l' & H1 & H2). rewrite in_map_iff in H2. destruct H2 as (a & H3 & H4). exists a. now rewrite <- H3 in *. 
-  - intros (a & H1). exists (f a). split; [assumption | ]. rewrite in_map_iff. exists a. split; [reflexivity | ]. 
-    eapply countIn. rewrite enum_ok. lia. 
-Qed. 
-
 Section fixTM. 
   (*we use a variant of the Turing machine definitions fixed to a single tape *)
 
@@ -117,7 +103,6 @@ Module basics (sig : TMSig).
   Definition l := 2 * (z + 1) + 1. (*length of the whole string: two tape sides and the state symbol*)
 
   Hint Unfold z z' l. 
-
 
   Hint Constructors move.
   Notation polarity := move. 
@@ -279,7 +264,6 @@ Module basics (sig : TMSig).
 
   (** *representation of configurations *)
   Notation strconfig := (list Gamma).
-  Implicit Type (s x : strconfig).
 
   Definition embedState (q : states) (m : stateSigma) : Gamma := inl (q, m). 
   Definition reprConfig' c ls qm rs := match c with (q, tape) => exists p, qm = embedState q (current tape) /\ reprTape (left tape) ls p /\ reprTape (right tape) rs p end. 
@@ -287,5 +271,175 @@ Module basics (sig : TMSig).
 
   Notation "c '≃c' '(' ls ',' q ',' rs ')'" := (reprConfig' c ls q rs) (at level 80). 
   Notation "c '≃c' s" := (reprConfig c s) (at level 80). 
+
+
+
+  (** *automation  *)
+
+  Lemma tape_repr_step u h a b p w : (a :: u) ≃t(p, S w) (b :: h) -> u ≃t(p, w) h. 
+  Proof. 
+    intros (H1 & H2 & H3). cbn [length] in *; repeat split.
+    - lia. 
+    - lia. 
+    - cbn [mapPolarity map] in H3. replace (wo + S w - S (|u|)) with (wo + w - (|u|)) in H3 by lia. 
+      replace (map (fun e => inr (inr (p, Some e))) u) with (mapPolarity p u) in H3 by now cbn.  
+      cbn [app] in H3. congruence. 
+  Qed. 
+
+  Lemma tape_repr_inv w u p (x : States) a : u ≃t(p, w) (@inl States tapeSigma x) :: a -> False. 
+  Proof. 
+    intros []. destruct H0. destruct u; now cbn in H1. 
+  Qed. 
+
+  Lemma tape_repr_inv2 w p p' (σ : Sigma) a : [] ≃t(p, w) (@inr States tapeSigma (inr (p', Some σ)))::a -> False. 
+  Proof. 
+    intros (H1 & H2 & H3).
+    cbn in H3. congruence. 
+  Qed. 
+
+  Lemma tape_repr_inv3 w p p' (u : Sigma) (us : list Sigma) h : u :: us ≃t(p, w) (inr (inr (p', |_|)) :: h) -> False. 
+  Proof. intros (H1 & H2 & H3). cbn in H3. congruence. Qed. 
+
+  Lemma tape_repr_inv4 w p (u : list Sigma) h : u ≃t(p, w) (inr #) :: h -> False. 
+  Proof. intros (H1 & H2 & H3). cbn in H3. destruct u; cbn in H3;  congruence. Qed. 
+
+  Lemma tape_repr_inv5 w p u h e : u ≃t(p, w) (inr #) :: e:: h -> False. 
+  Proof. intros (H1 & H2 & H3). destruct u; cbn in H3; congruence. Qed. 
+
+  Lemma tape_repr_inv6 w p u us h : us :: u ≃t(p, w) h -> exists h' n, h = (inr (inr (p, Some us))):: h' ++ E p (wo + n) /\ w = n + S (|h'|) /\ |h'| = |u| /\ u ≃t(p, w -1) h' ++ E p (wo + n). 
+  Proof.
+    intros.
+    destruct h. { destruct H. cbn in H; lia. }
+    destruct H as (H1 & H2 & H3). 
+    cbn [mapPolarity length map] in H3. exists (mapPolarity p u), (w - S (|u|)). 
+    repeat split. 
+    - cbn in H2, H1. replace (wo + (w - S (|u|))) with (wo + w - S (|u|)) by lia. apply H3. 
+    - unfold mapPolarity. rewrite map_length. cbn in H2. lia. 
+    - unfold mapPolarity. now rewrite map_length. 
+    - unfold mapPolarity. rewrite app_length, map_length. cbn in H1, H2. rewrite E_length. lia. 
+    - cbn in H2; lia. 
+    - cbn in H2. easy.
+  Qed.
+
+  Lemma tape_repr_inv7 w p p' u us n : us :: u ≃t(p, w) E p' n -> False. 
+  Proof. intros (H1 & H2 & H3). destruct n; cbn in H3; congruence. Qed.
+
+  Lemma tape_repr_inv8 u us p w e rs : us :: u ≃t(p, w) inr(inr e) :: rs -> e = (p, Some us). 
+  Proof. intros (H1 & H2 & H3). cbn in H3. congruence. Qed. 
+
+  Lemma tape_repr_inv9 us1 p w e1 rs : [us1] ≃t(p, S w) e1 :: rs -> rs = E p (wo + w). 
+  Proof. 
+    intros (H1 & H2 & H3). cbn in H3. inv H3. easy. 
+  Qed. 
+
+  Lemma tape_repr_inv10 u p w rs : u ≃t(p, w) rs -> w >= |u|. 
+  Proof. 
+    intros (H1 & H2 & H3). now cbn in H2. 
+  Qed. 
+
+  Lemma tape_repr_inv11 u p w rs : u ≃t(p, w) rs -> |rs| >= S wo. 
+  Proof. intros (H1 & H2 & H3). rewrite H1. lia. Qed. 
+
+  Lemma tape_repr_inv12 u p w rs : u ≃t(p, w) rs -> forall x, x el rs -> exists y, x = inr y. 
+  Proof. 
+    intros (_ & _ & ->) x H1. 
+    apply in_app_or  in H1 as [H1 | H1]. 
+    + unfold mapPolarity in H1. apply in_map_iff in H1 as (? & <- & H2). eauto. 
+    + revert H1. generalize (wo + w - |u|). induction n; intros [H | H]; eauto. 
+  Qed. 
+
+  Lemma tape_repr_inv13 u p p' w rs σ: u ≃t(p, w) (inr (inr (p', Some σ)) :: rs) -> p' = p /\ exists u', u = σ :: u'. 
+  Proof. 
+    intros (H1 & H2 & H3). destruct u; cbn in *. 
+    + congruence. 
+    + split; [ | exists u];  congruence. 
+  Qed. 
+
+  Lemma tape_repr_inv14 u p w rs e: u ≃t(p, w) e :: inr (#) :: rs -> False. 
+  Proof. 
+    intros (H1 & H2 & H3). destruct u; unfold wo in H3; cbn in H3; try congruence.
+    destruct u; cbn in H3; try congruence.
+  Qed. 
+
+  Lemma tape_repr_inv15 u p w : u ≃t(p, w) [] -> False. 
+  Proof.
+    intros (H1 & H2 & H3). now cbn in H1.
+  Qed. 
+
+  Ltac destruct_tape1 := repeat match goal with [H : delim |- _ ] => destruct H end.
+  Ltac discr_tape := destruct_tape1; match goal with
+                     | [H : ?u ≃t(?p, ?w) [] |- _] => now apply tape_repr_inv15 in H
+                     | [ H : ?u ≃t(?p, ?w) (inl ?e) :: ?a |- _] => now apply tape_repr_inv in H
+                     
+                     | [ H : [] ≃t(?p, ?w) (inr (inr (_, Some ?e))) :: ?a |- _] => now apply tape_repr_inv2 in H
+                     | [ H : ?u :: ?us ≃t(?p, ?w) inr (inr (_, |_|)):: ?a |- _] => now apply tape_repr_inv3 in H
+                     | [H : _ ≃t(_, _) _ :: inr # :: _ |- _ ] => now apply tape_repr_inv14 in H
+                     | [ H : ?us ≃t(?p, ?w) inr # :: ?a |- _] => now apply tape_repr_inv4 in H
+                     | [H : _ ≃t(?p, ?w) inr # :: ?e :: ?a |- _] => now apply tape_repr_inv5 in H
+                     | [H : ?u :: ?us ≃t(?p, 0) _ |- _] => destruct H; cbn in *; lia
+                     | [H : ?u :: ?us ≃t(?p, ?w) E _ ?n |- _] => now apply tape_repr_inv7 in H
+                     | [H : ?us ≃t(?p, ?w) ?a |- _] => let H1 := fresh in apply tape_repr_inv11 in H as H1; unfold wo in H1; cbn [length] in H1; lia (*this is really expensive, but in some cases desirable to have *)
+                     (* | [H : ?us ≃t(?p, ?w) _ |- _] => try (apply tape_repr_inv10 in H; cbn in H; lia) *)
+                      end. 
+
+  Ltac inv_tape' H := repeat match type of H with
+                        | _ ≃t(?p, ?w) ?x :: ?h => is_var x; destruct x; [discr_tape | ]     
+                        | _ ≃t(?p, ?w) (inr ?e) :: ?h => is_var e; destruct e; [discr_tape | ]
+                        | [] ≃t(?p, ?w) (inr (inr ?e)) :: ?h => is_var e; destruct e
+                        | ?u ≃t(?p, ?w) inr (inr (_, |_|)) :: ?h => is_var u; destruct u; [ | discr_tape] 
+                        | ?u :: ?us ≃t(?p, ?w) ?h => is_var h; destruct h; [ discr_tape | ]
+                        | ?u :: ?us ≃t(?p, ?w) ?h' ++ ?h'' => is_var h'; destruct h'; cbn in H; try discr_tape
+                        | ?u :: ?us ≃t(?p, ?w) inr(inr ?e) :: _ => is_var e; specialize (tape_repr_inv8 H) as ->  
+                        | ?u1 :: _ ≃t(?p, ?w) _  => is_var w; destruct w; [ discr_tape | ]
+                        | ?u1 :: [] ≃t(_, S ?w) _ :: ?h  => specialize (tape_repr_inv9 H) as ->
+                        | ?u ≃t(_, _) inr (inr (_, Some _)) :: _ => is_var u;
+                                                                  let Heqn := fresh "Hpeqn" in
+                                                                  specialize (tape_repr_inv13 H) as (Heqn & (? & ->)); inv Heqn
+                        end;
+                        (*if we can, we go into recursion after applying tape_repr_step *)
+                        match type of H with
+                        |  ?u1 :: _ ≃t(?p, S ?w) ?e :: _  => let H' := fresh in specialize (tape_repr_step H) as H'; inv_tape' H'; clear H' 
+                         | _ => idtac
+                        end.
+
+  (*the destruct_tape_in tactic generates equations for subtapes which are equal to E _. *)
+  (*We do not want to call inv on those equations since they might contain non-trivial equalities which cannot be resolved with a rewrite and would thus be lost with inv*)
+  Ltac clear_trivial_niltape H := cbn in H; match type of H with
+        | inr (inr (?p, |_|)) :: ?h = inr (inr (?p, |_|)) :: ?h' => let H' := fresh in assert (h = h') as H' by congruence; tryif clear_trivial_niltape H' then clear H else clear H'
+        | ?h = inr (inr _) :: _ => is_var h; rewrite H in *; clear H
+        | ?h = E _ _ => is_var h; rewrite H in *; clear H
+  end.
+
+  Ltac destruct_tape_in H := unfold reprTape in H;
+                             inv_tape' H;
+                             try match type of H with
+                                 | [] ≃t(_, _) ?h => let H' := fresh in specialize (proj2 (niltape_repr _ _ ) _ H) as H'; clear_trivial_niltape H'
+                                 | ?u ≃t(?p, ?w) inr _ :: ?h  => is_var u; destruct u; try discr_tape
+                                 end;
+                             inv_tape' H;
+                             repeat match goal with [H : ?h = ?h |- _] => clear H end.
+
+  Ltac destruct_tape_in_tidy H := unfold reprTape in H;
+                             try match type of H with
+                                 | _ ≃t(_, z') _ => let H' := fresh "n" in let H'' := fresh H' "Zeqn" in
+                                                    remember z' as H' eqn:H'' in H; destruct_tape_in H;
+                                                    repeat match goal with [H2 : context[wo + H'] |- _]=> cbn [wo Nat.add] in H2 end; rewrite !H'' in *; try clear H' H'' 
+                                 | _ => destruct_tape_in H
+                             end. 
+ 
+  Ltac inv_tape := match goal with
+                        | [H : _ ≃t(_, _) _ |- _] => inv_tape' H
+                   end. 
+
+  Ltac unfold_tape := unfold reprTape in *. 
+                        
+  Ltac destruct_tape := unfold_tape; inv_tape;
+                        try match goal with
+                        | [H: ?u ≃t(?p, ?w) inr _ :: ?h |- _] => is_var u; destruct u; try discr_tape
+                            end;
+                        inv_tape;
+                        repeat match goal with [H : ?h = ?h |- _] => clear H end.
+
+
 
 End basics. 
