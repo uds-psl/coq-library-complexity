@@ -323,12 +323,8 @@ L/Complexity/Cook/Prelim.v
 L/Complexity/Cook/CSR.v
 L/Complexity/Cook/GenNP.v
 L/Complexity/Cook/TCSR.v
-L/Complexity/Cook/GenNP_PR_Basics.v
-L/Complexity/Cook/GenNP_PR_Tape.v
-L/Complexity/Cook/GenNP_PR_Transition.v
-L/Complexity/Cook/GenNP_PR_Multistep.v
+L/Complexity/Cook/GenNP_PR.v
 L/Complexity/Cook/FlatFinTypes.v
-L/Complexity/Cook/GenNP_PR_String.v
 
 L/AbstractMachines/Programs.v
 L/AbstractMachines/AbstractSubstMachine.v

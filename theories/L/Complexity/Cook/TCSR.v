@@ -39,7 +39,7 @@ Notation "a / b" := ({|prem := a; conc := b|}).
 (* Defined.  *)
 
 Record TCSR := {
-               Sigma : finType;
+               Sigma : Type;
                init : list Sigma;  (* length is encoded implicitly as the length of init*) 
                windows : list (TCSRWin Sigma);
                final : list (list Sigma);
@@ -174,10 +174,10 @@ Section fixInstance.
     - rewrite H1. rewrite app_length, (proj2 (isRule_length rule)). lia. 
   Qed. 
 
-  Definition rewritesHead_pred ruleset a b := exists rule, rule el ruleset /\ rewritesHead rule a b. 
+  Definition rewritesHeadList ruleset a b := exists rule, rule el ruleset /\ rewritesHead rule a b. 
 
-  Lemma rewritesHead_pred_subset ruleset1 ruleset2 a b :
-    ruleset1 <<= ruleset2 -> rewritesHead_pred ruleset1 a b -> rewritesHead_pred ruleset2 a b.
+  Lemma rewritesHeadList_subset ruleset1 ruleset2 a b :
+    ruleset1 <<= ruleset2 -> rewritesHeadList ruleset1 a b -> rewritesHeadList ruleset2 a b.
   Proof. intros H (r & H1 & H2). exists r. split; [ apply H, H1 | apply H2]. Qed. 
 
 
@@ -186,9 +186,9 @@ Section fixInstance.
     unfold rewritesHead. unfold prefix. intros [(b' & H1) (b'' & H2)]. destruct r. destruct prem0, conc0. cbn in H1, H2. congruence. 
   Qed. 
 
-  Lemma rewritesAt_Head_pred_add_at_end i ruleset (a b c d : string) : rewritesAt (rewritesHead_pred ruleset) i a b -> rewritesAt (rewritesHead_pred ruleset) i (a ++ c) (b ++ d). 
+  Lemma rewritesAt_HeadList_add_at_end i ruleset (a b c d : string) : rewritesAt (rewritesHeadList ruleset) i a b -> rewritesAt (rewritesHeadList ruleset) i (a ++ c) (b ++ d). 
   Proof. 
-    intros. unfold rewritesAt, rewritesHead_pred in *.
+    intros. unfold rewritesAt, rewritesHeadList in *.
     destruct H as (rule & H0 & H). exists rule; split; [assumption | ]. 
     unfold Prelim.prefix in *. destruct H as ((b1 & H1) & (b2 & H2)). 
     split.
@@ -208,9 +208,6 @@ Ltac inv_valid := match goal with
                   end.
 
 Arguments valid {Sigma}. 
-(* Notation "s |= c" := (satFinal c s) (at level 60). *)
-(* Notation "a ⇝ b" := (valid a b) (at level 90, left associativity).  *)
-(* Notation "a '⇝(' n ')' b" := (relpower valid n a b) (at level 90, left associativity, format "a '⇝(' n ')' b"). *)
 
 (*we define it using the rewritesHead_pred rewrite predicate *)
-Definition TCSRLang (C : TCSR) :=  exists (sf : string (Sigma C)), relpower (valid (rewritesHead_pred(windows C))) (steps C) (init C) sf /\ satFinal (final C) sf. 
+Definition TCSRLang (C : TCSR) :=  exists (sf : string (Sigma C)), relpower (valid (rewritesHeadList (windows C))) (steps C) (init C) sf /\ satFinal (final C) sf. 
