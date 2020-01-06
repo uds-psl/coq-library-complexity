@@ -238,7 +238,14 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 \section{Introduction}
 
 \begin{frame}{Reminder: Complexity Theory in L}
-  \TODO{}
+  \begin{itemize}
+    \item L: call-by-value $\lambda$-calculus
+    \item reasonable model for computational complexity theory\footnote{\cite{ForsterKunzeRoth:2019:wcbv-Reasonable}}
+    \item Most definitions carry over, i.e. 
+      \[
+        \textsf{NP-hard}~A := \forall B, \textsf{inNP}~B \rightarrow B \preceq_{\text{p}} A 
+      \]
+  \end{itemize}
 \end{frame}
 
 \begin{frame}{Cook's Theorem\footnote{\emph{The complexity of theorem-proving procedures}\cite{Cook:1971:CTP:800157.805047}}}
@@ -258,7 +265,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 \end{frame}
 
 \begin{frame}{Generic NP-hard Problem}
-  Idea: encode computation as logical formula
+  Idea: encode computation as Boolean formula
 
   \only<2->{\frametitle{Generic NP-hard Problem on Turing Machines}}
 
@@ -309,7 +316,9 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
   %tackle these problems with a sequence of intermediate languages
 \end{frame}
 
-\begin{frame}<1>[label=tableau]{Tableau\footnote{based on\cite{Sipser:TheoryofComputation}}}
+\begin{frame}<1>[label=tableau]{Tableau\footnote{based on\cite{Sipser:TheoryofComputation}, similar to \cite{Cook:1971:CTP:800157.805047}}}
+  \only<1>{}
+  \only<2>{\frametitle{Tableau: Deterministic Simulation}}
   \begin{center}
     \begin{tikzpicture}[scale=0.8, every node/.style={scale=0.8}]
       \draw[thick] (1.5, -4) -- (1.5, 3) -- (10, 3) -- (10, -4) -- (1.5, -4);
@@ -370,7 +379,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 
       \path[<->] (1, -4) edge node[fill=white, anchor=center, pos= 0.5] {\small t} (1, 3);
       \path[<->] (1.5, -4.5) edge node[fill=white, anchor=center, pos=0.5] {\small \only<1>{ $l$}\only<2>{ $2z + 1$}} (10, -4.5);
-      \path[<->] (5.5, 3.5) edge node[fill=white, anchor=center, pos=0.5] {\small $k$} (7.5, 3.5);
+      %\path[<->] (5.5, 3.5) edge node[fill=white, anchor=center, pos=0.5] {\small $k$} (7.5, 3.5);
 
       \node at (11, 2.75) {\small 1\textsuperscript{st} config};
       \node at (11, 2.25) {\small 2\textsuperscript{nd} config};
@@ -515,6 +524,8 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
     {\colorHOne{} Non-unique representation: }
 
   }
+  \vspace{11ex}
+  \emph{special blanks \textvisiblespace{} for unused regions of the string}
 \end{frame}
 
 \begin{frame}[t]{Fixed State Position}
@@ -897,7 +908,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
   \end{center}
 \end{frame}
 
-\begin{frame}{Polarities}
+\begin{frame}{Polarities $\{\overset{\leftarrow}{\cdot}, \overset{-}{\cdot}, \overset{\rightarrow}{\cdot}\}$}
   Add one symbol to the right half of the tape:
   \begin{overlayarea}{\textwidth}{0.15\textwidth}
     \vspace{-0.5ex}
@@ -1024,18 +1035,17 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 
       \node at (1.5, 0.375) {$\cdots$};
       \node at (9.125, 0.375) {$\cdots$};
-      \node at (5.6125, 0.375) {$b$};
+      \node[color=\colorTikzC] at (5.6125, 0.375) {$b$};
       \node at (6.375, 0.375) {$a$};
       \node at (7.125, 0.375) {\blank};
       \node at (7.875, 0.375) {\blank};
-      \node at (4.875, 0.375) {$q_1^a$};
-      \node at (4.125, 0.375) {$c$};
+      \node[color=\colorTikzC] at (4.875, 0.375) {$q_1^a$};
+      \node[color=\colorTikzC] at (4.125, 0.375) {$c$};
       \node at (3.375, 0.375) {\blank};
 
       %\path[<->] (0, 1.5) edge node[fill=white, anchor=center, pos= 0.5] {\small $z$} (4.5, 1.5);
       %\node[color=white] at (4.75, 1.5) {l};
       %\path[<->] (5.25, 1.5) edge node[fill=white, anchor=center, pos =0.5] {\small $z$} (9.75, 1.5);
-
       \draw (0, -0.75) -- (9.75, -0.75);
       \draw (0, -0.75) -- (0, 0);
       \draw (9.75, -0.75) -- (9.75, 0);
@@ -1049,14 +1059,20 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
       \draw (7.5, 0) -- (7.5, -0.75);
       \draw (8.25, 0) -- (8.25, -0.75);
 
+      \draw[color=\colorTikzC] (3.75, 0) -- (6, 0);
+      \draw[color=\colorTikzC] (4.5, -0.75) -- (4.5, 0.75);
+      \draw[color=\colorTikzC] (5.25, -0.75) -- (5.25, 0.75);
+
+
+
       \node at (1.5, -0.375) {$\cdots$};
       \node at (9.125, -0.375) {$\cdots$};
-      \node at (5.6125, -0.375) {$\polpos{b}$};
+      \node[color=\colorTikzC] at (5.6125, -0.375) {$\polpos{b}$};
       \node at (6.375, -0.375) {$\polpos{b}$};
       \node at (7.125, -0.375) {$\polpos{a}$};
       \node at (7.875, -0.375) {\blank};
-      \node at (4.875, -0.375) {$q_2^c$};
-      \node at (4.125, -0.375) {\blank};
+      \node[color=\colorTikzC] at (4.875, -0.375) {$q_2^c$};
+      \node[color=\colorTikzC] at (4.125, -0.375) {\blank};
       \node at (3.375, -0.375) {\blank};
     \end{tikzpicture}
   \end{center}
@@ -1302,7 +1318,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 
         \node at (2, 0.5) {$\mathit{left}$};
         \node at (9, 0.5) {$\mathit{right}$};
-        \node at (5.5, 0.5) {$q^m$};
+        \node at (5.5, 0.5) {$q^\sigma$};
 
         \onslide<4-> {
           \draw (4, -1) -- (7, -1);
@@ -1314,7 +1330,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 
           \node at (4.5, -0.5) {$h_l'$};
           \node at (6.5, -0.5) {$h_r'$};
-          \node at (5.5, -0.5) {${q'}^{s'}$};
+          \node at (5.5, -0.5) {${q'}^{\sigma'}$};
         }
 
         \onslide<5-> {
@@ -1335,16 +1351,18 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 %Then: rewrites for tape halves can be proven separately using only a subset of the rules
 \end{frame}
 
-\begin{frame}{Challenges}
+\begin{frame}{Mechanisation: Challenges}
   \begin{itemize}
     \item massive number of cases (100): proof \emph{heavily} relies on automation
 
       $\rightarrow$ rewrite rules formalised as inductive predicates
     \item proofs that rewrites are unique require \emph{a lot} of inversions
-    \item left half of the tape is reversed compared to the Turing machine formalisation
+    \item left half of the tape is reversed wrt the Turing machine formalisation
 
       $\rightarrow$ use symmetry of rewrite rules for tapes
     \item Turing machine formalisation does not have notion of blanks
+
+      $\rightarrow$ mechanisation: blanks \emph{also} have polarities
   \end{itemize}
 \end{frame}
 
@@ -1366,50 +1384,8 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
   \end{center}
 \end{frame}
 
-\begin{frame}{Reduction to Binary Alphabet}
-  $\Sigma = \{\sigma_1, \ldots, \sigma_n\}$
 
-  Homomorphism: $f : \Sigma \rightarrow {\{0, 1\}}^n, \sigma_i \mapsto 0^{i-1} 1 0^{n-i}$
-
-  \vspace{2ex}
-  Example ($\length{\Sigma} = 2$):
-  \begin{center}
-    \begin{tikzpicture}
-      \draw (0, 0) -- (4, 0);
-      \draw (0, 1) -- (4, 1);
-      \draw (0, 0) -- (0, 1); 
-      \draw (4, 0) -- (4, 1);
-
-      \draw (1, 0) -- (1, 1);
-      \draw (2, 0) -- (2, 1);
-      \draw (3, 0) -- (3, 1);
-
-      \draw[dashed, thick, color=\colorTikzB] (0, -1) -- (0, 1) -- (3, 1) -- (3, -1) -- (0, -1);
-      \draw[dotted, thick, color=\colorTikzD] (1,-1) -- (1, 1) -- (4, 1) -- (4, -1) -- (1, -1);
-
-      \draw (-2, -2.5) -- (6, -2.5);
-      \draw (-2, -1.5) -- (6, -1.5);
-      \draw (-2, -2.5) -- (-2, -1.5); 
-      \draw (6, -2.5) -- (6, -1.5);
-
-      \draw[dashed] (1, -2.5) -- (1, -1.5);
-      \draw (2, -2.5) -- (2, -1.5);
-      \draw[dashed] (3, -2.5) -- (3, -1.5);
-      \draw (4, -2.5) -- (4, -1.5);
-      \draw[dashed] (5, -2.5) -- (5, -1.5);
-      \draw (0, -2.5) -- (0, -1.5);
-      \draw[dashed] (-1, -2.5) -- (-1, -1.5);
-
-      \draw[dashed, thick, color=\colorTikzB] (-2, -3.5) -- (-2, -1.5) -- (4, -1.5) -- (4, -3.5) -- (-2, -3.5);
-      \draw[dotted, thick, color=\colorTikzD] (0, -3.5) -- (0, -1.5) -- (6, -1.5) -- (6, -3.5) -- (0, -3.5);
-
-    \end{tikzpicture}
-  \end{center}
-\end{frame}
-
-\againframe<2>[noframenumbering]{prdef}
-
-\againframe[noframenumbering]{contextslide}
+%\againframe[noframenumbering]{contextslide}
 
 \begin{frame}{Conclusion}
   Contributions: 
@@ -1436,6 +1412,64 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 
 \miniframesoff
 \section{}
+
+\begin{frame}{LOC}
+  \begin{center}
+  \begin{tabular}{cccc}
+    Component & Spec & Proof \\
+    \midrule
+    Preliminaries & ? & ? \\
+    Definition of PR & ? & ? \\
+    Reduction of TM to PR & ? & ? \\
+    Encoding of finite types & ? & ? \\
+    Nondeterminism: Preludes & ? & ? 
+  \end{tabular}
+  \end{center}
+\end{frame}
+
+
+\begin{frame}{Reduction to Binary Alphabet}
+  $\Sigma = \{\sigma_1, \ldots, \sigma_n\}$
+
+  Homomorphism: $f : \Sigma \rightarrow {\{0, 1\}}^n, \sigma_i \mapsto 0^{i-1} 1 0^{n-i}$
+
+  \vspace{2ex}
+  Example ($\length{\Sigma} = 2$):
+  \begin{center}
+    \begin{tikzpicture}
+      \draw (0, 0) -- (4, 0);
+      \draw (0, 1) -- (4, 1);
+      \draw (0, 0) -- (0, 1); 
+      \draw (4, 0) -- (4, 1);
+
+      \draw (1, 0) -- (1, 1);
+      \draw (2, 0) -- (2, 1);
+      \draw (3, 0) -- (3, 1);
+
+      \draw[dashed, thick, color=\colorTikzB] (0, -1) -- (0, 1) -- (3, 1) -- (3, -1) -- (0, -1);
+      \draw[dotted, thick, color=\colorTikzA] (1,-1) -- (1, 1) -- (4, 1) -- (4, -1) -- (1, -1);
+
+      \draw (-2, -2.5) -- (6, -2.5);
+      \draw (-2, -1.5) -- (6, -1.5);
+      \draw (-2, -2.5) -- (-2, -1.5); 
+      \draw (6, -2.5) -- (6, -1.5);
+
+      \draw[dashed] (1, -2.5) -- (1, -1.5);
+      \draw (2, -2.5) -- (2, -1.5);
+      \draw[dashed] (3, -2.5) -- (3, -1.5);
+      \draw (4, -2.5) -- (4, -1.5);
+      \draw[dashed] (5, -2.5) -- (5, -1.5);
+      \draw (0, -2.5) -- (0, -1.5);
+      \draw[dashed] (-1, -2.5) -- (-1, -1.5);
+
+      \draw[dashed, thick, color=\colorTikzB] (-2, -3.5) -- (-2, -1.5) -- (4, -1.5) -- (4, -3.5) -- (-2, -3.5);
+      \draw[dotted, thick, color=\colorTikzA] (0, -3.5) -- (0, -1.5) -- (6, -1.5) -- (6, -3.5) -- (0, -3.5);
+
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\againframe<2>[noframenumbering]{prdef}
 
 \begin{frame}{Transition Rules -- Examples}
 
