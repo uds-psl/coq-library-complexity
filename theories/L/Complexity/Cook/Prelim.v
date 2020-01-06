@@ -152,6 +152,13 @@ Proof.
   - intros. apply relpowerS with (b := b). assumption. now apply IHrelpower. 
 Qed. 
 
+Lemma relpower_monotonous (X : Type) (R1 R2 : X -> X -> Prop) : (forall a b, R1 a b -> R2 a b) -> forall n a b, relpower R1 n a b -> relpower R2 n a b.
+Proof. 
+  intros H1 n a b. induction 1. 
+  - eauto. 
+  - apply H1 in H. eauto. 
+Qed.
+
 Lemma relpowerRev_trans (X : Type) (R : X -> X -> Prop) n m x y z : relpowerRev R n x y -> relpowerRev R m y z -> relpowerRev R (n + m) x z.
 Proof. 
   rewrite Nat.add_comm. induction 2; cbn; eauto. 

@@ -4,106 +4,90 @@ From PslBase Require Import FiniteTypes.
 From Undecidability Require Import L.Complexity.Cook.Prelim.
 Require Import Lia.
 
+(*we first define some notions for an arbitrary rewritesHead predicate *)
+Section abstractDefs.
+  Variable (X : Type). 
+  Notation string := (list X). 
 
-(*use an explicit representation instead of vectors of size 3 since this will make the problem closer to the flattened extractable problem *)
-Record TCSRWinP (Sigma : Type) := {
-                                   winEl1 : Sigma;
-                                   winEl2 : Sigma;
-                                   winEl3 : Sigma
-                                 }.
-
-Record TCSRWin (Sigma : Type) := {
-                                            prem : TCSRWinP Sigma;
-                                            conc : TCSRWinP Sigma
-                                   }.
-
-Definition TCSRWinP_to_list (sig : Type) (a : TCSRWinP sig) := match a with Build_TCSRWinP a b c => [a; b; c] end. 
-Coercion TCSRWinP_to_list : TCSRWinP >-> list. 
-
-Notation "'{' a ',' b ',' c '}'" := (Build_TCSRWinP a b c) (format "'{' a ',' b ',' c '}'").
-Notation "a / b" := ({|prem := a; conc := b|}). 
-
-(* Instance TCSRWinP_eqTypeC (Sigma : finType) : eq_dec (TCSRWinP Sigma).  *)
-(* Proof. *)
-(*   unfold dec. destruct Sigma. destruct type. decide equality.  *)
-(*   destruct (eqType_dec e1 e4); auto.  *)
-(*   destruct (eqType_dec e0 e3); auto.  *)
-(*   destruct (eqType_dec e e2); auto.  *)
-(* Defined.  *)
-
-(* Instance TCSRWin_eqTypeC (Sigma : finType) : eq_dec (TCSRWin Sigma).  *)
-(* Proof.  *)
-(*   unfold dec. decide equality. *)
-(*   destruct (TCSRWinP_eqTypeC conc0 conc1); auto.  *)
-(*   destruct (TCSRWinP_eqTypeC prem0 prem1); auto.  *)
-(* Defined.  *)
-
-Record TCSR := {
-               Sigma : Type;
-               init : list Sigma;  (* length is encoded implicitly as the length of init*) 
-               windows : list (TCSRWin Sigma);
-               final : list (list Sigma);
-               steps : nat
-             }.
-
-
-Implicit Type (C : TCSR).
-
-Section fixInstance.
-  Variable (Sigma : Type).
-  Variable (init : list Sigma).
-  Variable (windows : list (TCSRWin Sigma)).
-  Variable (final : list (list Sigma)).
-  Variable (steps : nat). 
-
-  Definition string := list Sigma. 
-  Definition window := TCSRWin Sigma.
-
-  Implicit Type (s a b: string). 
-  Implicit Type (r rule : window).
-  Implicit Type (x y : Sigma).
-
-  Definition isRule r := r el windows.
-  Lemma isRule_length r : length (prem r) = 3 /\ length (conc r) = 3.
-  Proof. 
-    intros. destruct r. 
-    cbn. destruct prem0, conc0. now cbn. 
-  Qed. 
-
-  (* the final constraint*)
-  Definition satFinal s := exists subs, subs el final /\ substring subs s.
-
-  (* rewrites inside a string *)
-  (*We define the following notions over an abstract rewritesHead predicate. A concrete instance can be obtained using rewritesHead_pred *)
   Definition rewritesHeadAbstract := string -> string -> Prop. 
-  Definition rewritesAt (p : rewritesHeadAbstract) (i : nat) a b := p (skipn i a) (skipn i b).
-  Lemma rewritesAt_head p a b : p a b <-> rewritesAt p 0 a b. 
-  Proof. 
-    unfold rewritesAt.
-    rewrite <- firstn_skipn with (n:= 0) (l:= a) at 1.
-    rewrite <- firstn_skipn with (n:= 0) (l:= b) at 1.
-    repeat rewrite firstn_O; now cbn. 
-  Qed. 
 
-  Lemma rewritesAt_step p a b x y (i:nat) : rewritesAt p i a b <-> rewritesAt p (S i) (x :: a) (y:: b). 
-  Proof. intros. unfold rewritesAt. now cbn. Qed. 
+  Section fixRewritesHead.
+    Variable (p : rewritesHeadAbstract). 
+
+    (* rewrites inside a string *)
+    Definition rewritesAt (i : nat) a b := p (skipn i a) (skipn i b).
+    Lemma rewritesAt_head a b : p a b <-> rewritesAt 0 a b. 
+    Proof. 
+      unfold rewritesAt.
+      rewrite <- firstn_skipn with (n:= 0) (l:= a) at 1.
+      rewrite <- firstn_skipn with (n:= 0) (l:= b) at 1.
+      repeat rewrite firstn_O; now cbn. 
+    Qed. 
+
+    Lemma rewritesAt_step a b x y (i:nat) : rewritesAt i a b <-> rewritesAt (S i) (x :: a) (y:: b). 
+    Proof. intros. unfold rewritesAt. now cbn. Qed. 
 
 
-  (*validity of a rewrite *)
-  Inductive valid (p : rewritesHeadAbstract): string -> string -> Prop :=
-  | validB: valid p [] [] 
-  | validSA a b x y: valid p a b -> length a < 2 -> valid p (x:: a) (y:: b)
-  | validS a b x y : valid p a b -> p (x::a) (y::b) -> valid p (x::a) (y::b). 
+    (*validity of a rewrite *)
+    Inductive valid : string -> string -> Prop :=
+    | validB: valid [] [] 
+    | validSA a b x y: valid a b -> length a < 2 -> valid (x:: a) (y:: b)
+    | validS a b x y : valid a b -> p (x::a) (y::b) -> valid (x::a) (y::b). 
 
+    Hint Constructors valid. 
+
+    Lemma valid_length_inv a b : valid a b -> length a = length b. 
+    Proof.
+      induction 1. 
+      - now cbn.
+      - cbn; congruence.
+      - cbn; congruence. 
+    Qed. 
+
+    Lemma relpower_valid_length_inv n a b : relpower valid n a b -> length a = length b. 
+    Proof.  induction 1; [solve [eauto] | ]. apply valid_length_inv in H. congruence. Qed. 
+
+    Lemma valid_base (a b c d e f : X) : valid [a; b ; c] [d; e; f] <-> p [a; b; c] [d; e; f]. 
+    Proof. 
+      split.
+      - intros; inv H. cbn in H5; lia. apply H5.  
+      - constructor 3. 2: apply H. repeat constructor.
+    Qed. 
+
+    (*the explicit characterisation using bounded quantification *)
+    Definition validExplicit a b := length a = length b /\ forall i, 0 <= i < length a - 2  -> rewritesAt i a b.
+
+    Lemma valid_iff a b :
+      valid a b <-> validExplicit a b.
+    Proof.
+      unfold validExplicit. split.
+      - induction 1. 
+        + cbn; split; [reflexivity | ]. 
+          intros; lia. 
+        + destruct IHvalid as (IH1 & IH2). split; [cbn; congruence | ]. 
+          cbn [length]; intros. lia. 
+        + destruct IHvalid as (IH1 & IH2); split; [cbn; congruence | ].
+          cbn [length]; intros.
+          destruct i. 
+          * eauto. 
+          * assert (0 <= i < (|a|) - 2) by lia. eauto. 
+      - revert b. induction a; intros b (H1 & H2). 
+        + inv_list. constructor. 
+        + inv_list. destruct (le_lt_dec 2 (length a0)). 
+          * cbn [length] in H2.
+            assert (0 <= 0 < S (|a0|) - 2) by lia. specialize (H2 0 H) as H3. 
+            eapply (@validS a0 b a x). 2-3: assumption. 
+            apply IHa. split; [congruence | ]. 
+            intros. assert (0 <= S i < S (|a0|) - 2) by lia. 
+            specialize (H2 (S i) H4). eauto. 
+          * constructor. 
+            2: assumption. 
+            apply IHa. split; [congruence | intros ]. 
+            cbn [length] in H2. assert (0 <= S i < S(|a0|) - 2) by lia. 
+            specialize (H2 (S i) H0); eauto. 
+    Qed. 
+  End fixRewritesHead.
   Hint Constructors valid. 
-
-  Lemma valid_length_inv p a b : valid p a b -> length a = length b. 
-  Proof.
-    induction 1. 
-    - now cbn.
-    - cbn; congruence.
-    - cbn; congruence. 
-  Qed. 
 
   (*valid is congruent for equivalent rewriteHead predicates *)
   Lemma valid_congruent' (p1 p2 : rewritesHeadAbstract) : (forall u v, p1 u v -> p2 u v) -> forall a b, valid p1 a b -> valid p2 a b. 
@@ -123,44 +107,79 @@ Section fixInstance.
     apply valid_congruent'. intros; now apply H. 
   Qed.
 
-  Lemma valid_base (p : rewritesHeadAbstract) (a b c d e f : Sigma) : valid p [a; b ; c] [d; e; f] <-> p [a; b; c] [d; e; f]. 
+  Lemma valid_monotonous (p1 p2 : rewritesHeadAbstract) : (forall x y, p1 x y -> p2 x y) -> forall x y, valid p1 x y -> valid p2 x y.
   Proof. 
-    split.
-    - intros; inv H. cbn in H5; lia. apply H5.  
-    - constructor 3. 2: apply H. repeat constructor.
+    intros H x y. induction 1.  
+    - eauto. 
+    - constructor 2; eauto. 
+    - apply H in H1. eauto. 
   Qed. 
+End abstractDefs. 
 
-  (*the explicit characterisation using bounded quantification *)
-  Definition validExplicit p a b := length a = length b /\ forall i, 0 <= i < length a - 2  -> rewritesAt p i a b.
+Arguments valid {X}. 
+Hint Constructors valid. 
 
-  Lemma valid_iff p a b :
-    valid p a b <-> validExplicit p a b.
-  Proof.
-    unfold validExplicit. split.
-    - induction 1. 
-      + cbn; split; [reflexivity | ]. 
-        intros; lia. 
-      + destruct IHvalid as (IH1 & IH2). split; [cbn; congruence | ]. 
-        cbn [length]; intros. lia. 
-      + destruct IHvalid as (IH1 & IH2); split; [cbn; congruence | ].
-        cbn [length]; intros.
-        destruct i. 
-        * eauto. 
-        * assert (0 <= i < (|a|) - 2) by lia. eauto. 
-    - revert b. induction a; intros b (H1 & H2). 
-      + inv_list. constructor. 
-      + inv_list. destruct (le_lt_dec 2 (length a0)). 
-        * cbn [length] in H2.
-          assert (0 <= 0 < S (|a0|) - 2) by lia. specialize (H2 0 H) as H3. 
-          eapply (@validS p a0 b a s). 2-3: assumption. 
-          apply IHa. split; [congruence | ]. 
-          intros. assert (0 <= S i < S (|a0|) - 2) by lia. 
-          specialize (H2 (S i) H4). eauto. 
-        * constructor. 
-          2: assumption. 
-          apply IHa. split; [congruence | intros ]. 
-          cbn [length] in H2. assert (0 <= S i < S(|a0|) - 2) by lia. 
-          specialize (H2 (S i) H0); eauto. 
+Ltac inv_valid := match goal with
+                    | [ H : valid _ _ _ |- _] => inv H
+                  end;
+                  try match goal with
+                  | [ H : | _ | < 2 |- _] => now cbn in H
+                  end.
+
+
+(** *TCSR using list-based rules *)
+
+(*use an explicit representation instead of vectors of size 3 since this will make the problem closer to the flattened extractable problem *)
+Record TCSRWinP (Sigma : Type) := {
+                                   winEl1 : Sigma;
+                                   winEl2 : Sigma;
+                                   winEl3 : Sigma
+                                 }.
+
+Record TCSRWin (Sigma : Type) := {
+                                            prem : TCSRWinP Sigma;
+                                            conc : TCSRWinP Sigma
+                                   }.
+
+Definition TCSRWinP_to_list (sig : Type) (a : TCSRWinP sig) := match a with Build_TCSRWinP a b c => [a; b; c] end. 
+Coercion TCSRWinP_to_list : TCSRWinP >-> list. 
+
+Notation "'{' a ',' b ',' c '}'" := (Build_TCSRWinP a b c) (format "'{' a ',' b ',' c '}'").
+Notation "a / b" := ({|prem := a; conc := b|}). 
+
+Record TCSR := {
+               Sigma : Type;
+               init : list Sigma;  (* length is encoded implicitly as the length of init*) 
+               windows : list (TCSRWin Sigma);
+               final : list (list Sigma);
+               steps : nat
+             }.
+
+Implicit Type (C : TCSR).
+
+(* the final constraint*)
+Definition satFinal (X : Type) final (s : list X) := exists subs, subs el final /\ substring subs s.
+
+(*specific definitions and results for list-based rules*)
+Section fixInstance.
+  Variable (Sigma : Type).
+  Variable (init : list Sigma).
+  Variable (windows : list (TCSRWin Sigma)).
+  Variable (final : list (list Sigma)).
+  Variable (steps : nat). 
+
+  Notation string := (list Sigma). 
+  Definition window := TCSRWin Sigma.
+
+  Implicit Type (s a b: string). 
+  Implicit Type (r rule : window).
+  Implicit Type (x y : Sigma).
+
+  Definition isRule r := r el windows.
+  Lemma isRule_length r : length (prem r) = 3 /\ length (conc r) = 3.
+  Proof. 
+    intros. destruct r. 
+    cbn. destruct prem0, conc0. now cbn. 
   Qed. 
 
   (*we now define a concrete rewrite predicate based on a set of rules *)
@@ -200,14 +219,79 @@ Section fixInstance.
 End fixInstance. 
 
 
-Ltac inv_valid := match goal with
-                    | [ H : valid _ _ _ |- _] => inv H
-                  end;
-                  try match goal with
-                  | [ H : | _ | < 2 |- _] => now cbn in H
-                  end.
-
-Arguments valid {Sigma}. 
 
 (*we define it using the rewritesHead_pred rewrite predicate *)
-Definition TCSRLang (C : TCSR) :=  exists (sf : string (Sigma C)), relpower (valid (rewritesHeadList (windows C))) (steps C) (init C) sf /\ satFinal (final C) sf. 
+Definition TCSRLang (C : TCSR) :=  exists (sf : list (Sigma C)), relpower (valid (rewritesHeadList (windows C))) (steps C) (init C) sf /\ satFinal (final C) sf. 
+
+(** *variant PTCSR using propositional rules *)
+
+Record PTCSR := {
+             PSigma : Type;
+             Pinit : list PSigma;  (* length is encoded implicitly as the length of init*) 
+             Pwindows : PSigma -> PSigma -> PSigma -> PSigma -> PSigma -> PSigma -> Prop;
+             Pfinal : list (list PSigma);
+             Psteps : nat
+           }.
+
+Section fixRulePred.
+  (*We define the equivalent of rewritesHeadList for predicate-based rules  *)
+
+  Variable (X : Type).
+  Definition windowPred := X -> X -> X -> X -> X -> X -> Prop.
+  Variable (p : windowPred). 
+
+  Inductive rewritesHeadInd: list X -> list X -> Prop :=
+    | rewHead_indC (x1 x2 x3 x4 x5 x6 : X) s1 s2 : p x1 x2 x3 x4 x5 x6 -> rewritesHeadInd (x1 :: x2 :: x3 :: s1) (x4 :: x5 :: x6 :: s2). 
+
+  Hint Constructors rewritesHeadInd. 
+
+  (*a few facts which will be useful *)
+  Lemma rewritesHeadInd_tail_invariant (γ1 γ2 γ3 γ4 γ5 γ6 : X) s1 s2 s1' s2' :
+    rewritesHeadInd (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2) <-> rewritesHeadInd (γ1 :: γ2 :: γ3 :: s1') (γ4 :: γ5 :: γ6 :: s2').
+  Proof. split; intros; inv H; eauto. Qed. 
+
+  Corollary rewritesHeadInd_rem_tail (γ1 γ2 γ3 γ4 γ5 γ6 : X) h1 h2 :
+    rewritesHeadInd [γ1; γ2; γ3] [γ4; γ5; γ6] <-> rewritesHeadInd (γ1 :: γ2 :: γ3 :: h1) (γ4 :: γ5 :: γ6 :: h2).
+  Proof. now apply rewritesHeadInd_tail_invariant. Qed. 
+
+  Lemma rewritesHeadInd_append_invariant (γ1 γ2 γ3 γ4 γ5 γ6 : X) s1 s2 s1' s2' :
+    rewritesHeadInd (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2) <-> rewritesHeadInd (γ1 :: γ2 :: γ3 :: s1 ++ s1') (γ4 :: γ5 :: γ6 :: s2 ++ s2').
+  Proof. now apply rewritesHeadInd_tail_invariant. Qed.
+
+  Lemma rewritesAt_rewritesHeadInd_add_at_end i a b h1 h2 :
+    rewritesAt rewritesHeadInd i a b -> rewritesAt rewritesHeadInd i (a ++ h1) (b ++ h2).
+  Proof. 
+    intros. unfold rewritesAt in *. inv H; symmetry in H0; symmetry in H1; repeat erewrite skipn_app2; eauto; try congruence; cbn; eauto. 
+  Qed.
+
+  Lemma rewritesAt_rewritesHeadInd_rem_at_end i a b h1 h2 :
+    rewritesAt rewritesHeadInd i (a ++ h1) (b ++ h2) -> i < |a| - 2 -> i < |b| - 2 -> rewritesAt rewritesHeadInd i a b.
+  Proof. 
+    intros. unfold rewritesAt in *.
+    assert (i <= |a|) by lia. destruct (skipn_app3 h1 H2) as (a' & H3 & H4). rewrite H3 in H. 
+    assert (i <= |b|) by lia. destruct (skipn_app3 h2 H5) as (b' & H6 & H7). rewrite H6 in H. 
+    clear H2 H5.
+    rewrite <- firstn_skipn with (l := a) (n := i) in H4 at 1. apply app_inv_head in H4 as <-. 
+    rewrite <- firstn_skipn with (l := b) (n := i) in H7 at 1. apply app_inv_head in H7 as <-. 
+    specialize (skipn_length i a) as H7. specialize (skipn_length i b) as H8. 
+    remember (skipn i a) as l. do 3 (destruct l as [ | ? l] ; [cbn in H7; lia | ]). 
+    remember (skipn i b) as l'. do 3 (destruct l' as [ | ? l']; [cbn in H8; lia | ]). 
+    cbn in H. rewrite rewritesHeadInd_tail_invariant in H. apply H. 
+  Qed. 
+ 
+End fixRulePred. 
+
+Hint Constructors rewritesHeadInd. 
+
+Definition windowPred_subs (X : Type) (p1 p2 : windowPred X) := forall x1 x2 x3 x4 x5 x6, p1 x1 x2 x3 x4 x5 x6 -> p2 x1 x2 x3 x4 x5 x6.
+
+Lemma rewritesHeadInd_monotonous (X : Type) (p1 p2 : windowPred X) : windowPred_subs p1 p2 -> forall x y, rewritesHeadInd p1 x y -> rewritesHeadInd p2 x y.
+Proof. 
+  intros H x y H1. inv H1. apply H in H0. eauto.  
+Qed. 
+
+Hint Constructors rewritesHeadInd.
+
+Definition PTCSRLang (C : PTCSR) :=  exists (sf : list (PSigma C)), relpower (valid (rewritesHeadInd (@Pwindows C))) (Psteps C) (Pinit C) sf /\ satFinal (Pfinal C) sf. 
+
+

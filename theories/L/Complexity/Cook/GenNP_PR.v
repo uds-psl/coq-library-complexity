@@ -9,11 +9,13 @@ Require Import PslBase.FiniteTypes.FinTypes.
 Section TM_single. 
   (*we use a variant of the Turing machine definitions fixed to a single tape *)
 
-  Variable (mstates : finType).
   Variable (Sigma : finType).
-  Variable (mtrans : (mstates * Vector.t (option Sigma) 1) -> (mstates * Vector.t (option Sigma * move) 1)). 
-  Variable (start : eqType_X mstates). 
-  Variable (halt : mstates -> bool). 
+  Variable (TM : mTM Sigma 1). 
+
+  Local Notation mstates := (@TM.states Sigma 1 TM). 
+  Local Notation mtrans := (@TM.trans Sigma 1 TM). 
+  Local Notation start := (@TM.start Sigma 1 TM). 
+  Local Notation halt := (@TM.halt Sigma 1 TM). 
 
   Definition strans (a : mstates * option Sigma) : (mstates * (option Sigma * move)) :=
     let (q, t) := a in let (q', ac) := mtrans (q, [| t |]) in (q', Vector.nth ac Fin.F1). 
@@ -52,7 +54,65 @@ Section TM_single.
     apply VectorDef.caseS' with (v := ctapes). 
     intros. 
     apply VectorDef.case0 with (v := t1). cbn. reflexivity. 
- Qed. 
+  Qed. 
+
+  Definition configState (c : sconfig) := match c with (q, _) => q end. 
+  Definition sstepRel s s' := halt (configState s) = false /\ sstep strans s = s'.
+
+  Lemma relpower_loop_agree l q tape q' tape':
+    relpower sstepRel l (q, tape) (q', tape')
+    -> halt (configState (q', tape')) = true
+    -> loop (step (M := TM)) (haltConf (M := TM)) (mk_mconfig q [|tape|]) l = Some (mk_mconfig q' [|tape'|]).
+  Proof. 
+     revert q tape q' tape'. 
+     induction l; cbn; intros. 
+     - inv H. unfold haltConf. cbn. rewrite H0. reflexivity. 
+     - inv H. destruct b as (q'' & tape''). eapply IHl in H3.
+       2: cbn; apply H0.  
+       destruct H2 as (F1 & F2). unfold haltConf. cbn in *. rewrite F1. 
+       setoid_rewrite <- (sstep_agree2 (mk_mconfig q [|tape|])). 
+       cbn. destruct TM.trans. inv F2. cbn. apply H3. 
+  Qed. 
+
+  Notation "s '≻(' k ')' s'" := (relpower sstepRel k s s') (at level 40). 
+
+  (*this is similar to what loopM does, but using the unfolded TM *)
+  Notation "s '▷(' k ')' s'" := (s ≻(k) s' /\ halt (configState s') = true) (at level 40).
+
+  Notation "s '▷(≤' k ')' s'" := (exists l, l <= k /\ s ▷(l) s') (at level 40).
+
+  Lemma loop_relpower_agree q tape q' tape' n: 
+    loopM (mk_mconfig q [|tape|]) n = Some (mk_mconfig q' [|tape'|]) 
+     -> (q, tape) ▷(≤ n) (q', tape').
+  Proof. 
+    revert q tape q' tape'.  
+     induction n; intros; cbn in *; unfold haltConf in H; cbn in H; destruct halt eqn:H1; [ | congruence | | ].
+    - inv H. exists 0. eauto.  
+    - inv H. exists 0. repeat split; [lia | eauto | eauto]. 
+    - specialize (sstep_agree1 (q, tape)) as H2. 
+      cbn [mconfig_for_sconfig] in H2. 
+      destruct (step (mk_mconfig q [|tape|])) as (q''  &tape'') eqn:H3. 
+      revert H H3 H2. 
+      apply VectorDef.caseS' with (v := tape''). clear tape''.
+      intros tape'' t0. 
+      apply VectorDef.case0 with (v := t0).  
+      intros H H3 H2. 
+      apply IHn in H as (l & F1 & F2 & F3).  
+      exists (S l). repeat split .
+      + lia. 
+      + econstructor. 2: apply F2. unfold sstepRel. rewrite <- H2. cbn. eauto. 
+      + apply F3. 
+  Qed. 
+  
+  Lemma loopM_halt sig l (M : mTM sig l) (c : TM.mconfig sig (TM.states M) l) n (q' : TM.states M) tape' : loopM c n = Some (mk_mconfig q' tape') -> TM.halt q' = true.
+  Proof. 
+    intros. revert c q' tape' H. induction n; intros; cbn in H. 
+    + unfold haltConf in H. destruct c. cbn in H. destruct (TM.halt cstate) eqn:H1; [ | congruence]. 
+      inv H. eauto.  
+    + destruct c. unfold haltConf in H. cbn in H. destruct (TM.halt cstate) eqn:H1. 
+      * inv H. eauto. 
+      * eapply IHn, H. 
+  Qed.
 End TM_single.
 
 Section fixTM. 
@@ -60,14 +120,14 @@ Section fixTM.
   Variable (TM : mTM Sigma 1).
 
   Notation states := (states TM).  
-  Notation trans := (strans (@trans Sigma 1 TM)). 
+  Notation trans := (@strans Sigma TM). 
   Notation start := (start TM). 
   Notation halt := (@halt Sigma 1 TM). 
 
   Variable (t : nat).
   Variable (k : nat). 
 
-  Notation sconfig := (sconfig states Sigma). 
+  Notation sconfig := (sconfig TM). 
   Implicit Type (c : sconfig). 
   Notation sstep := (sstep trans). 
   
@@ -412,54 +472,6 @@ Section fixTM.
                         repeat match goal with [H : ?h = ?h |- _] => clear H end.
 
 (*For easier automation, we define the rewrite rules using inductive predicates *)
-  Section fixRulePred.
-    (*We define the equivalent of rewritesHeadList for predicate-based rules  *)
-
-    Context {X : Type}.
-    Context (p : X -> X -> X -> X -> X -> X -> Prop). 
-
-    Inductive rewritesHeadInd: list X -> list X -> Prop :=
-      | rewHead_indC (x1 x2 x3 x4 x5 x6 : X) s1 s2 : p x1 x2 x3 x4 x5 x6 -> rewritesHeadInd (x1 :: x2 :: x3 :: s1) (x4 :: x5 :: x6 :: s2). 
-
-    Hint Constructors rewritesHeadInd. 
-
-    (*a few facts which will be useful *)
-    Lemma rewritesHeadInd_tail_invariant (γ1 γ2 γ3 γ4 γ5 γ6 : X) s1 s2 s1' s2' :
-      rewritesHeadInd (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2) <-> rewritesHeadInd (γ1 :: γ2 :: γ3 :: s1') (γ4 :: γ5 :: γ6 :: s2').
-    Proof. split; intros; inv H; eauto. Qed. 
-
-    Corollary rewritesHeadInd_rem_tail (γ1 γ2 γ3 γ4 γ5 γ6 : X) h1 h2 :
-      rewritesHeadInd [γ1; γ2; γ3] [γ4; γ5; γ6] <-> rewritesHeadInd (γ1 :: γ2 :: γ3 :: h1) (γ4 :: γ5 :: γ6 :: h2).
-    Proof. now apply rewritesHeadInd_tail_invariant. Qed. 
-
-    Lemma rewritesHeadInd_append_invariant (γ1 γ2 γ3 γ4 γ5 γ6 : X) s1 s2 s1' s2' :
-      rewritesHeadInd (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2) <-> rewritesHeadInd (γ1 :: γ2 :: γ3 :: s1 ++ s1') (γ4 :: γ5 :: γ6 :: s2 ++ s2').
-    Proof. now apply rewritesHeadInd_tail_invariant. Qed.
-
-    Lemma rewritesAt_rewritesHeadInd_add_at_end i a b h1 h2 :
-      rewritesAt rewritesHeadInd i a b -> rewritesAt rewritesHeadInd i (a ++ h1) (b ++ h2).
-    Proof. 
-      intros. unfold rewritesAt in *. inv H; symmetry in H0; symmetry in H1; repeat erewrite skipn_app2; eauto; try congruence; cbn; eauto. 
-    Qed.
-
-    Lemma rewritesAt_rewritesHeadInd_rem_at_end i a b h1 h2 :
-      rewritesAt rewritesHeadInd i (a ++ h1) (b ++ h2) -> i < |a| - 2 -> i < |b| - 2 -> rewritesAt rewritesHeadInd i a b.
-    Proof. 
-      intros. unfold rewritesAt in *.
-      assert (i <= |a|) by lia. destruct (skipn_app3 h1 H2) as (a' & H3 & H4). rewrite H3 in H. 
-      assert (i <= |b|) by lia. destruct (skipn_app3 h2 H5) as (b' & H6 & H7). rewrite H6 in H. 
-      clear H2 H5.
-      rewrite <- firstn_skipn with (l := a) (n := i) in H4 at 1. apply app_inv_head in H4 as <-. 
-      rewrite <- firstn_skipn with (l := b) (n := i) in H7 at 1. apply app_inv_head in H7 as <-. 
-      specialize (skipn_length i a) as H7. specialize (skipn_length i b) as H8. 
-      remember (skipn i a) as l. do 3 (destruct l as [ | ? l] ; [cbn in H7; lia | ]). 
-      remember (skipn i b) as l'. do 3 (destruct l' as [ | ? l']; [cbn in H8; lia | ]). 
-      cbn in H. rewrite rewritesHeadInd_tail_invariant in H. apply H. 
-    Qed. 
-  End fixRulePred. 
-
-  Hint Constructors rewritesHeadInd.
-
   (*unfold the three symbols at the head of premise and conclusion of a rewrite rule *)
   Ltac rewritesHeadInd_inv := 
     repeat match goal with
@@ -678,7 +690,7 @@ Section fixTM.
     - eauto. 
   Qed. 
 
-  Lemma E_rewrite_sym_unique p m n : forall (s : string Gamma), valid rewHeadTape (E p (S (S (S n)))) (inr (inr (positive, m)) :: s) -> s = E positive (S (S n)). 
+  Lemma E_rewrite_sym_unique p m n : forall (s : list Gamma), valid rewHeadTape (E p (S (S (S n)))) (inr (inr (positive, m)) :: s) -> s = E positive (S (S n)). 
   Proof. 
     intros. inv_valid. rewHeadTape_inv2.
     all: cbn [E]; f_equal; apply E_rewrite_blank_unique in H3; auto. 
@@ -1039,7 +1051,6 @@ Section fixTM.
 
 (** *preliminaries for transitions *)
 
-  Definition configState (c : sconfig) := match c with (q, _) => q end. 
   Notation "s '≻' s'" := (halt (configState s) = false /\ sstep s = s') (at level 50). 
 
   (*decomposition into left, center, right *)
@@ -2279,9 +2290,8 @@ Admitted.
 
   
   (** *multi-step simulation *)
-  Definition sstepRel s s' := halt (configState s) = false /\ sstep s = s'.
 
-  Notation "s '≻(' k ')' s'" := (relpower sstepRel k s s') (at level 40). 
+  Notation "s '≻(' k ')' s'" := (relpower (@sstepRel Sigma TM) k s s') (at level 40). 
 
   (*this is similar to what loopM does, but using the unfolded TM *)
   Notation "s '▷(' k ')' s'" := (s ≻(k) s' /\ halt (configState s') = true) (at level 40).
@@ -3991,54 +4001,6 @@ Admitted.
       + apply H in H2. apply IHn in H3. eauto. 
   Qed. 
 
-  Lemma relpower_loop_agree l q tape q' tape':
-    relpower sstepRel l (q, tape) (q', tape')
-    -> halt (configState (q', tape')) = true
-    -> loop (step (M := TM)) (haltConf (M := TM)) (mk_mconfig q [|tape|]) l = Some (mk_mconfig q' [|tape'|]).
-  Proof. 
-     revert q tape q' tape'. 
-     induction l; cbn; intros. 
-     - inv H. unfold haltConf. cbn. rewrite H0. reflexivity. 
-     - inv H. destruct b as (q'' & tape''). eapply IHl in H3.
-       2: cbn; apply H0.  
-       destruct H2 as (F1 & F2). unfold haltConf. cbn in *. rewrite F1. 
-       setoid_rewrite <- (@sstep_agree2 (TM.states TM) Sigma (@TM.trans Sigma 1 TM) (TM.start TM) (@TM.halt Sigma 1 TM) (mk_mconfig q [|tape|])). 
-       cbn. destruct TM.trans. inv F2. cbn. apply H3. 
-  Qed. 
-
-  Lemma loop_relpower_agree q tape q' tape' n: 
-    loopM (mk_mconfig q [|tape|]) n = Some (mk_mconfig q' [|tape'|]) 
-     -> (q, tape) ▷(≤ n) (q', tape').
-  Proof. 
-    revert q tape q' tape'.  
-     induction n; intros; cbn in *; unfold haltConf in H; cbn in H; destruct halt eqn:H1; [ | congruence | | ].
-    - inv H. exists 0. eauto.  
-    - inv H. exists 0. repeat split; [lia | eauto | eauto]. 
-    - specialize (@sstep_agree1 states Sigma (@TM.trans Sigma 1 TM) start halt (q, tape)) as H2. 
-      cbn [mconfig_for_sconfig] in H2. 
-      destruct (step (mk_mconfig q [|tape|])) as (q''  &tape'') eqn:H3. 
-      setoid_rewrite H3 in H2. 
-      revert H H3 H2. 
-      apply VectorDef.caseS' with (v := tape''). clear tape''.
-      intros tape'' t0. 
-      apply VectorDef.case0 with (v := t0).  
-      intros H H3 H2. 
-      apply IHn in H as (l & F1 & F2 & F3).  
-      exists (S l). repeat split .
-      + lia. 
-      + econstructor. 2: apply F2. unfold sstepRel. rewrite <- H2. cbn. eauto. 
-      + apply F3. 
-  Qed. 
-  
-  Lemma loopM_halt sig l (M : mTM sig l) (c : TM.mconfig sig (TM.states M) l) n (q' : TM.states M) tape' : loopM c n = Some (mk_mconfig q' tape') -> TM.halt q' = true.
-  Proof. 
-    intros. revert c q' tape' H. induction n; intros; cbn in H. 
-    + unfold haltConf in H. destruct c. cbn in H. destruct (TM.halt cstate) eqn:H1; [ | congruence]. 
-      inv H. eauto.  
-    + destruct c. unfold haltConf in H. cbn in H. destruct (TM.halt cstate) eqn:H1. 
-      * inv H. eauto. 
-      * eapply IHn, H. 
-  Qed.
 
   Lemma simulation : forall s, isValidInput s -> TCSRLang (Build_TCSR (initialString s) allFinSimRules finalSubstrings  t) <-> exists f, loopM (initc TM ([|initialTapeForString s|])) t = Some f.
   Proof. 
