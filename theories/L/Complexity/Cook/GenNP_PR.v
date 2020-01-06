@@ -1,5 +1,5 @@
 (* -*- company-coq-local-symbols: (("|_|" .?␣)); -*- *)
-From Undecidability.L.Complexity Require Import Cook.GenNP Cook.TCSR Cook.Prelim FlatFinTypes.
+From Undecidability.L.Complexity Require Import Cook.GenNP Cook.TPR Cook.Prelim FlatFinTypes.
 From PslBase Require Import FiniteTypes. 
 From Undecidability.TM Require Import TM.
 Require Import Lia. 
@@ -27,7 +27,6 @@ Section TM_single.
   Definition mconfig_for_sconfig c := let (q, tp) := c in mk_mconfig q [| tp |].
   Definition sconfig_for_mconfig (c : mconfig Sigma mstates 1) := let (q, tps) := c in (q, Vector.nth tps Fin.F1).
 
-  Local Notation TM := (@Build_mTM Sigma 1 mstates mtrans start halt).
   Lemma sstep_agree1 c : sconfig_for_mconfig (@step Sigma 1 TM (mconfig_for_sconfig c)) = sstep strans c.
   Proof. 
     destruct c. cbn.
@@ -2389,7 +2388,7 @@ Admitted.
       + apply G3. 
   Qed. 
 
-  (*our final constraint. we don't use the definition via a list of final substrings from the TCSR definition, but instead use this more specific form *)
+  (*our final constraint. we don't use the definition via a list of final substrings from the TPR definition, but instead use this more specific form *)
   (*we will later show that the two notions are equivalent for a suitable list of final substrings*)
   (*there exists the symbol of a halting state in the string s *)
   Definition containsHaltingState s := exists q qs, halt q = true /\ isSpecStateSym q qs /\ qs el s.  
@@ -2492,9 +2491,9 @@ Admitted.
   Definition Fpolarity := FinType (EqType polarity).
 
   (*polarity reversion for windows *)
-  Definition polarityRevTCSRWinP (x : TCSRWinP Gamma) : TCSRWinP Gamma :=
+  Definition polarityRevTPRWinP (x : TPRWinP Gamma) : TPRWinP Gamma :=
     match x with {σ1, σ2, σ3}=> {polarityFlipGamma σ3, polarityFlipGamma σ2, polarityFlipGamma σ1} end. 
-  Definition polarityRevWin (x : TCSRWin Gamma) : TCSRWin Gamma := {| prem := polarityRevTCSRWinP (prem x); conc := polarityRevTCSRWinP (conc x)|}. 
+  Definition polarityRevWin (x : TPRWin Gamma) : TPRWin Gamma := {| prem := polarityRevTPRWinP (prem x); conc := polarityRevTPRWinP (conc x)|}. 
 
   Lemma polarityRevWin_involution: involution polarityRevWin. 
   Proof. 
@@ -2843,7 +2842,7 @@ Admitted.
                       optReturn ({a, b, c} / {d, e, f})
     end.
 
-  Definition bound_WinP {X Y Z W : Type} (env : evalEnv X Y Z W) (c : TCSRWinP fGamma) :=
+  Definition bound_WinP {X Y Z W : Type} (env : evalEnv X Y Z W) (c : TPRWinP fGamma) :=
     bound_Gamma env (winEl1 c) /\ bound_Gamma env (winEl2 c) /\ bound_Gamma env (winEl3 c). 
   Definition bound_window {X Y Z W : Type} (env : evalEnv X Y Z W) (c : window fGamma) :=
     bound_WinP env (prem c) /\ bound_WinP env (conc c).
@@ -2882,7 +2881,7 @@ Admitted.
   Qed. 
 
   (*lifting of finReprEl to rewrite windows *)
-  Definition isFlatWinPOf (X : finType) (x : nat)(b : TCSRWinP nat) (a : TCSRWinP X) :=
+  Definition isFlatWinPOf (X : finType) (x : nat)(b : TPRWinP nat) (a : TPRWinP X) :=
     finReprEl x (winEl1 b) (winEl1 a) /\ finReprEl x (winEl2 b) (winEl2 a) /\ finReprEl x (winEl3 b) (winEl3 a).  
 
   Definition isFlatWindowOf (X : finType) (x : nat) (b : window nat) (a : window X):=
@@ -3199,7 +3198,7 @@ Admitted.
   Proof. 
     intros ((H1 & H2 & H3) & (F1 & F2 & F3)). 
     destruct win. destruct prem, conc. cbn in *. 
-    cbn [TCSR.winEl1 TCSR.winEl2 TCSR.winEl3] in *.
+    cbn [TPR.winEl1 TPR.winEl2 TPR.winEl3] in *.
     repeat match goal with
             | [H : finReprEl _ _ _ |- _] => rewrite (proj2 (proj2 H)); clear H
     end. 
@@ -4002,7 +4001,7 @@ Admitted.
   Qed. 
 
 
-  Lemma simulation : forall s, isValidInput s -> TCSRLang (Build_TCSR (initialString s) allFinSimRules finalSubstrings  t) <-> exists f, loopM (initc TM ([|initialTapeForString s|])) t = Some f.
+  Lemma simulation : forall s, isValidInput s -> TPRLang (Build_TPR (initialString s) allFinSimRules finalSubstrings  t) <-> exists f, loopM (initc TM ([|initialTapeForString s|])) t = Some f.
   Proof. 
     intros. split; intros. 
     - destruct H0 as (finalStr & H1 & H2). cbn [steps init windows final ] in H1, H2.
@@ -4021,7 +4020,7 @@ Admitted.
         unfold initc. 
         apply relpower_loop_agree; eauto. 
     - destruct H0 as ((q' & tape') & H0).  
-      unfold TCSRLang. 
+      unfold TPRLang. 
       revert H0. 
       eapply VectorDef.caseS' with (v := tape').  
       clear tape'.  intros tape' t0.
@@ -4037,7 +4036,7 @@ Admitted.
         * apply finalSubstrings_correct, F3. 
   Qed.  
 
-  Lemma reduction_to_inter : (exists s, isValidInput s /\ TCSRLang (Build_TCSR (initialString s) allFinSimRules finalSubstrings t)) <-> (exists s, isValidInput s /\ exists f, loopM (initc TM ([|initialTapeForString s|])) t = Some f). 
+  Lemma reduction_to_inter : (exists s, isValidInput s /\ TPRLang (Build_TPR (initialString s) allFinSimRules finalSubstrings t)) <-> (exists s, isValidInput s /\ exists f, loopM (initc TM ([|initialTapeForString s|])) t = Some f). 
   Proof. 
     split; (intros (s & H); exists s; split; [ tauto | now apply simulation]).
   Qed. 

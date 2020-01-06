@@ -1,8 +1,8 @@
-From Undecidability.L.Complexity Require Import Cook.TCSR Cook.Prelim.
+From Undecidability.L.Complexity Require Import Cook.TPR Cook.Prelim.
 From PslBase Require Import Base. 
 Require Import Lia. 
 
-Section fixPTCSRInstance. 
+Section fixPTPRInstance. 
   (*original instance lacking an initial string*)
   Variable (Sigma : Type). 
   Variable (p : Sigma -> Sigma -> Sigma -> Sigma -> Sigma -> Sigma -> Prop). 
@@ -17,7 +17,7 @@ Section fixPTCSRInstance.
   Variable (A0 : l >= 3). 
 
   (*the question now is: does there exists x0 satisfying initCond such that it ends up in a final state? *)
-  Definition ExPTCSR := exists x0, |x0| = l /\ initCond x0 /\ PTCSRLang (Build_PTCSR x0 p finalCondition t). 
+  Definition ExPTPR := exists x0, |x0| = l /\ initCond x0 /\ PTPRLang (Build_PTPR x0 p finalCondition t). 
 
   (*a prelude generates initial strings satisfying initCond *)
   Variable (Sigma' : Type). 
@@ -216,7 +216,7 @@ Section fixPTCSRInstance.
         subst. apply valid_length_inv in H. now rewrite !map_length in H.  
   Qed. 
 
-  Lemma prelude_ok : ExPTCSR <-> PTCSRLang (Build_PTCSR (map inr initialString) combP (map (map inl) finalCondition) (t' + t)). 
+  Lemma prelude_ok : ExPTPR <-> PTPRLang (Build_PTPR (map inr initialString) combP (map (map inl) finalCondition) (t' + t)). 
   Proof. 
     split. 
     - intros (x0 & H1 & H2 & (sf & F1 & F2)). cbn in *. exists (map inl sf). cbn. split. 
@@ -237,7 +237,7 @@ Section fixPTCSRInstance.
         * apply in_map_iff. eauto.  
         * unfold substring. destruct F3 as (b1 & b2 & F3). 
           exists (map inl b1), (map inl b2). now rewrite F3, !map_app. 
-    - intros (sf & F1 & F2). cbn in *. unfold ExPTCSR. 
+    - intros (sf & F1 & F2). cbn in *. unfold ExPTPR. 
       (*we need to split up F1 into the prelude and original part *)
       apply relpower_comb_split in F1 as (x0 & H1 & H2 & H3). 
       specialize (A1 H1) as (x & ->). exists x. split; [ | split]. 
@@ -245,7 +245,7 @@ Section fixPTCSRInstance.
         apply relpower_valid_length_inv in H1. rewrite !map_length in H1. lia. 
       + apply A4 in H1. destruct H1 as (? & H1 & H4). apply Prelim.map_inj in H1; [subst; apply H4 | ]. 
         unfold injective. intros. congruence. 
-      + unfold PTCSRLang. cbn. destruct H3 as (sf' & ->). exists sf'. split. 
+      + unfold PTPRLang. cbn. destruct H3 as (sf' & ->). exists sf'. split. 
         * clear F2 A2 A3 A4. apply liftOrig_relpower_p, H2. 
           apply relpower_valid_length_inv in H1.  rewrite !map_length in H1. lia.
         * clear A0 A2 A3 A4 A5 H1 H2. unfold satFinal in *. 
@@ -257,4 +257,4 @@ Section fixPTCSRInstance.
           exists b1', b2'. enough (subs' = b') by (subst; reflexivity). 
           apply Prelim.map_inj in H2; [apply H2 | unfold injective; congruence].  
   Qed. 
-End fixPTCSRInstance. 
+End fixPTPRInstance. 

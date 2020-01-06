@@ -4,31 +4,31 @@ From PslBase Require Import FiniteTypes.
 Require Import Lia.
 From Undecidability Require Import L.Complexity.Cook.Prelim.
 
-Record CSRWin (Sigma : finType) (w : nat) := {
+Record PRWin (Sigma : finType) (w : nat) := {
                                             prem : Vector.t Sigma w;
                                             conc : Vector.t Sigma w
                                           }.
 
-Record CSR := {
+Record PR := {
                Sigma : finType;
                offset : nat; 
                width : nat;  
                init : list Sigma;  (* length is encoded implicitly as the length of init*) (*length should be a multiple of offset *)
-               windows : list (CSRWin Sigma width);
+               windows : list (PRWin Sigma width);
                final : list (list Sigma);
                steps : nat
              }.
 
-Definition CSR_wellformed (c : CSR) := exists k, length (init c) = k * offset c.
+Definition PR_wellformed (c : PR) := exists k, length (init c) = k * offset c.
 
-Implicit Type (C : CSR).
+Implicit Type (C : PR).
 
 Section fixInstance.
-  Variable (c : CSR). 
+  Variable (c : PR). 
   Context (F0 : width c > 0).
 
   Definition string := list (Sigma c). 
-  Definition window := CSRWin (Sigma c) (width c). 
+  Definition window := PRWin (Sigma c) (width c). 
 
   Implicit Type (s a b: string). 
   Implicit Type (r rule : window).
@@ -144,8 +144,5 @@ Section fixInstance.
 End fixInstance. 
 
 Arguments valid {c}. 
-(* Notation "s |= c" := (satFinal c s) (at level 60).  *)
-(* Notation "a ⇝ b" := (valid a b) (at level 90, left associativity).  *)
-(* Notation "a '⇝(' n ')' b" := (relpower valid n a b) (at level 90, left associativity, format "a '⇝(' n ')' b"). *)
 
-Definition CSRLang (C : CSR) := CSR_wellformed C /\ exists (sf : string C), relpower valid (steps C) (init C) sf /\ satFinal sf. 
+Definition PRLang (C : PR) := PR_wellformed C /\ exists (sf : string C), relpower valid (steps C) (init C) sf /\ satFinal sf. 

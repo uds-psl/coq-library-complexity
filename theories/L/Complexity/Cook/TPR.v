@@ -127,35 +127,35 @@ Ltac inv_valid := match goal with
                   end.
 
 
-(** *TCSR using list-based rules *)
+(** *TPR using list-based rules *)
 
 (*use an explicit representation instead of vectors of size 3 since this will make the problem closer to the flattened extractable problem *)
-Record TCSRWinP (Sigma : Type) := {
+Record TPRWinP (Sigma : Type) := {
                                    winEl1 : Sigma;
                                    winEl2 : Sigma;
                                    winEl3 : Sigma
                                  }.
 
-Record TCSRWin (Sigma : Type) := {
-                                            prem : TCSRWinP Sigma;
-                                            conc : TCSRWinP Sigma
+Record TPRWin (Sigma : Type) := {
+                                            prem : TPRWinP Sigma;
+                                            conc : TPRWinP Sigma
                                    }.
 
-Definition TCSRWinP_to_list (sig : Type) (a : TCSRWinP sig) := match a with Build_TCSRWinP a b c => [a; b; c] end. 
-Coercion TCSRWinP_to_list : TCSRWinP >-> list. 
+Definition TPRWinP_to_list (sig : Type) (a : TPRWinP sig) := match a with Build_TPRWinP a b c => [a; b; c] end. 
+Coercion TPRWinP_to_list : TPRWinP >-> list. 
 
-Notation "'{' a ',' b ',' c '}'" := (Build_TCSRWinP a b c) (format "'{' a ',' b ',' c '}'").
+Notation "'{' a ',' b ',' c '}'" := (Build_TPRWinP a b c) (format "'{' a ',' b ',' c '}'").
 Notation "a / b" := ({|prem := a; conc := b|}). 
 
-Record TCSR := {
+Record TPR := {
                Sigma : Type;
                init : list Sigma;  (* length is encoded implicitly as the length of init*) 
-               windows : list (TCSRWin Sigma);
+               windows : list (TPRWin Sigma);
                final : list (list Sigma);
                steps : nat
              }.
 
-Implicit Type (C : TCSR).
+Implicit Type (C : TPR).
 
 (* the final constraint*)
 Definition satFinal (X : Type) final (s : list X) := exists subs, subs el final /\ substring subs s.
@@ -164,12 +164,12 @@ Definition satFinal (X : Type) final (s : list X) := exists subs, subs el final 
 Section fixInstance.
   Variable (Sigma : Type).
   Variable (init : list Sigma).
-  Variable (windows : list (TCSRWin Sigma)).
+  Variable (windows : list (TPRWin Sigma)).
   Variable (final : list (list Sigma)).
   Variable (steps : nat). 
 
   Notation string := (list Sigma). 
-  Definition window := TCSRWin Sigma.
+  Definition window := TPRWin Sigma.
 
   Implicit Type (s a b: string). 
   Implicit Type (r rule : window).
@@ -221,11 +221,11 @@ End fixInstance.
 
 
 (*we define it using the rewritesHead_pred rewrite predicate *)
-Definition TCSRLang (C : TCSR) :=  exists (sf : list (Sigma C)), relpower (valid (rewritesHeadList (windows C))) (steps C) (init C) sf /\ satFinal (final C) sf. 
+Definition TPRLang (C : TPR) :=  exists (sf : list (Sigma C)), relpower (valid (rewritesHeadList (windows C))) (steps C) (init C) sf /\ satFinal (final C) sf. 
 
-(** *variant PTCSR using propositional rules *)
+(** *variant PTPR using propositional rules *)
 
-Record PTCSR := {
+Record PTPR := {
              PSigma : Type;
              Pinit : list PSigma;  (* length is encoded implicitly as the length of init*) 
              Pwindows : PSigma -> PSigma -> PSigma -> PSigma -> PSigma -> PSigma -> Prop;
@@ -292,6 +292,6 @@ Qed.
 
 Hint Constructors rewritesHeadInd.
 
-Definition PTCSRLang (C : PTCSR) :=  exists (sf : list (PSigma C)), relpower (valid (rewritesHeadInd (@Pwindows C))) (Psteps C) (Pinit C) sf /\ satFinal (Pfinal C) sf. 
+Definition PTPRLang (C : PTPR) :=  exists (sf : list (PSigma C)), relpower (valid (rewritesHeadInd (@Pwindows C))) (Psteps C) (Pinit C) sf /\ satFinal (Pfinal C) sf. 
 
 

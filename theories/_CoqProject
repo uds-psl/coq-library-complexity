@@ -320,9 +320,10 @@ L/Complexity/Reductions/TSAT_to_Clique.v
 L/Complexity/Reductions/kSAT_to_SAT.v
 
 L/Complexity/Cook/Prelim.v
-L/Complexity/Cook/CSR.v
+L/Complexity/Cook/PR.v
 L/Complexity/Cook/GenNP.v
-L/Complexity/Cook/TCSR.v
+L/Complexity/Cook/TPR.v
+L/Complexity/Cook/PTPR_Preludes.v
 L/Complexity/Cook/GenNP_PR.v
 L/Complexity/Cook/FlatFinTypes.v
 
