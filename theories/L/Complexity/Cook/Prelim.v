@@ -159,6 +159,16 @@ Proof.
   - apply H1 in H. eauto. 
 Qed.
 
+Lemma relpower_extensional (X : Type) (R R': X -> X -> Prop) :
+  (forall x y, R x y <-> R' x y) -> forall n x y, relpower R n x y <-> relpower R' n x y. 
+Proof. 
+  intros H. induction n. 
+  - split; intros H0; inv H0; eauto. 
+  - split; intros H0; inv H0.
+    + apply H in H2. apply IHn in H3. eauto. 
+    + apply H in H2. apply IHn in H3. eauto. 
+Qed. 
+
 Lemma relpowerRev_trans (X : Type) (R : X -> X -> Prop) n m x y z : relpowerRev R n x y -> relpowerRev R m y z -> relpowerRev R (n + m) x z.
 Proof. 
   rewrite Nat.add_comm. induction 2; cbn; eauto. 

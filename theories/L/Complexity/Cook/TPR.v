@@ -86,11 +86,12 @@ Section abstractDefs.
             cbn [length] in H2. assert (0 <= S i < S(|a0|) - 2) by lia. 
             specialize (H2 (S i) H0); eauto. 
     Qed. 
+
+
   End fixRewritesHead.
   Hint Constructors valid. 
 
-  (*valid is congruent for equivalent rewriteHead predicates *)
-  Lemma valid_congruent' (p1 p2 : rewritesHeadAbstract) : (forall u v, p1 u v -> p2 u v) -> forall a b, valid p1 a b -> valid p2 a b. 
+  Lemma valid_extensional' (p1 p2 : rewritesHeadAbstract) : (forall u v, p1 u v -> p2 u v) -> forall a b, valid p1 a b -> valid p2 a b. 
   Proof. 
     intros.
     induction H0. 
@@ -100,11 +101,11 @@ Section abstractDefs.
       now apply H. 
   Qed.
 
-  Corollary valid_congruent p1 p2 : (forall u v, p1 u v <-> p2 u v) -> forall a b, valid p1 a b <-> valid p2 a b.
+  Corollary valid_extensional p1 p2 : (forall u v, p1 u v <-> p2 u v) -> forall a b, valid p1 a b <-> valid p2 a b.
   Proof.
-    intros; split; [apply valid_congruent'; intros; now apply H | ].
+    intros; split; [apply valid_extensional'; intros; now apply H | ].
     assert (forall u v, p2 u v <-> p1 u v) by (intros; now rewrite H).
-    apply valid_congruent'. intros; now apply H. 
+    apply valid_extensional'. intros; now apply H. 
   Qed.
 
   Lemma valid_monotonous (p1 p2 : rewritesHeadAbstract) : (forall x y, p1 x y -> p2 x y) -> forall x y, valid p1 x y -> valid p2 x y.
@@ -290,8 +291,36 @@ Proof.
   intros H x y H1. inv H1. apply H in H0. eauto.  
 Qed. 
 
+Lemma rewritesHeadInd_extensional (X : Type) (p1 p2 : windowPred X) : (forall x1 x2 x3 x4 x5 x6, p1 x1 x2 x3 x4 x5 x6 <-> p2 x1 x2 x3 x4 x5 x6) -> forall x y, rewritesHeadInd p1 x y <-> rewritesHeadInd p2 x y.
+Proof.  intros H; intros. split; apply rewritesHeadInd_monotonous; unfold windowPred_subs; apply H. Qed. 
+
 Hint Constructors rewritesHeadInd.
 
 Definition PTPRLang (C : PTPR) :=  exists (sf : list (PSigma C)), relpower (valid (rewritesHeadInd (@Pwindows C))) (Psteps C) (Pinit C) sf /\ satFinal (Pfinal C) sf. 
 
+(** *results for agreement of PTPR and TPR *)
+Definition rules_list_ind_agree {X : Type} (p : X -> X -> X -> X -> X -> X -> Prop) (l : list (window X)) :=
+  forall x1 x2 x3 x4 x5 x6, p x1 x2 x3 x4 x5 x6 <-> {x1, x2, x3} / {x4, x5, x6} el l. 
+
+Lemma rules_list_ind_rewritesHead_agree {X : Type} (p : X -> X -> X -> X -> X -> X -> Prop) (l : list (window X)) :
+  rules_list_ind_agree p l -> forall s1 s2, (rewritesHeadInd p s1 s2 <-> rewritesHeadList l s1 s2). 
+Proof. 
+  intros; split; intros. 
+  + inv H0. exists ({x1, x2, x3} / {x4, x5, x6}). split.
+    * apply H, H1. 
+    * split; unfold prefix; cbn; eauto. 
+  + destruct H0 as (r & H1 & ((b & ->) & (b' & ->))). 
+    destruct r as [prem0 conc0], prem0, conc0. cbn. constructor. apply H, H1.  
+Qed.
+
+Lemma tpr_ptpr_agree (X : Type) s final steps indrules (listrules : list (window X)): 
+  rules_list_ind_agree indrules listrules 
+  -> (TPRLang (Build_TPR s listrules final steps) <-> PTPRLang (Build_PTPR s indrules final steps)).
+Proof. 
+  intros; split; intros (sf & H1 & H2); cbn in *. 
+  - exists sf; cbn. split; [ | apply H2]. 
+    eapply relpower_extensional; [ apply valid_extensional, rules_list_ind_rewritesHead_agree, H | apply H1].  
+  - exists sf; cbn. split; [ | apply H2]. 
+    eapply relpower_extensional; [ apply valid_extensional; symmetry; apply rules_list_ind_rewritesHead_agree, H | apply H1]. 
+Qed. 
 

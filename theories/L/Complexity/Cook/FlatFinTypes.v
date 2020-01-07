@@ -24,7 +24,6 @@ Proof.
   rewrite map_length. reflexivity. 
 Qed. 
 
-
 Lemma finReprElSome (X : finType) n k x : finReprEl n k x -> @finReprEl (FinType (EqType (option X))) (flatOption n) (flatSome k) (Some x). 
 Proof. 
   intros (H1 & H2 & H3). split; [ | split]; cbn in *.
