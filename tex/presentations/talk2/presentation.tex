@@ -303,7 +303,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
   \end{overlayarea}
 \end{frame}
 
-\begin{frame}{Challenges}
+\begin{frame}[label=challenges]{Challenges}
   \begin{itemize}
     \item \sat{} formula has a fixed size, but: 
       \begin{itemize} 
@@ -378,7 +378,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
       \draw (4, 0) -- (5.5, 0);
 
       \path[<->] (1, -4) edge node[fill=white, anchor=center, pos= 0.5] {\small t} (1, 3);
-      \path[<->] (1.5, -4.5) edge node[fill=white, anchor=center, pos=0.5] {\small \only<1>{ $l$}\only<2>{ $2z + 1$}} (10, -4.5);
+      \path[<->] (1.5, -4.5) edge node[fill=white, anchor=center, pos=0.5] {\small \only<1>{ $l$}\only<2>{ $l = 2z + 1$}} (10, -4.5);
       %\path[<->] (5.5, 3.5) edge node[fill=white, anchor=center, pos=0.5] {\small $k$} (7.5, 3.5);
 
       \node at (11, 2.75) {\small 1\textsuperscript{st} config};
@@ -393,7 +393,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
   \begin{overlayarea}{\textwidth}{0.08\textwidth}
     %\color{gray}
     \begin{minipage}{0.48\textwidth}
-      $\Sigma = \{a, b, c\}$
+      $\Sigma_{\text{TM}} = \{a, b, c\}$
     \end{minipage}
     \begin{minipage}{0.48\textwidth}
       \raggedleft
@@ -429,7 +429,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
         \node at (1.5, 0.375) {$\cdots$};
         \node at (9.125, 0.375) {$\cdots$};
         \node at (5.6125, 0.375) {$b$};
-        \node at (6.375, 0.375) {$a$};
+        \node at (6.375, 0.375) {$b$};
         \node at (7.125, 0.375) {\blank};
         \node at (7.875, 0.375) {\blank};
         \node at (4.875, 0.375) {$q_1^a$};
@@ -456,7 +456,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
           \node at (1.5, -0.375) {$\cdots$};
           \node at (9.125, -0.375) {$\cdots$};
           \node at (5.6125, -0.375) {$b$};
-          \node at (6.375, -0.375) {$a$};
+          \node at (6.375, -0.375) {$b$};
           \node at (7.125, -0.375) {\blank};
           \node at (7.875, -0.375) {\blank};
           \node at (4.875, -0.375) {$b$};
@@ -486,7 +486,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
           \node at (9.125, -2.625) {$\cdots$};
           \node at (5.6125, -2.625) {$q_1^a$};
           \node at (6.375, -2.625) {$b$};
-          \node at (7.125, -2.625) {$a$};
+          \node at (7.125, -2.625) {$b$};
           \node at (7.875, -2.625) {\blank};
           \node at (4.875, -2.625) {$c$};
           \node at (4.125, -2.625) {\blank};
@@ -509,7 +509,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
           \node at (9.125, -3.375) {$\cdots$};
           \node at (5.6125, -3.375) {$b$};
           \node at (6.375, -3.375) {$b$};
-          \node at (7.125, -3.375) {$a$};
+          \node at (7.125, -3.375) {$b$};
           \node at (7.875, -3.375) {\blank};
           \node at (4.875, -3.375) {$q_2^c$};
           \node at (4.125, -3.375) {\blank};
@@ -532,7 +532,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
   \begin{overlayarea}{\textwidth}{0.08\textwidth}
     %\color{gray}
     \begin{minipage}{0.48\textwidth}
-      $\Sigma = \{a, b, c\}$
+      $\Sigma_{\text{TM}} = \{a, b, c\}$
     \end{minipage}
     \begin{minipage}{0.48\textwidth}
       \onslide<2->{
@@ -568,7 +568,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
         \node at (1.5, 0.375) {$\cdots$};
         \node at (9.125, 0.375) {$\cdots$};
         \node at (5.6125, 0.375) {$b$};
-        \node at (6.375, 0.375) {$a$};
+        \node at (6.375, 0.375) {$b$};
         \node at (7.125, 0.375) {\blank};
         \node at (7.875, 0.375) {\blank};
         \node at (4.875, 0.375) {$q_1^a$};
@@ -597,7 +597,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
           \node at (9.125, -0.375) {$\cdots$};
           \node at (5.6125, -0.375) {$b$};
           \node at (6.375, -0.375) {$b$};
-          \node at (7.125, -0.375) {$a$};
+          \node at (7.125, -0.375) {$b$};
           \node at (7.875, -0.375) {\blank};
           \node at (4.875, -0.375) {$q_2^c$};
           \node at (4.125, -0.375) {\blank};
@@ -615,7 +615,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
   \begin{overlayarea}{\textwidth}{0.08\textwidth}
     %\color{gray}
     \begin{minipage}{0.48\textwidth}
-      $\Sigma = \{a, b, c\}$
+      $\Sigma_{\text{TM}} = \{a, b, c\}$
     \end{minipage}
     \begin{minipage}{0.48\textwidth}
       \onslide<1->{
@@ -651,7 +651,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
         \node at (1.5, 0.375) {$\cdots$};
         \node at (9.125, 0.375) {$\cdots$};
         \node at (5.6125, 0.375) {\only<2-4>{\colorHTwo}$b$};
-        \node at (6.375, 0.375) {\only<3-4>{\colorHTwo}$a$};
+        \node at (6.375, 0.375) {\only<3-4>{\colorHTwo}$b$};
         \node at (7.125, 0.375) {\only<4>{\colorHTwo}\blank};
         \node at (7.875, 0.375) {\blank};
         \node at (4.875, 0.375) {\only<2-3>{\colorHTwo}$q_1^a$};
@@ -679,7 +679,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
         \node at (9.125, -0.375) {$\cdots$};
         \node at (5.6125, -0.375) {\only<2-4>{\colorHTwo}$b$};
         \node at (6.375, -0.375) {\only<3-4>{\colorHTwo}$b$};
-        \node at (7.125, -0.375) {\only<4>{\colorHTwo}$a$};
+        \node at (7.125, -0.375) {\only<4>{\colorHTwo}$b$};
         \node at (7.875, -0.375) {\blank};
         \node at (4.875, -0.375) {\only<2-3>{\colorHTwo}$q_2^c$};
         \node at (4.125, -0.375) {\only<2>{\colorHTwo}\blank};
@@ -711,12 +711,12 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
     \onslide<3->
     {
       \only<3>{\colorHTwo}
-      \trewwin{q_1^a}{b}{a}{q_2^c}{b}{b}
+      \trewwin{q_1^a}{b}{b}{q_2^c}{b}{b}
     }
     \onslide<4->
     {
       \only<4>{\colorHTwo}
-      \trewwin{b}{a}{\blank}{b}{b}{a}
+      \trewwin{b}{b}{\blank}{b}{b}{b}
     }
   \end{center}
 
@@ -746,7 +746,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
           \node at (7.875, 0.375) {\blank};
           \only<1>{
             \node at (5.6125, 0.375) {$b$};
-            \node at (6.375, 0.375) {$a$};
+            \node at (6.375, 0.375) {$b$};
           }
           \only<2->{ 
             \node at (5.6125, 0.375) {$\sigma_1$};
@@ -769,7 +769,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
           \only<1>{
             \node at (5.6125, -0.375) {$b$};
             \node at (6.375, -0.375) {$b$};
-            \node at (7.125, -0.375) {$a$};
+            \node at (7.125, -0.375) {$b$};
           }
           \only<2->{
             \node at (5.6125, -0.375) {$\sigma_3$};
@@ -777,10 +777,13 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
             \node at (7.125, -0.375) {$\sigma_2$};
           }
         \end{tikzpicture}
+        \begin{tikzpicture}[overlay]
+          \node at (4.5, 0.8) {$\sigma_i \in \Sigma_{\text{TM}}$ };
+        \end{tikzpicture}
       \end{center}
     \end{minipage}
     \begin{minipage}{0.38\textwidth}
-      \trewwin{\only<1>{b}\only<2->{\sigma_1}}{\only<1>{a}\only<2->{\sigma_2}}{\blank}{\only<1>{b}\only<2->{\sigma_3}}{\only<1>{b}\only<2->{\sigma_1}}{\only<1>{a}\only<2->{\sigma_2}}
+      \trewwin{\only<1>{b}\only<2->{\sigma_1}}{\only<1>{b}\only<2->{\sigma_2}}{\blank}{\only<1>{b}\only<2->{\sigma_3}}{\only<1>{b}\only<2->{\sigma_1}}{\only<1>{b}\only<2->{\sigma_2}}
     \end{minipage}
   \end{overlayarea}
 
@@ -864,11 +867,11 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 
       \node at (1.5, 0.375) {$\cdots$};
       \node at (9.125, 0.375) {$\cdots$};
-      \node at (5.6125, 0.375) {\only<5->{\colorHOne}$b$};
-      \node at (6.375, 0.375) {\only<5->{\colorHOne}$a$};
-      \node at (7.125, 0.375) {\only<5->{\colorHOne}\blank};
+      \node at (5.6125, 0.375) {\only<5>{\colorHOne}\only<6->{\colorHTwo}$b$};
+      \node at (6.375, 0.375) {\only<5>{\colorHOne}\only<6->{\colorHTwo}$b$};
+      \node at (7.125, 0.375) {\only<5>{\colorHOne}\blank};
       \node at (7.875, 0.375) {\blank};
-      \node at (4.875, 0.375) {$q_1^a$};
+      \node at (4.875, 0.375) {\only<6->{\colorHTwo}$q_1^a$};
       \node at (4.125, 0.375) {$c$};
       \node at (3.375, 0.375) {\blank};
 
@@ -889,7 +892,12 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
       \draw (7.5, 0) -- (7.5, -0.75);
       \draw (8.25, 0) -- (8.25, -0.75);
 
-      \only<5-> {
+      \only<6->{ 
+        \draw[color=\colorTikzC] (4.5, 0) -- (6.75, 0);
+        \draw[color=\colorTikzC] (5.25, -0.75) -- (5.25, 0.75);
+        \draw[color=\colorTikzC] (6, -0.75) -- (6, 0.75);
+      }
+      \only<5> {
         \draw[color=\colorTikzA] (5.25, 0) -- (7.5, 0);
         \draw[color=\colorTikzA] (6, -0.75) -- (6, 0.75);
         \draw[color=\colorTikzA] (6.75, -0.75) -- (6.75, 0.75);
@@ -897,11 +905,11 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 
       \node at (1.5, -0.375) {$\cdots$};
       \node at (9.125, -0.375) {$\cdots$};
-      \node at (5.6125, -0.375) {\only<5->{\colorHOne{}} $b$};
-      \node at (6.375, -0.375) {\only<4>{b}\only<5->{\colorHOne{}$a$}};
-      \node at (7.125, -0.375) {\only<4>{a}\only<5->{\colorHOne{}\blank}};
+      \node at (5.6125, -0.375) {\only<5>{\colorHOne{}}\only<6->{\colorHTwo}$b$};
+      \node at (6.375, -0.375) {\only<4>{b}\only<5->{\only<5>{\colorHOne{}}\only<6->{\colorHTwo}$b$}};
+      \node at (7.125, -0.375) {\only<4>{b}\only<5->{\only<5>{\colorHOne{}}\blank}};
       \node at (7.875, -0.375) {\blank};
-      \node at (4.875, -0.375) {$q_2^c$};
+      \node at (4.875, -0.375) {\only<6->{\colorHTwo}$q_2^c$};
       \node at (4.125, -0.375) {\blank};
       \node at (3.375, -0.375) {\blank};
     \end{tikzpicture}
@@ -1036,7 +1044,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
       \node at (1.5, 0.375) {$\cdots$};
       \node at (9.125, 0.375) {$\cdots$};
       \node[color=\colorTikzC] at (5.6125, 0.375) {$b$};
-      \node at (6.375, 0.375) {$a$};
+      \node at (6.375, 0.375) {$b$};
       \node at (7.125, 0.375) {\blank};
       \node at (7.875, 0.375) {\blank};
       \node[color=\colorTikzC] at (4.875, 0.375) {$q_1^a$};
@@ -1069,7 +1077,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
       \node at (9.125, -0.375) {$\cdots$};
       \node[color=\colorTikzC] at (5.6125, -0.375) {$\polpos{b}$};
       \node at (6.375, -0.375) {$\polpos{b}$};
-      \node at (7.125, -0.375) {$\polpos{a}$};
+      \node at (7.125, -0.375) {$\polpos{b}$};
       \node at (7.875, -0.375) {\blank};
       \node[color=\colorTikzC] at (4.875, -0.375) {$q_2^c$};
       \node[color=\colorTikzC] at (4.125, -0.375) {\blank};
@@ -1175,7 +1183,79 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
   \end{center}
 \end{frame}
 
-\section{Formalisation}
+%\section{Formalisation}
+
+\section{Context}
+\begin{frame}{Mechanisation: Challenges}
+  \begin{itemize}
+    \item massive number of cases (100): proof \emph{heavily} relies on automation
+
+      $\rightarrow$ rewrite rules formalised as inductive predicates
+    \item proofs that rewrites are unique require \emph{a lot} of inversions
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[label=contextslide]{Reduction of \gennp{} to \sat{}}
+  \begin{center}
+    \begin{tikzpicture}[scale=0.9, every node/.style={scale=0.9}]
+      \node[rectangle, draw=black, minimum width=10cm] (gennp) {Generic Problem on Turing Machines (\gennp{})}; 
+      \node[rectangle, draw=black, minimum width = 10cm, below = of gennp] (strrew1) {Parallel Rewriting (\PR{}) on arbitrary $\Sigma$};
+      \node[rectangle, draw=black, below = of strrew1, minimum width = 10cm] (strrew2) {Binary Parallel Rewriting};
+      \node[rectangle, draw=black, below = of strrew2, minimum width = 10cm] (csat) {Propositional SAT (\fsat{})};
+      \node[rectangle, draw=black, below = of csat, minimum width = 10cm] (sat) {SAT on CNFs (\sat{})};
+      \draw[->] 
+        (gennp) edge (strrew1)
+        (strrew1) edge node[right] {homomorphism} (strrew2)
+        (strrew2) edge node[right] {encode bits using boolean variables} (csat)
+        (csat) edge node[right] {Tseytin transformation} (sat);
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+%\againframe{challenges}
+
+
+%\againframe[noframenumbering]{contextslide}
+
+\begin{frame}{Conclusion}
+  Contributions: 
+  \begin{itemize}
+    \item verified correctness of Turing machine simulation in \PR{}
+    \item factorisation of proof\footnote{\cite{Sipser:TheoryofComputation}} into tractable parts
+    \item changes to the original construction\ldots
+      \begin{itemize}
+        \item \ldots to fit our notion of Turing machines
+        \item \ldots to make inductive proofs work formally
+      \end{itemize}
+  \end{itemize}
+
+  \vspace{3ex}
+
+  Roadmap:
+  \begin{itemize}
+    \item reduction of \PR{} to binary \PR{}
+    \item reduction of binary \PR{} to formula satisfiablity
+    \item (reduction of formula satisfiability to CNF satisfiability)
+    \item extraction to L
+  \end{itemize}
+\end{frame}
+
+\miniframesoff
+\section{}
+
+\begin{frame}{LOC}
+  \begin{center}
+  \begin{tabular}{cccc}
+    Component & Spec & Proof \\
+    \midrule
+    Preliminaries & ? & ? \\
+    Definition of PR & ? & ? \\
+    Reduction of TM to PR & ? & ? \\
+    Encoding of finite types & ? & ? \\
+    Nondeterminism: Preludes & ? & ? 
+  \end{tabular}
+  \end{center}
+\end{frame}
 
 \begin{frame}{Representation Relations}
   Representation of tape halves: 
@@ -1231,32 +1311,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
     \item $rs \sim_t^{z'} \mathit{right}$
   \end{itemize}
 
-  %\TODO{the annotation $z$ isn't consistent with the usage of $z$ in the other graphics (off-by-three)}
 \end{frame}
-
-
-%\begin{frame}{Representation Relations}
-%Representation of half-tapes $u \reprtt{p}{n} h$:
-%\begin{itemize}
-%\item $\length{u} \le n$
-%\item $h = \textsf{mapPolarity}~p~u \con E_{\hat{n} - \length{u}}$
-%\end{itemize}
-%where $\hat{n} = n + 2$ and $E_n := \blank^n \#$. 
-%\vspace{2ex}
-
-%Representation of configurations $(q, \mathit{tape}) \reprc{} (ls, qm, rs)$: 
-%\begin{itemize}
-%\item $\textsf{left}~\mathit{tape} \reprtt{p}{z} ls$
-%\item $qm = q^{\textsf{current}~\mathit{tape}}$
-%\item $\textsf{right}~\mathit{tape} \reprtt{p}{z} rs$
-%\end{itemize}
-
-%\begin{align*}
-%(q, \mathit{tp}) \reprc{} s := \exists ls~qm~rs,& s = \rev{(ls)} \con [qm] \con rs \\
-%\land &(q, \mathit{tp}) \reprc{} (ls, qm, rs)
-%\end{align*}
-%\end{frame}
-
 
 \begin{frame}{Deterministic Simulation}
   \begin{center}
@@ -1351,12 +1406,10 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 %Then: rewrites for tape halves can be proven separately using only a subset of the rules
 \end{frame}
 
-\begin{frame}{Mechanisation: Challenges}
-  \begin{itemize}
-    \item massive number of cases (100): proof \emph{heavily} relies on automation
 
-      $\rightarrow$ rewrite rules formalised as inductive predicates
-    \item proofs that rewrites are unique require \emph{a lot} of inversions
+
+\begin{frame}{Challenges due to Turing Machine Formalisation}
+  \begin{itemize}
     \item left half of the tape is reversed wrt the Turing machine formalisation
 
       $\rightarrow$ use symmetry of rewrite rules for tapes
@@ -1365,68 +1418,6 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
       $\rightarrow$ mechanisation: blanks \emph{also} have polarities
   \end{itemize}
 \end{frame}
-
-\section{Context}
-\begin{frame}[label=contextslide]{Reduction of \gennp{} to \sat{}}
-  \begin{center}
-    \begin{tikzpicture}[scale=0.9, every node/.style={scale=0.9}]
-      \node[rectangle, draw=black, minimum width=10cm] (gennp) {Generic Problem on Turing Machines (\gennp{})}; 
-      \node[rectangle, draw=black, minimum width = 10cm, below = of gennp] (strrew1) {Parallel Rewriting (\PR{}) on arbitrary $\Sigma$};
-      \node[rectangle, draw=black, below = of strrew1, minimum width = 10cm] (strrew2) {Binary Parallel Rewriting};
-      \node[rectangle, draw=black, below = of strrew2, minimum width = 10cm] (csat) {Propositional SAT (\fsat{})};
-      \node[rectangle, draw=black, below = of csat, minimum width = 10cm] (sat) {SAT on CNFs (\sat{})};
-      \draw[->] 
-        (gennp) edge (strrew1)
-        (strrew1) edge node[right] {homomorphism} (strrew2)
-        (strrew2) edge node[right] {encode bits using boolean variables} (csat)
-        (csat) edge node[right] {Tseytin transformation} (sat);
-    \end{tikzpicture}
-  \end{center}
-\end{frame}
-
-
-%\againframe[noframenumbering]{contextslide}
-
-\begin{frame}{Conclusion}
-  Contributions: 
-  \begin{itemize}
-    \item verified correctness of Turing machine simulation in \PR{}
-    \item factorisation of proof\footnote{\cite{Sipser:TheoryofComputation}} into tractable parts
-    \item changes to the original construction\ldots
-      \begin{itemize}
-        \item \ldots to fit our notion of Turing machines
-        \item \ldots to make inductive proofs work formally
-      \end{itemize}
-  \end{itemize}
-
-  \vspace{3ex}
-
-  Roadmap:
-  \begin{itemize}
-    \item reduction of \PR{} to binary \PR{}
-    \item reduction of binary \PR{} to formula satisfiablity
-    \item (reduction of formula satisfiability to CNF satisfiability)
-    \item extraction to L
-  \end{itemize}
-\end{frame}
-
-\miniframesoff
-\section{}
-
-\begin{frame}{LOC}
-  \begin{center}
-  \begin{tabular}{cccc}
-    Component & Spec & Proof \\
-    \midrule
-    Preliminaries & ? & ? \\
-    Definition of PR & ? & ? \\
-    Reduction of TM to PR & ? & ? \\
-    Encoding of finite types & ? & ? \\
-    Nondeterminism: Preludes & ? & ? 
-  \end{tabular}
-  \end{center}
-\end{frame}
-
 
 \begin{frame}{Reduction to Binary Alphabet}
   $\Sigma = \{\sigma_1, \ldots, \sigma_n\}$
