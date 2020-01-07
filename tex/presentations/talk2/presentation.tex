@@ -195,7 +195,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 
 \newcommand{\trewwin}[6]{
   \begin{tikzpicture}
-    \draw (0, 0) -- (2.25, 0);
+    \draw[thick] (0, 0) -- (2.25, 0);
     \draw (0.75, -0.75) -- (0.75, 0.75);
     \draw (1.5, -0.75) -- (1.5, 0.75);
     \node at (0.375, 0.375) {\ensuremath{#1}};
@@ -241,7 +241,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
   \begin{itemize}
     \item L: call-by-value $\lambda$-calculus
     \item reasonable model for computational complexity theory\footnote{\cite{ForsterKunzeRoth:2019:wcbv-Reasonable}}
-    \item Most definitions carry over, i.e. 
+    \item most definitions carry over, i.e. 
       \[
         \textsf{NP-hard}~A := \forall B, \textsf{inNP}~B \rightarrow B \preceq_{\text{p}} A 
       \]
@@ -267,7 +267,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 \begin{frame}{Generic NP-hard Problem}
   Idea: encode computation as Boolean formula
 
-  \only<2->{\frametitle{Generic NP-hard Problem on Turing Machines}}
+  \only<2->{\frametitle{Generic NP-hard Problem for Turing Machines}}
 
   \begin{overlayarea}{\textwidth}{0.4\textwidth}
     \only<1> {
@@ -407,6 +407,9 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
       \begin{tikzpicture}
         \draw (0, 0.75) -- (9.75, 0.75);
         \draw (0, 0) -- (9.75, 0);
+        \only<2->{
+          \draw[thick] (0, 0) -- (9.75, 0);
+        }
         \draw (0, 0) -- (0, 0.75);
         \draw (9.75, 0) -- (9.75, 0.75);
 
@@ -469,7 +472,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
           \draw[->, dashed] (6.75, -0.75) -- (7.5, -2.25);
 
           \draw (0, -2.25) -- (9.75, -2.25);
-          \draw (0, -3) -- (9.75, -3);
+          \draw[thick] (0, -3) -- (9.75, -3);
           \draw (0, -3) -- (0, -2.25);
           \draw (9.75, -3) -- (9.75, -2.25);
 
@@ -546,6 +549,9 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
       \begin{tikzpicture}
         \draw (0, 0.75) -- (9.75, 0.75);
         \draw (0, 0) -- (9.75, 0);
+        \only<2->{
+          \draw[thick] (0, 0) -- (9.75, 0);
+        }
         \draw (0, 0) -- (0, 0.75);
         \draw (9.75, 0) -- (9.75, 0.75);
 
@@ -628,7 +634,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
     \begin{center}
       \begin{tikzpicture}
         \draw (0, 0.75) -- (9.75, 0.75);
-        \draw (0, 0) -- (9.75, 0);
+        \draw[thick] (0, 0) -- (9.75, 0);
         \draw (0, 0) -- (0, 0.75);
         \draw (9.75, 0) -- (9.75, 0.75);
 
@@ -688,12 +694,12 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
         \only<2>{
           \draw[color=\colorTikzC] (4.5, -0.75) -- (4.5, 0.75);
           \draw[color=\colorTikzC] (5.25, -0.75) -- (5.25, 0.75);
-          \draw[color=\colorTikzC] (3.75, 0) -- (6, 0);
+          \draw[color=\colorTikzC, thick] (3.75, 0) -- (6, 0);
         }
         \only<3>{
           \draw[color=\colorTikzC] (5.25, -0.75) -- (5.25, 0.75);
           \draw[color=\colorTikzC] (6, -0.75) -- (6, 0.75);
-          \draw[color=\colorTikzC] (4.5, 0) -- (6.75, 0);
+          \draw[color=\colorTikzC, thick] (4.5, 0) -- (6.75, 0);
 
         }
       \end{tikzpicture}
@@ -731,7 +737,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
       \begin{center}
         \begin{tikzpicture}
           \draw (5.25, 0.75) -- (9.75, 0.75);
-          \draw (5.25, 0) -- (9.75, 0);
+          \draw[thick] (5.25, 0) -- (9.75, 0);
           \draw (5.25, 0) -- (5.25, 0.75);
           \draw (9.75, 0) -- (9.75, 0.75);
 
@@ -777,9 +783,11 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
             \node at (7.125, -0.375) {$\sigma_2$};
           }
         \end{tikzpicture}
-        \begin{tikzpicture}[overlay]
-          \node at (4.5, 0.8) {$\sigma_i \in \Sigma_{\text{TM}}$ };
-        \end{tikzpicture}
+        \only<2->{
+          \begin{tikzpicture}[overlay, remember picture]
+            \node at (4.5, 0.8) {$\sigma_i \in \Sigma_{\text{TM}}$ };
+          \end{tikzpicture}
+        }
       \end{center}
     \end{minipage}
     \begin{minipage}{0.38\textwidth}
@@ -798,7 +806,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
       \begin{center}
         \begin{tikzpicture}
           \draw (5.25, 0.75) -- (9.75, 0.75);
-          \draw (5.25, 0) -- (9.75, 0);
+          \draw[thick] (5.25, 0) -- (9.75, 0);
           \draw (5.25, 0) -- (5.25, 0.75);
           \draw (9.75, 0) -- (9.75, 0.75);
 
@@ -845,7 +853,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 
     \begin{tikzpicture}
       \draw (0, 0.75) -- (9.75, 0.75);
-      \draw (0, 0) -- (9.75, 0);
+      \draw[thick] (0, 0) -- (9.75, 0);
       \draw (0, 0) -- (0, 0.75);
       \draw (9.75, 0) -- (9.75, 0.75);
 
@@ -893,12 +901,12 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
       \draw (8.25, 0) -- (8.25, -0.75);
 
       \only<6->{ 
-        \draw[color=\colorTikzC] (4.5, 0) -- (6.75, 0);
+        \draw[color=\colorTikzC, thick] (4.5, 0) -- (6.75, 0);
         \draw[color=\colorTikzC] (5.25, -0.75) -- (5.25, 0.75);
         \draw[color=\colorTikzC] (6, -0.75) -- (6, 0.75);
       }
       \only<5> {
-        \draw[color=\colorTikzA] (5.25, 0) -- (7.5, 0);
+        \draw[color=\colorTikzA, thick] (5.25, 0) -- (7.5, 0);
         \draw[color=\colorTikzA] (6, -0.75) -- (6, 0.75);
         \draw[color=\colorTikzA] (6.75, -0.75) -- (6.75, 0.75);
       }
@@ -924,7 +932,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
       \begin{center}
         \begin{tikzpicture}
           \draw (5.25, 0.75) -- (9.75, 0.75);
-          \draw (5.25, 0) -- (9.75, 0);
+          \draw[thick] (5.25, 0) -- (9.75, 0);
           \draw (5.25, 0) -- (5.25, 0.75);
           \draw (9.75, 0) -- (9.75, 0.75);
 
@@ -975,7 +983,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
       \begin{center}
         \begin{tikzpicture}
           \draw (5.25, 0.75) -- (9.75, 0.75);
-          \draw (5.25, 0) -- (9.75, 0);
+          \draw[thick] (5.25, 0) -- (9.75, 0);
           \draw (5.25, 0) -- (5.25, 0.75);
           \draw (9.75, 0) -- (9.75, 0.75);
 
@@ -1021,7 +1029,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 
     \begin{tikzpicture}
       \draw (0, 0.75) -- (9.75, 0.75);
-      \draw (0, 0) -- (9.75, 0);
+      \draw[thick] (0, 0) -- (9.75, 0);
       \draw (0, 0) -- (0, 0.75);
       \draw (9.75, 0) -- (9.75, 0.75);
 
@@ -1067,11 +1075,9 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
       \draw (7.5, 0) -- (7.5, -0.75);
       \draw (8.25, 0) -- (8.25, -0.75);
 
-      \draw[color=\colorTikzC] (3.75, 0) -- (6, 0);
+      \draw[color=\colorTikzC, thick] (3.75, 0) -- (6, 0);
       \draw[color=\colorTikzC] (4.5, -0.75) -- (4.5, 0.75);
       \draw[color=\colorTikzC] (5.25, -0.75) -- (5.25, 0.75);
-
-
 
       \node at (1.5, -0.375) {$\cdots$};
       \node at (9.125, -0.375) {$\cdots$};
@@ -1116,7 +1122,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
   \begin{center}
     \begin{tikzpicture}
       \draw (0, 0.5) -- (10.5, 0.5);
-      \draw (0, 0) -- (10.5, 0);
+      \draw[thick] (0, 0) -- (10.5, 0);
       \draw (0, 0) -- (0, 0.5);
       \draw (10.5, 0) -- (10.5, 0.5);
 
@@ -1220,13 +1226,13 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 \begin{frame}{Conclusion}
   Contributions: 
   \begin{itemize}
-    \item verified correctness of Turing machine simulation in \PR{}
     \item factorisation of proof\footnote{\cite{Sipser:TheoryofComputation}} into tractable parts
     \item changes to the original construction\ldots
       \begin{itemize}
         \item \ldots to fit our notion of Turing machines
         \item \ldots to make inductive proofs work formally
       \end{itemize}
+    \item Coq: verified correctness of Turing machine simulation in \PR{}
   \end{itemize}
 
   \vspace{3ex}
@@ -1248,11 +1254,13 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
   \begin{tabular}{cccc}
     Component & Spec & Proof \\
     \midrule
-    Preliminaries & ? & ? \\
-    Definition of PR & ? & ? \\
-    Reduction of TM to PR & ? & ? \\
-    Encoding of finite types & ? & ? \\
-    Nondeterminism: Preludes & ? & ? 
+    preliminaries & 73 & 160 \\
+    definition of PR & 136 & 232 \\
+    reduction of TM to PR & ? & ? \\
+    encoding of finite types & 9 & 70 \\
+    nondeterminism: Preludes & 47 & 169 \\
+    \midrule
+    total & ? & ?
   \end{tabular}
   \end{center}
 \end{frame}
@@ -1404,9 +1412,37 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 %Somehow portray the idea that everything (flow of information) is propagated from the center of the string; the rewrite is determined uniquely by the head.
 
 %Then: rewrites for tape halves can be proven separately using only a subset of the rules
+
 \end{frame}
 
 
+\begin{frame}{Tape Transformations}
+  Add symbol: 
+  \[ rs \reprt{} h \land |rs| < z' \rightarrow \exists! h', (h \rightsquigarrow \polpos{a} :: h') \land a :: rs \reprt{+} \polpos{a} :: h' \]
+  \[ ls \reprt{} h \land |ls| < z' \rightarrow \exists! h', (\rev{h} \rightsquigarrow \rev{\polneg{a} :: h'}) \land a :: ls \reprt{-} \polneg{a} :: h'
+  \]
+  
+  Remove symbol: 
+  \[a :: b :: rs \reprt{} a :: b :: h \rightarrow \exists! h', (a :: b :: h \rightsquigarrow \polneg{b} :: h') \land b :: rs \reprt{-} \polneg{b} :: h' \]
+
+  Leave unchanged:
+  \[a :: rs \reprt{} a :: h \rightarrow \exists! h', (a :: h \rightsquigarrow \polneut{a} :: h) \land a :: rs \reprt{\circ} \polneut{a} :: h' \]
+
+\end{frame}
+
+\begin{frame}{Main Simulation Results}
+  \begin{block}{Completeness}
+    Let $(q, \mathit{tape})$ be a configuration with $\length{tape} \le k$. There exists $s$ with $(q, \mathit{tape}) \reprc{} s$.
+
+    If $(q, \mathit{tape}) \triangleright^{\le t} (q', \mathit{tape}')$, then there exists $s'$ with $s \rightsquigarrow^t s'$, $(q', \mathit{tape}') \reprc{} s'$ and $s' \models \Rfinal$. 
+  \end{block}
+
+  \begin{block}{Soundness}
+    Let $s$ be given such that $(q, \mathit{tape}) \reprc{} s$ and $\length{\mathit{tape}} \le k$ for some $q, \mathit{tape}$. 
+
+    If $s \rightsquigarrow^t s'$ and $s' \models \Rfinal$, then there exists $(q', \mathit{tape}')$ with $(q', \mathit{tape}') \reprc{} s'$ such that $(q, \mathit{tape}) \triangleright^{\le t} (q', \mathit{tape}')$ and $\length{\mathit{tape}'} \le z'$. 
+  \end{block}
+\end{frame}
 
 \begin{frame}{Challenges due to Turing Machine Formalisation}
   \begin{itemize}
@@ -1462,20 +1498,38 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 
 \againframe<2>[noframenumbering]{prdef}
 
-\begin{frame}{Transition Rules -- Examples}
+\begin{frame}{Transition Rules -- Example}
+  \onslide<2>{In Coq mechanisation:}
 
+  \vspace{1ex}
+  $\delta(q, a) = (p, \Some{b}, L)$: 
+  \begin{overlayarea}{\textwidth}{0.7\textheight}
+    \only<1>{
+      \begin{center}
+        \trewwin{\blank}{q^{a}}{m_1}{\blank}{p^{\blank}}{\polpos{b}}
+        \trewwin{\sigma_1}{q^a}{m_1}{\polpos{m_2}}{p^{\sigma_1}}{\polpos{b}}\\
+        \trewwin{\blank}{\blank}{q^a}{\blank}{\blank}{p^{\blank}}
+        \trewwin{\blank}{\sigma_1}{q^a}{\blank}{\blank}{p^{\sigma_1}}
+        \trewwin{\sigma_1}{\sigma_2}{q^a}{\polpos{m_1}}{\polpos{\sigma_1}}{p^{\sigma_2}} \\
+        \trewwin{q^a}{\blank}{\blank}{p^{m_1}}{\polpos{b}}{\blank}
+        \trewwin{q^a}{\sigma_1}{m_1}{p^{m_2}}{\polpos{b}}{\polpos{\sigma_1}}
+      \end{center}
+    }
+    \only<2->{
+      \begin{center}
+        \trewwin{m_1}{q^a}{m_2}{\polpos{m_3}}{p^{m_1}}{\polpos{b}}
+        \trewwin{m_1}{m_2}{q^a}{\polpos{m_3}}{\polpos{m_1}}{p^{m_2}}
+        \trewwin{q^a}{m_1}{m_2}{p^{m_3}}{\polpos{b}}{\polpos{m_1}}
+      \end{center}
+
+      Contains garbage, i.e. 
+      \begin{center}
+        \trewwin{\blank}{q^a}{\blank}{\polpos{\sigma}}{p^{\blank}}{\polpos{b}}
+      \end{center}
+    }
+  \end{overlayarea}
 \end{frame}
 
-\begin{frame}{Tape Transformations}
-
-\end{frame}
-
-\begin{frame}{Step Simulation}
-\end{frame}
-
-\begin{frame}{Main Simulation Results}
-
-\end{frame}
 
 \begin{frame}{String Rewriting (SR) (and why it does not work for us)}
   \begin{itemize}
@@ -1486,8 +1540,8 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 
   Problems: 
   \begin{itemize}
+    \item essentially unbounded, would require a modified restricted version for \sat{}; \emph{this is the hard part}
     \item only a single final string 
-    \item essentially unbounded, would require a modified restricted version for \sat{}
     \item only a single rewrite in each step, does not allow tape shifting
   \end{itemize}
 \end{frame}
