@@ -1983,7 +1983,7 @@ Section fixTM.
    Qed.  
 
 (*   (*if we start with a string of such a form, then the resulting string will also have this form *) *)
-   Lemma valid_rewHeadSim_conc_inv (X : Type) pred s' A B (a b c d e : X)  : 
+   Lemma valid_conc_inv (X : Type) pred s' A B (a b c d e : X)  : 
      valid (X := X) pred (A ++ [a; b; c; d; e] ++ B) s' 
      -> exists A' B' (a' b' c' d' e' : X), s' = A' ++ [a'; b'; c'; d'; e'] ++ B' /\ |A| = |A'| /\ |B|= |B'|. 
    Proof.  
@@ -2145,7 +2145,7 @@ Section fixTM.
 (*     cbn in H; rewrite <- !app_assoc in H; cbn in H;  *)
 (*       rewrite app_fold in H;  *)
 (*       let X1 := fresh "X1" in let X2 := fresh "X2" in  *)
-(*       destruct (valid_rewHeadSim_conc_inv H) as (? & ? & ? & ? & ? & ? & ? & -> & X1 & X2); *)
+(*       destruct (valid_conc_inv H) as (? & ? & ? & ? & ? & ? & ? & -> & X1 & X2); *)
 (*       normalise_conf_strings_in H;  *)
 (*       let K1 := fresh "K" in let K2 := fresh "K" in let K3 := fresh "K" in *)
 (*       let K4 := fresh "K" in let K5 := fresh "K" in *)
@@ -2270,7 +2270,7 @@ Admitted.
   (*     cbn in H; rewrite <- !app_assoc in H; cbn in H;  *)
   (*     rewrite app_fold in H;  *)
   (*     let X1 := fresh "X1" in let X2 := fresh "X2" in  *)
-  (*     destruct (valid_rewHeadSim_conc_inv H) as (? & ? & ? & ? & ? & ? & ? & -> & X1 & X2); *)
+  (*     destruct (valid_conc_inv H) as (? & ? & ? & ? & ? & ? & ? & -> & X1 & X2); *)
   (*     normalise_conf_strings_in H;  *)
   (*     let K1 := fresh "K" in let K2 := fresh "K" in let K3 := fresh "K" in *)
   (*     let K4 := fresh "K" in let K5 := fresh "K" in *)
@@ -4226,6 +4226,135 @@ Admitted.
         end. 
   Qed. 
 
+  Ltac inv_eqn_map := repeat match goal with 
+    | [H : _ :: ?a = map _ ?s |- _] => is_var s; destruct s; cbn in H; [congruence | inv H]
+    | [H : [] = map _ ?s |- _] => is_var s; destruct s; cbn in H; [ clear H| congruence]
+  end.
+
+  Hint Unfold isValidInput.
+
+  Local Ltac prelude_inv_valid_constant := 
+    repeat match goal with 
+      | [H : (| _ :: _ :: _ |) < 2 |- _] => cbn in H; try lia
+      | [H : _ = map _ _ |- _] => inv_eqn_map
+      | [H : rewritesHeadInd _ _ _ |- _] => inv H
+      | [H : liftPrelude _ _ _ _ _ _ _ |- _] => inv H
+      | [H : preludeRules _ _ _ _ _ _ |- _ ] => inv H
+      | [H : valid _ _ _ |- _] => inv H
+    end.
+
+  Lemma S_injective a b : S a = S b -> a = b. 
+  Proof. congruence. Qed. 
+
+  Ltac list_length_inv := repeat match goal with 
+      | [H : S _ = |?a| |- _] => is_var a; destruct a; cbn in H; [ congruence | apply S_injective in H]
+      | [H : 0 = |?a| |- _] => is_var a; destruct a; cbn in H; [ clear H| congruence]
+      | [H : |?a| = _ |- _] => symmetry in H
+  end. 
+
+  Lemma prelude_right_rewrites_blank_unique j s: 
+    valid (rewritesHeadInd (liftPrelude preludeRules)) (map inr (repEl (S (S j)) nblank ++ [ndelimC])) s -> s = map inl (E neutral (S (S j))).
+  Proof. 
+    intros. revert s H. induction j; intros.
+    - cbn in H. prelude_inv_valid_constant. now cbn. 
+    - inv H. 
+      + cbn in H4; lia.  
+      + apply IHj in H2 as ->. clear IHj. 
+        prelude_inv_valid_constant. eauto. 
+  Qed. 
+
+  Lemma prelude_right_rewrites_symbols_unique j i s: 
+    valid (rewritesHeadInd (liftPrelude preludeRules)) (map inr (repEl (S (S j)) nstar ++ repEl (S (S i)) nblank ++ [ndelimC])) s 
+    -> exists s', |s'| <= S(S j) /\ s = map inl (stringForTapeHalf' (S (S i) + (S (S j) - |s'|)) s'). 
+  Proof. 
+    revert s. induction j; cbn; intros. 
+    - do 2(match goal with [H : valid _ _ _ |- _] => inv H end; try match goal with [H : _ < 2 |- _] => cbn in H; lia end). 
+      apply prelude_right_rewrites_blank_unique in H1 as ->. 
+      prelude_inv_valid_constant. 
+      + destruct m. 
+        * exists [σ; e]. cbn; rewrite Nat.add_0_r. eauto. 
+        * exists [σ]. cbn. rewrite Nat.add_comm; cbn. eauto. 
+      + exists []. cbn. rewrite Nat.add_comm; cbn. eauto.
+    - inv H; [cbn in H4; lia | ]. apply IHj in H2 as (s' & H5 & ->). clear IHj. 
+      destruct s'; [ | destruct s']; cbn in *; prelude_inv_valid_constant. 
+      + exists [σ]. cbn. split; [ lia |eauto ].  
+      + exists []; cbn. rewrite !Nat.add_comm with (n := i). split; [lia | eauto]. 
+      + exists [σ1; e]. cbn. rewrite !Nat.add_comm with (n := i).  split; [lia | eauto]. 
+      + exists (σ1 :: e :: e0 :: s'). cbn. split; [lia | eauto]. 
+  Qed. 
+
+  Lemma list_length_split1 (X : Type) (s : list X) n : n <= |s| -> exists s1 s2, |s1| = n /\ |s2| = |s| - n /\ s = s1 ++ s2. 
+  Proof. 
+    revert s. induction n; intros. 
+    - exists [], s. cbn; rewrite Nat.sub_0_r. eauto. 
+    - destruct s; cbn in H; [lia | ]. assert (n <= |s|) as H' by lia. 
+      apply IHn in H' as (s1 & s2 & H1 & H2 & ->). 
+      exists (x::s1), s2. cbn. eauto. 
+  Qed. 
+
+  Lemma list_length_split2 (X : Type) (s : list X) n : n <= |s| -> exists s1 s2, |s1| = |s| - n /\ |s2| = n /\ s = s1 ++ s2. 
+  Proof. 
+    intros. assert (|s| - n <= |s|) as H' by lia. 
+    specialize (list_length_split1 H') as (s1 & s2 & H1 & H2 & ->). 
+    exists s1, s2. 
+    rewrite app_length in *.
+    repeat split; [lia | lia].
+  Qed. 
+
+  Lemma app_eq_length (X : Type) (s1 s2 w1 w2 : list X) : |s1| = |w1| -> s1 ++ s2 = w1 ++ w2 -> s1 = w1 /\ s2 = w2. 
+  Proof.
+    intros. revert w1 H H0. induction s1; cbn in *; intros. 
+    - destruct w1; cbn in *; eauto. 
+    - destruct w1; cbn in *; [congruence | ]. inv H0. inv H. 
+      specialize (IHs1 w1 H1 H3) as (-> & ->). eauto. 
+  Qed. 
+
+  Lemma prelude_left_rewrites_blank_unique j s : 
+    valid (rewritesHeadInd (liftPrelude preludeRules)) (inr ndelimC :: rev (map inr (repEl (S (S j)) nblank))) s -> s = rev (map inl (E neutral (S (S j)))).  
+  Proof. 
+    intros (H1 & H2)%valid_iff. cbn in H2. rewrite !app_length, rev_length, map_length, repEl_length in H2. 
+    cbn in H2. replace (j + 1 + 1 - 1) with (S j) in H2 by lia. 
+    revert s H1 H2. 
+    induction j; intros. 
+    - cbn in H1. assert (0 <= 0 < 1) as H3 by lia. specialize (H2 0 H3). 
+      cbn in H2. inv H2. prelude_inv_valid_constant. cbn in H0; subst.  
+      destruct s2; [ | now cbn in H1]. eauto. 
+    - assert (0 <= S j < S (S j)) as H3 by lia; specialize (H2 (S j) H3) as H4; clear H3. 
+      cbn in H4. rewrite <- !app_assoc in H4. cbn in H4. unfold rewritesAt in H4. 
+      cbn in H1. rewrite !app_length, rev_length in H1. cbn in H1. 
+      assert (3 <= |s|) as H5 by lia.
+      destruct (list_length_split2 H5) as (s1 & s2 & _ & F2 & ->). 
+      list_length_inv. clear H5. 
+      assert (forall i, 0 <= i < S j -> rewritesAt (rewritesHeadInd (liftPrelude preludeRules)) i (inr ndelimC
+          :: (rev (map inr (repEl j nblank)) ++ [inr nblank]) ++ [inr nblank]) (s1 ++ [s; s0])) as H. 
+      { 
+        intros. assert (0 <= i < S (S j)) as H5 by lia. 
+        specialize (H2 i H5). clear H5. 
+        replace ([s; s0; s2]) with ([s; s0] ++ [s2]) in H2 by now cbn. 
+        rewrite app_assoc in H2. rewrite app_fold in H2. 
+        specialize (rewritesAt_rewritesHeadInd_rem_at_end H2) as H2'. 
+        apply H2'. 
+        + cbn. rewrite !app_length, rev_length, map_length, repEl_length. cbn. lia. 
+        + cbn. rewrite app_length; cbn. rewrite !app_length, map_length, repEl_length in H1. cbn in H1. lia. 
+      }
+      assert (|inr ndelimC :: rev (map inr (repEl (S (S j)) nblank)) : list preludeSig| = |s1 ++ [s; s0]|) as H'. 
+      { 
+        cbn. rewrite !app_length, rev_length. cbn. rewrite app_length in H1. cbn in H1. lia. 
+      }
+      specialize (IHj (s1 ++ [s; s0]) H' H). cbn in IHj. 
+      clear H H' H1 H2. 
+      rewrite <- app_assoc in IHj. cbn in IHj. 
+      eapply app_eq_length in IHj as (-> & H1). 
+      + inv H1. cbn in H4. rewrite !skipn_app in H4. 
+        * prelude_inv_valid_constant. cbn. rewrite <- !app_assoc. eauto. 
+        * rewrite rev_length, map_length, E_length; lia. 
+        * rewrite rev_length, map_length, repEl_length; lia. 
+      + match type of IHj with ?a = ?b => assert (|a| = |b|) by congruence end. 
+        rewrite !app_length in H. cbn in H. lia. 
+  Qed. 
+
+  (*the proof of this lemma is very technical & boring *)
+  (*we just put together the previous lemmas, but need some case distinctions because we need rewrite windows of size 3 *)
   Lemma prelude_sound s: valid (rewritesHeadInd (liftPrelude preludeRules)) (map inr preludeInitialString) s -> exists s', s = map inl s' /\ isValidInitialString s'. 
   Proof. 
     intros. 
@@ -4237,7 +4366,159 @@ Admitted.
     exists s'; split; [reflexivity | ]. 
     unfold preludeInitialString in H. 
     unfold isValidInitialString.  
-  Admitted. 
+    unfold z, z' in H. replace (wo + (t + k) - k) with (wo + t) in H by lia. 
+    destruct k as [ | k'] eqn:eqk; [ | destruct k']; [destruct t as [ | t'] eqn:eqt; [ | destruct t'] | destruct t as [ | t'] eqn:eqt; [ | destruct t'] | ]; cbn in H. 
+    + exists []. cbn. unfold z, z'. subst. prelude_inv_valid_constant; cbn; eauto. 
+    + exists []. cbn. unfold z, z'. subst. prelude_inv_valid_constant; cbn; eauto. 
+    + exists [].
+      revert eqk eqt. 
+      rewrite Nat.add_comm in H. cbn in H. do 2 rewrite <- app_assoc in H. cbn in H. 
+      rewrite !map_app in H. cbn in H. rewrite app_fold in H. 
+      match type of H with 
+        context[?a :: ?b :: inr ninit :: ?c :: ?d :: ?r] => replace (a :: b :: inr ninit :: c :: d :: r) with ([a; b; inr ninit; c; d] ++ r) in H by (now cbn) 
+      end.
+      specialize (valid_conc_inv H) as (A' & B' & ? & ? & ? & ? & ? & F1 & F2 & F3). 
+      apply map_eq_app in F1 as (ls1 & ls2 & -> & -> & F1). symmetry in F1. 
+      apply map_eq_app in F1 as (ls3 & ls4 & -> & F1 & ->). 
+      inv_eqn_map. 
+      do 2 setoid_rewrite map_app in H at 2. cbn [map] in H. 
+      specialize (proj1 (valid_rewritesHeadInd_center _ _ _ _ _ _ _ _ _ _ _ _ _ _ _) (conj H (conj F2 F3))) as (G1 & G2 & G3 & G4 & G5). 
+      clear H. 
+      repeat match goal with 
+        | [ H : liftPrelude _ _ _ _ _ _ _ |- _] => inv H
+        | [ H : preludeRules _ _ _ _ _ _ |- _] => inv H
+      end.
+      rewrite map_rev in G1. 
+      replace ((inr ndelimC :: (rev (map inr (repEl t' nblank)) ++ [inr nblank]) ++ [inr nblank]) ++ [inr nblank; inr nblank]) with (inr ndelimC :: rev (map inr (repEl (S (S (S (S t')))) nblank)) : list preludeSig) in G1. 
+      2: { cbn. rewrite <- app_assoc. cbn. eauto. }
+      apply (prelude_left_rewrites_blank_unique) in G1. 
+      apply (prelude_right_rewrites_blank_unique (j := S (S t'))) in G2. 
+      cbn in G2. inv G2. symmetry in H0. inv_eqn_map. 
+      apply Prelim.map_inj in H1 as <- ; [ | unfold injective; congruence]. 
+      rewrite <- map_rev in G1. cbn in G1. rewrite <- app_assoc in G1. cbn in G1. 
+      rewrite map_app in G1. cbn in G1. 
+      apply app_eq_length in G1 as (G1 & _). 
+      * apply Prelim.map_inj in G1 as ->;[  | unfold injective; congruence ]. 
+        clear F2 F3. intros. cbn; unfold z', isValidInput. subst. rewrite Nat.add_comm. cbn. 
+           split; [ | lia]. rewrite <- !app_assoc. eauto. 
+      * clear F3 G1. rewrite <- F2. cbn. rewrite !app_length, !map_length, !app_length, !rev_length. 
+        rewrite repEl_length, E_length. cbn. lia.
+    + (*at most one relevant symbol *)
+      revert eqk eqt. (*so that they don't get in the way with inv/subst *)
+      replace ([inr ndelimC; inr nblank; inr nblank; inr nblank; inr ninit; inr nstar; inr nblank; inr nblank; inr ndelimC] : list preludeSig) with ([inr ndelimC; inr nblank] ++ [inr nblank; inr nblank; inr ninit; inr nstar; inr nblank] ++ [inr nblank; inr ndelimC] : list preludeSig) in H  by (now cbn). 
+      specialize (valid_conc_inv H) as (A' & B' & ? & ? & ? & ? & ? & F1 & F2 & F3). 
+      apply map_eq_app in F1 as (ls1 & ls2 & -> & -> & F1). symmetry in F1. 
+      apply map_eq_app in F1 as (ls3 & ls4 & -> & F1 & ->). 
+      inv_eqn_map. rewrite !map_app in H. cbn [map] in H. 
+      specialize (proj1 (valid_rewritesHeadInd_center _ _ _ _ _ _ _ _ _ _ _ _ _ _ _) (conj H (conj F2 F3))) as (G1 & G2 & G3 & G4 & G5).  
+      clear H. 
+      repeat match goal with 
+        | [ H : liftPrelude _ _ _ _ _ _ _ |- _] => inv H
+        | [ H : preludeRules _ _ _ _ _ _ |- _] => inv H
+      end.
+      rewrite map_length in *. 
+      cbn in F2, F3. list_length_inv. cbn in G1, G2. 
+      prelude_inv_valid_constant. intros. 
+      destruct m. 
+      - exists [e]. cbn. unfold z, z'. subst. unfold isValidInput. eauto. 
+      - exists []. cbn. unfold z, z'. subst. unfold isValidInput. eauto. 
+    + revert eqk eqt. (*so that they don't get in the way with inv/subst *)
+      (*apart from the replace call, this is the same as for the previous case *)
+      replace ([inr ndelimC; inr nblank; inr nblank; inr nblank; inr nblank; inr ninit; inr nstar; inr nblank; inr nblank; inr nblank; inr ndelimC] : list preludeSig) with ([inr ndelimC; inr nblank; inr nblank] ++ [inr nblank; inr nblank; inr ninit; inr nstar; inr nblank] ++ [inr nblank; inr nblank; inr ndelimC] : list preludeSig) in H  by (now cbn). 
+      specialize (valid_conc_inv H) as (A' & B' & ? & ? & ? & ? & ? & F1 & F2 & F3). 
+      apply map_eq_app in F1 as (ls1 & ls2 & -> & -> & F1). symmetry in F1. 
+      apply map_eq_app in F1 as (ls3 & ls4 & -> & F1 & ->). 
+      inv_eqn_map. rewrite !map_app in H. cbn [map] in H. 
+      specialize (proj1 (valid_rewritesHeadInd_center _ _ _ _ _ _ _ _ _ _ _ _ _ _ _) (conj H (conj F2 F3))) as (G1 & G2 & G3 & G4 & G5).  
+      clear H. 
+      repeat match goal with 
+        | [ H : liftPrelude _ _ _ _ _ _ _ |- _] => inv H
+        | [ H : preludeRules _ _ _ _ _ _ |- _] => inv H
+      end.
+      rewrite map_length in *. 
+      cbn in F2, F3. list_length_inv. cbn in G1, G2. 
+      prelude_inv_valid_constant. intros. 
+      destruct m. 
+      - exists [e]. cbn. unfold z, z'. subst. unfold isValidInput. eauto. 
+      - exists []. cbn. unfold z, z'. subst. unfold isValidInput. eauto.
+    + revert eqk eqt. 
+      rewrite Nat.add_comm in H. cbn in H. do 2 rewrite <- app_assoc in H. cbn in H. 
+      rewrite !map_app in H. cbn in H. rewrite app_fold in H. 
+      match type of H with 
+        context[?a :: ?b :: inr ninit :: ?c :: ?d :: ?r] => replace (a :: b :: inr ninit :: c :: d :: r) with ([a; b; inr ninit; c; d] ++ r) in H by (now cbn) 
+      end.
+      specialize (valid_conc_inv H) as (A' & B' & ? & ? & ? & ? & ? & F1 & F2 & F3). 
+      apply map_eq_app in F1 as (ls1 & ls2 & -> & -> & F1). symmetry in F1. 
+      apply map_eq_app in F1 as (ls3 & ls4 & -> & F1 & ->). 
+      inv_eqn_map. 
+      do 2 setoid_rewrite map_app in H at 2. cbn [map] in H. 
+      specialize (proj1 (valid_rewritesHeadInd_center _ _ _ _ _ _ _ _ _ _ _ _ _ _ _) (conj H (conj F2 F3))) as (G1 & G2 & G3 & G4 & G5). 
+      clear H. 
+      repeat match goal with 
+        | [ H : liftPrelude _ _ _ _ _ _ _ |- _] => inv H
+        | [ H : preludeRules _ _ _ _ _ _ |- _] => inv H
+      end.
+
+      inv G2. 1: now cbn in H4. 
+      inv H4. inv_eqn_map. inv H0. inv H4.  
+      rewrite map_rev in G1. 
+      replace ((inr ndelimC :: ((rev (map inr (repEl t' nblank)) ++ [inr nblank]) ++ [inr nblank]) ++ [inr nblank]) ++ [inr nblank; inr nblank] : list preludeSig) with (inr ndelimC :: rev (map inr (repEl (S (S (S (S (S t'))))) nblank)) : list preludeSig) in G1.
+      2: { cbn. rewrite <- app_assoc. cbn. eauto. }
+      apply (prelude_left_rewrites_blank_unique) in G1. 
+      apply (prelude_right_rewrites_blank_unique (j := S (S t'))) in H2. 
+      cbn in H2. inv H2. symmetry in H0. inv_eqn_map. 
+      apply Prelim.map_inj in H1 as <- ; [ | unfold injective; congruence]. 
+      rewrite <- map_rev in G1. cbn in G1. rewrite <- app_assoc in G1. cbn in G1. 
+      rewrite map_app in G1. cbn in G1. 
+      apply app_eq_length in G1 as (G1 & _). 
+      * apply Prelim.map_inj in G1 as ->;[  | unfold injective; congruence ]. 
+        clear F2 F3. intros. destruct m. 
+        -- exists [e]; cbn; unfold z', isValidInput. subst. rewrite Nat.add_comm. cbn. 
+           split; [ | lia]. rewrite <- !app_assoc. eauto. 
+        -- exists []; cbn; unfold z', isValidInput. subst. rewrite Nat.add_comm. cbn. 
+          split; [ | lia]. rewrite <- !app_assoc. eauto. 
+      * clear F3 G1. rewrite <- F2. cbn. rewrite !app_length, !map_length, !app_length, !rev_length. 
+        rewrite repEl_length, E_length. cbn. lia. 
+     + revert eqk. 
+       rewrite Nat.add_comm in H. cbn in H. do 2 rewrite <- app_assoc in H. cbn in H. 
+       rewrite !map_app in H. cbn in H. rewrite app_fold in H. 
+       match type of H with 
+         context[?a :: ?b :: inr ninit :: ?c :: ?d :: ?r] => replace (a :: b :: inr ninit :: c :: d :: r) with ([a; b; inr ninit; c; d] ++ r) in H by (now cbn) 
+       end.
+       specialize (valid_conc_inv H) as (A' & B' & ? & ? & ? & ? & ? & F1 & F2 & F3). 
+       apply map_eq_app in F1 as (ls1 & ls2 & -> & -> & F1). symmetry in F1. 
+       apply map_eq_app in F1 as (ls3 & ls4 & -> & F1 & ->). 
+       inv_eqn_map. 
+       do 2 setoid_rewrite map_app in H at 2. cbn [map] in H. 
+       specialize (proj1 (valid_rewritesHeadInd_center _ _ _ _ _ _ _ _ _ _ _ _ _ _ _) (conj H (conj F2 F3))) as (G1 & G2 & G3 & G4 & G5). 
+       clear H. 
+       rewrite map_rev in G1. 
+       replace ((inr ndelimC :: (rev (map inr (repEl (k' + t) nblank)) ++ [inr nblank]) ++ [inr nblank]) ++ [inr nblank; inr nblank] : list preludeSig) with (inr ndelimC :: rev (map inr (repEl (S (S (S (S k' + t)))) nblank)) : list preludeSig) in G1.
+       2: { cbn. rewrite <- app_assoc. eauto. }
+       apply (prelude_left_rewrites_blank_unique) in G1. 
+       rewrite <- map_rev in G1. cbn in G1. rewrite <- app_assoc in G1. cbn in G1. 
+       rewrite map_app in G1. cbn in G1. 
+       apply app_eq_length in G1 as (G1 & _).
+       * apply Prelim.map_inj in G1 as ->;[  | unfold injective; congruence ]. 
+         apply prelude_right_rewrites_symbols_unique in G2 as (s' & H1 & H2). 
+         apply (Prelim.map_inj) with (A := s2 :: s3 :: ls4) in H2; [ | unfold injective; congruence]. 
+         destruct s'; [ | destruct s']; cbn in H2; inv H2;
+         repeat match goal with 
+           | [ H : liftPrelude _ _ _ _ _ _ _ |- _] => inv H
+           | [ H : preludeRules _ _ _ _ _ _ |- _] => inv H
+         end; intros.
+         -- exists []. cbn. unfold isValidInput, z'. subst. cbn. split; [ | lia]. 
+            rewrite !Nat.add_comm with (n := t). cbn. rewrite <- !app_assoc. eauto. 
+         -- exists [e]. cbn. unfold isValidInput, z'. subst. cbn. split; [ | lia]. 
+            rewrite !Nat.add_comm with (n := t). cbn. rewrite <- !app_assoc. eauto. 
+         -- exists (e :: e0 :: s'). cbn. unfold isValidInput, z'. subst. cbn in *. split; [ | lia]. 
+            rewrite !Nat.add_comm with (n := t). 
+            replace (S (S k') + t - (|s'|)) with (S (S (k' - (|s'|) + t))) by lia. cbn. 
+            rewrite <- !app_assoc. eauto.
+      * clear G1 G2 G3 G4 G5. rewrite <- F2. 
+        cbn; rewrite !map_length, !app_length, !map_length, !rev_length.
+       rewrite E_length, repEl_length. cbn. lia. 
+  Qed. 
 
   Definition allRules := combP simRules preludeRules. 
 
