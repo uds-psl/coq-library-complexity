@@ -159,7 +159,7 @@ Proof.
   - apply H1 in H. eauto. 
 Qed.
 
-Lemma relpower_extensional (X : Type) (R R': X -> X -> Prop) :
+Lemma relpower_congruent (X : Type) (R R': X -> X -> Prop) :
   (forall x y, R x y <-> R' x y) -> forall n x y, relpower R n x y <-> relpower R' n x y. 
 Proof. 
   intros H. induction n. 
@@ -275,3 +275,61 @@ Proof.
     * congruence. 
     * now apply IHl. 
 Qed.
+
+Lemma In_explicit (X : Type) (x : X) (l : list X) :
+  x el l <-> exists s1 s2, l = s1 ++ [x] ++ s2. 
+Proof. 
+  induction l; cbn. 
+  - split; [tauto | intros (s1 & s2 & H)].
+    destruct s1; cbn in H; congruence. 
+  - split. 
+    + intros [-> | (s1 & s2 & ->)%IHl]. 
+      * exists [], l. eauto. 
+      * exists (a :: s1), s2; eauto. 
+    + intros ([] & s2 & H). 
+      * inv H. eauto. 
+      * inv H. right; apply IHl.
+        exists l0, s2. eauto. 
+Qed. 
+
+(*repeat an element *)
+Fixpoint repEl (X : Type) n (e : X) := 
+ match n with 
+ | 0 => []
+ | S n => e :: repEl n e
+end. 
+
+Lemma repEl_length (X : Type) n (e : X) : |repEl n e| = n. 
+Proof. induction n; cbn; eauto. Qed. 
+
+Lemma map_repEl (X Y : Type) (f : X -> Y) n (e : X) : map f (repEl n e) = repEl n (f e). 
+Proof. induction n; cbn; [eauto | congruence]. Qed. 
+
+Lemma repEl_add (X : Type) (a : X) n1 n2: repEl (n1 + n2) a = repEl n1 a ++ repEl n2 a.
+Proof.  induction n1; cbn; [eauto | congruence]. Qed. 
+
+Lemma list_length_split1 (X : Type) (s : list X) n : n <= |s| -> exists s1 s2, |s1| = n /\ |s2| = |s| - n /\ s = s1 ++ s2. 
+Proof. 
+  revert s. induction n; intros. 
+  - exists [], s. cbn; rewrite Nat.sub_0_r. eauto. 
+  - destruct s; cbn in H; [lia | ]. assert (n <= |s|) as H' by lia. 
+    apply IHn in H' as (s1 & s2 & H1 & H2 & ->). 
+    exists (x::s1), s2. cbn. eauto. 
+Qed. 
+
+Lemma list_length_split2 (X : Type) (s : list X) n : n <= |s| -> exists s1 s2, |s1| = |s| - n /\ |s2| = n /\ s = s1 ++ s2. 
+Proof. 
+  intros. assert (|s| - n <= |s|) as H' by lia. 
+  specialize (list_length_split1 H') as (s1 & s2 & H1 & H2 & ->). 
+  exists s1, s2. 
+  rewrite app_length in *.
+  repeat split; [lia | lia].
+Qed. 
+
+Lemma app_eq_length (X : Type) (s1 s2 w1 w2 : list X) : |s1| = |w1| -> s1 ++ s2 = w1 ++ w2 -> s1 = w1 /\ s2 = w2. 
+Proof.
+  intros. revert w1 H H0. induction s1; cbn in *; intros. 
+  - destruct w1; cbn in *; eauto. 
+  - destruct w1; cbn in *; [congruence | ]. inv H0. inv H. 
+    specialize (IHs1 w1 H1 H3) as (-> & ->). eauto. 
+Qed. 
