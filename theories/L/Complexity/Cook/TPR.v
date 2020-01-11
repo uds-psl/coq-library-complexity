@@ -170,7 +170,7 @@ Section fixInstance.
   Variable (steps : nat). 
 
   Notation string := (list Sigma). 
-  Definition window := TPRWin Sigma.
+  Notation window := (TPRWin Sigma).
 
   Implicit Type (s a b: string). 
   Implicit Type (r rule : window).
@@ -299,10 +299,10 @@ Hint Constructors rewritesHeadInd.
 Definition PTPRLang (C : PTPR) :=  exists (sf : list (PSigma C)), relpower (valid (rewritesHeadInd (@Pwindows C))) (Psteps C) (Pinit C) sf /\ satFinal (Pfinal C) sf. 
 
 (** *results for agreement of PTPR and TPR *)
-Definition rules_list_ind_agree {X : Type} (p : X -> X -> X -> X -> X -> X -> Prop) (l : list (window X)) :=
+Definition rules_list_ind_agree {X : Type} (p : X -> X -> X -> X -> X -> X -> Prop) (l : list (TPRWin X)) :=
   forall x1 x2 x3 x4 x5 x6, p x1 x2 x3 x4 x5 x6 <-> {x1, x2, x3} / {x4, x5, x6} el l. 
 
-Lemma rules_list_ind_rewritesHead_agree {X : Type} (p : X -> X -> X -> X -> X -> X -> Prop) (l : list (window X)) :
+Lemma rules_list_ind_rewritesHead_agree {X : Type} (p : X -> X -> X -> X -> X -> X -> Prop) (l : list (TPRWin X)) :
   rules_list_ind_agree p l -> forall s1 s2, (rewritesHeadInd p s1 s2 <-> rewritesHeadList l s1 s2). 
 Proof. 
   intros; split; intros. 
@@ -313,7 +313,7 @@ Proof.
     destruct r as [prem0 conc0], prem0, conc0. cbn. constructor. apply H, H1.  
 Qed.
 
-Lemma tpr_ptpr_agree (X : Type) s final steps indrules (listrules : list (window X)): 
+Lemma tpr_ptpr_agree (X : Type) s final steps indrules (listrules : list (TPRWin X)): 
   rules_list_ind_agree indrules listrules 
   -> (TPRLang (Build_TPR s listrules final steps) <-> PTPRLang (Build_PTPR s indrules final steps)).
 Proof. 
