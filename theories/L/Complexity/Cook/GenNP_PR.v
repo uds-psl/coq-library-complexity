@@ -2065,6 +2065,86 @@ Section fixTM.
   (*proof takes roughly 35mins + 4 gigs of RAM... *)
   Lemma stepsim q tp s q' tp' : (q, tp) ≃c s -> (q, tp) ≻ (q', tp') -> (sizeOfTape tp) < z' -> exists s', valid rewHeadSim s s' /\ (forall s'', valid rewHeadSim s s'' -> s'' = s') /\ (q', tp') ≃c s'. 
   Proof. 
+(*    intros H (H0' &  H0) H1. cbn in H0'. unfold sstep in H0. destruct trans eqn:H2 in H0. inv H0. rename p into p'. *)
+    (*apply valid_reprConfig_unfold. *)
+    (*rewrite sizeOfTape_lcr in H1. *)
+    (*destruct H as (ls & qm & rs & -> & H). destruct H as (p & -> & F1 & F2). unfold embedState. *)
+    (*destruct p' as ([wsym | ] & []); destruct tp as [ | ? l1 | ? l0 | l0 ? l1]; cbn in *; destruct_tape_in_tidy F1; destruct_tape_in_tidy F2. *)
+    (*all: try match type of F1 with ?l0 ≃t(_, _) _ => is_var l0; destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end. *)
+    (*all: try match type of F1 with _ :: ?l0 ≃t(_, _) _ => destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end. *)
+    (*all: try match type of F2 with ?l1 ≃t(_, _) _ => is_var l1; destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end. *)
+    (*all: try match type of F2 with _ :: ?l1 ≃t(_, _) _ => destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end. *)
+    
+    (*Optimize Proof. *)
+    (*all: cbn in H1. *)
+
+    (*[>analyse what transition should be taken, instantiate the needed lemmas and solve all of the obligations except for uniqueness <]*)
+    (*all: *)
+      (*match type of H2 with *)
+        (*| trans (?q, ?csym) = (?q', (?wsym, ?dir)) => *)
+          (*let nextsym := get_next_headsym F1 F2 csym wsym dir in *)
+          (*let writesym := get_written_sym csym wsym in *)
+          (*let shiftdir := get_shift_direction writesym dir F1 F2 in *)
+          (*[>init next tape halves <] *)
+          (*let Z1 := fresh "Z1" in let Z2 := fresh "Z2" in let Z3 := fresh "Z3" in *)
+          (*let W1 := fresh "W1" in let W2 := fresh "W2" in let W3 := fresh "W3" in *)
+          (*let h1 := fresh "h1" in let h2 := fresh "h2" in *)
+          (*cbn in F1; cbn in F2; *)
+          (*match shiftdir with *)
+          (*| R => match type of F1 with *)
+                (*| [] ≃t(?p, ?w) _ => specialize (E_rewrite_blank_rev p shiftdir w) as Z1; *)
+                                    (*specialize (proj1 (@niltape_repr w shiftdir)) as Z2; *)
+                                    (*specialize (@E_rewrite_blank_rev_unique p shiftdir w) as Z3 *)
+                (*| _ => destruct (tape_repr_rem_left F1) as (h1 & Z1 & Z3 & Z2); *)
+                      (*[>need to have one more head symbol in that case <] *)
+                      (*try match type of Z2 with _ :: ?l ≃t(_, _) _ => is_var l; *)
+                                                                    (*destruct l end; destruct_tape_in_tidy Z2 *)
+                (*end; *)
+                (*match writesym with *)
+                (*| Some ?sym => (destruct (tape_repr_add_right sym F2) as (h2 & W1 & W3 & W2)); [cbn; lia | destruct_tape_in_tidy W2] *)
+                (*| None => *)
+                    (*match type of F2 with *)
+                    (*| [] ≃t(?p, ?w) _ => specialize (E_rewrite_blank p shiftdir w) as W1; *)
+                                        (*specialize (proj1 (@niltape_repr w shiftdir)) as W2; *)
+                                        (*specialize (@E_rewrite_blank_unique p shiftdir w) as W3 *)
+                    (*end *)
+                (*end *)
+          (*| L => match type of F2 with *)
+                (*| [] ≃t(?p, ?w) _ => specialize (E_rewrite_blank p shiftdir w) as W1; *)
+                                    (*specialize (proj1 (@niltape_repr w shiftdir)) as W2; *)
+                                    (*specialize (@E_rewrite_blank_unique p shiftdir  w) as W3 *)
+                  (*| _ => destruct (tape_repr_rem_right F2) as (h2 & W1 & W3 & W2); *)
+                        (*[>need to have one more head symbol in that case <] *)
+                        (*try match type of W2 with _ :: ?l ≃t(_, _) _ => is_var l; *)
+                                                                      (*destruct l end; destruct_tape_in_tidy W2 *)
+                (*end; *)
+                (*match writesym with *)
+                  (*Some ?sym => destruct (tape_repr_add_left sym F1) as (h1 & Z1 & Z3 & Z2); [cbn; lia | destruct_tape_in_tidy Z2] *)
+                (*| None => match type of F1 with *)
+                        (*| [] ≃t(?p, ?w) _ => specialize (E_rewrite_blank_rev p shiftdir w) as Z1; *)
+                                            (*specialize (proj1 (@niltape_repr w shiftdir)) as Z2; *)
+                                            (*specialize (@E_rewrite_blank_rev_unique p shiftdir w) as Z3 *)
+                    (*end *)
+              (*end *)
+          (*| N => destruct (tape_repr_stay_left F1) as (h1 & Z1 & Z3 & Z2); destruct_tape_in_tidy Z2; *)
+                (*destruct (tape_repr_stay_right F2) as (h2 & W1 & W3 & W2); destruct_tape_in_tidy W2 *)
+          (*end; *)
+
+        (*[>instantiate existenials <] *)
+        (*match type of Z2 with _ ≃t(_, _) ?h => exists h end; *)
+        (*exists (inl (q', nextsym) : Gamma); *)
+        (*match type of W2 with _ ≃t(_, _) ?h => exists h end; *)
+
+        (*[>solve goals, except for the uniqueness goal (factored out due to performance)<] *)
+        (*(split; [solve_stepsim_rewrite shiftdir Z1 W1 | split; [  | solve_stepsim_repr shiftdir Z2 W2]]) *)
+    (*end. *)
+    
+    (*Optimize Proof. *)
+
+    (*[>solve the uniqueness obligations - this is very expensive because of the needed inversions <]*)
+    (*[>therefore abstract into opaque lemmas <]*)
+    (*idtac "solving uniqueness - this may take a while (25-30 minutes)".*)
+    (*all: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). *)
   Admitted. 
 
   (*if we are in a halting state, we can only rewrite to the same string (identity), except for setting the polarity to neutral *)
@@ -3782,10 +3862,20 @@ Section fixTM.
       { inl $ inr (inr (polVar 0, someSigmaVar 0)), inl $ inr (inr (polVar 0, someSigmaVar 1)), inl $ inr (inr (polVar 0, someSigmaVar 2))} / {inl $ inr (inr (polConst positive, blank)), inl $ inr (inr (polConst positive, someSigmaVar 0)), inl $ inr (inr (polConst positive, someSigmaVar 1))}
     ].
 
+  (*in principle, we could define the instantiated rules for shifting the tape to the left as the polarity reversion of the rules for shifting to the right (as it is done by the inductive predicate) *)
+  (*the problem with that is that we would also need to do that for the flat rules encoding natural numbers: but then we would need destructors for the encoding of finite types, using division, ... *)
+  (*that would be unpleasant for the running time analysis *)
+  (*instead, we explicitly define the rules again *)
   Definition mtlRules : list (window fAlphabet):=
     [
-      {inl $ inr $ inr (polVar 0, someSigmaVar 0), inl $ inr $ inr (polVar 0, someSigmaVar 1), inl $ inr $ inr (polVar 0, someSigmaVar 2)} / {inl $ inr $ inr (polConst negative, someSigmaVar 1), inl $ inr $ inr (polConst negative, someSigmaVar 2), inl $ inr $ inr (polConst negative, someSigmaVar 3)}
-      (*TODO: directly define the rules, because defining polarityRev on the flat representation would be a pain (because of running time analysis of division, ... *)
+      {inl $ inr $ inr (polVar 0, someSigmaVar 0), inl $ inr $ inr (polVar 0, someSigmaVar 1), inl $ inr $ inr (polVar 0, someSigmaVar 2)} / {inl $ inr $ inr (polConst negative, someSigmaVar 1), inl $ inr $ inr (polConst negative, someSigmaVar 2), inl $ inr $ inr (polConst negative, someSigmaVar 3)}; 
+      {inl $ inr $ inr (polVar 0, blank), inl $ inr $ inr (polVar 0, blank), inl $ inr $ inr (polVar 0, blank)} / {inl $ inr $ inr (polConst negative, blank), inl $ inr $ inr (polConst negative, blank), inl $ inr $ inr (polConst negative, someSigmaVar 0)}; 
+      {inl $ inr $ inr (polVar 0, blank), inl $ inr $ inr (polVar 0, blank), inl $ inr $ inr (polVar 0, someSigmaVar 0)} / {inl $ inr $ inr (polConst negative, blank), inl $ inr $ inr (polConst negative, someSigmaVar 0), inl $ inr $ inr (polConst negative, someSigmaVar 1)};
+      {inl $ inr $ inr (polVar 0, blank), inl $ inr $ inr (polVar 0, blank), inl $ inr $ inr (polVar 0, blank)} / {inl $ inr $ inr (polConst negative, blank), inl $ inr $ inr (polConst negative, blank), inl $ inr $ inr (polConst negative, blank)};
+      {inl $ inr $ inr (polVar 0, blank), inl $ inr $ inr (polVar 0, someSigmaVar 0), inl $ inr $ inr (polVar 0, someSigmaVar 1)} / {inl $ inr $ inr (polConst negative, someSigmaVar 0), inl $ inr $ inr (polConst negative, someSigmaVar 1), inl $ inr $ inr (polConst negative, someSigmaVar 2)};
+      {inl $ inr $ inr (polVar 0, someSigmaVar 0), inl $ inr $ inr (polVar 0, blank), inl $ inr $ inr (polVar 0, blank)}/ {inl $ inr $ inr (polConst negative, blank), inl $ inr $ inr (polConst negative, blank), inl $ inr $ inr (polConst negative, blank)};
+      {inl $ inr $ inr (polVar 0, someSigmaVar 0), inl $ inr $ inr (polVar 0, someSigmaVar 1), inl $ inr $ inr (polVar 0, blank)} / {inl $ inr $ inr (polConst negative, someSigmaVar 1), inl $ inr $ inr (polConst negative, blank), inl $ inr $ inr (polConst negative, blank)};
+      {inl $ inr $ inr (polVar 0, someSigmaVar 0), inl $ inr $ inr (polVar 0, someSigmaVar 1), inl $ inr $ inr (polVar 0, someSigmaVar 2)} / {inl $ inr $ inr (polConst negative, someSigmaVar 1), inl $ inr $ inr (polConst negative, someSigmaVar 2), inl $ inr $ inr (polConst negative, blank)} 
     ].
 
   Definition mtiRules : list (window fAlphabet) :=
@@ -3867,7 +3957,7 @@ Section fixTM.
     | ?a :: ?l => rec_exists l cont
     end. 
 
-  Ltac solve_agreement_tape := unfold mtrRules, mtiRules; 
+  Ltac solve_agreement_tape := unfold mtrRules, mtiRules, mtlRules; 
         match goal with
         | [ |- ex (fun r => r el ?h /\ _) ] => rec_exists h ltac:(solve_agreement_in_env)
         end.
@@ -3897,10 +3987,33 @@ Section fixTM.
       | inr s => inr s
     end. 
 
-  Lemma agreement_mtl x1 x2 x3 x4 x5 x6 :
-    shiftRightRules (~x1) (~x2) (~x3) (~x4) (~x5) (~x6) <-> {inl x3, inl x2, inl x1} / {inl x6, inl x5, inl x4} el finMTLRules.
+  Lemma pFlipAlphabet_pFlipGamma_eqn γ x: inl γ = pFlipAlphabet x -> x = inl (~γ). 
   Proof. 
-  Admitted. 
+    destruct x; cbn; intros.  
+    - inv H. now rewrite polarityFlipGamma_involution. 
+    - congruence. 
+  Qed. 
+
+  Lemma agreement_mtl x1 x2 x3 x4 x5 x6 :
+    @liftOrig Gamma shiftRightRules preludeSig' (pFlipAlphabet x1) (pFlipAlphabet x2) (pFlipAlphabet x3) (pFlipAlphabet x4) (pFlipAlphabet x5) (pFlipAlphabet x6) <-> {x3, x2, x1} / {x6, x5, x4} el finMTLRules.
+  Proof. 
+    split; intros. 
+    - inv H. repeat match goal with [H : inl _ = pFlipAlphabet _ |- _] => apply pFlipAlphabet_pFlipGamma_eqn in H end.
+      subst. rewHeadTape_inv2; apply in_makeRules_iff. 
+      + exists (Build_evalEnv [polarityFlip p] [σ3; σ2; σ1; σ4] [] []). solve_agreement_tape.       
+      + exists (Build_evalEnv [polarityFlip p] [σ1; σ1; σ1; σ1] [] []). solve_agreement_tape. 
+      + exists (Build_evalEnv [polarityFlip p] [] [] []). solve_agreement_tape. 
+      + exists (Build_evalEnv [polarityFlip p] [σ1; σ2] [] []). solve_agreement_tape. 
+      + exists (Build_evalEnv [polarityFlip p] [σ2; σ1; σ3] [] []). solve_agreement_tape. 
+      + exists (Build_evalEnv [polarityFlip p] [σ1] [] []). solve_agreement_tape. 
+      + exists (Build_evalEnv [polarityFlip p] [σ2; σ1] [] []). solve_agreement_tape. 
+      + exists (Build_evalEnv [polarityFlip p] [σ3; σ2; σ1] [] []). solve_agreement_tape. 
+    - intros. apply in_makeRules_iff in H as (env & rule & H1 & H2 & H3).  
+      destruct env. apply in_makeAllEvalEnv_iff in H2. 
+      destruct H2 as ((F1 & _) & (F2 & _) & (F3 & _) & (F4 & _)). 
+      destruct_var_env F1; destruct_var_env F3; destruct_var_env F4; destruct_var_env F2.  
+      all: try (now (cbn in H1; destruct_or H1; subst; cbn in H3; inv H3; cbn; eauto)).
+  Qed. 
 
   Lemma agreement_mti: rules_list_ind_agree (@liftOrig Gamma identityRules preludeSig') finMTIRules. 
   Proof. 
@@ -3920,16 +4033,16 @@ Section fixTM.
   Proof. 
     split; intros. 
     - unfold finTapeRules. rewrite !in_app_iff. inv H. inv H0. 
-      + apply agreement_mtl in H; eauto. 
+      + right; right. apply agreement_mtl. cbn. eauto. 
       + left. apply agreement_mtr. eauto. 
       + right; left. apply agreement_mti. eauto. 
     - unfold finTapeRules in H. rewrite !in_app_iff in H. destruct_or H. 
       + apply agreement_mtr in H. inv H. eauto.  
       + apply agreement_mti in H; inv H; eauto. 
-      + admit. 
-        (*econstructor. apply agreement_mtl. in H. eauto. *)
-  (*Qed. *)
-  Admitted. 
+      + apply agreement_mtl in H. inv H. 
+        repeat match goal with [H : inl _ = pFlipAlphabet _ |- _] => apply pFlipAlphabet_pFlipGamma_eqn in H end. 
+        subst. constructor. constructor 1. now rewrite !polarityFlipGamma_involution.  
+  Qed. 
 
   (** *agreement for transitions *)
   (*for the transition rules, the current and next state as well the read and written symbols are fixed *)
@@ -4427,5 +4540,4 @@ Section fixTM.
     * apply ind_reduction. 
     * apply fin_agreement. 
   Qed.
-  
 End fixTM. 
