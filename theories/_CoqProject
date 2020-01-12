@@ -327,6 +327,9 @@ L/Complexity/Cook/PTPR_Preludes.v
 L/Complexity/Cook/GenNP_PR.v
 L/Complexity/Cook/FlatFinTypes.v
 L/Complexity/Cook/TM_single.v
+L/Complexity/Cook/FlatPR.v
+L/Complexity/Cook/FlatTPR.v
+L/Complexity/Cook/FlatTPR_to_FlatPR.v
 
 L/AbstractMachines/Programs.v
 L/AbstractMachines/AbstractSubstMachine.v

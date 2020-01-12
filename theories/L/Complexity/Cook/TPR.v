@@ -87,7 +87,6 @@ Section abstractDefs.
             specialize (H2 (S i) H0); eauto. 
     Qed. 
 
-
   End fixRewritesHead.
   Hint Constructors valid. 
 
@@ -149,7 +148,7 @@ Notation "'{' a ',' b ',' c '}'" := (Build_TPRWinP a b c) (format "'{' a ',' b '
 Notation "a / b" := ({|prem := a; conc := b|}). 
 
 Record TPR := {
-               Sigma : Type;
+               Sigma : finType;
                init : list Sigma;  (* length is encoded implicitly as the length of init*) 
                windows : list (TPRWin Sigma);
                final : list (list Sigma);
@@ -227,7 +226,7 @@ Definition TPRLang (C : TPR) :=  exists (sf : list (Sigma C)), relpower (valid (
 (** *variant PTPR using propositional rules *)
 
 Record PTPR := {
-             PSigma : Type;
+             PSigma : finType;
              Pinit : list PSigma;  (* length is encoded implicitly as the length of init*) 
              Pwindows : PSigma -> PSigma -> PSigma -> PSigma -> PSigma -> PSigma -> Prop;
              Pfinal : list (list PSigma);
@@ -313,7 +312,7 @@ Proof.
     destruct r as [prem0 conc0], prem0, conc0. cbn. constructor. apply H, H1.  
 Qed.
 
-Lemma tpr_ptpr_agree (X : Type) s final steps indrules (listrules : list (TPRWin X)): 
+Lemma tpr_ptpr_agree (X : finType) s final steps indrules (listrules : list (TPRWin X)): 
   rules_list_ind_agree indrules listrules 
   -> (TPRLang (Build_TPR s listrules final steps) <-> PTPRLang (Build_PTPR s indrules final steps)).
 Proof. 

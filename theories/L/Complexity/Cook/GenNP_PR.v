@@ -3296,6 +3296,25 @@ Section fixTM.
 
   Definition isFlatListOf (X : finType) (l : list nat) (l' : list X) := l = map index l'. 
 
+  Lemma dupfree_map_getPosition (X : eqType) (l : list X) : Dupfree.dupfree l -> seq 0 (|l|) = map (getPosition l) l. 
+  Proof. 
+    intros H. enough (forall n, seq n (|l|) = map (fun x => n + getPosition l x) l). 
+    { specialize (H0 0). apply H0. }
+    induction H; intros; [ easy | ]. 
+    cbn. destruct Dec; [ | congruence]. 
+    rewrite Nat.add_0_r. f_equal. rewrite (IHdupfree (S n)). 
+    clear IHdupfree e. 
+    apply map_ext_in. 
+    intros a H1. destruct (Dec (a = x)); [ congruence | lia ].  
+  Qed. 
+
+  Lemma seq_isFlatListOf (X : finType) : isFlatListOf (seq 0 (|elem X|)) (elem X).  
+  Proof. 
+    unfold isFlatListOf. unfold index. rewrite dupfree_map_getPosition. 
+    2: apply dupfree_elements. 
+    now change (fun x => getPosition (elem X) x) with (getPosition (elem X)). 
+  Qed. 
+
   Lemma isFlatListOf_Some1 (T : finType) (T' : nat) (a : list nat) (b : list T) (n : nat) (x : nat):
     finRepr T T' -> isFlatListOf a b -> nth_error a n = Some x -> exists x', nth_error b n = Some x' /\ finReprEl T' x x'.
   Proof. 
@@ -3587,8 +3606,8 @@ Section fixTM.
       + eauto.  
   Qed. 
 
-  Definition makeRulesFin := makeRules reifyAlphabetFin. 
-  Definition makeRulesFlat := makeRules reifyAlphabetFlat. 
+  Definition makeRulesFin := makeRules reifyAlphabetFin (elem Fpolarity) (elem Sigma) (elem FstateSigma) (elem states).  
+  Definition makeRulesFlat := makeRules reifyAlphabetFlat (seq 0 flatPolarity) (seq 0 flatSigma) (seq 0 flatStateSigma) (seq 0 flatstates).
 
   Definition list_finReprEl (X : finType) (x : nat) (A : list nat) (B : list X)  :=
     (forall n, n el A -> exists a, finReprEl x n a /\ a el B) /\ (forall b, b el B -> exists n, finReprEl x n b /\ n el A). 
@@ -3638,7 +3657,8 @@ Section fixTM.
         apply IHl' in H1. intros ? [<- | H2].
         * rewrite H. apply in_map_iff; eauto. 
         * now apply H1.  
-  Qed. 
+  Qed.
+
 
   Lemma makeAllEvalEnv_isFlatEnvOf (Afin : list polarity) (Bfin : list Sigma) (Cfin : list stateSigma) (Dfin : list states) (Aflat Bflat Cflat Dflat : list nat) n1 n2 n3 n4:
     isFlatListOf Aflat Afin 
@@ -3671,6 +3691,20 @@ Section fixTM.
     apply in_makeAllEvalEnv_iff.
     rewrite M1, M2, M3, M4 at 1. rewrite !map_length.
     eauto 10.
+  Qed. 
+
+  Definition makeAllEvalEnvFin := makeAllEvalEnv (elem Fpolarity) (elem Sigma) (elem FstateSigma) (elem states).
+  Definition makeAllEvalEnvFlat := makeAllEvalEnv (seq 0 flatPolarity) (seq 0 flatSigma) (seq 0 flatStateSigma) (seq 0 flatstates).
+
+  Lemma makeAllEvalEnv_isFlatEnvOf' n1 n2 n3 n4 : list_isFlatEnvOf (makeAllEvalEnvFlat n1 n2 n3 n4) (makeAllEvalEnvFin n1 n2 n3 n4). 
+  Proof. 
+    apply makeAllEvalEnv_isFlatEnvOf. 
+    - apply seq_isFlatListOf.
+    - rewrite flatSigma_Sigma_compat. apply seq_isFlatListOf.
+    - assert (flatStateSigma = |elem FstateSigma|) as ->. 
+      { cbn. rewrite map_length. rewrite flatSigma_Sigma_compat. now cbn. }
+      apply seq_isFlatListOf. 
+    - rewrite flatstates_states_compat. apply seq_isFlatListOf.
   Qed. 
 
   Definition list_isFlatWindowOf (windowFlatList : list (window nat)) (windowFinList : list (window Alphabet)) :=
@@ -3707,30 +3741,26 @@ Section fixTM.
       + apply in_makeRules'_iff. exists env'. eauto.
   Qed. 
 
-  Lemma makeRules_isFlatWindowOf (Afin : list polarity) (Bfin : list Sigma) (Cfin : list stateSigma) (Dfin : list states) (Aflat Bflat Cflat Dflat : list nat) n1 n2 n3 n4 rules :
-    isFlatListOf Aflat Afin
-    -> isFlatListOf Bflat Bfin
-    -> isFlatListOf Cflat Cfin
-    -> isFlatListOf Dflat Dfin
-    -> list_isFlatWindowOf (makeRulesFlat Aflat Bflat Cflat Dflat n1 n2 n3 n4 rules) (makeRulesFin Afin Bfin Cfin Dfin n1 n2 n3 n4 rules).
+  Lemma makeRules_isFlatWindowOf n1 n2 n3 n4 rules :
+    list_isFlatWindowOf (makeRulesFlat n1 n2 n3 n4 rules) (makeRulesFin n1 n2 n3 n4 rules).
   Proof. 
     intros. split. 
-    - intros. unfold makeRulesFlat, makeRulesFin, makeRules in H3. 
-      apply in_concat_iff in H3 as (windows & H3 & H4). 
-      apply in_map_iff in H4 as (rule & <- & H5). 
-      specialize (makeAllEvalEnv_isFlatEnvOf n1 n2 n3 n4 H H0 H1 H2) as F.
+    - intros. unfold makeRulesFlat, makeRulesFin, makeRules in H. 
+      apply in_concat_iff in H as (windows & H & H1). 
+      apply in_map_iff in H1 as (rule & <- & H2). 
+      specialize (makeAllEvalEnv_isFlatEnvOf' n1 n2 n3 n4) as F.
       apply (makeRules'_isFlatWindowOf rule) in F.
-      apply F in H3 as (w' & F1 & F2). exists w'.  
+      apply F in H as (w' & F1 & F2). exists w'.  
       split; [ apply F1 | ]. 
       unfold makeRulesFin, makeRules. apply in_concat_iff. 
       eauto 10.
-    - intros. unfold makeRulesFin, makeRules in H3. 
-      apply in_concat_iff in H3 as (windows & H3 & H4). 
-      apply in_map_iff in H4 as (rule & <- & H5). 
-      specialize (makeAllEvalEnv_isFlatEnvOf n1 n2 n3 n4 H H0 H1 H2) as F.
+    - intros. unfold makeRulesFin, makeRules in H. 
+      apply in_concat_iff in H as (windows & H & H1). 
+      apply in_map_iff in H1 as (rule & <- & H2). 
+      specialize (makeAllEvalEnv_isFlatEnvOf' n1 n2 n3 n4) as F.
       apply (makeRules'_isFlatWindowOf rule) in F.
       unfold list_isFlatWindowOf in F. 
-      apply F in H3 as (w & F1 & F2). exists w.  
+      apply F in H as (w & F1 & F2). exists w.  
       split; [ apply F1 | ]. 
       unfold makeRulesFin, makeRulesFlat, makeRules. apply in_concat_iff. 
       eauto 10. 
@@ -3885,11 +3915,28 @@ Section fixTM.
         {inl $ inr (inr (polVar 0, blank)), inl $ inr (inr (polVar 0, blank)), inl $ inr (inl delimC)} / {inl $ inr (inr (polVar 1, blank)), inl $ inr (inr (polVar 1, blank)), inl $ inr (inl delimC)}
     ].
 
-  Definition finMTRRules := makeRulesFin (elem Fpolarity) (elem Sigma) (elem FstateSigma) (elem states) 1 4 0 0 mtrRules. 
-  Definition finMTIRules := makeRulesFin (elem Fpolarity) (elem Sigma) (elem FstateSigma) (elem states) 2 0 4 0 mtiRules.
-  Definition finMTLRules := makeRulesFin (elem Fpolarity) (elem Sigma) (elem FstateSigma) (elem states) 1 4 0 0 mtlRules. 
+  Definition finMTRRules := makeRulesFin 1 4 0 0 mtrRules. 
+  Definition finMTIRules := makeRulesFin 2 0 4 0 mtiRules.
+  Definition finMTLRules := makeRulesFin 1 4 0 0 mtlRules. 
+
+  Definition flatMTRRules := makeRulesFlat 1 4 0 0 mtrRules.
+  Definition flatMTIRules := makeRulesFlat 2 0 4 0 mtiRules.
+  Definition flatMTLRules := makeRulesFlat 1 4 0 0 mtlRules.
 
   Definition finTapeRules := finMTRRules ++ finMTIRules ++ finMTLRules. 
+  Definition flatTapeRules := flatMTRRules ++ flatMTIRules ++ flatMTLRules. 
+
+  Lemma list_isFlatWindowOf_concat flat1 flat2 fin1 fin2: list_isFlatWindowOf flat1 fin1 -> list_isFlatWindowOf flat2 fin2 -> list_isFlatWindowOf (flat1 ++ flat2) (fin1 ++ fin2). 
+  Proof. 
+    intros; split; intros. 
+  Admitted. 
+  
+  Lemma fin_flat_tapeRules_agree : list_isFlatWindowOf flatTapeRules finTapeRules. 
+  Proof. 
+    unfold flatTapeRules, finTapeRules. 
+    apply list_isFlatWindowOf_concat; [ | apply list_isFlatWindowOf_concat]. 
+    all: apply makeRules_isFlatWindowOf. 
+  Qed. 
 
   Ltac destruct_or H := match type of H with
                         | ?a \/ ?b => destruct H as [H | H]; try destruct_or H
@@ -4540,4 +4587,7 @@ Section fixTM.
     * apply ind_reduction. 
     * apply fin_agreement. 
   Qed.
+
+  (** flat rules *)
+
 End fixTM. 

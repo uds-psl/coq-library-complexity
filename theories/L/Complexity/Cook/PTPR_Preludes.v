@@ -1,10 +1,11 @@
 From Undecidability.L.Complexity Require Import Cook.TPR Cook.Prelim.
 From PslBase Require Import Base. 
+From PslBase Require Import FinTypes. 
 Require Import Lia. 
 
 Section fixPTPRInstance. 
   (*original instance lacking an initial string*)
-  Variable (Sigma : Type). 
+  Variable (Sigma : finType). 
   Variable (p : Sigma -> Sigma -> Sigma -> Sigma -> Sigma -> Sigma -> Prop). 
   Variable (finalCondition : list (list Sigma)). 
   Variable (t : nat). 
@@ -20,7 +21,7 @@ Section fixPTPRInstance.
   Definition ExPTPR := exists x0, |x0| = l /\ initCond x0 /\ PTPRLang (Build_PTPR x0 p finalCondition t). 
 
   (*a prelude generates initial strings satisfying initCond *)
-  Variable (Sigma' : Type). 
+  Variable (Sigma' : finType). 
   Notation combSigma := (sum Sigma Sigma').
 
   Variable (p' : Sigma' -> Sigma' -> Sigma' -> combSigma -> combSigma -> combSigma -> Prop). 
@@ -147,13 +148,13 @@ Section fixPTPRInstance.
         + inv_eqn_map. rewrite map_length in H0; cbn in H1; lia.   
         + inv_eqn_map. inv H0. inv_eqn_map. inv H3. 
           * inv H0.   
-          * inv H0. destruct s4; cbn in *. 
+          * inv H0. destruct s; cbn in *. 
             -- apply valid_length_inv in H; destruct s2; [ | cbn in H; congruence]. 
                split.
                ++ constructor 3. constructor 2; cbn; eauto.  eauto.
-               ++ exists [d; e; f]; eauto. 
-            -- edestruct (IHvalid (s0::s3::s1::s4)) as (H2 & (? & H3)); [now cbn | now cbn | inv_eqn_map ]. 
-               split; [eauto | ]. exists (d :: s5 :: s6 :: x); eauto.  
+               ++ exists [d; e2; f]; eauto. 
+            -- edestruct (IHvalid (e0::e1::e3::s)) as (H2 & (? & H3)); [now cbn | now cbn | inv_eqn_map ]. 
+               split; [eauto | ]. exists (d :: e4 :: e2 :: x); eauto.  
       } 
       subst. 
       edestruct (IHrelpower) as (IH1 & IH2). 
