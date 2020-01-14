@@ -21,7 +21,13 @@ Record PR := {
 
 Definition PRWin_of_size (X : Type) (win : PRWin X) (k : nat) := |prem win| = k /\ |conc win| = k. 
 
-Definition PR_wellformed (c : PR) := width c > 0 /\ (forall win, win el windows c -> PRWin_of_size win (width c)) /\ (exists k, length (init c) = k * offset c).
+Definition PR_wellformed (c : PR) := 
+  width c > 0 
+  /\ offset c > 0
+  /\ offset c <= width c (*instances not satisfying this property are wonderfully unintuitive *)
+  /\ length (init c) >= width c (*we do not want vacuous rewrites *)
+  /\ (forall win, win el windows c -> PRWin_of_size win (width c)) 
+  /\ (exists k, length (init c) = k * offset c).
 
 (**we do some general definitions first which can be reused for the flat version *)
 Section fixX. 
@@ -34,7 +40,9 @@ Section fixX.
   (*Context (exists k, length (init) = k * offset).*)
 
   (* the final constraint*)
-  Definition satFinal (final : list (list X)) s := exists subs, subs el final /\ substring subs s.
+  (* this is defined in terms of the offset: there must exist an element of a list of strings final which is a substring of the the string s at a multiple of offset *)
+  Definition satFinal l (final : list (list X)) s := 
+    exists subs k, subs el final /\ k * offset <= l /\  prefix subs (skipn (k * offset) s).
 
   (* rewrites inside a string *)
   Definition rewritesHead (X : Type) (rule : PRWin X) a b := prefix (prem rule) a /\ prefix (conc rule) b.
@@ -66,6 +74,14 @@ Section fixX.
     - now cbn.
     - repeat rewrite app_length. firstorder. 
     - repeat rewrite app_length; firstorder. 
+  Qed. 
+
+  Lemma valid_multiple_of_offset a b : valid a b -> exists k, |a| = k * offset.
+  Proof. 
+    induction 1. 
+    - exists 0; now cbn. 
+    - setoid_rewrite app_length. destruct IHvalid as (k & ->).  exists (S k); nia. 
+    - setoid_rewrite app_length. destruct IHvalid as (k & ->).  exists (S k); nia. 
   Qed. 
 
   Definition validExplicit a b := length a = length b /\ (exists k, length a = k * offset) /\ forall i, 0 <= i < length a + 1 - width /\ (exists j, i = j * offset) -> exists rule, rule el windows  /\ rewritesAt rule i a b.
@@ -137,7 +153,7 @@ Section fixInstance.
   Definition isRule r := r el windows c.
   Lemma isRule_length r : isRule r -> length (prem r) = width c /\ length (conc r) = width c.
   Proof. 
-    intros. destruct wf as (_ & H1 & _). specialize (H1 r H ) as (H1 & H2). tauto. 
+    intros. destruct wf as (_ & _ & _ & _ & H1 & _). specialize (H1 r H ) as (H1 & H2). tauto. 
   Qed. 
 
   Lemma rewritesHead_length_inv rule a b : rewritesHead rule a b -> isRule rule -> length a >= width c /\ length b >= width c. 
@@ -149,4 +165,4 @@ Section fixInstance.
 
 End fixInstance. 
 
-Definition PRLang (C : PR) := PR_wellformed C /\ exists (sf : list (Sigma C)), relpower (valid (offset C) (width C) (windows C)) (steps C) (init C) sf /\ satFinal (final C) sf. 
+Definition PRLang (C : PR) := PR_wellformed C /\ exists (sf : list (Sigma C)), relpower (valid (offset C) (width C) (windows C)) (steps C) (init C) sf /\ satFinal (offset C) (|init C|) (final C) sf. 

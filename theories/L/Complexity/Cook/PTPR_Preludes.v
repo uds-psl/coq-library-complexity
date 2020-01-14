@@ -5,7 +5,12 @@ Require Import Lia.
 
 Section fixPTPRInstance. 
   (*original instance lacking an initial string*)
-  Variable (Sigma : finType). 
+  Variable (Sigma : Type). 
+
+  (*we do not directly assume Sigma to be a finType in order to be able to use the definitions not depending on Sigma being a finType for ordinary Types *)
+  Variable (ESigma : eq_dec Sigma). 
+  Variable (FSigma : finTypeC (EqType Sigma)). 
+
   Variable (p : Sigma -> Sigma -> Sigma -> Sigma -> Sigma -> Sigma -> Prop). 
   Variable (finalCondition : list (list Sigma)). 
   Variable (t : nat). 
@@ -21,11 +26,13 @@ Section fixPTPRInstance.
   Definition ExPTPR := exists x0, |x0| = l /\ initCond x0 /\ PTPRLang (Build_PTPR x0 p finalCondition t). 
 
   (*a prelude generates initial strings satisfying initCond *)
-  Variable (Sigma' : finType). 
+  Variable (Sigma' : Type). 
+  Variable (eSigma' : eq_dec Sigma').
+  Variable (FSigma' : finTypeC (EqType Sigma')). 
+
   Notation combSigma := (sum Sigma Sigma').
 
   Variable (p' : Sigma' -> Sigma' -> Sigma' -> combSigma -> combSigma -> combSigma -> Prop). 
-
 
   Variable (initialString : list Sigma').   
   Variable (t' : nat). 
@@ -148,13 +155,13 @@ Section fixPTPRInstance.
         + inv_eqn_map. rewrite map_length in H0; cbn in H1; lia.   
         + inv_eqn_map. inv H0. inv_eqn_map. inv H3. 
           * inv H0.   
-          * inv H0. destruct s; cbn in *. 
+          * inv H0. destruct s4; cbn in *. 
             -- apply valid_length_inv in H; destruct s2; [ | cbn in H; congruence]. 
                split.
                ++ constructor 3. constructor 2; cbn; eauto.  eauto.
-               ++ exists [d; e2; f]; eauto. 
-            -- edestruct (IHvalid (e0::e1::e3::s)) as (H2 & (? & H3)); [now cbn | now cbn | inv_eqn_map ]. 
-               split; [eauto | ]. exists (d :: e4 :: e2 :: x); eauto.  
+               ++ exists [d; e; f]; eauto. 
+            -- edestruct (IHvalid (s0::s3::s1::s4)) as (H2 & (? & H3)); [now cbn | now cbn | inv_eqn_map ]. 
+               split; [eauto | ]. exists (d :: s5 :: s6 :: x); eauto.  
       } 
       subst. 
       edestruct (IHrelpower) as (IH1 & IH2). 
@@ -220,7 +227,9 @@ Section fixPTPRInstance.
   Lemma prelude_ok : ExPTPR <-> PTPRLang (Build_PTPR (map inr initialString) combP (map (map inl) finalCondition) (t' + t)). 
   Proof. 
     split. 
-    - intros (x0 & H1 & H2 & (sf & F1 & F2)). cbn in *. exists (map inl sf). cbn. split. 
+    - intros (x0 & H1 & H2 & (_ & sf & F1 & F2)). cbn in *. split. 
+      1 : { unfold PTPR_wellformed. cbn. rewrite map_length, A5. lia. }
+      exists (map inl sf). cbn. split. 
       + eapply relpower_trans.
         * eapply relpower_monotonous. 
           { eapply valid_monotonous. eapply rewritesHeadInd_monotonous. apply liftPrelude_subs_combP. }
@@ -238,7 +247,7 @@ Section fixPTPRInstance.
         * apply in_map_iff. eauto.  
         * unfold substring. destruct F3 as (b1 & b2 & F3). 
           exists (map inl b1), (map inl b2). now rewrite F3, !map_app. 
-    - intros (sf & F1 & F2). cbn in *. unfold ExPTPR. 
+    - intros (_ & sf & F1 & F2). cbn in *. unfold ExPTPR. 
       (*we need to split up F1 into the prelude and original part *)
       apply relpower_comb_split in F1 as (x0 & H1 & H2 & H3). 
       specialize (A1 H1) as (x & ->). exists x. split; [ | split]. 
@@ -246,7 +255,11 @@ Section fixPTPRInstance.
         apply relpower_valid_length_inv in H1. rewrite !map_length in H1. lia. 
       + apply A4 in H1. destruct H1 as (? & H1 & H4). apply Prelim.map_inj in H1; [subst; apply H4 | ]. 
         unfold injective. intros. congruence. 
-      + unfold PTPRLang. cbn. destruct H3 as (sf' & ->). exists sf'. split. 
+      + unfold PTPRLang. split. 
+        1: { 
+          unfold PTPR_wellformed. cbn. 
+          apply relpower_valid_length_inv in H1. rewrite !map_length in H1. lia. }
+        cbn. destruct H3 as (sf' & ->). exists sf'. split. 
         * clear F2 A2 A3 A4. apply liftOrig_relpower_p, H2. 
           apply relpower_valid_length_inv in H1.  rewrite !map_length in H1. lia.
         * clear A0 A2 A3 A4 A5 H1 H2. unfold satFinal in *. 

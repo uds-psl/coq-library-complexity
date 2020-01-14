@@ -27,7 +27,6 @@ Section abstractDefs.
     Lemma rewritesAt_step a b x y (i:nat) : rewritesAt i a b <-> rewritesAt (S i) (x :: a) (y:: b). 
     Proof. intros. unfold rewritesAt. now cbn. Qed. 
 
-
     (*validity of a rewrite *)
     Inductive valid : string -> string -> Prop :=
     | validB: valid [] [] 
@@ -155,6 +154,8 @@ Record TPR := {
                steps : nat
              }.
 
+Definition TPR_wellformed C := length (init C) >= 3. 
+
 Implicit Type (C : TPR).
 
 (* the final constraint*)
@@ -219,9 +220,8 @@ Section fixInstance.
 End fixInstance. 
 
 
-
 (*we define it using the rewritesHead_pred rewrite predicate *)
-Definition TPRLang (C : TPR) :=  exists (sf : list (Sigma C)), relpower (valid (rewritesHeadList (windows C))) (steps C) (init C) sf /\ satFinal (final C) sf. 
+Definition TPRLang (C : TPR) := TPR_wellformed C /\ exists (sf : list (Sigma C)), relpower (valid (rewritesHeadList (windows C))) (steps C) (init C) sf /\ satFinal (final C) sf. 
 
 (** *variant PTPR using propositional rules *)
 
@@ -232,6 +232,8 @@ Record PTPR := {
              Pfinal : list (list PSigma);
              Psteps : nat
            }.
+
+Definition PTPR_wellformed D := length (Pinit D) >= 3. 
 
 Section fixRulePred.
   (*We define the equivalent of rewritesHeadList for predicate-based rules  *)
@@ -295,7 +297,7 @@ Proof.  intros H; intros. split; apply rewritesHeadInd_monotonous; unfold window
 
 Hint Constructors rewritesHeadInd.
 
-Definition PTPRLang (C : PTPR) :=  exists (sf : list (PSigma C)), relpower (valid (rewritesHeadInd (@Pwindows C))) (Psteps C) (Pinit C) sf /\ satFinal (Pfinal C) sf. 
+Definition PTPRLang (C : PTPR) :=  PTPR_wellformed C /\ exists (sf : list (PSigma C)), relpower (valid (rewritesHeadInd (@Pwindows C))) (Psteps C) (Pinit C) sf /\ satFinal (Pfinal C) sf. 
 
 (** *results for agreement of PTPR and TPR *)
 Definition rules_list_ind_agree {X : Type} (p : X -> X -> X -> X -> X -> X -> Prop) (l : list (TPRWin X)) :=
@@ -316,10 +318,12 @@ Lemma tpr_ptpr_agree (X : finType) s final steps indrules (listrules : list (TPR
   rules_list_ind_agree indrules listrules 
   -> (TPRLang (Build_TPR s listrules final steps) <-> PTPRLang (Build_PTPR s indrules final steps)).
 Proof. 
-  intros; split; intros (sf & H1 & H2); cbn in *. 
-  - exists sf; cbn. split; [ | apply H2]. 
+  intros; split; intros (H0 & sf & H1 & H2); cbn in *. 
+  - split; [apply H0 | ]. 
+    exists sf; cbn. split; [ | apply H2]. 
     eapply relpower_congruent; [ apply valid_congruent, rules_list_ind_rewritesHead_agree, H | apply H1].  
-  - exists sf; cbn. split; [ | apply H2]. 
+  - split; [apply H0 | ].  
+    exists sf; cbn. split; [ | apply H2]. 
     eapply relpower_congruent; [ apply valid_congruent; symmetry; apply rules_list_ind_rewritesHead_agree, H | apply H1]. 
 Qed. 
 

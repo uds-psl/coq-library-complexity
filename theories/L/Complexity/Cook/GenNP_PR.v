@@ -2425,11 +2425,13 @@ Section fixTM.
     + unfold substring. now apply In_explicit. 
   Qed.
 
+  SearchAbout reprConfig.
+
   (*simulation lemma: for valid inputs, the PR instance does rewrite to a final string iff the Turing machine does accept *)
   Lemma simulation : forall s, isValidInput k s -> PTPRLang (Build_PTPR (initialString s) simRules finalSubstrings  t) <-> exists f, loopM (initc TM ([|initialTapeForString s|])) t = Some f.
   Proof. 
     intros. split; intros. 
-    - destruct H0 as (finalStr & H1 & H2). cbn [Psteps Pinit Pwindows Pfinal ] in H1, H2.
+    - destruct H0 as (wf & finalStr & H1 & H2). cbn [Psteps Pinit Pwindows Pfinal ] in H1, H2.
       (*erewrite relpower_congruent in H1.*)
       (*2: eapply valid_congruent, rewHead_agreement_all.*)
       specialize (@soundness start (initialTapeForString s) (initialString s) finalStr) as H3. 
@@ -2456,13 +2458,16 @@ Section fixTM.
       + destruct s; cbn; unfold isValidInput in H; cbn in *; lia. 
       + apply initialString_reprConfig, H. 
       + apply loop_relpower_agree, H0. 
-      + exists s'.  split. 
+      + split. 
+        1: { unfold PTPR_wellformed. cbn. specialize (initialString_reprConfig H) as H1.  
+            apply string_reprConfig_length in H1. unfold l in H1. lia. }
+        exists s'.  split. 
         * apply F1.  
         * apply finalSubstrings_correct, F3. 
   Qed.  
 
   (*from this, we directly get a reduction to existential PR: does there exist an input string satisfying isValidInitialString for which the PR instance is a yes instance? *)
-  Lemma TM_reduction_to_ExPTPR : @ExPTPR Gamma simRules finalSubstrings t isValidInitialString l <-> (exists s, isValidInput k s /\ exists f, loopM (initc TM ([|initialTapeForString s|])) t = Some f). 
+  Lemma TM_reduction_to_ExPTPR : @ExPTPR Gamma _ _ simRules finalSubstrings t isValidInitialString l <-> (exists s, isValidInput k s /\ exists f, loopM (initc TM ([|initialTapeForString s|])) t = Some f). 
   Proof. 
     split; unfold ExPTPR.  
     - intros (x0 & H1 & (s & H2 & H3) & H4). exists s. split; [apply H3 | ]. subst; now apply simulation.
@@ -2565,7 +2570,7 @@ Section fixTM.
 
   (*nblank symbols of the prelude do rewrite to blanks (right half of the string)*)
   Lemma prelude_blank_tape_rewrites_right n : 
-    valid (rewritesHeadInd(liftPrelude preludeRules)) (repEl (S (S n)) 
+    valid (rewritesHeadInd (liftPrelude preludeRules)) (repEl (S (S n)) 
                                                       (inr nblank) ++ [inr ndelimC]) (map inl (E neutral (S (S n)))). 
   Proof.  induction n; cbn; eauto 10.  Qed. 
 
@@ -2975,8 +2980,14 @@ Section fixTM.
 
   Definition allRules := combP simRules preludeRules. 
 
+  Global Instance preludeSig'_eqTypeC : eq_dec preludeSig'.
+  Proof. unfold dec. decide equality. Defined. 
+
+  Global Instance preludeSig'_finTypeC : finTypeC (EqType preludeSig'). 
+  Proof. exists [nblank; nstar; ndelimC; ninit]. intros []; simpl; dec; congruence. Defined.
+
   (*the result which is given by the prelude *)
-  Lemma prelude_reduction_from_ExPTPR : @ExPTPR Gamma simRules finalSubstrings t isValidInitialString l <-> PTPRLang (@Build_PTPR preludeSig (map inr preludeInitialString) allRules (map (map inl) finalSubstrings) (1 + t)).  
+  Lemma prelude_reduction_from_ExPTPR : @ExPTPR Gamma _ _ simRules finalSubstrings t isValidInitialString l <-> PTPRLang (@Build_PTPR (FinType (EqType preludeSig)) (map inr preludeInitialString) allRules (map (map inl) finalSubstrings) (1 + t)).  
   Proof. 
     eapply prelude_ok. 
     - unfold l. lia. 
@@ -2990,7 +3001,7 @@ Section fixTM.
 
   (*reduction using the propositional rewrite rules: we put together the prelude and the deterministic simulation *)
   Lemma ind_reduction: 
-    PTPRLang (@Build_PTPR preludeSig (map inr preludeInitialString) allRules (map (map inl) finalSubstrings) (1 + t))
+    PTPRLang (@Build_PTPR (FinType (EqType preludeSig)) (map inr preludeInitialString) allRules (map (map inl) finalSubstrings) (1 + t))
     <-> GenNP (existT _ Sigma (TM, k, t)). 
   Proof. 
     rewrite <- prelude_reduction_from_ExPTPR. apply TM_reduction_to_ExPTPR.
@@ -3000,11 +3011,6 @@ Section fixTM.
   (** *list-based rules *)
   Notation Alphabet := ((Gamma + preludeSig')%type). 
 
-  Global Instance preludeSig'_eqTypeC : eq_dec preludeSig'.
-  Proof. unfold dec. decide equality. Defined. 
-
-  Global Instance preludeSig'_finTypeC : finTypeC (EqType preludeSig'). 
-  Proof. exists [nblank; nstar; ndelimC; ninit]. intros []; simpl; dec; congruence. Defined.
 
   Hint Constructors preludeSig'. 
 
@@ -4176,27 +4182,27 @@ Section fixTM.
         ].
 
   (*the environments which assign values to the non-constant variables of the transition rules *)
-  Definition baseEnv := makeAllEvalEnv (elem Fpolarity) (elem Sigma) (elem FstateSigma) (elem states) 1 0 3 0. 
-  Definition baseEnvNone := makeAllEvalEnv (elem Fpolarity) (elem Sigma) (elem FstateSigma) (elem states) 2 2 2 0. 
-  Definition baseEnvHalt := makeAllEvalEnv (elem Fpolarity) (elem Sigma) (elem FstateSigma) (elem states) 1 0 3 0. 
+  Definition fin_baseEnv := makeAllEvalEnv (elem Fpolarity) (elem Sigma) (elem FstateSigma) (elem states) 1 0 3 0. 
+  Definition fin_baseEnvNone := makeAllEvalEnv (elem Fpolarity) (elem Sigma) (elem FstateSigma) (elem states) 2 2 2 0. 
+  Definition fin_baseEnvHalt := makeAllEvalEnv (elem Fpolarity) (elem Sigma) (elem FstateSigma) (elem states) 1 0 3 0. 
 
   (*given a state and a current symbol, generate the rules for the corresponding transition *)
   Definition generateRulesForFinNonHalt (q : states) (m : stateSigma) :=
     filterSome (match m, (trans (q, m)) with
-    | _, (q', (Some σ, L)) => concat (map (makeSomeRight q q' m (Some σ) reifyAlphabetFin) baseEnv)
-    | _, (q', (Some σ, R)) => concat (map ( makeSomeLeft q q' m (Some σ) reifyAlphabetFin) baseEnv)
-    | _, (q', (Some σ, N)) => concat (map ( makeSomeStay q q' m (Some σ) reifyAlphabetFin) baseEnv)
-    | Some σ, (q', (None, L)) => concat (map (makeSomeRight q q' (Some σ) (Some σ) reifyAlphabetFin) baseEnv)
-    | Some σ, (q', (None, R)) => concat (map (makeSomeLeft q q' (Some σ) (Some σ) reifyAlphabetFin) baseEnv)
-    | Some σ, (q', (None, N)) => concat (map (makeSomeStay q q' (Some σ) (Some σ) reifyAlphabetFin) baseEnv)
-    | None, (q', (None, L)) => concat (map (makeNoneRight q q' reifyAlphabetFin) baseEnvNone)
-    | None, (q', (None, R)) => concat (map (makeNoneLeft q q' reifyAlphabetFin) baseEnvNone)
-    | None, (q', (None, N)) => concat (map (makeNoneStay q q' reifyAlphabetFin) baseEnvNone)
+    | _, (q', (Some σ, L)) => concat (map (makeSomeRight q q' m (Some σ) reifyAlphabetFin) fin_baseEnv)
+    | _, (q', (Some σ, R)) => concat (map ( makeSomeLeft q q' m (Some σ) reifyAlphabetFin) fin_baseEnv)
+    | _, (q', (Some σ, N)) => concat (map ( makeSomeStay q q' m (Some σ) reifyAlphabetFin) fin_baseEnv)
+    | Some σ, (q', (None, L)) => concat (map (makeSomeRight q q' (Some σ) (Some σ) reifyAlphabetFin) fin_baseEnv)
+    | Some σ, (q', (None, R)) => concat (map (makeSomeLeft q q' (Some σ) (Some σ) reifyAlphabetFin) fin_baseEnv)
+    | Some σ, (q', (None, N)) => concat (map (makeSomeStay q q' (Some σ) (Some σ) reifyAlphabetFin) fin_baseEnv)
+    | None, (q', (None, L)) => concat (map (makeNoneRight q q' reifyAlphabetFin) fin_baseEnvNone)
+    | None, (q', (None, R)) => concat (map (makeNoneLeft q q' reifyAlphabetFin) fin_baseEnvNone)
+    | None, (q', (None, N)) => concat (map (makeNoneStay q q' reifyAlphabetFin) fin_baseEnvNone)
     end).
 
   (*given a state, generate the rules needed for halting states *)
   Definition generateRulesForFinHalt (q : states) :=
-    filterSome (concat (map (fun env =>  makeHalt q reifyAlphabetFin env) baseEnvHalt)).
+    filterSome (concat (map (fun env =>  makeHalt q reifyAlphabetFin env) fin_baseEnvHalt)).
   (*given a state, generate either transition rules or halting rules for it *)
   Definition generateRulesForFin (q : states) :=
     if halt q then generateRulesForFinHalt q else
@@ -4580,7 +4586,7 @@ Section fixTM.
 
   (*the reduction using the list-based rules *)
   Lemma fin_reduction : 
-    TPRLang (@Build_TPR preludeSig (map inr preludeInitialString) allFinRules (map (map inl) finalSubstrings) (1 + t))
+    TPRLang (@Build_TPR (FinType (EqType preludeSig)) (map inr preludeInitialString) allFinRules (map (map inl) finalSubstrings) (1 + t))
     <-> GenNP (existT _ Sigma (TM, k, t)). 
   Proof. 
     rewrite tpr_ptpr_agree. 
