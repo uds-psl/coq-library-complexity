@@ -242,7 +242,7 @@ Section fixInstance.
     induction 1. 
     + rewrite homo_nil; [eauto | apply A1]. 
     + rewrite app_length in H0. nia. 
-    + apply list_ofFlatType_app in H. rewrite !(proj1 A1). destruct rule as [prem conc]. 
+    + apply list_ofFlatType_app in H. rewrite !(proj1 A1). destruct win as [prem conc]. 
       econstructor 3. 
       * destruct (le_lt_dec width (|a|)). 
         -- apply IHvalid, H. nia. 

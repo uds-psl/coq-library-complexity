@@ -333,3 +333,13 @@ Proof.
   - destruct w1; cbn in *; [congruence | ]. inv H0. inv H. 
     specialize (IHs1 w1 H1 H3) as (-> & ->). eauto. 
 Qed. 
+
+
+Lemma S_injective a b : S a = S b -> a = b. 
+Proof. congruence. Qed. 
+
+Ltac list_length_inv := repeat match goal with 
+    | [H : S _ = |?a| |- _] => is_var a; destruct a; cbn in H; [ congruence | apply S_injective in H]
+    | [H : 0 = |?a| |- _] => is_var a; destruct a; cbn in H; [ clear H| congruence]
+    | [H : |?a| = _ |- _] => symmetry in H
+end.

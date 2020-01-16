@@ -4,13 +4,12 @@ From Undecidability Require Import L.Complexity.Cook.Prelim TPR PR.
 Require Import Lia.
 
 Section fixInstance. 
-  Variable (tpr : TPR). 
-
-  Notation FSigma := (TPR.Sigma tpr).
-  Notation Finit := (TPR.init tpr).
-  Notation Fwindows := (TPR.windows tpr).
-  Notation Ffinal := (TPR.final tpr).
-  Notation Fsteps := (TPR.steps tpr). 
+  (*We do not directly fix a TPR instance since we do not actually require the alphabet to be finite for the reduction *)
+  Variable (FSigma : Type). 
+  Variable (Finit : list FSigma). 
+  Variable (Fwindows : list (TPRWin FSigma)). 
+  Variable (Ffinal : list (list FSigma)). 
+  Variable (Fsteps : nat). 
 
   Definition TPRWin_to_PRWin (X : Type) (win : TPRWin X) := Build_PRWin (TPRWinP_to_list (TPR.prem win)) (TPRWinP_to_list (TPR.conc win)).
 
@@ -18,15 +17,6 @@ Section fixInstance.
 
   Hint Constructors PR.valid. 
   Hint Constructors TPR.valid.
-
-  Lemma S_injective a b : S a = S b -> a = b. 
-  Proof. congruence. Qed. 
-
-  Ltac list_length_inv := repeat match goal with 
-      | [H : S _ = |?a| |- _] => is_var a; destruct a; cbn in H; [ congruence | apply S_injective in H]
-      | [H : 0 = |?a| |- _] => is_var a; destruct a; cbn in H; [ clear H| congruence]
-      | [H : |?a| = _ |- _] => symmetry in H
-  end.
 
   Lemma valid_agree (s1 s2 : list FSigma) : 
     |s1| >= 3 -> TPR.valid (rewritesHeadList Fwindows) s1 s2 <-> PR.valid 1 3 PR_windows s1 s2. 
@@ -81,9 +71,10 @@ Section fixInstance.
       setoid_rewrite <- (firstn_skipn k s). setoid_rewrite H3.
       exists (firstn k s), b. easy.
   Qed. 
-
-  Definition PR_instance := Build_PR 1 3 Finit PR_windows Ffinal Fsteps. 
 End fixInstance. 
+
+
+Definition PR_instance (tpr : TPR) := Build_PR 1 3 (TPR.init tpr) (PR_windows (TPR.windows tpr)) (TPR.final tpr) (TPR.steps tpr). 
 
 Lemma TPR_to_PR (tpr : TPR) : TPRLang tpr <-> PRLang (PR_instance tpr). 
 Proof. 
@@ -94,9 +85,9 @@ Proof.
       * unfold PR_windows in *. apply in_map_iff in H0 as (win' & <- & H0). cbn. destruct win', prem, conc; now cbn.
       * setoid_rewrite Nat.mul_1_r. eauto. 
     + apply relpower_valid_agree, H1. apply H. 
-    + apply final_agree, H2. apply TPR.relpower_valid_length_inv in H1. lia. 
+    + apply final_agree, H2. apply TPR.relpower_valid_length_inv in H1; cbn. lia. 
   - destruct H as (H1 & sf & H2 & H3). split; [ | exists sf; repeat split]; cbn in *. 
     + destruct H1 as (_ & _ & _ & H1 &_). cbn in H1. apply H1.  
     + apply relpower_valid_agree; [ apply H1 | apply H2]. 
-    + apply final_agree, H3. apply relpower_valid_length_inv in H2. lia. 
+    + eapply final_agree, H3. apply relpower_valid_length_inv in H2. lia. 
 Qed. 

@@ -3,72 +3,9 @@ From PslBase Require Import Vectors.Vectors.
 From Undecidability Require Import L.Complexity.Cook.Prelim FlatTPR FlatPR TPR_to_PR.
 Require Import Lia.
 
-Section fixInstance. 
-  Variable (ftpr : FlatTPR). 
-
-  Notation FSigma := (FlatTPR.Sigma ftpr).
-  Notation Finit := (FlatTPR.init ftpr).
-  Notation Fwindows := (FlatTPR.windows ftpr).
-  Notation Ffinal := (FlatTPR.final ftpr).
-  Notation Fsteps := (FlatTPR.steps ftpr). 
-
-  Definition PR_windows := map (@TPRWin_to_PRWin nat) Fwindows. 
-  Definition FPR_instance := Build_FlatPR FSigma 1 3 Finit PR_windows Ffinal Fsteps.
-
-  Hint Constructors PR.valid. 
-  Hint Constructors TPR.valid.
-  Lemma valid_agree (s1 s2 : list nat) : 
-    |s1| >= 3 -> TPR.valid (rewritesHeadList Fwindows) s1 s2 <-> PR.valid 1 3 PR_windows s1 s2. 
-  Proof. 
-    (*split. *)
-    (*- induction 1 as [ | ? ? ? ? ? IH | ? ? ? ? ? IH]. *)
-      (*+ eauto. *)
-      (*+ replace (x :: a) with ([x] ++ a) by now cbn. replace (y :: b) with ([y] ++ b) by now cbn. *)
-       (*constructor 2. [apply IH | now cbn | now intros ? [-> | []] | now intros ? [-> | []] | now cbn | now cbn]. *)
-      (*+ replace (x :: a) with ([x] ++ a) by now cbn. replace (y :: b) with ([y] ++ b) by now cbn. *)
-        (*destruct H2 as (rule & H3 & H4). *)
-        (*econstructor 3; [ apply IH | now intros ? [-> | []] | now intros ? [-> | []] | now cbn | now cbn | | ]. *)
-        (** unfold PR_windows. apply in_map_iff. exists rule. split; eauto.*)
-        (** unfold rewritesHead. unfold TPRWin_to_PRWin. cbn. eauto. *)
-    (*- induction 1 as [ | ? ? ? ? ? IH | ? ? ? ? ? ? IH ]. *)
-      (*+ eauto. *)
-      (*+ destruct u as [ | n1 u]; cbn in *; [ congruence | destruct u; cbn in *; [ | congruence]]. *)
-        (*destruct v as [ | n2 v]; cbn in *; [ congruence | destruct v; cbn in *; [ | congruence]].*)
-        (*cbn; eauto. *)
-      (*+ destruct u as [ | n1 u]; cbn in *; [ congruence | destruct u; cbn in *; [ | congruence]]. *)
-        (*destruct v as [ | n2 v]; cbn in *; [ congruence | destruct v; cbn in *; [ | congruence]].*)
-        (*cbn in *. destruct H5 as (H6 & H7). *)
-        (*unfold PR_windows in H4. apply in_map_iff in H4 as (rule' & <- & H4). *)
-        (*cbn in *. econstructor 3; [ apply IH| now apply H0 | now apply H1| ]. *)
-        (*exists rule'. split; [ apply H4 | split; eauto ]. *)
-  Admitted. 
-
-  Lemma relpower_valid_agree k (s1 s2 : list nat) : 
-    |s1| >= 3 -> relpower (TPR.valid (rewritesHeadList Fwindows)) k s1 s2 <-> relpower (PR.valid 1 3 PR_windows) k s1 s2. 
-  Proof. 
-    intros; split; induction 1; [ eauto | | eauto | ]. 
-    - econstructor; [ apply valid_agree; [apply H | apply H0] | apply IHrelpower]. 
-      apply TPR.valid_length_inv in H0; lia. 
-    - econstructor; [ apply valid_agree; [ apply H | apply H0] | apply IHrelpower]. 
-      apply valid_length_inv in H0; lia. 
-  Qed. 
-
-  Lemma final_agree (s : list nat) : |s| = |Finit| -> TPR.satFinal Ffinal s <-> PR.satFinal 1 (length Finit) Ffinal s. 
-  Proof. 
-    unfold TPR.satFinal, satFinal. setoid_rewrite Nat.mul_1_r. split; intros. 
-    - destruct H0 as (subs & H1 & H2). exists subs. 
-      destruct H2 as (b1 & b2 & ->). 
-      exists (|b1|). split; [ apply H1 | ]. 
-      rewrite skipn_app; [ | easy]. 
-      split; [ rewrite !app_length in H; lia | now exists b2].
-    - destruct H0 as (subs & k & H1 & H2 & (b & H3)). exists subs. split; [ apply H1 | ]. 
-      unfold substring. 
-      setoid_rewrite <- (firstn_skipn k s). setoid_rewrite H3.
-      exists (firstn k s), b. easy.
-  Qed. 
-
-   
-End fixInstance. 
+(*we can completely re-use the construction and correctness results of the TPR-PR reduction *)
+(*as the reduction does not depend on the alphabet being finite *)
+Definition FPR_instance (ftpr : FlatTPR) := Build_FlatPR (FlatTPR.Sigma ftpr) 1 3 (FlatTPR.init ftpr) (PR_windows (FlatTPR.windows ftpr)) (FlatTPR.final ftpr) (FlatTPR.steps ftpr).
 
 Lemma reduction (ftpr : FlatTPR) : FlatTPRLang ftpr <-> FlatPRLang (FPR_instance ftpr). 
 Proof. 
@@ -114,10 +51,10 @@ Proof.
         assert (exists x, TPRWin_to_PRWin x = Build_PRWin prem conc /\ x el FlatTPR.windows ftpr) as H2. 
         { exists (prem / conc). cbn. eauto. }
         apply F3 in H2. destruct H2 as (H2 & H3). destruct prem, conc. cbn in *. 
-        unfold list_ofFlatType in H2, H3. repeat split; eauto. 
+        unfold list_ofFlatType in H2, H3. unfold ofFlatType in *. repeat split; cbn; eauto. 
     + apply H1. 
     + clear H1 H3. cbn in H2. apply relpower_valid_agree, H2. apply H. 
-    + apply final_agree, H3. now apply relpower_valid_length_inv in H2. 
+    + eapply final_agree, H3. now apply relpower_valid_length_inv in H2. 
 Qed. 
 
 (*Section fixType. *)

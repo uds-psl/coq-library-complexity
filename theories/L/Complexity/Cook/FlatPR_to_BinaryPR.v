@@ -92,8 +92,6 @@ Section fixInstance.
   Qed. 
 End fixInstance. 
 
-Print FlatPR_wellformed. 
-
 Definition ofFlatType_dec (b a : nat) := leb (S a) b.
 Definition list_ofFlatType_dec (t : nat)  (s : list nat) := forallb (ofFlatType_dec t) s. 
 
