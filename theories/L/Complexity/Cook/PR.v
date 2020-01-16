@@ -76,6 +76,28 @@ Section fixX.
     - repeat rewrite app_length; firstorder. 
   Qed. 
 
+  Lemma relpower_valid_length_inv k a b : relpower valid k a b -> length a = length b. 
+  Proof. 
+    induction 1; [ auto | rewrite <- IHrelpower; now apply valid_length_inv]. 
+  Qed. 
+
+  Lemma valid_vacuous (a b : list X) m: |a| = |b| -> |a| < width -> |a| = m * offset -> valid a b.
+  Proof. 
+    clear G0. 
+    revert a b. induction m; intros.  
+    - cbn in H1. destruct a; [ | cbn in H1; congruence]. destruct b; [ | cbn in H; congruence ].  constructor. 
+    - cbn in H1. assert (offset <= |a|) by lia. apply list_length_split1 in H2 as (s1 & s2 & H3 & H4 & H5).  
+      assert (offset <= |b|) by lia. apply list_length_split1 in H2 as (s3 & s4 & H6 & H7 & H8). 
+      rewrite H5, H8. constructor 2. 
+      + subst. apply IHm. 
+        * rewrite !app_length in H. lia. 
+        * rewrite app_length in H0. lia. 
+        * rewrite app_length in *. lia. 
+      + lia. 
+      + lia. 
+      + lia.  
+  Qed. 
+
   Lemma valid_multiple_of_offset a b : valid a b -> exists k, |a| = k * offset.
   Proof. 
     induction 1. 
@@ -164,5 +186,4 @@ Section fixInstance.
   Qed. 
 
 End fixInstance. 
-
 Definition PRLang (C : PR) := PR_wellformed C /\ exists (sf : list (Sigma C)), relpower (valid (offset C) (width C) (windows C)) (steps C) (init C) sf /\ satFinal (offset C) (|init C|) (final C) sf. 

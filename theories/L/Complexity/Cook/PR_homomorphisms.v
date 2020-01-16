@@ -63,8 +63,6 @@ Section fixInstance.
   Notation final := (final fpr).
   Notation steps := (steps fpr). 
 
-  (*Context (A0 : FlatPR_wellformed fpr). *)
-
   
   Context (A1 : uniform_homomorphism h). 
   Definition hsingle x := h [x]. 
@@ -93,7 +91,7 @@ Section fixInstance.
   Lemma h_length_inv' l1 l2 : h l1 = h l2 -> |l1| = |l2|. 
   Proof.  intros; now apply h_length_inv. Qed. 
 
-  Lemma h_bounded_injective l1 l2 : list_ofFlatType l1 Sigma -> h l1 = h l2 -> l1 = l2. 
+  Lemma h_bounded_injective l1 l2 : list_ofFlatType Sigma l1 -> h l1 = h l2 -> l1 = l2. 
   Proof. 
     destruct A1 as (A4 & A5). revert l2. induction l1; intros l2 H1 H0. 
     - destruct l2; cbn in *; [ reflexivity | apply h_length_inv' in H0; cbn in H0; congruence]. 
@@ -101,7 +99,7 @@ Section fixInstance.
       rewrite homo_cons in H0; [ | apply A1]. rewrite homo_cons with (x := n) in H0; [ | apply A1]. 
       apply app_eq_length in H0 as (H0 & H0'); [ | apply A5].
       apply A2 in H0 as ->; [ | now apply H1 ].  
-      assert (list_ofFlatType l1 Sigma) as G1. { intros x H5. apply (H1 x (or_intror H5)). }
+      assert (list_ofFlatType Sigma l1) as G1. { intros x H5. apply (H1 x (or_intror H5)). }
       now rewrite (IHl1 l2 G1 H0'). 
   Qed. 
 
@@ -172,42 +170,6 @@ Section fixInstance.
 
   Context (A : FlatPR_wellformed fpr). 
 
-  Lemma valid_vacuous (X : Type) width offset windows (a b : list X) m: |a| = |b| -> |a| < width -> |a| = m * offset -> valid offset width windows a b.
-  Proof. 
-    revert a b. induction m; intros.  
-    - cbn in H1. destruct a; [ | cbn in H1; congruence]. destruct b; [ | cbn in H; congruence ].  constructor. 
-    - cbn in H1. assert (offset <= |a|) by lia. apply list_length_split1 in H2 as (s1 & s2 & H3 & H4 & H5).  
-      assert (offset <= |b|) by lia. apply list_length_split1 in H2 as (s3 & s4 & H6 & H7 & H8). 
-      rewrite H5, H8. constructor 2. 
-      + subst. apply IHm. 
-        * rewrite !app_length in H. lia. 
-        * rewrite app_length in H0. lia. 
-        * rewrite app_length in *. lia. 
-      + lia. 
-      + lia. 
-      + lia.  
-  Qed. 
-
-  Lemma validFlat_vacuous Sigma width offset windows (a b : list nat) m : |a| = |b| -> |a| < width -> |a| = m * offset -> list_ofFlatType a Sigma -> list_ofFlatType b Sigma -> validFlat Sigma offset width windows a b.
-  Proof. 
-    revert a b. induction m; intros.  
-    - cbn in H1. destruct a; [ | cbn in H1; congruence]. destruct b; [ | cbn in H; congruence ].  constructor. 
-    - cbn in H1. assert (offset <= |a|) by lia. apply list_length_split1 in H4 as (s1 & s2 & H5 & H6 & H7).  
-      assert (offset <= |b|) by lia. apply list_length_split1 in H4 as (s3 & s4 & H8 & H9 & H10). 
-      subst. rewrite list_ofFlatType_app in H2, H3.  constructor 2. 
-      + subst. apply IHm. 
-        * rewrite !app_length in H. lia. 
-        * rewrite app_length in H0. lia. 
-        * rewrite app_length in *. lia. 
-        * tauto. 
-        * tauto. 
-      + lia. 
-      + tauto. 
-      + tauto. 
-      + lia. 
-      + lia.  
-  Qed. 
-
   Lemma rewritesHead_homomorphism1 win a b : 
     win el windows -> rewritesHead win a b -> rewritesHead (hwindow win) (h a) (h b). 
   Proof. 
@@ -257,7 +219,7 @@ Section fixInstance.
       split; unfold prefix; eauto.  
   Qed. 
 
-  Lemma rewritesHead_homomorphism_ofFlatType win a1 a2 b1 b2: win el windows -> rewritesHead (hwindow win) (h a1 ++ h a2) (h b1 ++ h b2) -> |b1| = offset -> list_ofFlatType b1 Sigma.
+  Lemma rewritesHead_homomorphism_ofFlatType win a1 a2 b1 b2: win el windows -> rewritesHead (hwindow win) (h a1 ++ h a2) (h b1 ++ h b2) -> |b1| = offset -> list_ofFlatType Sigma b1.
   Proof. 
     intros. 
     rewrite <- !(proj1 A1) in H0. apply rewritesHead_homomorphism_iff in H0; [ | apply H]. 
@@ -272,9 +234,9 @@ Section fixInstance.
   Qed. 
 
   Hint Constructors valid. 
-  Hint Constructors validFlat.
+  (*Hint Constructors validFlat.*)
 
-  Lemma valid_homomorphism1 a b : |a| >= width -> list_ofFlatType a Sigma -> validFlat Sigma offset width windows a b -> valid hoffset hwidth hwindows (h a) (h b).
+  Lemma valid_homomorphism1 a b : |a| >= width -> list_ofFlatType Sigma a -> valid offset width windows a b -> valid hoffset hwidth hwindows (h a) (h b).
   Proof. 
     intros H0 H. unfold hwidth, hoffset.
     induction 1. 
@@ -283,21 +245,21 @@ Section fixInstance.
     + apply list_ofFlatType_app in H. rewrite !(proj1 A1). destruct rule as [prem conc]. 
       econstructor 3. 
       * destruct (le_lt_dec width (|a|)). 
-        -- apply IHvalidFlat, H. nia. 
+        -- apply IHvalid, H. nia. 
         --(*we show that for this case, the whole string is covered by the rule *)
-          clear IHvalidFlat H2 H3. 
-          specialize (validFlat_multiple_of_offset H1) as (m & H1').
+          clear IHvalid H2 H3. 
+          specialize (valid_multiple_of_offset H1) as (m & H1').
           eapply valid_vacuous with (m := m). 
-          ++ rewrite !h_multiplier. apply validFlat_length_inv in H1. nia. 
+          ++ rewrite !h_multiplier. apply valid_length_inv in H1. nia. 
           ++ rewrite !h_multiplier. specialize k_ge. nia. 
           ++ rewrite h_multiplier. nia. 
       * rewrite h_multiplier. specialize k_ge. nia. 
       * rewrite h_multiplier. specialize k_ge. nia. 
-      * unfold hwindows. apply in_map_iff. exists (Build_PRWin prem conc). split; [ | apply H6]. reflexivity. 
+      * unfold hwindows. apply in_map_iff. exists (Build_PRWin prem conc). split; [ | apply H4]. reflexivity. 
       * rewrite <- !(proj1 A1). apply rewritesHead_homomorphism_iff; assumption.
   Qed. 
 
-  Lemma valid_homomorphism2 a b' : |a| >= width -> list_ofFlatType a Sigma -> valid hoffset hwidth hwindows (h a) b' -> exists b, b' = h b /\ list_ofFlatType b Sigma /\ validFlat Sigma offset width windows a b.
+  Lemma valid_homomorphism2 a b' : |a| >= width -> list_ofFlatType Sigma a -> valid hoffset hwidth hwindows (h a) b' -> exists b, b' = h b /\ list_ofFlatType Sigma b /\ valid offset width windows a b.
   Proof. 
     unfold hoffset, hwidth. intros.  
     remember (h a). revert a Heql H0 H. induction H1. 
@@ -326,11 +288,9 @@ Section fixInstance.
         * apply list_ofFlatType_app. split; [ | apply IH1]. apply rewritesHead_homomorphism_ofFlatType in H3; eauto. 
         * econstructor 3. 
           -- apply IH2.  
-          -- apply H4.
-          -- eapply rewritesHead_homomorphism_ofFlatType; eauto.
-          -- apply H8. 
-          -- apply H7. 
-          -- apply H10. 
+          -- easy.
+          -- easy. 
+          -- easy.
           -- rewrite <- !(proj1 A1) in H3. apply rewritesHead_homomorphism_iff in H3; eauto.
       + (*the interesting base case *)
         clear IHvalid H6. unfold hwindows in H2. apply in_map_iff in H2 as (rule' & <- & H10). 
@@ -376,23 +336,19 @@ Section fixInstance.
         exists (b1 ++ b2). split; [now rewrite !(proj1 A1) | split; [ apply A5 | ]].
         (*thus, we can show the validity *)
         econstructor 3. 
-        -- specialize (valid_multiple_of_offset H1) as (k1 & H1'). eapply validFlat_vacuous.  
+        -- specialize (valid_multiple_of_offset H1) as (k1 & H1'). eapply valid_vacuous.  
            ++ apply valid_length_inv in H1. rewrite !h_multiplier in H1. nia. 
            ++ apply l.  
            ++ rewrite h_multiplier in H1'. enough (|a2| = k1 * offset) as G by apply G. nia. 
-           ++ apply list_ofFlatType_app in H4; apply H4. 
-           ++ apply list_ofFlatType_app in A5; apply A5. 
-        -- apply list_ofFlatType_app in H4; apply H4. 
-        -- apply list_ofFlatType_app in A5; apply A5. 
-        -- apply H8. 
-        -- apply H7. 
-        -- apply H10. 
+        -- easy. 
+        -- easy.  
+        -- easy.  
         -- apply rewritesHead_homomorphism_iff; [ apply H10 | rewrite !(proj1 A1); apply H30].
   Qed. 
 
   (*we can obtain an equivalence, but its second direction is significantly weaker than the direction which we've just shown *)
   Lemma valid_homomorphism_iff a b : 
-    |a| >= width -> list_ofFlatType a Sigma -> validFlat Sigma offset width windows a b <-> valid hoffset hwidth hwindows (h a) (h b).
+    |a| >= width -> list_ofFlatType Sigma a -> valid offset width windows a b <-> valid hoffset hwidth hwindows (h a) (h b).
   Proof. 
     intros H0 H; split. unfold hwidth, hoffset. 
     - apply valid_homomorphism1; easy.  
@@ -403,30 +359,30 @@ Section fixInstance.
   Qed. 
 
   Lemma valid_relpower_homomorphism1 a b steps : 
-    |a| >= width -> list_ofFlatType a Sigma -> relpower (validFlat Sigma offset width windows) steps a b -> relpower (valid (k * offset) (k * width) hwindows) steps (h a) (h b).
+    |a| >= width -> list_ofFlatType Sigma a -> relpower (valid offset width windows) steps a b -> relpower (valid (k * offset) (k * width) hwindows) steps (h a) (h b).
   Proof. 
     intros H H0. induction 1; [ eauto | ]. econstructor. 
     + apply valid_homomorphism_iff; [ apply H |apply H0 | apply H1 ]. 
     + apply IHrelpower. 
-      * apply validFlat_length_inv in H1. lia. 
+      * apply valid_length_inv in H1. lia. 
       * eapply valid_list_ofFlatType_invariant; eauto. 
   Qed. 
 
   Lemma valid_relpower_homomorphism2 a b' steps: 
-    |a| >= width -> list_ofFlatType a Sigma -> relpower (valid (k * offset) (k * width) hwindows) steps (h a) b' -> exists b, b' = h b /\ relpower (validFlat Sigma offset width windows) steps a b. 
+    |a| >= width -> list_ofFlatType Sigma a -> relpower (valid (k * offset) (k * width) hwindows) steps (h a) b' -> exists b, b' = h b /\ relpower (valid offset width windows) steps a b. 
   Proof. 
     intros. remember (h a). revert a Heql H H0. induction H1; intros. 
     - exists a0. split; eauto. 
     - subst. apply valid_homomorphism2 in H as (b' & -> & H3 & H); [ | easy | easy]. 
       edestruct (IHrelpower b' eq_refl) as (c' & -> & IH). 
-      + apply validFlat_length_inv in H; lia. 
+      + apply valid_length_inv in H; lia. 
       + apply H3. 
       + exists c'; split; [ easy | ]. econstructor; easy. 
   Qed. 
 
   (*again a slightly weaker equivalence *)
   Lemma valid_relpower_homomorphism_iff a b steps : 
-    |a| >= width -> list_ofFlatType a Sigma -> relpower (validFlat Sigma offset width windows) steps a b <-> relpower (valid (k * offset) (k * width) hwindows) steps (h a) (h b).
+    |a| >= width -> list_ofFlatType Sigma a -> relpower (valid offset width windows) steps a b <-> relpower (valid (k * offset) (k * width) hwindows) steps (h a) (h b).
   Proof. 
     intros. split. 
     - now apply valid_relpower_homomorphism1.  
@@ -466,7 +422,7 @@ Section fixInstance.
   Qed. 
       
   Lemma FlatPR_homomorphism_iff : 
-    (exists sf, list_ofFlatType sf Sigma /\ relpower (validFlat Sigma offset width windows) steps init sf /\ satFinal offset (|init|) final sf) 
+    (exists sf, list_ofFlatType Sigma sf /\ relpower (valid offset width windows) steps init sf /\ satFinal offset (|init|) final sf) 
     <-> (exists sf, relpower (valid hoffset hwidth hwindows) hsteps hinit sf /\ satFinal hoffset (|hinit|) hfinal sf). 
   Proof. 
     unfold hsteps, hinit, hoffset, hwidth. 
@@ -476,14 +432,14 @@ Section fixInstance.
       exists (h sf). split. 
       + apply valid_relpower_homomorphism_iff; easy. 
       + clear A4 A5 H1. apply final_agree. 
-        * apply relpower_validFlat_length_inv in H2. lia. 
+        * apply relpower_valid_length_inv in H2. lia. 
         * apply H3. 
     - destruct H as (sf & H1 & H2). 
       apply valid_relpower_homomorphism2 in H1 as (sf' & -> & H1).
       + exists sf'. split; [ | split; [apply H1 | ]].
         * apply relpower_valid_list_ofFlatType_invariant in H1; easy.
         * clear A4 A5. apply final_agree. 
-          -- apply relpower_validFlat_length_inv in H1; easy. 
+          -- apply relpower_valid_length_inv in H1; easy. 
           -- apply H2. 
       + apply A4. 
       + apply A5. 
