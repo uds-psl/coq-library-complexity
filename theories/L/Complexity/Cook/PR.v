@@ -10,7 +10,7 @@ Record PRWin (Sigma : Type):= {
                               }.
 
 Record PR := {
-               Sigma : Type;
+               Sigma : finType;
                offset : nat; 
                width : nat;  
                init : list Sigma;  (* length is encoded implicitly as the length of init*) (*length should be a multiple of offset *)
@@ -45,10 +45,10 @@ Section fixX.
     exists subs k, subs el final /\ k * offset <= l /\  prefix subs (skipn (k * offset) s).
 
   (* rewrites inside a string *)
-  Definition rewritesHead (X : Type) (rule : PRWin X) a b := prefix (prem rule) a /\ prefix (conc rule) b.
+  Definition rewritesHead (X : Type) (win : PRWin X) a b := prefix (prem win) a /\ prefix (conc win) b.
 
-  Definition rewritesAt (rule : PRWin X) (i : nat) a b := rewritesHead rule (skipn i a) (skipn i b).
-  Lemma rewritesAt_head rule a b : rewritesHead rule a b <-> rewritesAt rule 0 a b. 
+  Definition rewritesAt (win : PRWin X) (i : nat) a b := rewritesHead win (skipn i a) (skipn i b).
+  Lemma rewritesAt_head win a b : rewritesHead win a b <-> rewritesAt win 0 a b. 
   Proof. 
     unfold rewritesAt.
     rewrite <- firstn_skipn with (n:= 0) (l:= a) at 1.
@@ -56,7 +56,7 @@ Section fixX.
     repeat rewrite firstn_O; now cbn. 
   Qed. 
 
-  Lemma rewritesAt_step (rule : PRWin X) a b u v (i:nat) : length u = offset -> length v = offset -> rewritesAt rule i a b <-> rewritesAt rule (i + offset) (u ++ a) (v ++ b). 
+  Lemma rewritesAt_step (win : PRWin X) a b u v (i:nat) : length u = offset -> length v = offset -> rewritesAt win i a b <-> rewritesAt win (i + offset) (u ++ a) (v ++ b). 
   Proof.
     intros. unfold rewritesAt.
     rewrite Nat.add_comm. now repeat rewrite skipn_add. 
@@ -66,7 +66,7 @@ Section fixX.
   Inductive valid: list X -> list X -> Prop :=
   | validB: valid [] [] 
   | validSA a b u v : valid a b -> length a < width - offset -> length u = offset -> length v = offset -> valid (u++ a) (v++ b)
-  | validS a b u v rule: valid a b -> length u = offset -> length v = offset -> rule el windows -> rewritesHead rule (u ++ a) (v ++ b) -> valid (u ++ a) (v ++ b). 
+  | validS a b u v win: valid a b -> length u = offset -> length v = offset -> win el windows -> rewritesHead win (u ++ a) (v ++ b) -> valid (u ++ a) (v ++ b). 
 
   Lemma valid_length_inv a b : valid a b -> length a = length b. 
   Proof.
@@ -106,7 +106,11 @@ Section fixX.
     - setoid_rewrite app_length. destruct IHvalid as (k & ->).  exists (S k); nia. 
   Qed. 
 
-  Definition validExplicit a b := length a = length b /\ (exists k, length a = k * offset) /\ forall i, 0 <= i < length a + 1 - width /\ (exists j, i = j * offset) -> exists rule, rule el windows  /\ rewritesAt rule i a b.
+  Definition validExplicit a b := length a = length b 
+    /\ (exists k, length a = k * offset) 
+    /\ forall i, 0 <= i < length a + 1 - width 
+      /\ (exists j, i = j * offset) -> exists win, win el windows 
+      /\ rewritesAt win i a b.
 
   Lemma valid_iff a b :
     valid a b <-> validExplicit a b.
@@ -123,29 +127,29 @@ Section fixX.
         split.
         1: { destruct IH2 as (k & IH2). exists (S k). rewrite app_length; lia. }
         rewrite app_length. intros i (iH1 & (j & iH2)). destruct j. 
-        * exists rule. split; [assumption | ]. rewrite Nat.mul_0_l in iH2. rewrite iH2 in *. now rewrite <- rewritesAt_head.  
+        * exists win. split; [assumption | ]. rewrite Nat.mul_0_l in iH2. rewrite iH2 in *. now rewrite <- rewritesAt_head.  
         * cbn in iH2. assert (0 <= i - offset < (|a|) + 1 - width) by lia.
           assert (exists j, i - offset = j * offset) by (exists j; lia). 
-          specialize (IH3 (i -offset) (conj H4 H5)) as (rule' & F1 & F2). 
-          exists rule'; split; [assumption | ]. rewrite (@rewritesAt_step rule' a b u v (i -offset) H0 H1) in F2. rewrite Nat.sub_add in F2; [assumption | lia]. 
+          specialize (IH3 (i -offset) (conj H4 H5)) as (win' & F1 & F2). 
+          exists win'; split; [assumption | ]. rewrite (@rewritesAt_step win' a b u v (i -offset) H0 H1) in F2. rewrite Nat.sub_add in F2; [assumption | lia]. 
     - intros (H1 & (k & H2) & H3). revert a b H1 H2 H3. induction k; intros. 
       + rewrite Nat.mul_0_l in H2; rewrite H2 in *. inv_list. constructor.
       + cbn in H2. rewrite H2 in H1; symmetry in H1.
         apply length_app_decompose in H2 as (u & a' & -> & H2 & H4).
         apply length_app_decompose in H1 as (v & b' & -> & H1 & H5). 
         destruct (le_lt_dec (width - offset) (length a')). 
-        * (*have to find a rule to apply*)
+        * (*have to find a window to apply*)
           rewrite app_length in H3. 
           assert (0 <= 0 < (|u|) + (|a'|) + 1 - width) by lia. 
           assert (exists j, 0 = j * offset) as H' by (exists 0; lia). 
-          destruct (H3 0 (conj H H')) as (rule & F1 & F2%rewritesAt_head). 
-          eapply (@validS a' b' u v rule). 2-5: assumption. 
+          destruct (H3 0 (conj H H')) as (win & F1 & F2%rewritesAt_head). 
+          eapply (@validS a' b' u v win). 2-5: assumption. 
           apply IHk; [lia | apply H4 | ]. 
           intros i (H0 & (j & H6)). assert (0 <= i + (|u|) < (|u|) + (|a'|) + 1 - width) by lia. 
           assert (exists j, i + (|u|) = j * offset) by (exists (S j); lia). 
-          destruct (H3 (i + (|u|)) (conj H7 H8)) as (rule' & F3 & F4). 
-          exists rule'; split; [assumption | ]. 
-          rewrite H2 in F4. now apply (proj2 (@rewritesAt_step rule' a' b' u v (i ) H2 H1)) in F4. 
+          destruct (H3 (i + (|u|)) (conj H7 H8)) as (win' & F3 & F4). 
+          exists win'; split; [assumption | ]. 
+          rewrite H2 in F4. now apply (proj2 (@rewritesAt_step win' a' b' u v (i ) H2 H1)) in F4. 
         * (* the rewrite is vacuously valid *)
           constructor.
           2-4: assumption. 
@@ -153,9 +157,9 @@ Section fixX.
           intros i (F1 & (j & F2)). rewrite app_length in H3. 
           assert (0 <= i + (|u|) < (|u|) + (|a'|) + 1 - width) by lia.
           assert (exists j, i + (|u|) = j * offset) by (exists (S j); lia). 
-          destruct (H3 (i + (|u|)) (conj H H0)) as (rule & H6 & H7). 
-          exists rule; split; [assumption | ]. 
-          rewrite H2 in H7. now apply (proj2 (@rewritesAt_step rule a' b' u v i H2 H1)) in H7. 
+          destruct (H3 (i + (|u|)) (conj H H0)) as (win & H6 & H7). 
+          exists win; split; [assumption | ]. 
+          rewrite H2 in H7. now apply (proj2 (@rewritesAt_step win a' b' u v i H2 H1)) in H7. 
   Qed. 
 End fixX. 
 
@@ -169,7 +173,7 @@ Section fixInstance.
   Definition window := PRWin (Sigma c). 
 
   Implicit Type (s a b: string). 
-  Implicit Type (r rule : window).
+  Implicit Type (win : window).
   Implicit Type (x y : Sigma c).
 
   Definition isRule r := r el windows c.
@@ -178,7 +182,7 @@ Section fixInstance.
     intros. destruct wf as (_ & _ & _ & _ & H1 & _). specialize (H1 r H ) as (H1 & H2). tauto. 
   Qed. 
 
-  Lemma rewritesHead_length_inv rule a b : rewritesHead rule a b -> isRule rule -> length a >= width c /\ length b >= width c. 
+  Lemma rewritesHead_length_inv win a b : rewritesHead win a b -> isRule win -> length a >= width c /\ length b >= width c. 
   Proof. 
     intros. unfold rewritesHead, prefix in *. destruct H as ((b1 & ->) & (b2 & ->)). split.  
     - rewrite app_length. rewrite (proj1 (isRule_length H0)). lia.  

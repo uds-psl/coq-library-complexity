@@ -1,11 +1,7 @@
-From PslBase Require Import Base. 
+From PslBase Require Import Base FinTypes. 
 From PslBase Require Import Vectors.Vectors. 
-From Undecidability Require Import L.Complexity.Cook.Prelim FlatTPR FlatPR.
+From Undecidability Require Import L.Complexity.Cook.Prelim FlatTPR FlatPR TPR_to_PR.
 Require Import Lia.
-
-From Undecidability.L Require Import Tactics.LTactics.
-From Undecidability.L.Complexity Require Import Problems.kSAT PolyBounds Tactics NP. 
-From Undecidability.L.Datatypes Require Import LBool LNat Lists LProd. 
 
 Section fixInstance. 
   Variable (ftpr : FlatTPR). 
@@ -16,9 +12,8 @@ Section fixInstance.
   Notation Ffinal := (FlatTPR.final ftpr).
   Notation Fsteps := (FlatTPR.steps ftpr). 
 
-  Definition TPRWin_to_PRWin (win : TPRWin nat) := Build_PRWin (TPRWinP_to_list (TPR.prem win)) (TPRWinP_to_list (TPR.conc win)).
-
-  Definition PR_windows := map TPRWin_to_PRWin Fwindows. 
+  Definition PR_windows := map (@TPRWin_to_PRWin nat) Fwindows. 
+  Definition FPR_instance := Build_FlatPR FSigma 1 3 Finit PR_windows Ffinal Fsteps.
 
   Hint Constructors PR.valid. 
   Hint Constructors TPR.valid.
@@ -29,7 +24,7 @@ Section fixInstance.
     (*- induction 1 as [ | ? ? ? ? ? IH | ? ? ? ? ? IH]. *)
       (*+ eauto. *)
       (*+ replace (x :: a) with ([x] ++ a) by now cbn. replace (y :: b) with ([y] ++ b) by now cbn. *)
-        (*constructor 2. [apply IH | now cbn | now intros ? [-> | []] | now intros ? [-> | []] | now cbn | now cbn]. *)
+       (*constructor 2. [apply IH | now cbn | now intros ? [-> | []] | now intros ? [-> | []] | now cbn | now cbn]. *)
       (*+ replace (x :: a) with ([x] ++ a) by now cbn. replace (y :: b) with ([y] ++ b) by now cbn. *)
         (*destruct H2 as (rule & H3 & H4). *)
         (*econstructor 3; [ apply IH | now intros ? [-> | []] | now intros ? [-> | []] | now cbn | now cbn | | ]. *)
@@ -72,7 +67,7 @@ Section fixInstance.
       exists (firstn k s), b. easy.
   Qed. 
 
-  Definition FPR_instance := Build_FlatPR FSigma 1 3 Finit PR_windows Ffinal Fsteps. 
+   
 End fixInstance. 
 
 Lemma reduction (ftpr : FlatTPR) : FlatTPRLang ftpr <-> FlatPRLang (FPR_instance ftpr). 

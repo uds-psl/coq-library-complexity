@@ -91,3 +91,5 @@ Proof.
     rewrite getPosition_prodLists with (k1 := k1) (k2 := k2); eauto. 
 Qed. 
 
+Definition isFlatListOf (X : finType) (l : list nat) (l' : list X) := l = map index l'.
+

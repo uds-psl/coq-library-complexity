@@ -35,6 +35,14 @@ Section abstractDefs.
 
     Hint Constructors valid. 
 
+    Lemma valid_vacuous a b : |a| <= 2 -> |a| = |b| -> valid a b. 
+    Proof. 
+      intros. 
+      destruct a as [ | a1 a]; [ | destruct a as [ | a2 a]; [ | destruct a; cbn in *; [ | lia]]];
+      (destruct b as [ | b1 b]; [ | destruct b as [ | b2 b]; [ | destruct b; cbn in *; [ | lia]]]); 
+          cbn in *; try congruence; eauto. 
+    Qed. 
+
     Lemma valid_length_inv a b : valid a b -> length a = length b. 
     Proof.
       induction 1. 

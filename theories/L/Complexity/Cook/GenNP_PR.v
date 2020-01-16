@@ -3300,8 +3300,6 @@ Section fixTM.
     - destruct x; cbn; lia. 
   Qed. 
 
-  Definition isFlatListOf (X : finType) (l : list nat) (l' : list X) := l = map index l'. 
-
   Lemma dupfree_map_getPosition (X : eqType) (l : list X) : Dupfree.dupfree l -> seq 0 (|l|) = map (getPosition l) l. 
   Proof. 
     intros H. enough (forall n, seq n (|l|) = map (fun x => n + getPosition l x) l). 
