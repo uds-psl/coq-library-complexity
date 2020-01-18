@@ -2425,8 +2425,6 @@ Section fixTM.
     + unfold substring. now apply In_explicit. 
   Qed.
 
-  SearchAbout reprConfig.
-
   (*simulation lemma: for valid inputs, the PR instance does rewrite to a final string iff the Turing machine does accept *)
   Lemma simulation : forall s, isValidInput k s -> PTPRLang (Build_PTPR (initialString s) simRules finalSubstrings  t) <-> exists f, loopM (initc TM ([|initialTapeForString s|])) t = Some f.
   Proof. 

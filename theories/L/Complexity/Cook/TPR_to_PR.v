@@ -80,7 +80,7 @@ Lemma TPR_to_PR (tpr : TPR) : TPRLang tpr <-> PRLang (PR_instance tpr).
 Proof. 
   split; intros. 
   - destruct H as (H & sf & H1 & H2). split; [ | exists sf; repeat split]. 
-    + repeat split; cbn in *; [ lia | lia | lia | apply H | | | ]. 
+    + repeat split; cbn in *; [ lia | lia | exists 3; split; lia | apply H | | | ]. 
       * unfold PR_windows in *. apply in_map_iff in H0 as (win' & <- & H0). cbn. destruct win', prem, conc; now cbn.   
       * unfold PR_windows in *. apply in_map_iff in H0 as (win' & <- & H0). cbn. destruct win', prem, conc; now cbn.
       * setoid_rewrite Nat.mul_1_r. eauto. 

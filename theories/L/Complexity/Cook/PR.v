@@ -24,7 +24,7 @@ Definition PRWin_of_size (X : Type) (win : PRWin X) (k : nat) := |prem win| = k 
 Definition PR_wellformed (c : PR) := 
   width c > 0 
   /\ offset c > 0
-  /\ offset c <= width c (*instances not satisfying this property are wonderfully unintuitive *)
+  /\ (exists k, k > 0 /\ width c = k * offset c) (*instances not satisfying this property are wonderfully unintuitive *)
   /\ length (init c) >= width c (*we do not want vacuous rewrites *)
   /\ (forall win, win el windows c -> PRWin_of_size win (width c)) 
   /\ (exists k, length (init c) = k * offset c).
@@ -188,6 +188,6 @@ Section fixInstance.
     - rewrite app_length. rewrite (proj1 (isRule_length H0)). lia.  
     - rewrite app_length, (proj2 (isRule_length H0)). lia. 
   Qed. 
-
 End fixInstance. 
+
 Definition PRLang (C : PR) := PR_wellformed C /\ exists (sf : list (Sigma C)), relpower (valid (offset C) (width C) (windows C)) (steps C) (init C) sf /\ satFinal (offset C) (|init C|) (final C) sf. 

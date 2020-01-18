@@ -14,31 +14,6 @@ Record FlatPR := {
   steps : nat
   }.
 
-(*Inductive isFlatPRWinOf (X : finType) (flatwin : PRWin nat) (win : PRWin X) := *)
-  (*mkIsFlatPRWinO (Hprem : isFlatListOf (prem flatwin) (prem win)) *)
-    (*(Hconc : isFlatListOf (conc flatwin) (conc win))*)
-  (*: isFlatPRWinOf flatwin win. *)
-
-(*Inductive isFlatWindowsOf (X : finType) (flatwindows : list (PRWin nat)) (windows : list (PRWin X)) := *)
-  (*mkIsFlatWindowsOf (Hsound : forall flatwin, flatwin el flatwindows -> exists win, win el windows /\ isFlatPRWinOf flatwin win)*)
-    (*(Hcomplete : forall win, win el windows -> exists flatwin, flatwin el flatwindows /\ isFlatPRWinOf flatwin win)*)
-  (*: isFlatWindowsOf flatwindows windows. *)
-
-(*Inductive isFlatFinalOf (X : finType) (flatfinal : list (list nat)) (final : list (list X)) := *)
-  (*mkIsFlatFinalOf (Hsound : forall fin, fin el flatfinal -> exists fin', fin' el final /\ isFlatListOf fin fin')*)
-    (*(Hcomplete : forall fin, fin el final -> exists fin', fin' el flatfinal /\ isFlatListOf fin' fin)*)
-  (*: isFlatFinalOf flatfinal final. *)
-
-(*Inductive isFlatPROf (fpr : FlatPR) (pr : PR) := *)
-  (*mkIsFlatPROf (HSigma : finRepr (PR.Sigma pr) (Sigma fpr))*)
-    (*(HOffset : offset fpr = PR.offset pr)*)
-    (*(HWidth : width fpr = PR.width pr)*)
-    (*(HInit : isFlatListOf (init fpr) (PR.init pr))*)
-    (*(HWindows : isFlatWindowsOf (windows fpr) (PR.windows pr))*)
-    (*(HFinal : isFlatFinalOf (final fpr) (PR.final pr))*)
-  (*: isFlatPROf fpr pr.*)
-
-
 Definition ofFlatType (k : nat) (e : nat) := e < k. 
 Definition list_ofFlatType (k : nat) (l : list nat) := forall a, a el l -> ofFlatType k a. 
 
@@ -160,3 +135,66 @@ Section fixInstance.
     - apply valid_length_inv in H1. lia. 
   Qed. 
 End fixInstance.
+
+(*relation to PR instances *)
+Inductive isFlatPRWinOf (X : finType) (flatwin : PRWin nat) (win : PRWin X) := 
+  mkIsFlatPRWinO (Hprem : isFlatListOf (prem flatwin) (prem win)) 
+    (Hconc : isFlatListOf (conc flatwin) (conc win))
+  : isFlatPRWinOf flatwin win. 
+
+Inductive isFlatWindowsOf (X : finType) (flatwindows : list (PRWin nat)) (windows : list (PRWin X)) := 
+  mkIsFlatWindowsOf (Hsound : forall flatwin, flatwin el flatwindows -> exists win, win el windows /\ isFlatPRWinOf flatwin win)
+    (Hcomplete : forall win, win el windows -> exists flatwin, flatwin el flatwindows /\ isFlatPRWinOf flatwin win)
+  : isFlatWindowsOf flatwindows windows. 
+
+Inductive isFlatFinalOf (X : finType) (flatfinal : list (list nat)) (final : list (list X)) := 
+  mkIsFlatFinalOf (Hsound : forall fin, fin el flatfinal -> exists fin', fin' el final /\ isFlatListOf fin fin')
+    (Hcomplete : forall fin, fin el final -> exists fin', fin' el flatfinal /\ isFlatListOf fin' fin)
+  : isFlatFinalOf flatfinal final. 
+
+Inductive isFlatPROf (fpr : FlatPR) (pr : PR) := 
+  mkIsFlatPROf (HSigma : finRepr (PR.Sigma pr) (Sigma fpr))
+    (HOffset : offset fpr = PR.offset pr)
+    (HWidth : width fpr = PR.width pr)
+    (HInit : isFlatListOf (init fpr) (PR.init pr))
+    (HWindows : isFlatWindowsOf (windows fpr) (PR.windows pr))
+    (HFinal : isFlatFinalOf (final fpr) (PR.final pr))
+  : isFlatPROf fpr pr.
+
+(*given a well-formed flat instance, we can derive a "canonical" (up to bijections of the finite type) PR instance *)
+
+(*Section fixFlat. *)
+  (*Variable (fpr : FlatPR). *)
+  (*Context (A : FlatPR_wellformed fpr). *)
+
+  (*Definition FSigma := Fin.t (Sigma fpr). *)
+  (*Definition Foffset := offset fpr. *)
+  (*Definition Fwidth := width fpr. *)
+  (*Definition Fsteps := steps fpr. *)
+
+  (*Lemma list_ofFlatType_cons x y k : list_ofFlatType k (x :: y) <-> ofFlatType k x /\ list_ofFlatType k y. *)
+  (*Proof. *)
+    (*split; unfold list_ofFlatType; intros. *)
+    (*- split; [ apply H; eauto | intros; apply H; eauto]. *)
+    (*- destruct H0 as [-> | H0]. *)
+      (*+ apply (proj1 H). *)
+      (*+ apply (proj2 H), H0. *)
+  (*Qed. *)
+
+  (*Lemma index_of_nat n k (H : k < n) : index (Fin.of_nat_lt H) = k. *)
+  (*Proof. *)
+    (*induction k. *)
+    (*- cbn. destruct n; cbn; [ exfalso; lia | ]. unfold index. cbn. destruct False_rect; cbn. unfold False_rect. Check Nat.nlt_0_r. *)
+
+  (*Lemma Fstring (x : list nat) : list_ofFlatType (Sigma fpr) x -> {y : list FSigma & isFlatListOf x y}. *)
+  (*Proof. *)
+    (*intros. induction x. *)
+    (*- exists []. unfold isFlatListOf. easy. *)
+    (*- apply list_ofFlatType_cons in H as (H & H0). *)
+      (*apply IHx in H0 as (y & H0). exists (Fin.of_nat_lt H :: y). *)
+      (*unfold isFlatListOf. cbn. unfold Fin.of_nat_lt. *)
+      
+      (*SearchAbout list_ofFlatType. *)
+      (*unfold list_ofFlatType *)
+
+  (*Definition Finit := *)
