@@ -15,6 +15,8 @@ Record BinaryPR := {
 
 Definition BinaryPR_wellformed (c : BinaryPR) := 
   width c > 0 
+  /\ offset c > 0
+  /\ (exists k, k > 0 /\ width c = k * offset c)
   /\ length (init c) >= width c
   /\ (forall win, win el windows c -> PRWin_of_size win (width c)) 
   /\ (exists k, length (init c) = k * offset c).

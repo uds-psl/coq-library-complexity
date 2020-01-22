@@ -343,3 +343,15 @@ Ltac list_length_inv := repeat match goal with
     | [H : 0 = |?a| |- _] => is_var a; destruct a; cbn in H; [ clear H| congruence]
     | [H : |?a| = _ |- _] => symmetry in H
 end.
+
+Lemma list_eq_length (X : Type) (l1 l2 : list X) : l1 = l2 -> |l1| = |l2|. 
+Proof. 
+  congruence. 
+Qed.
+
+Lemma nth_error_step (X : Type) x s (l : list X) a y : x >= S s -> nth_error l (x - S s) = Some a <-> nth_error (y :: l) (x - s) = Some a.
+Proof. 
+  intros. replace (y :: l) with ([y] ++ l) by now cbn. 
+  rewrite nth_error_app2; cbn; [ | lia].
+  replace (x - s - 1) with (x - S s) by lia. tauto.
+Qed. 
