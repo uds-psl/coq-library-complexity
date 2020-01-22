@@ -1,5 +1,5 @@
 From PslBase Require Import Base. 
-From Undecidability.L.Complexity.Cook Require Import Prelim FSAT BinaryPR. 
+From Undecidability.L.Complexity.Cook Require Import Prelim FSAT BinaryPR.
 From Undecidability.L.Complexity Require Import Tactics. 
 
 From Undecidability.L.Datatypes Require Import Lists. 
@@ -368,17 +368,26 @@ Section fixInstance.
                     | S stepindex => encodeWindowsAt startA startB ∧ encodeWindowsInLine' stepindex (l - offset) (startA + offset) (startB + offset)
                     end.
 
+  Lemma encodeWindowsInLine'_stepindex_monotone' index startA startB : forall n, n <= index -> encodeWindowsInLine' index n startA startB = encodeWindowsInLine' (S index) n startA startB. 
+  Proof. 
+    destruct A as (A1 & A2 & _).
+    revert startA startB.
+    induction index; intros. 
+    - unfold encodeWindowsInLine'. assert (n = 0) as -> by lia. cbn; destruct width; [ lia | easy ].
+    - unfold encodeWindowsInLine'. destruct (Nat.ltb n width); [ easy | ]. fold encodeWindowsInLine'. 
+      erewrite IHindex by lia. easy. 
+  Qed. 
+
   Lemma encodeWindowsInLine'_stepindex_monotone index index' startA startB : index' >= index -> encodeWindowsInLine' index index startA startB = encodeWindowsInLine' index' index startA startB. 
   Proof. 
-    intros. 
-    destruct A as (A1 & _).
-    revert index' H.  induction index; intros. 
-    - cbn. destruct index'; cbn; (destruct width; [ lia | easy]).
-    - destruct index'; [lia | ]. apply le_S_n in H. apply IHindex in H. 
-      cbn. 
-  Admitted.
+    intros. revert index H.
+    induction index'; intros. 
+    - assert (index = 0) as -> by lia. easy.
+    - destruct (nat_eq_dec (S index') index). 
+      + now rewrite e.
+      + assert (index' >= index) as H1 by lia. rewrite <- encodeWindowsInLine'_stepindex_monotone' by lia. now apply IHindex'.
+  Qed.
 
-  SearchAbout firstn.
   Lemma firstn_add (X : Type) (m : list X) l1 l2 : firstn (l1 + l2) m = firstn l1 m ++ firstn l2 (skipn l1 m). 
   Proof. 
     revert l1 l2. induction m; intros. 
@@ -529,6 +538,8 @@ Section fixInstance.
     unfold encodeWindowsInAllLines. apply encodeWindowsInAllLines'_encodesPredicate. 
   Qed. 
 
+  (*should only be called for s satisfying |s| > 0; for s = nil, the breaking condition does not work as intended*)
+  (*in principle, this is not a problem as the resulting formula is still equivalent to the desired formula, but this breaks monotonicity*)
   Fixpoint encodeSubstringInLine' (s : list bool) (stepindex l : nat) (start : nat) := 
     if l <? |s| then Ffalse
                   else match stepindex with 
@@ -536,10 +547,26 @@ Section fixInstance.
                     | S stepindex => encodeListAt start s ∨ encodeSubstringInLine' s stepindex (l - offset) (start + offset) 
                     end.
 
-  Lemma encodeSubstringInLine'_stepindex_monotone s index1 index2 start : 
-    index2 >= index1 -> encodeSubstringInLine' s index1 index1 start = encodeSubstringInLine' s index2 index1 start.
+  Lemma encodeSubstringInLine'_stepindex_monotone' s index start : forall n, |s| > 0 -> n <= index -> encodeSubstringInLine' s index n start = encodeSubstringInLine' s (S index) n start. 
   Proof. 
-  Admitted. 
+    destruct A as (A1 & A2 & _).
+    revert start.
+    induction index; intros. 
+    - unfold encodeSubstringInLine'. assert (n = 0) as -> by lia. cbn; destruct s; [ cbn in *; lia | easy ]. 
+    - unfold encodeSubstringInLine'. destruct (Nat.ltb n (|s|)); [ easy | ]. fold encodeSubstringInLine'. 
+      erewrite IHindex by lia. easy. 
+  Qed. 
+
+  Lemma encodeSubstringInLine'_stepindex_monotone s index1 index2 start : 
+    |s| > 0 -> index2 >= index1 -> encodeSubstringInLine' s index1 index1 start = encodeSubstringInLine' s index2 index1 start.
+  Proof. 
+    intros. revert index1 H0. 
+    induction index2; intros.
+    - assert (index1 = 0) as -> by lia. easy.
+    - destruct (nat_eq_dec (S index2) index1). 
+      + now rewrite e.
+      + assert (index2 >= index1) as H1 by lia. rewrite <- encodeSubstringInLine'_stepindex_monotone' by lia. now apply IHindex2.
+  Qed. 
 
   Lemma projVars_length_le start l m: |projVars start l m| <= |m|. 
   Proof. 
@@ -557,8 +584,9 @@ Section fixInstance.
     intros H0 H. unfold projVars in H. rewrite <- H, firstn_length, skipn_length. lia.
   Qed. 
 
-  Lemma encodeSubstringInLine'_encodesPredicate s start l : l <= llength -> (exists k, l = k * offset) -> encodesPredicateAt start l (encodeSubstringInLine' s l l start) (fun m => (exists k, k * offset <= l /\ projVars (k * offset) (|s|) m = s) /\ |m| = l). 
+  Lemma encodeSubstringInLine'_encodesPredicate s start l : |s| > 0 -> l <= llength -> (exists k, l = k * offset) -> encodesPredicateAt start l (encodeSubstringInLine' s l l start) (fun m => (exists k, k * offset <= l /\ projVars (k * offset) (|s|) m = s) /\ |m| = l). 
   Proof. 
+    intros F.
     (*need strong induction *)
     destruct A as (A1 & A4 & A2 & A5 & A7 & A3). 
     revert start.  
@@ -589,7 +617,7 @@ Section fixInstance.
         replace (start + S offset + (S l - S offset) - start) with (S l) in H by nia.
         replace (start + S offset - start) with (S offset) in H by lia.
 
-        rewrite encodeSubstringInLine'_stepindex_monotone with (index2 := l) in H; [ | lia].
+        rewrite encodeSubstringInLine'_stepindex_monotone with (index2 := l) in H; [ | apply F| lia].
         eapply encodesPredicateAt_extensional; [ | apply H]. clear H.
         intros. cbn. split.
         * intros ((k0 & H2 & H3) & H4). split; [ | easy]. 
@@ -622,7 +650,16 @@ Section fixInstance.
   Qed.
 
   (*TODO: consistent argument order over all functions *)
-  Definition encodeSubstringInLine s start l := encodeSubstringInLine' s l l start. 
+  Definition encodeSubstringInLine s start l := match s with [] => Ftrue | _ => encodeSubstringInLine' s l l start end.
+  Lemma encodeSubstringInLine_encodesPredicate s start l : l <= llength -> (exists k, l = k * offset) -> encodesPredicateAt start l (encodeSubstringInLine s start l) (fun m => (exists k, k * offset <= l /\ projVars (k * offset) (|s|) m = s) /\ |m| = l). 
+  Proof. 
+    intros. unfold encodeSubstringInLine. destruct s eqn:H1. 
+    - split; [easy | ]. unfold satisfies. cbn. intros; split.
+      + intros _. split; [exists 0; cbn; firstorder |now rewrite explicitAssignment_length  ]. 
+      + intros _. reflexivity. 
+    - apply encodeSubstringInLine'_encodesPredicate; cbn; easy.
+  Qed. 
+
   Definition encodeFinalConstraint (start : nat) := listOr (map (fun s => encodeSubstringInLine s start llength) final). 
 
   Lemma encodesPredicate_listOr (X : Type) (l : list X) (encode : X -> nat -> nat -> formula) (p : X -> list bool -> Prop) start len : 
@@ -651,7 +688,7 @@ Section fixInstance.
   Proof. 
     unfold encodeFinalConstraint. 
     eapply encodesPredicateAt_extensional; [ | apply encodesPredicate_listOr]. 
-    2: { intros. apply encodeSubstringInLine'_encodesPredicate; [easy | apply A]. }
+    2: { intros. apply encodeSubstringInLine_encodesPredicate; [easy | apply A]. }
     intros. split. 
     - intros ((subs & k & H1 & H2 & H3) & H4). split; [ | easy].
       exists subs. split; [ apply H1 | split; [ | apply H4]]. 
@@ -717,10 +754,19 @@ Section fixInstance.
   Lemma expAssgn_to_assgn_inv a s b : (forall x, x el a <-> x >= s /\ nth_error b (x -s) = Some true) 
     -> explicitAssignment a s (|b|) = b. 
   Proof. 
-    revert s. induction b; cbn; intros; [ easy | ].
-    destruct list_in_decb eqn:H1. 
-    - apply list_in_decb_iff in H1; [ | intros; now rewrite Nat.eqb_eq]. 
-  Admitted. 
+    intros. apply list_eq_nth_error. split; [ apply explicitAssignment_length | ].
+    intros k H1. rewrite explicitAssignment_length in H1. 
+    rewrite explicitAssignment_nth by apply H1. 
+    unfold evalVar. destruct list_in_decb eqn:H2. 
+    - apply list_in_decb_iff in H2; [ | intros; now rewrite Nat.eqb_eq ].
+      apply H in H2 as (_ & H2). now replace (s + k - s) with k in H2 by lia.
+    - apply list_in_decb_iff' in H2; [ | intros; now rewrite Nat.eqb_eq].
+      (*we do a case analysis, thus we do not need XM *)
+      destruct (nth_error b k) eqn:H3. 
+      + destruct b0; [ | easy]. exfalso; apply H2. apply H. 
+        replace (s + k - s) with k by lia. easy.
+      + apply nth_error_none in H3. lia.
+  Qed. 
 
   Lemma relpower_valid_to_assignment n x y: 
     relpower (valid offset width windows) n x y -> |x| = llength 
@@ -781,8 +827,51 @@ Section fixInstance.
       exists a. apply H2. clear H2. 
       apply expAssgn_to_assgn_inv in H9. rewrite H5 in H9. rewrite H9. easy.
   Qed. 
-
-
 End fixInstance.
+
+(*now the whole reduction including non-wellformed instances *)
+Definition BinaryPR_wf_dec (bpr : BinaryPR) := 
+  leb 1 (width bpr) 
+  && leb 1 (offset bpr)
+  && Nat.eqb (Nat.modulo (width bpr) (offset bpr)) 0
+  && leb (width bpr) (|init bpr|)
+  && forallb (PRWin_of_size_dec (width bpr)) (windows bpr)
+  && Nat.eqb (Nat.modulo (|init bpr|) (offset bpr)) 0. 
+
+Lemma BinaryPR_wf_dec_correct (bpr : BinaryPR) : BinaryPR_wf_dec bpr = true <-> BinaryPR_wellformed bpr. 
+Proof. 
+  unfold BinaryPR_wf_dec, BinaryPR_wellformed. rewrite !andb_true_iff, !and_assoc.
+  rewrite !leb_iff. rewrite <- !(reflect_iff _ _ (Nat.eqb_spec _ _ )).  
+  rewrite !forallb_forall. 
+  setoid_rewrite PRWin_of_size_dec_correct. 
+  split; intros; repeat match goal with [H : _ /\ _ |- _] => destruct H end; 
+  repeat match goal with [ |- _ /\ _ ] => split end; try easy. 
+  - apply Nat.mod_divide in H1 as (k & H1); [ | lia]. 
+    exists k; split; [ | apply H1 ]. destruct k; cbn in *; lia.
+  - apply Nat.mod_divide in H4 as (k & H4); [ | lia].  exists k; apply H4.  
+  - apply Nat.mod_divide; [ lia | ]. destruct H1 as (k & _ & H1). exists k; apply H1.
+  - apply Nat.mod_divide; [ lia | ]. apply H4. 
+Qed. 
+
+Definition trivialNoInstance := 0 ∧ ¬0. 
+Lemma trivialNoInstance_isNoInstance : not (FSAT trivialNoInstance). 
+Proof. 
+  intros (a & H). unfold satisfies in H. cbn in H.  
+  destruct (evalVar a 0); cbn in H; congruence. 
+Qed. 
+
+Definition reduction (bpr : BinaryPR) := if BinaryPR_wf_dec bpr then encodeTableau bpr else trivialNoInstance. 
+
+Lemma BinaryPR_to_FSAT (bpr : BinaryPR) : BinaryPRLang bpr <-> FSAT (reduction bpr). 
+Proof. 
+  split. 
+  - intros (H1 & H2). unfold reduction. rewrite (proj2 (BinaryPR_wf_dec_correct _) H1).
+    now apply reduction_wf.
+  - intros H. unfold reduction in H. destruct (BinaryPR_wf_dec) eqn:H1. 
+    + apply BinaryPR_wf_dec_correct in H1. apply reduction_wf in H; easy. 
+    + now apply trivialNoInstance_isNoInstance in H. 
+Qed. 
+  
+
 
 

@@ -21,6 +21,12 @@ Record PR := {
 
 Definition PRWin_of_size (X : Type) (win : PRWin X) (k : nat) := |prem win| = k /\ |conc win| = k. 
 
+Definition PRWin_of_size_dec (X : Type) width (win : PRWin X) := Nat.eqb (|prem win|) width && Nat.eqb (|conc win|) width.
+Lemma PRWin_of_size_dec_correct (X : Type) width (win : PRWin X) : PRWin_of_size_dec width win = true <-> PRWin_of_size win width. 
+Proof. 
+  unfold PRWin_of_size, PRWin_of_size_dec. rewrite andb_true_iff. rewrite <- !(reflect_iff _ _ (Nat.eqb_spec _ _ )). easy.
+Qed. 
+
 Definition PR_wellformed (c : PR) := 
   width c > 0 
   /\ offset c > 0
