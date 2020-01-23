@@ -160,8 +160,11 @@ Section fixInstance.
 
   Lemma FlatPR_homomorphism_wf : FlatPR_wellformed fpr -> BinaryPR.BinaryPR_wellformed hBinaryPR. 
   Proof. 
-    intros (H1 & H2 & H3 & H4 & H5 & H6 & H7). split; [ | split; [ | split]]; cbn. 
-    + unfold hwidth. unfold k. specialize (proj2 (proj2 A1) 0) as H8. nia. 
+    intros (H1 & H2 & H3 & H4 & H5 & H6 & H7 & H8 & H9). 
+    unfold BinaryPR.BinaryPR_wellformed. repeat match goal with [ |- _ /\ _] => split end; cbn. 
+    + unfold hwidth. unfold k. specialize (proj2 (proj2 A1) 0) as H10. nia. 
+    + unfold hoffset. specialize k_ge; nia.
+    + unfold hwidth, hoffset. destruct H3 as (k & H3 & H3'). exists k. nia.
     + unfold hinit, hwidth. rewrite h_multiplier. nia. 
     + unfold hwidth. intros [] H. unfold hwindows in H. apply in_map_iff in H as (win' & <- & H). 
       destruct win'. apply H5 in H. destruct H as (H & H0); cbn in *. split; cbn; now rewrite h_multiplier. 
