@@ -355,3 +355,71 @@ Proof.
   rewrite nth_error_app2; cbn; [ | lia].
   replace (x - s - 1) with (x - S s) by lia. tauto.
 Qed. 
+
+Lemma list_eq_nth_error (X : Type) (l1 l2 : list X) : 
+  l1 = l2 <-> (|l1| = |l2| /\ forall k, k < |l1| -> nth_error l1 k = nth_error l2 k). 
+Proof. 
+  split; [intros -> | intros (H1 & H2)]. 
+  - split; [easy | intros; easy ]. 
+  - revert l2 H1 H2; induction l1; intros; destruct l2. 
+    + easy. 
+    + cbn in H1; congruence. 
+    + cbn in H1; congruence. 
+    + cbn in H1. apply Nat.succ_inj in H1. enough (a = x /\ l1 = l2) by easy; split. 
+      * specialize (H2 0 (Nat.lt_0_succ (|l1|))). now cbn in H2. 
+      * apply IHl1; [ apply H1 | ]. 
+        intros. apply Nat.succ_lt_mono in H. specialize (H2 (S k) H). now cbn in H2. 
+Qed. 
+
+Lemma nth_error_firstn (X : Type) k m (l : list X): k < m -> nth_error (firstn m l) k = nth_error l k. 
+Proof. 
+  revert k l. induction m; intros. 
+  - lia.
+  - destruct k; cbn; destruct l; easy. 
+Qed. 
+
+Lemma nth_error_skipn (X : Type) k m (l : list X) : nth_error (skipn m l) k = nth_error l (m + k). 
+Proof. 
+  revert k l. induction m; intros. 
+  - easy. 
+  - destruct l; cbn; [ now destruct k | apply IHm]. 
+Qed. 
+
+Lemma firstn_all_inv (X : Type) (m l : list X) : |l| = |m| -> firstn (|l|) m = l -> m = l.
+Proof. 
+  revert l; induction m; intros.
+  - destruct l; cbn; easy. 
+  - destruct l; cbn in *; [easy | ]. inv H0. apply Nat.succ_inj in H. 
+    rewrite H3. f_equal. now apply IHm. 
+Qed. 
+
+Lemma skipn_firstn_shift (X : Type) (m : list X) len l : skipn l (firstn len m) = firstn (len - l) (skipn l m). 
+Proof. 
+  revert l len. induction m; cbn; intros. 
+  - rewrite !firstn_nil, !skipn_nil, firstn_nil. easy. 
+  - destruct len. 
+    + cbn. now destruct l.
+    + cbn. destruct l; cbn; [ easy | ]. now rewrite IHm. 
+Qed. 
+
+Lemma skipn_skipn (X : Type) (m : list X) l1 l2 : skipn l1 (skipn l2 m) = skipn (l1 + l2) m. 
+Proof. 
+  revert l1 l2. 
+  induction m; intros; destruct l2; cbn; try now rewrite !skipn_nil. 
+  - now rewrite Nat.add_0_r. 
+  - rewrite IHm. rewrite Nat.add_succ_r. easy. 
+Qed. 
+
+Lemma skipn_firstn_skipn (X : Type) (m : list X) l1 l2 len2 : 
+  skipn l1 (firstn len2 (skipn l2 m)) = firstn (len2 - l1) (skipn (l1 + l2) m). 
+Proof. 
+  intros. 
+  rewrite skipn_firstn_shift. now rewrite skipn_skipn. 
+Qed. 
+
+Lemma firstn_add (X : Type) (m : list X) l1 l2 : firstn (l1 + l2) m = firstn l1 m ++ firstn l2 (skipn l1 m). 
+Proof. 
+  revert l1 l2. induction m; intros. 
+  - now rewrite !skipn_nil, !firstn_nil.
+  - destruct l1; cbn; [ easy | ]. now rewrite IHm. 
+Qed. 

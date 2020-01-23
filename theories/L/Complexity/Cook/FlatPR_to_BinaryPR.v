@@ -95,7 +95,6 @@ End fixInstance.
 Definition ofFlatType_dec (b a : nat) := leb (S a) b.
 Definition list_ofFlatType_dec (t : nat)  (s : list nat) := forallb (ofFlatType_dec t) s. 
 
-Definition PRWin_of_size_dec width (win : PRWin nat) := Nat.eqb (|prem win|) width && Nat.eqb (|conc win|) width.
 Definition PRWin_ofFlatType_dec (Sigma : nat) (win : PRWin nat) := list_ofFlatType_dec Sigma (prem win) && list_ofFlatType_dec Sigma (conc win). 
 
 Lemma leb_iff a b : leb a b = true <-> a <= b. 
@@ -112,16 +111,12 @@ Proof.
   split; intros H; intros; now apply H.
 Qed. 
 
-Lemma PRWin_of_size_dec_correct width win : PRWin_of_size_dec width win = true <-> PRWin_of_size win width. 
-Proof. 
-  unfold PRWin_of_size, PRWin_of_size_dec. rewrite andb_true_iff. rewrite <- !(reflect_iff _ _ (Nat.eqb_spec _ _ )). easy.
-Qed. 
-
 Lemma PRWin_ofFlatType_dec_correct win Sigma : PRWin_ofFlatType_dec Sigma win = true <-> PRWin_ofFlatType Sigma win. 
 Proof. 
   unfold PRWin_ofFlatType_dec, PRWin_ofFlatType. rewrite andb_true_iff. 
   rewrite !list_ofFlatType_dec_correct. easy. 
 Qed. 
+
 
 Definition FlatPR_wf_dec (fpr : FlatPR) := 
   leb 1 (width fpr) 
