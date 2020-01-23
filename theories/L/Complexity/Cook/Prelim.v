@@ -3,8 +3,16 @@ From PslBase Require Import Vectors.Vectors.
 From PslBase Require Import FiniteTypes. 
 Require Import Lia.
 Require Template.utils.
-From Undecidability.TM Require Import TM.
-From Undecidability.TM Require Import TM.
+
+Require Export PslBase.FiniteTypes.FinTypes PslBase.FiniteTypes.BasicFinTypes PslBase.FiniteTypes.CompoundFinTypes.
+Require Export PslBase.Retracts.
+Require Export PslBase.Inhabited.
+Require Export PslBase.Base.
+
+Require Export smpl.Smpl.
+
+(*From Undecidability.TM Require Import TM.*)
+(*From Undecidability.TM Require Import TM.*)
 From Undecidability.L.TM Require Import TMflat TMflatEnc TMflatFun TMEncoding TapeDecode TMunflatten.
 
 Require Import Lia. 
@@ -422,4 +430,16 @@ Proof.
   revert l1 l2. induction m; intros. 
   - now rewrite !skipn_nil, !firstn_nil.
   - destruct l1; cbn; [ easy | ]. now rewrite IHm. 
+Qed. 
+
+Lemma dupfree_map_getPosition (X : eqType) (l : list X) : Dupfree.dupfree l -> seq 0 (|l|) = map (getPosition l) l. 
+Proof. 
+  intros H. enough (forall n, seq n (|l|) = map (fun x => n + getPosition l x) l). 
+  { specialize (H0 0). apply H0. }
+  induction H; intros; [ easy | ]. 
+  cbn. destruct Dec; [ | congruence]. 
+  rewrite Nat.add_0_r. f_equal. rewrite (IHdupfree (S n)). 
+  clear IHdupfree e. 
+  apply map_ext_in. 
+  intros a H1. destruct (Dec (a = x)); [ congruence | lia ].  
 Qed. 

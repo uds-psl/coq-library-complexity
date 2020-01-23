@@ -14,17 +14,6 @@ Record FlatPR := {
   steps : nat
   }.
 
-Definition ofFlatType (k : nat) (e : nat) := e < k. 
-Definition list_ofFlatType (k : nat) (l : list nat) := forall a, a el l -> ofFlatType k a. 
-
-Lemma list_ofFlatType_app (l1 l2 : list nat) (k : nat) : list_ofFlatType k (l1 ++ l2) <-> list_ofFlatType k l1 /\ list_ofFlatType k l2. 
-Proof. 
-  split; intros; unfold list_ofFlatType in *. 
-  - setoid_rewrite in_app_iff in H. split; intros; apply H; eauto. 
-  - destruct H as (H1 & H2); setoid_rewrite in_app_iff; intros a [ | ]; eauto. 
-Qed. 
-
-
 Definition PRWin_ofFlatType k (win : PRWin nat) := list_ofFlatType k (prem win) /\ list_ofFlatType k (conc win). 
 
 Definition FlatPR_wellformed fpr := 
