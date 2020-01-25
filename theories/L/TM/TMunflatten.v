@@ -37,7 +37,6 @@ Definition unflatten_acts (sig:finType) n (l__r : list (option nat * move)) : (V
   | _ => Vector.const (None,N) n
   end.
   
-
 Definition unflatten_trans (states:finType) (sig:finType) d n (f:list (nat * list (option nat) * (nat * list (option nat * move))))
   : states * Vector.t (option sig) n -> states * Vector.t (option sig * move) n :=
   fun '(st,l) =>
@@ -64,8 +63,8 @@ Program Definition unflattenTM (M:TM) : mTM (finType_CS (Fin.t (sig M))) (tapes 
 
 Lemma Card_Fint n : Cardinality (finType_CS (Fin.t n)) = n.
 Proof.
-Admitted.
-
+  unfold Cardinality. unfold elem. unfold enum. cbn. unfold Fin_initVect. now rewrite vector_to_list_length. 
+Qed.
 
 Lemma index_nth_elem (X:finType) i d:
   i < Cardinality X
@@ -221,7 +220,7 @@ Proof.
    rewrite !index_nth_elem_fint. 2,3:easy.
    rewrite unflatten_in_correct. 2,3:now try rewrite Card_Fint;easy.
    erewrite lookup_sound. 2:eapply flatTrans_inj;eassumption. 2:easy.
-   cbn.
+   cbn -[finType_CS].
    setoid_rewrite unflatten_in_correct. 2,3:now try rewrite Card_Fint;easy.
    setoid_rewrite unflatten_acts_correct. 2,3:now try rewrite Card_Fint;easy.
    repeat split.
@@ -231,7 +230,7 @@ Proof.
    +erewrite lookup_sound. 3:eassumption. 2:eapply flatTrans_inj;eassumption.
     edestruct lookup as (st0,l__r). left.
     specialize (flatTrans_bound H H') as (?&?&?&?&?&?).
-    rewrite !index_nth_elem_fint. 2,3:easy. cbn in *.
+    rewrite !index_nth_elem_fint. 2,3:easy. cbn -[finType_CS] in *.
     replace ((index s0, map (option_map index) (Vector.to_list v0),
               (st0, map (map_fst (option_map index)) (Vector.to_list (unflatten_acts (finType_CS (Fin.t sig)) n l__r)))))
       with (index s0, map (option_map (fun x : Fin.t sig => index x)) (Vector.to_list v0), (st0, l__r)).
@@ -239,7 +238,7 @@ Proof.
     eassumption.
    +erewrite lookup_sound'. 2:eapply flatTrans_inj;eassumption.
     2:{right. easy. }
-    cbn. right.
+    cbn -[finType_CS]. right.
     setoid_rewrite index_nth. split. easy.
     clear. unfold unflatten_acts,unflatten_acts'.
     rewrite map_repeat. cbn.
@@ -251,7 +250,6 @@ Proof.
     induction n;cbn. easy.
     rewrite <- IHn. easy. 
 Qed.
-
 
 Lemma isFlatteningTrans_validFlatTrans n sig' (M' : mTM sig' n) f:
 isFlatteningTransOf f (TM.trans (m:=M'))
@@ -284,7 +282,7 @@ Proof.
   intros (?&?). destruct M.
   cbn in *.
   assert (H_st:(Init.Nat.max 1 states) = states) by now destruct states.
-  econstructor; cbn - [max].
+  econstructor; cbn - [finType_CS max].
   -easy.
   -now rewrite Card_Fint.
   -rewrite H_st.
@@ -512,7 +510,6 @@ Proof.
     all:eapply Nat.le_lt_trans;[ | eapply H;easy].
     all:Lia.lia.
 Qed.
-    
    
 Lemma isUnflattableTapes sig n t :
   isValidFlatTapes (Cardinality sig) n t = true -> {t' & isFlatteningTapesOf (sig:=sig) (n:=n) t t'}.
