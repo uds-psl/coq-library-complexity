@@ -15,13 +15,17 @@ Record FlatTPR := {
 Definition TPRWinP_ofFlatType (winp : TPRWinP nat) (k : nat) := winEl1 winp < k /\ winEl2 winp < k /\ winEl3 winp < k.
 Definition TPRWin_ofFlatType (win : TPRWin nat) (k : nat) := TPRWinP_ofFlatType (prem win) k /\ TPRWinP_ofFlatType (conc win) k. 
 
-Definition FlatTPR_wellformed ftpr := 
-  length (init ftpr) >= 3
-  /\ list_ofFlatType (Sigma ftpr) (init ftpr) 
-  /\ (forall s, s el final ftpr -> list_ofFlatType (Sigma ftpr) s)
-  /\ (forall win, win el windows ftpr -> TPRWin_ofFlatType win (Sigma ftpr)). 
+Definition isValidFlatWindows (l : list (TPRWin nat)) k := (forall win, win el l -> TPRWin_ofFlatType win k).
+Definition isValidFlatFinal (l : list (list nat)) k := (forall s, s el l -> list_ofFlatType k s).
+Definition isValidFlatInitial (l : list nat) k := list_ofFlatType k l.
 
-Definition FlatTPRLang (C : FlatTPR) := FlatTPR_wellformed C /\ exists (sf : list nat), list_ofFlatType  (Sigma C) sf /\ relpower (valid (rewritesHeadList (windows C))) (steps C) (init C) sf /\ satFinal (final C) sf. 
+Definition FlatTPR_wellformed ftpr := length (init ftpr) >= 3.
+Definition isValidFlattening ftpr :=
+  isValidFlatInitial (init ftpr) (Sigma ftpr)
+  /\ isValidFlatFinal (final ftpr) (Sigma ftpr)
+  /\ isValidFlatWindows (windows ftpr) (Sigma ftpr). 
+
+Definition FlatTPRLang (C : FlatTPR) := FlatTPR_wellformed C /\ isValidFlattening C /\ exists (sf : list nat), list_ofFlatType  (Sigma C) sf /\ relpower (valid (rewritesHeadList (windows C))) (steps C) (init C) sf /\ satFinal (final C) sf. 
 
 (*we can define a relation to TPR instances such that TPR instances and FlatTPR instances are equivalent *)
 
@@ -209,40 +213,44 @@ Proof.
     rewrite !map_app in H0. rewrite H0, H3. eauto.
 Qed. 
 
+Lemma isFlatTPROf_isValidFlattening (tpr : TPR) (ftpr : FlatTPR) : isFlatTPROf ftpr tpr -> isValidFlattening ftpr. 
+Proof. 
+  intros [H1 H2 H3 H4].
+  split; [ | split]. 
+  + unfold isValidFlatInitial, list_ofFlatType. rewrite H2. 
+    intros a. rewrite in_map_iff. intros (a' & <- & F1).
+    unfold ofFlatType. rewrite H1. apply index_le. 
+  + intros s H0%H4. destruct H0 as (s' & F1 & ->).
+    intros a. rewrite in_map_iff. intros (a' & <- & F3). 
+    rewrite H1. apply index_le. 
+  + intros win H0%H3. destruct H0 as (win' & F1 & F2). 
+    destruct F2 as ([F2 F3 F4] & [F5 F6 F7]).
+    repeat split; rewrite H1; unfold finReprEl' in *;
+    repeat match goal with [H : index _ = _ |- _] => try rewrite <- H; clear H end;
+    apply index_le.  
+Qed.
+
 Lemma isFlatTPROf_wf_equivalent (tpr : TPR) (ftpr : FlatTPR) : 
   isFlatTPROf ftpr tpr -> (FlatTPR_wellformed ftpr <-> TPR_wellformed tpr). 
 Proof. 
-  intros [H1 H2 H3 H4]. split; intros. 
-  - destruct H as (F1 & _). 
-    unfold TPR_wellformed. rewrite H2 in F1. now rewrite map_length in F1.  
-  - split; [ | split; [ | split]]. 
-    + rewrite H2. rewrite map_length; apply H. 
-    + unfold list_ofFlatType. rewrite H2. 
-      intros a. rewrite in_map_iff. intros (a' & <- & F1).
-      unfold ofFlatType. rewrite H1. apply index_le. 
-    + intros s H0%H4. destruct H0 as (s' & F1 & ->).
-      intros a. rewrite in_map_iff. intros (a' & <- & F3). 
-      rewrite H1. apply index_le. 
-    + intros win H0%H3. destruct H0 as (win' & F1 & F2). 
-      destruct F2 as ([F2 F3 F4] & [F5 F6 F7]).
-      repeat split; rewrite H1; unfold finReprEl' in *;
-      repeat match goal with [H : index _ = _ |- _] => try rewrite <- H; clear H end;
-      apply index_le. 
+  intros [H1 H2 H3 H4]. split; intros; unfold FlatTPR_wellformed, TPR_wellformed in *.
+  - rewrite H2 in H. now rewrite map_length in H.  
+  - rewrite H2. rewrite map_length; apply H. 
 Qed. 
 
 Lemma isFlatTPROf_equivalence (tpr : TPR) (ftpr : FlatTPR) : 
   isFlatTPROf ftpr tpr -> (FlatTPRLang ftpr <-> TPRLang tpr). 
 Proof. 
   intros. split. 
-  - intros (H1 & H2). split; [ now eapply isFlatTPROf_wf_equivalent | ]. 
+  - intros (H1 & H2 & H3). split; [ now eapply isFlatTPROf_wf_equivalent | ]. 
     destruct H as [F1 F2 F3 F4 F5].
-    destruct H2 as (sf & H3 & H4 & H5).
+    destruct H3 as (sf & H3 & H4 & H5).
     apply (finRepr_exists_list F1) in H3 as (SF & H3).
     exists SF. split. 
-    + eapply relpower_valid_flat_agree; eauto. 1: apply H1. 
-      rewrite <- F5. apply H4.    
+    + eapply relpower_valid_flat_agree; eauto. rewrite <- F5. apply H4.    
     + eapply final_flat_agree; eauto.
   - intros (H1 & H2). split; [ now eapply isFlatTPROf_wf_equivalent | ]. 
+    split; [now eapply isFlatTPROf_isValidFlattening | ].
     destruct H as [F1 F2 F3 F4 F5]. 
     destruct H2 as (sf & H3 & H4). 
     exists (map index sf). repeat split. 
@@ -255,4 +263,64 @@ Proof.
     + eapply final_flat_agree; eauto. unfold isFlatListOf; reflexivity. 
 Qed. 
 
+Require Import PslBase.FiniteTypes.VectorFin PslBase.FiniteTypes.Cardinality. 
+(*unflattening *)
+Lemma unflattenTPRWinP (w : TPRWinP nat) k : TPRWinP_ofFlatType w k -> sigT (fun (w' : TPRWinP (finType_CS (Fin.t k))) => isFlatTPRWinPOf w w'). 
+Proof. 
+  intros. destruct w. destruct H as (H1 & H2 & H3). cbn in *.
+  assert (finRepr (finType_CS (Fin.t k)) k). 
+  { unfold finRepr. specialize (Card_Fint k) as H4. unfold Cardinality in H4. easy. }
+  eapply (finRepr_exists H) in H1 as (a1 & H1).  
+  eapply (finRepr_exists H) in H2 as (a2 & H2). 
+  eapply (finRepr_exists H) in H3 as (a3 & H3). 
+  exists (Build_TPRWinP a1 a2 a3). repeat split; eapply finReprEl_finReprEl'; easy.
+Qed. 
+
+Lemma unflattenWindow (w : TPRWin nat) k : TPRWin_ofFlatType w k -> sigT (fun (w' : TPRWin (finType_CS (Fin.t k))) => isFlatTPRWinOf w w'). 
+Proof. 
+  intros. destruct w. destruct H as (H1 & H2). cbn in *.
+  apply unflattenTPRWinP in H1 as (prem' & H1). 
+  apply unflattenTPRWinP in H2 as (conc' & H2).
+  exists (Build_TPRWin prem' conc'). split; easy.
+Qed. 
+
+Lemma unflattenWindows (l : list (TPRWin nat)) k : isValidFlatWindows l k -> sigT (fun (l' : list (TPRWin (finType_CS (Fin.t k)))) => isFlatTWindowsOf l l').  
+Proof. 
+  intros. unfold isValidFlatWindows in H. induction l. 
+  - exists []. easy.
+  - edestruct IHl as (l' & IH);[ easy | ]. specialize (H a (or_introl eq_refl)). 
+    apply unflattenWindow in H as (a' & H). exists (a' :: l'). split; intros.
+    + destruct H0 as [-> | H0]; [easy | ]. apply IH in H0 as (win & ? & ?); eauto.
+    + destruct H0 as [-> | H0]; [ easy | ]. apply IH in H0 as (win' & ? & ?); eauto.
+Qed. 
+
+Lemma unflattenString (f : list nat) k : list_ofFlatType k f -> sigT (fun (f' : list (finType_CS (Fin.t k))) => isFlatListOf f f'). 
+Proof. 
+  intros H. 
+  eapply finRepr_exists_list with (X := finType_CS (Fin.t k)) in H as (a' & H). 
+  2: { unfold finRepr. specialize (Card_Fint k). easy. }
+  eauto.
+Qed. 
+
+Lemma unflattenFinal (f : list (list nat)) k : isValidFlatFinal f k -> sigT (fun (f' : list (list (finType_CS (Fin.t k)))) => isFlatFinalOf f f'). 
+Proof. 
+  intros. unfold isValidFlatFinal in H. induction f; intros.
+  - exists []; easy.
+  - edestruct IHf as (f' & IH); [easy | ]. specialize (H a (or_introl eq_refl)). 
+    apply unflattenString in H as (a' &H).
+    exists (a'::f'). split; intros. 
+    + destruct H0 as [-> | H0]; [easy | ]. apply IH in H0 as (? & ? & ?); eauto.
+    + destruct H0 as [-> | H0]; [easy | ]. apply IH in H0 as (? & ? & ?); eauto.
+Qed. 
+
+Lemma unflattenTPR (f : FlatTPR) : isValidFlattening f -> sigT (fun (f' : TPR) => isFlatTPROf f f'). 
+Proof. 
+  intros (H1 & H2 & H3).
+  apply unflattenWindows in H3 as (w' & H3). 
+  apply unflattenFinal in H2 as (f' & H2). 
+  apply unflattenString in H1 as (i' & H1). 
+  exists (Build_TPR i' w' f' (steps f)). 
+  constructor; eauto.
+  cbn. unfold finRepr. specialize (Card_Fint (Sigma f)). easy.
+Qed.
     

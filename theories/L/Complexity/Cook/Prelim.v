@@ -69,6 +69,26 @@ Ltac inv_list := repeat match goal with
                   | [H : S ?z = |?xs| |- _] => destruct xs; [ discr_list | ]; cbn in H
                   end. 
 
+Lemma singleton_incl (X : Type) (a : X) (h : list X) :
+  [a] <<= h <-> a el h. 
+Proof. 
+  split; intros. 
+  - now apply H. 
+  - now intros a' [-> | []]. 
+Qed. 
+
+Ltac force_In := match goal with
+                  | [ |- ?a el ?a :: ?h] => now left
+                  | [ |- ?a el ?b :: ?h] => right; force_In
+                  | [ |- [?a] <<= ?h] => apply singleton_incl; force_In
+                  end. 
+
+Ltac destruct_or H := match type of H with
+                      | ?a \/ ?b => destruct H as [H | H]; try destruct_or H
+                        end.
+
+
+
 Lemma skipn_add (X : Type) (xs vs: list X) (i j : nat) : length vs = j -> skipn (j + i) (vs ++ xs) = skipn i xs. 
 Proof. 
   revert vs; induction j; intros. 
@@ -284,6 +304,15 @@ Proof.
     * now apply IHl. 
 Qed.
 
+Lemma nth_error_nth' (X : Type) x y (l : list X) n : nth_error l n = Some x -> nth n l y = x.
+Proof. 
+  revert n; induction l; intros; cbn. 
+  - now destruct n. 
+  - destruct n; cbn in H.
+    * congruence. 
+    * now apply IHl. 
+Qed.
+
 Lemma In_explicit (X : Type) (x : X) (l : list X) :
   x el l <-> exists s1 s2, l = s1 ++ [x] ++ s2. 
 Proof. 
@@ -442,4 +471,15 @@ Proof.
   clear IHdupfree e. 
   apply map_ext_in. 
   intros a H1. destruct (Dec (a = x)); [ congruence | lia ].  
+Qed. 
+
+Lemma repEl_app_inv (X : Type) (a : X) s1 s2 n : repEl n a = s1 ++ s2 -> exists n1 n2, s1 = repEl n1 a /\ s2 = repEl n2 a /\ n1 + n2 = n. 
+Proof. 
+  revert s1 s2.  induction n. 
+  - cbn. destruct s1, s2; cbn; try congruence. intros _. exists 0, 0; now cbn.  
+  - cbn. destruct s1. 
+    + cbn. destruct s2; cbn; [ congruence | ]. 
+      intros H. inv H. exists 0, (S n); now cbn. 
+    + intros. cbn in H. inv H. apply IHn in H2 as (n1 & n2 & -> & -> & <-). 
+      exists (S n1), n2; now cbn. 
 Qed. 

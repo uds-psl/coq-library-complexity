@@ -35,6 +35,31 @@ Definition PR_wellformed (c : PR) :=
   /\ (forall win, win el windows c -> PRWin_of_size win (width c)) 
   /\ (exists k, length (init c) = k * offset c).
 
+Definition PR_wf_dec (pr : PR) := 
+  leb 1 (width pr) 
+  && leb 1 (offset pr)
+  && Nat.eqb (Nat.modulo (width pr) (offset pr)) 0
+  && leb (width pr) (|init pr|)
+  && forallb (PRWin_of_size_dec (width pr)) (windows pr)
+  && Nat.eqb (Nat.modulo (|init pr|) (offset pr)) 0.
+ 
+
+Lemma PR_wf_dec_correct (pr : PR) : PR_wf_dec pr = true <-> PR_wellformed pr. 
+Proof. 
+  unfold PR_wf_dec, PR_wellformed. rewrite !andb_true_iff, !and_assoc.
+  rewrite !leb_iff. rewrite <- !(reflect_iff _ _ (Nat.eqb_spec _ _ )).  
+  rewrite !forallb_forall. 
+  setoid_rewrite PRWin_of_size_dec_correct.  
+  split; intros; repeat match goal with [H : _ /\ _ |- _] => destruct H end; 
+  repeat match goal with [ |- _ /\ _ ] => split end; try easy. 
+  - apply Nat.mod_divide in H1 as (k & H1); [ | lia]. 
+    exists k; split; [ | apply H1 ]. destruct k; cbn in *; lia.
+  - apply Nat.mod_divide in H4 as (k & H4); [ | lia].  exists k; apply H4.  
+  - apply Nat.mod_divide; [ lia | ]. destruct H1 as (k & _ & H1). exists k; apply H1.
+  - apply Nat.mod_divide; [ lia | ]. apply H4. 
+Qed. 
+
+
 (**we do some general definitions first which can be reused for the flat version *)
 Section fixX. 
   Variable (X : Type).
@@ -197,3 +222,38 @@ Section fixInstance.
 End fixInstance. 
 
 Definition PRLang (C : PR) := PR_wellformed C /\ exists (sf : list (Sigma C)), relpower (valid (offset C) (width C) (windows C)) (steps C) (init C) sf /\ satFinal (offset C) (|init C|) (final C) sf. 
+
+(*we consider equivalent instances: equivalent instances are obtained by reordering the windows and final substrings *)
+
+Hint Constructors valid. 
+Lemma valid_windows_monotonous (X : Type) (offset width : nat) (a b : list X) (w1 w2 : list (PRWin X)) : 
+  w1 <<= w2
+  -> valid offset width w1 a b -> valid offset width w2 a b.
+Proof. 
+  intros. induction H0. 
+  - eauto. 
+  - eauto. 
+  - apply H in H3. eauto. 
+Qed. 
+
+Lemma valid_windows_equivalent (X : Type) (offset width : nat) (a b : list X) (w1 w2 : list (PRWin X)) : 
+  w1 === w2 
+  -> valid offset width w1 a b <-> valid offset width w2 a b.
+Proof. 
+  intros [H1 H2]; split; now apply valid_windows_monotonous. 
+Qed. 
+
+Lemma satFinal_final_monotonous (X : Type) (offset l : nat) (f1 f2 : list (list X)) s: 
+  f1 <<= f2 -> satFinal offset l f1 s -> satFinal offset l f2 s. 
+Proof. 
+  intros. destruct H0 as (subs & k & H1 & H2 & H3).
+  exists subs, k. apply H in H1. easy.
+Qed. 
+
+Lemma satFinal_final_equivalent (X : Type) (offset l : nat) (f1 f2 : list (list X)) s: 
+  f1 === f2 -> satFinal offset l f1 s <-> satFinal offset l f2 s. 
+Proof. 
+  intros [H1 H2]; split; now apply satFinal_final_monotonous. 
+Qed. 
+
+

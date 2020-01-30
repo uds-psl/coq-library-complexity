@@ -25,14 +25,18 @@ Section TM_single.
   Definition mconfig_for_sconfig c := let (q, tp) := c in mk_mconfig q [| tp |].
   Definition sconfig_for_mconfig (c : mconfig Sigma mstates 1) := let (q, tps) := c in (q, Vector.nth tps Fin.F1).
 
+  Lemma vec_case1 (X : Type) (v : Vector.t X 1) : exists x, v = [|x|].
+  Proof. 
+    eapply Vector.caseS' with (v0:=v).
+    intros. revert t. apply Vector.case0. easy.
+  Qed. 
+
   Lemma sstep_agree1 c : sconfig_for_mconfig (@step Sigma 1 TM (mconfig_for_sconfig c)) = sstep strans c.
   Proof. 
     destruct c. cbn.
     destruct mtrans eqn:H1. unfold sconfig_for_mconfig.
     unfold step. unfold doAct_multi. cbn. unfold current_chars. cbn. setoid_rewrite H1. 
-    eapply Vector.caseS with (n := 0). 
-    2 : apply t0.
-    intros.
+    specialize(vec_case1 t0) as (? & ->). 
     erewrite Vector.nth_map2 with (p2 := Fin0) (p3 := Fin0). 2-3: reflexivity. cbn. reflexivity.  
   Qed. 
 
@@ -41,16 +45,13 @@ Section TM_single.
     destruct c. cbn. unfold step. cbn. unfold current_chars.
     assert ([| current ctapes[@Fin0]|] = Vector.map (current (sig := Sigma)) ctapes). 
     {
-      apply VectorDef.caseS' with (v := ctapes). intros. apply VectorDef.case0 with (v := t). cbn. reflexivity. 
+      specialize (vec_case1 ctapes) as (? & ->). easy. 
     }
     rewrite H. destruct mtrans eqn:H1. 
     cbn. 
-    apply VectorDef.caseS' with (v := t). 
-    intros. 
-    apply VectorDef.case0 with (v := t0). cbn. 
-    apply VectorDef.caseS' with (v := ctapes). 
-    intros. 
-    apply VectorDef.case0 with (v := t1). cbn. reflexivity. 
+    specialize (vec_case1 t) as (? & ->). 
+    specialize (vec_case1 ctapes) as (? & ->).
+    cbn. reflexivity. 
   Qed. 
 
   Definition configState c := match c with (q, _) => q end. 
@@ -91,9 +92,7 @@ Section TM_single.
       cbn [mconfig_for_sconfig] in H2. 
       destruct (step (mk_mconfig q [|tape|])) as (q''  &tape'') eqn:H3. 
       revert H H3 H2. 
-      apply VectorDef.caseS' with (v := tape''). clear tape''.
-      intros tape'' t0. 
-      apply VectorDef.case0 with (v := t0).  
+      specialize (vec_case1 tape'') as (? & ->).
       intros H H3 H2. 
       apply IHn in H as (l & F1 & F2 & F3).  
       exists (S l). repeat split .

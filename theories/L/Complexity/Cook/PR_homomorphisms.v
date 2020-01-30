@@ -1,64 +1,12 @@
 From PslBase Require Import Base FiniteTypes. 
 From PslBase Require Import Vectors.Vectors. 
-From Undecidability.L.Complexity.Cook Require Import Prelim PR.
-From Undecidability.L.Complexity.Cook Require BinaryPR.
+From Undecidability.L.Complexity.Cook Require Import Prelim PR UniformHomomorphisms.
+From Undecidability.L.Complexity.Cook Require BinaryPR .
 Require Import Lia.
-
-(*We define uniform homomorphisms (of strings): Given strings of the same length, they output strings of the same length.*)
-Section fixX.
-  Variable (X Y : Type). 
-
-  Definition homomorphism (h : list X -> list Y) := forall x1 x2, h (x1 ++ x2) = h x1 ++ h x2. 
-
-  Lemma homo_nil h : homomorphism h -> h [] = []. 
-  Proof. 
-    intros. unfold homomorphism in H. specialize (H [] []). 
-    cbn in H; rewrite H. destruct (h []) eqn:Heqn; cbn; [ congruence | ].  
-    assert (|y :: l| = |(y :: l) ++ y :: l|) as H0 by congruence. 
-    cbn in H0. rewrite app_length in H0. cbn in H0; lia. 
-  Qed. 
-
-  Lemma homo_cons h x l : homomorphism h -> h (x::l) = h [x] ++ h l.
-  Proof. 
-    intros. replace (x :: l) with ([x] ++ l) by now cbn. apply H. 
-  Qed.
-
-  Lemma homo_concat h : homomorphism h -> forall x, h (concat x) = concat (map h x). 
-  Proof. 
-    intros. induction x. 
-    - cbn. apply homo_nil, H. 
-    - cbn. rewrite H. now rewrite IHx. 
-  Qed. 
-
-  (*the last condition excludes the trivial homomorphism x ↦ ε *)
-  Definition uniform_homomorphism (h : list X -> list Y) := homomorphism h /\ (forall x y, |h [x]| = |h [y]|) /\ (forall x, |h[x]| >= 1).
-
-  Lemma unif_homo_length h x y : uniform_homomorphism h -> |x| = |y| -> |h x| = |h y|. 
-  Proof. 
-    intros (H1 & H2 & _). 
-    revert y. induction x; intros. 
-    - destruct y; cbn in *; [ | congruence]. now cbn. 
-    - destruct y; cbn in *; [ congruence | ]. 
-      replace (a :: x) with ([a] ++ x) by now cbn. replace (x0 :: y) with ([x0] ++ y) by now cbn. 
-      rewrite !H1. rewrite !app_length. erewrite H2 with (y := x0). 
-      rewrite IHx with (y := y); eauto. 
-  Qed. 
-
-  (*given an arbitrary function mapping elements of X into strings over Y, we can derive a homomorphism *)
-  Definition canonicalHom (h' : X -> list Y) := fun (l : list X) => concat (map h' l). 
-  Lemma canonicalHom_is_homomorphism h' : homomorphism (canonicalHom h'). 
-  Proof. 
-    unfold homomorphism. intros. unfold canonicalHom. 
-    now rewrite map_app, concat_app. 
-  Qed. 
-End fixX. 
 
 (*We show that we can apply a uniform homomorphism to a PR instance if the homomorphism is injective on its alphabet *)
 Section fixInstance.  
   Variable (Y : finType).
-  (*Context (Yeq : eq_dec Y). *)
-  (*Context (Yfin : finTypeC (EqType Y)). *)
-
 
   Variable (fpr : PR). 
 
@@ -74,17 +22,18 @@ Section fixInstance.
 
   Definition h := canonicalHom h'. 
   
-  Context (A0 : forall x, |h' x| >= 1). 
-  Context (A1 : forall x y, |h' x| = |h' y|). 
   Context (A2 : injective h'). 
   Context (A3 : |elem Sigma| > 0). 
+  Variable (k : nat). 
+  Context (A1 : k >= 1). 
+  Context (A0 : forall x, |h' x| = k). 
 
   Lemma h_unifHom : uniform_homomorphism h. 
   Proof. 
     repeat split. 
     - apply canonicalHom_is_homomorphism. 
-    - intros. cbn. rewrite !app_nil_r. apply A1. 
-    - intros. cbn. rewrite app_nil_r. apply A0. 
+    - intros. cbn. rewrite !app_nil_r. now rewrite !A0.
+    - intros. cbn. rewrite app_nil_r. now rewrite A0. 
   Qed. 
 
   Lemma h_nil_cons x l : not (|h []| = |h (x :: l)|). 
@@ -127,34 +76,24 @@ Section fixInstance.
       cbn in H0; rewrite !app_nil_r in H0. now apply A2 in H0. 
   Qed. 
 
-  Lemma h_multiplier' : { k & (forall x, |h x| = k * (|x|)) /\ k >= 1}.
+  Lemma h_multiplier x : |h x| = k * |x|. 
   Proof. 
-    destruct elem; [ exists 0; cbn in A3; lia | ]. 
-    exists (|h' e|). split; [ | apply A0]. intros x. 
-    induction x; cbn. 
-    - lia. 
-    - rewrite app_length. unfold h, canonicalHom in IHx. rewrite IHx.       
-      rewrite Nat.mul_succ_r. rewrite (A1 a e). lia. 
+    induction x. 
+    - cbn. lia. 
+    - cbn. rewrite app_length. unfold h, canonicalHom in IHx. rewrite IHx. rewrite A0. nia. 
   Qed. 
-
-  Definition k := projT1 h_multiplier'. 
-  Lemma h_multiplier : forall x, |h x| = k * |x|. 
-  Proof. intros. unfold k. destruct h_multiplier'. apply a. Qed. 
-
-  Lemma k_ge : k >= 1. 
-  Proof. unfold k. destruct h_multiplier'. apply a.  Qed. 
 
   Lemma h_nil_inv a : h a = [] -> a = []. 
   Proof. 
     specialize (h_multiplier a) as H. 
     destruct a; [ easy | ]. intros H0. 
-    rewrite H0 in H. specialize k_ge as H1. cbn in *; nia. 
+    rewrite H0 in H. cbn in *; nia. 
   Qed. 
 
   Lemma h_app_inv1 a u v : h a = u ++ v -> |u| = k -> exists a1 a2, a = a1::a2 /\ h [a1] = u /\ h a2 = v. 
   Proof. 
     intros.  destruct a. 
-    - specialize (h_multiplier []) as H1. rewrite H in H1. rewrite app_length in H1. cbn in H1. specialize (k_ge) as H2. nia. 
+    - specialize (h_multiplier []) as H1. rewrite H in H1. rewrite app_length in H1. cbn in H1. nia. 
     - rewrite homo_cons in H; [ | apply h_unifHom]. 
       specialize (h_multiplier [e]) as H1. cbn in H1. rewrite Nat.mul_1_r, app_nil_r in H1. 
       apply app_eq_length in H; [ | cbn in *; rewrite app_nil_r; lia]. 
@@ -212,7 +151,7 @@ Section fixInstance.
     apply app_eq_length in H4 as (-> & ->); [ | easy]. 
     exists b1. 
     split; [ easy | split]. 
-    - rewrite h_multiplier in H1; specialize k_ge; nia. 
+    - rewrite h_multiplier in H1; nia. 
     - split; cbn. 
       + unfold prefix. exists c1. easy. 
       + unfold prefix. exists c2. now rewrite (proj1 h_unifHom), <- app_assoc. 
@@ -249,10 +188,10 @@ Section fixInstance.
           specialize (valid_multiple_of_offset H) as (m & H').
           eapply valid_vacuous with (m := m). 
           ++ rewrite !h_multiplier. apply valid_length_inv in H. nia. 
-          ++ rewrite !h_multiplier. specialize k_ge. nia. 
+          ++ rewrite !h_multiplier. nia. 
           ++ rewrite h_multiplier. nia. 
-      * rewrite h_multiplier. specialize k_ge. nia. 
-      * rewrite h_multiplier. specialize k_ge. nia. 
+      * rewrite h_multiplier. nia. 
+      * rewrite h_multiplier. nia. 
       * unfold hwindows. apply in_map_iff. exists (Build_PRWin prem conc). split; [ | apply H3]. reflexivity. 
       * rewrite <- !(proj1 h_unifHom). apply rewritesHead_homomorphism_iff; assumption.
   Qed. 
@@ -266,13 +205,12 @@ Section fixInstance.
     - intros. clear IHvalid. symmetry in Heql.
       eapply h_app_inv in Heql as (a1 & a2 & -> & F1 & F2); [ | rewrite Nat.mul_comm; apply H1]. 
       rewrite <- F1, h_multiplier in H1. 
-      rewrite <- F2, h_multiplier in H. rewrite app_length in H3. specialize k_ge. nia. 
+      rewrite <- F2, h_multiplier in H. rewrite app_length in H3. nia. 
     - intros. symmetry in Heql.  
       eapply h_app_inv in Heql as (a1 & a2 & -> & F1 & F2); [ | rewrite Nat.mul_comm; apply H]. 
       subst. 
-      specialize (k_ge) as F. 
       apply rewritesHead_homomorphism2 in H3 as (b1 & -> & H7 & H3); 
-        [ | easy | rewrite h_multiplier in H; specialize k_ge; nia | easy ]. 
+        [ | easy | rewrite h_multiplier in H; nia | easy ]. 
       specialize (h_multiplier a1) as H6. 
       assert (|a1| = offset) by nia. 
       destruct (le_lt_dec width (|a2|)) as [l|l]. 
@@ -396,7 +334,7 @@ Section fixInstance.
       exists subs', k0; split; [ apply H1 | ]. 
       destruct H3 as (b & H3). unfold prefix. 
       rewrite <- (firstn_skipn (k0 * offset) sf), (proj1 h_unifHom) in H3. 
-      unfold hinit in H2; rewrite h_multiplier in H2. split; [ specialize k_ge; nia | ]. 
+      unfold hinit in H2; rewrite h_multiplier in H2. split; [ nia | ]. 
       rewrite skipn_app in H3. 
       + eapply h_app_inv in H3 as (a1 & a2 & -> & H4 & H5); [ | rewrite Nat.mul_comm, h_multiplier; easy ].
         exists a2. enough (a1 = subs') by easy. 

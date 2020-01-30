@@ -10,42 +10,42 @@ Definition FPR_instance (ftpr : FlatTPR) := Build_FlatPR (FlatTPR.Sigma ftpr) 1 
 Lemma reduction (ftpr : FlatTPR) : FlatTPRLang ftpr <-> FlatPRLang (FPR_instance ftpr). 
 Proof. 
   split; intros. 
-  - destruct H as (H & sf & H1 & H2 & H3). split; [ | exists sf; repeat split].  
-    + destruct H as (F0 & F1 & F2 & F3). unfold FlatPR_wellformed. cbn in *.
-      unfold PR_windows. 
-      repeat split. 
-      * lia. 
-      * lia. 
+  - destruct H as (H & H0 & sf & H1 & H2 & H3). split; [ | split; [ | exists sf; repeat split]].
+    + unfold FlatTPR_wellformed in H. unfold FlatPR_wellformed. cbn in *. unfold PR_windows.
+      repeat split; try lia.   
       * exists 3. split; easy.  
-      * apply F0. 
-      * apply in_map_iff in H as (win' & <- & H). cbn.  destruct win', prem, conc; now cbn.   
-      * apply in_map_iff in H as (win' & <- & H). cbn.  destruct win', prem, conc; now cbn. 
+      * apply in_map_iff in H4 as (win' & <- & H4). 
+        destruct win', prem, conc; cbn in *. easy.  
+      * apply in_map_iff in H4 as (win' & <- & H4). 
+        destruct win', prem, conc; cbn in *. easy.  
       * setoid_rewrite Nat.mul_1_r. eauto. 
+    + destruct H0 as (F1 & F2 & F3). repeat split. 
       * apply F1. 
       * apply F2. 
-      * apply in_map_iff in H as (win' & <- & H). 
-        apply F3 in H. destruct win', prem, conc; cbn in *. unfold list_ofFlatType. 
-        destruct H as ((G1 & G2 & G3) & _). cbn in *. intros. 
+      * cbn in H0. unfold PR_windows in H0. 
+        apply in_map_iff in H0 as (win' & <- & H0). cbn. destruct win', prem, conc; cbn.
+        apply F3 in H0. destruct H0 as ((G1 & G2 & G3) & _). unfold list_ofFlatType; intros. cbn in *.
         repeat match goal with 
           |[H : ?a \/ ?b |- _] => destruct H
           | [H : False |- _] => destruct H
         end; subst; eauto.  
-      * apply in_map_iff in H as (win' & <- & H). 
-        apply F3 in H. destruct win', prem, conc; cbn in *. unfold list_ofFlatType. 
-        destruct H as (_ & (G1 & G2 & G3)). cbn in *. intros. 
+      * cbn in H0. unfold PR_windows in H0. 
+        apply in_map_iff in H0 as (win' & <- & H0). cbn. destruct win', prem, conc; cbn.
+        apply F3 in H0. destruct H0 as (_ & (G1 & G2 & G3)). unfold list_ofFlatType; intros. cbn in *.
         repeat match goal with 
           |[H : ?a \/ ?b |- _] => destruct H
           | [H : False |- _] => destruct H
-        end; subst; eauto.
+        end; subst; eauto.  
     + apply H1. 
     + clear H1 H3. cbn in *. apply relpower_valid_agree, H2. apply H. 
     + apply final_agree, H3. now apply TPR.relpower_valid_length_inv in H2. 
-  - destruct H as (H & sf & H1 & H2 & H3). split; [ | exists sf; repeat split]. 
-    + clear H1 H2 H3. destruct H as (_ & _ & _ & F0 & _ & _ & F1 & F2 & F3). 
-      split; [ | split; [ | split]]. 
-      * cbn in F0. apply F0. 
+  - destruct H as (H & H0 & sf & H1 & H2 & H3). split; [ | split; [ | exists sf; repeat split]].
+    + clear H1 H2 H3. destruct H as (_ & _ & _ & F0 & _ & _).  
+      unfold FlatTPR_wellformed. easy.  
+    + clear H1 H2 H3. destruct H0 as (F1 & F2 & F3).
+      split; [ | split]. 
       * cbn in F1; apply F1. 
-      * cbn in F2. apply F2. 
+      * cbn in F2. unfold FlatTPR.isValidFlatFinal. apply F2. 
       * intros [prem conc]. specialize (F3 (Build_PRWin prem conc)). 
         cbn in F3. intros H1. unfold PR_windows in F3. rewrite in_map_iff in F3. 
         assert (exists x, TPRWin_to_PRWin x = Build_PRWin prem conc /\ x el FlatTPR.windows ftpr) as H2. 

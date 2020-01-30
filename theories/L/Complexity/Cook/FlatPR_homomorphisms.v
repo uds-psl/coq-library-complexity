@@ -160,7 +160,7 @@ Section fixInstance.
 
   Lemma FlatPR_homomorphism_wf : FlatPR_wellformed fpr -> BinaryPR.BinaryPR_wellformed hBinaryPR. 
   Proof. 
-    intros (H1 & H2 & H3 & H4 & H5 & H6 & H7 & H8 & H9). 
+    intros (H1 & H2 & H3 & H4 & H5 & H6). 
     unfold BinaryPR.BinaryPR_wellformed. repeat match goal with [ |- _ /\ _] => split end; cbn. 
     + unfold hwidth. unfold k. specialize (proj2 (proj2 A1) 0) as H10. nia. 
     + unfold hoffset. specialize k_ge; nia.
@@ -172,6 +172,7 @@ Section fixInstance.
   Qed. 
 
   Context (A : FlatPR_wellformed fpr). 
+  Context (B : isValidFlattening fpr). 
 
   Lemma rewritesHead_homomorphism1 win a b : 
     win el windows -> rewritesHead win a b -> rewritesHead (hwindow win) (h a) (h b). 
@@ -212,7 +213,7 @@ Section fixInstance.
     split; intros.
     - now apply rewritesHead_homomorphism1.
     - unfold hwindow in H0. destruct win. destruct H0 as ((c1 & H1) & (c2 & H2)). 
-      cbn in *. destruct A as (_ & _ & _ & _ & A4 & _ & _ & _ & A5). 
+      cbn in *. destruct A as (_ & _ & _ & _ & A4 & _). destruct B as (_ & _ & A5).
       eapply h_app_inv in H1 as (a1 & a2 & -> & H1 & <-); [ | rewrite Nat.mul_comm; apply h_multiplier].  
       eapply h_app_inv in H2 as (b1 & b2 & -> & H2 & <-); [ | rewrite Nat.mul_comm; apply h_multiplier]. 
       specialize (A5 _ H) as (A5 & A6). cbn in *.
@@ -226,7 +227,7 @@ Section fixInstance.
   Proof. 
     intros. 
     rewrite <- !(proj1 A1) in H0. apply rewritesHead_homomorphism_iff in H0; [ | apply H]. 
-    destruct A as (_ & _ & (? & H4 & H5) & _ & A4 & _ & _ & _ & A5). 
+    destruct A as (_ & _ & (? & H4 & H5) & _ & A4 & _). destruct B as (_ & _ & A5). 
     specialize (A4 _ H) as (_ & A4).
     specialize (A5 _ H) as (_ & A5). 
     destruct H0 as (_ & (b1' & H0)). 
@@ -237,7 +238,6 @@ Section fixInstance.
   Qed. 
 
   Hint Constructors valid. 
-  (*Hint Constructors validFlat.*)
 
   Lemma valid_homomorphism1 a b : |a| >= width -> list_ofFlatType Sigma a -> valid offset width windows a b -> valid hoffset hwidth hwindows (h a) (h b).
   Proof. 
@@ -301,7 +301,7 @@ Section fixInstance.
         remember H3 as H30. clear HeqH30. (*we'll need the original hypothesis later *)
         specialize H3 as ((rest' & H3') & (rest & H3)). (*show rest = [] *)
         (*we need some structural assumptions *)
-        destruct A as (_ & _ & A4 & _ & A6 & _ & _ & _ & A5). 
+        destruct A as (_ & _ & A4 & _ & A6 & _). destruct B as (_ &_& A5). 
         assert (rest = []) as ->. 
         { 
           assert (|a1++a2| = width). 
@@ -419,7 +419,7 @@ Section fixInstance.
       + eapply h_app_inv in H3 as (a1 & a2 & -> & H4 & H5); [ | rewrite Nat.mul_comm, h_multiplier; easy ].
         exists a2. enough (a1 = subs') by easy. 
         symmetry; apply h_bounded_injective; [ | easy].
-        destruct A as (_ & _ & _ & _ & _ & _ & _ & A8 & _). 
+        destruct A as (_ & _ & _ & _ & _ & _). destruct B as (_ & A8 & _). 
         apply A8 in H1. apply H1. 
       + rewrite h_multiplier. rewrite firstn_length. nia. 
   Qed. 
@@ -429,7 +429,7 @@ Section fixInstance.
     <-> (exists sf, relpower (valid hoffset hwidth hwindows) hsteps hinit sf /\ satFinal hoffset (|hinit|) hfinal sf). 
   Proof. 
     unfold hsteps, hinit, hoffset, hwidth. 
-    destruct A as (_ & _ & _  & A4  & _ & _ & A5 & _). 
+    destruct A as (_ & _ & _  & A4  & _ ). destruct B as (A5 & _).
     split; intros. 
     - destruct H as (sf & H1 & H2 & H3). 
       exists (h sf). split. 

@@ -5,7 +5,7 @@ From Undecidability.L.Complexity.Cook Require Import Prelim.
 Require Export smpl.Smpl. 
 
 (*a finite type is represented by the number of its elements *)
-Definition finRepr (X : finType) (n : nat) := n = length (elem X ). 
+Definition finRepr (X : finType) (n : nat) := n = |elem X|. 
 (*we just enumerate the elements starting at 0 *)
 Definition finReprEl (X : finType) (n : nat) k (x : X) := finRepr X n /\ k < n /\ index x = k.  
 
@@ -30,14 +30,14 @@ Definition flatPair (a b : nat) x y := x * b + y.
 Smpl Create finRepr. 
 Ltac finRepr_simpl := smpl finRepr; repeat smpl finRepr. 
 
-Lemma finReprOption (X : finType) (n : nat) : finRepr X n -> finRepr (FinType (EqType (option X))) (flatOption n).
+Lemma finReprOption (X : finType) (n : nat) : finRepr X n -> finRepr (finType_CS (option X)) (flatOption n).
 Proof. 
   intros. unfold finRepr in *. unfold flatOption; cbn -[enum]. rewrite H; cbn.
   rewrite map_length. reflexivity. 
 Qed. 
 Smpl Add (apply finReprOption) : finRepr.
 
-Lemma finReprElSome (X : finType) n k x : finReprEl n k x -> @finReprEl (FinType (EqType (option X))) (flatOption n) (flatSome k) (Some x). 
+Lemma finReprElSome (X : finType) n k x : finReprEl n k x -> @finReprEl (finType_CS (option X)) (flatOption n) (flatSome k) (Some x). 
 Proof. 
   intros (H1 & H2 & H3). split; [ | split]; cbn in *.
   - now apply finReprOption. 
@@ -46,7 +46,7 @@ Proof.
 Qed. 
 Smpl Add (apply finReprElSome) : finRepr.
 
-Lemma finReprElNone (X : finType) n : finRepr X n -> @finReprEl (FinType (EqType (option X))) (flatOption n) flatNone None. 
+Lemma finReprElNone (X : finType) n : finRepr X n -> @finReprEl (finType_CS (option X)) (flatOption n) flatNone None. 
 Proof. 
   intros. split; [ | split]; cbn. 
   - now apply finReprOption.
@@ -55,7 +55,7 @@ Proof.
 Qed. 
 Smpl Add (apply finReprElNone) : finRepr. 
 
-Lemma finReprSum (A B: finType) (a b : nat) : finRepr A a -> finRepr B b -> finRepr (FinType (EqType (sum A B))) (flatSum a b). 
+Lemma finReprSum (A B: finType) (a b : nat) : finRepr A a -> finRepr B b -> finRepr (finType_CS (sum A B)) (flatSum a b). 
 Proof. 
   intros. unfold finRepr in *. unfold flatSum; cbn in *.
   rewrite app_length. rewrite H, H0.
@@ -63,7 +63,7 @@ Proof.
 Qed. 
 Smpl Add (apply finReprSum) : finRepr. 
 
-Lemma finReprElInl (A B : finType) (a b : nat) k x : finRepr B b -> finReprEl a k x -> @finReprEl (FinType (EqType (sum A B))) (flatSum a b) (flatInl k) (inl x). 
+Lemma finReprElInl (A B : finType) (a b : nat) k x : finRepr B b -> finReprEl a k x -> @finReprEl (finType_CS (sum A B)) (flatSum a b) (flatInl k) (inl x). 
 Proof. 
   intros H0 (H1 & H2 & H3). split; [ | split]. 
   - now apply finReprSum. 
@@ -78,7 +78,7 @@ Proof.
 Qed. 
 Smpl Add (apply finReprElInl) : finRepr.
 
-Lemma finReprElInr (A B : finType) (a b : nat) k x : finRepr A a -> finReprEl b k x -> @finReprEl (FinType (EqType (sum A B))) (flatSum a b) (flatInr a k) (inr x). 
+Lemma finReprElInr (A B : finType) (a b : nat) k x : finRepr A a -> finReprEl b k x -> @finReprEl (finType_CS (sum A B)) (flatSum a b) (flatInr a k) (inr x). 
 Proof. 
   intros H0 (H1 & H2 & H3). split; [ | split ]. 
   - now apply finReprSum. 
@@ -94,14 +94,14 @@ Proof.
 Qed. 
 Smpl Add (apply finReprElInr) : finRepr. 
 
-Lemma finReprProd (A B : finType) (a b : nat) : finRepr A a -> finRepr B b -> finRepr (FinType (EqType (prod A B))) (flatProd a b).  
+Lemma finReprProd (A B : finType) (a b : nat) : finRepr A a -> finRepr B b -> finRepr (finType_CS (prod A B)) (flatProd a b).  
 Proof. 
   intros. unfold finRepr in *. unfold flatProd.
   cbn. now rewrite prodLists_length. 
 Qed. 
 Smpl Add (apply finReprProd) : finRepr.
 
-Lemma finReprElPair (A B : finType) (a b : nat) k1 k2 x1 x2 : finReprEl a k1 x1 -> finReprEl b k2 x2 -> @finReprEl (FinType (EqType (prod A B))) (flatProd a b) (flatPair a b k1 k2) (pair x1 x2).
+Lemma finReprElPair (A B : finType) (a b : nat) k1 k2 x1 x2 : finReprEl a k1 x1 -> finReprEl b k2 x2 -> @finReprEl (finType_CS (prod A B)) (flatProd a b) (flatPair a b k1 k2) (pair x1 x2).
 Proof. 
   intros (H1 & H2 & H3) (F1 & F2 & F3). split; [ | split]. 
   - now apply finReprProd. 
@@ -119,6 +119,15 @@ Proof.
   unfold isFlatListOf in *. cbn. split; intros. 
   - inv H. easy. 
   - destruct H as (-> & ->). easy.
+Qed. 
+
+Lemma isFlatListOf_app (X : finType) (L1 L2 : list X) l1 l2 : isFlatListOf l1 L1 -> isFlatListOf l2 L2 -> isFlatListOf (l1 ++ l2) (L1 ++ L2). 
+Proof. 
+  revert L1. induction l1; intros.
+  - unfold isFlatListOf in H; destruct L1; [easy | cbn in *; congruence ].
+  - destruct L1; [ unfold isFlatListOf in H; cbn in H; congruence | ].
+    apply isFlatListOf_cons in H as (H1 & H2). cbn. 
+    apply isFlatListOf_cons; split; [ apply H1 | apply IHl1; easy].
 Qed. 
 
 Lemma isFlatListOf_functional (X: finType) (L1 L2 : list X) (l : list nat) : 
@@ -152,9 +161,48 @@ Proof.
   now change (fun x => getPosition (elem X) x) with (getPosition (elem X)). 
 Qed.
 
+Lemma repEl_isFlatListOf (X : finType) a (A : X) n : finReprEl' a A -> isFlatListOf (repEl n a) (repEl n A).
+Proof. 
+  induction n; cbn; intros; [ easy | now apply isFlatListOf_cons].
+Qed. 
+
+Lemma isFlatListOf_incl1 (X : finType) (fin : list X) flat l:
+  isFlatListOf flat fin -> l <<= flat -> exists l', isFlatListOf (X := X) l l' /\ l' <<= fin.
+Proof.
+  intros. revert fin H. induction l; cbn in *; intros. 
+  - exists []; split; eauto. unfold isFlatListOf. now cbn.
+  - apply incl_lcons in H0 as (H0 & H1).
+    apply IHl with (fin := fin) in H1 as (l' & H2 & H3). 
+    2: apply H. 
+    rewrite H in H0. apply in_map_iff in H0 as (a' & H4 & H5).
+    exists (a' :: l'). split. 
+    + unfold isFlatListOf. cbn. now rewrite <- H4, H2. 
+    + cbn. intros ? [-> | H6]; eauto.
+Qed.
+
+Lemma isFlatListOf_incl2 (X : finType) (fin : list X) flat l':
+  isFlatListOf flat fin -> l' <<= fin -> exists l, isFlatListOf (X := X) l l' /\ l <<= flat.
+Proof.
+  intros.
+  exists (map index l'). split.
+  - reflexivity.
+  - induction l'; cbn. 
+    + eauto.
+    + apply incl_lcons in H0 as (H0 & H1).
+      apply IHl' in H1. intros ? [<- | H2].
+      * rewrite H. apply in_map_iff; eauto. 
+      * now apply H1.  
+Qed.
+
 (*we define what it means for a number to be of a flat type *)
 Definition ofFlatType (k : nat) (e : nat) := e < k. 
 Definition list_ofFlatType (k : nat) (l : list nat) := forall a, a el l -> ofFlatType k a. 
+
+Lemma isFlatListOf_list_ofFlatType (X : finType) (L : list X) l : isFlatListOf l L -> list_ofFlatType (|elem X|) l. 
+Proof. 
+  intros. unfold list_ofFlatType. rewrite H. intros a (a' & <- & H1)%in_map_iff. 
+  unfold ofFlatType. apply index_le. 
+Qed. 
 
 Lemma list_ofFlatType_app (l1 l2 : list nat) (k : nat) : list_ofFlatType k (l1 ++ l2) <-> list_ofFlatType k l1 /\ list_ofFlatType k l2. 
 Proof. 
@@ -180,14 +228,14 @@ Proof.
   assert (sigT (fun a' =>nth_error (elem X) a = Some a')) as (a' & H2).
   { 
     unfold ofFlatType in H0. rewrite H in H0.
-    apply nth_error_Some in H0. destruct nth_error; easy. 
+    unfold Cardinality in H0. apply nth_error_Some in H0. destruct nth_error; easy. 
   } 
   exists a'. repeat split; [ easy | easy | ].
   unfold index. specialize (nth_error_nth H2) as <-.
   apply getPosition_nth. 
   + apply Cardinality.dupfree_elements. 
   + eapply utils.nth_error_Some_length, H2. 
-Qed. 
+Qed.
 
 Lemma finRepr_exists_list (X : finType) (x : nat) (l : list nat) : 
   finRepr X x -> list_ofFlatType x l -> sigT (fun (L : list X) => isFlatListOf l L). 

@@ -6,6 +6,54 @@ From Undecidability.L.Datatypes Require Import Lists.
 
 Require Import Lia. 
 
+Require Import BinNat BinNums.
+(*Local Open Scope N_scope. *)
+
+(*SearchAbout "peano_rec".*)
+(*Definition bfirstn (X : Type) (n : N) (l : list X) : list X.*)
+(*Proof. *)
+  (*revert n l. apply (N.peano_rect (fun _ => list X -> list X)). *)
+  (*- intros _. exact []. *)
+  (*- intros n rec l. destruct l. *)
+    (*+ exact []. *)
+    (*+ apply rec in l. exact (x :: l). *)
+(*Defined. *)
+(*Locate firstn_firstn. *)
+
+(*Lemma bfirstn_nil (X : Type) n:*)
+  (*@bfirstn X n [] = [].*)
+(*Proof. *)
+  (*revert n. apply N.peano_ind; intros; unfold bfirstn; [rewrite N.peano_rect_base | rewrite N.peano_rect_succ ]; easy. *)
+(*Qed. *)
+
+(*Definition peano_case (P : N -> Type) (f0 : P 0) (f : forall n, P (N.succ n)) (n : N) : P n := N.peano_rect P f0 (fun n _ => f n) n. *)
+(*Lemma peano_case_base (P : N -> Type) (f0 : P 0) (f : forall n, P (N.succ n)) : peano_case f0 f 0 = f0.*)
+(*Proof. *)
+  (*unfold peano_case. apply N.peano_rect_base. *)
+(*Qed. *)
+(*Lemma peano_case_succ (P : N -> Type) (f0 : P 0) (f : forall n, P (N.succ n)) n : peano_case f0 f (N.succ n) = f n. *)
+(*Proof. *)
+  (*unfold peano_case. apply N.peano_rect_succ. *)
+(*Qed. *)
+
+(*Lemma firstn_firstn (X : Type):*)
+    (*forall l:list X,*)
+    (*forall i j : N,*)
+    (*bfirstn i (bfirstn j l) = bfirstn (N.min i j) l.*)
+  (*Proof. induction l as [|x xs Hl].*)
+    (*- intros. now rewrite ?bfirstn_nil.*)
+    (*- intros i. apply peano_case with (n := i).      *)
+      (** intro. rewrite N.min_l by lia. now simpl.*)
+      (** intros. apply peano_case with (n := j).*)
+        (*+ rewrite N.min_r by lia. unfold bfirstn. rewrite N.peano_rect_succ, !N.peano_rect_base. now simpl.*)
+        (*+ simpl. f_equal. apply Hl.*)
+  (*Qed.*)
+
+(*SearchAbout firstn.*)
+(*Print firstn_firstn. *)
+
+(*Compute (bfirstn 0 [1; 2; 3; 4; 5]). *)
+
 Section fixInstance. 
   Variable (bpr : BinaryPR). 
   
@@ -274,7 +322,6 @@ Section fixInstance.
       + intros H. inv H. now rewrite firstn_all.
       + intros (H2 & H3). inv H2. f_equal. apply Nat.succ_inj in H0. now apply firstn_all_inv. 
   Qed. 
-
 
   (*encoding of windows *)
   (*startA is the position at which the premise is placed, startB the position at which the conclusion is placed *)
