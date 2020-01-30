@@ -41,6 +41,40 @@ Section funTable.
   Qed.
 End funTable.
 
+Section lookup_correct.
+  Variable (X Y : Type). 
+  Variable (eqb : X -> X -> bool).
+  Variable (Heqb : forall x y, reflect (x = y) (eqb x y)). 
+
+  Lemma lookup_sound (L : list (X * Y)) a b def : 
+    (forall a' b1 b2, (a', b1) el L -> (a', b2) el L -> b1 = b2) -> (a, b) el L -> lookup eqb a L def = b.
+  Proof. 
+    intros H1 H2. induction L; cbn; [ destruct H2 | ]. 
+    destruct a0. specialize (Heqb a x). apply reflect_iff in Heqb. 
+    destruct eqb. 
+    - specialize (proj2 Heqb eq_refl) as ->.
+      destruct H2 as [H2 | H2]; [easy | ].
+      apply (H1 x y b); easy.
+    - assert (not (a = x)). { intros ->. easy. }
+      destruct H2 as [H2 | H2]; [ congruence | ].
+      apply IHL in H2; [easy | intros; now eapply H1]. 
+  Qed. 
+
+  Lemma lookup_complete (L : list (X * Y)) a def : 
+    {(a, lookup eqb a L def) el L } + {~(exists b, (a, b) el L) /\  lookup eqb a L def = def}.
+  Proof. 
+    induction L; cbn; [ right; split; [ intros [? []] | reflexivity] | ]. 
+    destruct a0. specialize (Heqb a x). apply reflect_iff in Heqb. 
+    destruct eqb. 
+    - left; left. f_equal. symmetry; now apply Heqb. 
+    - destruct IHL as [IH | IH]. 
+      + left; right; apply IH. 
+      + right. split; [ intros (b & [H1 | H1]) | apply IH].
+        * inv H1. easy.
+        * apply (proj1 IH). eauto.
+  Qed. 
+End lookup_correct.
+
 Definition lookupTime {X Y} `{registered X} (eqbT : timeComplexity (X ->X ->bool)) x (l:list (X*Y)):=
   fold_right (fun '(a,b) res => callTime2 eqbT x a + res +19) 4 l.
 
