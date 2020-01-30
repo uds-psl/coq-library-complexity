@@ -61,11 +61,6 @@ Program Definition unflattenTM (M:TM) : mTM (finType_CS (Fin.t (sig M))) (tapes 
     TM.halt := unflatten_halt (halt M);
   |}.
 
-Lemma Card_Fint n : Cardinality (finType_CS (Fin.t n)) = n.
-Proof.
-  unfold Cardinality. unfold elem. unfold enum. cbn. unfold Fin_initVect. now rewrite vector_to_list_length. 
-Qed.
-
 Lemma index_nth_elem (X:finType) i d:
   i < Cardinality X
   -> index (nth (A:=X) i (elem _) d) = i.
