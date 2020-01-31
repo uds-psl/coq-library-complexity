@@ -1,8 +1,10 @@
 From PslBase Require Import Base FinTypes. 
-From PslBase Require Import Vectors.Vectors. 
 From Undecidability Require Import L.Complexity.Cook.Prelim.
 From Undecidability.L.Complexity.Cook Require Export PR FlatFinTypes. 
 Require Import Lia.
+
+(**Flat Parallel Rewriting *)
+(*A flattened version of parallel rewriting using natural numbers to represent finite types *)
 
 Record FlatPR := {
   Sigma : nat;
@@ -14,12 +16,14 @@ Record FlatPR := {
   steps : nat
   }.
 
+(*validity of windows and final constraints relative to an alphabet *)
+(*we have to enforce this as we always consider only a finite subset of N *)
 Definition PRWin_ofFlatType (win : PRWin nat) k:= list_ofFlatType k (prem win) /\ list_ofFlatType k (conc win). 
-
 Definition isValidFlatWindows (l : list (PRWin nat)) k := (forall win, win el l -> PRWin_ofFlatType win k).
 Definition isValidFlatFinal (l : list (list nat)) k := (forall s, s el l -> list_ofFlatType k s).
 Definition isValidFlatInitial (l : list nat) k := list_ofFlatType k l.
 
+(*the well-formedness constraints are the same as for PR *)
 Definition FlatPR_wellformed fpr := 
   width fpr > 0 
   /\ offset fpr > 0 
@@ -28,11 +32,15 @@ Definition FlatPR_wellformed fpr :=
   /\ (forall win, win el windows fpr -> PRWin_of_size win (width fpr)) 
   /\ (exists k, length (init fpr) = k * offset fpr). 
 
+(*additionally, we require that instances only use the given finite subset of N *)
 Definition isValidFlattening fpr := 
  list_ofFlatType (Sigma fpr) (init fpr) 
   /\ (forall s, s el final fpr -> list_ofFlatType (Sigma fpr) s)
   /\ (forall win, win el windows fpr -> PRWin_ofFlatType win (Sigma fpr)). 
 
+(*the definitions of validity and satisfaction of final constraints can be re-used *)
+
+(*we can now define the language of valid FlatPR instances *)
 Definition FlatPRLang (C : FlatPR) := FlatPR_wellformed C /\ isValidFlattening C
   /\ exists (sf : list nat), list_ofFlatType (Sigma C) sf 
       /\ relpower (valid (offset C) (width C) (windows C)) (steps C) (init C) sf 
@@ -51,13 +59,8 @@ Section fixInstance.
   Context (A : FlatPR_wellformed fpr). 
   Context (B : isValidFlattening fpr). 
 
-  Lemma app_length_split (X : Type) (v u b c : list X) : v ++ b = u ++ c -> |v| <= |u| -> exists u', u = v ++ u'. 
-  Proof. 
-    intros. apply list_length_split1 in H0 as (s1 & s2 & H0 & _ & ->). 
-    rewrite <- app_assoc in H. apply app_eq_length in H as (-> & ->); [ | easy]. 
-    now exists s2. 
-  Qed. 
-
+  (*we want to prove that for syntactically well-formed instances, we can only rewrite to strings that are again strings over the finite alphabet *)
+  (*we first prove a more general statement over abstract homomorph properties*)
   Lemma p_invariant (p : list nat -> Prop) (a b : list nat) : 
     p a 
     -> (forall x y, p (x ++ y) <-> p x /\ p y) 
@@ -105,7 +108,8 @@ Section fixInstance.
         now apply G2. 
   Qed. 
 
-  Lemma valid_list_ofFlatType_invariant a b : 
+  (*the statement is now a straightforward corollary *)
+  Corollary valid_list_ofFlatType_invariant a b : 
     list_ofFlatType Sigma a -> |a| >= width -> valid offset width windows a b -> list_ofFlatType Sigma b. 
   Proof.
     intros H H0 H1. eapply (@p_invariant (list_ofFlatType Sigma)).
@@ -123,6 +127,7 @@ Section fixInstance.
     - apply H1. 
   Qed. 
 
+  (*of course, this transfers to an arbitrary number of rewrite steps *)
   Lemma relpower_valid_list_ofFlatType_invariant steps a b: 
     list_ofFlatType Sigma a -> |a| >= width -> relpower (valid offset width windows) steps a b -> list_ofFlatType Sigma b. 
   Proof. 
@@ -239,9 +244,8 @@ Proof.
     eapply isFlatListOf_list_ofFlatType, F3. 
 Qed. 
 
-(*we show that FlatPR instances "behave in the same way" as PR instances  *)
+(** we show that FlatPR instances "behave in the same way" as PR instances  *)
 
-(*this is completely similar to the corresponding proof for FlatTPR *)
 Lemma rewritesHead_flat_agree (X : finType) (windowsFin : list (PRWin X)) windowsFlat finStr finStr' flatStr flatStr' :
   isFlatListOf flatStr finStr
   -> isFlatListOf flatStr' finStr'
@@ -277,6 +281,7 @@ Proof.
 Qed.
 
 Section fixFPRInstance. 
+  (*for the proof, we fix an instance *)
   Variable (fpr : FlatPR). 
   Notation Sigma := (Sigma fpr).
   Notation offset := (offset fpr).
@@ -290,11 +295,11 @@ Section fixFPRInstance.
   Context (B : isValidFlattening fpr). 
 
 
-  Lemma valid_flat_agree (X : finType) (windows : list (PRWin X)) fwindows s1 s2 fs1 fs2: 
+  Lemma valid_flat_agree (X : finType) (fwindows : list (PRWin X)) s1 s2 fs1 fs2: 
     isFlatListOf fs1 s1 
     -> isFlatListOf fs2 s2
-    -> isFlatWindowsOf fwindows windows 
-    -> valid offset width fwindows fs1 fs2 <-> valid offset width windows s1 s2. 
+    -> isFlatWindowsOf windows fwindows 
+    -> valid offset width windows fs1 fs2 <-> valid offset width fwindows s1 s2. 
   Proof. 
     intros H H1 H2. 
     split.
@@ -311,7 +316,7 @@ Section fixFPRInstance.
       + unfold isFlatListOf in H5, H6.
         symmetry in H5. apply map_eq_app in H5 as (ls1 & ls2 & -> & -> & ->). 
         symmetry in H6. apply map_eq_app in H6 as (rs1 & rs2 & -> & -> & ->).
-        assert (exists w, w el fwindows /\ rewritesHead w (map index ls1 ++ map index ls2) (map index rs1 ++ map index rs2)) as H5 by eauto.
+        assert (exists w, w el windows /\ rewritesHead w (map index ls1 ++ map index ls2) (map index rs1 ++ map index rs2)) as H5 by eauto.
         eapply rewritesHead_flat_agree in H5 as (finwin & H5 & H6). 
         * econstructor 3. 2-3: now rewrite map_length in *. 
           -- eapply IHvalid; easy.
@@ -325,7 +330,7 @@ Section fixFPRInstance.
       + rewrite H2, H4. rewrite !map_app. constructor. 2-4: rewrite map_length; auto.
         now eapply IHvalid.
       + rewrite H4, H5. rewrite !map_app. 
-        assert (exists w, w el windows /\ rewritesHead w (u ++ a) (v++b)) as H7 by eauto.
+        assert (exists w, w el fwindows /\ rewritesHead w (u ++ a) (v++b)) as H7 by eauto.
         eapply rewritesHead_flat_agree in H7 as (finwin & H7 & H8). 2-4: eauto.
         econstructor 3. 2-3: rewrite map_length; auto.
         * now eapply IHvalid.
@@ -393,6 +398,7 @@ Section fixFPRInstance.
   Qed. 
 End fixFPRInstance. 
 
+(*well-formedness is equivalent, of course *)
 Lemma isFlatPROf_wf_equivalent (pr : PR) (fpr : FlatPR) : 
   isFlatPROf fpr pr -> (FlatPR_wellformed fpr <-> PR_wellformed pr). 
 Proof. 
@@ -419,6 +425,7 @@ Proof.
     + destruct F6 as (k & F6). rewrite H4, map_length. exists k. nia. 
 Qed. 
 
+(*now we can derive equivalence of instances related via isFlatPROf *)
 Lemma isFlatPROf_equivalence (pr : PR) (fpr : FlatPR) : 
   isFlatPROf fpr pr -> (FlatPRLang fpr <-> PRLang pr). 
 Proof. 
@@ -449,9 +456,12 @@ Proof.
 Qed. 
 
 (*given a well-formed flat instance, we can derive a "canonical" (up to bijections of the finite type) PR instance *)
+(*we use Fin.t as the canonical finite type *)
+
 (*unflattening *)
 Require Import PslBase.FiniteTypes.VectorFin PslBase.FiniteTypes.Cardinality. 
-Lemma unflattenString (f : list nat) k : list_ofFlatType k f -> sigT (fun (f' : list (finType_CS (Fin.t k))) => isFlatListOf f f'). 
+Import Coq.Init.Specif.
+Lemma unflattenString (f : list nat) k : list_ofFlatType k f -> {f' : list (finType_CS (Fin.t k)) & isFlatListOf f f'}.
 Proof. 
   intros H. 
   eapply finRepr_exists_list with (X := finType_CS (Fin.t k)) in H as (a' & H). 
@@ -459,7 +469,7 @@ Proof.
   eauto.
 Qed. 
 
-Lemma unflattenWindow (w : PRWin nat) k : PRWin_ofFlatType w k -> sigT (fun (w' : PRWin (finType_CS (Fin.t k))) => isFlatPRWinOf w w'). 
+Lemma unflattenWindow (w : PRWin nat) k : PRWin_ofFlatType w k -> {w' : PRWin (finType_CS (Fin.t k)) & isFlatPRWinOf w w'}. 
 Proof. 
   intros. destruct w. destruct H as (H1 & H2). cbn in *.
   apply unflattenString in H1 as (prem' & H1). 
@@ -467,7 +477,7 @@ Proof.
   exists (Build_PRWin prem' conc'). split; easy.
 Qed. 
 
-Lemma unflattenWindows (l : list (PRWin nat)) k : isValidFlatWindows l k -> sigT (fun (l' : list (PRWin (finType_CS (Fin.t k)))) => isFlatWindowsOf l l').  
+Lemma unflattenWindows (l : list (PRWin nat)) k : isValidFlatWindows l k -> {l' : list (PRWin (finType_CS (Fin.t k))) & isFlatWindowsOf l l'}.
 Proof. 
   intros. unfold isValidFlatWindows in H. induction l. 
   - exists []. easy.
@@ -477,7 +487,7 @@ Proof.
     + destruct H0 as [-> | H0]; [ easy | ]. apply IH in H0 as (win' & ? & ?); eauto.
 Qed. 
 
-Lemma unflattenFinal (f : list (list nat)) k : isValidFlatFinal f k -> sigT (fun (f' : list (list (finType_CS (Fin.t k)))) => isFlatFinalOf f f'). 
+Lemma unflattenFinal (f : list (list nat)) k : isValidFlatFinal f k -> {f' : list (list (finType_CS (Fin.t k))) & isFlatFinalOf f f'}.
 Proof. 
   intros. unfold isValidFlatFinal in H. induction f; intros.
   - exists []; easy.
@@ -488,7 +498,7 @@ Proof.
     + destruct H0 as [-> | H0]; [easy | ]. apply IH in H0 as (? & ? & ?); eauto.
 Qed. 
 
-Lemma unflattenPR (f : FlatPR) : isValidFlattening f -> sigT (fun (f' : PR) => isFlatPROf f f'). 
+Lemma unflattenPR (f : FlatPR) : isValidFlattening f -> {f' : PR & isFlatPROf f f'}.
 Proof. 
   intros (H1 & H2 & H3).
   apply unflattenWindows in H3 as (w' & H3). 

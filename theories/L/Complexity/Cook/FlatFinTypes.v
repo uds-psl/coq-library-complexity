@@ -4,9 +4,17 @@ Require Import Lia.
 From Undecidability.L.Complexity.Cook Require Import Prelim.
 Require Export smpl.Smpl. 
 
+(** Representation of finite types by natural numbers *)
+(*this is needed as finite types are not extractable to L currently *)
+
 (*a finite type is represented by the number of its elements *)
 Definition finRepr (X : finType) (n : nat) := n = |elem X|. 
+
+(* we define what it means for a number to be of a flat type *)
+Definition ofFlatType (k : nat) (e : nat) := e < k.
+
 (*we just enumerate the elements starting at 0 *)
+(*we do not use ofFlatType in the definition in order to reduce necessary unfolds *)
 Definition finReprEl (X : finType) (n : nat) k (x : X) := finRepr X n /\ k < n /\ index x = k.  
 
 (*a weaker version that does not explicitly enforce x to have a flat type *)
@@ -17,10 +25,12 @@ Proof. unfold finReprEl, finReprEl'. easy. Qed.
 
 (*for some of the proofs below, the stronger version of finReprEl is much more pleasant (e.g. for sum types)*)
 
+(*flat type constructors *)
 Definition flatOption (n : nat) := S n.
 Definition flatProd (a b : nat) := a * b.
 Definition flatSum (a b : nat) := a + b.
 
+(*flat value constructors *)
 Definition flatNone := 0.
 Definition flatSome k := S k. 
 Definition flatInl (k : nat) := k.
@@ -111,7 +121,8 @@ Proof.
 Qed. 
 Smpl Add (apply finReprElPair) : finRepr.
 
-(*flattened lists *)
+
+(** flattened lists *)
 Definition isFlatListOf (X : finType) (l : list nat) (l' : list X) := l = map index l'.
 
 Lemma isFlatListOf_cons (X : finType) (A : X) a l L: isFlatListOf (a :: l) (A :: L) <-> finReprEl' a A /\ isFlatListOf l L.
@@ -154,18 +165,6 @@ Proof.
   + rewrite H. apply index_le. 
 Qed. 
 
-Lemma seq_isFlatListOf (X : finType) : isFlatListOf (seq 0 (|elem X|)) (elem X).  
-Proof. 
-  unfold isFlatListOf. unfold index. rewrite dupfree_map_getPosition. 
-  2: apply dupfree_elements. 
-  now change (fun x => getPosition (elem X) x) with (getPosition (elem X)). 
-Qed.
-
-Lemma repEl_isFlatListOf (X : finType) a (A : X) n : finReprEl' a A -> isFlatListOf (repEl n a) (repEl n A).
-Proof. 
-  induction n; cbn; intros; [ easy | now apply isFlatListOf_cons].
-Qed. 
-
 Lemma isFlatListOf_incl1 (X : finType) (fin : list X) flat l:
   isFlatListOf flat fin -> l <<= flat -> exists l', isFlatListOf (X := X) l l' /\ l' <<= fin.
 Proof.
@@ -194,8 +193,20 @@ Proof.
       * now apply H1.  
 Qed.
 
-(*we define what it means for a number to be of a flat type *)
-Definition ofFlatType (k : nat) (e : nat) := e < k. 
+Lemma seq_isFlatListOf (X : finType) : isFlatListOf (seq 0 (|elem X|)) (elem X).  
+Proof. 
+  unfold isFlatListOf. unfold index. rewrite dupfree_map_getPosition. 
+  2: apply dupfree_elements. 
+  now change (fun x => getPosition (elem X) x) with (getPosition (elem X)). 
+Qed.
+
+Lemma repEl_isFlatListOf (X : finType) a (A : X) n : finReprEl' a A -> isFlatListOf (repEl n a) (repEl n A).
+Proof. 
+  induction n; cbn; intros; [ easy | now apply isFlatListOf_cons].
+Qed. 
+
+ 
+(* lists that only contain elements which belong to the flat representation of a finite type *)
 Definition list_ofFlatType (k : nat) (l : list nat) := forall a, a el l -> ofFlatType k a. 
 
 Lemma isFlatListOf_list_ofFlatType (X : finType) (L : list X) l : isFlatListOf l L -> list_ofFlatType (|elem X|) l. 

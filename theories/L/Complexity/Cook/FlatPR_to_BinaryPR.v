@@ -3,8 +3,13 @@ From PslBase Require Import Vectors.Vectors.
 From Undecidability.L.Complexity.Cook Require Import Prelim UniformHomomorphisms BinaryPR FlatPR PR_to_BinaryPR. 
 Require Import Lia.
 
-(*we basically reduce to PR and use the established reduction PR -> BinaryPR *)
+(** Reduction of FlatPR to BinaryPR *)
+(*logically, we reduce FlatPR to PR and use the reduction of PR to BinaryPR *)
+(*but in order to make the reduction extractable, we give a shortcut reduction which produces instances which are the same up to syntax (like reordering)*)
+
 Section fixInstanceA. 
+  (*we first do the reduction for well-formed instances satisfying the syntactic requirements *)
+
   Variable (fpr : FlatPR). 
 
   Notation Sigma := (Sigma fpr).
@@ -15,12 +20,11 @@ Section fixInstanceA.
   Notation final := (final fpr).
   Notation steps := (steps fpr). 
 
-  (*we first do the reduction for wellformed instances, satisfying the syntactic requirements *)
   Context (A : FlatPR_wellformed fpr). 
   Context (B : isValidFlattening fpr). 
   Context (A1 : Sigma > 0). (*instances without this property are trivial no instances *)
 
-  (*we use the hNat homomorphism from the PR reduction *)
+  (*we use the hNat base homomorphism from the PR reduction *)
   Definition hflat := canonicalHom (hNat Sigma).
 
   Definition hoffset := Sigma * offset. 
@@ -33,14 +37,14 @@ Section fixInstanceA.
 
   Definition hBinaryPR := @BinaryPR.Build_BinaryPR hoffset hwidth hinit hwindows hfinal hsteps. 
 
-  (*We show that if fpr is the flattening of a PR instance pr, then the produced BinaryPR instances are equivalent *)
-  (*up to reordering of windows and final strings *)
+  (*We show that if fpr is the flattening of a PR instance pr, then the produced BinaryPR instances are equivalent up to reordering of windows and final strings *)
 
   Variable (pr : PR). 
   Variable (isFlattening : isFlatPROf fpr pr). 
 
   Definition finhBinaryPR := PR_to_BinaryPR.hBinaryPR pr.
 
+  (*agreement of produced lists, windows, ... *)
   Lemma isFlatListOf_hom_agree l L : isFlatListOf l L -> hflat l = @h pr L.  
   Proof. 
     destruct isFlattening. 
@@ -71,6 +75,7 @@ Section fixInstanceA.
       apply isFlatListOf_hom_agree in H1; apply in_map_iff; eauto. 
   Qed. 
 
+  (*equivalence of well-formedness *)
   Lemma BinaryPR_instances_wf_equivalent : BinaryPR_wellformed finhBinaryPR <-> BinaryPR_wellformed hBinaryPR. 
   Proof. 
     destruct isFlattening. 
@@ -85,6 +90,7 @@ Section fixInstanceA.
     - unfold hinit in H6. erewrite isFlatListOf_hom_agree in H6; [ | easy]. apply H6. 
   Qed. 
 
+  (*now the instances are in fact equivalent *)
   Lemma BinaryPR_instances_equivalent : BinaryPRLang finhBinaryPR <-> BinaryPRLang hBinaryPR. 
   Proof. 
     unfold BinaryPRLang. destruct isFlattening. 
@@ -103,14 +109,15 @@ Section fixInstanceA.
   Qed. 
 End fixInstanceA.
 
-
+(*as usual, instances not satisfying the syntactic requirements are just mapped to a trivial no instance *)
 Definition trivialNoInstance := Build_BinaryPR 0 0 [] [] [] 0. 
 Lemma trivialNoInstance_isNoInstance : not (BinaryPRLang trivialNoInstance). 
 Proof. 
   intros (H & _). destruct H as (H & _). cbn in H. lia. 
 Qed. 
 
-Definition reduction (fpr : FlatPR) := if FlatPR_wf_dec fpr && isValidFlattening_dec fpr then hBinaryPR fpr else trivialNoInstance. 
+Definition reduction (fpr : FlatPR) :=
+  if FlatPR_wf_dec fpr && isValidFlattening_dec fpr then hBinaryPR fpr else trivialNoInstance.
 
 Lemma FlatPR_to_BinaryPR (fpr : FlatPR) : FlatPRLang fpr <-> BinaryPRLang (reduction fpr).  
 Proof. 

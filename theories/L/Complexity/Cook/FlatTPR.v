@@ -1,8 +1,9 @@
-From PslBase Require Import Vectors.Vectors. 
-From Undecidability Require Import L.Complexity.Cook.Prelim FlatPR FlatFinTypes. 
+From Undecidability.L.Complexity.Cook Require Import Prelim FlatPR FlatFinTypes. 
 From Undecidability.L.Complexity.Cook Require Export TPR.
 From PslBase Require Import Base FinTypes. 
 Require Import Lia.
+
+(**Flat 3-Parallel Rewriting *)
 
 Record FlatTPR := {
   Sigma : nat;
@@ -19,16 +20,21 @@ Definition isValidFlatWindows (l : list (TPRWin nat)) k := (forall win, win el l
 Definition isValidFlatFinal (l : list (list nat)) k := (forall s, s el l -> list_ofFlatType k s).
 Definition isValidFlatInitial (l : list nat) k := list_ofFlatType k l.
 
+(*well-formedness is defined similarly to TPR *)
 Definition FlatTPR_wellformed ftpr := length (init ftpr) >= 3.
+
 Definition isValidFlattening ftpr :=
   isValidFlatInitial (init ftpr) (Sigma ftpr)
   /\ isValidFlatFinal (final ftpr) (Sigma ftpr)
   /\ isValidFlatWindows (windows ftpr) (Sigma ftpr). 
 
-Definition FlatTPRLang (C : FlatTPR) := FlatTPR_wellformed C /\ isValidFlattening C /\ exists (sf : list nat), list_ofFlatType  (Sigma C) sf /\ relpower (valid (rewritesHeadList (windows C))) (steps C) (init C) sf /\ satFinal (final C) sf. 
+Definition FlatTPRLang (C : FlatTPR) :=
+  FlatTPR_wellformed C /\ isValidFlattening C
+  /\ exists (sf : list nat), list_ofFlatType  (Sigma C) sf
+                     /\ relpower (valid (rewritesHeadList (windows C))) (steps C) (init C) sf
+                     /\ satFinal (final C) sf.
 
-(*we can define a relation to TPR instances such that TPR instances and FlatTPR instances are equivalent *)
-
+(** We can define a relation to TPR instances such that TPR instances and FlatTPR instances are equivalent *)
 Inductive isFlatTPRWinPOf (X : finType) (flatwinp : TPRWinP nat) (winp : TPRWinP X) := 
   mkIsFlatTPRWinPOf (Helem1 : finReprEl' (winEl1 flatwinp) (winEl1 winp))
     (Helem2 : finReprEl' (winEl2 flatwinp) (winEl2 winp))
@@ -53,6 +59,7 @@ Inductive isFlatTPROf (fpr : FlatTPR) (pr : TPR) :=
     (Hsteps : steps fpr = TPR.steps pr)
   : isFlatTPROf fpr pr.
 
+(*proof of agreement *)
 Lemma isFlatTPRWinOf_map_index (X : finType) (win : TPRWin X) win' :
   isFlatTPRWinOf win' win -> (prem win' : list nat) = map index (prem win) /\ (conc win' : list nat) = map index (conc win). 
 Proof. 
@@ -263,8 +270,9 @@ Proof.
     + eapply final_flat_agree; eauto. unfold isFlatListOf; reflexivity. 
 Qed. 
 
+(**from a flat instance, we can restore a canonical non-flat instance *)
+
 Require Import PslBase.FiniteTypes.VectorFin PslBase.FiniteTypes.Cardinality. 
-(*unflattening *)
 Lemma unflattenTPRWinP (w : TPRWinP nat) k : TPRWinP_ofFlatType w k -> sigT (fun (w' : TPRWinP (finType_CS (Fin.t k))) => isFlatTPRWinPOf w w'). 
 Proof. 
   intros. destruct w. destruct H as (H1 & H2 & H3). cbn in *.
@@ -323,4 +331,3 @@ Proof.
   constructor; eauto.
   cbn. unfold finRepr. specialize (Card_Fint (Sigma f)). easy.
 Qed.
-    

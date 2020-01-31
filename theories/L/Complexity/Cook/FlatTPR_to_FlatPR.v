@@ -3,11 +3,13 @@ From PslBase Require Import Vectors.Vectors.
 From Undecidability Require Import L.Complexity.Cook.Prelim FlatTPR FlatPR TPR_to_PR.
 Require Import Lia.
 
+(** *Reduction of FlatTPR to FlatPR*)
+
 (*we can completely re-use the construction and correctness results of the TPR-PR reduction *)
 (*as the reduction does not depend on the alphabet being finite *)
 Definition FPR_instance (ftpr : FlatTPR) := Build_FlatPR (FlatTPR.Sigma ftpr) 1 3 (FlatTPR.init ftpr) (PR_windows (FlatTPR.windows ftpr)) (FlatTPR.final ftpr) (FlatTPR.steps ftpr).
 
-Lemma reduction (ftpr : FlatTPR) : FlatTPRLang ftpr <-> FlatPRLang (FPR_instance ftpr). 
+Lemma FlatTPR_to_FlatPR (ftpr : FlatTPR) : FlatTPRLang ftpr <-> FlatPRLang (FPR_instance ftpr). 
 Proof. 
   split; intros. 
   - destruct H as (H & H0 & sf & H1 & H2 & H3). split; [ | split; [ | exists sf; repeat split]].
@@ -56,16 +58,3 @@ Proof.
     + clear H1 H3. cbn in H2. apply relpower_valid_agree, H2. apply H. 
     + eapply final_agree, H3. now apply relpower_valid_length_inv in H2. 
 Qed. 
-
-(*Section fixType. *)
-  (*Variable (X : Type).*)
-  (*Context {H : registered X}.*)
-  (*Run TemplateProgram (tmGenEncode "TPRWinP_enc" (TPRWinP X)). *)
-  (*Run TemplateProgram (tmGenEncode "TPRWin_enc" (TPRWin X)). *)
-
-(*Run TemplateProgram (tmGenEncode "FlatTPR_enc" FlatTPR).*)
-(*Hint Resolve TM_enc_correct : Lrewrite.*)
-
-
-(*Lemma FlatTPR_to_FlatPR : reducesPolyMO FlatTPRLang FlatPRLang. *)
-

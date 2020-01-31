@@ -483,3 +483,13 @@ Proof.
     + intros. cbn in H. inv H. apply IHn in H2 as (n1 & n2 & -> & -> & <-). 
       exists (S n1), n2; now cbn. 
 Qed. 
+
+Lemma app_length_split (X : Type) (v u b c : list X) : v ++ b = u ++ c -> |v| <= |u| -> exists u', u = v ++ u'. 
+Proof. 
+  intros. apply list_length_split1 in H0 as (s1 & s2 & H0 & _ & ->). 
+  rewrite <- app_assoc in H. apply app_eq_length in H as (-> & ->); [ | easy]. 
+  now exists s2. 
+Qed. 
+
+Lemma list_eqn_length (X : Type) (l1 l2 : list X) : l1 = l2 -> |l1| = |l2|. 
+Proof. congruence. Qed. 

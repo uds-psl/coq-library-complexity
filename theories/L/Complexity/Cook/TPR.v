@@ -1,10 +1,22 @@
 From PslBase Require Import Base. 
-From PslBase Require Import Vectors.Vectors. 
 From PslBase Require Import FiniteTypes. 
 From Undecidability Require Import L.Complexity.Cook.Prelim.
 Require Import Lia.
 
-(*we first define some notions for an arbitrary rewritesHead predicate *)
+(** *3-Parallel Rewriting *)
+(*We define a variant of Parallel Rewriting where the width is fixed to 3 and the offset is fixed to 1. 
+  The resulting specialised definitions make reduction from Turing machines easier to construct.
+
+Moreover, we generalise the definition of valid to arbitrary rewritesHead predicates. 
+This allows us to define the reduction from Turing machines using inductive predicates. 
+The list-based version (with a set of windows given as a list) is obtained as a special case.
+
+To that end, we define two variants of 3-PR in this file:
+- the usual variant (TPR) which is based on lists of rules
+- the propositional variant PTPR over an abstract rewritesHead predicate 
+*)
+
+(*We first define some general notions for an arbitrary rewritesHead predicate *)
 Section abstractDefs.
   Variable (X : Type). 
   Notation string := (list X). 
@@ -62,7 +74,9 @@ Section abstractDefs.
     Qed. 
 
     (*the explicit characterisation using bounded quantification *)
-    Definition validExplicit a b := length a = length b /\ forall i, 0 <= i < length a - 2  -> rewritesAt i a b.
+    Definition validExplicit a b := 
+      length a = length b 
+      /\ forall i, 0 <= i < length a - 2  -> rewritesAt i a b.
 
     Lemma valid_iff a b :
       valid a b <-> validExplicit a b.
@@ -93,27 +107,11 @@ Section abstractDefs.
             cbn [length] in H2. assert (0 <= S i < S(|a0|) - 2) by lia. 
             specialize (H2 (S i) H0); eauto. 
     Qed. 
-
   End fixRewritesHead.
+
   Hint Constructors valid. 
 
-  Lemma valid_congruent' (p1 p2 : rewritesHeadAbstract) : (forall u v, p1 u v -> p2 u v) -> forall a b, valid p1 a b -> valid p2 a b. 
-  Proof. 
-    intros.
-    induction H0. 
-    - constructor. 
-    - now constructor. 
-    - constructor 3. apply IHvalid. 
-      now apply H. 
-  Qed.
-
-  Corollary valid_congruent p1 p2 : (forall u v, p1 u v <-> p2 u v) -> forall a b, valid p1 a b <-> valid p2 a b.
-  Proof.
-    intros; split; [apply valid_congruent'; intros; now apply H | ].
-    assert (forall u v, p2 u v <-> p1 u v) by (intros; now rewrite H).
-    apply valid_congruent'. intros; now apply H. 
-  Qed.
-
+  (*valid is congruent with regards to rewritesHead predicates*)
   Lemma valid_monotonous (p1 p2 : rewritesHeadAbstract) : (forall x y, p1 x y -> p2 x y) -> forall x y, valid p1 x y -> valid p2 x y.
   Proof. 
     intros H x y. induction 1.  
@@ -121,6 +119,16 @@ Section abstractDefs.
     - constructor 2; eauto. 
     - apply H in H1. eauto. 
   Qed. 
+
+  Corollary valid_congruent p1 p2 : 
+    (forall u v, p1 u v <-> p2 u v) 
+    -> forall a b, valid p1 a b <-> valid p2 a b.
+  Proof.
+    intros; split; [apply valid_monotonous; intros; now apply H | ].
+    assert (forall u v, p2 u v <-> p1 u v) by (intros; now rewrite H).
+    apply valid_monotonous. intros; now apply H. 
+  Qed.
+
 End abstractDefs. 
 
 Arguments valid {X}. 
@@ -144,9 +152,9 @@ Record TPRWinP (Sigma : Type) := {
                                  }.
 
 Record TPRWin (Sigma : Type) := {
-                                            prem : TPRWinP Sigma;
-                                            conc : TPRWinP Sigma
-                                   }.
+                                  prem : TPRWinP Sigma;
+                                  conc : TPRWinP Sigma
+                                }.
 
 Definition TPRWinP_to_list (sig : Type) (a : TPRWinP sig) := match a with Build_TPRWinP a b c => [a; b; c] end. 
 Coercion TPRWinP_to_list : TPRWinP >-> list. 
@@ -167,7 +175,8 @@ Definition TPR_wellformed C := length (init C) >= 3.
 Implicit Type (C : TPR).
 
 (* the final constraint*)
-Definition satFinal (X : Type) final (s : list X) := exists subs, subs el final /\ substring subs s.
+Definition satFinal (X : Type) final (s : list X) := 
+  exists subs, subs el final /\ substring subs s.
 
 (*specific definitions and results for list-based rules*)
 Section fixInstance.
@@ -208,7 +217,6 @@ Section fixInstance.
     ruleset1 <<= ruleset2 -> rewritesHeadList ruleset1 a b -> rewritesHeadList ruleset2 a b.
   Proof. intros H (r & H1 & H2). exists r. split; [ apply H, H1 | apply H2]. Qed. 
 
-
   Lemma rewritesHead_rule_inv r a b (σ1 σ2 σ3 σ4 σ5 σ6 : Sigma) : rewritesHead r (σ1 :: σ2 :: σ3 :: a) (σ4 :: σ5 :: σ6 :: b) -> r = {σ1, σ2 , σ3} / {σ4 , σ5, σ6}. 
   Proof. 
     unfold rewritesHead. unfold prefix. intros [(b' & H1) (b'' & H2)]. destruct r. destruct prem0, conc0. cbn in H1, H2. congruence. 
@@ -229,7 +237,10 @@ End fixInstance.
 
 
 (*we define it using the rewritesHead_pred rewrite predicate *)
-Definition TPRLang (C : TPR) := TPR_wellformed C /\ exists (sf : list (Sigma C)), relpower (valid (rewritesHeadList (windows C))) (steps C) (init C) sf /\ satFinal (final C) sf. 
+Definition TPRLang (C : TPR) := 
+  TPR_wellformed C 
+  /\ exists (sf : list (Sigma C)), relpower (valid (rewritesHeadList (windows C))) (steps C) (init C) sf 
+    /\ satFinal (final C) sf. 
 
 (** *variant PTPR using propositional rules *)
 

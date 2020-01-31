@@ -1,8 +1,9 @@
-From PslBase Require Import Base. 
-From PslBase Require Import FiniteTypes. 
+From PslBase Require Import Base.
 Require Import Lia.
 From Undecidability Require Import L.Complexity.Cook.Prelim.
 From Undecidability.L.Complexity.Cook Require Export PR.
+
+(** Parallel Rewriting restricted to a binary alphabet *)
 
 Record BinaryPR := {
   offset : nat;
@@ -13,6 +14,7 @@ Record BinaryPR := {
   steps : nat
   }.
 
+(*the same well-formedness conditions as for Parallel Rewriting *)
 Definition BinaryPR_wellformed (c : BinaryPR) := 
   width c > 0 
   /\ offset c > 0
@@ -22,4 +24,6 @@ Definition BinaryPR_wellformed (c : BinaryPR) :=
   /\ (exists k, length (init c) = k * offset c).
 
 Definition BinaryPRLang (C : BinaryPR) := 
-  BinaryPR_wellformed C /\ exists (sf : list bool), relpower (valid (offset C) (width C) (windows C)) (steps C) (init C) sf /\ satFinal (offset C) (length (init C)) (final C) sf.
+  BinaryPR_wellformed C
+  /\ exists (sf : list bool), relpower (valid (offset C) (width C) (windows C)) (steps C) (init C) sf
+                     /\ satFinal (offset C) (length (init C)) (final C) sf.

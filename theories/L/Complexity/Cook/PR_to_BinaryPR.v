@@ -3,7 +3,11 @@ From PslBase Require Import Vectors.Vectors.
 From Undecidability.L.Complexity.Cook Require Import Prelim BinaryPR PR PR_homomorphisms. 
 Require Import Lia.
 
+(** *PR to BinaryPR *)
+(*We reduce arbitrary PR instances to a binary alphabet by using the results on uniform homomorphisms. *)
+
 Section fixInstance. 
+  (*we first do the reduction for wellformed instances, satisfying the syntactic requirements *)
   Variable (pr : PR). 
 
   Notation Sigma := (Sigma pr).
@@ -14,11 +18,11 @@ Section fixInstance.
   Notation final := (final pr).
   Notation steps := (steps pr). 
 
-  (*we first do the reduction for wellformed instances, satisfying the syntactic requirements *)
   Context (A : PR_wellformed pr). 
   Context (A1 : |elem Sigma| > 0). (*instances without this property are trivial no instances *)
   
   (*we fix the homomorphism on natural numbers *)
+  (*it just encodes the alphabet using a unary encoding: there is one indicator bit for each element of the alphabet*)
   Definition hNat (Sig : nat) (x : nat) := if leb (S x) Sig then repEl x false ++ [true] ++ repEl (Sig - x -1) false
                                                 else repEl Sig false. 
 
@@ -109,15 +113,15 @@ Section fixInstance.
     split; intros. 
     - destruct H as (_ & sf & H1 & H2).
       split; [ apply PR_homomorphism_wf; auto | ]. 
-      apply PR_homomorphism_iff; eauto. 
-      apply h'_injective. apply h'_length. 
+      apply PR_homomorphism_iff; eauto; [ apply h'_length | apply h'_injective].
     - destruct H as (_ & H1).
       split; [ apply A | ]. 
-      apply (PR_homomorphism_iff h'_injective A1 A1 h'_length A) in H1. 
+      apply (PR_homomorphism_iff h'_length A1 h'_injective A) in H1. 
       apply H1. 
   Qed. 
 End fixInstance. 
 
+(*for non-wellformed instances, we map to a trivial no-instance *)
 Definition trivialNoInstance := Build_BinaryPR 0 0 [] [] [] 0. 
 Lemma trivialNoInstance_isNoInstance : not (BinaryPRLang trivialNoInstance). 
 Proof. 

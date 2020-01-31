@@ -1,9 +1,23 @@
-From PslBase Require Import Base. 
-From PslBase Require Import Vectors.Vectors. 
-From PslBase Require Import FiniteTypes. 
+From PslBase Require Import Base FiniteTypes.
 Require Import Lia.
 From Undecidability Require Import L.Complexity.Cook.Prelim.
 
+(** *Parallel Rewriting *)
+(*
+  Parallel Rewriting is a string-based problem. 
+  We are given an initial string and ask whether this string can be rewritten to another string of the same length in exactly t rewrite steps.
+  Rewrite steps are constrained by a set of rewrite windows: Each rewrite window has constant width w and consists of a premise and a conclusion.
+  In order for a rewrite step from a string A to a string B to be valid, at each multiple of an offset o in the strings A and B, there needs to hold a rewrite window,
+  i.e. there needs to exist some rewrite window the premise of which matches A at that offset and the conclusion of which matches B at that offset.
+
+  Moreover, we have a final constraint: The final string F which is reaches after t steps should satisfy a substring constraint.
+  We are given a set of substrings and one of those strings needs to be a substring of F at an offset which is a muliple of o.
+
+  Abstractly, the offset o can be interpreted in the following way: o subsequent symbols together form an abstract symbol.
+  Therefore we impose constraints on the relation between o, w and the length of the strings, namely that o symbols always belong together.
+*)
+
+(*a single rewrite window *)
 Record PRWin (Sigma : Type):= {
                                 prem : list Sigma;
                                 conc : list Sigma
@@ -13,12 +27,13 @@ Record PR := {
                Sigma : finType;
                offset : nat; 
                width : nat;  
-               init : list Sigma;  (* length is encoded implicitly as the length of init*) (*length should be a multiple of offset *)
+               init : list Sigma;  (* the length is encoded implicitly as the length of init*)
                windows : list (PRWin Sigma);
                final : list (list Sigma);
                steps : nat
              }.
 
+(*the windows need to have a size of width *)
 Definition PRWin_of_size (X : Type) (win : PRWin X) (k : nat) := |prem win| = k /\ |conc win| = k. 
 
 Definition PRWin_of_size_dec (X : Type) width (win : PRWin X) := Nat.eqb (|prem win|) width && Nat.eqb (|conc win|) width.
@@ -27,10 +42,11 @@ Proof.
   unfold PRWin_of_size, PRWin_of_size_dec. rewrite andb_true_iff. rewrite <- !(reflect_iff _ _ (Nat.eqb_spec _ _ )). easy.
 Qed. 
 
+(*we impose a number of syntactic constraints; instances not satisfying these constraints do not behave in an intuitive way *)
 Definition PR_wellformed (c : PR) := 
   width c > 0 
   /\ offset c > 0
-  /\ (exists k, k > 0 /\ width c = k * offset c) (*instances not satisfying this property are wonderfully unintuitive *)
+  /\ (exists k, k > 0 /\ width c = k * offset c) (*this is in line with the abstract interpretation of seeing offset symbols as one *)
   /\ length (init c) >= width c (*we do not want vacuous rewrites *)
   /\ (forall win, win el windows c -> PRWin_of_size win (width c)) 
   /\ (exists k, length (init c) = k * offset c).
@@ -60,7 +76,7 @@ Proof.
 Qed. 
 
 
-(**we do some general definitions first which can be reused for the flat version *)
+(*we now give a semantics to PR instances *)
 Section fixX. 
   Variable (X : Type).
   Variable (offset : nat). 
@@ -68,7 +84,6 @@ Section fixX.
   Variable (windows : list (PRWin X)). 
 
   Context (G0 : width > 0).
-  (*Context (exists k, length (init) = k * offset).*)
 
   (* the final constraint*)
   (* this is defined in terms of the offset: there must exist an element of a list of strings final which is a substring of the the string s at a multiple of offset *)
@@ -87,13 +102,15 @@ Section fixX.
     repeat rewrite firstn_O; now cbn. 
   Qed. 
 
-  Lemma rewritesAt_step (win : PRWin X) a b u v (i:nat) : length u = offset -> length v = offset -> rewritesAt win i a b <-> rewritesAt win (i + offset) (u ++ a) (v ++ b). 
+  Lemma rewritesAt_step (win : PRWin X) a b u v (i:nat) : length u = offset -> length v = offset -> rewritesAt win i a b <-> rewritesAt win (i + offset) (u ++ a) (v ++ b).
   Proof.
     intros. unfold rewritesAt.
     rewrite Nat.add_comm. now repeat rewrite skipn_add. 
   Qed. 
 
-  (*validity of a rewrite *)
+  (** validity of a rewrite *)
+  (*we use an inductive definition; the main motivation behind this definition is to only have a rewritesHead premise in one case as this leads to fewer cases in proofs*)
+  (*the drawback of this definition is that it allows vacuous rewrites (using only the first two rules); but if the two strings have a length of at least width, this is not a problem *)
   Inductive valid: list X -> list X -> Prop :=
   | validB: valid [] [] 
   | validSA a b u v : valid a b -> length a < width - offset -> length u = offset -> length v = offset -> valid (u++ a) (v++ b)
@@ -107,11 +124,7 @@ Section fixX.
     - repeat rewrite app_length; firstorder. 
   Qed. 
 
-  Lemma relpower_valid_length_inv k a b : relpower valid k a b -> length a = length b. 
-  Proof. 
-    induction 1; [ auto | rewrite <- IHrelpower; now apply valid_length_inv]. 
-  Qed. 
-
+  (*we can rewrite to any string if the length is less than width *)
   Lemma valid_vacuous (a b : list X) m: |a| = |b| -> |a| < width -> |a| = m * offset -> valid a b.
   Proof. 
     clear G0. 
@@ -137,6 +150,7 @@ Section fixX.
     - setoid_rewrite app_length. destruct IHvalid as (k & ->).  exists (S k); nia. 
   Qed. 
 
+  (*we can give an explicit characterisation which better captures the original intuition: a rewrite window has to hold at every multiple of offset *)
   Definition validExplicit a b := length a = length b 
     /\ (exists k, length a = k * offset) 
     /\ forall i, 0 <= i < length a + 1 - width 
@@ -192,20 +206,59 @@ Section fixX.
           exists win; split; [assumption | ]. 
           rewrite H2 in H7. now apply (proj2 (@rewritesAt_step win a' b' u v i H2 H1)) in H7. 
   Qed. 
+
+  (*in order to reason about a sequence of rewrites, we use relational powers *)
+  Lemma relpower_valid_length_inv k a b : relpower valid k a b -> length a = length b. 
+  Proof. 
+    induction 1; [ auto | rewrite <- IHrelpower; now apply valid_length_inv]. 
+  Qed. 
 End fixX. 
 
-Implicit Type (C : PR).
+(*we can now define the language of valid PR instances *)
+Definition PRLang (C : PR) :=
+  PR_wellformed C
+  /\ exists (sf : list (Sigma C)),
+    relpower (valid (offset C) (width C) (windows C)) (steps C) (init C) sf
+    /\ satFinal (offset C) (|init C|) (final C) sf.
+
+
+Section fixValid.
+  (** we consider syntactically equivalent instances: equivalent instances are obtained by reordering the windows and final substrings *)
+  Variable (X : Type).
+  Variable (offset width l : nat). 
+
+  Hint Constructors valid. 
+  Lemma valid_windows_monotonous (a b : list X) (w1 w2 : list (PRWin X)) : w1 <<= w2 -> valid offset width w1 a b -> valid offset width w2 a b.
+  Proof. 
+    intros. induction H0. 
+    - eauto. 
+    - eauto. 
+    - apply H in H3. eauto. 
+  Qed. 
+
+  Lemma valid_windows_equivalent (a b : list X) (w1 w2 : list (PRWin X)) : w1 === w2 -> valid offset width w1 a b <-> valid offset width w2 a b.
+  Proof. 
+    intros [H1 H2]; split; now apply valid_windows_monotonous. 
+  Qed. 
+
+  Lemma satFinal_final_monotonous (f1 f2 : list (list X)) s: f1 <<= f2 -> satFinal offset l f1 s -> satFinal offset l f2 s. 
+  Proof. 
+    intros. destruct H0 as (subs & k & H1 & H2 & H3).
+    exists subs, k. apply H in H1. easy.
+  Qed. 
+
+  Lemma satFinal_final_equivalent (f1 f2 : list (list X)) s: f1 === f2 -> satFinal offset l f1 s <-> satFinal offset l f2 s. 
+  Proof. 
+    intros [H1 H2]; split; now apply satFinal_final_monotonous. 
+  Qed. 
+End fixValid.
 
 Section fixInstance.
+  (*results specific to PR instances *)
   Variable (c : PR). 
   Context (wf : PR_wellformed c). 
 
   Notation string := (list (Sigma c)).
-  Definition window := PRWin (Sigma c). 
-
-  Implicit Type (s a b: string). 
-  Implicit Type (win : window).
-  Implicit Type (x y : Sigma c).
 
   Definition isRule r := r el windows c.
   Lemma isRule_length r : isRule r -> length (prem r) = width c /\ length (conc r) = width c.
@@ -220,40 +273,3 @@ Section fixInstance.
     - rewrite app_length, (proj2 (isRule_length H0)). lia. 
   Qed. 
 End fixInstance. 
-
-Definition PRLang (C : PR) := PR_wellformed C /\ exists (sf : list (Sigma C)), relpower (valid (offset C) (width C) (windows C)) (steps C) (init C) sf /\ satFinal (offset C) (|init C|) (final C) sf. 
-
-(*we consider equivalent instances: equivalent instances are obtained by reordering the windows and final substrings *)
-
-Hint Constructors valid. 
-Lemma valid_windows_monotonous (X : Type) (offset width : nat) (a b : list X) (w1 w2 : list (PRWin X)) : 
-  w1 <<= w2
-  -> valid offset width w1 a b -> valid offset width w2 a b.
-Proof. 
-  intros. induction H0. 
-  - eauto. 
-  - eauto. 
-  - apply H in H3. eauto. 
-Qed. 
-
-Lemma valid_windows_equivalent (X : Type) (offset width : nat) (a b : list X) (w1 w2 : list (PRWin X)) : 
-  w1 === w2 
-  -> valid offset width w1 a b <-> valid offset width w2 a b.
-Proof. 
-  intros [H1 H2]; split; now apply valid_windows_monotonous. 
-Qed. 
-
-Lemma satFinal_final_monotonous (X : Type) (offset l : nat) (f1 f2 : list (list X)) s: 
-  f1 <<= f2 -> satFinal offset l f1 s -> satFinal offset l f2 s. 
-Proof. 
-  intros. destruct H0 as (subs & k & H1 & H2 & H3).
-  exists subs, k. apply H in H1. easy.
-Qed. 
-
-Lemma satFinal_final_equivalent (X : Type) (offset l : nat) (f1 f2 : list (list X)) s: 
-  f1 === f2 -> satFinal offset l f1 s <-> satFinal offset l f2 s. 
-Proof. 
-  intros [H1 H2]; split; now apply satFinal_final_monotonous. 
-Qed. 
-
-

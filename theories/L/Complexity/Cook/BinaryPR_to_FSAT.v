@@ -1,12 +1,32 @@
 From PslBase Require Import Base. 
 From Undecidability.L.Complexity.Cook Require Import Prelim FSAT BinaryPR.
 From Undecidability.L.Complexity Require Import Tactics. 
-
 From Undecidability.L.Datatypes Require Import Lists. 
-
 Require Import Lia. 
 
-Require Import BinNat BinNums.
+(** *Reduction of BinaryPR to FSAT *)
+(*High-level overview:
+We lay out the BinaryPR computation in a tableau which has (steps + 1) lines, where steps is the number of steps of the BPR instance, 
+and each line has a length which is equal to the length of the BPR strings.
+Each cell of the tableau corresponds to one symbol of a BPR string and is encoded using a single Boolean variable in the FSAT instance.
+
+The FSAT formula consists of three gadgets, encoding:
+- the constraint on the initial string
+- the validity of rewrites 
+- the final constraints.
+
+The constraint on the initial string is straightforward to encode: We just have a big AND over the positions of the string.
+
+For the validity of rewrites, we have a AND consisting of a subformula for each of the rewrites.
+Each rewrite in turn forces that the successor string evolves validly from the current string - we have an AND over the offsets of the string
+at which rewrite windows have to hold. 
+For each of the offsets, we then have a disjunction over all rewrite windows. 
+That a rewrite window holds at a position is encoded similarly to the initial string.
+
+For the final constraint, we have a disjunction over the final strings and a nested disjunction over all positions at which a string can be a substring.
+*)
+
+(*Require Import BinNat BinNums.*)
 (*Local Open Scope N_scope. *)
 
 (*SearchAbout "peano_rec".*)
@@ -66,7 +86,6 @@ Section fixInstance.
 
   Context (A : BinaryPR_wellformed bpr). 
   Notation llength := (length init). 
-
   Implicit Types (a : assgn) (v : var). 
 
   (*convenience functions for creating formulas *)
@@ -833,7 +852,3 @@ Proof.
     + apply BinaryPR_wf_dec_correct in H1. apply reduction_wf in H; easy. 
     + now apply trivialNoInstance_isNoInstance in H. 
 Qed. 
-  
-
-
-

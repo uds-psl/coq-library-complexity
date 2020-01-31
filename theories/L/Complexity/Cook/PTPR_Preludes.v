@@ -3,6 +3,26 @@ From PslBase Require Import Base.
 From PslBase Require Import FinTypes. 
 Require Import Lia. 
 
+(*We introduce preludes for TPR instances (for simplicity, we restrict ourselves to the propositional variant PTPR) *)
+(* Preludes allow us to reduce the problem "∃ init, P init /\ PTPRLang (instance(init))" to "PTPRLang (instance')", where 
+  instance is a PTPR instance which lacks an initial string and P is an arbitrary predicate on initial strings. 
+  A prelude is a set of rewrite windows together with a new initial string which generates a new string.
+  
+  If we can find a set of rewrite windows and an initial string as well as a number of steps t' such that the initial string
+  can rewrite in t' steps to exactly those strings satisfying P, we can do the above reduction by adding the new rules, fixing 
+  the initial string and adding t' to the number of steps of instance. 
+
+  In order to ensure that the new rewrite windows and the old ones do not interfere, we require their alphabets to be disjoint
+  (but of course, the prelude needs to rewrite to strings of the old alphabet; it just is not allowed to rewrite _from_ 
+  strings of the old alphabet). 
+  In this formalisation, this constraint is mostly enforced syntactically by taking the new alphabet to be the sum of 
+  the prelude alphabet and the old alphabet.
+  *)
+
+(* Remark: One can also see preludes of providing a limited form of compositionality; for instance, one could also show 
+  that preludes allow one to reduce an existential question to another (possibly simpler) existential question.
+  *)
+
 Section fixPTPRInstance. 
   (*original instance lacking an initial string*)
   Variable (Sigma : Type). 
@@ -22,7 +42,7 @@ Section fixPTPRInstance.
   (*otherwise, vacuous rewrites destroy everything *)
   Variable (A0 : l >= 3). 
 
-  (*the question now is: does there exists x0 satisfying initCond such that it ends up in a final state? *)
+  (*the question now is: does there exist x0 satisfying initCond such that it ends up in a final state? *)
   Definition ExPTPR := exists x0, |x0| = l /\ initCond x0 /\ PTPRLang (Build_PTPR x0 p finalCondition t). 
 
   (*a prelude generates initial strings satisfying initCond *)
@@ -31,9 +51,7 @@ Section fixPTPRInstance.
   Variable (FSigma' : finTypeC (EqType Sigma')). 
 
   Notation combSigma := (sum Sigma Sigma').
-
   Variable (p' : Sigma' -> Sigma' -> Sigma' -> combSigma -> combSigma -> combSigma -> Prop). 
-
   Variable (initialString : list Sigma').   
   Variable (t' : nat). 
 
@@ -54,7 +72,7 @@ Section fixPTPRInstance.
   (*the prelude rules always produce a string that is a valid initial string for the original instance, up to the injection inl *)
   Variable (A1: forall x0, relpower (valid (rewritesHeadInd liftPrelude)) t' (map inr initialString) x0 -> isOrigString x0). 
 
-  (*disjointness: string is produced too early *)
+  (*disjointness: string is not produced too early *)
   Variable (A2 : forall k x, k < t' -> relpower (valid (rewritesHeadInd liftPrelude)) k (map inr initialString) x -> isPreludeString x).  
 
   (*completeness *)
@@ -66,12 +84,10 @@ Section fixPTPRInstance.
   (*compatibility *)
   Variable (A5 : |initialString| = l). 
 
-
   Lemma liftPrelude_subs_combP : windowPred_subs liftPrelude combP. 
   Proof. 
     unfold windowPred_subs. intros. inv H. eauto. 
   Qed. 
-
 
   Hint Constructors valid. 
 

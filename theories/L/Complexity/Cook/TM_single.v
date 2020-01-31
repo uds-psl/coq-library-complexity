@@ -2,10 +2,13 @@ From Undecidability.TM Require Import TM.
 From Undecidability.L.Complexity.Cook Require Import Prelim. 
 Require Import Lia. 
 
-(*we introduce easier definitions for single-tape Turing machines where we do not wrap the single tape in a singleton vector *)
-(*we also define a relation-based computation relation (instead of using loopM) *)
+(*We introduce easier definitions for single-tape Turing machines where the single tape is not wrapped in a singleton vector.*)
+(*We also define a relpower-based computation relation (instead of using loopM). 
+  (This is motivated by the fact that it is easier to reason inductively about a relpower-based relation.)
+*)
+
 Section TM_single. 
-  (*we use a variant of the Turing machine definitions fixed to a single tape *)
+  (*We use a variant of the Turing machine definitions fixed to a single tape *)
 
   Variable (Sigma : finType).
   Variable (TM : mTM Sigma 1). 
@@ -31,6 +34,7 @@ Section TM_single.
     intros. revert t. apply Vector.case0. easy.
   Qed. 
 
+  (*agreement for single computation steps *)
   Lemma sstep_agree1 c : sconfig_for_mconfig (@step Sigma 1 TM (mconfig_for_sconfig c)) = sstep strans c.
   Proof. 
     destruct c. cbn.
@@ -57,6 +61,14 @@ Section TM_single.
   Definition configState c := match c with (q, _) => q end. 
   Definition sstepRel s s' := halt (configState s) = false /\ sstep strans s = s'.
 
+  Notation "s '≻' s'" := (halt (configState s) = false /\ sstep strans s = s') (at level 50).
+  Notation "s '≻(' k ')' s'" := (relpower sstepRel k s s') (at level 40). 
+
+  (*this is similar to what loopM does*)
+  Notation "s '▷(' k ')' s'" := (s ≻(k) s' /\ halt (configState s') = true) (at level 40).
+  Notation "s '▷(≤' k ')' s'" := (exists l, l <= k /\ s ▷(l) s') (at level 40).
+
+  (*agreement of loop and relpower *)
   Lemma relpower_loop_agree l q tape q' tape':
     relpower sstepRel l (q, tape) (q', tape')
     -> halt (configState (q', tape')) = true
@@ -71,14 +83,6 @@ Section TM_single.
        setoid_rewrite <- (sstep_agree2 (mk_mconfig q [|tape|])). 
        cbn. destruct TM.trans. inv F2. cbn. apply H3. 
   Qed. 
-
-  Notation "s '≻' s'" := (halt (configState s) = false /\ sstep strans s = s') (at level 50).
-  Notation "s '≻(' k ')' s'" := (relpower sstepRel k s s') (at level 40). 
-
-  (*this is similar to what loopM does, but using the unfolded TM *)
-  Notation "s '▷(' k ')' s'" := (s ≻(k) s' /\ halt (configState s') = true) (at level 40).
-
-  Notation "s '▷(≤' k ')' s'" := (exists l, l <= k /\ s ▷(l) s') (at level 40).
 
   Lemma loop_relpower_agree q tape q' tape' n: 
     loopM (mk_mconfig q [|tape|]) n = Some (mk_mconfig q' [|tape'|]) 
@@ -101,7 +105,8 @@ Section TM_single.
       + apply F3. 
   Qed. 
   
-  Lemma loopM_halt sig l (M : mTM sig l) (c : TM.mconfig sig (TM.states M) l) n (q' : TM.states M) tape' : loopM c n = Some (mk_mconfig q' tape') -> TM.halt q' = true.
+  Lemma loopM_halt sig l (M : mTM sig l) (c : TM.mconfig sig (TM.states M) l) n (q' : TM.states M) tape' : 
+    loopM c n = Some (mk_mconfig q' tape') -> TM.halt q' = true.
   Proof. 
     intros. revert c q' tape' H. induction n; intros; cbn in H. 
     + unfold haltConf in H. destruct c. cbn in H. destruct (TM.halt cstate) eqn:H1; [ | congruence]. 
@@ -111,6 +116,7 @@ Section TM_single.
       * eapply IHn, H. 
   Qed.
 
+  (*A Turing machine can only use one additional cell per computation step. *)
   Lemma tm_step_size q tp q' tp' l: (q, tp) ≻ (q', tp') -> sizeOfTape tp = l -> sizeOfTape tp' <= S l. 
   Proof. 
     intros. 

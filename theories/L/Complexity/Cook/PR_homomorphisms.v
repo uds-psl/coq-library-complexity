@@ -1,13 +1,13 @@
 From PslBase Require Import Base FiniteTypes. 
-From PslBase Require Import Vectors.Vectors. 
 From Undecidability.L.Complexity.Cook Require Import Prelim PR UniformHomomorphisms.
 From Undecidability.L.Complexity.Cook Require BinaryPR .
 Require Import Lia.
 
-(*We show that we can apply a uniform homomorphism to a PR instance if the homomorphism is injective on its alphabet *)
-Section fixInstance.  
-  Variable (Y : finType).
+(** *Results on the behaviour of PR under string homomorphisms *)
+(*specifically, we show that we can obtain equivalent PR instances by applying injective uniform homomorphisms*)
 
+Section fixInstance.  
+  Variable (Y : finType). (*target alphabet of the homomorphism *)
   Variable (fpr : PR). 
 
   Notation Sigma := (Sigma fpr).
@@ -18,16 +18,23 @@ Section fixInstance.
   Notation final := (final fpr).
   Notation steps := (steps fpr). 
 
+  (*a unique homomorphism is defined by h' *)
   Variable (h' : Sigma -> list Y).
-
   Definition h := canonicalHom h'. 
   
-  Context (A2 : injective h'). 
-  Context (A3 : |elem Sigma| > 0). 
+  (*A0 and A1 model uniformity and ε-freeness *)
   Variable (k : nat). 
-  Context (A1 : k >= 1). 
   Context (A0 : forall x, |h' x| = k). 
+  Context (A1 : k >= 1). 
 
+  (*of course, we need injectivity *)
+  Context (A2 : injective h'). 
+
+  (*finally, we require the source alphabet to be non-trivial *)
+  (*this is wlog as the PR instance is trivial if Sigma is empty *)
+  Context (A3 : |elem Sigma| > 0). 
+
+  (*we show basic results about h *)
   Lemma h_unifHom : uniform_homomorphism h. 
   Proof. 
     repeat split. 
@@ -36,39 +43,14 @@ Section fixInstance.
     - intros. cbn. rewrite app_nil_r. now rewrite A0. 
   Qed. 
 
-  Lemma h_nil_cons x l : not (|h []| = |h (x :: l)|). 
-  Proof. 
-    intros H. replace (x ::l) with ([x] ++ l) in H by now cbn.
-    rewrite (proj1 h_unifHom) in H. rewrite (homo_nil (proj1 h_unifHom)) in H. 
-    rewrite !app_length in H. cbn in H. rewrite app_nil_r in H. 
-    specialize (A0 x). lia.
-  Qed. 
-
-  Lemma h_length_inv l1 l2 : |h l1| = |h l2| -> |l1| = |l2|. 
-  Proof. 
-    revert l2. induction l1; intros. 
-    + destruct l2; [easy | now apply h_nil_cons in H].  
-    + destruct l2; [ symmetry in H; now apply h_nil_cons in H | ]. 
-      cbn. f_equal. apply IHl1. 
-      rewrite homo_cons in H; [ | apply h_unifHom]. 
-      rewrite homo_cons with (x := e) in H; [ | apply h_unifHom].
-      rewrite !app_length in H.
-      rewrite (proj1 (proj2 h_unifHom)) with (y := e) in H. lia. 
-  Qed. 
-
-  Lemma h_length_inv' l1 l2 : h l1 = h l2 -> |l1| = |l2|. 
-  Proof. intros; now apply h_length_inv. Qed. 
-
-  Lemma list_eqn_length (X : Type) (l1 l2 : list X) : l1 = l2 -> |l1| = |l2|. 
-  Proof. congruence. Qed. 
-
+  Hint Extern 4 (uniform_homomorphism h) => apply h_unifHom. 
   Lemma h_injective l1 l2 : h l1 = h l2 -> l1 = l2. 
   Proof. 
     revert l2. induction l1; intros l2 H0. 
     - destruct l2; [cbn in *; reflexivity | ]. 
       cbn in H0. apply list_eqn_length in H0. rewrite app_length in H0. cbn in H0. 
       specialize (A0 e). lia. 
-    - destruct l2; [ apply h_length_inv' in H0; cbn in *; congruence | ]. 
+    - destruct l2; [ apply h_length_inv' in H0; cbn in *; auto; congruence | ]. 
       rewrite homo_cons in H0; [ | apply h_unifHom ]. 
       rewrite homo_cons with (x := e) in H0; [ | apply h_unifHom]. 
       apply app_eq_length in H0 as (H0 & H0'); [ | apply (proj1 (proj2 (h_unifHom)))]. 
@@ -81,13 +63,6 @@ Section fixInstance.
     induction x. 
     - cbn. lia. 
     - cbn. rewrite app_length. unfold h, canonicalHom in IHx. rewrite IHx. rewrite A0. nia. 
-  Qed. 
-
-  Lemma h_nil_inv a : h a = [] -> a = []. 
-  Proof. 
-    specialize (h_multiplier a) as H. 
-    destruct a; [ easy | ]. intros H0. 
-    rewrite H0 in H. cbn in *; nia. 
   Qed. 
 
   Lemma h_app_inv1 a u v : h a = u ++ v -> |u| = k -> exists a1 a2, a = a1::a2 /\ h [a1] = u /\ h a2 = v. 
@@ -114,6 +89,7 @@ Section fixInstance.
       + apply H6. 
   Qed. 
 
+  (*the transformed PR instance *)
   Definition hoffset := k * offset. 
   Definition hwidth := k * width. 
   Definition hinit := h init. 
@@ -122,15 +98,43 @@ Section fixInstance.
   Definition hfinal := map h final. 
   Definition hsteps := steps. 
 
+  Definition hPR := Build_PR hoffset hwidth hinit hwindows hfinal hsteps.
+
+  (*from now on, we assume a well-formed instance for the main results *)
   Context (A : PR_wellformed fpr). 
 
-  Lemma rewritesHead_homomorphism1 win a b : 
-    win el windows -> rewritesHead win a b -> rewritesHead (hwindow win) (h a) (h b). 
+  Lemma hPR_wf : PR_wellformed hPR. 
   Proof. 
-    unfold hwindow. destruct win. intros H0 ((c1 & H1) & (c2 & H2)). 
-    subst. split; cbn -[canonicalHom]; rewrite (proj1 h_unifHom); unfold prefix; eauto.
+    destruct A as (F1 & F2 & F3 & F4 & F5 & F6). 
+    unfold PR_wellformed. cbn. unfold hwidth, hoffset, hinit, hwindows, hsteps. repeat match goal with [ |- _ /\ _] => split end; try nia.
+    - destruct F3 as (k0 & F3 & F3'). exists k0; split; [easy | nia].
+    - rewrite h_multiplier. nia.
+    - intros win H. apply in_map_iff in H as (win' & <- & H). apply F5 in H. 
+      destruct win'; destruct H as [H1 H2]. cbn in *. split; unfold hwindow; cbn; rewrite h_multiplier; nia. 
+    - destruct F6 as (k0 & F6). exists k0. rewrite h_multiplier. nia. 
   Qed. 
 
+  (*we show equivalence of the original instance and the transformed instance*)
+
+  (*agreement of rewritesHead *)
+  Lemma rewritesHead_homomorphism_iff win a b : 
+    win el windows -> rewritesHead win a b <-> rewritesHead (hwindow win) (h a) (h b). 
+  Proof. 
+    split.
+    - unfold hwindow. destruct win. intros ((c1 & H1) & (c2 & H2)). 
+      subst. split; cbn -[canonicalHom]; rewrite (proj1 h_unifHom); unfold prefix; eauto.
+    - intros. unfold hwindow in H0. destruct win. destruct H0 as ((c1 & H1) & (c2 & H2)). 
+      cbn in *. destruct A as (_ & _ & _ & _ & A4 & _ ). 
+      eapply h_app_inv in H1 as (a1 & a2 & -> & H1 & <-); [ | rewrite Nat.mul_comm; apply h_multiplier].  
+      eapply h_app_inv in H2 as (b1 & b2 & -> & H2 & <-); [ | rewrite Nat.mul_comm; apply h_multiplier]. 
+      apply h_injective in H1 as <-.
+      apply h_injective in H2 as <-.
+      split; unfold prefix; eauto.  
+  Qed. 
+
+  (*for the direction from homomorphisms to the original instance, we actually need a stronger result telling us that 
+    the conclusion is again in the image of the homomorphism
+    *)
   Lemma rewritesHead_homomorphism2 win a1 a2 u v: 
     win el hwindows 
     -> |a1| = offset 
@@ -157,23 +161,13 @@ Section fixInstance.
       + unfold prefix. exists c2. now rewrite (proj1 h_unifHom), <- app_assoc. 
   Qed. 
 
-  Lemma rewritesHead_homomorphism_iff win a b : 
-    win el windows -> rewritesHead win a b <-> rewritesHead (hwindow win) (h a) (h b). 
-  Proof. 
-    split; intros.
-    - now apply rewritesHead_homomorphism1.
-    - unfold hwindow in H0. destruct win. destruct H0 as ((c1 & H1) & (c2 & H2)). 
-      cbn in *. destruct A as (_ & _ & _ & _ & A4 & _ ). 
-      eapply h_app_inv in H1 as (a1 & a2 & -> & H1 & <-); [ | rewrite Nat.mul_comm; apply h_multiplier].  
-      eapply h_app_inv in H2 as (b1 & b2 & -> & H2 & <-); [ | rewrite Nat.mul_comm; apply h_multiplier]. 
-      apply h_injective in H1 as <-.
-      apply h_injective in H2 as <-.
-      split; unfold prefix; eauto.  
-  Qed. 
-
+  (*agreement for valid*)
   Hint Constructors valid. 
 
-  Lemma valid_homomorphism1 a b : |a| >= width -> valid offset width windows a b -> valid hoffset hwidth hwindows (h a) (h b).
+  Lemma valid_homomorphism1 a b : 
+    |a| >= width 
+    -> valid offset width windows a b 
+    -> valid hoffset hwidth hwindows (h a) (h b).
   Proof. 
     intros H0. unfold hwidth, hoffset.
     induction 1. 
@@ -196,11 +190,20 @@ Section fixInstance.
       * rewrite <- !(proj1 h_unifHom). apply rewritesHead_homomorphism_iff; assumption.
   Qed. 
 
-  Lemma valid_homomorphism2 a b' : |a| >= width -> valid hoffset hwidth hwindows (h a) b' -> exists b, b' = h b /\ valid offset width windows a b.
+  (*for the other direction, we again prove a stronger result saying that the conclusion is in the image of the homomorphism *)
+  (*the main difficulty lies in showing that the windows cover the whole string and we do not have vacuous rewrites*)
+  (*then, the lemma decomposes to two interesting cases: 
+    - the case where a single rewrite window covers the whole string
+    - the case where a part of the string is already covered by some windows and we add a new window at the front
+  *)
+  Lemma valid_homomorphism2 a b' : 
+    |a| >= width 
+    -> valid hoffset hwidth hwindows (h a) b' 
+    -> exists b, b' = h b /\ valid offset width windows a b.
   Proof. 
     unfold hoffset, hwidth. intros.  
     remember (h a). revert a Heql H. induction H0. 
-    - intros. symmetry in Heql. apply h_nil_inv in Heql. subst. exists []. 
+    - intros. symmetry in Heql. apply h_nil_inv in Heql; [ | auto]. subst. exists []. 
       split; [symmetry; apply homo_nil, (proj1 h_unifHom) | eauto ]. 
     - intros. clear IHvalid. symmetry in Heql.
       eapply h_app_inv in Heql as (a1 & a2 & -> & F1 & F2); [ | rewrite Nat.mul_comm; apply H1]. 
@@ -276,7 +279,8 @@ Section fixInstance.
 
   (*we can obtain an equivalence, but its second direction is significantly weaker than the direction which we've just shown *)
   Lemma valid_homomorphism_iff a b : 
-    |a| >= width -> valid offset width windows a b <-> valid hoffset hwidth hwindows (h a) (h b).
+    |a| >= width 
+    -> valid offset width windows a b <-> valid hoffset hwidth hwindows (h a) (h b).
   Proof. 
     intros H0; split. unfold hwidth, hoffset. 
     - apply valid_homomorphism1; easy.  
@@ -285,8 +289,11 @@ Section fixInstance.
       + apply H0. 
   Qed. 
 
+  (*this lifts to powers of valid*)
   Lemma valid_relpower_homomorphism1 a b steps : 
-    |a| >= width -> relpower (valid offset width windows) steps a b -> relpower (valid (k * offset) (k * width) hwindows) steps (h a) (h b).
+    |a| >= width 
+    -> relpower (valid offset width windows) steps a b 
+    -> relpower (valid (k * offset) (k * width) hwindows) steps (h a) (h b).
   Proof. 
     intros H. induction 1; [ eauto | ]. econstructor. 
     + apply valid_homomorphism_iff; [ apply H | easy ]. 
@@ -294,7 +301,9 @@ Section fixInstance.
   Qed. 
 
   Lemma valid_relpower_homomorphism2 a b' steps: 
-    |a| >= width -> relpower (valid (k * offset) (k * width) hwindows) steps (h a) b' -> exists b, b' = h b /\ relpower (valid offset width windows) steps a b. 
+    |a| >= width 
+    -> relpower (valid (k * offset) (k * width) hwindows) steps (h a) b' 
+    -> exists b, b' = h b /\ relpower (valid offset width windows) steps a b. 
   Proof. 
     intros. remember (h a). revert a Heql H. induction H0; intros. 
     - exists a0. split; eauto. 
@@ -306,7 +315,8 @@ Section fixInstance.
 
   (*again a slightly weaker equivalence *)
   Lemma valid_relpower_homomorphism_iff a b steps : 
-    |a| >= width -> relpower (valid offset width windows) steps a b <-> relpower (valid (k * offset) (k * width) hwindows) steps (h a) (h b).
+    |a| >= width 
+    -> relpower (valid offset width windows) steps a b <-> relpower (valid (k * offset) (k * width) hwindows) steps (h a) (h b).
   Proof. 
     intros. split. 
     - now apply valid_relpower_homomorphism1.  
@@ -314,7 +324,10 @@ Section fixInstance.
       symmetry in Heq; apply h_injective in Heq. easy. 
   Qed. 
 
-  Lemma final_agree sf : |init| = |sf| -> satFinal offset (length init) final sf <-> satFinal hoffset (length hinit) hfinal (h sf). 
+  (*agreement of the final constraints *)
+  Lemma final_agree sf : 
+    |init| = |sf| 
+    -> satFinal offset (length init) final sf <-> satFinal hoffset (length hinit) hfinal (h sf). 
   Proof. 
     intros G. unfold satFinal, hoffset, hfinal. split; intros (subs & k0 & H1 & H2 & H3). 
     - rewrite G in H2. exists (h subs), (k0). 
@@ -342,6 +355,7 @@ Section fixInstance.
       + rewrite h_multiplier. rewrite firstn_length. nia. 
   Qed. 
       
+  (*the transformed instance is a YES-instance iff the original instance is a YES-instance *)
   Lemma PR_homomorphism_iff : 
     (exists sf, relpower (valid offset width windows) steps init sf /\ satFinal offset (|init|) final sf) 
     <-> (exists sf, relpower (valid hoffset hwidth hwindows) hsteps hinit sf /\ satFinal hoffset (|hinit|) hfinal sf). 
@@ -363,7 +377,6 @@ Section fixInstance.
         * apply H2. 
       + apply A4. 
   Qed. 
-
 End fixInstance. 
 
 

@@ -1,7 +1,9 @@
 From PslBase Require Import Base FinTypes. 
-From PslBase Require Import Vectors.Vectors. 
 From Undecidability Require Import L.Complexity.Cook.Prelim TPR PR.
 Require Import Lia.
+
+(** *Reduction of 3-PR to PR. *)
+(*Apart from syntactical differences, this is just a simple embedding. *)
 
 Section fixInstance. 
   (*We do not directly fix a TPR instance since we do not actually require the alphabet to be finite for the reduction *)
@@ -17,6 +19,8 @@ Section fixInstance.
 
   Hint Constructors PR.valid. 
   Hint Constructors TPR.valid.
+
+  (*We show agreement for valid and satFinal *)
 
   Lemma valid_agree (s1 s2 : list FSigma) : 
     |s1| >= 3 -> TPR.valid (rewritesHeadList Fwindows) s1 s2 <-> PR.valid 1 3 PR_windows s1 s2. 
@@ -73,7 +77,7 @@ Section fixInstance.
   Qed. 
 End fixInstance. 
 
-
+(*The reduction is now straightforward. *)
 Definition PR_instance (tpr : TPR) := Build_PR 1 3 (TPR.init tpr) (PR_windows (TPR.windows tpr)) (TPR.final tpr) (TPR.steps tpr). 
 
 Lemma TPR_to_PR (tpr : TPR) : TPRLang tpr <-> PRLang (PR_instance tpr). 
