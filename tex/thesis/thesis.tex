@@ -2,6 +2,15 @@
 
 \include{header}
 \tolerance=200
+\usepackage{csquotes}
+\usepackage{biblatex}
+\addbibresource{bibliography.bib}
+
+\usepackage{proof}
+\usepackage{mathtools}
+\usepackage{tikz}
+\usepackage{booktabs, colortbl}
+
 
 \settitle{Towards a Formal Proof of the Cook-Levin Theorem}
 \setauthor{Lennard Gäher}
@@ -42,7 +51,7 @@
 
 \begin{document}
 
-\renewcommand\cite{\citep}
+%\renewcommand\cite{\citep}
 
 \thispagestyle{empty}
 
@@ -94,8 +103,9 @@
 
 \renewcommand{\emph}{\textit}
 
-\bibliographystyle{plainnat}
-\bibliography{bibliography}
+%\bibliographystyle{plainnat}
+%\bibliography{bibliography}
+\printbibliography
 
 \end{document}
 

@@ -1,3 +1,6 @@
+\usepackage{gensymb}
+\usepackage{array}
+
 %% Macros
 \newcommand{\M}[1]{\ensuremath{\textit{#1}}} % \mathup
 \newcommand{\imp}{\mathbin{\rightarrow}~}
@@ -39,3 +42,49 @@ $\square$% % the end-of-proof mark
 %
 % vertical
 \par}} % build paragraph
+
+
+
+%more mathematical macros
+\newcommand*{\listsof}[1]{\mathcal{L} (#1)}
+
+\newcommand{\ONone}{\emptyset}
+\newcommand{\OSome}[1]{\degree\kern-0.5ex#1}
+
+\newcommand*{\match}{\textbf{match}~}
+\newcommand*{\withl}{\textbf{[}~}
+\newcommand*{\withr}{~\textbf{]}}
+\newcommand*{\withm}{\quad\textbf{|}\quad}
+\newcommand*{\llet}{\textbf{let}~}
+\newcommand*{\lin}{\textbf{in}~}
+\newcommand{\ITE}[3]{\textbf{if}~{#1}~\textbf{then}~{#2}~\textbf{else}~{#3}}
+
+\newcommand{\Type}{\textsf{\bfseries T}}
+\newcommand{\Prop}{\textsf{\bfseries P}}
+\newcommand{\bool}{\textsf{B}}
+\newcommand{\btrue}{\mathsf{T}}
+\newcommand{\bfalse}{\mathsf{F}}
+\newcommand{\andb}{\&\&}
+\newcommand{\orb}{||}
+\newcommand{\notb}{!}
+\newcommand{\nat}{\mathsf{N}}
+\newcommand{\natS}{1 + }
+\newcommand{\length}[1]{|#1|}
+
+\newcommand{\con}{+\kern-1.3ex+\kern0.8ex}
+\newcommand{\rev}{\mathsf{rev}}
+\newcommand{\opt}[1]{\mathcal{O}{(#1)}}
+\newcommand{\nil}{[]}
+\newcommand{\cons}{::}
+
+\newcommand{\injl}{\textsf{L}}
+\newcommand{\injr}{\textsf{R}}
+
+\newcommand{\eqb}[2]{#1\overset{?}{=}#2}
+
+\newcommand{\bnfmid}{~\mid~}
+
+\newcommand{\concat}{\con}
+
+\newcolumntype{C}{>{$}c<{$}}
+

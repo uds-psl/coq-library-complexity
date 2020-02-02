@@ -1,17 +1,126 @@
-\chapter{Preliminaries}
+
+\newcommand*{\movel}{\textsf{L}}
+\newcommand*{\mover}{\textsf{R}}
+\newcommand*{\moven}{\textsf{N}}
+
+\chapter{Preliminaries}\label{chap:preliminaries}
+In this section, we present the needed basic definitions, including Turing machines and the call-by-value $\lambda$-calculus L.
 
 \section{Type Theory}
-introduce type theory things
+We formalise the results in the constructive type theory of Coq, featuring inductive types and an impredicative universe of propositions $\Prop$. In this section we introduce the notations and concepts common in type theory. Readers not familiar with type theory may informally regard types as sets.
+
+The type of options $\opt{X}$ over $X$ consists of the elements $\ONone$, denoting the absence of a value, and elements $\OSome{x}$ for $x : X$.
+
+We write $\listsof{X}$ for the type of lists over $X$. Lists are constructed inductively, starting from the empty list $\nil$, using the cons constructor: For an element $x : X$ and a list $A : \listsof{X}$, $x\cons{} A$ is the list $A$ prepended with $x$.
+For an arbitrary list $A$, $\length{A}$ is the length of $A$. 
+The concatenation of two lists $A$ and $B$ is written as $A \con{} B$. 
+We use positions to refer to the elements of a list at a certain offset, starting at 0. The valid positions of a list $A$ are the numbers $0, \ldots, \length{A}-1$. 
+Given a position $i$, the element of $A$ at $i$ is denoted by $A[i]$. Formally, this is an option value: if $i$ is not a valid position, $A[i]$ is defined to be $\ONone{}$. 
+
+The type of vectors of length $n$ over $X$ is written $X^n$. For length and subscripting, we use the same notations as for lists.
+
+The product type $X \times Y$ of the types $X$ and $Y$ consists of pairs of elements of $X$ and $Y$. The pair of $x : X$ and $y : Y$ is written as $(x, y)$, while we use $\pi_1, \pi_2$ for the projections of a pair to its first and second component. 
+
+The sum type $X + Y$ of the types $X$ and $Y$ consists of the elements of $X$ and the elements of $Y$. Formally, we have two injections $\injl : X \rightarrow X + Y$ and $\injr : Y \rightarrow X + Y$. 
+
+Sigma types $\Sigma_x.p~x$ allow us to define pairs where the type of the second component depends on the first component (therefore its inhabitants are also called \emph{dependent pairs}). We write $(x, s)$ for the dependent pair consisting of $x$ and $s : p~x$. 
+
+A type $X$ is called \emph{discrete} if equality on it is decidable, that is, there exists a function $\textsf{eq}_X : X \rightarrow X \rightarrow \bool$ such that $\textsf{eq}_X~a~b = \btrue$ if, and only if, $a = b$. We also write $\eqb{a}{b}$ instead of $\textsf{eq}_X~a~b$, omitting the type which can be inferred from the context. 
+
+We also need \emph{finite types}. Finite types are discrete types with a finite number of elements. Formally, we require a list of all values of the type as a witness that it is finite~\cite{menz2016}.
+For any number $n$, there is a type with exactly $n$ elements, which we call $F_n$. 
+
+\section{Relations}
+As is common in type theory, we model relations on a type $X$ using binary predicates of type $X \rightarrow X \rightarrow \Prop$. 
+For a relation $R$, we write $(a, b) \in R$ or $a~R~b$ for $R~a~b$. 
+
+The $n$-th power $R^n$ of a relation $R$ is defined inductively:
+\begin{align*}
+  \infer{R^0~x~x}{}
+  \qquad
+  \infer{R^{\natS{n}}~x~z}{R~x~y\quad R^n~y~z}
+\end{align*}
+For some proofs, it will be convenient to have an alternative definition where the successor case appends a new transition instead of prepending it:
+\begin{align*}
+  \infer{R_0~x~x}{}
+  \qquad
+  \infer{R_{\natS{n}}~x~z}{R_n~x~y\quad R~y~z}
+\end{align*}
+
+\begin{proposition}
+  We have the following basic facts:
+  \begin{enumerate}
+    \item Transitivity: $R^n~x~y \rightarrow R^m~y~z \rightarrow R^{n+m}~x~z$ and $R_n~x~y \rightarrow R_m~y~z \rightarrow R_{n+m}~x~z$
+    \item Monotonicity: $R \subseteq S \rightarrow R^n~x~y \rightarrow S^n~x~y$
+    \item Congruence: $R \equiv S \rightarrow R^n~x~y \leftrightarrow S^n~x~y$
+    \item Agreement: $R^n~x~y \leftrightarrow R_n~x~y$
+  \end{enumerate}
+\end{proposition}
 
 \section{Turing Machines}
-introduce Turing machines (Asperti/Ricciotti)
+In this section, we present the formalisation of deterministic Turing machines used throughout the thesis. 
+
+Turing machines can be regarded as finite automata with access to a fixed number of infinite tapes. Each tape has a head which can be moved sequentially. 
+In each computational step, the Turing machine reads the content of the cells currently under the heads. It then transitions to a new state and can optionally write a symbol on each of the tapes, before potentially moving the heads one position to the left or to the right.
+
+The following definitions are due to Asperti and Ricciotti~\cite{asperti_ricciotti}; the Coq formalisation we are using has been developed by Wuttke~\cite{wuttke2017}.
+
+\subsection{Tapes}
+We define tapes over a finite type $\Sigma$, the tape alphabet. In contrast to usual presentations, $\Sigma$ does not contain a special blank symbol that denotes unused regions of the tape. Instead, the definition only captures the regions of the tape that are currently used. 
+A tape can be in one of four states:
+\begin{align*}
+  \text{tape}~&\Sigma  := \\
+  |&~\textsf{niltape} \\
+  |&~\textsf{leftof}~(c : \Sigma)~(rs : \listsof{\Sigma}) \\
+  |&~\textsf{rightof}~(c : \Sigma)~(ls : \listsof{\Sigma}) \\
+  |&~\textsf{midtape}~(ls : \listsof{\Sigma})~(c : \Sigma)~(rs : \listsof{\Sigma})
+\end{align*}
+A \textsf{niltape} is completely empty. In all other cases, the tape contains at least one symbol $c$. 
+
+In the case of $\textsf{leftof}~c~rs$, the list of symbols $c::rs$ contains exactly the tape contents right of the head, and conversely, in the case of $\textsf{rightof}~c~ls$, the list $c::ls$ contains the tape contents left of the head. For these two cases, the tape does not currently reside on a symbol.
+If the Turing machine wants to move the head one more symbol beyond the used tape region, the tape does not change, that is, it is not possible for the head to be two or more symbols beyond the used tape region.
+
+Finally, $\textsf{midtape}~ls~c~rs$ models the case that the head resides on the symbol $c$ and there are (possibly empty) parts of the tape $ls$ and $rs$ to the left and to the right.
+
+This formalisation of tapes without blanks has the advantage that each possible tape is uniquely represented by exactly one element of $\textsf{tape}~\Sigma$. 
+
+\subsection{Turing machines}
+In each computational step, a Turing machine can optionally write a symbol and move the head on each of its tapes individually. These actions are captured by the type $\textsf{Act}_{\Sigma} \defeq{} \opt{\Sigma} \times \textsf{move}$, where $\Sigma$ is the tape alphabet and 
+\[\textsf{move} := \movel \bnfmid \mover \bnfmid \moven \] 
+defines the possible movements. 
+
+\begin{definition}[Turing machines]
+  Given a finite type $\Sigma$ and a number of tapes $n$, Turing machines of type $\textsf{TM}~\Sigma~n$ are tuples $(Q, \delta, q_0, \textsf{halt})$, where $Q$ is the finite type of states, $\delta : Q \times {(\opt{\Sigma})}^n \rightarrow Q \times {\textsf{Act}_\Sigma}^n$ is the transition function, $q_0$ is the initial state and $\textsf{halt} : Q \rightarrow \bool$ defines the halting states.
+\end{definition}
+For the semantics of Turing machines, the values of the transition function for halting states, i.e.\ states $q$ for which $\textsf{halt}~q = \btrue$, are irrelevant. 
+
+\begin{definition}[Configurations]
+  Let $M : \textsf{TM}~\Sigma~n$. The type of configurations over $M$ is given by 
+  $\textsf{conf}_{M} \defeq Q_{M} \times {(\textsf{tape}_{\Sigma})}^n$.
+\end{definition}
+
+In the following, we fix the number of tapes to 1, which is sufficient for our needs. 
+We give the full definition of the semantics in Appendix~\ref{app:TM}.
+For our needs, it will suffice to assume a transition relation $\succ$ on configurations such that 
+$(q, tp) \succ (q', tp')$ holds if, and only if, $\textsf{halt}~q = \bfalse$ and $(q', tp')$ is the successor configuration of $(q, tp)$ according to the transition function.
+
+\begin{definition}[Termination Relation]
+  \[ (q, tp) \rhd^{k} (q', tp') := (q, tp) \succ^k (q', tp') \land \textsf{halt}~q' = \btrue\]
+  \[ (q, tp) \rhd^{\le k} (q', tp') := \exists l \le k, (q, tp) \rhd^l (q', tp') \]
+\end{definition}
 
 \section{The $\lambda$ Calculus L}
-introduce L 
+In this section, we introduce L as the computational model we are using. For more details, the interested reader is referred to~\cite{ForsterSmolka:2017:L-Computability}, where L is introduced in detail in the context of computability theory.
+
+definitions
+
+Scott encoding of inductive datatypes
 
 size and space measure
 
 size explosion problem
+
+argument why one should not expect an easy direct reduction from L to a natural problem (due to size explosion)
 
 \section{Basic Notions of Complexity Theory}
 complexity, i.e. basic definitions done by Fabian
