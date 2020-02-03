@@ -1,7 +1,8 @@
 From Undecidability.TM Require Import TM.
 From Undecidability.L.TM Require Import TMflat TMflatEnc TMflatFun TMEncoding TapeDecode TMunflatten.
 
-(** Definition of a generic NP-hard problem *)
+(** *Definition of a generic NP-hard problem *)
+(*(at least it is NP-hard if one accepts Turing machines)*)
 
 (*we constrain the form the initial configuration of the Turing machine has:
  the head is required to stand left of the input*)
