@@ -497,3 +497,11 @@ Qed.
 
 Lemma list_eqn_length (X : Type) (l1 l2 : list X) : l1 = l2 -> |l1| = |l2|. 
 Proof. congruence. Qed. 
+
+Lemma nth_nth_error (X : Type) (l : list X) n def a  : nth n l def = a -> n < |l| -> nth_error l n = Some a. 
+Proof. 
+  intros. apply nth_error_Some in H0. destruct nth_error eqn:H1; [ | congruence].
+  clear H0. apply nth_error_nth' with (y := def) in H1. easy.
+Qed. 
+
+

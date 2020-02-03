@@ -635,7 +635,7 @@ Section fixTM.
     - eauto. 
   Qed. 
 
-  Lemma  E_rewrite_sym_rem_unique p p' σ n : forall s, valid rewHeadTape (inr (inr (p, Some σ)) :: E p (S (S n))) (inr (inr (p', |_|)):: s) -> p' = negative /\ s = E negative (S (S n)). 
+  Lemma E_rewrite_sym_rem_unique p p' σ n : forall s, valid rewHeadTape (inr (inr (p, Some σ)) :: E p (S (S n))) (inr (inr (p', |_|)):: s) -> p' = negative /\ s = E negative (S (S n)). 
   Proof. 
     intros. inv_valid. rewHeadTape_inv2.
     destruct p'; cbn in H5; try congruence; clear H5.
@@ -950,7 +950,7 @@ Section fixTM.
     unfold sizeOfTape. rewrite tapeToList_lcr. rewrite !app_length. rewrite rev_length. destruct current; cbn; lia. 
   Qed.
 
-  (*simplification tactic for equations that will arise from inversions*)
+  (*simplification tactic for equations that arise from inversions*)
   Lemma prod_eq (X Y : Type) (a c : X) (b d : Y) : (a, b) = (c, d) -> a = c /\ b = d. 
   Proof. intros; split; congruence. Qed. 
 
@@ -982,9 +982,14 @@ Section fixTM.
   Create HintDb trans discriminated. 
   Definition transRule := Gamma -> Gamma -> Gamma -> Gamma -> Gamma -> Gamma -> Prop.
 
-  (*We structure the rules in several layers: first of all, we have to differentiate whether, for a transition, the Turing machine writes a symbol or not *)
-  (*(note that we take the view that the TM can write a symbol even if our transition function returns None (this just means that the symbol under the head remains unchanged) if there is currently a symbol under the head: in this case the written symbol is just the current symbol) *)
-  (*in the cases (Some, Some), (Some, None), (None, Some) (denoting the read/write positions of the transition function) the TM writes a symbol; only in the (None, None) case it does not write one *)
+  (*We structure the rules in several layers: first of all, we have to differentiate whether, for a transition, the Turing machine writes a symbol or not 
+    (note that we take the view that the TM can write a symbol even if our transition function returns None (this just means that the symbol under the head remains unchanged) if there is currently a symbol under the head: in this case the written symbol is just the current symbol) 
+    in the cases (Some, Some), (Some, None), (None, Some) (denoting the read/write positions of the transition function) the TM writes a symbol; only in the (None, None) case it does not write one 
+  *)
+
+  (* The rules are simplified and generate spurious windows which do not harm rewriting in any way.
+    As long as the reprConfig invariant is fulfilled, the spurious windows cannot be applied.
+  *)
 
   (*rules for the case where the Turing machine writes a symbol *)
   (*shift right rules *)
@@ -1013,7 +1018,7 @@ Section fixTM.
   Inductive transSomeLeftLeft : states -> states -> stateSigma -> transRule :=
     | tsll q q' (a : stateSigma) (m1 m2 m3 : stateSigma) p : transSomeLeftLeft q q' a (inl (q, a)) (inr (inr (p, m1))) (inr (inr (p, m2))) (inl (q', m1)) (inr (inr (negative, m2))) (inr (inr(negative, m3))). 
 
-  Hint Constructors transSomeLeftLeft : trans. 
+  Hint Constructors transSomeLeftLeft : trans.
 
   Inductive transSomeLeftRight : states -> states -> stateSigma -> stateSigma -> transRule :=
     | tslr q q' (a b : stateSigma) (m1 m2 m3 : stateSigma) p : transSomeLeftRight q q' a b (inr (inr (p, m1))) (inr (inr (p, m2))) (inl (q, a)) (inr (inr (negative, m2))) (inr (inr (negative, b))) (inl (q', m3)).
@@ -1132,7 +1137,7 @@ Section fixTM.
   Hint Constructors transSomeNone : trans.
 
   (*the special case of (None, None) needs extra care as the Turing machine doesn't write any symbol *) 
-  (*the structure of the rules is the same for this case, but we need a more fine-grained definition of the base rules because of the special handling if we are the border of the visited tape region *)
+  (*the structure of the rules is the same for this case, but we need a more fine-grained definition of the base rules because of the special handling if we are at the border of the visited tape region *)
 
   (*shift right rules *)
   Inductive transNoneRightCenter :  states -> states -> transRule :=
@@ -1617,7 +1622,7 @@ Section fixTM.
 
   Lemma reprTape_no_isStateSym u p w h e : e el h -> u ≃t(p, w) h -> not (isStateSym e). 
   Proof. 
-    intros. destruct H0 as (_ & _ & ->). 
+    intros. destruct H0 as (_ & ->). 
     apply in_app_or in H. destruct H as [H | H]. 
     - unfold mapPolarity in H. apply in_map_iff in H as (m & H & _). intros (? & ->). congruence. 
     - apply E_alphabet in H. intros (? & ->). destruct H; congruence. 
@@ -1676,7 +1681,8 @@ Section fixTM.
       do 2 (destruct a; destruct b; try now cbn in H; try now inv H0; eauto with trans). 
     - constructor 3. 
       + destruct_tape. destruct a; [ discr_tape | ].   
-        * destruct H1 as (H1 & _ & H2). cbn in H2.  inv H2. cbn in H1; destruct w.   
+        * specialize (string_reprTape'_length H1) as H1'. 
+          destruct H1 as (_ & H2). cbn in H2. inv H2. cbn in H1'; destruct w.   
           -- apply valid_length_inv in H0. 
              do 3 (destruct b; try now cbn in H0). repeat constructor. 
           -- apply IHvalid with (u := []) (w0 := w). apply niltape_repr.  
@@ -2057,86 +2063,88 @@ Section fixTM.
   (*proof takes roughly 35mins + 4 gigs of RAM... *)
   Lemma stepsim q tp s q' tp' : (q, tp) ≃c s -> (q, tp) ≻ (q', tp') -> (sizeOfTape tp) < z' -> exists s', valid rewHeadSim s s' /\ (forall s'', valid rewHeadSim s s'' -> s'' = s') /\ (q', tp') ≃c s'. 
   Proof. 
-(*    intros H (H0' &  H0) H1. cbn in H0'. unfold sstep in H0. destruct trans eqn:H2 in H0. inv H0. rename p into p'. *)
-    (*apply valid_reprConfig_unfold. *)
-    (*rewrite sizeOfTape_lcr in H1. *)
-    (*destruct H as (ls & qm & rs & -> & H). destruct H as (p & -> & F1 & F2). unfold embedState. *)
-    (*destruct p' as ([wsym | ] & []); destruct tp as [ | ? l1 | ? l0 | l0 ? l1]; cbn in *; destruct_tape_in_tidy F1; destruct_tape_in_tidy F2. *)
-    (*all: try match type of F1 with ?l0 ≃t(_, _) _ => is_var l0; destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end. *)
-    (*all: try match type of F1 with _ :: ?l0 ≃t(_, _) _ => destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end. *)
-    (*all: try match type of F2 with ?l1 ≃t(_, _) _ => is_var l1; destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end. *)
-    (*all: try match type of F2 with _ :: ?l1 ≃t(_, _) _ => destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end. *)
+    (* 
+    intros H (H0' &  H0) H1. cbn in H0'. unfold sstep in H0. destruct trans eqn:H2 in H0. inv H0. rename p into p'. 
+    apply valid_reprConfig_unfold. 
+    rewrite sizeOfTape_lcr in H1. 
+    destruct H as (ls & qm & rs & -> & H). destruct H as (p & -> & F1 & F2). unfold embedState. 
+    destruct p' as ([wsym | ] & []); destruct tp as [ | ? l1 | ? l0 | l0 ? l1]; cbn in *; destruct_tape_in_tidy F1; destruct_tape_in_tidy F2. 
+    all: try match type of F1 with ?l0 ≃t(_, _) _ => is_var l0; destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end. 
+    all: try match type of F1 with _ :: ?l0 ≃t(_, _) _ => destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end. 
+    all: try match type of F2 with ?l1 ≃t(_, _) _ => is_var l1; destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end. 
+    all: try match type of F2 with _ :: ?l1 ≃t(_, _) _ => destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end. 
     
-    (*Optimize Proof. *)
-    (*all: cbn in H1. *)
+    Optimize Proof. 
+    all: cbn in H1. 
 
-    (*[>analyse what transition should be taken, instantiate the needed lemmas and solve all of the obligations except for uniqueness <]*)
-    (*all: *)
-      (*match type of H2 with *)
-        (*| trans (?q, ?csym) = (?q', (?wsym, ?dir)) => *)
-          (*let nextsym := get_next_headsym F1 F2 csym wsym dir in *)
-          (*let writesym := get_written_sym csym wsym in *)
-          (*let shiftdir := get_shift_direction writesym dir F1 F2 in *)
-          (*[>init next tape halves <] *)
-          (*let Z1 := fresh "Z1" in let Z2 := fresh "Z2" in let Z3 := fresh "Z3" in *)
-          (*let W1 := fresh "W1" in let W2 := fresh "W2" in let W3 := fresh "W3" in *)
-          (*let h1 := fresh "h1" in let h2 := fresh "h2" in *)
-          (*cbn in F1; cbn in F2; *)
-          (*match shiftdir with *)
-          (*| R => match type of F1 with *)
-                (*| [] ≃t(?p, ?w) _ => specialize (E_rewrite_blank_rev p shiftdir w) as Z1; *)
-                                    (*specialize (proj1 (@niltape_repr w shiftdir)) as Z2; *)
-                                    (*specialize (@E_rewrite_blank_rev_unique p shiftdir w) as Z3 *)
-                (*| _ => destruct (tape_repr_rem_left F1) as (h1 & Z1 & Z3 & Z2); *)
-                      (*[>need to have one more head symbol in that case <] *)
-                      (*try match type of Z2 with _ :: ?l ≃t(_, _) _ => is_var l; *)
-                                                                    (*destruct l end; destruct_tape_in_tidy Z2 *)
-                (*end; *)
-                (*match writesym with *)
-                (*| Some ?sym => (destruct (tape_repr_add_right sym F2) as (h2 & W1 & W3 & W2)); [cbn; lia | destruct_tape_in_tidy W2] *)
-                (*| None => *)
-                    (*match type of F2 with *)
-                    (*| [] ≃t(?p, ?w) _ => specialize (E_rewrite_blank p shiftdir w) as W1; *)
-                                        (*specialize (proj1 (@niltape_repr w shiftdir)) as W2; *)
-                                        (*specialize (@E_rewrite_blank_unique p shiftdir w) as W3 *)
-                    (*end *)
-                (*end *)
-          (*| L => match type of F2 with *)
-                (*| [] ≃t(?p, ?w) _ => specialize (E_rewrite_blank p shiftdir w) as W1; *)
-                                    (*specialize (proj1 (@niltape_repr w shiftdir)) as W2; *)
-                                    (*specialize (@E_rewrite_blank_unique p shiftdir  w) as W3 *)
-                  (*| _ => destruct (tape_repr_rem_right F2) as (h2 & W1 & W3 & W2); *)
-                        (*[>need to have one more head symbol in that case <] *)
-                        (*try match type of W2 with _ :: ?l ≃t(_, _) _ => is_var l; *)
-                                                                      (*destruct l end; destruct_tape_in_tidy W2 *)
-                (*end; *)
-                (*match writesym with *)
-                  (*Some ?sym => destruct (tape_repr_add_left sym F1) as (h1 & Z1 & Z3 & Z2); [cbn; lia | destruct_tape_in_tidy Z2] *)
-                (*| None => match type of F1 with *)
-                        (*| [] ≃t(?p, ?w) _ => specialize (E_rewrite_blank_rev p shiftdir w) as Z1; *)
-                                            (*specialize (proj1 (@niltape_repr w shiftdir)) as Z2; *)
-                                            (*specialize (@E_rewrite_blank_rev_unique p shiftdir w) as Z3 *)
-                    (*end *)
-              (*end *)
-          (*| N => destruct (tape_repr_stay_left F1) as (h1 & Z1 & Z3 & Z2); destruct_tape_in_tidy Z2; *)
-                (*destruct (tape_repr_stay_right F2) as (h2 & W1 & W3 & W2); destruct_tape_in_tidy W2 *)
-          (*end; *)
+    (*analyse what transition should be taken, instantiate the needed lemmas and solve all of the obligations except for uniqueness *)
+    all: 
+      match type of H2 with 
+        | trans (?q, ?csym) = (?q', (?wsym, ?dir)) => 
+          let nextsym := get_next_headsym F1 F2 csym wsym dir in 
+          let writesym := get_written_sym csym wsym in 
+          let shiftdir := get_shift_direction writesym dir F1 F2 in 
+          (*init next tape halves *)
+          let Z1 := fresh "Z1" in let Z2 := fresh "Z2" in let Z3 := fresh "Z3" in 
+          let W1 := fresh "W1" in let W2 := fresh "W2" in let W3 := fresh "W3" in 
+          let h1 := fresh "h1" in let h2 := fresh "h2" in 
+          cbn in F1; cbn in F2; 
+          match shiftdir with 
+          | R => match type of F1 with 
+                | [] ≃t(?p, ?w) _ => specialize (E_rewrite_blank_rev p shiftdir w) as Z1; 
+                                    specialize (proj1 (@niltape_repr w shiftdir)) as Z2; 
+                                    specialize (@E_rewrite_blank_rev_unique p shiftdir w) as Z3 
+                | _ => destruct (tape_repr_rem_left F1) as (h1 & Z1 & Z3 & Z2); 
+                      (*need to have one more head symbol in that case *)
+                      try match type of Z2 with _ :: ?l ≃t(_, _) _ => is_var l; 
+                                                                    destruct l end; destruct_tape_in_tidy Z2 
+                end; 
+                match writesym with 
+                | Some ?sym => (destruct (tape_repr_add_right sym F2) as (h2 & W1 & W3 & W2)); [cbn; lia | destruct_tape_in_tidy W2] 
+                | None => 
+                    match type of F2 with 
+                    | [] ≃t(?p, ?w) _ => specialize (E_rewrite_blank p shiftdir w) as W1; 
+                                        specialize (proj1 (@niltape_repr w shiftdir)) as W2; 
+                                        specialize (@E_rewrite_blank_unique p shiftdir w) as W3 
+                    end 
+                end 
+          | L => match type of F2 with 
+                | [] ≃t(?p, ?w) _ => specialize (E_rewrite_blank p shiftdir w) as W1; 
+                                    specialize (proj1 (@niltape_repr w shiftdir)) as W2; 
+                                    specialize (@E_rewrite_blank_unique p shiftdir  w) as W3 
+                  | _ => destruct (tape_repr_rem_right F2) as (h2 & W1 & W3 & W2); 
+                        (*need to have one more head symbol in that case *)
+                        try match type of W2 with _ :: ?l ≃t(_, _) _ => is_var l; 
+                                                                      destruct l end; destruct_tape_in_tidy W2 
+                end; 
+                match writesym with 
+                  Some ?sym => destruct (tape_repr_add_left sym F1) as (h1 & Z1 & Z3 & Z2); [cbn; lia | destruct_tape_in_tidy Z2] 
+                | None => match type of F1 with 
+                        | [] ≃t(?p, ?w) _ => specialize (E_rewrite_blank_rev p shiftdir w) as Z1; 
+                                            specialize (proj1 (@niltape_repr w shiftdir)) as Z2; 
+                                            specialize (@E_rewrite_blank_rev_unique p shiftdir w) as Z3 
+                    end 
+              end 
+          | N => destruct (tape_repr_stay_left F1) as (h1 & Z1 & Z3 & Z2); destruct_tape_in_tidy Z2; 
+                destruct (tape_repr_stay_right F2) as (h2 & W1 & W3 & W2); destruct_tape_in_tidy W2 
+          end; 
 
-        (*[>instantiate existenials <] *)
-        (*match type of Z2 with _ ≃t(_, _) ?h => exists h end; *)
-        (*exists (inl (q', nextsym) : Gamma); *)
-        (*match type of W2 with _ ≃t(_, _) ?h => exists h end; *)
+        (*instantiate existenials *)
+        match type of Z2 with _ ≃t(_, _) ?h => exists h end; 
+        exists (inl (q', nextsym) : Gamma); 
+        match type of W2 with _ ≃t(_, _) ?h => exists h end; 
 
-        (*[>solve goals, except for the uniqueness goal (factored out due to performance)<] *)
-        (*(split; [solve_stepsim_rewrite shiftdir Z1 W1 | split; [  | solve_stepsim_repr shiftdir Z2 W2]]) *)
-    (*end. *)
+        (*solve goals, except for the uniqueness goal (factored out due to performance)*)
+        (split; [solve_stepsim_rewrite shiftdir Z1 W1 | split; [  | solve_stepsim_repr shiftdir Z2 W2]]) 
+    end. 
     
-    (*Optimize Proof. *)
+    Optimize Proof. 
 
-    (*[>solve the uniqueness obligations - this is very expensive because of the needed inversions <]*)
-    (*[>therefore abstract into opaque lemmas <]*)
-    (*idtac "solving uniqueness - this may take a while (25-30 minutes)".*)
-    (*all: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). *)
+    (*solve the uniqueness obligations - this is very expensive because of the needed inversions *)
+    (*therefore abstract into opaque lemmas *)
+    idtac "solving uniqueness - this may take a while (25-30 minutes)".
+    all: unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). 
+    *)
   Admitted. 
 
   (*if we are in a halting state, we can only rewrite to the same string (identity), except for setting the polarity to neutral *)
@@ -2302,12 +2310,12 @@ Section fixTM.
       destruct H as (ls & qm & rs & -> & H4). destruct H4 as (p & -> & H5 & H6).
       apply in_app_or in H3; destruct H3 as [ | H3]; [ | apply in_app_or in H3; destruct H3 as [ | H3 ] ].
       + clear H6. destruct H2 as (m & ->). 
-        apply in_rev in H. destruct H5 as (_ & _ & ->). apply in_app_iff in H. destruct H as [H | H]. 
+        apply in_rev in H. destruct H5 as ( _ & ->). apply in_app_iff in H. destruct H as [H | H]. 
         * unfold mapPolarity in H. apply in_map_iff in H as (σ & H & _). congruence. 
         * apply E_alphabet in H. destruct H; congruence.
       + destruct H as [ <- | []]. destruct H2. unfold embedState in H. congruence. 
       + clear H5. destruct H2 as (m & ->).
-        destruct H6 as (_ & _ & ->). apply in_app_iff in H3. destruct H3 as [H | H]. 
+        destruct H6 as ( _ & ->). apply in_app_iff in H3. destruct H3 as [H | H]. 
         * unfold mapPolarity in H. apply in_map_iff in H as (σ & H & _). congruence. 
         * apply E_alphabet in H. destruct H; congruence.
   Qed. 
@@ -2324,12 +2332,7 @@ Section fixTM.
 
   Lemma stringForTapeHalf_reprTape s : |s| <= z' -> s ≃t(neutral) stringForTapeHalf s.
   Proof. 
-    intros.  repeat split. 
-    - destruct s. 
-      + cbn. rewrite E_length. lia. 
-      + unfold stringForTapeHalf, mapPolarity. rewrite app_length, map_length, E_length. 
-        cbn [length] in *. unfold z, wo, z' in *. lia. 
-    - lia. 
+    intros. now repeat split.
   Qed. 
 
   Lemma stringForConfig_reprConfig q s : sizeOfTape s <= z' -> (q, s) ≃c stringForConfig q s. 
@@ -2990,7 +2993,7 @@ Section fixTM.
   Qed. 
 
   (*reduction using the propositional rewrite rules: we put together the prelude and the deterministic simulation *)
-  Lemma ind_reduction: 
+  Lemma GenNP_to_PTPR: 
     PTPRLang (@Build_PTPR (FinType (EqType preludeSig)) (map inr preludeInitialString) allRules (map (map inl) finalSubstrings) (1 + t))
     <-> GenNP (existT _ Sigma (fTM, k, t)). 
   Proof. 
@@ -3358,9 +3361,6 @@ Section fixTM.
       all: unfold boundVar; try rewrite !map_length; tauto.  
   Qed. 
 
-  Lemma Some_injective (X : Type) (a b : X) : Some a = Some b -> a = b. 
-  Proof. congruence. Qed. 
-
   Lemma reifyAlphabet_reprEl a b d :
     isFlatEnvOf a b -> bound_Alphabet a d
     -> exists e1 e2, reifyAlphabetFin b d = Some e1 /\ reifyAlphabetFlat a d = Some e2 /\ finReprEl flatAlphabet e2 e1. 
@@ -3702,7 +3702,6 @@ Section fixTM.
       eauto 10. 
   Qed. 
  
-  (*TODO: maybe remove *)
   Lemma finType_enum_list_finReprEl (T : finType) : list_finReprEl (length (elem T)) (seq 0 (length (elem T))) (elem T). 
   Proof. 
     unfold list_finReprEl. split.
@@ -4395,12 +4394,12 @@ Section fixTM.
   Qed. 
 
   (*the reduction using the list-based rules *)
-  Lemma fin_reduction : 
+  Lemma GenNP_to_TPR : 
     TPRLang (@Build_TPR (FinType (EqType preludeSig)) (map inr preludeInitialString) allFinRules (map (map inl) finalSubstrings) (1 + t))
     <-> GenNP (existT _ Sigma (fTM, k, t)). 
   Proof. 
     rewrite tpr_ptpr_agree. 
-    * apply ind_reduction. 
+    * apply GenNP_to_PTPR. 
     * apply fin_agreement. 
   Qed.
 
@@ -4445,44 +4444,14 @@ Section fixTM.
     - destruct b; cbn; intros H; inv H. easy.
   Qed. 
 
-  (*Definition flattrans_t := list ((nat * option nat) * (nat * (option nat * move))). *)
+  Lemma opt_finReprEl'_Some (X : finType) a (a' : X) : finReprEl' a a' -> opt_finReprEl' (Some a) (Some a'). 
+  Proof. 
+    intros. unfold opt_finReprEl'. rewrite <- H. easy.
+  Qed. 
 
-  (*Definition flattrans_to_single (a : (nat * list (option nat)) * (nat * list (option nat * move))) := *)
-    (*match a with ((s, xs), (s', xs')) =>*)
-      (*match xs with [x]  => *)
-        (*match xs' with [(x', mo)] => Some ((s, x), (s', (x', mo))) *)
-          (*| _ => None*)
-        (*end*)
-      (*| _ => None*)
-      (*end*)
-    (*end. *)
+  Lemma opt_finReprEl'_None (X : finType) : @opt_finReprEl' X None None. 
+  Proof. unfold opt_finReprEl'. easy. Qed.
 
-  (*Lemma flattrans_to_single_*)
-              
-  (*Fixpoint flattrans_to_single_list (l : list ((nat * list (option nat)) * (nat * list (option nat * move)))) : option flattrans_t *)
-    (*:= match l with *)
-      (*[] => optReturn []*)
-      (*| a :: l => *)
-          (*do a <- flattrans_to_single a;*)
-          (*do l <- flattrans_to_single_list l;*)
-          (*optReturn (a :: l)*)
-      (*end. *)
-
-
-  (*Lemma flatTrans_singletape : sigT (fun (flattrans : flattrans_t) => *)
-    (*(forall (s s' : nat) (x x' : option nat) (m : move), ((s, x), (s', (x', m))) el flattrans -> *)
-    (*(exists y y' s1 s1', opt_finReprEl' x y /\ opt_finReprEl' x' y' /\ finReprEl' s s1 /\ finReprEl' s' s1' /\  trans (s1, y) = (s1', (y', m))))*)
-    (*/\ (forall (s s' : states) (x x' : stateSigma) (m : move), trans (s, x) = (s', (x', m)) -> ((index s, option_map index x), (index s', (option_map index x', m))) el flattrans)*)
-  (*). *)
-  (*Proof. *)
-    (*destruct flatTM_TM_compat. specialize (Sigma_finRepr) as F1. specialize (states_finRepr) as F2. *)
-    (*clear eq__sig eq__states eq__start R__halt flatTM_TM_compat. *)
-    (*induction (TMflat.trans flatTM); inv R__trans. *)
-    (*- exists []. split; intros. *)
-      (*+ inv H. *)
-      (*+ apply Inductive*)
-
-    
   Notation flatTrans := (TMflat.trans flatTM). 
   Notation flatHalt := (TMflat.halt flatTM).
   Notation flatStart := (TMflat.start flatTM).
@@ -4544,8 +4513,6 @@ Section fixTM.
     unfold isFlatListOf in *. rewrite <- H. firstorder. 
   Qed. 
 
-  (*Lemma fOpt_finReprEl : finReprEl' a a' -> finReprEl' (fOpt (Some a)) (Some a'). *)
-
   Lemma envAddSSigma_isFlatEnvOf finEnv flatEnv a a' : 
     opt_finReprEl' a a' -> isFlatEnvOf flatEnv finEnv -> isFlatEnvOf (envAddSSigma (fOpt a) flatEnv) (envAddSSigma a' finEnv). 
   Proof. 
@@ -4566,23 +4533,6 @@ Section fixTM.
     - destruct H1 as (env & <- & (envFlat & H2 & H3)%H). 
       exists (f1 envFlat). split; [ now apply H0 | apply in_map_iff; eauto]. 
   Qed. 
-
-  Lemma opt_finReprEl'_Some (X : finType) a (a' : X) : finReprEl' a a' -> opt_finReprEl' (Some a) (Some a'). 
-  Proof. 
-    intros. unfold opt_finReprEl'. rewrite <- H. easy.
-  Qed. 
-
-  Lemma opt_finReprEl'_None (X : finType) : @opt_finReprEl' X None None. 
-  Proof. unfold opt_finReprEl'. easy. Qed.
-
-  Lemma nth_error_nth' (X : Type) x y (l : list X) n : nth_error l n = Some x -> nth n l y = x.
-  Proof. 
-    revert n; induction l; intros; cbn. 
-    - now destruct n. 
-    - destruct n; cbn in H.
-      * congruence. 
-      * now apply IHl. 
-  Qed.
 
   (*applies to goals of the form list_isFlatEnvOf (map (_ q q) flat_baseEnvHalt) ?finenv *)
   Ltac fin_flat_find_env := 
@@ -4605,23 +4555,7 @@ Section fixTM.
       | [ |- isFlatEnvOf _ (envAddState _ _)] => apply envAddState_isFlatEnvOf
     end; try easy.
 
-  Lemma finReprEl'_exists (X : finType) n : ofFlatType (Cardinality X) n -> exists (e:X), finReprEl' n e.
-  Proof. 
-    intros. unfold ofFlatType,Cardinality in H. apply nth_error_Some in H. destruct (nth_error (elem X) n) eqn:H1; [ | congruence ].
-    exists e. unfold finReprEl'. clear H.
-    specialize (nth_error_nth H1) as <-. apply getPosition_nth. 
-    + apply Cardinality.dupfree_elements. 
-    + eapply utils.nth_error_Some_length, H1.
-  Qed. 
-
-  Lemma nth_nth_error (X : Type) (l : list X) n def a  : nth n l def = a -> n < |l| -> nth_error l n = Some a. 
-  Proof. 
-    intros. apply nth_error_Some in H0. destruct nth_error eqn:H1; [ | congruence].
-    clear H0. apply nth_error_nth' with (y := def) in H1. easy.
-  Qed. 
-
-  Print opt_finReprEl'. 
-
+  (*those nice little singleton vectors have to go :) sorry *)
   Ltac destruct_vec1 := repeat match goal with [v : Vector.t _ 1 |- _] => specialize (vec_case1 v) as (? & ->) end. 
 
   Lemma fin_flat_nonhaltWindows_agree q qflat m mflat : 
@@ -4851,7 +4785,6 @@ Section fixTM.
   Definition flat_finalSubstrings : list (list nat) := map (fun pr => match pr with (s, m) => [flatInl $ flatInl (flatPair flatstates flatStateSigma s m)] end) (prodLists flat_haltingStates (seq 0 flatStateSigma)). 
 
   Smpl Add (reflexivity) : finRepr. 
-  SearchAbout finReprEl'.
 
   Lemma finReprEl'_finReprEl (X: finType) (A : X) a x: finRepr X x -> finReprEl' a A -> finReprEl x a A.
   Proof. 
@@ -4911,7 +4844,7 @@ Section fixTM.
   Lemma reduction_wf_correct : 
     GenNP (existT _ Sigma (fTM, k, t)) <-> FlatTPRLang reduction_wf.
   Proof. 
-    rewrite <- fin_reduction. symmetry. eapply isFlatTPROf_equivalence, reduction_isFlatTPROf.
+    rewrite <- GenNP_to_TPR. symmetry. eapply isFlatTPROf_equivalence, reduction_isFlatTPROf.
   Qed. 
 
 End fixTM. 
@@ -4962,7 +4895,7 @@ Proof.
         specialize (unflatten_single H1 H3) as (TM' & H4). 
         exists (finType_CS(Fin.t (TMflat.sig tm))), TM'.
         split; [apply H4 | ]. 
-        eapply fin_reduction. 1: apply H4. 
+        eapply GenNP_to_TPR. 1: apply H4. 
         eapply isFlatTPROf_equivalence. 1: apply reduction_isFlatTPROf, H4. 
         cbn in H.  
         apply H. 

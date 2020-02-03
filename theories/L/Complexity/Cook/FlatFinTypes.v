@@ -248,6 +248,15 @@ Proof.
   + eapply utils.nth_error_Some_length, H2. 
 Qed.
 
+Lemma finReprEl'_exists (X : finType) n : ofFlatType (Cardinality X) n -> exists (e:X), finReprEl' n e.
+Proof. 
+  intros. unfold ofFlatType,Cardinality in H. apply nth_error_Some in H. destruct (nth_error (elem X) n) eqn:H1; [ | congruence ].
+  exists e. unfold finReprEl'. clear H.
+  specialize (nth_error_nth H1) as <-. apply getPosition_nth. 
+  + apply Cardinality.dupfree_elements. 
+  + eapply utils.nth_error_Some_length, H1.
+Qed. 
+
 Lemma finRepr_exists_list (X : finType) (x : nat) (l : list nat) : 
   finRepr X x -> list_ofFlatType x l -> sigT (fun (L : list X) => isFlatListOf l L). 
 Proof. 
