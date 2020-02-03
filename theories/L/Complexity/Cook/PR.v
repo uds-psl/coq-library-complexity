@@ -150,6 +150,41 @@ Section fixX.
     - setoid_rewrite app_length. destruct IHvalid as (k & ->).  exists (S k); nia. 
   Qed. 
 
+  (*a more direct characterisation which does not allow vacuous rewrites, making some proofs simpler *)
+  (*its drawback is that it uses rewritesHead in two cases, which makes many proofs more complicated *)
+  Inductive validDirect: list X -> list X -> Prop :=
+  | validDirectB a b win : |a| = |b| -> |a| = width -> win el windows -> rewritesHead win a b -> validDirect a b 
+  | validDirectS a b u v win: validDirect a b -> length u = offset -> length v = offset -> win el windows -> rewritesHead win (u ++ a) (v ++ b) -> validDirect (u ++ a) (v ++ b). 
+
+  Hint Constructors validDirect.
+
+  Variable (A0 : exists k, k > 0 /\ width = k * offset). 
+  Variable (A1 : offset > 0). 
+  Lemma validDirect_valid a b : validDirect a b <-> valid a b /\ |a| >= width.
+  Proof. 
+    split.
+    - induction 1. 
+      + split; [ | lia]. 
+        assert (offset <= width) as H3 by (destruct A0 as (? & ? & ?); nia).         
+        rewrite <- H0 in H3. assert (offset <= |b|) as H4 by lia.
+        apply list_length_split1 in H3 as (a1 & a2 & H3 & _ & ->). 
+        apply list_length_split1 in H4 as (b1 & b2 & H4 & _ & ->). 
+        econstructor; [ | lia | lia | apply H1| apply H2]. 
+        rewrite !app_length in *. 
+        destruct A0 as (k & _ & ->).
+        eapply valid_vacuous; try lia. rewrite H3 in H0. assert (|a2| = (k-1) * offset) as H6 by nia. apply H6. 
+      + destruct IHvalidDirect as (IH & H4). split; [ | rewrite app_length; lia]. 
+        econstructor 3; [ apply IH | apply H0 | apply H1 | apply H2 | apply H3]. 
+    - intros (H1 & H2). induction H1; cbn in H2; [ lia | rewrite app_length in H2; lia| ]. 
+      destruct (le_lt_dec width (|a|)). 
+      + apply IHvalid in l. eauto.
+      + clear IHvalid. assert (|u++a| = width). 
+        { apply valid_multiple_of_offset in H1 as (ak & H1). destruct A0 as (k & A2 & ->). 
+          rewrite app_length in *. enough (k = S ak) by nia. nia. 
+        }
+        econstructor 1; eauto. apply valid_length_inv in H1. now rewrite !app_length. 
+  Qed. 
+
   (*we can give an explicit characterisation which better captures the original intuition: a rewrite window has to hold at every multiple of offset *)
   Definition validExplicit a b := length a = length b 
     /\ (exists k, length a = k * offset) 

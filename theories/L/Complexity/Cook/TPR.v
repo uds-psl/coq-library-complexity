@@ -73,6 +73,25 @@ Section abstractDefs.
       - constructor 3. 2: apply H. repeat constructor.
     Qed. 
 
+    (*a different characterisation not allowing vacuous rewrites *)
+    (*this is conceptually nicer, but it has the problem that p is used in two cases, which makes some proofs harder *)
+    Inductive validDirect : string -> string -> Prop :=
+    | validDirectB a b : |a| = 3 -> |b| = 3 -> p a b -> validDirect a b 
+    | validDirectS a b x y : validDirect a b -> p (x::a) (y::b) -> validDirect (x::a) (y::b). 
+
+    Lemma validDirect_valid a b : validDirect a b <-> valid a b /\ |a| >= 3. 
+    Proof. 
+      split. 
+      - induction 1. 
+        + split; [ | lia]. list_length_inv. eauto 10.
+        + destruct IHvalidDirect as [IH H1]. split; [ | cbn; lia]. eauto 10.
+      - intros (H1 & H2). induction H1; cbn in H2; [easy | easy | ]. 
+        list_length_inv. destruct a. 
+        + clear IHvalid. apply valid_length_inv in H1. cbn in H1. 
+          constructor; cbn; easy. 
+        + constructor 2; [ | apply H]. apply IHvalid. now cbn. 
+    Qed. 
+
     (*the explicit characterisation using bounded quantification *)
     Definition validExplicit a b := 
       length a = length b 

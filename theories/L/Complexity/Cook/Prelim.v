@@ -379,6 +379,10 @@ Ltac list_length_inv := repeat match goal with
     | [H : S _ = |?a| |- _] => is_var a; destruct a; cbn in H; [ congruence | apply S_injective in H]
     | [H : 0 = |?a| |- _] => is_var a; destruct a; cbn in H; [ clear H| congruence]
     | [H : |?a| = _ |- _] => symmetry in H
+    | [H : S _ >= S _ |- _] => apply Peano.le_S_n in H
+    | [H : S _ <= S _ |- _] => apply Peano.le_S_n in H
+    | [H :  |?a| >= S _ |- _] => is_var a; destruct a; cbn in H; [lia | ]
+    | [H : S _ <= |?a| |- _] => is_var a; destruct a; cbn in H; [lia | ]
 end.
 
 Lemma list_eq_length (X : Type) (l1 l2 : list X) : l1 = l2 -> |l1| = |l2|. 

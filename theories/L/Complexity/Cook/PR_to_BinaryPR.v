@@ -116,8 +116,7 @@ Section fixInstance.
       apply PR_homomorphism_iff; eauto; [ apply h'_length | apply h'_injective].
     - destruct H as (_ & H1).
       split; [ apply A | ]. 
-      apply (PR_homomorphism_iff h'_length A1 h'_injective A) in H1. 
-      apply H1. 
+      apply (PR_homomorphism_iff h'_length A1 h'_injective A1) in H1; [apply H1 | apply A]. 
   Qed. 
 End fixInstance. 
 

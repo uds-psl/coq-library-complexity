@@ -191,8 +191,7 @@ Section fixInstance.
   Qed. 
 
   (*for the other direction, we again prove a stronger result saying that the conclusion is in the image of the homomorphism *)
-  (*the main difficulty lies in showing that the windows cover the whole string and we do not have vacuous rewrites*)
-  (*then, the lemma decomposes to two interesting cases: 
+  (*The lemma decomposes to two interesting cases: 
     - the case where a single rewrite window covers the whole string
     - the case where a part of the string is already covered by some windows and we add a new window at the front
   *)
@@ -201,80 +200,44 @@ Section fixInstance.
     -> valid hoffset hwidth hwindows (h a) b' 
     -> exists b, b' = h b /\ valid offset width windows a b.
   Proof. 
-    unfold hoffset, hwidth. intros.  
-    remember (h a). revert a Heql H. induction H0. 
-    - intros. symmetry in Heql. apply h_nil_inv in Heql; [ | auto]. subst. exists []. 
-      split; [symmetry; apply homo_nil, (proj1 h_unifHom) | eauto ]. 
-    - intros. clear IHvalid. symmetry in Heql.
-      eapply h_app_inv in Heql as (a1 & a2 & -> & F1 & F2); [ | rewrite Nat.mul_comm; apply H1]. 
-      rewrite <- F1, h_multiplier in H1. 
-      rewrite <- F2, h_multiplier in H. rewrite app_length in H3. nia. 
-    - intros. symmetry in Heql.  
-      eapply h_app_inv in Heql as (a1 & a2 & -> & F1 & F2); [ | rewrite Nat.mul_comm; apply H]. 
-      subst. 
-      apply rewritesHead_homomorphism2 in H3 as (b1 & -> & H7 & H3); 
-        [ | easy | rewrite h_multiplier in H; nia | easy ]. 
-      specialize (h_multiplier a1) as H6. 
-      assert (|a1| = offset) by nia. 
-      destruct (le_lt_dec width (|a2|)) as [l|l]. 
-      + (*we can apply the IH *)
-        unfold hwindows in H2. apply in_map_iff in H2 as (rule' & <- & H10). 
-        assert (|a2| >= width) as l' by lia; clear l.
-        specialize (IHvalid a2 eq_refl l') as (b0 & -> & IH). 
+    (*we switch to the validDirect characterisation *)
+    intros H H0. assert (valid hoffset hwidth hwindows (h a) b' /\ |h a| >= hwidth) as H1%validDirect_valid. 
+    { split; [easy | ]. unfold hwidth; rewrite h_multiplier. nia. }
+    all: unfold hoffset, hwidth. 
+    4: { destruct A as (_ & H5 & _). nia. }
+    3: { destruct A as (_ & _ & (k0 & H5 & H6) &_). exists k0. nia. }
+    2: { destruct A as (H5 & _). nia. }
+    enough (exists b, b' = h b /\ validDirect offset width windows a b).
+    { destruct H2 as (b & -> & H2). apply validDirect_valid in H2. 2-4: apply A. easy. }
+    clear H0 H. 
+    remember (h a). revert a Heql. induction H1; intros. 
+    - subst. 
+      destruct A as (_ & _ & _ & _ & H5 & _). unfold hwindows in H1. apply in_map_iff in H1 as (win' & <- & H1).
+      specialize (H5 _ H1) as (H1' & H1''). 
+      exists (conc win'). remember H2 as H20. clear HeqH20. (*we'll need the hypothesis later *)
+      destruct H2 as ((a1 & H2) & (b1 & H3)). (*we show b1 = a1 = []*)
+      assert (b1 = []). 
+      { 
+        rewrite H2, H3, !app_length in H. destruct win'. cbn in *. 
+        rewrite !h_multiplier in H. enough (a1 = []) as -> by (destruct b1; [easy | cbn in H; nia]). 
+        rewrite H2, app_length, h_multiplier in H0. unfold hwidth in H0. destruct a1; [easy | cbn in H0; nia].
+      } 
+      rewrite H3, H4, app_nil_r. destruct win'. cbn in *. split; [easy | ]. 
+      eapply h_app_inv in H2 as (b1' & b2 & -> & H2 & <-); [ | rewrite h_multiplier, Nat.mul_comm; reflexivity]. 
+      apply h_injective in H2 as ->. 
+      assert (b2 = []) as ->.
+      { rewrite h_multiplier, app_length in H0. unfold hwidth in H0. destruct b2; [easy | cbn in H0; nia]. }
+      rewrite app_nil_r. econstructor; [lia | lia | apply H1 | ].
+      apply rewritesHead_homomorphism_iff; [ apply H1 | ].
+      rewrite H3, H4, !app_nil_r in H20. apply H20.
+    - unfold hoffset, hwidth in *. unfold hwindows in H2. apply in_map_iff in H2 as (rule' & <- & H10). 
+      symmetry in Heql. eapply h_app_inv in Heql as (a1 & a2 & -> & F1 & F2); [ | rewrite Nat.mul_comm; apply H]. 
+      subst. apply rewritesHead_homomorphism2 in H3 as (b1 & -> & H7 & H3); [ |now apply in_map_iff | rewrite h_multiplier in H; nia | easy ]. 
+       specialize (IHvalidDirect a2 eq_refl) as (b0 & -> & IH). 
         exists (b1 ++ b0). repeat split.
         * now rewrite (proj1 h_unifHom). 
-        * econstructor 3; [ easy | easy | easy | easy | ]. 
+        * econstructor; [ easy | rewrite h_multiplier in H; nia | easy | apply H10 | ]. 
           rewrite <- !(proj1 h_unifHom) in H3. apply rewritesHead_homomorphism_iff in H3; eauto.
-      + (*the interesting base case *)
-        clear IHvalid H6. unfold hwindows in H2. apply in_map_iff in H2 as (rule' & <- & H10). 
-        (*we show: the rule actually matches the whole string *)
-        remember H3 as H30. clear HeqH30. (*we'll need the original hypothesis later *)
-        specialize H3 as ((rest' & H3') & (rest & H3)). (*show rest = [] *)
-        (*we need some structural assumptions *)
-        destruct A as (_ & _ & A4 & _ & A5 & _ ). 
-        assert (rest = []) as ->. 
-        { 
-          assert (|a1++a2| = width). 
-          { 
-            specialize (valid_multiple_of_offset H0) as (k1 & H0').
-            rewrite app_length. destruct A4 as (ak & _ & A4). rewrite A4 in *. 
-            rewrite app_length in H4. 
-            rewrite h_multiplier in H0'. 
-            enough (ak = S k1) by nia. nia. 
-          }
-          clear H4 A4. 
-          specialize (A5 _ H10) as (A5 & A5'). 
-          assert (rest' = []) as ->. 
-          { (*we now know: | h(a1 ++ a2)| = k * width, but also |prem (hwindow rule')| = k * width *)
-            clear l H7 H3. 
-            assert (|h a1 ++ h a2| = | prem (hwindow rule') ++ rest'|) by congruence. 
-            rewrite <- (proj1 h_unifHom) in H3. 
-            destruct rule' as (prem & conc); cbn in *. rewrite app_length in H3. 
-            rewrite !h_multiplier, H2, A5 in H3.  destruct rest'; cbn in H3; [easy | nia]. 
-          } 
-          enough (|h b1 ++ b| = |h a1 ++ h a2|) as H11.
-          { rewrite H3, H3' in H11. rewrite !app_length in H11. 
-            destruct rule'; cbn in *. rewrite !h_multiplier, A5, A5' in H11. 
-            destruct rest; cbn in H11; [auto | lia]. 
-          }
-          rewrite !app_length. apply valid_length_inv in H0. lia.
-        }
-        rewrite app_nil_r in H3.  destruct rule'; cbn in *.  
-
-        symmetry in H3. eapply h_app_inv in H3 as (b1' & b2 & -> & H3 & <-); [ | rewrite h_multiplier, Nat.mul_comm; reflexivity]. 
-        apply h_injective in H3 as ->. 
-        (*we have now arrived at a point where we know that the conclusion is also of the form h _  *)
-        exists (b1 ++ b2). split; [now rewrite !(proj1 h_unifHom) | ].
-        (*thus, we can show the validity *)
-        econstructor 3. 
-        -- specialize (valid_multiple_of_offset H0) as (k1 & H0'). eapply valid_vacuous.  
-           ++ apply valid_length_inv in H0. rewrite !h_multiplier in H0. nia. 
-           ++ apply l.  
-           ++ rewrite h_multiplier in H0'. enough (|a2| = k1 * offset) as G by apply G. nia. 
-        -- easy. 
-        -- easy.  
-        -- easy.  
-        -- apply rewritesHead_homomorphism_iff; [ apply H10 | rewrite !(proj1 h_unifHom); apply H30].
   Qed. 
 
   (*we can obtain an equivalence, but its second direction is significantly weaker than the direction which we've just shown *)

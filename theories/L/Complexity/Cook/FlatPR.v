@@ -70,42 +70,25 @@ Section fixInstance.
     -> valid offset width windows a b 
     -> p b. 
   Proof. 
-    intros H H0 H1 G1 G2 H2. induction H2. 
-    - apply H.
-    - rewrite app_length in H1. lia. 
-    - rewrite app_length in H1. apply H0 in H. 
-      destruct (le_lt_dec width (|a|)). 
-      + apply H0. 
-        split; [ | apply IHvalid; [ easy | lia]]. 
-        clear IHvalid H2 l. 
-        now eapply G1. 
-      + clear IHvalid. clear G1. 
-        destruct A as (_ & _ & (k & _ & A2) & _ & A6 & _).  
-        destruct B as ( _ & _ & A5).
-        specialize (A5 _ H5) as (A5 & A7). 
-        specialize H6 as ((rest' & H6') & (rest & H6)).  (*show rest = [] *)
-        (*we need some structural assumptions *)
-        assert (rest = []) as ->. 
-        { 
-          assert (|u ++ a| = width). 
-          { 
-            specialize (valid_multiple_of_offset H2) as (k1 & H1').
-            rewrite app_length. rewrite A2 in *. 
-            enough (k = S k1) by nia. nia. 
-          }
-          specialize (A6 _ H5) as (A6 & A6'). 
-          assert (rest' = []) as ->. 
-          { (*we now know: | u ++ a| = width, but also |prem (window rule')| = width *)
-            destruct win as (prem & conc); cbn in *. 
-            rewrite H6', app_length, A6 in H7. destruct rest'; cbn in H7; [easy | nia]. 
-          } 
-          rewrite app_nil_r in H6'. 
-          assert (|v ++ b| = |conc win ++ rest|) by congruence. 
-          rewrite !app_length in H8. rewrite app_length in H7. 
-          apply valid_length_inv in H2. destruct rest; cbn in *; [easy | lia]. 
-        }       
-        rewrite app_nil_r in H6. rewrite H6. 
-        now apply G2. 
+    intros H H0 H1 G1 G2 H2. 
+    (*we switch to the direct characterisation *)
+    assert (valid offset width windows a b /\ |a| >= width) as H3%validDirect_valid by tauto. 2-4: apply A.
+    clear H2 H1. induction H3. 
+    - clear G1. 
+      destruct A as (_ & _ & (k & _ & A2) & _ & A6 & _).  
+      destruct B as ( _ & _ & A5).
+      specialize (A5 _ H3) as (A5 & A7). 
+      specialize H4 as ((rest' & H6') & (rest & H6)).  (*show rest = [] *)
+      specialize (A6 _ H3) as (A6 & A6').
+      subst. rewrite app_length in H2. 
+      (*we need some structural assumptions *)
+      assert (rest = []) as ->. 
+      { 
+        destruct rest'; cbn in H2; [ | lia]. rewrite !app_length in H1. 
+        destruct rest; [ easy | cbn in H1; lia].
+      }       
+      rewrite app_nil_r. now apply G2.     
+    - rewrite H0. apply H0 in H. split; [ | apply IHvalidDirect; easy]. now eapply G1. 
   Qed. 
 
   (*the statement is now a straightforward corollary *)
