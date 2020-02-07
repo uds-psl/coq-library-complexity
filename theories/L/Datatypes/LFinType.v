@@ -53,3 +53,15 @@ Section finType_eqb.
   Qed. *)
 
 End finType_eqb.
+
+Lemma enc_finType_eq (X:finType) (x:X):
+  enc (registered := registered_finType) x = enc (index x).
+Proof.
+  reflexivity.
+Qed.
+
+Lemma size_finType_le (X:finType) (x:X):
+  size (enc (registered := registered_finType) x) <= length (elem X) * 4.
+Proof.
+  rewrite enc_finType_eq,size_nat_enc. specialize (index_le x). lia.
+Qed.

@@ -1,6 +1,6 @@
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import LNat Lists LProd LFinType LVector.
-From Undecidability.L Require Import Computability.MuRec Functions.FinTypeLookup.
+From Undecidability.L Require Import Computability.MuRec Functions.FinTypeLookup Functions.EqBool.
 From Undecidability.L Require Export TM.TMEncoding.
 From Undecidability.L Require Import TM.TapeFuns.
 
@@ -14,22 +14,6 @@ Definition Halt :{ '(Sigma, n) : _ & mTM Sigma n & tapes Sigma n} -> _ :=
   fun '(existT2 _ _ (Sigma, n) M tp) =>
     exists (f: mconfig _ (states M) _), halt (cstate f) = true
                                    /\ exists k, loopM (mk_mconfig (start M) tp) k = Some f.
-
-Fixpoint loopTime {X} `{registered X} f (fT: timeComplexity (X -> X)) (p: X -> bool) (pT : timeComplexity (X -> bool)) (a:X) k :=
-  fst (pT a tt) +
-  match k with
-    0 => 7
-  |  S k =>
-     fst (fT a tt) + 13 + loopTime f fT p pT (f a) k
-  end.
-
-Instance term_loop A `{registered A} :
-  computableTime' (@loop A)
-                 (fun f fT => (1,fun p pT => (1,fun a _ => (5,fun k _ =>(loopTime f fT p pT a k,tt))))).
-Proof.
-  extract.
-  solverec.
-Qed.
 
 Section loopM.
   Context (sig : finType).
@@ -47,88 +31,45 @@ Section loopM.
   Let eqb_states := eqbFinType_inst (X:=states M).
   Existing Instance eqb_states.
 
-  Definition transTime := (length (elem (states M) )*17 + n * 17 * (length ( elem sig )+ 4) + 71) * length (funTable (trans (m:=M))) + 16.
-
+  Local Definition c__trans :=
+       (length ( elem (states M) ) * 4 + (n * (4 * length ( elem sig ) + 10) + 4) + 4) *
+       c__eqbComp (finType_CS (states M * VectorDef.t (option sig) n)).
+  Definition transTime := (| funTable (trans (m:=M)) |) * (c__trans + 24) + 4 + 9.
   (** *** Computability of transition relation *)
-  Instance term_trans : computableTime' (trans (m:=M)) (fun _ _ => (transTime,tt)).
+  Global Instance term_trans : computableTime' (trans (m:=M)) (fun _ _ => (transTime,tt)).
   Proof.
     pose (t:= (funTable (trans (m:=M)))).
-    
-    apply computableTimeExt with (x:= fun c => lookup EqBool.eqb c t (start M,Vector.const (None,N) _)).
-    2:{(*Set Printing Implicit. Typeclasses eauto := debug.*) (*** TODO: instantiatte eqb-instance? **) Import EqBool. extract.
-       cbn [fst snd]. intuition ring_simplify.
-
-
-       rewrite lookupTime_leq with (k:=(4 * (| elem (states M) |) * c__eqbComp (finType_CS (states M * VectorDef.t (option sig) n)) +
-  4 * n * (| elem sig |) * c__eqbComp (finType_CS (states M * VectorDef.t (option sig) n)) +
-  14 * n * c__eqbComp (finType_CS (states M * VectorDef.t (option sig) n)) +
-  12 * c__eqbComp (finType_CS (states M * VectorDef.t (option sig) n)) + 5)).
-       -unfold transTime.
-
-        repeat match goal with
-                 |- context C[length _] =>let G:= context C [length t] in progress change G
-               end.
-        ring_simplify.  omega.
-       -intros y. unfold callTime2.
-        cbn [fst snd]. ring_simplify.
-        unfold eqbTime. rewrite Nat.le_min_l.
-        setoid_rewrite size_prod at 1. cbn [fst snd].
-
-        Lemma enc_finType_eq (X:finType) (x:X):
-          enc (registered := registered_finType) x = enc (index x).
-        Proof.
-          reflexivity.
-        Qed.
-
-        Lemma enc_vector_eq X `{registered X} m (x:Vector.t X m):
-          enc x = enc (Vector.to_list x).
-        Proof.
-          reflexivity.
-        Qed.
-        
-        rewrite enc_finType_eq,enc_vector_eq.
-        rewrite size_list,sumn_le_bound with (c:=(| elem sig |) * 4 + 14).
-        2:{
-          intros ? (?&<-&?)%in_map_iff. rewrite LOptions.size_option. destruct x.
-          rewrite enc_finType_eq. rewrite size_nat_enc. rewrite index_leq. lia. lia. }
-        rewrite map_length,to_list_length.
-        rewrite size_nat_enc.
-        setoid_rewrite index_leq. ring_simplify. rewrite Nat.min_id.
-        rewrite list_eqbTime_leq with (k:= | elem sig| * 17 + 29).
-        +rewrite to_list_length. ring_simplify. omega.
-        +intros [] [];unfold callTime2;cbn [fst snd].
-         setoid_rewrite index_leq at 1 2. rewrite Nat.min_id.
-         all:ring_simplify. all:omega.
+    apply computableTimeExt with (x:= (fun c => lookup c t (start M,Vector.const (None , N) _ ) )).
+    2:{ remember t as lock__t .
+        extract. solverec. subst lock__t .
+        rewrite lookupTime_leq.
+                                        setoid_rewrite size_prod;cbn [fst snd].
+         unfold reg_states;rewrite (size_finType_le a).
+         
+         rewrite enc_vector_eq. evar (c__elem' : nat).
+         evar (c__elem : nat). 
+         rewrite size_list,sumn_le_bound with (c:=c__elem).
+         2:{
+           intros ? (?&<-&?)%in_map_iff.
+           rewrite LOptions.size_option.
+           [c__elem]: exact( c__elem' + 10). subst c__elem.
+           destruct x. 2:lia.
+           unfold reg_sig;rewrite (size_finType_le e).
+           ring_simplify.
+           [c__elem']: exact (4 * (| elem sig |)). subst c__elem'. lia.
+         }
+         rewrite map_length,to_list_length.
+         unfold c__elem',transTime,c__trans,t,c__elem. reflexivity.
     }
+    
     cbn -[t] ;intro. subst t.  setoid_rewrite lookup_funTable. reflexivity.
-    apply prod_eqb_spec. apply finType_eqb_reflect. apply vector_eqb_spec,LOptions.option_eqb_spec,finType_eqb_reflect.
-  Qed.
-
-  Instance term_current: computableTime' ((current (sig:=sig))) (fun _ _ => (10,tt)).
-  Proof.
-    extract.
-    solverec.
-  Qed.
-
-  Instance term_current_chars: computableTime' (current_chars (sig:=sig) (n:=n))  (fun _ _ => (n * 22 +12,tt)).
-  Proof.
-    extract.
-    solverec.
-    rewrite map_time_const,to_list_length.  omega.
   Qed.
 
   Definition step' (c :  mconfig sig (states M) n) : mconfig sig (states M) n :=
     let (news, actions) := trans (cstate c, current_chars (ctapes c)) in
     mk_mconfig news (doAct_multi (ctapes c) actions).
 
-
-  Instance term_doAct: computableTime' (doAct (sig:=sig)) (fun _ _ => (1,fun _ _ => (89,tt))).
-  Proof.
-    extract.
-    solverec.
-  Qed.
-
-  Instance term_doAct_multi: computableTime' (doAct_multi (n:=n) (sig:=sig)) (fun _ _ => (1,fun _ _ =>(n * 108 + 19,tt))).
+  Global Instance term_doAct_multi: computableTime' (doAct_multi (n:=n) (sig:=sig)) (fun _ _ => (1,fun _ _ =>(n * 108 + 19,tt))).
   Proof.
     extract.
     solverec.
@@ -138,33 +79,30 @@ Section loopM.
   Qed.
 
 
-  Instance term_step' : computableTime' (step (M:=M)) (fun _ _ => (n* 130+ transTime + 64,tt)).
+  Global Instance term_step' : computableTime' (step (M:=M)) (fun _ _ => (n* 130+ transTime + 64,tt)).
   Proof.
     extract.
     solverec.
   Qed.
 
-  Definition haltTime := length (funTable (halt (m:=M))) * (length (elem (states M)) * 17 + 37) + 12.
+  Local Definition cHalt := ((| elem (states M) |) * 4 * c__eqbComp (states M) + 24).
 
-  Instance term_halt : computableTime' (halt (m:=M)) (fun _ _ => (haltTime,tt)).
+  Definition haltTime := length (funTable (halt (m:=M))) * cHalt + 12.
+
+  Global Instance term_halt : computableTime' (halt (m:=M)) (fun _ _ => (haltTime,tt)).
   Proof.
     pose (t:= (funTable (halt (m:=M)))).
-    apply computableTimeExt with (x:= fun c => lookup finType_eqb c t false).
+    apply computableTimeExt with (x:= fun c => lookup c t false).
     2:{extract.
        solverec.
-       rewrite lookupTime_leq with (k:=17 * (| elem (states M) |) + 18).
-       2:{
-         intros. cbn [callTime2 fst].
-         repeat rewrite index_leq. rewrite Nat.min_id. omega.
-       }
-       unfold haltTime. subst t.
-       ring_simplify. reflexivity.
+       rewrite lookupTime_leq.
+       unfold reg_states at 1;rewrite size_finType_le.
+       unfold haltTime. subst t. unfold cHalt. nia.
     }
     cbn;intro. subst t. setoid_rewrite lookup_funTable. reflexivity.
-    apply finType_eqb_reflect.
   Qed.
 
-  Instance term_haltConf : computableTime' (haltConf (M:=M)) (fun _ _ => (haltTime+8,tt)).
+  Global Instance term_haltConf : computableTime' (haltConf (M:=M)) (fun _ _ => (haltTime+8,tt)).
   Proof.
     extract.
     solverec.

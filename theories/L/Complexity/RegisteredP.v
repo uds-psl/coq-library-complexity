@@ -1,7 +1,7 @@
 From Undecidability.L.Tactics Require Import LTactics.
 From Undecidability.L.Datatypes Require Import LProd LTerm.
 
-From Undecidability.L Require Import Complexity.Synthetic Complexity.Monotonic Functions.Encoding TM.TMEncoding.
+From Undecidability.L Require Import Complexity.Synthetic Complexity.Monotonic Functions.Encoding.
 
 Class registeredP `(X:Type) `{registered X}: Type :=
   {
@@ -84,33 +84,12 @@ Proof.
   now destruct l.
 Qed.
 
-
-Instance term_move_enc
-  :computableTime' (TMEncoding.move_enc) (fun x _ => (15,tt)).
-Proof.
-  extract. solverec.
-Qed.
-
 Instance term_bool_enc
   :computableTime' (LBool.bool_enc) (fun x _ => (12,tt)).
 Proof.
   extract. solverec.
 Qed.
 
-
-Instance regP_move : registeredP TM.move.
-Proof.
-  evar (c:nat).
-  exists c.
-  eexists _. 
-  eapply computesTime_timeLeq.
-  2:now apply term_move_enc.
-  intros l _. split. 2:easy.
-  change (enc l) with (TMEncoding.move_enc l).
-  cbn.
-  [c]:exact (4). unfold c.
-  destruct l;cbn [size TMEncoding.move_enc]. all:lia.
-Qed.
 
 Instance regP_bool : registeredP bool.
 Proof.

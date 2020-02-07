@@ -1,6 +1,10 @@
-From Undecidability.L Require Import TM.TMflat TM.TMflatEnc Tactics.LTactics Datatypes.LNat Datatypes.Lists.
-Require Import PslBase.FiniteTypes.
-From Undecidability Require Import TM.TM TM.TMEncoding.
+From Undecidability.L Require Import TM.TMflat Tactics.LTactics Datatypes.LNat Datatypes.Lists Functions.EqBool.
+
+From Undecidability Require Import TM.TM TM.TMEncoding L.TM.TMunflatten.
+
+From PslBase.FiniteTypes Require FiniteFunction.
+From Undecidability Require Import Functions.FinTypeLookup.
+
 
 Lemma size_flatTape (sig : finType) (t' : tape sig):
   size (enc (mapTape index t')) <= sizeOfTape t' * (Cardinality.Cardinality sig * 4+9) + 17.
@@ -70,24 +74,10 @@ Proof.
    specialize (IHn x0). rewrite IHn,sizeoftape_maptape_eq. lia.
 Qed.
 
-Lemma lookup_sound' (A: eqType) (B: Type) (L : list (prod A B)) a b def :
-  (forall a' b1 b2, (a',b1) el L -> (a',b2) el L -> b1=b2) -> ( (a,b) el L \/ ((forall b', ~ (a,b') el L) /\ b = def) ) -> lookup L a def = b.
-Proof.
-  intros H1 H2. unfold lookup.
-  destruct filter eqn:E.
-  - destruct H2 as [H2|H2].
-    +assert ((a,b) el filter (fun p : A * B => Dec (fst p = a)) L) by ( rewrite in_filter_iff ; eauto).
-     now rewrite E in H.
-    +easy.
-  - destruct p. assert ((e,b0) el (filter (fun p : A * B => Dec (fst p = a)) L)) by now rewrite E.
-    rewrite in_filter_iff in H. 
-    dec; cbn in *; subst; firstorder.
-Qed.
-
 Lemma isFlatteningTransOf_eq st sig' n trans trans' s v:
   isFlatteningTransOf (st:=st) (sig:=sig') (n:=n) trans trans' ->
   (let (s',v'):= trans' (s,v) in
-  (index s', map (map_fst (option_map index)) (Vector.to_list v'))) = lookup trans (index s,map (option_map index) (Vector.to_list v)) (index s, repeat (None,N) n).
+  (index s', map (map_fst (option_map index)) (Vector.to_list v'))) = FinTypeLookup.lookup (index s,map (option_map index) (Vector.to_list v)) trans (index s, repeat (None,N) n).
 Proof.
   intros [H1 H2].
   destruct trans' as [s' v'] eqn:eq.
@@ -101,7 +91,7 @@ Proof.
    congruence. 
   -specialize (H2 s v) as H2'. rewrite eq in H2'.
    destruct H2' as [ | (<-&->) ]. easy.
-   edestruct lookup_complete as [H'|H'].
+   edestruct lookup_complete with (A:= (nat * list (option nat))%type) (B:= (nat * list (option nat * move))%type) as [H'|H'].
    2:{right. split.
       +intros ? ?.
        eapply H'. eexists. eassumption.
@@ -116,20 +106,15 @@ Proof.
    eapply vector_to_list_inj in H''' as <-. rewrite eq in Ht. inv Ht.
    eassumption.
    Unshelve.
+   2:exact _.
    repeat econstructor. 
 Qed.
 
 
-Definition mconfigFlat :Type := nat * list (tape nat).
-
-Inductive isFlatteningConfigOf {st sig : finType} {n}: mconfigFlat -> mconfig st sig n -> Prop :=
-  mkisFlatteningConfigOf c c' (Hs : fst c = index c'.(cstate)) (Ht:isFlatteningTapesOf (snd c) c'.(ctapes))
-  : isFlatteningConfigOf c c'.
-Print step.
-
-Fixpoint zipWith {X Y Z} (f:X -> Y->Z) (xs:list X) (ys:list Y) : list Z :=
+Definition zipWith {X Y Z} (f:X -> Y->Z) :=
+  fix zipWith (xs:list X) (ys:list Y) : list Z :=
   match xs,ys with
-    x::xs,y::ys => f x y :: zipWith f xs ys
+    x::xs,y::ys => f x y :: zipWith xs ys
   | _,_ => []
   end.
 
@@ -153,7 +138,8 @@ Qed.
 
 
 Definition stepFlat (trans:list (nat * list (option nat) * (nat * list (option nat * move)))) (c:mconfigFlat) : mconfigFlat :=
-  let (news, actions) := lookup trans (fst c, map (@current _) (snd c)) (fst c, repeat (None, N) (length (snd c))) in (news,(zipWith (@doAct _) (snd c) actions)).
+  let (news, actions) := lookup (fst c, map (@current _) (snd c)) trans (fst c, repeat (None, N) (length (snd c)))
+  in (news,(zipWith (@doAct _) (snd c) actions)).
 
 Lemma current_charsFlat_eq (sig:finType) n t (t': tapes sig n):
   isFlatteningTapesOf t t' ->
@@ -172,16 +158,14 @@ Lemma stepFlat_eq sig' n (M': mTM sig' n) (trans:list (nat * list (option nat) *
   isFlatteningConfigOf (stepFlat trans c) (step (M:=M') c').
 Proof.
   intros Htrans H. inv H.
-  destruct c. cbn in Hs,Ht. inv Hs.
-
   unfold stepFlat, step. cbn [fst snd cstate ctapes] in *.
   erewrite current_charsFlat_eq. 2:easy.
-  replace (length l) with n.
+  replace (length t) with n.
   2:{inv Ht. destruct c'. now rewrite LVector.to_list_length. }
   erewrite <-isFlatteningTransOf_eq. 2:easy.
-  destruct TM.trans. econstructor. now easy.
-  cbn - [doAct_multi]. 
-  apply doAct_multiFlat. easy.
+  destruct TM.trans. apply isFlatteningConfigOf_iff;do 2 econstructor.
+  apply doAct_multiFlat;eauto. 
+  now econstructor.
 Qed.
 
 Definition haltConfFlat (l : list bool) (c:mconfigFlat) : bool := nth (fst c) l false.  
@@ -201,12 +185,12 @@ Proof.
   induction k in Hc,c,c'|-*.
   -cbn.
    destruct HM. destruct R__halt. unfold haltConfFlat,haltConf.
-   inv Hc. destruct c. cbn in *. subst.
+   inv Hc;cbn [fst snd]. 
    rewrite R__halt. destruct halt. 2:easy.
    econstructor. all:easy.
   -cbn.
     destruct HM. destruct R__halt. unfold haltConfFlat,haltConf.
-   inversion Hc;subst. destruct c. cbn in *. subst.
+   inversion Hc;cbn [fst snd]. subst.
    rewrite R__halt. destruct halt. easy.
    eapply stepFlat_eq in Hc. 2:eassumption. eapply IHk in Hc as H'.
    fold (haltConfFlat (TMflat.halt M)). fold (haltConf (M:=M')). 
@@ -218,8 +202,54 @@ Lemma initFlat_correct sig n M (M' : mTM sig n) t t':
   isFlatteningTapesOf t t' ->
   isFlatteningConfigOf (M.(TMflat.start), t) (initc M' t').
 Proof.
-  intros ? ?. inv H.
-  econstructor.
-  -easy.
-  -cbn. easy.
+  intros. eapply isFlatteningConfigOf_iff;do 2  econstructor. eassumption.
+  inv H. cbn. congruence.
 Qed.
+
+Definition execFlatTM M t n :=
+  if isValidFlatTM M then
+    if isValidFlatTapes M.(sig) M.(TMflat.tapes) t
+    then loopMflat M (M.(TMflat.start),t) n
+    else None
+  else None.
+
+Lemma execFlatTM_correct M t k c :
+  execFlatTM M t k = Some c <->
+  (exists sig n (M':mTM sig n) c0 c',
+      isFlatteningTMOf M M'
+      /\ isFlatteningConfigOf (M.(TMflat.start),t) c0
+      /\ loopM (M:=M') c0 k = Some c' 
+      /\ isFlatteningConfigOf c c').
+Proof.
+  unfold execFlatTM.
+  destruct (isValidFlatTM_spec M);cbn [andb].
+  2:{ cbn. split. easy. intros (?&?&?&?&?&?&?&?&?). exfalso. eauto using isFlattening_is_valid. }
+  split.
+  -apply unflattenTM_correct in v.
+   pose (sig' := (finType_CS (Fin.t (sig M)))).
+   pose (states' := states (unflattenTM M)). cbn [unflattenTM states] in states'.
+   rewrite <- Card_Fint with (n:=sig M) at 1. fold sig'.
+   destruct isValidFlatTapes eqn:H';cbn [andb]. 2:easy. apply isUnflattableTapes in H' as (t'&Ht).
+   cbn [negb]. 
+   assert (def : states') by (eapply (@Fin.of_nat_lt 0) ;nia).
+   eapply initFlat_correct in Ht. 2:eauto.
+(*   assert (H' : isFlatteningConfigOf (s,t) (mk_mconfig (nth s (elem states') def) t')).
+   {constructor. 2:eauto. cbn. subst states'. now rewrite index_nth_elem_fint. }*)
+   assert (H'' := loopMflat_correct k v Ht).
+   intros Hloop. rewrite Hloop in H''.
+   destruct loopM eqn:HloopM.
+   all:now eauto 10.
+  -intros (?&?&?&?&?&HM&Hinit&HloopM&?). inversion HM.
+   inversion Hinit. subst. rewrite H1. 
+   erewrite eq__sig,flatteningTapeIsValid. 2:eassumption. 
+   destruct (Nat.ltb_spec0 (index (cstate x2)) (TMflat.states M)).
+   2:{exfalso. apply n. rewrite eq__states. eapply index_le. }
+   cbn. 
+   eassert (H'':=loopMflat_correct k HM Hinit).
+   rewrite HloopM in H''. destruct loopMflat. 2:easy.
+   destruct c,m. inv Ht.
+   inv H''. inv H. do 2 f_equal. 
+   inv Ht0. inv Ht. easy.
+Qed.
+
+

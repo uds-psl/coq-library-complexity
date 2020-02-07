@@ -37,7 +37,7 @@ Proof.
   unfold monotonic. easy.
 Qed.
 
-Lemma monotonic_comp f1 f2: monotonic f1 -> monotonic f2 -> monotonic (fun x => f1 (f2 x)).
+Lemma monotonic_comp f1 f2: monotonic f1 -> monotonic f2 -> monotonic (fun x => f1 (f2 x)). 
 Proof.
   unfold monotonic.
   intros H1 H2 **.
@@ -54,3 +54,47 @@ Smpl Add 20 (lazymatch goal with
                | _ => simple eapply monotonic_comp
                end)
              end) : monotonic.
+
+(*
+Inductive TTnat: Type -> Type :=
+  TTnatBase : TTnat nat
+| TTnatArr X Y (ttx : TTnat X) (tty : TTnat Y) : TTnat (X -> Y).
+
+Arguments TTnatArr _ _ {_ _}.
+Existing Class TTnat.
+Existing Instances TTnatBase TTnatArr.
+
+
+Fixpoint leHO {ty} {tt : TTnat ty} : ty -> ty -> Prop :=
+  match tt with
+    TTnatBase => le
+  | TTnatArr X Y => respectful (@leHO X _) (@leHO Y _)
+  end.
+Arguments leHO : simpl never.
+
+(*
+Instance leHO_Pointwise_le X Y (ttx : TTnat X) (tty : TTnat Y) (f g : X -> Y):
+  Proper 
+  Pointwise (@leHO _ ttx ==> leqHO _ tty).*)
+
+Notation "'monotonicHO'" := (Proper leHO) (at level 0).
+
+(*)
+Lemma leHO_monotonic (f : nat -> nat) :
+  monotonic f <-> monotonicHO f.
+Proof.
+  reflexivity.
+Qed.
+
+Module test.
+  Variable f : nat -> nat -> nat.
+  Context {Hf : monotonicHO f}.
+
+  Goal forall x y y', y <= y' -> f x y <= f x y'.
+  Proof.
+    pose Hf.
+    intros. now setoid_rewrite H.
+  Qed.
+End test.
+
+*)*)

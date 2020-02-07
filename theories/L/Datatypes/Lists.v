@@ -318,4 +318,14 @@ Proof.
             | @mk_registered _ enc _ _ => enc
             end a)) with (enc a). solverec. 
 Qed.
-  
+
+Lemma size_list_enc_r {X} `{registered X} (l:list X):
+  length l <= size (enc l).
+Proof.
+  rewrite size_list. induction l;cbn. all:lia.
+Qed.
+
+Instance term_repeat A `{registered A}: computableTime' (@repeat A) (fun _ _ => (5, fun n _ => (n * 12 + 4,tt))).
+Proof.
+  extract. solverec.
+Qed.

@@ -1,5 +1,5 @@
-From Undecidability Require Import L.Functions.FinTypeLookup L.Functions.EqBool.
 Require Import PslBase.FiniteTypes.
+From Undecidability Require Import L.Functions.EqBool.
 From PslBase.FiniteTypes Require Import VectorFin Cardinality.
 
 From Undecidability Require Import TM.TM.
@@ -362,8 +362,6 @@ Proof.
   3:symmetry. all:easy.
 Qed.           
 
-Print validFlatTrans.
-
 Definition isBoundTransTable (sig n states : nat) (f : list (nat * list (option nat) * (nat * list (option nat * move)))) :=
   forallb (fun '((s,v),(s',v')) =>
              (s <? states)
@@ -452,7 +450,7 @@ Definition isValidFlatTape (sig:nat) (t:tape nat):=
   forallb (fun x => Nat.ltb x sig) (tapeToList t).
 
 Definition isValidFlatTapes (sig:nat) n (t:list (tape nat)):=
-  (length t =? n) && forallb (isValidFlatTape sig) t.
+  if length t =? n then forallb (isValidFlatTape sig) t else false.
 
 Lemma tapeToList_map_commute sig sig' (f : sig -> sig') t :
   tapeToList (mapTape f t) = map f (tapeToList t).
@@ -467,8 +465,7 @@ Lemma flatteningTapeIsValid (sig:finType) n t (t' : TM.tapes sig n):
 Proof.
   intros H. inv H.
   unfold isValidFlatTapes.
-  rewrite andb_true_iff. split.
-  {rewrite vector_to_list_length. rewrite Nat.eqb_refl. easy. }
+  rewrite vector_to_list_length. rewrite Nat.eqb_refl.
   induction t' as [ |t];cbn. easy.
   rewrite andb_true_iff. split.
   2:{easy. }
@@ -514,9 +511,7 @@ Lemma isUnflattableTapes sig n t :
   isValidFlatTapes (Cardinality sig) n t = true -> {t' & isFlatteningTapesOf (sig:=sig) (n:=n) t t'}.
 Proof.
   cbn. unfold isValidFlatTapes.
-  intros H. rewrite !andb_true_iff in H.
-  destruct H as (H'&H).
-  eapply Nat.eqb_eq in H'. subst n.
+  intros H. destruct (Nat.eqb_spec (length t) n). 2:easy. subst n.
   induction t.
   -eexists [||]. rewrite isFlatteningTapesOf_iff. easy.
   -cbn in H.
@@ -526,11 +521,29 @@ Proof.
    eexists (t0:::v').
    rewrite isFlatteningTapesOf_iff in *. cbn. f_equal. all: now cbv.
 Qed.
-(*
-Lemma isValidFlatTapes_spec sig n t :
-  reflect (forall sig, Cardinality sig = n -> exists t', isFlatteningTapesOf (sig:=sig) (n:=n) t t') (isValidFlatTapes (Cardinality sig) n t).
+
+(** ** unflatten Conf *)
+
+Definition validFlatTape sig (t : tape nat) :=
+  forall n, n el tapeToList t -> n < sig.
+
+Lemma isValidFlatTape_spec sig t :
+  reflect (validFlatTape sig t) (isValidFlatTape sig t).
 Proof.
-  eapply iff_reflect. split.
-  -intros (?&?%flatteningTapeIsValid).  easy.
-  -intros (?&?)%isUnflattableTapes.  eauto.
-Qed.*)
+  unfold validFlatTape, isValidFlatTape.
+  apply iff_reflect. rewrite forallb_forall. setoid_rewrite Nat.ltb_lt. easy.
+Qed.
+      
+
+Definition validFlatConf M (c:mconfigFlat):=
+  let (s,ts) := c in
+   length ts = M.(tapes) /\ Forall (validFlatTape M.(sig)) ts /\ s < M.(states).
+
+(*
+Lemma isValidFatConf_spec M c:
+  reflect (validFlatConf M c) (isFlatteningConfigOf (M.(states)) M.(sig) M.(tapes) c).
+Proof.
+  unfold validFlatTape, isValidFlatTape.
+  apply iff_reflect. rewrite forallb_forall. setoid_rewrite Nat.ltb_lt. easy.
+Qed.
+*)

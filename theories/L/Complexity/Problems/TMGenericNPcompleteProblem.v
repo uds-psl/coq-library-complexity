@@ -1,145 +1,121 @@
 From Undecidability.TM Require Import TM.
-From Undecidability.L.TM Require Import TMflat TMflatEnc TMflatFun TMEncoding TapeDecode TMunflatten TMflatFun TMflatComp.
+From Undecidability.L.TM Require Import TMflat TMflatEnc TMflatFun TMEncoding TapeDecode TMunflatten TMflatFun TMflatComp TMinL.
 From Undecidability.L.Datatypes Require Import LNat LProd Lists.
 
 
-(*** TODO: move M
-  or parts of initial tape into definition? **)
+(* Factorise proof over GenNP? *)
+Definition GenNP sig n : mTM sig n * nat * nat -> Prop :=
+  fun '(M, k, steps) =>
+    exists tp, sizeOfmTapes tp <= k
+          /\ exists f, loopM (initc M tp) steps = Some f.
+
+Definition FlatTM1GenNP : TM*nat*nat -> Prop:=
+  fun '(M,maxSize, steps (*in unary*)) =>
+    exists sig (M':mTM sig 1), isFlatteningTMOf M M' /\ GenNP (M', maxSize, steps).
 
 Definition TMgenericNPcompleteProblem: TM*nat*nat -> Prop:=
   fun '(M,maxSize, steps (*in unary*)) =>
-    exists sig n (M':mTM sig n), isFlatteningTMOf M M' /\ (exists t, (exists f, loopM (initc M' t) steps = Some f)
-         /\ sizeOfmTapes t <= maxSize).
+    exists sig n (M':mTM sig n), isFlatteningTMOf M M' /\ GenNP (M',maxSize,steps).
 
-
-From Undecidability.L.Complexity Require Import NP LinTimeDecodable.
+From Undecidability.L.Complexity Require Import NP LinTimeDecodable ONotation.
 From Undecidability.L Require Import Tactics.LTactics Functions.Decoding TMflatFun.
-
-
 From Undecidability Require Import L.Functions.EqBool.
-
 From Undecidability Require Import L.Datatypes.LNat.
-
-Lemma size_list_enc_r X `{registered X} (l:list X):
-  length l <= size (enc l)*5 + 4.
-Proof.
-  rewrite size_list. induction l;cbn. all:lia.
-Qed.
-
-Instance term_isValidFlatTM : computableTime' isValidFlatTM (fun M _ => (size (enc M) ^ 2 * (c__eqbComp nat + c__eqbComp (nat * list (option nat)) +  c__eqbComp (nat * list (option nat * move)) + 20)*9,tt)).
-Proof.
-  unfold isValidFlatTM. unfold Nat.ltb.
-  extract.
-  intros M _. 
-  clear. split. 2:easy. remember mult as f' eqn:eq'. ring_simplify. subst f'.
-  cbn - [plus mult].  remember mult as f' eqn:eq'. ring_simplify. subst f'.
-  rewrite Nat.le_min_r. rewrite size_nat_enc_r with (n:=states M).
-
-  assert (H1:size (enc (trans M)) <= size (enc M)) by (rewrite size_TM;destruct M;cbn;lia).
-  assert (H2:size (enc (states M)) <= size (enc M)) by (rewrite size_TM;destruct M;cbn;lia).
-  assert (H3:1 <= size (enc M)) by (rewrite size_TM;destruct M;cbn;lia).
-
-  (* assert (H4:size (enc (trans M)) <= size (enc M)) by (rewrite size_TM;destruct M;cbn;lia). *)
-  (* assert (H5:size (enc (trans M)) <= size (enc M)) by (rewrite size_TM;destruct M;cbn;lia). *)
-  (* assert (H6:size (enc (trans M)) <= size (enc M)) by (rewrite size_TM;destruct M;cbn;lia). *)
-  (* assert (H1:size (enc (trans M)) <= size (enc M)) by (rewrite size_TM;destruct M;cbn;lia). *)
-
-
-
-  rewrite !size_list_enc_r with (l:=trans M). Unshelve. 2:exact _.
-  rewrite !H1. rewrite !H2. ring_simplify.
-  nia.
-Qed.
 
 Lemma inNP_TMgenericNPCompleteProblem:
   inNP TMgenericNPcompleteProblem.
 Proof.
   apply inNP_intro with (R:= fun '(M,maxSize, steps (*in unary*)) t =>
+                               sizeOfmTapesFlat t <= maxSize /\  
                                exists sig n (M':mTM sig n),
                                  isFlatteningTMOf M M'
                                  /\ exists t', isFlatteningTapesOf t t'
-                                         /\ (exists f, loopM (initc M' t') steps = Some f)
-                                         /\ sizeOfmTapes t' <= maxSize).
+                                         /\ (exists f, loopM (initc M' t') steps = Some f)).
   now apply linDec_polyTimeComputable.
-  -evar (f':nat -> nat).
+  -destruct execFlat_poly as (f''&Hf''&polyf''&monof'').
+   evar (f':nat -> nat). [f']:intro x.
    exists f'. repeat eapply conj.
    {
      eexists (fun '((M,maxSize,steps),t) =>
-                if negb ((sizeOfmTapesFlat t <=? maxSize) && isValidFlatTM M && isValidFlatTapes M.(sig) M.(tapes) t)
-                then false
-                else match loopMflat M (M.(start),t) steps with
+                if (sizeOfmTapesFlat t <=? maxSize)
+                then match execFlatTM M t steps with
                        Some _ => true
-                     | _ => false
-                     end).
+                      | _ => false
+                     end
+                else false).
      repeat eapply conj.
      2:{intros [[[M maxSize] steps] t]. cbn.
         destruct (Nat.leb_spec0 (sizeOfmTapesFlat t) (maxSize));cbn [negb andb].
-        2:{ split. 2:easy.
-            intros (?&?&?&?&?&?&?&?). erewrite sizeOfmTapesFlat_eq in n. 2:easy. easy.
-        }
-        destruct (isValidFlatTM_spec M);cbn [negb andb].
-        2:{ split. 2:easy.
-            intros (?&?&?&?&?&?&?&?). eauto using isFlattening_is_valid.
-        }
-        destruct isValidFlatTapes eqn:eq;cbn [negb andb].
-        2:{ split. 2:easy.
-            intros (?&?&?&[]&?&?&?&?). destruct M;cbn in *;subst. 
-            eapply flatteningTapeIsValid in H. easy.
-        }
-        specialize loopMflat_correct with (M:=M) (c:=(M.(start),t)) (k:=steps) as H.
-        rewrite <- Card_Fint with (n:=sig M) in eq.
-        eapply unflattenTM_correct in v.
-        split.
-        -intros (?&?&M'&?&?&?&?&?).
-         specialize H with (1:=H0) (2:=initFlat_correct H0 H1).
-         destruct H2.
-         destruct loopMflat,loopM.
-         all:try easy.
-        -destruct loopMflat. 2:easy. intros _.
-         eexists _,_,(unflattenTM M).
-         split. now eauto using unflattenTM_correct.
-         eapply isUnflattableTapes in eq as (t'&?).
-         exists t'. split. easy.
-         specialize H with (1:=v). split. 2:now erewrite <- sizeOfmTapesFlat_eq.
-         specialize H with (c'                          :=initc (unflattenTM M) t').
-         assert (H':isFlatteningConfigOf (start M, t) (initc (unflattenTM M) t')).
-         {eapply initFlat_correct;easy. }
-         apply H in H'. destruct loopM. 2:easy.
-         eauto.
+        2:{ split. 2:easy. intros (?&?&?&?&?&?&?&?). easy. }
+        specialize (execFlatTM_correct M t steps) as H.
+        destruct execFlatTM as [c| ] eqn:Hexec. all:split. 1,4:easy.
+        -intros. specialize (H c). destruct H as [H _]. specialize (H eq_refl) as (?&?&?&?&?&?&Hc&?&?).
+         split. easy.
+         do 4 esplit. eauto.
+         inv Hc. cbn in *.
+         do 2 esplit. eauto.
+         destruct x2. cbn in *.
+         eexists. rewrite <- H1. unfold initc. repeat f_equal. inv H. apply injective_index. congruence.
+        -intros (?&?&?&?&?&?&?&?&?). exfalso.
+         edestruct H as [_ H']. discriminate H'.
+         do 6 eexists. now eauto.
+         split. now eauto using initFlat_correct.
+         split. eauto. instantiate (1 := (_,_)).
+         split;cbn. constructor.
      }
      eexists.
+     extract. 
+     recRel_prettify.
+     intros [[[M maxSize] steps] t] [].
+     split;[ |now repeat destruct _].
+     rewrite sizeOfmTapesFlat_timeBySize.
+     rewrite Nat.le_min_r.
+     unfold sizeOfmTapesFlat_timeSize.
+     remember (size (enc (M, maxSize, steps, t))) as x.
 
-     (* TODO: size flat TM *)
+     assert (Ht : size (enc t) <= x).
+     { subst x. rewrite !size_prod. cbn [fst snd]. lia. }
+     rewrite Ht.
+
+     assert (Hms : maxSize <= x).
+     { subst x. rewrite !size_prod. cbn [fst snd]. rewrite <- size_nat_enc_r. lia. }
+     rewrite Hms at 1.
      
      
-     Print isValidFlatTM.
-     Fail now extract. all:admit. 
+     destruct (Nat.leb_spec (sizeOfmTapesFlat t) maxSize).
+     rewrite Hf''. hnf in monof''. rewrite monof'' with (x':=x).
+     2:{rewrite H. subst x. rewrite !size_prod. cbn [fst snd]. rewrite <- !size_nat_enc_r. lia. }
+     destruct execFlatTM.
+     all:unfold f'.
+     reflexivity.
+     all:lia.
    }
-   all:admit.
-  -evar (f:nat -> nat).
+   all:unfold f'.
+   all:smpl_inO.
+  -evar (f:nat -> nat). [f]:intro x.
    exists f. repeat eapply conj.
    2:{
      intros [[TM maxSize] steps] y.
-     intros (?&?&?&?&?&R__tapes&?&?).
-     remember (size (enc (TM, maxSize, steps))) as n eqn:Hn.
+     intros (?&sig&n&M'&HM&R__tapes&?&?).
+     remember (size (enc (TM, maxSize, steps))) as x eqn:Hn.
      rewrite size_flatTapes. 2:eassumption.
-     rewrite !size_prod,size_TM in Hn.
-     destruct TM;cbn [fst snd] in Hn.
-     destruct H;cbn in *. subst x0.
-     unshelve erewrite ((_ : tapes <= n)) at 1 3.
-     {rewrite size_nat_enc with (n:=tapes) in Hn. lia. }
-     unshelve erewrite ((_ : sizeOfmTapes x2 <= n)) at 1 3.
-     {rewrite size_nat_enc with (n:=maxSize) in Hn. lia. }
-     unshelve erewrite ((_ : Cardinality.Cardinality x <= n)) at 1.
-     {rewrite size_nat_enc with (n:=sig) in Hn. lia. }
-     [f]:intros s. unfold f. reflexivity.
+     rewrite !size_prod,size_TM in Hn;cbn [fst snd] in Hn.
+     inversion HM. subst n.
+     destruct TM. cbn in *. rewrite !size_nat_enc in Hn.
+     unshelve erewrite ((_ : tapes <= x)) at 1 3. lia.
+     unshelve erewrite ((_ : Cardinality.Cardinality sig <= x)) at 1 3. lia.
+     erewrite <- sizeOfmTapesFlat_eq. 2:eassumption.
+     rewrite H.
+     unshelve erewrite ((_ : maxSize <= x)) at 1 3. nia.
+     unfold f. reflexivity.
    }
-   all:unfold f;smpl_inO.
+   all:unfold f.
+   all:smpl_inO.
   -unfold TMgenericNPcompleteProblem.
    intros [[] ].
    
    setoid_rewrite isFlatteningTapesOf_iff.
    split.
-   +intros (?&?&?&?&?&?&?). eauto 10.
-   +intros (?&?&?&?&?&?&?&?&?). eauto 10.
-Admitted.
+   +intros (?&?&?&?&?&?&?&?). erewrite <- ?sizeOfmTapesFlat_eq in *. eauto 10. constructor.
+   +intros (?&?&?&?&?&?&?&?&?). unfold GenNP. erewrite ?sizeOfmTapesFlat_eq in *. eauto 20. subst;constructor.
+Qed.

@@ -107,6 +107,27 @@ Qed.
 From Undecidability.L.Complexity Require Export RegisteredP LinTimeDecodable.
 
 
+Instance term_move_enc
+  :computableTime' (TMEncoding.move_enc) (fun x _ => (15,tt)).
+Proof.
+  extract. solverec.
+Qed.
+
+Instance regP_move : registeredP TM.move.
+Proof.
+  evar (c:nat).
+  exists c.
+  eexists _. 
+  eapply computesTime_timeLeq.
+  2:now apply term_move_enc.
+  intros l _. split. 2:easy.
+  change (enc l) with (TMEncoding.move_enc l).
+  cbn.
+  [c]:exact (4). unfold c.
+  destruct l;cbn [size TMEncoding.move_enc]. all:lia.
+Qed.
+
+
 Definition c__encTM := max (c__regP (list (nat * list (option nat) * (nat * list (option nat * TM.move))))) (max (c__regP nat) (max (c__regP (list bool)) 4)).
 
 Instance term_TM_enc
