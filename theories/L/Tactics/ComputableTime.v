@@ -226,6 +226,9 @@ Proof.
 Qed.
     
 Definition cnst {X} (x:X):nat. exact 0. Qed.
+
+Definition callTime X (fT : X -> unit -> nat * unit) x: nat := fst (fT x tt). 
+Arguments callTime / {_}.
  
 Definition callTime2 X Y
            (fT : X -> unit -> nat * (Y -> unit -> nat * unit)) x y : nat :=
