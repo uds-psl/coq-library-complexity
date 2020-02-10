@@ -236,7 +236,6 @@ End remove.
 
 (*derivation of the pigeonhole principle on lists *)
 (*adapted from ICL 2019 *)
-From Equations Require Import Equations.
 Notation "x 'nel' A" := (~ In x A) (at level 70).
 Section rep.
   Variable (X : Type). 
@@ -244,7 +243,7 @@ Section rep.
     repB x A : x el A -> rep (x::A)
   | repS x A : rep A -> rep (x::A).
 
-   Derive Signature for dupfree rep.
+   (*Derive Signature for dupfree rep.*)
 
   (** Inversion lemmas *)
 
@@ -269,8 +268,8 @@ Section rep.
   Proof.
     intros H1 H2.
     induction H1 as [x A|x A _ IH].
-    - depelim H2. intuition.
-    - depelim H2. auto 2.
+    - inv H2. intuition.
+    - inv H2. auto 2.
   Qed.
 
   Context (eqdec : (forall x y: X, dec (x = y))).
@@ -329,12 +328,12 @@ Section rep.
     rep A -> {A1&{x&{A2&{A3| A=A1++x::A2++x::A3 }}}}.
   Proof.
     induction A as [|x A IH]; cbn.
-    - intros H. exfalso. depelim H.  (* intros []%rep_nil. *)
+    - intros H. exfalso. inv H.  (* intros []%rep_nil. *)
     - intros H.
       destruct (mem_dec x A) as [(A1&A2&H1)%mem_sigma|H1].
       + rewrite H1. exists [], x, A1, A2. reflexivity.
       + destruct IH as (A1&y&A2&A3&IH).
-        * depelim H; intuition. 
+        * inv H; intuition. 
         *  rewrite IH. exists (x::A1), y, A2, A3. reflexivity.
   Qed.
 

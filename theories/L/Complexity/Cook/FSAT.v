@@ -1,8 +1,5 @@
 From Undecidability.L Require Import L.
-From Undecidability.L.Tactics Require Import LTactics ComputableTactics.
-From Undecidability.L.Datatypes Require Import LProd LTerm LNat Lists LOptions.
-From Undecidability.L.Complexity Require Import NP Synthetic Monotonic Tactics PolyBounds MorePrelim.
-From Undecidability.L.Functions Require Import Size.
+From Undecidability.L.Datatypes Require Import LLists. 
 
 (** *Formula Satisfiability: the satisfiability problem on arbitrary Boolean formulas *)
 

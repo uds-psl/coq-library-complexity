@@ -3,8 +3,9 @@ Require Import Lia.
 From Undecidability Require Import L.Complexity.Cook.Prelim.
 From Undecidability.L.Complexity.Cook Require Export PR.
 
-(** Parallel Rewriting restricted to a binary alphabet *)
+(** *BinaryPR: Parallel Rewriting restricted to a binary alphabet *)
 
+(*Note that BinaryPR is syntactially flat as we need not artificially restrict 𝔹 to be a finite type*)
 Record BinaryPR := {
   offset : nat;
   width : nat;

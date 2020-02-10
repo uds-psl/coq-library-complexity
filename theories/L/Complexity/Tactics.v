@@ -1,4 +1,4 @@
-From PslBase Require Export Base. 
+From PslBase Require Import Base. 
 Require Import ssrbool. 
 
 Ltac simp_bool := repeat match goal with

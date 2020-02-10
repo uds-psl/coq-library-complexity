@@ -1,7 +1,7 @@
 From PslBase Require Import Base. 
 From Undecidability.L.Complexity.Cook Require Import Prelim FSAT BinaryPR.
 From Undecidability.L.Complexity Require Import Tactics. 
-From Undecidability.L.Datatypes Require Import Lists. 
+From Undecidability.L.Datatypes Require Import LLists. 
 Require Import Lia. 
 
 (** *Reduction of BinaryPR to FSAT *)
@@ -445,7 +445,7 @@ Section fixInstance.
         encodesPredicateAt_comp_simp H2. 
 
         replace (start + S offset + llength) with (start + llength + S offset) in H2 by lia. 
-        replace (start + S offset + (l - offset + llength) - start) with (S (l + llength)) in H2. 
+        replace (start + S offset + (S l - S offset + llength) - start) with (S (l + llength)) in H2. 
         2: { destruct A2 as (? & A2 & A6). nia. }
         
         rewrite encodeWindowsInLine'_stepindex_monotone with (index' := l) in H2; [ | lia].
@@ -629,7 +629,7 @@ Section fixInstance.
 
         rewrite encodeSubstringInLine'_stepindex_monotone with (index2 := l) in H; [ | apply F| lia].
         eapply encodesPredicateAt_extensional; [ | apply H]. clear H.
-        intros. cbn. split.
+        intros. split.
         * intros (k0 & H2 & H3). 
           destruct k0; [ now left | right]. 
           exists k0. split; [ easy | ]. 
@@ -655,8 +655,6 @@ Section fixInstance.
       intros (k & H1 & H2). apply list_eq_length in H2. specialize (projVars_length_le (k * offset) (|s|) (explicitAssignment a start (S l))) as H4.
       rewrite explicitAssignment_length in H4. lia. 
   Qed.
-
-  (*TODO: consistent argument order over all functions *)
 
   (*we now have to do a case analysis: if the substring which has to be checked is non-empty, we use the function defined above *)
   (*otherwise, the empty string is trivially a substring *)
@@ -728,12 +726,12 @@ Section fixInstance.
     clear H. 
     encodesPredicateAt_comp_simp H1. 
     unfold encodeTableau. 
-    replace (llength + steps * llength - 0 - 0) with (S steps * llength) in H1 by lia.
+    rewrite !Nat.sub_0_r in H1. cbn [Nat.add] in H1. 
 
     eapply encodesPredicateAt_extensional; [ clear H1| apply H1].
     intros m H4. 
     setoid_rewrite projVars_comp. rewrite !Nat.min_l by nia. 
-    setoid_rewrite Nat.add_0_r. setoid_rewrite Nat.sub_0_r. 
+    setoid_rewrite Nat.add_0_r.  
     split. 
     - intros (H1 & H2 & H3). 
       repeat split; [easy | | easy].

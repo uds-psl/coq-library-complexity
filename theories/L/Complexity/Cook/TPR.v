@@ -16,11 +16,11 @@ To that end, we define two variants of 3-PR in this file:
 - the propositional variant PTPR over an abstract rewritesHead predicate 
 *)
 
-(*We first define some general notions for an arbitrary rewritesHead predicate *)
 Section abstractDefs.
   Variable (X : Type). 
   Notation string := (list X). 
 
+  (*We first define some general notions for an arbitrary rewritesHead predicate *)
   Definition rewritesHeadAbstract := string -> string -> Prop. 
 
   Section fixRewritesHead.

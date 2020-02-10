@@ -18,12 +18,12 @@ From Undecidability Require Import L.Complexity.Cook.Prelim.
 *)
 
 (*a single rewrite window *)
-Record PRWin (Sigma : Type):= {
+Inductive PRWin (Sigma : Type):= {
                                 prem : list Sigma;
                                 conc : list Sigma
                               }.
 
-Record PR := {
+Inductive PR := {
                Sigma : finType;
                offset : nat; 
                width : nat;  
@@ -188,14 +188,13 @@ Section fixX.
   (*we can give an explicit characterisation which better captures the original intuition: a rewrite window has to hold at every multiple of offset *)
   Definition validExplicit a b := length a = length b 
     /\ (exists k, length a = k * offset) 
-    /\ forall i, 0 <= i < length a + 1 - width 
-      /\ (exists j, i = j * offset) -> exists win, win el windows 
-      /\ rewritesAt win i a b.
+    /\ forall i, 0 <= i < length a + 1 - width /\ (exists j, i = j * offset)
+           -> exists win, win el windows /\ rewritesAt win i a b.
 
   Lemma valid_iff a b :
     valid a b <-> validExplicit a b.
-  Proof.
-    unfold validExplicit. split.
+  Proof using G0.
+    unfold validExplicit. clear A0 A1. split.
     - induction 1.
       + split; [now cbn |split; [now exists 0 | ] ]. intros. cbn [length] in H. lia.  
       + specialize (valid_length_inv H) as H'. split; [ repeat rewrite app_length; now rewrite H', H1, H2 | ].

@@ -6,7 +6,7 @@ Require Import Lia.
 (**Flat Parallel Rewriting *)
 (*A flattened version of parallel rewriting using natural numbers to represent finite types *)
 
-Record FlatPR := {
+Inductive FlatPR := {
   Sigma : nat;
   offset : nat;
   width : nat;
@@ -491,3 +491,280 @@ Proof.
   constructor; eauto.
   cbn. unfold finRepr. specialize (Card_Fint (Sigma f)). easy.  
 Qed.
+
+
+
+(** *extraction *)
+
+From Undecidability.L.Tactics Require Import LTactics GenEncode.
+From Undecidability.L.Datatypes Require Import  LProd LOptions LLNat LLists.
+
+Section fix_X.
+  Variable (X:Type).
+  Context `{X_registered : registered X}.
+
+  Run TemplateProgram (tmGenEncode "PRWin_enc" (PRWin X)).
+  Hint Resolve PRWin_enc_correct : Lrewrite.
+
+  Global Instance term_Build_PRWin : computableTime' (@Build_PRWin X) (fun _ _ => (1, fun _ _ => (1, tt))).
+  Proof.
+    extract constructor. solverec. 
+  Defined. 
+
+  Definition cnst_prem := 5. 
+  Global Instance term_prem : computableTime' (@prem X) (fun _ _ => (cnst_prem, tt)).
+  Proof.
+    extract. unfold cnst_prem. solverec.
+  Defined. 
+
+  Definition cnst_conc := 5.
+  Global Instance term_conc : computableTime' (@conc X) (fun _ _ => (cnst_conc, tt)). 
+  Proof.
+    extract. unfold cnst_conc. solverec. 
+  Defined.
+
+  Lemma PRWin_enc_size (win : PRWin X) : size (enc win) = size (enc (prem win)) + size (enc (conc win)) + 4.
+  Proof. 
+    destruct win. cbn. unfold enc. cbn. nia.
+  Qed. 
+End fix_X. 
+
+Hint Resolve PRWin_enc_correct : Lrewrite.
+
+Run TemplateProgram (tmGenEncode "FlatPR_enc" (FlatPR)).
+Hint Resolve FlatPR_enc_correct : Lrewrite. 
+
+From Undecidability.L.Complexity Require Import PolyBounds. 
+
+Instance term_Build_FlatPR : computableTime' Build_FlatPR (fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, tt)))))))).
+Proof.
+  extract constructor. solverec. 
+Defined. 
+
+Definition c__Sigma := 10.
+Instance term_FlatPR_Sigma : computableTime' Sigma (fun _ _ => (c__Sigma, tt)). 
+Proof.
+  extract. unfold c__Sigma. solverec. 
+Defined. 
+
+Definition c__offset := 10.
+Instance term_FlatPR_offset : computableTime' offset (fun _ _ => (c__offset, tt)). 
+Proof. 
+  extract. unfold c__offset. solverec. 
+Defined. 
+
+Definition c__width := 10.
+Instance term_FlatPR_width : computableTime' width (fun _ _ => (c__width, tt)). 
+Proof. 
+  extract. unfold c__width. solverec. 
+Defined. 
+
+Definition c__init := 10.
+Instance term_FlatPR_init : computableTime' init (fun _ _ => (c__init, tt)). 
+Proof. 
+  extract. unfold c__init. solverec. 
+Defined. 
+
+Definition c__windows := 10.
+Instance term_FlatPR_windows : computableTime' windows (fun _ _ => (c__windows, tt)). 
+Proof. 
+  extract. unfold c__windows. solverec. 
+Defined. 
+
+Definition c__final := 10.
+Instance term_FlatPR_final : computableTime' final (fun _ _ => (c__final, tt)). 
+Proof. 
+  extract. unfold c__final. solverec. 
+Defined. 
+
+Definition c__steps := 10.
+Instance term_FlatPR_steps : computableTime' steps (fun _ _ => (c__steps, tt)). 
+Proof. 
+  extract. unfold c__steps. solverec. 
+Defined. 
+
+Lemma FlatPR_enc_size (fpr : FlatPR) : size (enc fpr) = size (enc (Sigma fpr)) + size(enc (offset fpr)) + size (enc (width fpr)) + size (enc (init fpr)) + size (enc (windows fpr)) + size (enc (final fpr)) + size (enc (steps fpr)) + 9. 
+Proof. 
+  destruct fpr. cbn. unfold enc. cbn. nia.
+Qed. 
+
+(*extraction of PRWin_of_size_dec *)
+Section PRWin_of_size. 
+  Variable ( X : Type). 
+  Context `{X_registered : registered X}.
+
+  Definition c__prwinOfSizeDec := 2 * (cnst_prem + 2 * c__nat_eqb2 + cnst_conc + 6 + c__length).
+  Definition PRWin_of_size_dec_time width (win : PRWin X) := c__prwinOfSizeDec * (1 + |prem win| + |conc win|) + nat_eqb_time (|prem win|) width + nat_eqb_time (|conc win|) width.
+  Global Instance term_PRWin_of_size_dec : computableTime' (@PRWin_of_size_dec X) (fun width _ => (1, fun win _ => (PRWin_of_size_dec_time width win, tt))). 
+  Proof. 
+    extract. solverec. unfold PRWin_of_size_dec_time, c__prwinOfSizeDec. nia.  
+  Defined. 
+
+  Definition c__prwinOfSizeDecBound := c__prwinOfSizeDec + c__nat_eqb. 
+  Lemma PRWin_of_size_dec_time_bound width (win : PRWin X) : PRWin_of_size_dec_time width win <= (size(enc win) + 1) * c__prwinOfSizeDecBound. 
+  Proof. 
+    unfold PRWin_of_size_dec_time, nat_eqb_time. rewrite !Nat.le_min_l. rewrite !list_size_length.
+    rewrite PRWin_enc_size. unfold c__prwinOfSizeDecBound. nia.
+  Qed. 
+End PRWin_of_size. 
+
+(*extraction of FlatPR_wf_dec *)
+Definition c__FlatPRWfDec := 3 * c__leb2 + 4 * c__width + 3 * c__offset + 2 * c__nat_eqb2 + 2 * c__init + 2 * c__length + c__windows + 32 + 4 * c__leb + 2 * c__nat_eqb.
+Definition FlatPR_wf_dec_time x := 2 * c__length * (|init x|) + leb_time (width x) (|init x|) + forallb_time (@PRWin_of_size_dec_time nat (width x)) (windows x) + modulo_time (|init x|) (offset x) + modulo_time (width x) (offset x) + c__FlatPRWfDec.  
+
+Instance term_FlatPR_wf_dec : computableTime' FlatPR_wf_dec (fun fpr _ => (FlatPR_wf_dec_time fpr, tt)).
+Proof. 
+  extract. solverec. unfold FlatPR_wf_dec_time, c__FlatPRWfDec, nat_eqb_time, leb_time. 
+  (*ring_simplify.*)
+  rewrite Nat.le_min_l. rewrite Nat.le_min_l. rewrite Nat.le_min_r. setoid_rewrite Nat.le_min_r at 2. 
+  (*nia. *)
+  leq_crossout.
+Defined.
+(*nia. *)
+(*zify. clear. nia.*)
+
+
+Definition c__FlatPRWfDecBound := 2*(2 * c__length + c__leb + c__prwinOfSizeDecBound + c__forallb + 2 * c__moduloBound + c__FlatPRWfDec).
+Definition poly__FlatPRWfDec n := (n*n + 2* n + 1) * c__FlatPRWfDecBound.
+
+Lemma FlatPR_wf_dec_time_bound fpr : 
+  FlatPR_wf_dec_time fpr <= poly__FlatPRWfDec (size (enc fpr)). 
+Proof. 
+  unfold FlatPR_wf_dec_time. rewrite leb_time_bound_l. 
+  rewrite !modulo_time_bound. rewrite list_size_enc_length.
+  rewrite list_size_length.
+  erewrite forallb_time_bound_env.
+  2: {
+    split; [intros | ].
+    - specialize (PRWin_of_size_dec_time_bound (X := nat) y a) as H1.
+      instantiate (2:= fun n => (n + 1) * c__prwinOfSizeDecBound). nia. 
+    - smpl_inO. 
+  }
+  rewrite list_size_length. 
+  replace_le (size(enc (windows fpr))) with (size (enc fpr)) by (rewrite FlatPR_enc_size; lia). 
+  replace_le (size(enc (init fpr))) with (size (enc fpr)) by (rewrite FlatPR_enc_size; lia). 
+  replace_le (size(enc (width fpr))) with (size (enc fpr)) by (rewrite FlatPR_enc_size; lia). 
+  replace_le (size(enc(offset fpr))) with (size (enc fpr)) by (rewrite FlatPR_enc_size; lia). 
+  unfold poly__FlatPRWfDec, c__FlatPRWfDecBound. nia.
+Qed. 
+
+(*extraction of isValidFlattening_dec *)
+
+(*ofFlatTypeDec *)
+Definition c__ofFlatTypeDec := c__leb2 + 2. 
+Definition ofFlatType_dec_time (sig e : nat) := leb_time (1 + e) sig + c__ofFlatTypeDec. 
+Instance term_ofFlatType_dec : computableTime' ofFlatType_dec (fun sig _ => (1, fun e _ => (ofFlatType_dec_time sig e, tt))). 
+Proof. 
+  extract. solverec. unfold ofFlatType_dec_time, c__ofFlatTypeDec. solverec. 
+Defined. 
+Definition c__ofFlatTypeDecBound := c__ofFlatTypeDec + c__leb. 
+Definition poly__ofFlatTypeDec n := (n +1) * c__ofFlatTypeDecBound. 
+Lemma ofFlatType_dec_time_bound sig e: ofFlatType_dec_time sig e <= poly__ofFlatTypeDec (size (enc sig)). 
+Proof. 
+  unfold ofFlatType_dec_time. rewrite leb_time_bound_r. unfold poly__ofFlatTypeDec, c__ofFlatTypeDecBound; nia.
+Qed. 
+Lemma ofFlatType_dec_poly : monotonic poly__ofFlatTypeDec /\ inOPoly poly__ofFlatTypeDec. 
+Proof.
+  split; unfold poly__ofFlatTypeDec; smpl_inO. 
+Qed. 
+
+
+(*list_ofFlatType_dec *)
+Definition c__listOfFlatTypeDec := 3.
+Definition list_ofFlatType_dec_time (sig : nat) (l : list nat) := forallb_time (fun x1 => ofFlatType_dec_time sig x1) l + c__listOfFlatTypeDec. 
+Instance term_list_ofFlatType_dec : computableTime' list_ofFlatType_dec (fun sig _ => (1, fun l _ => (list_ofFlatType_dec_time sig l, tt))). 
+Proof. 
+  extract. solverec. unfold list_ofFlatType_dec_time, c__listOfFlatTypeDec. solverec. 
+Qed. 
+
+
+Definition c__listOfFlatTypeDecBound := c__forallb + c__listOfFlatTypeDec. 
+Definition poly__listOfFlatTypeDec n := ((n+1) * (poly__ofFlatTypeDec n + c__listOfFlatTypeDecBound)).
+Lemma list_ofFlatType_dec_time_bound t l : list_ofFlatType_dec_time t l <= poly__listOfFlatTypeDec (size (enc t) + size (enc l)).
+Proof.
+  unfold list_ofFlatType_dec_time. 
+  erewrite forallb_time_bound_env.
+  2: {
+    split; [ intros | ]. 
+    - rewrite (ofFlatType_dec_time_bound y a). poly_mono ofFlatType_dec_poly.
+      2: apply le_add_l with (n := size(enc a)). reflexivity.
+    - apply ofFlatType_dec_poly.
+  }
+  rewrite list_size_length.
+  replace_le (size(enc l)) with (size (enc t) + size (enc l)) by lia at 1.
+  setoid_rewrite Nat.add_comm at 5.
+  unfold poly__listOfFlatTypeDec, c__listOfFlatTypeDecBound. nia.
+Qed. 
+Lemma list_ofFlatType_dec_poly : monotonic poly__listOfFlatTypeDec /\ inOPoly poly__listOfFlatTypeDec. 
+Proof.
+  split; unfold poly__listOfFlatTypeDec; smpl_inO; apply ofFlatType_dec_poly.
+Qed. 
+
+(*PRWin_ofFlatType_dec *)
+Definition c__PRWinOfFlatTypeDec := cnst_prem + cnst_conc +8.
+Definition PRWin_ofFlatType_dec_time (sig : nat) (w : PRWin nat):= list_ofFlatType_dec_time sig (prem w) + list_ofFlatType_dec_time sig (conc w) + c__PRWinOfFlatTypeDec. 
+Instance term_PRWin_ofFlatType_dec : computableTime' PRWin_ofFlatType_dec (fun sig _ => (1, fun w _ => (PRWin_ofFlatType_dec_time sig w, tt))). 
+Proof.
+  extract. solverec. unfold PRWin_ofFlatType_dec_time, c__PRWinOfFlatTypeDec. nia.
+Defined. 
+
+Definition c__PRWinOfFlatTypeDecBound := 2 * (c__PRWinOfFlatTypeDec + 1).
+Definition poly__PRWinOfFlatTypeDec n := (poly__listOfFlatTypeDec n + 1) * c__PRWinOfFlatTypeDecBound.
+Lemma PRWin_ofFlatType_dec_time_bound sig w : PRWin_ofFlatType_dec_time sig w <= poly__PRWinOfFlatTypeDec (size (enc sig) + size (enc w)).
+Proof. 
+  unfold PRWin_ofFlatType_dec_time. rewrite !list_ofFlatType_dec_time_bound. 
+  unfold poly__PRWinOfFlatTypeDec.
+  poly_mono list_ofFlatType_dec_poly at 2.
+  2: (replace_le (size (enc (conc w))) with (size (enc w)) by (rewrite PRWin_enc_size; lia)); reflexivity.
+  poly_mono list_ofFlatType_dec_poly at 1.
+  2: (replace_le (size (enc (prem w))) with (size (enc w)) by (rewrite PRWin_enc_size; lia)); reflexivity.
+  unfold c__PRWinOfFlatTypeDecBound. nia. 
+Qed. 
+Lemma PRWin_ofFlatType_dec_poly : monotonic poly__PRWinOfFlatTypeDec /\ inOPoly poly__PRWinOfFlatTypeDec. 
+Proof. 
+  split; unfold poly__PRWinOfFlatTypeDec; smpl_inO; apply list_ofFlatType_dec_poly.  
+Qed. 
+
+(*isValidFlattening_dec *)
+Definition c__isValidFlatteningDec := 3 * c__Sigma + c__init + c__final + c__windows + 16.
+Definition isValidFlattening_dec_time x := list_ofFlatType_dec_time (Sigma x) (init x) + forallb_time (list_ofFlatType_dec_time (Sigma x)) (final x)+ forallb_time (PRWin_ofFlatType_dec_time (Sigma x)) (windows x) + c__isValidFlatteningDec.
+Instance term_isValidFlattening_dec : computableTime' isValidFlattening_dec (fun fpr _ => (isValidFlattening_dec_time fpr, tt)).
+Proof.
+  extract. solverec. unfold isValidFlattening_dec_time, c__isValidFlatteningDec.
+  repeat change (fun x => ?h x) with h. solverec. 
+Defined. 
+
+Definition c__isValidFlatteningDecBound := 2 * c__forallb + c__isValidFlatteningDec. 
+Definition poly__isValidFlatteningDec n :=(n + 2) * poly__listOfFlatTypeDec n + (n + 1) * poly__PRWinOfFlatTypeDec n + (n + 1) * c__isValidFlatteningDecBound. 
+Lemma isValidFlatteningDec_time_bound fpr : isValidFlattening_dec_time fpr <= poly__isValidFlatteningDec (size (enc fpr)). 
+Proof. 
+  unfold isValidFlattening_dec_time. 
+  rewrite list_ofFlatType_dec_time_bound. 
+  erewrite forallb_time_bound_env. 
+  2: {
+    split; [intros | ].
+    - rewrite list_ofFlatType_dec_time_bound, Nat.add_comm; reflexivity. 
+    - apply list_ofFlatType_dec_poly. 
+  }
+  erewrite forallb_time_bound_env. 
+  2 : {
+    split; [intros | ].
+    - rewrite PRWin_ofFlatType_dec_time_bound, Nat.add_comm; reflexivity. 
+    - apply PRWin_ofFlatType_dec_poly. 
+  }
+
+  rewrite !list_size_length. 
+  poly_mono list_ofFlatType_dec_poly at 1. 
+  2: (replace_le (size (enc (Sigma fpr)) + size (enc (init fpr))) with (size (enc fpr)) by (rewrite FlatPR_enc_size; lia)); reflexivity. 
+  poly_mono list_ofFlatType_dec_poly at 2. 
+  2: (replace_le (size (enc (final fpr)) + size (enc (Sigma fpr))) with (size (enc fpr)) by (rewrite FlatPR_enc_size; lia)); reflexivity. 
+  replace_le (size (enc (final fpr))) with (size (enc fpr)) by (rewrite FlatPR_enc_size; lia) at 1. 
+  replace_le (size (enc (windows fpr))) with (size (enc fpr)) by (rewrite FlatPR_enc_size; lia) at 1. 
+  poly_mono PRWin_ofFlatType_dec_poly at 1. 
+  2: (replace_le (size (enc (windows fpr)) + size (enc (Sigma fpr))) with (size (enc fpr)) by (rewrite FlatPR_enc_size; lia)); reflexivity. 
+  unfold poly__isValidFlatteningDec, c__isValidFlatteningDecBound. nia.
+Qed. 
+Lemma isValidFlatteningDec_poly : monotonic poly__isValidFlatteningDec /\ inOPoly poly__isValidFlatteningDec. 
+Proof. 
+  split; (unfold poly__isValidFlatteningDec; smpl_inO; [apply list_ofFlatType_dec_poly |apply PRWin_ofFlatType_dec_poly ]). 
+Qed. 
