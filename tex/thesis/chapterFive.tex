@@ -11,7 +11,7 @@
 \renewcommand{\strent}[1]{\rightsquigarrow_{#1}}
 
 \newcommand{\pFlip}[1]{\textsf{pFlip}~#1}
-\newcommand{\pFlipi}[1]{\textasciitilde#1}
+\newcommand{\pFlipi}[1]{\text{\textasciitilde}#1}
 \newcommand{\pRev}{\textsf{pRev}}
 
 \newcommand{\nilstr}[2]{E~#1~#2}
@@ -139,7 +139,7 @@ This version prepends a chunk of $o$ symbols in each step. The first two cases d
 Parallel Rewriting generates a sequence of strings. The last string should contain one element of a set of strings as a substring.
 \begin{definition}[Substring constraint]
   Given a set of strings $\Rfinal : \listsof{\str{\Sigma}}$, string $s$ satisfies $\Rfinal$, written $s \models \Rfinal$, if:
-  \[\exists \mathit{subs}\;k, \mathit{subs} \in \Rfinal \land k \cdot o \le \length{s} \land \prefix{\mathit{subs}}{s[k \cdot o..]} \]
+  \[\exists \mathit{subs}~k, \mathit{subs} \in \Rfinal \land k \cdot o \le \length{s} \land \prefix{\mathit{subs}}{s[k \cdot o..]} \]
 \end{definition}
 The definition requires a string to be a substring at a position which is a multiple of the offset $o$.
 
@@ -400,7 +400,7 @@ We prove several lemmas which are similar in flavour and will later be the base 
 These results are each proven for the right tape half and then derived for the left tape half by Lemma~\ref{lem:symm_tape_rew}. 
 
 \begin{remark}
-  It now becomes clear why we require at least three symbols on each side of the state symbol: this way, we can prove results about each of the tape halves individually without running into the problem of vacuous rewrite~(Lemma~\ref{lem:vacuous}). 
+  It now becomes clear why we require at least three symbols on each side of the state symbol: this way, we can prove results about each of the tape halves individually without running into the problem of vacuous rewrites~(Lemma~\ref{lem:vacuous}). 
 \end{remark}
 
 %lemma 16
@@ -436,7 +436,7 @@ The two statements of Lemma~\ref{lem:nilstr_blank} each have an existence and un
 \[\mexists a, p~a \land q~a \defeq \exists a, p~a \land (\forall b, p~b \rightarrow b = a) \land q~a. \]
 Thus, Lemma~\ref{lem:nilstr_blank}.1 now reads as follows: $\mexists s, \nilstr{p}{\hat{n}} \strent{\Rtape} (p', \blank) :: s \land s = \nilstr{p'}{(\natS{n})}$. 
 
-\begin{lemma}[Empty Tape Half: Adding Symbols]\label{lem:nilstr_add}\leavevmode
+\begin{lemma}[Empty Tape Half: Adding a Symbol]\label{lem:nilstr_add}\leavevmode
   \begin{enumerate}
     \item $\mexists s, \nilstr{p}{(\natS{\hat{n}})} \strent{} \polpos{\sigma} :: s \land s = \nilstr{(+)}{\hat{n}}$
     \item $\mexists s, \rev{(\nilstr{p}{(\natS{\hat{n}})})} \strent{} \rev{(\polneg{\sigma} :: s)} \land s = \nilstr{(-)}{\hat{n}}$
@@ -449,7 +449,7 @@ Thus, Lemma~\ref{lem:nilstr_blank}.1 now reads as follows: $\mexists s, \nilstr{
   \end{enumerate}
 \end{proof}
 
-\begin{lemma}[Empty Tape Half: Removing Symbols]\label{lem:nilstr_rem}\leavevmode
+\begin{lemma}[Empty Tape Half: Removing a Symbol]\label{lem:nilstr_rem}\leavevmode
   \begin{enumerate}
     \item $\mexists s~p', (p, \sigma) :: \nilstr{p}{\hat{n}} \strent{\Rtape} (p', \blank) :: s \land (p' = - \land s = \nilstr{(-)}{\hat{n}})$
     \item $\mexists s~p', \rev{((p, \sigma) :: \nilstr{p}{\hat{n}})} \strent{\Rtape} \rev{(p', \blank):: s} \land (p' = + \land s = \nilstr{(+)}{\hat{n}})$. 
@@ -457,12 +457,79 @@ Thus, Lemma~\ref{lem:nilstr_blank}.1 now reads as follows: $\mexists s, \nilstr{
 \end{lemma}
 
 We now generalise these results to arbitrary tape halves that need not be empty. 
+Intuitively, the following three lemmas allow us to add a symbol of $\Sigma$ to a string representing a tape half, remove a symbol, or leave the tape half unchanged, thus enabling the tape shifts.
+The results are all proved by using induction on the tape half that is represented by the string and use the special cases for the empty tape proved previously in the base case.
+
+\begin{lemma}[Adding a Symbol]\label{lem:tape_add}
+  If $rs \reprtt{n}{p} h$ and $\length{rs} < n$, then 
+  \begin{enumerate}
+    \item $\mexists h', h \strent{\Rtape} \polpos{\sigma} :: h' \land \sigma :: rs \reprtt{n}{+} \polpos{\sigma} :: h'$ 
+    \item $\mexists h', \rev{h} \strent{\Rtape} \rev{(\polneg{\sigma} :: h')} \land \sigma :: rs \reprtt{n}{-} \polneg{\sigma} :: h'$
+  \end{enumerate}
+\end{lemma}
+\begin{proof}
+  We look at the first statement, the second statement is again derived by Lemma~\ref{lem:symm_tape_rew}. 
+  The proof proceeds by induction on $rs$. In the base case, we choose $h' = \nilstr{+}{(\natS{n})}$ and apply Lemma ~\ref{lem:nilstr_add}. 
+
+  In the successor case, we have $\sigma_1 :: rs \reprtt{p}{n} h$, $\natS{\length{rs}} < n$. By inversion on $\reprtt{p}{n}$, we have $h = (p, \sigma_1) :: h_0$ and $n = \natS{n'}$. We show 
+  \begin{align*}
+    (p, \sigma_1) :: h_0 \polpos{\sigma} :: h' \land \sigma::\sigma_1 ::rs \reprtt{p}{\natS{n'}} \polpos{\sigma} :: h'  
+  \end{align*}
+  In order to determine a rewrite rule to apply at the head, we need to know two more symbols at the head of $h_0$. Thus we do a case analysis on $rs$: either $rs = \nil$, $rs = [\sigma_2]$, or $rs = \sigma_2 :: \sigma_3 :: rs'$. The interesting case is the third one, for which we need the inductive hypothesis. 
+
+  By inversion on $\reprtt{\natS{n'}}{p}$, we get $h_0 = (p, \sigma_2) :: (p, \sigma_3) :: h_1$ and $n' = 2 + n_0$, with $\sigma_1 :: \sigma_2 :: \sigma_3 :: rs' \reprtt{(3 + n_0)}{p} (p, \sigma_1) :: (p, \sigma_2) :: (p, \sigma_3) :: h_1$. 
+  Thus, $\sigma_2 :: \sigma_3 :: rs' \reprtt{(2 + n_0)}{p} (p, \sigma_2) :: (p, \sigma_3) :: h_1$, 
+  to which the inductive hypothesis can be applied for $\sigma := \sigma_1$ to obtain a unique $h'$ 
+  with $\sigma_2 :: \sigma_3 :: h_1 \strent{} \polpos{\sigma_1} :: h'$ and $\sigma_1 :: \sigma_2 :: \sigma_3 :: rs' \reprtt{(2 + n_0)}{+} \polpos{\sigma_1} :: h'$. By inversion on $\reprtt{2+n_0}{+}$, we have $h' = \polpos{\sigma_2} :: \polpos{\sigma_3} :: h_2$. 
+
+  By using the rewrite window $\irewwin{(p, \sigma_1)}{(p, \sigma_2)}{(p, \sigma_3)}{\polpos{\sigma}}{\polpos{\sigma_1}}{\polpos{\sigma_2}}$, we directly get existence. 
+  Uniqueness follows by inversion on the rewrite at the head of the string and by using the uniqueness from the inductive hypothesis.
+\end{proof}
+
+\begin{lemma}[Removing a Symbol]\label{lem:tape_rem}
+  If $\sigma :: rs \reprtt{n}{p} (p, \sigma) :: (p, m) :: h$, then 
+  \begin{enumerate}
+    \item $\mexists h', (p, \sigma) :: (p, m) :: h \strent{\Rtape} \polneg{m} :: h' \land rs \reprtt{n}{-} \polneg{m} :: h'$
+    \item $\mexists h', \rev{((p, \sigma) :: (p, m) :: h)} \strent{\Rtape} \rev{(\polpos{m} :: h')} \land rs \reprtt{n}{+} \polpos{m} :: h'$
+  \end{enumerate}
+\end{lemma}
+
+\begin{lemma}[Leaving the Tape Unchanged]\label{lem:tape_stay}
+  If $rs \reprtt{n}{p} (p, m) :: h$, then 
+  \begin{enumerate}
+    \item $\mexists h', (p, m) :: h \strent{\Rtape} \polneut{m} :: h' \land rs \reprtt{n}{\circ} \polneut{m} :: h'$
+    \item $\mexists h', \rev{((p, m) :: h)} \strent{\Rtape} \rev{(\polneut{m} :: h')} \land rs \reprtt{n}{\circ} \polneut{m} :: h'$
+  \end{enumerate}
+\end{lemma}
 
 \section{Encoding Transitions}
+In this section, we deal with the transition function. We introduce new rewrite rules for the different cases of the transition function. The resulting windows can be applied at the center of the configuration string at the three positions involving the state symbol. Thus, we have three windows for each transition of the Turing machine: one for each of the cases where the state symbol is in the left, center, or right cell of a rewrite window.
+When the Turing machine can take a step, the state symbol uniquely determines the successor string to which the corresponding configuration string can be rewritten. The flow of information for the rewrite is from the state symbol at the center to outer regions of the tape halves: the rewrite rules involving the state symbol uniquely determine the new head of the tape halves. Then, the results of the previous section yield unique successor tape strings.
+
+\subsection{Transition Rules}
+As we are working with single-tape Turing machines, we simplify the type of the transition function $\delta$ to $Q \times \opt{\Sigma} \rightarrow Q \times \textsf{Act}_\Sigma$ in the following presentation, omitting the singleton vector wrappers. 
+We make the following observations regarding the Turing machine's behaviour on a transition $\delta (q, m) = (q', m', a)$:
+\begin{center}
+  \begin{tabular}{cccc}
+    $m$ & state symbol & $m'$ & written symbol \\
+    \midrule
+    \multirow{2}{*}{$\OSome{\sigma}$} & \multirow{2}{*}{$q^\sigma$} & $\OSome{\sigma'}$ & $\sigma'$ \\
+    \cmidrule{3-4}
+                                     & & $\ONone$ & $\sigma$ \\
+                                     \midrule
+    \multirow{2}{*}{$\ONone$} & \multirow{2}{*}{$q^\blank$} & $\OSome{\sigma'}$ & $\sigma'$ \\
+    \cmidrule{3-4}
+                             & & $\ONone$ & / 
+  \end{tabular}
+\end{center}
+Even if $m' = \ONone$, we can interpret that as the Turing machine just writing the current symbol again, if the head is currently on a symbol. 
+The rewrite windows for all of the cases except for the one where $m = \ONone$ and $m' = \ONone$ look very similar. The last case needs a special treatment: if the symbol currently under the head is a blank, the machine does not write a symbol, and the transition function dictates to move in a direction where the next symbol is a blank again, the tape must not be shifted.
+This resembles the semantics of the Turing machine; for instance, if the tape is currently $\textsf{leftof}~\sigma~rs$ and $\delta(q, \ONone) = (q', \ONone, L)$, the successor tape is $\textsf{leftof}~\sigma~rs$ again.
 
 \section{Halting Extensions}
 
 \section{Multistep Simulation}
+\todo{mention here why uniqueness of representation is cool}
 
 \section{Nondeterministic Preludes}
 
