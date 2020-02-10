@@ -1,7 +1,7 @@
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import LNat Lists LProd LFinType LVector.
-From Undecidability.L Require Import Computability.MuRec Functions.FinTypeLookup.
-From Undecidability.L Require Import MuRec.
+From Undecidability.L Require Import Functions.EqBool.
+
 
 
 From Undecidability Require Import TM.TM L.Functions.Decoding.
@@ -25,6 +25,24 @@ Definition move_eqb (m n : move) : bool :=
 Lemma move_eqb_spec x y : reflect (x = y) (move_eqb x y).
 Proof.
   destruct x, y;constructor. all:easy.
+Qed.
+
+
+Instance eqbOption:
+  eqbClass move_eqb.
+Proof.
+  intros ? ?. eapply move_eqb_spec.
+Qed.
+
+
+Instance eqbComp_bool : eqbCompT move.
+Proof.
+  evar (c:nat). exists c. unfold move_eqb.
+  unfold enc;cbn.
+  extract.
+  solverec.
+  [c]:exact 3.
+  all:unfold c;try lia.
 Qed.
 
 (*
@@ -165,3 +183,15 @@ Section fix_sig.
 End fix_sig.
 
 Hint Resolve tape_enc_correct : Lrewrite.
+
+Lemma sizeOfTape_by_size {sig} `{registered sig} (t:(tape sig)) :
+  sizeOfTape t <= size (enc t).
+Proof.
+  change (enc (X:=tape sig)) with (tape_enc (sig:=sig)). unfold tape_enc,sizeOfTape.
+  change (match H with
+          | @mk_registered _ enc _ _ => enc
+          end) with (enc (registered:=H)). change (list_enc (X:=sig)) with (enc (X:=list sig)).
+  destruct t. all:cbn [tapeToList length tape_enc size].
+  all:rewrite ?app_length,?rev_length. all:cbn [length].
+  all:ring_simplify. all:try rewrite !size_list_enc_r. all:try nia.
+Qed.

@@ -1,7 +1,8 @@
 From Undecidability.L.Tactics Require Export LTactics GenEncode.
 Require Import PslBase.Numbers.
 
-Require Import Nat Undecidability.L.Datatypes.LBool Undecidability.L.Datatypes.LProd.
+Require Import Nat.
+From Undecidability.L Require Import Datatypes.LBool Functions.EqBool Datatypes.LProd.
 (** ** Encoding of natural numbers *)
 
 Run TemplateProgram (tmGenEncode "nat_enc" nat).
@@ -42,19 +43,32 @@ Proof.
   solverec.
 Defined.
 
-Instance termT_nat_eqb: computableTime' Nat.eqb (fun x xT => (5,(fun y yT => ((min x y)*17 + 9,tt)))).
+Instance eqbNat_inst : eqbClass Nat.eqb.
 Proof.
+  exact Nat.eqb_spec. 
+Qed.
+
+Instance eqbComp_nat : eqbCompT nat.
+Proof.
+  evar (c:nat). exists c. unfold Nat.eqb.
+  unfold enc;cbn.
   extract.
   solverec.
-Defined.
+  [c]:exact 5.
+  all:unfold c;try lia.
+Qed.
+(*Defined.*)
 
 Instance termT_nat_min : computableTime' Nat.min (fun x _ => (5, fun y _ => (8 + 15 * min x y, tt))).
 Proof. 
   extract. solverec. 
 Qed. 
 
-Instance termT_nat_max : computableTime' Nat.max (fun x _ => (5, fun y _ => (8 + 15 * min x y, tt))).
-Proof. extract. solverec. Qed. 
+Instance termT_nat_max :
+  computableTime' (Nat.max) (fun x _ => (5,fun y _ => (min x y * 15 + 8,tt))).
+Proof.
+  extract. solverec.
+Qed.
 
 Instance termT_pow:
   computableTime' Init.Nat.pow   (fun (x : nat) _ => (5,fun (n : nat) _ => (n* (x*19+x^n*11+19) + 5, tt))).
@@ -126,7 +140,6 @@ Lemma size_nat_enc_r (n:nat) :
 Proof.
     induction n;cbv [enc registered_nat_enc] in *. all:cbn [size nat_enc] in *. all:solverec.
 Qed.
-
 
 
 (* This is an example for an function in which the run-time of the fix itself is not constant (in add, the fix on the first argument always returns an function in ~5 steps)*)

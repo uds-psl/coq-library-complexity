@@ -1,4 +1,5 @@
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
+From Undecidability.L Require Import Functions.EqBool.
 From Undecidability.L.Datatypes Require Import LBool LNat LOptions LProd.
 Require Export List PslBase.Lists.Filter Datatypes.
 
@@ -229,8 +230,62 @@ Section int.
     -cbn. Lia.lia.
     -rewrite H,IHA. cbn [length map sumn]. Lia.lia.
   Qed.
+
+  Global Instance eqbList f `{eqbClass (X:=X) f}:
+    eqbClass (list_eqb f).
+  Proof.
+    intros ? ?. eapply list_eqb_spec. all:eauto using eqb_spec.
+  Qed.
+
+  Global Instance eqbComp_List `{eqbCompT X (R:=HX)}:
+    eqbCompT (list X).
+  Proof.
+    evar (c:nat). exists c. unfold list_eqb. 
+    unfold enc;cbn.
+    change (eqb0) with (eqb (X:=X)).
+    extract. unfold eqb,eqbTime. fold @enc.
+    recRel_prettify2. easy.
+    [c]:exact (c__eqbComp X + 6).
+    all:unfold c. all:cbn iota beta delta [list_enc].
+    all:fold (@enc X _).
+    all:cbn [size]. all: nia.
+  Qed.
   
 End int.
+
+
+Instance term_length X {H:registered X}:
+  computableTime' (@length X) (fun t _ => (length t * 11 + 8,tt)).  
+extract. solverec.
+Proof.
+Qed.
+
+
+Fixpoint forallb_time {X} (fT:X -> nat) xs :=
+  match xs with
+    [] => 8
+  | x :: xs => fT x + forallb_time fT xs + 15
+  end.
+
+Lemma forallb_time_eq X f (l:list X):
+  forallb_time f l = sumn (map f l) + length l * 15 + 8.
+Proof.
+  induction l;cbn;nia.
+Qed.
+
+Lemma forallb_time_const X c (l:list X):
+  forallb_time (fun _ =>  c) l = length l * (c+15) + 8.
+Proof.
+  induction l;cbn;nia.
+Qed.
+
+Instance term_forallb X {HX:registered X}:
+  computableTime' (@forallb X) (fun f t__f => (1,fun l _ => (forallb_time (fun x => fst (t__f x tt)) l,tt))).
+Proof.
+  extract.
+  solverec.
+Qed.
+
 
 Section list_prod.
 
@@ -262,6 +317,17 @@ Proof.
    change ((match H with
             | @mk_registered _ enc _ _ => enc
             end a)) with (enc a). solverec. 
+Qed.
+
+Lemma size_list_enc_r {X} `{registered X} (l:list X):
+  length l <= size (enc l).
+Proof.
+  rewrite size_list. induction l;cbn. all:lia.
+Qed.
+
+Instance term_repeat A `{registered A}: computableTime' (@repeat A) (fun _ _ => (5, fun n _ => (n * 12 + 4,tt))).
+Proof.
+  extract. solverec.
 Qed.
   
 Section forallb. 

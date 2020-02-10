@@ -3,15 +3,13 @@ From Undecidability.L.Datatypes Require Import LProd LTerm.
 From Undecidability.L.Complexity Require Import NP Synthetic Monotonic.
 From Undecidability.L.Functions Require Import Size.
 
-Definition genericNPcompleteProblem : term*nat*nat -> Prop:=
+Definition GenNP : term*nat*nat -> Prop:=
   fun '(s', maxSize, steps (*in unary*)) =>
-    closed s' /\
+    proc s' /\
     exists (c:term), size (enc c) <= maxSize
                 /\ s' (enc c) ⇓(<=steps) (enc true).
 
-
-
-Lemma NPhard_genericNPcompleteProblem : NPhard genericNPcompleteProblem.
+Lemma NPhard_GenNP : NPhard GenNP.
 Proof.
   intros X reg__X ? Q [(*? ?*) R R__dec (f__Rbal&polyf__Rbal&bounds_f__Rbal&mono_f__Rbal) R__spec].
   destruct R__dec as (t__R&(d__R&[comp_d__R]&spec_d__R)&poly_t__R&mono_t__R).
@@ -37,7 +35,7 @@ Proof.
   -intros x.
    rewrite R__spec. split.
    +intros (c&H'). specialize (spec_d__R (x,c)). apply ssreflect.iffLR with (2:=H') in spec_d__R.
-    unfold genericNPcompleteProblem.
+    unfold GenNP.
     split. now Lproc.
     exists c. repeat split.
     *rewrite bounds_f__Rbal. 2:eassumption. easy.
@@ -53,7 +51,7 @@ Proof.
      rewrite bounds_f__Rbal. 2:eassumption.
      rewrite leq_f__Rbal'. reflexivity.
     *Lproc.
-   +unfold genericNPcompleteProblem.
+   +unfold GenNP.
     intros (?&c&size__c&R').
     exists c. specialize (spec_d__R (x,c)). cbn in spec_d__R. rewrite spec_d__R.
     eapply inj_enc.
@@ -67,12 +65,12 @@ From Undecidability.L.Functions Require Import Proc.
 From Undecidability.L.AbstractMachines.Computable Require Import EvalForTimeBool.
 Import EvalForTime LargestVar.
 
-Lemma inNP_genericNPcompleteProblem : inNP genericNPcompleteProblem.
+Lemma inNP_GenNP : inNP GenNP.
 Proof.
   eexists (fun x (c:term) => exists (s':term) (maxSize steps :nat), 
-               x = (s',maxSize,steps) /\ closed s' /\ size (enc c) <= maxSize 
+               x = (s',maxSize,steps) /\ proc s' /\ size (enc c) <= maxSize 
                /\ s' (enc c) ⇓(<=steps) (enc true)).
-  3:{ intros ((?,?),?). unfold genericNPcompleteProblem. split.
+  3:{ intros ((?,?),?). unfold GenNP. split.
       -intros [? (?&?&?)]. eauto 10. 
       -intros (?&?&?&?&[= <- <- <-]&?&?&?). eauto 10. }
   2:{ exists (fun x => x). repeat split. 1,3:smpl_inO.
@@ -83,7 +81,7 @@ Proof.
     evar (f__t : nat -> nat). [f__t]:intro n.
     eexists f__t. repeat eapply conj.
     eexists (fun '((s',maxSize,steps),c) =>
-               if closedb s' && (size (enc c) <=? maxSize)
+               if closedb s' && lambdab s' && (size (enc c) <=? maxSize)
                then
                    evalForTimeBool true (N.of_nat steps) (s' (enc c))
                else false). split.
@@ -113,14 +111,16 @@ Proof.
      rewrite H3. unfold f__t.
      reflexivity.
      unfold f__t. lia.
-    -intros [[[s' maxSize] steps] c]. cbn [fst snd prod_curry].
+    -intros [[[s' maxSize] steps] c]. cbn [fst snd prod_curry]. unfold proc. 
      destruct (closedb_spec s');cbn [andb]. 2:{ split;[|congruence];intros (?&?&?&[= -> -> ->]&?);tauto. }
+     destruct (lambdab_spec s');cbn [andb]. 2:{ split;[|congruence];intros (?&?&?&[= -> -> ->]&?);tauto. }
+
      destruct (Nat.leb_spec0 (size (enc c)) maxSize);cbn [andb]. 2:{ split;[|congruence];intros (?&?&?&[= -> -> ->]&?);tauto. }
      eapply reflect_iff.
      eapply ssrbool.equivP. eapply evalForTimeBool_spec.
      rewrite  !Nnat.Nat2N.id.
      split.
-     +intuition eauto 10.
+     +unfold proc. intuition eauto 10.
      +intros (?&?&?&[= -> -> ->]&?). intuition eauto 10. Lproc.
     -unfold f__t.
      smpl_inO.
@@ -129,8 +129,9 @@ Proof.
   }
 Qed.
 
-Lemma genericNPcompleteProblem_complete :
-  NPcomplete genericNPcompleteProblem.
+Lemma GenNP_complete :
+  NPcomplete GenNP.
 Proof.
-  eauto using inNP_genericNPcompleteProblem, NPhard_genericNPcompleteProblem. 
+  eauto using inNP_GenNP, NPhard_GenNP. 
 Qed.
+

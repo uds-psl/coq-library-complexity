@@ -1,4 +1,4 @@
-From Undecidability Require Import TM.TM L.Functions.FinTypeLookup.
+From Undecidability Require Import TM.TM.
 Require Import PslBase.FiniteTypes.
 From PslBase.FiniteTypes Require Import VectorFin Cardinality.
 
@@ -53,4 +53,16 @@ Lemma isFlatteningTapesOf_iff (sig : finType) (n : nat) y (t:Vector.t (tape sig)
   isFlatteningTapesOf y t <-> y = (Vector.to_list (mapTapes index t)).
 Proof.
   split. now inversion 1. intros ->;easy.
+Qed.
+
+Definition mconfigFlat :Type := nat * list (tape nat).
+Inductive isFlatteningConfigOf {st sig : finType} {n}: mconfigFlat -> mconfig st sig n -> Prop :=
+  mkisFlatteningConfigOf t c'  (Ht:isFlatteningTapesOf t c'.(ctapes))
+  : isFlatteningConfigOf (index c'.(cstate),t) c'.
+
+
+Lemma isFlatteningConfigOf_iff {st sig : finType} n c (c' : mconfig st sig n):
+  isFlatteningConfigOf c c' <-> exists t, isFlatteningTapesOf t c'.(ctapes) /\ c = (index c'.(cstate),t).
+Proof.
+  split. inversion 1;subst. eauto. intros (?&?&->). easy.
 Qed.

@@ -15,6 +15,13 @@ Proof.
     subst. f_equal. eapply IHx. eassumption.
 Defined.
 
+
+Lemma enc_vector_eq X `{registered X} m (x:Vector.t X m):
+  enc x = enc (Vector.to_list x).
+Proof.
+  reflexivity.
+Qed.
+
 Instance term_to_list X `{registered X} n : computableTime' (Vector.to_list (A:=X) (n:=n)) (fun _ _ => (1,tt)).
 Proof.
   apply cast_computableTime.
@@ -116,4 +123,36 @@ Qed.
 Lemma to_list_length X n0 (l:Vector.t X n0) :length (Vector.to_list l) = n0.
 Proof.
   induction l. reflexivity. rewrite <- IHl at 3. reflexivity.
+Qed.
+
+From Undecidability.L Require Import Functions.EqBool.
+
+Global Instance eqbVector  X eqbx `{eqbClass (X:=X) eqbx} n:
+  eqbClass (VectorEq.eqb eqbx (n:=n) (m:=n)).
+Proof.
+  intros ? ?. eapply vector_eqb_spec. all:eauto using eqb_spec.
+Qed.
+
+Global Instance eqbComp_List X `{registered X} `{eqbCompT X (R:=_)} n:
+  eqbCompT (Vector.t X n).
+Proof.
+  evar (c:nat). exists c. edestruct term_vector_eqb with (X:=X). now eauto using comp_eqb.
+  eexists.
+  eapply computesTime_timeLeq. 2:eauto. clear.
+  repeat (hnf;intros;cbn [fst snd];split). easy.
+  unfold enc;cbn - [plus mult c max] in *. all:fold (@enc X _).
+  change VectorDef.to_list with (@Vector.to_list X n).
+  generalize (Vector.to_list x) as l, (Vector.to_list x0). clear.
+  setoid_rewrite size_list.
+  induction l;intros l'.
+  -cbn - [plus mult c max min] in *.
+   enough (10<=c). nia. shelve.
+  -destruct l' as [ |? l'].
+   all:cbn - [plus mult c max min] in *.
+   1:{ enough (10<=c). nia. shelve. }
+   specialize (IHl l').
+   unfold eqbTime at 1.
+   enough (10+c__eqbComp X<=c ). nia. shelve.
+  [c]:exact (c__eqbComp X + 10).
+   Unshelve. all:subst c. all:nia.
 Qed.

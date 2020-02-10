@@ -1,7 +1,8 @@
-From Undecidability Require Import TM.TM L.Functions.FinTypeLookup.
 Require Import PslBase.FiniteTypes.
+From Undecidability Require Import L.Functions.EqBool.
 From PslBase.FiniteTypes Require Import VectorFin Cardinality.
 
+From Undecidability Require Import TM.TM.
 From Undecidability Require Import L.TM.TMflat.
 From Undecidability Require L.TM.TMEncoding.
 
@@ -305,22 +306,21 @@ Proof.
   -apply index_le.
 Qed.
 
-Definition allSameEntry {X Y} (eqbX:X -> X -> bool) (eqbY:Y -> Y -> bool) x y (f : list (X*Y)) :=
+Definition allSameEntry {X Y} eqbX eqbY `{_:eqbClass (X:=X) eqbX} `{eqbClass (X:=Y) eqbY} x y (f : list (X*Y)) :=
   forallb (fun '(x',y') => implb (eqbX x x') (eqbY y y')) f.
 
-Fixpoint isInjFinfuncTable {X Y} (eqbX:X -> X -> bool) (eqbY:Y -> Y -> bool) (f : list (X*Y)) :=
+Definition isInjFinfuncTable {X Y} eqbX eqbY `{_:eqbClass (X:=X) eqbX} `{eqbClass (X:=Y) eqbY}
+  := fix isInjFinfuncTable (f : list (X*Y)) : bool :=
   match f with
     [] => true
-  | (x,y)::f => allSameEntry eqbX eqbY x y f
-              && isInjFinfuncTable eqbX eqbY f
+  | (x,y)::f => allSameEntry x y f
+              && isInjFinfuncTable f
   end.
 
-Lemma allSameEntry_spec X Y eqbX eqbY x y f:
-  (forall x y : X, reflect (x = y) (eqbX x y))
-  -> (forall x y : Y, reflect (x = y) (eqbY x y))
-  -> reflect (forall (y' : Y), (x, y') el f -> y = y') (allSameEntry eqbX eqbY x y f).
+Lemma allSameEntry_spec X Y eqbX eqbY `{Hx:eqbClass (X:=X) eqbX} `{Hy:eqbClass (X:=Y) eqbY} x y (f:list (X*Y)):
+  reflect (forall (y' : Y), (x, y') el f -> y = y') (allSameEntry x y f).
 Proof.
-  intros Hx Hy. unfold allSameEntry.
+  unfold allSameEntry.
   apply iff_reflect. rewrite forallb_forall.
   transitivity (forall x' y',  (x',y') el f -> implb (eqbX x x') (eqbY y y') = true).
   2:{split. now intros ? [].
@@ -337,15 +337,13 @@ Proof.
    apply H in H0. easy.
 Qed.
 
-Lemma isInjFinfuncTable_spec X Y eqbX eqbY f:
-  (forall x y : X, reflect (x = y) (eqbX x y))
-  -> (forall x y : Y, reflect (x = y) (eqbY x y))
-  -> reflect (forall (a : X) (b b' : Y), (a, b) el f -> (a, b') el f -> b = b') (isInjFinfuncTable eqbX eqbY f).
+Lemma isInjFinfuncTable_spec X Y eqbX eqbY `{Hx:eqbClass (X:=X) eqbX} `{Hy:eqbClass (X:=Y) eqbY} (f:list (X*Y)):
+  reflect (forall (a : X) (b b' : Y), (a, b) el f -> (a, b') el f -> b = b') (isInjFinfuncTable f).
 Proof.
-  intros Hx Hy. induction f as [ |[x y] f].
+  induction f as [ |[x y] f].
   cbn;constructor. easy.
   cbn.
-  edestruct (allSameEntry_spec x y f Hx Hy) as [H' | H'].
+  edestruct (allSameEntry_spec x y f) as [H' | H'].
   2:{cbn. constructor.
      intros H. eapply H'.  intros.
      eapply H;[left|right].  all:easy.
@@ -356,8 +354,6 @@ Proof.
   intros ? ? ? ? [[= -> ->]| ] [[= ->] | ]. all:subst.
   3:symmetry. all:easy.
 Qed.           
-
-Print validFlatTrans.
 
 Definition isBoundTransTable (sig n states : nat) (f : list (nat * list (option nat) * (nat * list (option nat * move)))) :=
   forallb (fun '((s,v),(s',v')) =>
@@ -409,8 +405,7 @@ Proof.
 Qed.   
 
 Definition isValidFlatTrans sig n states (f : list (nat * list (option nat) * (nat * list (option nat * move)))) :=
-  isInjFinfuncTable (LProd.prod_eqb Nat.eqb (Lists.list_eqb (LOptions.option_eqb Nat.eqb)))
-                    (LProd.prod_eqb Nat.eqb (Lists.list_eqb (LProd.prod_eqb (LOptions.option_eqb Nat.eqb) TMEncoding.move_eqb))) f && isBoundTransTable sig n states f.
+  isInjFinfuncTable  f && isBoundTransTable sig n states f.
 
 Lemma isValidFlatTrans_spec sig n states f:
   reflect (validFlatTrans sig n states f)
@@ -420,8 +415,7 @@ Proof.
   eapply iff_reflect.
   rewrite andb_true_iff. rewrite <- !reflect_iff.
   2:{ eapply isBoundTransTable_spec. }
-  2:{ eapply isInjFinfuncTable_spec.
-      all:intros;eauto using LProd.prod_eqb_spec, LOptions.option_eqb_spec, Lists.list_eqb_spec, TMEncoding.move_eqb_spec, Nat.eqb_spec. }
+  2:{ eapply isInjFinfuncTable_spec. }
   split.
   -now intros [].
   -econstructor. all:easy.
@@ -449,7 +443,7 @@ Definition isValidFlatTape (sig:nat) (t:tape nat):=
   forallb (fun x => Nat.ltb x sig) (tapeToList t).
 
 Definition isValidFlatTapes (sig:nat) n (t:list (tape nat)):=
-  (length t =? n) && forallb (isValidFlatTape sig) t.
+  if length t =? n then forallb (isValidFlatTape sig) t else false.
 
 Lemma tapeToList_map_commute sig sig' (f : sig -> sig') t :
   tapeToList (mapTape f t) = map f (tapeToList t).
@@ -464,8 +458,7 @@ Lemma flatteningTapeIsValid (sig:finType) n t (t' : TM.tapes sig n):
 Proof.
   intros H. inv H.
   unfold isValidFlatTapes.
-  rewrite andb_true_iff. split.
-  {rewrite vector_to_list_length. rewrite Nat.eqb_refl. easy. }
+  rewrite vector_to_list_length. rewrite Nat.eqb_refl.
   induction t' as [ |t];cbn. easy.
   rewrite andb_true_iff. split.
   2:{easy. }
@@ -510,9 +503,7 @@ Lemma isUnflattableTapes sig n t :
   isValidFlatTapes (Cardinality sig) n t = true -> {t' & isFlatteningTapesOf (sig:=sig) (n:=n) t t'}.
 Proof.
   cbn. unfold isValidFlatTapes.
-  intros H. rewrite !andb_true_iff in H.
-  destruct H as (H'&H).
-  eapply Nat.eqb_eq in H'. subst n.
+  intros H. destruct (Nat.eqb_spec (length t) n). 2:easy. subst n.
   induction t.
   -eexists [||]. rewrite isFlatteningTapesOf_iff. easy.
   -cbn in H.
@@ -522,11 +513,29 @@ Proof.
    eexists (t0:::v').
    rewrite isFlatteningTapesOf_iff in *. cbn. f_equal. all: now cbv.
 Qed.
-(*
-Lemma isValidFlatTapes_spec sig n t :
-  reflect (forall sig, Cardinality sig = n -> exists t', isFlatteningTapesOf (sig:=sig) (n:=n) t t') (isValidFlatTapes (Cardinality sig) n t).
+
+(** ** unflatten Conf *)
+
+Definition validFlatTape sig (t : tape nat) :=
+  forall n, n el tapeToList t -> n < sig.
+
+Lemma isValidFlatTape_spec sig t :
+  reflect (validFlatTape sig t) (isValidFlatTape sig t).
 Proof.
-  eapply iff_reflect. split.
-  -intros (?&?%flatteningTapeIsValid).  easy.
-  -intros (?&?)%isUnflattableTapes.  eauto.
-Qed.*)
+  unfold validFlatTape, isValidFlatTape.
+  apply iff_reflect. rewrite forallb_forall. setoid_rewrite Nat.ltb_lt. easy.
+Qed.
+      
+
+Definition validFlatConf M (c:mconfigFlat):=
+  let (s,ts) := c in
+   length ts = M.(tapes) /\ Forall (validFlatTape M.(sig)) ts /\ s < M.(states).
+
+(*
+Lemma isValidFatConf_spec M c:
+  reflect (validFlatConf M c) (isFlatteningConfigOf (M.(states)) M.(sig) M.(tapes) c).
+Proof.
+  unfold validFlatTape, isValidFlatTape.
+  apply iff_reflect. rewrite forallb_forall. setoid_rewrite Nat.ltb_lt. easy.
+Qed.
+*)

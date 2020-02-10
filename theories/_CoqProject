@@ -259,6 +259,7 @@ L/Datatypes/LVector.v
 L/Datatypes/LDepPair.v
 
 
+L/Functions/EqBool.v
 L/Functions/Equality.v
 L/Functions/Encoding.v
 L/Functions/Decoding.v
@@ -285,6 +286,7 @@ L/TM/TMflat.v
 L/TM/TMunflatten.v
 L/TM/TMflatEnc.v
 L/TM/TMflatFun.v
+L/TM/TMflatComp.v
 L/TM/TMinL.v
 L/TM/TapeFuns.v
 L/TM/TapeDecode.v
@@ -306,12 +308,16 @@ L/Complexity/ONotation.v
 L/Complexity/RegisteredP.v
 L/Complexity/LinTimeDecodable.v
 L/Complexity/NP.v
+
+L/Complexity/Problems/GenNP.v
+L/Complexity/Problems/TMGenNP.v
+L/Complexity/Problems/GenNPHalt.v
+L/Complexity/Reductions/TMGenNP/LToTMGenNP.v
+
 L/Complexity/PolyBounds.v
 L/Complexity/Tactics.v
 L/Complexity/MorePrelim.v
 #L/Complexity/Problems/LGraph.v
-#L/Complexity/Problems/GenericNPcompleteProblem.v
-#L/Complexity/Problems/TMGenericNPcompleteProblem.v
 #L/Complexity/Problems/Clique.v
 #L/Complexity/Problems/SAT.v
 #L/Complexity/Problems/kSAT.v
@@ -340,7 +346,6 @@ L/Complexity/Cook/PR_to_BinaryPR.v
 L/Complexity/Cook/UniformHomomorphisms.v
 L/Datatypes/LLists.v
 L/Datatypes/LLNat.v
-
 
 L/AbstractMachines/Programs.v
 L/AbstractMachines/AbstractSubstMachine.v

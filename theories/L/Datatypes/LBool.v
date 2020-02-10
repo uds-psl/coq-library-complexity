@@ -45,3 +45,32 @@ Qed.
 Lemma size_bool (b : bool) : size(enc b) <= 4. 
 Proof.  destruct b; cbv; lia. Qed. 
 
+Definition OmegaLift := lam Omega.
+
+Lemma OmegaLift_proc : proc OmegaLift.
+Proof.  unfold OmegaLift.  Lproc. Qed.
+Hint Resolve OmegaLift_proc : LProc.
+
+Definition trueOrDiverge := lam (var 0 I OmegaLift I).
+
+Lemma trueOrDiverge_proc : proc trueOrDiverge.
+Proof.  unfold trueOrDiverge. Lproc. Qed.
+Hint Resolve trueOrDiverge_proc : LProc.
+
+Lemma trueOrDiverge_true : trueOrDiverge (enc true) >(4) I.
+Proof.
+  unfold trueOrDiverge. cbv - [pow]. Lsimpl.
+Qed.
+
+Hint Resolve trueOrDiverge_true : Lrewrite.
+
+
+Lemma trueOrDiverge_eval t b: trueOrDiverge (enc b) ⇓ t -> b = true.
+Proof.
+  destruct b. easy.
+  unfold trueOrDiverge. intros (R&l).
+  edestruct Omega_diverge with (t:=t).  
+  assert (H':t == Omega).
+  {rewrite <- R. apply star_equiv. unfold enc;cbn. etransitivity. now Lbeta. apply step_star. constructor. }
+  now rewrite <- H'.
+Qed.
