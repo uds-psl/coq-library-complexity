@@ -28,14 +28,15 @@ End NP_certificate_fix.
 
 Local Set Warnings "-cannot-define-projection".
 Record inNP {X} `{registered X} (P:restrictedP X) : Prop :=
-  {
-    (*Y : Type;
+  inNP_introSpec
+    {
+      (*Y : Type;
     reg__Y : registered Y;*)
-    R : X -> term -> Prop; (* fixed to term for simplicity *)
-    poly__R : inTimePoly (fun '(x,y) => (fst (P x), R x y));
-    bal__R : polyBalanced R;
-    spec__R : forall x, fst (P x) -> snd (P x) <-> exists y, R x y
-  }.
+      R : X -> term -> Prop; (* fixed to term for simplicity *)
+      poly__R : inTimePoly (fun '(x,y) => (fst (P x), R x y));
+      bal__R : polyBalanced R;
+      spec__R : forall x, fst (P x) -> snd (P x) <-> exists y, R x y
+    }.
 
 
 Lemma inNP_intro {X Y} `{_:registered X} `{registered Y} {_:decodable Y} (P:restrictedP X) (R:X -> Y -> Prop):
@@ -95,16 +96,27 @@ Qed.
 
 
 Record reducesPolyMO X Y `{registered X} `{registered Y} (P : restrictedP X) (Q : restrictedP Y) :Prop :=
-  {
-    reducesPolyMO_f : X -> Y;
-    reducesPolyMO_comp : polyTimeComputable reducesPolyMO_f;
-    reducesPolyMO_correct : forall x, fst (P x) -> (snd (P x) <-> snd (Q (reducesPolyMO_f x)));
-    reducesPolyMO_correctRestr : forall x, fst (P x) -> fst (Q (reducesPolyMO_f x))
-  }.
+  reducesPolyMO_introSpec {
+      f : X -> Y;
+      f__comp : polyTimeComputable f;
+      f__correct : forall x, fst (P x) -> (snd (P x) <-> snd (Q (f x)));
+      f__correctRestr : forall x, fst (P x) -> fst (Q (f x))
+    }.
 
 Notation "P ⪯p Q" := (reducesPolyMO P Q) (at level 50).
 
-Lemma reducesPolyMO_reflexive X {regX : registered X} P : P ⪯p P.
+Lemma reducesPolyMO_intro X Y `{RX: registered X} `{RY:registered Y} (P : restrictedP X) (Q : restrictedP Y) f:
+  polyTimeComputable f
+  -> (forall x, fst (P x) -> fst (Q (f x)) /\ (snd (P x) <-> snd (Q (f x))))
+  -> P ⪯p Q.
+Proof.
+  intros H H'. econstructor. eassumption. all:intros ? ?. all:now eapply H'.
+Qed.
+
+Lemma reducesPolyMO_restriction_antimonotone X `{R :registered X} (P Q:restrictedP X) :
+    (forall x, fst (P x) -> fst (Q x))
+    -> (forall x, fst (P x) -> snd (P x) <-> snd (Q x))
+    -> P ⪯p Q.
 Proof.
   exists (fun x => x). 2,3:easy.
   exists (fun _ => 1).
@@ -112,6 +124,11 @@ Proof.
   -smpl_inO.
   -hnf. reflexivity.
   -exists (fun x => x). repeat split. 2-3:now smpl_inO.  reflexivity.
+Qed.
+
+Lemma reducesPolyMO_reflexive X {regX : registered X} P : P ⪯p P.
+Proof.
+  apply reducesPolyMO_restriction_antimonotone. all:easy. 
 Qed.
 
 Lemma reducesPolyMO_transitive X Y Z {regX : registered X} {regY : registered Y} {regZ : registered Z} (P : restrictedP X) (Q : restrictedP Y) (R : restrictedP Z) :
@@ -172,6 +189,8 @@ Proof.
 Qed.
 
 
+
+
 (** ** NP Hardness and Completeness *)
 Definition NPhard X `{registered X} P :=
   forall Y `{registeredP Y} Q,
@@ -183,6 +202,14 @@ Proof.
   intros R hard.
   intros ? ? ? Q' H'. apply hard in H'.
   eapply reducesPolyMO_transitive with (1:=H'). all:eassumption.
+Qed.
+
+Corollary NPhard_traditional X `{registered X} P:
+  NPhard P -> NPhard (unrestrictedP (fun x => snd (P x))).
+Proof.
+  eapply red_NPhard.
+  eapply reducesPolyMO_restriction_antimonotone.
+  all: cbn. all:easy.
 Qed.
 
 Definition NPcomplete X `{registered X} P :=

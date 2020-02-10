@@ -5,14 +5,15 @@ Inductive is_computable_time {A} {t : TT A} (a : A) fT : Prop :=
   C : computableTime a fT -> is_computable_time a fT.
 (** Semantics for [[restrictedP]]: fst is the subset of X which is an admsisable input, second is the Problem itself. *)
 Definition restrictedP X := (X -> Prop*Prop).
-Definition restrPWhere {X} vX P : restrictedP X:= fun (x:X) => (vX x,P x).
-Notation "vX '@With' P" := (restrPWhere vX P) (at level 0, P at level 0).
+Definition restrictBy {X} vX P : restrictedP X:= fun (x:X) => (vX x,P x).
+(* Notation "vX '@With' P" := (restrPWhere vX P) (at level 0, P at level 0). *)
 
 
-Definition unrestrictedP {X} P : restrictedP X := restrPWhere (fun x => True) P.
+Definition unrestrictedP {X} P : restrictedP X := restrictBy (fun _ => True) P.
 
 Local Set Warnings "-cannot-define-projection".
-Record decInTime {X} `{R :registered X} (P : restrictedP X) (fT : nat -> nat) :Prop := 
+Record decInTime {X} `{R :registered X} (P : restrictedP X) (fT : nat -> nat) :Prop :=
+  decInTime_intro
   {
     decInTime_decP : X -> bool ;
     decInTime_compIn : is_computable_time (t:=TyArr (TyB X) (TyB bool)) decInTime_decP (fun x _ => (fT (L.size (enc x)),tt)) ;
@@ -20,11 +21,11 @@ Record decInTime {X} `{R :registered X} (P : restrictedP X) (fT : nat -> nat) :P
   }.
 
 
-Lemma decInTime_restriction_antimono X `{R :registered X} (P P':restrictedP X) (fT : nat -> nat) :
-  (forall x, fst (P' x) -> fst (P x))
-  -> (forall x, fst (P' x) -> snd (P x) <-> snd (P' x))
+Lemma decInTime_restriction_antimono X `{R :registered X} (P Q:restrictedP X) (fT : nat -> nat) :
+  (forall x, fst (Q x) -> fst (P x))
+  -> (forall x, fst (Q x) -> snd (P x) <-> snd (Q x))
   -> decInTime P fT
-  -> decInTime P' fT.
+  -> decInTime Q fT.
 Proof.
   intros Hf Hs [decO compIn correct]. eexists. eauto.
   intros ? ?. rewrite <- correct.
@@ -111,6 +112,7 @@ Smpl Add 12 simple eapply smpl_inOPoly_fT_inO : inO.
 
 
 Record polyTimeComputable X Y `{registered X} `{registered Y} (f : X -> Y): Prop :=
+  polyTimeComputable_intro
   {
     polyTimeC__t : nat -> nat;
     polyTimeC__comp : is_computable_time (t:=TyArr _ _) f (fun x _ => (polyTimeC__t (L.size (enc x)),tt));

@@ -12,14 +12,13 @@ Definition TMGenNP' sig n : mTM sig n * nat * nat -> Prop :=
     exists tp, sizeOfmTapes tp <= k
           /\ exists f, loopM (initc M tp) steps = Some f.
 
-Definition TM1GenNP : TM*nat*nat -> Prop:=
-  fun '(M,maxSize, steps (*in unary*)) =>
-    exists sig (M':mTM sig 1), isFlatteningTMOf M M' /\ TMGenNP' (M', maxSize, steps).
-
 Definition TMGenNP: TM*nat*nat -> Prop:=
   fun '(M,maxSize, steps (*in unary*)) =>
     (exists sig n (M':mTM sig n), isFlatteningTMOf M M' /\ TMGenNP' (M',maxSize,steps)).
 
+Definition TM1GenNP : restrictedP (TM*nat*nat) :=
+  fun '(M,maxSize, steps (*in unary*)) =>
+    ( M.(TMflat.tapes) = 1 , exists sig (M':mTM sig 1), isFlatteningTMOf M M' /\ TMGenNP' (M', maxSize, steps)).
 
 
 Lemma inNP_TMgenericNPCompleteProblem:
