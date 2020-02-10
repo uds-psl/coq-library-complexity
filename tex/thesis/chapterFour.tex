@@ -1,7 +1,6 @@
 \newcommand*{\gennp}{\textbf{TMGenNP}}
 
 \newcommand{\strent}{\rightsquigarrow}
-\newcommand{\constrent}{\overset{!}{\rightsquigarrow}}
 \newcommand{\Rfinal}{R_{\text{final}}}
 
 \newcommand{\bigO}[1]{\mathcal{O}{(#1)}}
@@ -48,16 +47,21 @@ Therefore, we believe that the most practical path of reducing from L to \SAT{} 
 
 \begin{definition}[TMGenNP]
   \begin{align*}
-    \gennp{} (\Sigma, M : \textsf{TM}~\Sigma~1, k, t) \defeq \exists~in, \length{in} \le k \land \exists f, (\textsf{start}_M, \textsf{initTape}~in) \rhd^{\le t} f 
+    \gennp{} (\Sigma, M : \textsf{TM}~\Sigma~1, k, t) \defeq \exists~in, \length{in} \le k \land \exists f, ({\textsf{start}}_M, \textsf{initTape}~in) \rhd^{\le t} f, 
   \end{align*}
+  where 
+  \begin{align*}
+    \textsf{initTape}~[] \defeq \textsf{niltape} \\
+    \textsf{initTape}~x::xs \defeq \textsf{leftof}~x~xs,
+  \end{align*}
+  that is, the head is initially positioned left of the input.
 \end{definition}
-\todo{define initTape}
 
 \gennp{} is a form of a generic problem for Turing machines. A definition the reader might be more familiar with is the following: 
 \begin{center}
   Given a nondeterministic Turing machine $M$, an input $in$ and a number of steps $t$, does $M$ accept $in$ in at most $t$ steps?
 \end{center}
-Our definition relates to this one in a similar way the verifier characterisation of \NP{} relates to the one using nondeterminism: the nondeterminism is moved into the input. The reason for that simply is that formally working with nondeterminism is unpleasant.
+Our definition relates to this one in a similar way the verifier characterisation of \NP{} relates to the one using nondeterminism: the nondeterminism is moved into the input. The reason for that is that formally working with nondeterminism is unpleasant.
 Additionally, we have made the simplification that the input of the Turing machine consists only of the nondeterministic certificate, as the ``regular'' input can just be hardcoded into the Turing machine. 
 
 In a theory with Turing machines as the computational model, \gennp{} would be almost trivially \NP{}-hard, although it would not be a natural problem as it depends on the model of computation.
@@ -65,7 +69,8 @@ Using L, however, the hardness is not trivial anymore.
 In this setting, we just see \gennp{} the same as any other problem; one could even consider it to be natural as it does not refer to our model of computation.
 
 \section{Deterministic Simulation: Tableau of Configurations}
-We first consider how a deterministic Turing machine can be encoded.
+We first consider how the computation of a deterministic Turing machine can be encoded for an arbitrary input of which we only know that its size is at most $k$. The nondetermistic ``guessing'' of an input of such a form will be covered in the next section.
+
 At a first glance, it might seem unintuitive that one can encode the computation of a Turing machine using a fixed-size formula as it is not known a priori how much time or space the Turing machine needs on a particular input.
 The key is that \gennp{} just asks us to simulate a Turing machine $M$ for a bounded number of steps $t$ on inputs of a bounded size $\le k$. 
 Thus, the formula can be made large enough to account for the worst-case: $t$ computational steps and a space usage of $t + k$ tape cells as the Turing machine can visit at most one cell per computational step\footnote{The bound is $t +k$ and not $t$ since we count the input even if the Turing machine does not read it.}. 
@@ -154,13 +159,18 @@ However, there are multiple ways of dealing with head movements.
 The most straightforward way might be to move the position of the state symbol, resembling the movement of the head (moving-head semantics).
 \begin{example}[Moving Head]\label{ex:movinghead}
   Consider the Turing machine $M$ over alphabet $\Sigma = \{a, b, c\}$ with $Q = \{q_0, q_1\}$, $\textsf{halt}~q_0 = \bfalse$ and $\delta(q_0, \OSome{a}) = (q_1, (\OSome{b}, \movel))$. 
-  The successor of the tableau line using moving-head semantics
+  The successor of the tableau line
   \begin{center}
     \begin{tikzpicture}
-      \draw (0, 0.75) -- (9.75, 0.75);
-      \draw (0, 0) -- (9.75, 0);
+      \draw (-0.75, 0.75) -- (10.5, 0.75);
+      \draw (-0.75, 0) -- (10.5, 0);
+      \draw (-0.75, 0) -- (-0.75, 0.75);
+      \draw (10.5, 0) -- (10.5, 0.75);
+
       \draw (0, 0) -- (0, 0.75);
       \draw (9.75, 0) -- (9.75, 0.75);
+      \node at (-0.375, 0.375) {\#};
+      \node at (10.125, 0.375) {\#};
 
       \draw (4.5, 0) -- (4.5, 0.75);
       \draw (5.25, 0) -- (5.25, 0.75);
@@ -183,32 +193,37 @@ The most straightforward way might be to move the position of the state symbol, 
 
     \end{tikzpicture}
   \end{center}
-  would be 
+  using moving-head semantics would be 
   \begin{center}
     \begin{tikzpicture}
-      \draw (0, 0) -- (9.75, 0);
-      \draw (0, -0.75) -- (9.75, -0.75);
-      \draw (0, -0.75) -- (0, 0);
-      \draw (9.75, -0.75) -- (9.75, 0);
+      \draw (-0.75, 0.75) -- (10.5, 0.75);
+      \draw (-0.75, 0) -- (10.5, 0);
+      \draw (-0.75, 0) -- (-0.75, 0.75);
+      \draw (10.5, 0) -- (10.5, 0.75);
 
-      \draw (4.5, 0) -- (4.5, -0.75);
-      \draw (5.25, 0) -- (5.25, -0.75);
-      \draw (3.75, 0) -- (3.75, -0.75);
-      \draw (3, 0) -- (3, -0.75);
-      \draw (6, 0) -- (6, -0.75);
-      \draw (6.75, 0) -- (6.75, -0.75);
-      \draw (7.5, 0) -- (7.5, -0.75);
-      \draw (8.25, 0) -- (8.25, -0.75);
+      \draw (0, 0) -- (0, 0.75);
+      \draw (9.75, 0) -- (9.75, 0.75);
+      \node at (-0.375, 0.375) {\#};
+      \node at (10.125, 0.375) {\#};
 
-      \node at (1.5, -0.375) {$\cdots$};
-      \node at (9.125, -0.375) {$\cdots$};
-      \node at (5.6125, -0.375) {$b$};
-      \node at (6.375, -0.375) {$b$};
-      \node at (7.125, -0.375) {\blank};
-      \node at (7.875, -0.375) {\blank};
-      \node at (4.875, -0.375) {$b$};
-      \node at (4.125, -0.375) {$q_1^c$};
-      \node at (3.375, -0.375) {\blank};
+      \draw (4.5, 0) -- (4.5, 0.75);
+      \draw (5.25, 0) -- (5.25, 0.75);
+      \draw (3.75, 0) -- (3.75, 0.75);
+      \draw (3, 0) -- (3, 0.75);
+      \draw (6, 0) -- (6, 0.75);
+      \draw (6.75, 0) -- (6.75, 0.75);
+      \draw (7.5, 0) -- (7.5, 0.75);
+      \draw (8.25, 0) -- (8.25, 0.75);
+
+      \node at (1.5, 0.375) {$\cdots$};
+      \node at (9.125, 0.375) {$\cdots$};
+      \node at (5.6125, 0.375) {$b$};
+      \node at (6.375, 0.375) {$b$};
+      \node at (7.125, 0.375) {\blank};
+      \node at (7.875, 0.375) {\blank};
+      \node at (4.875, 0.375) {$b$};
+      \node at (4.125, 0.375) {$q_1^c$};
+      \node at (3.375, 0.375) {\blank};
     \end{tikzpicture}
   \end{center}
 \end{example}
@@ -218,10 +233,15 @@ Depending on \emph{how} the Turing machine moves its head in order to write down
 Thus, for any given configuration $(q, tp)$ of the machine, there are multiple ways of encoding it as a configuration string:
 \begin{center}
   \begin{tikzpicture}
-    \draw (0, 0) -- (9.75, 0);
-    \draw (0, -0.75) -- (9.75, -0.75);
-    \draw (0, -0.75) -- (0, 0);
-    \draw (9.75, -0.75) -- (9.75, 0);
+    \draw (-0.75, -0.75) -- (10.5, -0.75);
+    \draw (-0.75, 0) -- (10.5, 0);
+    \draw (-0.75, 0) -- (-0.75, -0.75);
+    \draw (10.5, 0) -- (10.5, -0.75);
+
+    \draw (0, 0) -- (0, -0.75);
+    \draw (9.75, 0) -- (9.75, -0.75);
+    \node at (-0.375, -0.375) {\#};
+    \node at (10.125, -0.375) {\#};
 
     \draw (4.5, 0) -- (4.5, -0.75);
     \draw (5.25, 0) -- (5.25, -0.75);
@@ -242,13 +262,19 @@ Thus, for any given configuration $(q, tp)$ of the machine, there are multiple w
     \node at (4.125, -0.375) {$q_1^c$};
     \node at (3.375, -0.375) {\blank};
 
-    \draw[->, dashed] (3.75, -0.75) -- (4.5, -1.5);
-    \draw[->, dashed] (6.75, -0.75) -- (7.5, -1.5);
+    \draw[-{>[scale=2.0]}, dashed] (3.75, -0.75) -- (4.5, -1.5);
+    \draw[-{>[scale=2.0]}, dashed] (6.75, -0.75) -- (7.5, -1.5);
 
-    \draw (0, -1.5) -- (9.75, -1.5);
-    \draw (0, -2.25) -- (9.75, -2.25);
+    \draw (-0.75, -1.5) -- (10.5, -1.5);
+    \draw (-0.75, -2.25) -- (10.5, -2.25);
+    \draw (-0.75, -2.25) -- (-0.75, -1.5);
+    \draw (10.5, -2.25) -- (10.5, -1.5);
+
     \draw (0, -2.25) -- (0, -1.5);
     \draw (9.75, -2.25) -- (9.75, -1.5);
+    \node at (-0.375, -1.875) {\#};
+    \node at (10.125, -1.875) {\#};
+
 
     \draw (4.5, -1.5) -- (4.5, -2.25);
     \draw (5.25, -1.5) -- (5.25, -2.25);
@@ -279,10 +305,15 @@ Therefore, we instead use a moving-tape semantics where the position of the head
   Adapting example~\ref{ex:movinghead}, the same transition looks like this when using moving-tape semantics:
   \begin{center}
     \begin{tikzpicture}
-      \draw (0, 0.75) -- (9.75, 0.75);
-      \draw (0, 0) -- (9.75, 0);
+      \draw (-0.75, 0.75) -- (10.5, 0.75);
+      \draw (-0.75, 0) -- (10.5, 0);
+      \draw (-0.75, 0) -- (-0.75, 0.75);
+      \draw (10.5, 0) -- (10.5, 0.75);
+
       \draw (0, 0) -- (0, 0.75);
       \draw (9.75, 0) -- (9.75, 0.75);
+      \node at (-0.375, 0.375) {\#};
+      \node at (10.125, 0.375) {\#};
 
       \draw (4.5, 0) -- (4.5, 0.75);
       \draw (5.25, 0) -- (5.25, 0.75);
@@ -310,13 +341,19 @@ Therefore, we instead use a moving-tape semantics where the position of the head
       \node at (4.125, 0.375) {$c$};
       \node at (3.375, 0.375) {\blank};
 
-      \path[<->] (0, 1.5) edge node[fill=white, anchor=center, pos= 0.5] {\small $z$} (4.5, 1.5);
+      \path[<->] (0, 1.5) edge node[fill=white, anchor=center, pos= 0.5] {\small $\hat{z}$} (4.5, 1.5);
       \node[color=white] at (4.75, 1.5) {l};
-      \path[<->] (5.25, 1.5) edge node[fill=white, anchor=center, pos =0.5] {\small $z$} (9.75, 1.5);
+      \path[<->] (5.25, 1.5) edge node[fill=white, anchor=center, pos =0.5] {\small $\hat{z}$} (9.75, 1.5);
 
-      \draw (0, -0.75) -- (9.75, -0.75);
-      \draw (0, -0.75) -- (0, 0);
-      \draw (9.75, -0.75) -- (9.75, 0);
+      \draw (-0.75, -0.75) -- (10.5, -0.75);
+      \draw (-0.75, -0.75) -- (-0.75, 0);
+      \draw (10.5, -0.75) -- (10.5, 0);
+
+      \draw (0, 0) -- (0, -0.75);
+      \draw (9.75, 0) -- (9.75, -0.75);
+      \node at (-0.375, -0.375) {\#};
+      \node at (10.125, -0.375) {\#};
+
 
       \draw (4.5, 0) -- (4.5, -0.75);
       \draw (5.25, 0) -- (5.25, -0.75);
@@ -338,7 +375,7 @@ Therefore, we instead use a moving-tape semantics where the position of the head
       \node at (3.375, -0.375) {\blank};
     \end{tikzpicture}
   \end{center}
-  Note that the size of the substrings left and right of the center symbol is the same number $z$ depending on $t$ and $k$, expressing that the state symbol is fixed at the center.
+  Note that the size of the substrings left and right of the center symbol is the same number $\hat{z}$ depending on $t$ and $k$, expressing that the state symbol is fixed at the center.
 \end{example}
 
 With the moving-tape representation, we have arrived at a formally pleasing handling of head movements. 
@@ -358,7 +395,7 @@ For this, we introduce \emph{rewrite windows} consisting of $3 \times 2$ symbols
   \end{tabular}
 \end{center}
 
-These rewrite windows are used to justify that one line of the tableau \emph{validly} follows from the previous one. At each possible offset, there must exist a rewrite window whose premise matches a prefix of the previous string and whose conclusion matches prefix of the succeding string.
+These rewrite windows are used to justify that one line of the tableau \emph{validly} follows from the previous one. At each possible offset, there must exist a rewrite window whose premise matches a prefix of the previous string and whose conclusion matches a prefix of the succeding string.
 
 \begin{example}[Rewrite Windows]\label{ex:rewwindows}
   Consider again example~\ref{ex:movingtape}. For the positions labelled -2, -1, 0, 1 and 2 we need the following rewrite windows (from left to right):
@@ -391,19 +428,24 @@ Most of the windows need to exist for every possible combination of tape symbols
 \end{example}
 Note that we distinguish between blanks $\blank$ and elements of $\Sigma$ as $\blank$ is only a part of the representation of configurations as strings.
 
-Seeing this generaliation, one might now realise a problem regarding the tape shifts: the rewrite windows are not provided enough information such that the overlapping constraints can enforce a consistent tape shift.
+Seeing this generaliation, one might now realise a problem regarding the tape shifts: the rewrite windows are not provided enough information for the overlapping constraints to enforce a consistent tape shift.
 \begin{example}[Inconsistent Tape Shifts]
   We need not only be able to shift the tape to the right, but also leave its position unchanged. For instance, we need the following rewrite rule:
   \begin{center}
     \rewwin{\sigma_1 & \sigma_2 & \blank{}}{\sigma_1 & \sigma_2 & \blank{}}
   \end{center}
-  Looking again at Example~\ref{ex:movingtape}, this rule can be applied at the position labelled with 1 to obtain the an alternative successor string:
+  Looking again at Example~\ref{ex:movingtape}, this rule can be applied at the position labelled with 1 to obtain an alternative successor string:
   \begin{center}
     \begin{tikzpicture}
-      \draw (0, 0.75) -- (9.75, 0.75);
-      \draw (0, 0) -- (9.75, 0);
+      \draw (-0.75, 0.75) -- (10.5, 0.75);
+      \draw (-0.75, 0) -- (10.5, 0);
+      \draw (-0.75, 0) -- (-0.75, 0.75);
+      \draw (10.5, 0) -- (10.5, 0.75);
+
       \draw (0, 0) -- (0, 0.75);
       \draw (9.75, 0) -- (9.75, 0.75);
+      \node at (-0.375, 0.375) {\#};
+      \node at (10.125, 0.375) {\#};
 
       \draw (4.5, 0) -- (4.5, 0.75);
       \draw (5.25, 0) -- (5.25, 0.75);
@@ -431,9 +473,14 @@ Seeing this generaliation, one might now realise a problem regarding the tape sh
       \node at (4.125, 0.375) {$c$};
       \node at (3.375, 0.375) {\blank};
 
-      \draw (0, -0.75) -- (9.75, -0.75);
-      \draw (0, -0.75) -- (0, 0);
-      \draw (9.75, -0.75) -- (9.75, 0);
+      \draw (-0.75, -0.75) -- (10.5, -0.75);
+      \draw (-0.75, -0.75) -- (-0.75, 0);
+      \draw (10.5, -0.75) -- (10.5, 0);
+
+      \draw (0, 0) -- (0, -0.75);
+      \draw (9.75, 0) -- (9.75, -0.75);
+      \node at (-0.375, -0.375) {\#};
+      \node at (10.125, -0.375) {\#};
 
       \draw (4.5, 0) -- (4.5, -0.75);
       \draw (5.25, 0) -- (5.25, -0.75);
@@ -460,22 +507,27 @@ Seeing this generaliation, one might now realise a problem regarding the tape sh
 
 The reason for this inconsistency is that the rewrite window cannot infer from the overlapping tape symbols alone in which direction the tape is shifted. 
 We fix this problem by adding more information: polarities. Polarities $p : \polarity{} \defeq + \bnfmid - \bnfmid \circ{}$ are positive, negative, or neutral. 
-Each symbol of the tape alphabet is annotated with a polarity indicating in which direction the tape is shifted. They do not add any information to the configuration strings in their own right and are just relevant for the configuration changes.
-Notationally, we write $\polpos{\sigma}, \polneg{\sigma}, \polneut{\sigma}$ for a symbol $\sigma$ annotated with a positive, negative, or neutral polarity. Blanks do not need polarities.
+Each symbol of the tape alphabet and each blank is annotated with a polarity indicating in which direction the tape is shifted. Polarities do not add any information to the configuration strings in their own right and are just relevant for the configuration changes.
+Notationally, we write $\polpos{\sigma}, \polneg{\sigma}, \polneut{\sigma}$ for a symbol $\sigma$ annotated with a positive, negative, or neutral polarity.
 
 \begin{example}[Polarities]\label{ex:polarities}
   The rewrite rules mentioned above now have the following form:
   \begin{center}
     \rewwin{\sigma_1 & \sigma_2 & \blank{}}{\polpos{\sigma_3} & \polpos{\sigma_1} & \polpos{\sigma_2}} 
-    \rewwin{\sigma_1 & \sigma_2 & \blank{}}{\polneut{\sigma_1} & \polneut{\sigma_2} & \blank{}}
+    \rewwin{\sigma_1 & \sigma_2 & \blank{}}{\polneut{\sigma_1} & \polneut{\sigma_2} & \polneut{\blank{}}}
   \end{center}
   The inconsistent rewrite is not possible anymore as the windows overlapping from the left force a positive polarity.
   \begin{center}
     \begin{tikzpicture}
-      \draw (0, 0.75) -- (9.75, 0.75);
-      \draw (0, 0) -- (9.75, 0);
+      \draw (-0.75, 0.75) -- (10.5, 0.75);
+      \draw (-0.75, 0) -- (10.5, 0);
+      \draw (-0.75, 0) -- (-0.75, 0.75);
+      \draw (10.5, 0) -- (10.5, 0.75);
+
       \draw (0, 0) -- (0, 0.75);
       \draw (9.75, 0) -- (9.75, 0.75);
+      \node at (-0.375, 0.375) {\#};
+      \node at (10.125, 0.375) {\#};
 
       \draw (4.5, 0) -- (4.5, 0.75);
       \draw (5.25, 0) -- (5.25, 0.75);
@@ -503,9 +555,14 @@ Notationally, we write $\polpos{\sigma}, \polneg{\sigma}, \polneut{\sigma}$ for 
       \node at (4.125, 0.375) {$c$};
       \node at (3.375, 0.375) {\blank};
 
-      \draw (0, -0.75) -- (9.75, -0.75);
-      \draw (0, -0.75) -- (0, 0);
-      \draw (9.75, -0.75) -- (9.75, 0);
+      \draw (-0.75, -0.75) -- (10.5, -0.75);
+      \draw (-0.75, -0.75) -- (-0.75, 0);
+      \draw (10.5, -0.75) -- (10.5, 0);
+
+      \draw (0, 0) -- (0, -0.75);
+      \draw (9.75, 0) -- (9.75, -0.75);
+      \node at (-0.375, -0.375) {\#};
+      \node at (10.125, -0.375) {\#};
 
       \draw (4.5, 0) -- (4.5, -0.75);
       \draw (5.25, 0) -- (5.25, -0.75);
@@ -521,24 +578,28 @@ Notationally, we write $\polpos{\sigma}, \polneg{\sigma}, \polneut{\sigma}$ for 
       \node at (5.6125, -0.375) {$\polpos{b}$};
       \node at (6.375, -0.375) {$\polpos{b}$};
       \node at (7.125, -0.375) {$\polpos{b}$};
-      \node at (7.875, -0.375) {\blank};
+      \node at (7.875, -0.375) {$\polpos{\blank}$};
       \node at (4.875, -0.375) {$q_1^c$};
-      \node at (4.125, -0.375) {\blank};
-      \node at (3.375, -0.375) {\blank};
+      \node at (4.125, -0.375) {$\polpos{\blank}$};
+      \node at (3.375, -0.375) {$\polpos{\blank}$};
     \end{tikzpicture}
   \end{center}
 \end{example}
 
 Note that we omit the polarities in the premises of rules as they are irrelevant.
-Formally, for each of the rewrite rules depicted in Example~\ref{ex:polarities}, do an instantiation not only for all possible combinations of variable valuations, but also for the three possible polarities in the premise (we only require that the polarities are consistent).
+Formally, for each of the rewrite rules depicted in Example~\ref{ex:polarities}, we do an instantiation not only for all possible combinations of variable valuations, but also for the three possible polarities in the premise (we only require that the polarities are consistent).
 
-Finally, we need to enforce that the final configuration is a halting configuration. This can be encoded by requiring that an element of $\{q^m | \textsf{halt}~q = \btrue\}$ is contained in the last line of the tableau.
+\begin{remark}[Blanks and Polarities]
+  Formally, it is not necessary for blanks to be annotated with polarities. However, adding polarities to blanks allows us to handle symbols of the tape alphabet and blanks in a more uniform way, simplifying the formal proofs. 
+\end{remark}
+
+Finally, we need to enforce that the final configuration is a halting configuration. This can be encoded by requiring that an element of $[q^m~|~\textsf{halt}~q = \btrue]$ is contained in the last line of the tableau.
 
 \section{Nondeterministic Input}
 The construction presented in the previous section can simulate a deterministic Turing machine given an initial configuration. \gennp{}, however, asks for the existence of an input which the Turing machine accepts. 
 This nondeterminism of the input can be encoded by prepending a new line to the tableau:
 \begin{center}
-  \begin{tikzpicture}
+  \begin{tikzpicture}[scale=1.2]
     \draw (0, 0.5) -- (10.5, 0.5);
     \draw[thick] (0, 0) -- (10.5, 0);
     \draw (0, 0) -- (0, 0.5);
@@ -601,8 +662,8 @@ This nondeterminism of the input can be encoded by prepending a new line to the 
     \node at (10.25, -0.25) {\#};
 
     \path[<->] (5.5, 1) edge node[fill=white, anchor=center, pos= 0.5] {\small $k$} (8, 1);
-    \path[<->] (0, 1) edge node [fill = white, anchor=center, pos=0.5] {\small $z$} (5, 1);
-    \path[<->] (8, 1) edge node [fill = white, anchor =center, pos=0.5] {\small $z-k$} (10.5, 1);
+    \path[<->] (0.5, 1) edge node [fill = white, anchor=center, pos=0.5] {\small $\hat{z}$} (5, 1);
+    \path[<->] (8, 1) edge node [fill = white, anchor =center, pos=0.5] {\small $\hat{z}-k$} (10, 1);
   \end{tikzpicture}
 \end{center}
 
@@ -613,8 +674,8 @@ In the presentation by Sipser~\cite{Sipser:TheoryofComputation}, the tableau is 
 Instead, we factorise the proof into smaller parts by introducing three intermediate problems that deal with these concerns one-by-one. 
 Figure~\ref{fig:redoverview} gives an overview over the reductions.
 
-The reduction of \gennp{} to Parallel Rewriting (\PR{}), a string-based problem which will be introduced in Section~\ref{TODO}, handles the main part of the Turing machine simulation. After that, we do not have to reason about Turing machines anymore. 
-Parallel Rewriting can be seen as a problem between Turing machines and circuits.
+The reduction of \gennp{} to Parallel Rewriting (\PR{}), a string-based problem which will be introduced in Section~\ref{sec:pr}, handles the main part of the Turing machine simulation. After that, we do not have to reason about Turing machines anymore. 
+Parallel Rewriting can be seen as a model between Turing machines and circuits.
 %The remaining three reductions subsequently deal with the encoding of the alphabet, the encoding as a Boolean formula and the conversion to a CNF.
 
 \begin{figure}

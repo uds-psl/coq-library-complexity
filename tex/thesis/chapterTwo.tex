@@ -3,6 +3,10 @@
 \newcommand*{\mover}{\textsf{R}}
 \newcommand*{\moven}{\textsf{N}}
 
+\newcommand*{\tmleft}[1]{\textsf{left}~#1}
+\newcommand*{\tmright}[1]{\textsf{right}~#1}
+\newcommand*{\tmcurrent}[1]{\textsf{current}~#1}
+
 \chapter{Preliminaries}\label{chap:preliminaries}
 In this section, we present the needed basic definitions, including Turing machines and the call-by-value $\lambda$-calculus L.
 
@@ -16,6 +20,7 @@ For an arbitrary list $A$, $\length{A}$ is the length of $A$.
 The concatenation of two lists $A$ and $B$ is written as $A \con{} B$. 
 We use positions to refer to the elements of a list at a certain offset, starting at 0. The valid positions of a list $A$ are the numbers $0, \ldots, \length{A}-1$. 
 Given a position $i$, the element of $A$ at $i$ is denoted by $A[i]$. Formally, this is an option value: if $i$ is not a valid position, $A[i]$ is defined to be $\ONone{}$. 
+\todo{skipn, firstn subscripting notation as used in chapter 5}
 
 The type of vectors of length $n$ over $X$ is written $X^n$. For length and subscripting, we use the same notations as for lists.
 
@@ -83,6 +88,8 @@ If the Turing machine wants to move the head one more symbol beyond the used tap
 Finally, $\textsf{midtape}~ls~c~rs$ models the case that the head resides on the symbol $c$ and there are (possibly empty) parts of the tape $ls$ and $rs$ to the left and to the right.
 
 This formalisation of tapes without blanks has the advantage that each possible tape is uniquely represented by exactly one element of $\textsf{tape}~\Sigma$. 
+\todo{remark that the adjacent symbols are always at the head; picture showing reversion of left tape}
+\todo{introduce left, right and current}
 
 \subsection{Turing machines}
 In each computational step, a Turing machine can optionally write a symbol and move the head on each of its tapes individually. These actions are captured by the type $\textsf{Act}_{\Sigma} \defeq{} \opt{\Sigma} \times \textsf{move}$, where $\Sigma$ is the tape alphabet and 

@@ -4,7 +4,7 @@
 \newcommand{\NP}{\textsf{NP}}
 \newcommand{\PC}{\textsf{P}}
 
-Since the advent of modern complexity theory in the 1960s and -70s, it has become one of the cornerstones of theoretical computer science. 
+Since the advent of modern computational complexity theory in the 1960s and -70s, it has become one of the cornerstones of theoretical computer science. 
 Important early results include the hierarchy theorems by Hartmanis and Stearns~\cite{hartmanis_stearns}, essentially stating that one can compute more given more time or space. 
 The next landmark result was the Cook-Levin-Theorem, first proved by Stephen A. Cook in 1971~\cite{cook_theorem} and independently discovered by Leonid Levin in 1973~\cite{levin_theorem}. 
 This result founded the important class of \NP{}-complete problems: \NP{} is the class of all problems which are polynomial-time verifiable, i.e.\ for which it is efficiently decidable if a given certificate correctly proves that an element is a yes-instance of the problem. For two problems \textbf{P} and \textbf{Q}, \textbf{P} is polynomial-time reducible to \textbf{Q} if there is a function $f$ transforming instances of \textbf{P} into instances of \textbf{Q}, such that for any instance $p$ of \textbf{P}, $p \in \textbf{P}$ does hold if, and only if, $f(p) \in \textbf{Q}$. 
@@ -15,8 +15,8 @@ Given a formula $C$ in conjunctive normal form, does there exist an assignment $
 It states that \SAT{} is \NP{}-complete. 
 
 If we were to find an efficient algorithm deciding the satisfiability problem in polynomial time, we would thus directly get polynomial-time deciders for all problems contained in \NP{}. 
-The importance of this result was underlined by the subsequent discovery of 21 more \NP{}-complete problems by Richard Karp in 1972~\cite{Karp1972}, the \NP{}-hardness of which was established by reductions from \textbf{SAT}. This showed that there are in fact many more problems which are interesting in practice and \NP{}-hard. 
-Thus, the important contribution of the Cook-Levin-Theorem is not that specifically \SAT{} is \NP{}-complete, but that there exists a natural\footnote{We regard a problem as natural if it is independent of a model of computation.}\todo{is this notion well-defined?} \NP{}-hard problem. If one has a natural problem such as \SAT{} which has been shown to be \NP{}-hard, it is relatively easy to show another problem to be \NP{}-hard.
+The importance of this result was underlined by the subsequent discovery of 21 more \NP{}-complete problems by Richard Karp in 1972~\cite{Karp1972}, the \NP{}-hardness of which was established by reductions from \textbf{SAT}. This showed that there are in fact many more problems which are interesting in practice and \NP{}-complete. 
+Thus, the important contribution of the Cook-Levin-Theorem is not that specifically \SAT{} is \NP{}-hard, but that there exists a natural\footnote{We regard a problem as natural if it is independent of a model of computation.}\todo{is this notion well-defined?} \NP{}-hard problem. If one has a natural problem such as \SAT{} which has been shown to be \NP{}-hard, it is relatively easy to show another problem to be \NP{}-hard.
 
 Nowadays, the question whether \PC{} = \NP{}, i.e.\ whether every problem which is verifiable in polynomial time is also decidable in polynomial time, is one of the biggest open questions of computer science~\cite{claymath}. If one were to find a polynomial-time decider for an \NP{}-hard problem such as \SAT{}, one could directly answer ``\PC{}= \NP{}!''.
 
@@ -63,6 +63,10 @@ Readers not familiar with Coq may want to skip these sections.
 \paragraph{Contributions}
 We do a case study of formally analysing polynomial-time reductions and show that formally doing complexity theory is to some extent feasible.
 The proof of the Cook-Levin-Theorem as presented by Sipser~\cite{Sipser:TheoryofComputation} is adapted in order to make a formalisation feasible. To that end the construction is changed in significant ways and a new string-based intermediate problem is introduced. 
+
+%\paragraph{Global Todos}
+\todo{lookup captialisation in names of lemmas and definitions}
+\todo{change math font; italicised textsf looks bad} 
 
 %\setCoqFilename{filename}
 

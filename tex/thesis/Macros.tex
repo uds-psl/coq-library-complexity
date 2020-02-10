@@ -1,12 +1,13 @@
 \usepackage{gensymb}
 \usepackage{array}
+\usepackage{mathtools}
 
 %% Macros
 \newcommand{\M}[1]{\ensuremath{\textit{#1}}} % \mathup
 \newcommand{\imp}{\mathbin{\rightarrow}~}
 \newcommand{\Imp}{\mathbin{\Rightarrow}~}
 \renewcommand{\iff}{\mathbin{\leftrightarrow}}
-\newcommand{\defeq}{\mathrel{\mathop:=}}
+\newcommand{\defeq}{\coloneqq}
 
 \newcommand{\dd}[2]{\ensuremath{#1_1,\dots,#1_{#2}}}  % x_1,...,x_n
 \newcommand{\ddd}[2]{\ensuremath{#1_1\dots\,#1_{#2}}}  % x_1...x_n
@@ -54,7 +55,7 @@ $\square$% % the end-of-proof mark
 \newcommand*{\match}{\textbf{match}~}
 \newcommand*{\withl}{\textbf{[}~}
 \newcommand*{\withr}{~\textbf{]}}
-\newcommand*{\withm}{\quad\textbf{|}\quad}
+\newcommand*{\withm}{~\textbf{|}~}
 \newcommand*{\llet}{\textbf{let}~}
 \newcommand*{\lin}{\textbf{in}~}
 \newcommand{\ITE}[3]{\textbf{if}~{#1}~\textbf{then}~{#2}~\textbf{else}~{#3}}
