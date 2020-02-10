@@ -3,18 +3,42 @@ From Undecidability.L.Complexity Require Export Monotonic ONotation.
 
 Inductive is_computable_time {A} {t : TT A} (a : A) fT : Prop :=
   C : computableTime a fT -> is_computable_time a fT.
+(** Semantics for [[restrictedP]]: fst is the subset of X which is an admsisable input, second is the Problem itself. *)
+Definition restrictedP X := (X -> Prop*Prop).
+Definition restrPWhere {X} vX P : restrictedP X:= fun (x:X) => (vX x,P x).
+Notation "vX '@With' P" := (restrPWhere vX P) (at level 0, P at level 0).
 
-Definition L_decidable_inTime {X} `{R :registered X} (P : X -> Prop) (fT : nat -> nat) :Prop := Eval cbn [timeComplexity] in
-  exists f : X -> bool, is_computable_time (t:=TyArr (TyB X) (TyB bool)) f
-                                  (fun x _ => (fT (L.size (enc x)),tt)) /\ forall x, P x <-> f x = true.
+
+Definition unrestrictedP {X} P : restrictedP X := restrPWhere (fun x => True) P.
+
+Local Set Warnings "-cannot-define-projection".
+Record decInTime {X} `{R :registered X} (P : restrictedP X) (fT : nat -> nat) :Prop := 
+  {
+    decInTime_decP : X -> bool ;
+    decInTime_compIn : is_computable_time (t:=TyArr (TyB X) (TyB bool)) decInTime_decP (fun x _ => (fT (L.size (enc x)),tt)) ;
+    decInTime_correct : forall x, fst (P x) -> snd (P x) <-> decInTime_decP x  = true
+  }.
+
+
+Lemma decInTime_restriction_antimono X `{R :registered X} (P P':restrictedP X) (fT : nat -> nat) :
+  (forall x, fst (P' x) -> fst (P x))
+  -> (forall x, fst (P' x) -> snd (P x) <-> snd (P' x))
+  -> decInTime P fT
+  -> decInTime P' fT.
+Proof.
+  intros Hf Hs [decO compIn correct]. eexists. eauto.
+  intros ? ?. rewrite <- correct.
+  -now rewrite Hs.
+  -now apply Hf.
+Qed.
 
 Definition inTimeO {X} `{R :registered X} P f :=
-  exists f', L_decidable_inTime P f' /\ f' ∈O f.
+  exists f', decInTime P f' /\ f' ∈O f.
 
 Notation "P ∈TimeO f" := (inTimeO P f) (at level 70).
 
 Definition inTimeo {X} `{R :registered X} P f :=
-  exists f', L_decidable_inTime P f' /\ f' ∈o f.
+  exists f', decInTime P f' /\ f' ∈o f.
 
 Notation "P ∈Timeo f" := (inTimeo P f) (at level 70).
 
@@ -23,7 +47,7 @@ Notation "P ∈Timeo f" := (inTimeo P f) (at level 70).
 
 (** Inclusion *)
 Lemma inTime_mono f g X (_ : registered X):
-  f ∈O g -> forall (P : X -> Prop), P ∈TimeO f -> P ∈TimeO g.
+  f ∈O g -> forall P, P ∈TimeO f -> P ∈TimeO g.
 Proof.
   intros H P (?&?&?). unfold inTimeO.
   eexists _. split. eassumption. now rewrite H1.

@@ -38,12 +38,12 @@ Section TimeHierarchy_Parametric.
   Let start (w : term * nat) : term :=
     let '(s,padding) := w in (s (enc w)).
 
-  Definition L__f (w : term * nat) : Prop :=(~closed (fst w) \/ start w ⇓(<=f(size (enc w))) enc false).
+  Definition L__f (w : term * nat) :=~closed (fst w) \/ start w ⇓(<=f(size (enc w))) enc false.
 
   
-  Lemma L_A_notIn_f : ~ L__f ∈Timeo f.
+  Lemma L_A_notIn_f : ~ (unrestrictedP L__f) ∈Timeo f.
   Proof.
-    intros [t__o [(fdec &[fdec__intT]&f_dec_spec) Ht__o]].
+    intros (t__o&[fdec [fdec__intT] Hf]&Ht__o).
     specialize (Ht__o 1) as (n0&Hn0). setoid_rewrite Nat.mul_1_l in Hn0.
     pose (w:=(extT fdec,n0)).  unfold extracted in w.
 
@@ -58,8 +58,8 @@ Section TimeHierarchy_Parametric.
     }
     clear Hn0.
     
-    specialize (f_dec_spec w) as f_dec_spec.
-    unfold L__f in f_dec_spec. unfold w in f_dec_spec at 1 3.  cbn [start fst snd] in *. fold w in f_dec_spec.
+    specialize (Hf w Logic.I) as f_dec_spec.
+    unfold L__f in f_dec_spec. cbn in *. unfold w in f_dec_spec at 1 3.  cbn [start fst snd] in *. fold w in f_dec_spec.
     clearbody w.
 
     destruct (fdec w) eqn:eq.
@@ -264,12 +264,12 @@ Section TimeHierarchy_Parametric.
     forall maxVar size x, x <= t__E maxVar size x. 
   
   Lemma LA_In_f_times_step:
-    L__f ∈TimeO (fun n => t__E n (2*n) (f n)).
+    unrestrictedP L__f ∈TimeO (fun n => t__E n (2*n) (f n)).
   Proof.
     (* intros H_t__E H_t__step. *)
     eexists (fun n => fT n + t__E n (2*n) (f n) + n * 221 + 12). split.
     exists U_spec.
-    -split. split. eexists.
+    -split. eexists.
      eapply computesTime_timeLeq with (fT:= (fun w _ => (_,tt))).
      2:{ exact U_correct. }
      +intros [s padding] [].
@@ -284,8 +284,8 @@ Section TimeHierarchy_Parametric.
        Lia.lia.
       *rewrite size_prod. cbn [start fst snd size].
        rewrite size_prod. cbn [fst snd]. rewrite size_term_enc_r with (s:=s). change (term_enc) with (@enc term _). Lia.lia. 
-     +intros w. rewrite <- spec_L__f.
-      eapply reflect_iff. apply U_reflects_U_spec.
+    -intros w _. cbn. rewrite <- spec_L__f.
+     eapply reflect_iff. apply U_reflects_U_spec.
     -repeat apply inO_add_l.
      +etransitivity. exact f_TC.
       exists 1,0. intros. rewrite <- suplin_t__E. Lia.lia.

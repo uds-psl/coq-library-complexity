@@ -5,20 +5,19 @@ From Undecidability.L.Functions Require Import Size.
 
 Definition GenNP : term*nat*nat -> Prop:=
   fun '(s', maxSize, steps (*in unary*)) =>
-    proc s' /\
-    exists (c:term), size (enc c) <= maxSize
-                /\ s' (enc c) ⇓(<=steps) (enc true).
+    (proc s'/\exists (c:term), size (enc c) <= maxSize
+                         /\ s' (enc c) ⇓(<=steps) (enc true)).
 
-Lemma NPhard_GenNP : NPhard GenNP.
+Lemma NPhard_GenNP : NPhard (unrestrictedP GenNP).
 Proof.
   intros X reg__X ? Q [(*? ?*) R R__dec (f__Rbal&polyf__Rbal&bounds_f__Rbal&mono_f__Rbal) R__spec].
-  destruct R__dec as (t__R&(d__R&[comp_d__R]&spec_d__R)&poly_t__R&mono_t__R).
+  destruct R__dec as (t__R&[d__R [comp_d__R] spec_d__R]&poly_t__R&mono_t__R).
   pose (f x := fun c => d__R (x,c)).
   assert (computableTime' f (fun x _ => (1,fun c _ => (t__R (size (enc (x, c))) + 3,tt))));cbn [timeComplexity] in *.
   {intros. subst f. extract. solverec. }
   specialize inOPoly_computable with (1:=polyf__Rbal) as (f__Rbal'&tf__Rbal'&[]&polyf__Rbal'&leq_f__Rbal'&?&?&?).
   specialize inOPoly_computable with (1:=poly_t__R) as (t__R'&tt__R'&[]&poly_t__R'&leq_t__R'&?&?&?).
-  exists (fun x => (lam (extT f (enc x) 0),f__Rbal' (size (enc x)),t__R' (size (enc x) + f__Rbal' (size (enc x))+4)+5)). split.
+  exists (fun x => (lam (extT f (enc x) 0),f__Rbal' (size (enc x)),t__R' (size (enc x) + f__Rbal' (size (enc x))+4)+5));cbn [fst snd GenNP]. 3:easy. 
   -evar (f':nat -> nat). [f']:refine (fun x => _).
    eexists (fun x => f' x). 
    +split. extract.
@@ -32,10 +31,10 @@ Proof.
      generalize (size (enc x)). intros. reflexivity.
     *smpl_inO. all:eapply inOPoly_comp. all:smpl_inO.
     *smpl_inO.
-  -intros x.
-   rewrite R__spec. split.
-   +intros (c&H'). specialize (spec_d__R (x,c)). apply ssreflect.iffLR with (2:=H') in spec_d__R.
-    unfold GenNP.
+  -intros x ?.
+   rewrite R__spec. 2:easy. split.
+   +intros (c&H'). specialize (spec_d__R (x,c));cbn [fst snd] in spec_d__R. apply ssreflect.iffLR with (2:=H') in spec_d__R. 2:easy. 
+    unfold GenNP;cbn [snd].
     split. now Lproc.
     exists c. repeat split.
     *rewrite bounds_f__Rbal. 2:eassumption. easy.
@@ -53,7 +52,7 @@ Proof.
     *Lproc.
    +unfold GenNP.
     intros (?&c&size__c&R').
-    exists c. specialize (spec_d__R (x,c)). cbn in spec_d__R. rewrite spec_d__R.
+    exists c. specialize (spec_d__R (x,c)). cbn in spec_d__R. rewrite spec_d__R. 2:easy. 
     eapply inj_enc.
     eapply unique_normal_forms. 1,2:now Lproc.
     eapply evalLe_eval_subrelation, eval_star_subrelation in R'.
@@ -65,12 +64,12 @@ From Undecidability.L.Functions Require Import Proc.
 From Undecidability.L.AbstractMachines.Computable Require Import EvalForTimeBool.
 Import EvalForTime LargestVar.
 
-Lemma inNP_GenNP : inNP GenNP.
+Lemma inNP_GenNP : inNP (unrestrictedP GenNP).
 Proof.
   eexists (fun x (c:term) => exists (s':term) (maxSize steps :nat), 
                x = (s',maxSize,steps) /\ proc s' /\ size (enc c) <= maxSize 
                /\ s' (enc c) ⇓(<=steps) (enc true)).
-  3:{ intros ((?,?),?). unfold GenNP. split.
+  3:{ intros ((?,?),?) []. cbn. split.
       -intros [? (?&?&?)]. eauto 10. 
       -intros (?&?&?&?&[= <- <- <-]&?&?&?). eauto 10. }
   2:{ exists (fun x => x). repeat split. 1,3:smpl_inO.
@@ -85,7 +84,7 @@ Proof.
                then
                    evalForTimeBool true (N.of_nat steps) (s' (enc c))
                else false). split.
-    -split. extract. intros [[[s' maxSize] steps] c].
+    -extract. intros [[[s' maxSize] steps] c].
      remember (size (enc (s', maxSize, steps, c))) as n.
      assert (H1 : ( size (enc s') <= n)) by (subst n;rewrite !size_prod;cbn;lia).
      assert (H2 : ( size (enc maxSize) <= n)) by (subst n;rewrite !size_prod;cbn;lia).
@@ -116,11 +115,12 @@ Proof.
      destruct (lambdab_spec s');cbn [andb]. 2:{ split;[|congruence];intros (?&?&?&[= -> -> ->]&?);tauto. }
 
      destruct (Nat.leb_spec0 (size (enc c)) maxSize);cbn [andb]. 2:{ split;[|congruence];intros (?&?&?&[= -> -> ->]&?);tauto. }
+     cbn [fst GenNP]. intros [].
      eapply reflect_iff.
      eapply ssrbool.equivP. eapply evalForTimeBool_spec.
      rewrite  !Nnat.Nat2N.id.
      split.
-     +unfold proc. intuition eauto 10.
+     +intuition eauto 10.
      +intros (?&?&?&[= -> -> ->]&?). intuition eauto 10. Lproc.
     -unfold f__t.
      smpl_inO.
@@ -130,8 +130,7 @@ Proof.
 Qed.
 
 Lemma GenNP_complete :
-  NPcomplete GenNP.
+  NPcomplete (unrestrictedP GenNP).
 Proof.
   eauto using inNP_GenNP, NPhard_GenNP. 
 Qed.
-

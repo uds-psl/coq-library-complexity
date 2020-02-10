@@ -1,7 +1,10 @@
 From Undecidability.TM Require Import TM.
 From Undecidability.L.TM Require Import TMflat TMflatEnc TMflatFun TMEncoding TapeDecode TMunflatten TMflatFun TMflatComp TMinL.
 From Undecidability.L.Datatypes Require Import LNat LProd Lists.
-
+From Undecidability.L.Complexity Require Import NP LinTimeDecodable ONotation.
+From Undecidability.L Require Import Tactics.LTactics Functions.Decoding TMflatFun.
+From Undecidability Require Import L.Functions.EqBool.
+From Undecidability Require Import L.Datatypes.LNat.
 
 (* Factorise proof over GenNP? *)
 Definition TMGenNP' sig n : mTM sig n * nat * nat -> Prop :=
@@ -15,15 +18,12 @@ Definition TM1GenNP : TM*nat*nat -> Prop:=
 
 Definition TMGenNP: TM*nat*nat -> Prop:=
   fun '(M,maxSize, steps (*in unary*)) =>
-    exists sig n (M':mTM sig n), isFlatteningTMOf M M' /\ TMGenNP' (M',maxSize,steps).
+    (exists sig n (M':mTM sig n), isFlatteningTMOf M M' /\ TMGenNP' (M',maxSize,steps)).
 
-From Undecidability.L.Complexity Require Import NP LinTimeDecodable ONotation.
-From Undecidability.L Require Import Tactics.LTactics Functions.Decoding TMflatFun.
-From Undecidability Require Import L.Functions.EqBool.
-From Undecidability Require Import L.Datatypes.LNat.
+
 
 Lemma inNP_TMgenericNPCompleteProblem:
-  inNP TMGenNP.
+  inNP (unrestrictedP TMGenNP).
 Proof.
   apply inNP_intro with (R:= fun '(M,maxSize, steps (*in unary*)) t =>
                                sizeOfmTapesFlat t <= maxSize /\  
@@ -44,7 +44,7 @@ Proof.
                      end
                 else false).
      repeat eapply conj.
-     2:{intros [[[M maxSize] steps] t]. cbn.
+     2:{intros [[[M maxSize] steps] t] []. cbn.
         destruct (Nat.leb_spec0 (sizeOfmTapesFlat t) (maxSize));cbn [negb andb].
         2:{ split. 2:easy. intros (?&?&?&?&?&?&?&?). easy. }
         specialize (execFlatTM_correct M t steps) as H.
@@ -117,5 +117,5 @@ Proof.
    setoid_rewrite isFlatteningTapesOf_iff.
    split.
    +intros (?&?&?&?&?&?&?&?). erewrite <- ?sizeOfmTapesFlat_eq in *. eauto 10. constructor.
-   +intros (?&?&?&?&?&?&?&?&?). unfold TMGenNP'. erewrite ?sizeOfmTapesFlat_eq in *. eauto 20. subst;constructor.
+   +intros (?&?&?&?&?&?&?&?&?). cbn. erewrite ?sizeOfmTapesFlat_eq in *. eauto 20. subst;constructor.
 Qed.
