@@ -22,9 +22,13 @@
 
 \newcommand{\polarity}{\textsf{polarity}}
 
-\newcommand{\polneg}[1]{\overleftarrow{#1}}
-\newcommand{\polpos}[1]{\overrightarrow{#1}}
-\newcommand{\polneut}[1]{\overline{#1}}
+
+%workaround so that polarities on blanks have the same height as on other symbols
+\newcommand*{\TallestContent}{\ensuremath{\gamma}}% <-- This should be the tallest content
+
+\newcommand{\polneg}[1]{\overleftarrow{#1\vphantom{\TallestContent}}}
+\newcommand{\polpos}[1]{\overrightarrow{#1\vphantom{\TallestContent}}}
+\newcommand{\polneut}[1]{\overline{#1\vphantom{\TallestContent}}}
 
 \newcommand{\reprt}[1]{\ensuremath{\sim_t^{#1}}}
 \newcommand{\reprtt}[2]{\ensuremath{\sim_t^{(#1, #2)}}}

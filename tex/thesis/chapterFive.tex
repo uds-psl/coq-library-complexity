@@ -36,7 +36,6 @@
 }
 
 \newcommand*{\irewwin}[6]{\ensuremath{[#1, #2, #3]~/~[#4, #5, #6]}}
-
 \chapter{Reducing GenNP to Parallel Rewriting}\label{chap:gennp_pr}
 We introduce the string-based \emph{Parallel Rewriting} (\PR{}) problem which formally captures the idea of a string tableau constrained by rewrite windows. The rest of this chapter is then devoted to formalising the tableau construction presented in Chapter~\ref{chap:informaloverview} and proving its correctness in a reduction from \gennp{} to \PR{}.
 
@@ -413,7 +412,8 @@ These results are each proven for the right tape half and then derived for the l
 \end{lemma}
 \begin{proof}
   \begin{enumerate}
-    \item The first statement follows by induction on $n$. For the second one, we unfold $\hat{n} = \natS{(\natS{n})}$ and generalise $\natS{n}$ to arbitrary $n \ge 1$. The statement then follows by induction on $n$. 
+    \item The first statement follows by induction on $n$. For the second one, we unfold $\hat{n} = \natS{(\natS{n})}$ and generalise $\natS{n}$ to arbitrary $n \ge 1$. The statement then follows by induction on $n$: the base case is contradictory. In the successor case, we do another case analysis on $n$. If $n =0$, the statement follows by inversion on the used rewrite rule. 
+      Otherwise, $n = S n'$. We have $\nilstr{p}{(3+n')} \strent{} (p', \blank) :: s$ and show $s = \nilstr{p'}{(2 + n)}$. By inversion on the rewrite rule used at the head, we get four cases and in each one, $s = (p', \blank) :: s'$ and $\nilstr{p}{(2+n)} \strent{} (p', \blank) :: s'$. As $S n' \ge 1$, we apply the inductive hypothesis and get $s' = \nilstr{p'}{(\natS{n})}$, closing the proof. 
     \item For the first statement, it suffices to show $\rev~{(\nilstr{(\pFlipi{\pFlipi{p}})}{\hat{n}})} \strent{\Rtape} \rev~{(\nilstr{(\pFlipi{\pFlipi{p}})}{\hat{n}})}$. By Proposition~\ref{prop:tapefacts}.1), we can pull out one of the $\pFlip$s to turn the $\rev$ into a $\pRev$. Applying Lemma~\ref{lem:symm_tape_rew}.1), we are left with $\withl \pFlipi{\gamma} \withm \gamma \in \nilstr{p}{\hat{n}} \withr \strent{\Rtape} \withl \pFlipi{\gamma} \withm \gamma \in \nilstr{p'}{\hat{n}} \withr$. This follows by another application of Proposition~\ref{prop:tapefacts}.1) and part 1). 
 
       The second part is proved in a similar way: we use that $\pFlip$ is involutive, apply Lemma~\ref{lem:symm_tape_rew}.2), and use part 1).
@@ -424,7 +424,11 @@ The important idea of Lemma~\ref{lem:nilstr_blank} is that the rewrite is unique
 
 \begin{remark}
   Recall that we use rewrite windows of width 3. Choosing a width of 2 does in principle also work. 
-  A width of 3, however, makes some proofs easier. Consider again the uniqueness part of statement 1 of the previous lemma. 
+  A width of 3, however, makes some proofs much easier. Consider again the uniqueness part of statement 1 of the previous lemma. 
+  The appropriate statement to prove would be: $\nilstr{p}{(\natS{n})} \strent{} (p', \blank) :: s \rightarrow s = \nilstr{p'}{n}$. The corrsponding strengthening would be to require $n \ge 0$, which is trivial. 
+  In the successor case, we know $\nilstr{p}{(2 + n)} \strent{} (p', \blank) :: s$ and we have to prove $s = \nilstr{p'}{(1 + n)}$. If we now do an inversion on the rewrite rule used at the head, we cannot, for instance, directly rule out that $s = \polneg{\sigma} :: s'$ (by the rewrite rule $[\blank, \blank]~/~[\polneg{\blank}, \polneg{\sigma}]$\footnote{The modifications of the rules to width 2 is straightforward.}). In order to rule out cases like this, we would need to do a case analysis on $n$ and then do more inversions on the rewrite rules at the next position. 
+
+  Rewrite windows of size 3 do not necessitate these additional inversions: they directly encode structural information such as $\nilstr{p}{(3+n)} \not\strent{} \polneg{\blank} :: \polneg{\sigma} :: s'$. 
 \end{remark}
 
 \newcommand{\mexists}{\overline{\exists}!}
@@ -452,7 +456,7 @@ Thus, Lemma~\ref{lem:nilstr_blank}.1 now reads as follows: $\mexists s, \nilstr{
   \end{enumerate}
 \end{lemma}
 
-\todo{using one of the proofs here: demonstrate why we use rw windows of size three (instead of 2)}
+We now generalise these results to arbitrary tape halves that need not be empty. 
 
 \section{Encoding Transitions}
 
