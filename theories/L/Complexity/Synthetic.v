@@ -22,7 +22,7 @@ Record decInTime {X} `{R :registered X} (P : restrictedP X) (fT : nat -> nat) :P
 
 Lemma decInTime_restriction_antimono X `{R :registered X} (P P':restrictedP X) (fT : nat -> nat) :
   (forall x, fst (P' x) -> fst (P x))
-  -> (forall x, snd (P x) <-> snd (P' x))
+  -> (forall x, fst (P' x) -> snd (P x) <-> snd (P' x))
   -> decInTime P fT
   -> decInTime P' fT.
 Proof.
