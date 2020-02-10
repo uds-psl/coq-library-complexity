@@ -526,6 +526,8 @@ Even if $m' = \ONone$, we can interpret that as the Turing machine just writing 
 The rewrite windows for all of the cases except for the one where $m = \ONone$ and $m' = \ONone$ look very similar. The last case needs a special treatment: if the symbol currently under the head is a blank, the machine does not write a symbol, and the transition function dictates to move in a direction where the next symbol is a blank again, the tape must not be shifted.
 This resembles the semantics of the Turing machine; for instance, if the tape is currently $\textsf{leftof}~\sigma~rs$ and $\delta(q, \ONone) = (q', \ONone, L)$, the successor tape is $\textsf{leftof}~\sigma~rs$ again.
 
+We start with the cases 
+
 \section{Halting Extensions}
 
 \section{Multistep Simulation}
