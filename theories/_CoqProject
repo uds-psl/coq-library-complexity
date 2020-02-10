@@ -308,9 +308,10 @@ L/Complexity/ONotation.v
 L/Complexity/RegisteredP.v
 L/Complexity/LinTimeDecodable.v
 L/Complexity/NP.v
-L/Complexity/Problems/GenericNPcompleteProblem.v
-L/Complexity/Problems/TMGenericNPcompleteProblem.v
-L/Complexity/Reductions/L_to_mTM.v
+L/Complexity/Problems/GenNP.v
+L/Complexity/Problems/TMGenNP.v
+L/Complexity/Problems/GenNPHalt.v
+L/Complexity/Reductions/TMGenNP/LToTMGenNP.v
 
 L/AbstractMachines/Programs.v
 L/AbstractMachines/AbstractSubstMachine.v

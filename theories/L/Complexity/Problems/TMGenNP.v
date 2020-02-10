@@ -4,18 +4,18 @@ From Undecidability.L.Datatypes Require Import LNat LProd Lists.
 
 
 (* Factorise proof over GenNP? *)
-Definition GenNP sig n : mTM sig n * nat * nat -> Prop :=
+Definition TMGenNP' sig n : mTM sig n * nat * nat -> Prop :=
   fun '(M, k, steps) =>
     exists tp, sizeOfmTapes tp <= k
           /\ exists f, loopM (initc M tp) steps = Some f.
 
-Definition FlatTM1GenNP : TM*nat*nat -> Prop:=
+Definition TM1GenNP : TM*nat*nat -> Prop:=
   fun '(M,maxSize, steps (*in unary*)) =>
-    exists sig (M':mTM sig 1), isFlatteningTMOf M M' /\ GenNP (M', maxSize, steps).
+    exists sig (M':mTM sig 1), isFlatteningTMOf M M' /\ TMGenNP' (M', maxSize, steps).
 
-Definition TMgenericNPcompleteProblem: TM*nat*nat -> Prop:=
+Definition TMGenNP: TM*nat*nat -> Prop:=
   fun '(M,maxSize, steps (*in unary*)) =>
-    exists sig n (M':mTM sig n), isFlatteningTMOf M M' /\ GenNP (M',maxSize,steps).
+    exists sig n (M':mTM sig n), isFlatteningTMOf M M' /\ TMGenNP' (M',maxSize,steps).
 
 From Undecidability.L.Complexity Require Import NP LinTimeDecodable ONotation.
 From Undecidability.L Require Import Tactics.LTactics Functions.Decoding TMflatFun.
@@ -23,7 +23,7 @@ From Undecidability Require Import L.Functions.EqBool.
 From Undecidability Require Import L.Datatypes.LNat.
 
 Lemma inNP_TMgenericNPCompleteProblem:
-  inNP TMgenericNPcompleteProblem.
+  inNP TMGenNP.
 Proof.
   apply inNP_intro with (R:= fun '(M,maxSize, steps (*in unary*)) t =>
                                sizeOfmTapesFlat t <= maxSize /\  
@@ -111,11 +111,11 @@ Proof.
    }
    all:unfold f.
    all:smpl_inO.
-  -unfold TMgenericNPcompleteProblem.
+  -unfold TMGenNP.
    intros [[] ].
    
    setoid_rewrite isFlatteningTapesOf_iff.
    split.
    +intros (?&?&?&?&?&?&?&?). erewrite <- ?sizeOfmTapesFlat_eq in *. eauto 10. constructor.
-   +intros (?&?&?&?&?&?&?&?&?). unfold GenNP. erewrite ?sizeOfmTapesFlat_eq in *. eauto 20. subst;constructor.
+   +intros (?&?&?&?&?&?&?&?&?). unfold TMGenNP'. erewrite ?sizeOfmTapesFlat_eq in *. eauto 20. subst;constructor.
 Qed.
