@@ -309,15 +309,15 @@ L/Complexity/NP.v
 L/Complexity/PolyBounds.v
 L/Complexity/Tactics.v
 L/Complexity/MorePrelim.v
-L/Complexity/Problems/LGraph.v
-L/Complexity/Problems/GenericNPcompleteProblem.v
-L/Complexity/Problems/TMGenericNPcompleteProblem.v
-L/Complexity/Problems/Clique.v
-L/Complexity/Problems/SAT.v
-L/Complexity/Problems/kSAT.v
-L/Complexity/Reductions/L_to_mTM.v
-L/Complexity/Reductions/TSAT_to_Clique.v
-L/Complexity/Reductions/kSAT_to_SAT.v
+#L/Complexity/Problems/LGraph.v
+#L/Complexity/Problems/GenericNPcompleteProblem.v
+#L/Complexity/Problems/TMGenericNPcompleteProblem.v
+#L/Complexity/Problems/Clique.v
+#L/Complexity/Problems/SAT.v
+#L/Complexity/Problems/kSAT.v
+#L/Complexity/Reductions/L_to_mTM.v
+#L/Complexity/Reductions/TSAT_to_Clique.v
+#L/Complexity/Reductions/kSAT_to_SAT.v
 
 L/Complexity/Cook/Prelim.v
 L/Complexity/Cook/PR.v
@@ -338,6 +338,9 @@ L/Complexity/Cook/FSAT.v
 L/Complexity/Cook/BinaryPR_to_FSAT.v
 L/Complexity/Cook/PR_to_BinaryPR.v
 L/Complexity/Cook/UniformHomomorphisms.v
+L/Datatypes/LLists.v
+L/Datatypes/LLNat.v
+
 
 L/AbstractMachines/Programs.v
 L/AbstractMachines/AbstractSubstMachine.v
