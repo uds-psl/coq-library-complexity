@@ -36,16 +36,22 @@ Proof.
   extract. recRel_prettify_arith. solverec.
 Qed.
 
-Instance termT_leb : computableTime' leb (fun x xT => (5,(fun y yT => (min x y*14 + 8,tt)))).
+Definition c__leb := 14.
+Definition c__leb2 := 5. 
+Definition leb_time (x y : nat) := c__leb * (1 + min x y).
+Instance termT_leb : computableTime' leb (fun x xT => (c__leb2,(fun y yT => (leb_time x y,tt)))).
 Proof.
   extract.
-  solverec.
+  solverec. all: unfold leb_time, c__leb, c__leb2; solverec. 
 Defined.
 
-Instance termT_nat_eqb: computableTime' Nat.eqb (fun x xT => (5,(fun y yT => ((min x y)*17 + 9,tt)))).
+Definition c__nat_eqb := 17. 
+Definition c__nat_eqb2 := 5. 
+Definition nat_eqb_time (x y : nat) := c__nat_eqb * (1 + min x y). 
+Instance termT_nat_eqb: computableTime' Nat.eqb (fun x xT => (c__nat_eqb2,(fun y yT => (nat_eqb_time x y,tt)))).
 Proof.
   extract.
-  solverec.
+  solverec. all: unfold nat_eqb_time, c__nat_eqb, c__nat_eqb2; solverec. 
 Defined.
 
 Instance termT_nat_min : computableTime' Nat.min (fun x _ => (5, fun y _ => (8 + 15 * min x y, tt))).

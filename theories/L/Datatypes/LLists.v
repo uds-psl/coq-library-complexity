@@ -1,5 +1,5 @@
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import LBool LNat LOptions LProd.
+From Undecidability.L.Datatypes Require Import LBool LOptions LProd LLNat.
 Require Export List PslBase.Lists.Filter Datatypes.
 
 (** ** Encoding of lists *)
@@ -140,14 +140,16 @@ Proof.
   extract.
 Defined.
 
-Definition nth_error_time (X : Type) := fun (A : list X) (_ : unit) => (5, fun (n : nat) (_ : unit) => (min n (length A) * 15 + 10, tt)).
-Instance termT_nth_error (X:Type) (Hx : registered X): computableTime' (@nth_error X) (@nth_error_time X).
+Definition c__ntherror := 15.
+Definition nth_error_time (X : Type) (A : list X) := (length A + 1) * c__ntherror. 
+Instance termT_nth_error (X:Type) (Hx : registered X): computableTime' (@nth_error X) (fun l _ => (5, fun n _ => (nth_error_time l, tt))). 
 Proof.
-  extract. solverec.
+  extract. solverec. all: unfold nth_error_time, c__ntherror; solverec. 
 Qed.
 
-Instance termT_length X `{registered X} : computableTime' (@length X) (fun A _ => ((length A)*11+8,tt)).
-extract. solverec.
+Definition c__length := 11.
+Instance termT_length X `{registered X} : computableTime' (@length X) (fun A _ => (c__length * (1 + |A|),tt)).
+extract. solverec. all: unfold c__length; solverec.
 Qed.
 
 Instance termT_rev_append X `{registered X}: computableTime' (@rev_append X) (fun l _ => (5,fun res _ => (length l*13+4,tt))).
