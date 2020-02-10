@@ -503,5 +503,3 @@ Proof.
   intros. apply nth_error_Some in H0. destruct nth_error eqn:H1; [ | congruence].
   clear H0. apply nth_error_nth' with (y := def) in H1. easy.
 Qed. 
-
-

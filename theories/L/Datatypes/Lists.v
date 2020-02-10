@@ -329,21 +329,6 @@ Instance term_repeat A `{registered A}: computableTime' (@repeat A) (fun _ _ => 
 Proof.
   extract. solverec.
 Qed.
-  
-Section forallb. 
-  Variable (X : Type).
-  Context (H : registered X).
-
-  Definition c__forallb := 15. 
-  Definition forallb_time (fT : X -> nat) (l : list X) := fold_right (fun elm acc => fT elm + acc + c__forallb) c__forallb l. 
-
-  Global Instance term_forallb : computableTime' (@forallb X) (fun f fT => (1, fun l _ => (forallb_time (callTime fT) l, tt))). 
-  Proof.
-    extract.
-    solverec. 
-    all: unfold forallb_time, c__forallb; solverec. 
-  Defined. 
-End forallb.
 
 Section list_in.
   Variable (X : Type). 
