@@ -16,7 +16,7 @@ Definition GenNPHalt := restrictBy HaltsOrDiverges GenNPHalt'.
 
 Lemma NPhard_GenNP : NPhard GenNPHalt.
 Proof.
-  intros X reg__X ? Q [(*? ?*) R R__dec (f__Rbal&polyf__Rbal&bounds_f__Rbal&mono_f__Rbal) R__spec].
+  intros X reg__X P Q [(*? ?*) R R__dec (f__Rbal&polyf__Rbal&bounds_f__Rbal&mono_f__Rbal) R__spec].
   destruct R__dec as (t__R&[d__R [comp_d__R] spec_d__R]&poly_t__R&mono_t__R).
   pose (f x := fun c => d__R (x,c)).
   assert (computableTime' f (fun x _ => (1,fun c _ => (t__R (size (enc (x, c))) + 3,tt))));cbn [timeComplexity] in *.
@@ -27,19 +27,19 @@ Proof.
   apply reducesPolyMO_intro with (f:= g);cbn [fst snd]. 
   -unfold g. evar (f':nat -> nat). [f']:refine (fun x => _).
    eexists (fun x => f' x). 
-   +split. extract.
-    recRel_prettify2. cbn [size].  generalize (size (enc x)). intro. unfold f'. reflexivity. 
+   +exists. extract.
+    recRel_prettify2. generalize (size (enc x)). intro. unfold f'. reflexivity. 
    +subst f'. cbn beta. smpl_inO. all:eapply inOPoly_comp. all:smpl_inO.
    +subst f'. cbn beta. smpl_inO.
-   + eexists (fun x => _);repeat split.
+   +eexists (fun x => _). repeat apply conj.
     *intros. 
      repeat (setoid_rewrite -> size_prod;cbn[fst snd]).
      rewrite !size_nat_enc,!size_term_enc. cbn [size]. 
      generalize (size (enc x)). intros. reflexivity.
     *smpl_inO. all:eapply inOPoly_comp. all:smpl_inO.
     *smpl_inO.
-  -intros x ?. remember (g x) as x0 eqn:eqx0. destruct x0 as ((t0,maxSize0),steps0).
-   unfold g in eqx0. injection eqx0. intros Hx0 Hsize0 Hsteps0.  clear eqx0.
+  -intros x x__valid. remember (g x) as x0 eqn:eqx0. destruct x0 as ((t0,maxSize0),steps0).
+   unfold g in eqx0. injection eqx0. intros Hx0 Hsize0 Hsteps0. clear eqx0.
    rewrite R__spec. 2:easy. cbn [GenNPHalt restrictBy fst snd].
    unfold HaltsOrDiverges,GenNPHalt'.
    evar (c0 : nat).
@@ -49,7 +49,8 @@ Proof.
     rewrite size_prod. cbn [fst snd].
     hnf in mono_t__R;erewrite mono_t__R. rewrite leq_t__R'.
     2:now rewrite Hc. 
-    unfold c0. reflexivity. }
+    unfold c0. reflexivity.
+   }
    unshelve eapply (_ : forall (A B : Prop), A -> (A -> B) -> A /\ B). tauto. 
    +split. now subst t0;Lproc.
     intros c H'. specialize (Ht0 c).
@@ -61,7 +62,7 @@ Proof.
      apply Ht0 in H'. eapply redLe_star_subrelation in H'. rewrite H' in Rc.
      eapply trueOrDiverge_eval in Rc. easy.    
    +intros [_ Hc]. split.
-    *intros (c&H'). specialize (spec_d__R (x,c) H6). cbn [fst snd] in *.
+    *intros (c&H'). specialize (spec_d__R (x,c) x__valid). cbn [fst snd] in *.
      exists c. split. 
      --rewrite bounds_f__Rbal. 2:eassumption. subst;easy.
      --exists I.
