@@ -543,7 +543,6 @@ Section StepMachine.
     | _ => default (* not specified *)
     end.
 
-  About CasePair_size1.
 
 
   Definition Step_app_Rel : pRel sigStep^+ bool 11 :=

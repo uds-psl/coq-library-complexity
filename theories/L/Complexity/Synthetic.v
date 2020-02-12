@@ -3,6 +3,9 @@ From Undecidability.L.Complexity Require Export Monotonic ONotation.
 
 Inductive is_computable_time {A} {t : TT A} (a : A) fT : Prop :=
   C : computableTime a fT -> is_computable_time a fT.
+
+(* TODO: It would be interesting to understand why we can't use sigma types.*)
+
 (** Semantics for [[restrictedP]]: fst is the subset of X which is an admsisable input, second is the Problem itself. *)
 Definition restrictedP X := (X -> Prop*Prop).
 Definition restrictBy {X} vX P : restrictedP X:= fun (x:X) => (vX x,P x).

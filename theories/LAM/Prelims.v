@@ -2,8 +2,10 @@ From Undecidability.L Require Export Prelim.ARS L.
 Export ARSNotations.
 Require Export Undecidability.LAM.BaseExtension Coq.Program.Basics PslBase.Base.
 
+
 Definition evaluatesIn (X : Type) (R : X -> X -> Prop) n (x y : X) := pow R n x y /\ terminal R y.
 
+(*
 Inductive evalIn : nat -> term -> term -> Prop :=
   evalInVal s : evalIn 0 (lam s) (lam s)
 | evalInBeta (s s' t t' u : term) i j k l: evalIn i s (lam s') -> evalIn j t (lam t') -> evalIn k (subst s' 0 (lam t')) u -> l = (i+j+1+k) -> evalIn l (s t) u.
@@ -322,11 +324,6 @@ Qed.
 
 Reserved Notation "s '>>lm' t" (at level 50).
 
-Lemma lam_terminal u: lambda u -> terminal step u.
-Proof.
-  intros H ? R;inv H;inv R.  
-Qed.
-
 Lemma functional_lm_step : functional lm_step.
 Proof.
   intros ? ? u R1 R2;induction R1 in u,R2|-*.
@@ -345,8 +342,6 @@ Lemma complete_induction (p : nat -> Prop) : (forall x0 : nat, (forall y : nat, 
 Proof. (*usable as induction scheme*)
   intros. now apply (complete_induction x).
 Qed.
-
-
 
 Instance le_preorder : PreOrder le.
 Proof.
@@ -368,3 +363,4 @@ Proof.
   cbv. intros. 
   apply mult_le_compat. all:eauto. 
 Qed.
+*)

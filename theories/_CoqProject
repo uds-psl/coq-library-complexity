@@ -312,8 +312,10 @@ L/Complexity/Problems/GenNP.v
 L/Complexity/Problems/TMGenNP.v
 L/Complexity/Problems/GenNPHalt.v
 L/Complexity/Reductions/TMGenNP/LToTMGenNP.v
+L/Complexity/Reductions/TMGenNP/IntermediateProblems.v
 
 L/AbstractMachines/Programs.v
+L/AbstractMachines/ProgramsDef.v
 L/AbstractMachines/AbstractSubstMachine.v
 L/AbstractMachines/AbstractHeapMachine.v
 L/AbstractMachines/AbstractHeapMachineDef.v

@@ -10,9 +10,15 @@ Definition GenNPHalt' : term*nat*nat -> Prop :=
 
 Definition HaltsOrDiverges : term*nat*nat -> Prop :=
   fun '(s, maxSize, steps (*in unary*)) =>
-    closed s /\ forall (c:term), size (enc c) <= maxSize -> ~(exists t, s (enc c) ⇓ t) \/ exists t, s (enc c) ⇓(<=steps) t.
+    closed s /\ forall (c:term), size (enc c) <= maxSize -> forall k, (exists t, s (enc c) ⇓(k) t) -> k <= steps.
 
 Definition GenNPHalt := restrictBy HaltsOrDiverges GenNPHalt'.
+
+(*MOVE*)
+Instance evalLe_eval_subrelation i: subrelation (evalIn i) eval.
+Proof.
+  intros ? ? [?  ?]. split. eapply pow_star_subrelation. all:eauto. 
+Qed.
 
 Lemma NPhard_GenNP : NPhard GenNPHalt.
 Proof.
@@ -51,17 +57,20 @@ Proof.
     2:now rewrite Hc. 
     unfold c0. reflexivity.
    }
-   unshelve eapply (_ : forall (A B : Prop), A -> (A -> B) -> A /\ B). tauto. 
+   split.
    +split. now subst t0;Lproc.
-    intros c H'. specialize (Ht0 c).
-    destruct (f x c) eqn:eqfxc.
-    *right. eexists. eapply le_evalLe_proper. 2,3:reflexivity. 2:now Lsimpl.
-     unfold c0. subst steps0. ring_simplify. 
-     subst maxSize0. nia. 
-    *left. intros [? Rc].
-     apply Ht0 in H'. eapply redLe_star_subrelation in H'. rewrite H' in Rc.
-     eapply trueOrDiverge_eval in Rc. easy.    
-   +intros [_ Hc]. split.
+    intros c H' k (t&Ht). specialize (Ht0 c H') as (kt0&lt__j&Ht0).
+    unshelve eassert (eqb := trueOrDiverge_eval _).
+    3:{
+      eapply equiv_eval_proper. 
+      3:eapply evalLe_eval_subrelation;exact Ht. 2:reflexivity.
+      eapply pow_star in Ht0;rewrite Ht0. easy.
+    }
+    rewrite eqb in Ht0. 
+    edestruct evalIn_unique with (1:=Ht) as [eqk _].
+    {clear Ht. eapply evalIn_trans. exact Ht0. split. apply trueOrDiverge_true. Lproc. }
+    subst k steps0. rewrite lt__j. unfold c0 in *. subst maxSize0. nia.
+   +split.
     *intros (c&H'). specialize (spec_d__R (x,c) x__valid). cbn [fst snd] in *.
      exists c. split. 
      --rewrite bounds_f__Rbal. 2:eassumption. subst;easy.

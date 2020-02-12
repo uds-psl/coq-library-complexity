@@ -39,12 +39,6 @@ Proof.
   intros ? ? ? R1 R2;inv R1;inv R2. all:left;congruence.
 Qed.
 
-Lemma evalIn_mono s t n n' :
-  s ⇓(<=n) t -> n <= n' -> s ⇓(<=n') t.
-Proof.
-  intros ? <-. easy.
-Qed.
-
 Lemma univDecTime_complete (s:term) (b:bool) k:
   closed s ->
   s ⇓(k) (enc b) ->

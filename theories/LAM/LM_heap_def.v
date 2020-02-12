@@ -2,11 +2,7 @@
 
 From Undecidability Require Import TM.Prelim TM.Relations.
 Require Import FunInd.
-
-
-Definition Var := nat.
-Inductive Com := varT (n : Var) | appT | lamT | retT.
-Definition Pro := list Com.
+From Undecidability Require Export L.AbstractMachines.Programs.
 
 Definition HAdd : Type := nat.
 Definition HClos : Type := HAdd * Pro.
@@ -17,7 +13,7 @@ Section Semantics.
 
   Implicit Types H : Heap.
   Implicit Types T V : list HClos.
-  Implicit Types n m : Var.
+  Implicit Types n m : nat.
   Implicit Types a b c : HAdd.
   Implicit Types g : HClos.
   Implicit Types P Q : Pro.

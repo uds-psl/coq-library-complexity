@@ -1,4 +1,4 @@
-From Undecidability.L Require Import L Seval.
+From Undecidability.L Require Import L Seval Complexity.ResourceMeasures.
 From Undecidability.LAM Require Import Prelims.
 From Undecidability.LAM Require Import LM_heap_def.
 (** ** Direct correctness proof  *)
@@ -46,7 +46,7 @@ Proof.
   change (Some (compile s,c)) with (jumpTarget 0 ([]++compile s) (retT::c)).
   generalize 0.
   generalize (retT::c) as c'. clear c.
-  generalize (@nil Com) as c. 
+  generalize (@nil Tok) as c. 
   induction s;intros c' c l.
   -reflexivity.
   -cbn. autorewrite with list. rewrite IHs1,IHs2. cbn. now autorewrite with list. 
@@ -249,6 +249,74 @@ Proof.
    exact R.
 Qed.
 
+(*TODO*)
+(*
+Lemma completenessTime' s t s0 P a T V H k:
+  evalIn k s t -> unfolds H a 0 s0 s ->
+  exists g H', reprC H' g t
+            /\ pow step (3*k) ((a,compile s0++P)::T,V,H)
+                  (tailRecursion (a,P) T,g::V,H') /\ extended H H'.
+Proof.
+  intros (n&Ev)%eval_seval R.
+  induction Ev in s0,P,a,T,V,H,R |-*.
+  -inversion R.
+   +subst k s0 s'. clear H0 R. rename P0 into Q,H3 into R,H1 into lookup_eq.
+    rewrite Nat.sub_0_r in lookup_eq.
+    eexists (b,Q),H.
+    repeat split.
+    *eauto using reprC.
+    *cbn [compile]. eapply R_star. now econstructor.
+    *hnf. tauto.
+   +subst k s' s0. clear R. rename H3 into R.
+    eexists (a,compile s1),H.
+    repeat split.
+    *eauto using reprC,reprP,unfolds.
+    *cbn [compile Datatypes.app]; autorewrite with list;cbn [Datatypes.app].
+     apply R_star. constructor. apply jumpTarget_correct.
+    *hnf. tauto.
+  -inv R.
+   {exfalso. inv H2. inv H3. }
+   rename t0 into t1. rename H4 into I__s, H5 into I__t.
+   cbn [compile List.app]; autorewrite with list; cbn [List.app].
+   specialize (IHEv1 _ (compile t1 ++ appT ::P) _ T V _ I__s)
+     as ([a2 P__temp]&Heap1&rep1&R1&Ext1).
+   inv rep1. inv H4. inv H6. rename H3 into I__s'.
+   apply (unfolds_extend Ext1) in I__t.
+   specialize (IHEv2 _ (appT ::P) _ T ((a2,compile s2)::V) _ I__t)
+     as (g__t&Heap2&rep2&R2&Ext2).
+   edestruct (put Heap2 (Some(g__t,a2))) as [a2' Heap2'] eqn:eq.
+   assert (Ext2' := (put_extends eq)).
+   apply ( reprC_extend Ext2') in rep2.
+   apply ( unfolds_extend Ext2) in I__s'. apply ( unfolds_extend Ext2') in I__s'.
+
+   specialize (unfolds_subst (get_current eq) rep2 I__s') as I__subst.
+   edestruct (IHEv3 _ [] _ (tailRecursion (a,P) T) V _ I__subst) as (g__u&Heap3&rep3&R3&Ext3).
+   eexists g__u,Heap3.
+   split;[ | split].
+   +eassumption.
+   +rewrite R1,tailRecursion_compile,R2. cbn.
+    eapply starC.
+    {apply step_beta. eassumption. }
+    autorewrite with list in R3.
+    exact R3.
+   +rewrite Ext1,Ext2,Ext2',Ext3. reflexivity.
+Qed.
+
+Lemma completenessTime s t:
+  eval s t -> closed s ->
+  exists g H, reprC H g t
+         /\ star step (init s)
+               ([],[g],H).
+Proof.
+  intros H1 H2.
+  edestruct (completeness' (s0:=s) (a:=0) (H:=[]) [] [] [] H1)
+    as (g&H'&rep&R&_).
+  -apply bound_unfolds_id. eauto using closed_k_bound.
+  -autorewrite with list in R.
+   exists g,H'. split. assumption.
+   exact R.
+Qed. *)
+
 (** *** BS soundness *)
 
 Lemma soundness' s0 s P a T V H k sigma:
@@ -300,7 +368,7 @@ Proof.
    apply pow_add in R' as (?&R2'&R3).
    apply rcomp_1 in R2'. inv R2'.
    specialize (put_extends H14) as Ext3.
-   edestruct IH with (P:=@nil Com) as (k31&k32&g3&H'3&t3&eq3&R31&[R3' _]&Ev3&Ext4&Rg3).
+   edestruct IH with (P:=@nil Tok) as (k31&k32&g3&H'3&t3&eq3&R31&[R3' _]&Ev3&Ext4&Rg3).
    2:now autorewrite with list;split;[exact R3|].
    now omega.
    {
@@ -350,7 +418,7 @@ Lemma soundness s sigma:
 Proof.
   intros cs [R Ter].
   eapply star_pow in R as [k R].
-  edestruct soundness' with (P:=@nil Com) as (k1&k2&g&H&t&eq&R1&[R2 _]&Ev&_&Rgt).
+  edestruct soundness' with (P:=@nil Tok) as (k1&k2&g&H&t&eq&R1&[R2 _]&Ev&_&Rgt).
   -split. rewrite app_nil_r. all:eassumption.
   -apply bound_unfolds_id. eapply closed_dcl. eassumption.
   -cbn in R2.
