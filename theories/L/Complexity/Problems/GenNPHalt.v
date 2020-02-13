@@ -22,7 +22,7 @@ Qed.
 
 Lemma NPhard_GenNP : NPhard GenNPHalt.
 Proof.
-  intros X reg__X P Q [(*? ?*) R R__dec (f__Rbal&polyf__Rbal&bounds_f__Rbal&mono_f__Rbal) R__spec].
+  intros X reg__X regP__X vX Q [ R R__dec (f__Rbal&polyf__Rbal&bounds_f__Rbal&mono_f__Rbal) R__spec].
   destruct R__dec as (t__R&[d__R [comp_d__R] spec_d__R]&poly_t__R&mono_t__R).
   pose (f x := fun c => d__R (x,c)).
   assert (computableTime' f (fun x _ => (1,fun c _ => (t__R (size (enc (x, c))) + 3,tt))));cbn [timeComplexity] in *.
@@ -46,7 +46,8 @@ Proof.
     *smpl_inO.
   -intros x x__valid. remember (g x) as x0 eqn:eqx0. destruct x0 as ((t0,maxSize0),steps0).
    unfold g in eqx0. injection eqx0. intros Hx0 Hsize0 Hsteps0. clear eqx0.
-   rewrite R__spec. 2:easy. cbn [GenNPHalt restrictBy fst snd].
+   specialize (R__spec _ x__valid).
+   cbn [GenNPHalt restrictBy fst snd].
    unfold HaltsOrDiverges,GenNPHalt'.
    evar (c0 : nat).
    assert (Ht0 : forall c, size (enc c) <= maxSize0 -> t0 (enc c) >(<= c0) trueOrDiverge (enc (f x c))).
@@ -70,7 +71,7 @@ Proof.
     edestruct evalIn_unique with (1:=Ht) as [eqk _].
     {clear Ht. eapply evalIn_trans. exact Ht0. split. apply trueOrDiverge_true. Lproc. }
     subst k steps0. rewrite lt__j. unfold c0 in *. subst maxSize0. nia.
-   +split.
+   +rewrite R__spec. split.
     *intros (c&H'). specialize (spec_d__R (x,c) x__valid). cbn [fst snd] in *.
      exists c. split. 
      --rewrite bounds_f__Rbal. 2:eassumption. subst;easy.

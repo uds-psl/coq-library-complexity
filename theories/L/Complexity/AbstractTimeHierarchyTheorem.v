@@ -57,8 +57,7 @@ Section TimeHierarchy_Parametric.
       rewrite size_prod. unfold w;cbn [fst snd]. rewrite size_nat_enc. lia.
     }
     clear Hn0.
-    
-    specialize (Hf w Logic.I) as f_dec_spec.
+    specialize (Hf w Logic.I) as f_dec_spec. cbn in f_dec_spec.
     unfold L__f in f_dec_spec. cbn in *. unfold w in f_dec_spec at 1 3.  cbn [start fst snd] in *. fold w in f_dec_spec.
     clearbody w.
 
@@ -284,7 +283,7 @@ Section TimeHierarchy_Parametric.
        Lia.lia.
       *rewrite size_prod. cbn [start fst snd size].
        rewrite size_prod. cbn [fst snd]. rewrite size_term_enc_r with (s:=s). change (term_enc) with (@enc term _). Lia.lia. 
-    -intros w _. cbn. rewrite <- spec_L__f.
+    -intros w ?. cbn. rewrite <- spec_L__f.
      eapply reflect_iff. apply U_reflects_U_spec.
     -repeat apply inO_add_l.
      +etransitivity. exact f_TC.

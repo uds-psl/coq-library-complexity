@@ -4,44 +4,46 @@ From Undecidability.L.Complexity Require Export Monotonic ONotation.
 Inductive is_computable_time {A} {t : TT A} (a : A) fT : Prop :=
   C : computableTime a fT -> is_computable_time a fT.
 
-(* TODO: It would be interesting to understand why we can't use sigma types.*)
+Global Generalizable Variable vX.
 
 (** Semantics for [[restrictedP]]: fst is the subset of X which is an admsisable input, second is the Problem itself. *)
-Definition restrictedP X := (X -> Prop*Prop).
-Definition restrictBy {X} vX P : restrictedP X:= fun (x:X) => (vX x,P x).
+Definition restrictedP {X} vX := ({x:X | vX x} -> Prop).
 (* Notation "vX '@With' P" := (restrPWhere vX P) (at level 0, P at level 0). *)
 
+Definition restrictBy {X} vX (P:X->Prop) : restrictedP vX := fun '(exist _ x _) => P x.
+Arguments restrictBy : clear implicits.
+Arguments restrictBy {_} _ _ !_.
 
-Definition unrestrictedP {X} P : restrictedP X := restrictBy (fun _ => True) P.
+Definition unrestrictedP {X} (P:X->Prop) : restrictedP (fun _ => True) := restrictBy _ P.
+Arguments unrestrictedP X P !x.
 
 Local Set Warnings "-cannot-define-projection".
-Record decInTime {X} `{R :registered X} (P : restrictedP X) (fT : nat -> nat) :Prop :=
+Record decInTime {X} `{R :registered X} `(P : restrictedP vX) (fT : nat -> nat) :Prop :=
   decInTime_intro
   {
     decInTime_decP : X -> bool ;
     decInTime_compIn : is_computable_time (t:=TyArr (TyB X) (TyB bool)) decInTime_decP (fun x _ => (fT (L.size (enc x)),tt)) ;
-    decInTime_correct : forall x, fst (P x) -> snd (P x) <-> decInTime_decP x  = true
+    decInTime_correct : forall x (Hx : vX x), P (exist _ x Hx) <-> decInTime_decP x  = true
   }.
 
 
-Lemma decInTime_restriction_antimono X `{R :registered X} (P Q:restrictedP X) (fT : nat -> nat) :
-  (forall x, fst (Q x) -> fst (P x))
-  -> (forall x, fst (Q x) -> snd (P x) <-> snd (Q x))
+Lemma decInTime_restriction_antimono X `{R :registered X} vP vQ (P : restrictedP vP) (Q:restrictedP vQ) (fT : nat -> nat) :
+  (forall x, vQ x -> vP x)
+  -> (forall x H__P H__Q, P (exist vP x H__P) <-> Q (exist vQ x H__Q))
   -> decInTime P fT
   -> decInTime Q fT.
 Proof.
-  intros Hf Hs [decO compIn correct]. eexists. eauto.
-  intros ? ?. rewrite <- correct.
-  -now rewrite Hs.
-  -now apply Hf.
+  intros Hv Hx [decO compIn correct]. eexists. eauto.
+  intros x HQ. rewrite <- Hx with (H__P:=Hv _ HQ).
+  rewrite correct. reflexivity.
 Qed.
 
-Definition inTimeO {X} `{R :registered X} P f :=
+Definition inTimeO {X} `{R :registered X} `(P:restrictedP vX) f :=
   exists f', decInTime P f' /\ f' ∈O f.
 
 Notation "P ∈TimeO f" := (inTimeO P f) (at level 70).
 
-Definition inTimeo {X} `{R :registered X} P f :=
+Definition inTimeo {X} `{R :registered X} `(P:restrictedP vX) f :=
   exists f', decInTime P f' /\ f' ∈o f.
 
 Notation "P ∈Timeo f" := (inTimeo P f) (at level 70).
@@ -51,9 +53,9 @@ Notation "P ∈Timeo f" := (inTimeo P f) (at level 70).
 
 (** Inclusion *)
 Lemma inTime_mono f g X (_ : registered X):
-  f ∈O g -> forall P, P ∈TimeO f -> P ∈TimeO g.
+  f ∈O g -> forall `(P:restrictedP vX), P ∈TimeO f -> P ∈TimeO g.
 Proof.
-  intros H P (?&?&?). unfold inTimeO.
+  intros H P ? (?&?&?). unfold inTimeO.
   eexists _. split. eassumption. now rewrite H1.
 Qed.
 

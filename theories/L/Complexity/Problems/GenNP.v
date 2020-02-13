@@ -10,14 +10,14 @@ Definition GenNP : term*nat*nat -> Prop:=
 
 Lemma NPhard_GenNP : NPhard (unrestrictedP GenNP).
 Proof.
-  intros X reg__X ? Q [(*? ?*) R R__dec (f__Rbal&polyf__Rbal&bounds_f__Rbal&mono_f__Rbal) R__spec].
+  intros X reg__X regP__X vX Q [R R__dec (f__Rbal&polyf__Rbal&bounds_f__Rbal&mono_f__Rbal) R__spec]. 
   destruct R__dec as (t__R&[d__R [comp_d__R] spec_d__R]&poly_t__R&mono_t__R).
   pose (f x := fun c => d__R (x,c)).
   assert (computableTime' f (fun x _ => (1,fun c _ => (t__R (size (enc (x, c))) + 3,tt))));cbn [timeComplexity] in *.
   {intros. subst f. extract. solverec. }
   specialize inOPoly_computable with (1:=polyf__Rbal) as (f__Rbal'&tf__Rbal'&[]&polyf__Rbal'&leq_f__Rbal'&?&?&?).
   specialize inOPoly_computable with (1:=poly_t__R) as (t__R'&tt__R'&[]&poly_t__R'&leq_t__R'&?&?&?).
-  exists (fun x => (lam (extT f (enc x) 0),f__Rbal' (size (enc x)),t__R' (size (enc x) + f__Rbal' (size (enc x))+4)+5));cbn [fst snd GenNP]. 3:easy. 
+  exists (fun x => (lam (extT f (enc x) 0),f__Rbal' (size (enc x)),t__R' (size (enc x) + f__Rbal' (size (enc x))+4)+5));cbn [fst snd GenNP]. 
   -evar (f':nat -> nat). [f']:refine (fun x => _).
    eexists (fun x => f' x). 
    +split. extract.
@@ -31,9 +31,9 @@ Proof.
      generalize (size (enc x)). intros. reflexivity.
     *smpl_inO. all:eapply inOPoly_comp. all:smpl_inO.
     *smpl_inO.
-  -intros x ?.
-   rewrite R__spec. 2:easy. split.
-   +intros (c&H'). specialize (spec_d__R (x,c));cbn [fst snd] in spec_d__R. apply ssreflect.iffLR with (2:=H') in spec_d__R. 2:easy. 
+  -cbn [unrestrictedP]. intros x ?. exists Logic.I. 
+   rewrite R__spec. split.
+   +intros (c&H'). cbn - [GenNP]. specialize (spec_d__R (x,c) Hx). cbn beta iota in spec_d__R. apply ssreflect.iffLR with (2:=H') in spec_d__R. 
     unfold GenNP;cbn [snd].
     split. now Lproc.
     exists c. repeat split.
@@ -52,7 +52,7 @@ Proof.
     *Lproc.
    +unfold GenNP.
     intros (?&c&size__c&R').
-    exists c. specialize (spec_d__R (x,c)). cbn in spec_d__R. rewrite spec_d__R. 2:easy. 
+    exists c. specialize (spec_d__R (x,c) Hx). cbn in spec_d__R. rewrite spec_d__R. 
     eapply inj_enc.
     eapply unique_normal_forms. 1,2:now Lproc.
     eapply evalLe_eval_subrelation, eval_star_subrelation in R'.
