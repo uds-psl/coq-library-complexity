@@ -27,7 +27,8 @@ Section fixInstance.
                                                 else repEl Sig false. 
 
   Lemma hNat_length (Sig x : nat) : |hNat Sig x| = Sig. 
-  Proof. 
+  Proof using. 
+    clear A A1 pr.
     unfold hNat. destruct leb eqn:H. 
     - rewrite !app_length, !repEl_length. apply leb_complete in H. cbn. nia. 
     - now rewrite repEl_length.

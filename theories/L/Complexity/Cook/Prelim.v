@@ -330,20 +330,24 @@ Proof.
 Qed. 
 
 (*repeat an element *)
-Fixpoint repEl (X : Type) n (e : X) := 
- match n with 
- | 0 => []
- | S n => e :: repEl n e
-end. 
+Section repEl_fixX. 
+  Variable (X : Type). 
 
-Lemma repEl_length (X : Type) n (e : X) : |repEl n e| = n. 
-Proof. induction n; cbn; eauto. Qed. 
+  Fixpoint repEl n (e : X) := 
+   match n with 
+   | 0 => []
+   | S n => e :: repEl n e
+  end. 
+
+  Lemma repEl_length n (e : X) : |repEl n e| = n. 
+  Proof. induction n; cbn; eauto. Qed. 
+
+  Lemma repEl_add (a : X) n1 n2: repEl (n1 + n2) a = repEl n1 a ++ repEl n2 a.
+  Proof.  induction n1; cbn; [eauto | congruence]. Qed. 
+End repEl_fixX. 
 
 Lemma map_repEl (X Y : Type) (f : X -> Y) n (e : X) : map f (repEl n e) = repEl n (f e). 
 Proof. induction n; cbn; [eauto | congruence]. Qed. 
-
-Lemma repEl_add (X : Type) (a : X) n1 n2: repEl (n1 + n2) a = repEl n1 a ++ repEl n2 a.
-Proof.  induction n1; cbn; [eauto | congruence]. Qed. 
 
 Lemma list_length_split1 (X : Type) (s : list X) n : n <= |s| -> exists s1 s2, |s1| = n /\ |s2| = |s| - n /\ s = s1 ++ s2. 
 Proof. 

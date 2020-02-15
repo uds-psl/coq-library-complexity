@@ -117,20 +117,22 @@ End Fix_X.
 
 Hint Resolve list_enc_correct : Lrewrite.
 
+Definition c__map := 12. 
 Fixpoint map_time {X} (fT:X -> nat) xs :=
   match xs with
-    [] => 8
-  | x :: xs => fT x + map_time fT xs + 12
+    [] => c__map
+  | x :: xs => fT x + map_time fT xs + c__map
   end.
   
 Instance term_map (X Y:Type) (Hx : registered X) (Hy:registered Y): computableTime' (@map X Y) (fun _ fT => (1,fun l _ => (map_time (fun x => fst (fT x tt)) l,tt))).
 Proof.
   extract.
+  unfold map_time, c__map.
   solverec.
 Defined.
 
 Lemma map_time_const {X} c (xs:list X):
-  map_time (fun _ => c) xs = length xs * (c + 12) + 8.
+  map_time (fun _ => c) xs = length xs * (c + c__map) + c__map.
 Proof.
   induction xs;cbn. all:lia.
 Qed.
@@ -141,8 +143,8 @@ Proof.
 Defined.
 
 Definition c__ntherror := 15.
-Definition nth_error_time (X : Type) (A : list X) := (length A + 1) * c__ntherror. 
-Instance termT_nth_error (X:Type) (Hx : registered X): computableTime' (@nth_error X) (fun l _ => (5, fun n _ => (nth_error_time l, tt))). 
+Definition nth_error_time (X : Type) (A : list X) (n : nat) := (min (length A) n + 1) * c__ntherror. 
+Instance termT_nth_error (X:Type) (Hx : registered X): computableTime' (@nth_error X) (fun l _ => (5, fun n _ => (nth_error_time l n, tt))). 
 Proof.
   extract. solverec. all: unfold nth_error_time, c__ntherror; solverec. 
 Qed.

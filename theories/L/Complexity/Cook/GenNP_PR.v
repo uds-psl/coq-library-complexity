@@ -755,8 +755,8 @@ Section fixTM.
         { destruct h; [ discr_tape| destruct h; [discr_tape | now cbn in H10]]. }
         rewHeadTape_inv2; apply H2 in H8; now inv H8. 
       + now apply tape_repr_step'.
-  Qed. 
-       
+  Qed.
+
   (*the same result for the left tape half can be derived using the symm lemmas*)
   Corollary tape_repr_add_left ls σ h p w:
     ls ≃t(p, w) h -> length ls < w
@@ -1596,7 +1596,7 @@ Section fixTM.
   Proof.  
     intros. inv H0.  
     specialize (tape_repr_inv12 H) as H2. 
-    destruct H1 as [ H1 | H1]; [ | destruct H1].  
+    destruct H1 as [ H1 | H1 ]; [ | destruct H1].  
     + apply transRules_statesym in H1. 
       destruct H1 as (q & _ & [(x & -> ) | [(x & ->) | (x & ->)]]). 
       all: destruct (H2 (inl (q, x))); [ eauto | congruence]. 
@@ -1991,6 +1991,7 @@ Section fixTM.
     simp_eqn;  
     cbn; try rewrite <- !app_assoc; cbn; reflexivity). 
 
+  Notation "s '⇝' s'" := (valid rewHeadSim s s') (at level 40). 
 
   (*main simulation result: a single step of the Turing machine corresponds to a single step of the PR instance (if we are not in a halting state) *)
   (*proof takes roughly 35mins + 4 gigs of RAM... *)
@@ -1998,7 +1999,7 @@ Section fixTM.
     (q, tp) ≃c s
     -> (q, tp) ≻ (q', tp')
     -> (sizeOfTape tp) < z'
-    -> exists s', valid rewHeadSim s s' /\ (forall s'', valid rewHeadSim s s'' -> s'' = s') /\ (q', tp') ≃c s'.
+    -> exists s', s ⇝ s' /\ (forall s'', s ⇝ s'' -> s'' = s') /\ (q', tp') ≃c s'.
   Proof. 
 (*    Set Default Goal Selector "all".*)
     (*intros H (H0' &  H0) H1. cbn in H0'. unfold sstep in H0. destruct trans eqn:H2 in H0. inv H0. rename p into p'. *)
@@ -2083,7 +2084,7 @@ Section fixTM.
   Lemma haltsim q tp s :
     (q, tp) ≃c s
     -> halt q = true
-    -> exists s', valid rewHeadSim s s' /\ (forall s'', valid rewHeadSim s s'' -> s'' = s') /\ (q, tp) ≃c s'.
+    -> exists s', s ⇝ s' /\ (forall s'', s ⇝ s'' -> s'' = s') /\ (q, tp) ≃c s'.
   Proof. 
     Set Default Goal Selector "all". 
     intros. apply valid_reprConfig_unfold. 
@@ -2135,8 +2136,6 @@ Section fixTM.
   Notation "s '▷(' k ')' s'" := (s ≻(k) s' /\ halt (configState s') = true) (at level 40).
 
   Notation "s '▷(≤' k ')' s'" := (exists l, l <= k /\ s ▷(l) s') (at level 40).
-
-  Notation "s '⇝' s'" := (valid rewHeadSim s s') (at level 40). 
   Notation "s '⇝(' k ')' s'" := (relpower (valid rewHeadSim) k s s') (at level 40).
 
   (*Lemma 23 *)
@@ -2199,7 +2198,7 @@ Section fixTM.
       + apply H1. 
     - destruct b as (q''& tp''). assert (z' >= n) as X by lia. specialize (IH X q'' tp'' q' tp' eq_refl eq_refl). clear X.
       unfold sstepRel in H. 
-      assert (sizeOfTape tp < z') as X by lia. specialize (stepsim H1 H X) as (s' & F1 & F2 & F3). clear X.
+      specialize (stepsim H1 H ltac:(lia)) as (s' & F1 & F2 & F3).
       specialize (IH s' F3) as (s'' & G1 & G2 & G3). 
       apply tm_step_size with (l := sizeOfTape tp)in H. 2: reflexivity. lia. 
       exists s''. repeat split. 
@@ -2225,11 +2224,6 @@ Section fixTM.
       + apply G3. 
   Qed. 
 
-  (*our final constraint. we don't use the definition via a list of final substrings from the TPR definition, but instead use this more specific form *)
-  (*we will later show that the two notions are equivalent for a suitable list of final substrings*)
-  (*there exists the symbol of a halting state in the string s *)
-  Definition containsHaltingState s := exists q qs, halt q = true /\ isSpecStateSym q qs /\ qs el s.  
-  
   (*Lemma 27 *)
   (*currently differs from the version in the memo: the additional sizeOfTape tp <= z' - j constraint is due to the similar constraint in Lemma 23 *)
   (*the additional assumption z' >= j is needed for the same reason *)
@@ -2243,14 +2237,11 @@ Section fixTM.
     intros. apply relpower_relpowerRev in H0.
     induction H0 as [ | s y y' j H0 IH].  
     - exists q, tp, 0. rewrite Nat.add_0_r. repeat split; eauto.  
-    - assert (sizeOfTape tp <= z' - j) as H4 by lia.  assert (z' >= j) as H5 by lia. 
-      specialize (IH H H4 H5) as (q' & tp' & j' & F1 & F2 & F3 & F4). 
-      clear H4 H5. 
+    - specialize (IH H ltac:(lia) ltac:(lia)) as (q' & tp' & j' & F1 & F2 & F3 & F4). 
       destruct (halt q') eqn:H4. 
       + exists q', tp', j'.
         specialize (halting_inversion F1 H4 H3) as H5. eauto. 
-      + assert (sizeOfTape tp' < z') as H6 by lia.
-        specialize (step_inversion' F1 H6 H4 H3) as (q'' & tp'' & G1 & G2). 
+      + specialize (step_inversion' F1 ltac:(lia) H4 H3) as (q'' & tp'' & G1 & G2). 
         exists q'', tp'', (S j'). repeat split; eauto. 
         * lia.  
         * apply relpower_relpowerRev. econstructor.
@@ -2258,6 +2249,11 @@ Section fixTM.
           -- apply G2.  
         * apply tm_step_size with (l := sizeOfTape tp') in G2; [lia | reflexivity ].  
   Qed. 
+
+  (*our final constraint. we don't use the definition via a list of final substrings from the TPR definition, but instead use this more specific form *)
+  (*we will later show that the two notions are equivalent for a suitable list of final substrings*)
+  (*there exists the symbol of a halting state in the string s *)
+  Definition containsHaltingState s := exists q qs, halt q = true /\ isSpecStateSym q qs /\ qs el s.  
 
   (*Lemma 28 *)
   Lemma finalCondition q tp s : (q, tp) ≃c s -> (halt q = true <-> containsHaltingState s). 

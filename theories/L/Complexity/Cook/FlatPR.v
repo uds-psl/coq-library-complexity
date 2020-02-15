@@ -647,6 +647,10 @@ Proof.
   replace_le (size(enc(offset fpr))) with (size (enc fpr)) by (rewrite FlatPR_enc_size; lia). 
   unfold poly__FlatPRWfDec, c__FlatPRWfDecBound. nia.
 Qed. 
+Lemma FlatPR_wf_dec_poly : monotonic poly__FlatPRWfDec /\ inOPoly poly__FlatPRWfDec.
+Proof. 
+  unfold poly__FlatPRWfDec; split; smpl_inO. 
+Qed. 
 
 (*extraction of isValidFlattening_dec *)
 
@@ -736,7 +740,7 @@ Defined.
 
 Definition c__isValidFlatteningDecBound := 2 * c__forallb + c__isValidFlatteningDec. 
 Definition poly__isValidFlatteningDec n :=(n + 2) * poly__listOfFlatTypeDec n + (n + 1) * poly__PRWinOfFlatTypeDec n + (n + 1) * c__isValidFlatteningDecBound. 
-Lemma isValidFlatteningDec_time_bound fpr : isValidFlattening_dec_time fpr <= poly__isValidFlatteningDec (size (enc fpr)). 
+Lemma isValidFlattening_dec_time_bound fpr : isValidFlattening_dec_time fpr <= poly__isValidFlatteningDec (size (enc fpr)). 
 Proof. 
   unfold isValidFlattening_dec_time. 
   rewrite list_ofFlatType_dec_time_bound. 
