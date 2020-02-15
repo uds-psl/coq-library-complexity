@@ -5,7 +5,6 @@
 
 \newcommand{\bigO}[1]{\mathcal{O}{(#1)}}
 
-\newcommand{\PR}{\textbf{PR}}
 \newcommand{\BPR}{\textbf{BinaryPR}}
 \newcommand{\fsat}{\textbf{FSAT}}
 \newcommand{\sat}{\textbf{SAT}}
@@ -24,7 +23,7 @@
 
 
 %workaround so that polarities on blanks have the same height as on other symbols
-\newcommand*{\TallestContent}{\ensuremath{\gamma}}% <-- This should be the tallest content
+\newcommand*{\TallestContent}{\ensuremath{b}}% <-- This should be the tallest content
 
 \newcommand{\polneg}[1]{\overleftarrow{#1\vphantom{\TallestContent}}}
 \newcommand{\polpos}[1]{\overrightarrow{#1\vphantom{\TallestContent}}}
@@ -45,32 +44,24 @@ We formally state the main part of the Cook-Levin-Theorem:
 \end{theorem}
 
 \section{A Generic Problem for Turing Machines}
-Recall that, in order to show a language $L$ to be \NP{}-hard, we have to show that any language $L'$ contained in \NP{} can be reduced to it. In our setting of complexity theory in L, we thus have to reduce the computation of L to \SAT{}.
+Recall that, in order to show a problem $P$ to be \NP{}-hard, we have to show that any problem $Q$ contained in \NP{} can be reduced to it. In our setting of complexity theory in L, we thus have to reduce the computation of L to \SAT{}.
 In Section~\ref{TODO}, we argued why it is hard to directly reduce from L to any natural problem. 
 Therefore, we believe that the most practical path of reducing from L to \SAT{} is to use Turing machines as an intermediate problem. 
 
-\begin{definition}[TMGenNP]
-  \begin{align*}
-    \gennp{} (\Sigma, M : \textsf{TM}~\Sigma~1, k, t) \defeq \exists~in, \length{in} \le k \land \exists f, ({\textsf{start}}_M, \textsf{initTape}~in) \rhd^{\le t} f, 
-  \end{align*}
-  where 
-  \begin{align*}
-    \textsf{initTape}~[] \defeq \textsf{niltape} \\
-    \textsf{initTape}~x::xs \defeq \textsf{leftof}~x~xs,
-  \end{align*}
-  that is, the head is initially positioned left of the input.
-\end{definition}
-
-\gennp{} is a form of a generic problem for Turing machines. A definition the reader might be more familiar with is the following: 
+We start from a generic problem for Turing machines. A definition of such a problem the reader might be familiar with is the following:
 \begin{center}
-  Given a nondeterministic Turing machine $M$, an input $in$ and a number of steps $t$, does $M$ accept $in$ in at most $t$ steps?
+  Given a nondeterministic Turing machine $M$, an input $inp$ and a number of steps $t$, does $M$ accept $inp$ in at most $t$ steps?
 \end{center}
-Our definition relates to this one in a similar way the verifier characterisation of \NP{} relates to the one using nondeterminism: the nondeterminism is moved into the input. The reason for that is that formally working with nondeterminism is unpleasant.
-Additionally, we have made the simplification that the input of the Turing machine consists only of the nondeterministic certificate, as the ``regular'' input can just be hardcoded into the Turing machine. 
+This definition explicitly employs nondeterminism, making it hard to reason formally. Therefore, we use a characterisation that relates to this one in a similar way the verifier characterisation of \NP{} relates to the one using nondeterminism: the nondeterminism is moved into the input.
+\begin{center}
+  \gennp{}:
+  Given a deterministic Turing machine $M$, a maximal input length $k$ and a number of steps $t$, does there exists an input $inp$ with $\length{inp} \le k$ such that $M$ accepts $inp$ in at most $t$ steps?
+\end{center}
+Note that we treat the whole input as being a nondeterministic certificate. This does not impose a restriction as the ``regular'' input can just be hardcoded into the Turing machine.
+
 
 In a theory with Turing machines as the computational model, \gennp{} would be almost trivially \NP{}-hard, although it would not be a natural problem as it depends on the model of computation.
-Using L, however, the hardness is not trivial anymore.
-In this setting, we just see \gennp{} the same as any other problem; one could even consider it to be natural as it does not refer to our model of computation.
+Using L, however, the hardness is not trivial anymore. In this setting, we just see \gennp{} the same as any other problem.\todo{more on that?}
 
 \section{Deterministic Simulation: Tableau of Configurations}
 We first consider how the computation of a deterministic Turing machine can be encoded for an arbitrary input of which we only know that its size is at most $k$. The nondetermistic ``guessing'' of an input of such a form will be covered in the next section.
@@ -597,7 +588,7 @@ Formally, for each of the rewrite rules depicted in Example~\ref{ex:polarities},
   Formally, it is not necessary for blanks to be annotated with polarities. However, adding polarities to blanks allows us to handle symbols of the tape alphabet and blanks in a more uniform way, simplifying the formal proofs. 
 \end{remark}
 
-Finally, we need to enforce that the final configuration is a halting configuration. This can be encoded by requiring that an element of $[q^m~|~\textsf{halt}~q = \btrue]$ is contained in the last line of the tableau.
+Finally, we need to enforce that the final configuration is a halting configuration. This can be encoded by requiring that an element of $[q^m~|~\textsf{halt}~q = \btrue, m : \Sigma + \{\blank\}]$ is contained in the last line of the tableau.\todo{fix notation for type}
 
 \section{Nondeterministic Input}
 The construction presented in the previous section can simulate a deterministic Turing machine given an initial configuration. \gennp{}, however, asks for the existence of an input which the Turing machine accepts. 

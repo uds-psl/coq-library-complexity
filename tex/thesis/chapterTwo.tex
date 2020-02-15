@@ -7,6 +7,9 @@
 \newcommand*{\tmright}[1]{\textsf{right}~#1}
 \newcommand*{\tmcurrent}[1]{\textsf{current}~#1}
 
+\newcommand{\finType}{\textsf{finType}}
+
+
 \chapter{Preliminaries}\label{chap:preliminaries}
 In this section, we present the needed basic definitions, including Turing machines and the call-by-value $\lambda$-calculus L.
 
@@ -28,7 +31,7 @@ The product type $X \times Y$ of the types $X$ and $Y$ consists of pairs of elem
 
 The sum type $X + Y$ of the types $X$ and $Y$ consists of the elements of $X$ and the elements of $Y$. Formally, we have two injections $\injl : X \rightarrow X + Y$ and $\injr : Y \rightarrow X + Y$. 
 
-Sigma types $\Sigma_x.p~x$ allow us to define pairs where the type of the second component depends on the first component (therefore its inhabitants are also called \emph{dependent pairs}). We write $(x, s)$ for the dependent pair consisting of $x$ and $s : p~x$. 
+Sigma types $\sigtype{x}.p~x$ allow us to define pairs where the type of the second component depends on the first component (therefore its inhabitants are also called \emph{dependent pairs}). We write $(x, s)$ for the dependent pair consisting of $x$ and $s : p~x$. 
 
 A type $X$ is called \emph{discrete} if equality on it is decidable, that is, there exists a function $\textsf{eq}_X : X \rightarrow X \rightarrow \bool$ such that $\textsf{eq}_X~a~b = \btrue$ if, and only if, $a = b$. We also write $\eqb{a}{b}$ instead of $\textsf{eq}_X~a~b$, omitting the type which can be inferred from the context. 
 
@@ -47,18 +50,18 @@ The $n$-th power $R^n$ of a relation $R$ is defined inductively:
 \end{align*}
 For some proofs, it will be convenient to have an alternative definition where the successor case appends a new transition instead of prepending it:
 \begin{align*}
-  \infer{R_0~x~x}{}
+  \infer{\prescript{0}{}R~x~x}{}
   \qquad
-  \infer{R_{\natS{n}}~x~z}{R_n~x~y\quad R~y~z}
+  \infer{\prescript{\natS{n}}{}R~x~z}{\prescript{n}{}R~x~y\quad R~y~z}
 \end{align*}
 
-\begin{proposition}
+\begin{proposition}\label{prop:relpower}
   We have the following basic facts:
   \begin{enumerate}
-    \item Transitivity: $R^n~x~y \rightarrow R^m~y~z \rightarrow R^{n+m}~x~z$ and $R_n~x~y \rightarrow R_m~y~z \rightarrow R_{n+m}~x~z$
+    \item Transitivity: $R^n~x~y \rightarrow R^m~y~z \rightarrow R^{n+m}~x~z$ and $\prescript{n}{}R~x~y \rightarrow \prescript{m}{}R~y~z \rightarrow \prescript{n+m}{}R~x~z$
     \item Monotonicity: $R \subseteq S \rightarrow R^n~x~y \rightarrow S^n~x~y$
     \item Congruence: $R \equiv S \rightarrow R^n~x~y \leftrightarrow S^n~x~y$
-    \item Agreement: $R^n~x~y \leftrightarrow R_n~x~y$
+    \item Agreement: $R^n~x~y \leftrightarrow \prescript{n}{}R~x~y$
   \end{enumerate}
 \end{proposition}
 
@@ -90,6 +93,7 @@ Finally, $\textsf{midtape}~ls~c~rs$ models the case that the head resides on the
 This formalisation of tapes without blanks has the advantage that each possible tape is uniquely represented by exactly one element of $\textsf{tape}~\Sigma$. 
 \todo{remark that the adjacent symbols are always at the head; picture showing reversion of left tape}
 \todo{introduce left, right and current}
+\todo{lemma tm step size}
 
 \subsection{Turing machines}
 In each computational step, a Turing machine can optionally write a symbol and move the head on each of its tapes individually. These actions are captured by the type $\textsf{Act}_{\Sigma} \defeq{} \opt{\Sigma} \times \textsf{move}$, where $\Sigma$ is the tape alphabet and 
