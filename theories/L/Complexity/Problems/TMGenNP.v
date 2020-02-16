@@ -23,22 +23,23 @@ Definition TM1GenNP := restrictBy (fun '(M,_,_) => M.(TMflat.tapes) = 1)
 Lemma inNP_TMgenericNPCompleteProblem:
   inNP (unrestrictedP TMGenNP).
 Proof.
-  apply inNP_intro with (R:= fun '(M,maxSize, steps (*in unary*)) t =>
-                               sizeOfmTapesFlat t <= maxSize /\  
-                               exists sig n (M':mTM sig n),
-                                 isFlatteningTMOf M M'
-                                 /\ exists t', isFlatteningTapesOf t t'
-                                         /\ (exists f, loopM (initc M' t') steps = Some f)).
+  pose (R := fun '(exist _ (M,maxSize, steps (*in unary*)) _ : {x | True}) t =>
+               sizeOfmTapesFlat t <= maxSize /\  
+               exists sig n (M':mTM sig n),
+                 isFlatteningTMOf M M'
+                 /\ exists t', isFlatteningTapesOf t t'
+                         /\ (exists f, loopM (initc M' t') steps = Some f)).
+  apply inNP_intro with (R0:= R).
   now apply linDec_polyTimeComputable.
   -destruct execFlat_poly as (f''&Hf''&polyf''&monof'').
    evar (f':nat -> nat). [f']:intro x.
    exists f'. repeat eapply conj.
-   {
+   { cbn. 
      eexists (fun '((M,maxSize,steps),t) =>
                 if (sizeOfmTapesFlat t <=? maxSize)
                 then match execFlatTM M t steps with
                        Some _ => true
-                      | _ => false
+                     | _ => false
                      end
                 else false).
      repeat eapply conj.
@@ -50,16 +51,16 @@ Proof.
         -intros. specialize (H c). destruct H as [H _]. specialize (H eq_refl) as (?&?&?&?&?&?&Hc&?&?).
          split. easy.
          do 4 esplit. eauto.
-         inv Hc. cbn in *.
-         do 2 esplit. eauto.
-         destruct x2. cbn in *.
-         eexists. rewrite <- H1. unfold initc. repeat f_equal. inv H. apply injective_index. congruence.
-        -intros (?&?&?&?&?&?&?&?&?). exfalso.
-         edestruct H as [_ H']. discriminate H'.
-         do 6 eexists. now eauto.
-         split. now eauto using initFlat_correct.
-         split. eauto. instantiate (1 := (_,_)).
-         split;cbn. constructor.
+            inv Hc. cbn in *.
+            do 2 esplit. eauto.
+               destruct x2. cbn in *.
+               eexists. rewrite <- H1. unfold initc. repeat f_equal. inv H. apply injective_index. congruence.
+               -intros (?&?&?&?&?&?&?&?&?). exfalso.
+                edestruct H as [_ H']. discriminate H'.
+                do 6 eexists. now eauto.
+                   split. now eauto using initFlat_correct.
+                   split. eauto. instantiate (1 := (_,_)).
+                   split;cbn. constructor.
      }
      eexists.
      extract. 
@@ -91,29 +92,24 @@ Proof.
    all:unfold f'.
    all:smpl_inO.
   -evar (f:nat -> nat). [f]:intro x.
-   exists f. repeat eapply conj.
-   2:{
-     intros [[TM maxSize] steps] y.
-     intros (?&sig&n&M'&HM&R__tapes&?&?).
-     remember (size (enc (TM, maxSize, steps))) as x eqn:Hn.
-     rewrite size_flatTapes. 2:eassumption.
-     rewrite !size_prod,size_TM in Hn;cbn [fst snd] in Hn.
-     inversion HM. subst n.
-     destruct TM. cbn in *. rewrite !size_nat_enc in Hn.
-     unshelve erewrite ((_ : tapes <= x)) at 1 3. lia.
-     unshelve erewrite ((_ : Cardinality.Cardinality sig <= x)) at 1 3. lia.
-     erewrite <- sizeOfmTapesFlat_eq. 2:eassumption.
-     rewrite H.
-     unshelve erewrite ((_ : maxSize <= x)) at 1 3. nia.
-     unfold f. reflexivity.
-   }
-   all:unfold f.
-   all:smpl_inO.
-  -unfold TMGenNP.
-   intros [[] ].
-   
-   setoid_rewrite isFlatteningTapesOf_iff.
-   split.
-   +intros (?&?&?&?&?&?&?&?). erewrite <- ?sizeOfmTapesFlat_eq in *. eauto 10. constructor.
-   +intros (?&?&?&?&?&?&?&?&?). cbn. erewrite ?sizeOfmTapesFlat_eq in *. eauto 20. subst;constructor.
+   exists f.
+   +intros [[[TM maxSize] steps]] y.  cbn.
+    intros (?&sig&n&M'&HM&t' & Ht' & HHalt) .
+    eexists _,_,_. split. easy. eexists. split. now erewrite <- sizeOfmTapesFlat_eq. easy.
+   +intros [[[TM maxSize] steps]]. cbn.
+    intros (sig&n&M'&HM&t' & Ht' & HHalt) .
+    eexists _. split.
+    *split. now erewrite sizeOfmTapesFlat_eq.
+     eauto 10 using mkIsFlatteningTapeOf.
+    *remember (size (enc (TM, maxSize, steps))) as x eqn:Hn.
+     rewrite size_flatTapes. 2:now apply mkIsFlatteningTapeOf.
+     rewrite Ht'.
+     assert (n <= x /\ maxSize <= x /\ Cardinality.Cardinality sig <= x) as (->&->&->).
+     {inv HM;destruct TM; cbn in *. rewrite !size_prod,size_TM;cbn [fst snd].
+      repeat apply conj.
+      all:rewrite size_nat_enc_r at 1; subst;nia.
+     }
+     unfold f;reflexivity.
+   +unfold f;smpl_inO.
+   +unfold f;smpl_inO.
 Qed.

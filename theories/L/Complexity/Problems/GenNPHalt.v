@@ -22,12 +22,12 @@ Qed.
 
 Lemma NPhard_GenNP : NPhard GenNPHalt.
 Proof.
-  intros X reg__X regP__X vX Q [ R R__dec (f__Rbal&polyf__Rbal&bounds_f__Rbal&mono_f__Rbal) R__spec].
+  intros X reg__X regP__X vX Q [ R R__dec [p ? ? bounds_f__Rbal mono_f__Rbal]].
   destruct R__dec as (t__R&[d__R [comp_d__R] spec_d__R]&poly_t__R&mono_t__R).
   pose (f x := fun c => d__R (x,c)).
   assert (computableTime' f (fun x _ => (1,fun c _ => (t__R (size (enc (x, c))) + 3,tt))));cbn [timeComplexity] in *.
   {intros. subst f. extract. solverec. }
-  specialize inOPoly_computable with (1:=polyf__Rbal) as (f__Rbal'&tf__Rbal'&[]&polyf__Rbal'&leq_f__Rbal'&?&?&?).
+  specialize inOPoly_computable with (1:=bounds_f__Rbal) as (f__Rbal'&tf__Rbal'&[]&polyf__Rbal'&leq_f__Rbal'&?&?&?).
   specialize inOPoly_computable with (1:=poly_t__R) as (t__R'&tt__R'&[]&poly_t__R'&leq_t__R'&?&?&?).
   pose (g:= fun x => (lam (trueOrDiverge (extT f (enc x) 0)),f__Rbal' (size (enc x)),t__R' (size (enc x) + f__Rbal' (size (enc x))+4)+9)).
   apply reducesPolyMO_intro with (f:= g);cbn [fst snd]. 
@@ -46,7 +46,6 @@ Proof.
     *smpl_inO.
   -intros x x__valid. remember (g x) as x0 eqn:eqx0. destruct x0 as ((t0,maxSize0),steps0).
    unfold g in eqx0. injection eqx0. intros Hx0 Hsize0 Hsteps0. clear eqx0.
-   specialize (R__spec _ x__valid).
    cbn [GenNPHalt restrictBy fst snd].
    unfold HaltsOrDiverges,GenNPHalt'.
    evar (c0 : nat).
@@ -71,17 +70,17 @@ Proof.
     edestruct evalIn_unique with (1:=Ht) as [eqk _].
     {clear Ht. eapply evalIn_trans. exact Ht0. split. apply trueOrDiverge_true. Lproc. }
     subst k steps0. rewrite lt__j. unfold c0 in *. subst maxSize0. nia.
-   +rewrite R__spec. split.
-    *intros (c&H'). specialize (spec_d__R (x,c) x__valid). cbn [fst snd] in *.
+   +split.
+    *intros (c&?&H')%polyCertRel_complete. specialize (spec_d__R (x,c) x__valid). cbn [fst snd] in *.
      exists c. split. 
-     --rewrite bounds_f__Rbal. 2:eassumption. subst;easy.
+     --subst maxSize0. rewrite <- leq_f__Rbal'. easy.
      --exists I.
-       unshelve eassert (Hc'' := Ht0 _ _). 2:{rewrite bounds_f__Rbal. 2:easy. subst maxSize0. now apply leq_f__Rbal'. }
+       unshelve eassert (Hc'' := Ht0 _ _). 2:{subst maxSize0. rewrite <- leq_f__Rbal'. easy. }
        eapply le_evalLe_proper. 2,3:reflexivity.
        2:{Lsimpl. unfold f. rewrite (proj1 spec_d__R). 2:easy. Lsimpl. }
        subst steps0 c0. cbn beta. ring_simplify. subst maxSize0. nia.
-    *intros (c&size__c&?&R').    
-     exists c. specialize (spec_d__R (x,c)). cbn in spec_d__R. rewrite spec_d__R. 2:easy. 
+    *intros (c&size__c&?&R'). eapply polyCertRel_sound.
+     specialize (spec_d__R (x,c)); cbn in spec_d__R. rewrite spec_d__R.
      eapply trueOrDiverge_eval with (t:=x0).
      eapply equiv_eval_proper. 2:reflexivity.
      {unfold f in Ht0. specialize (Ht0 _ size__c). apply redLe_star_subrelation in  Ht0.  rewrite <- Ht0.

@@ -11,49 +11,68 @@ From Undecidability.L Require Export Functions.Decoding.
 
 Section NP_certificate_fix.
   Variable X Y : Type.
+
+  Definition curryRestrRel vX (R : {x : X | vX x} -> Y -> Prop) : restrictedP (fun '(x,_) => vX x) :=
+  (fun '(exist _ (x,y) Hx) => (R (exist vX x Hx) y)).
+  
   Context `{Reg__X : registered X}.
   Context `{RegY : registered Y}.
-
-  Implicit Type R : X -> Y -> Prop.
-
-
-  Definition polyBalanced R :Prop :=
-    exists f, inOPoly f /\ (forall x y, R x y -> size (enc y) <= f (size (enc x))) /\ monotonic f.
 
   Definition inTimePoly {X} `{registered X} `(P:restrictedP vX):=
     exists f, decInTime P f /\ inOPoly f /\ monotonic f.
 
+  Local Set Warnings "-cannot-define-projection".
+  
+  Record polyCertRel {vX : X -> Prop} (P:restrictedP vX) (R: {x | vX x} -> Y -> Prop) :Prop :=
+    polyBoundedWitness_introSpec
+      {
+        p : nat -> nat;
+        polyCertRel_sound : forall x y, R x y -> P x;
+        polyCertRel_complete : forall x, P x -> exists (y:Y), R x y /\ size (enc y) <= p (size (enc (proj1_sig x)));
+        poly__p : inOPoly p ;
+        mono__p : monotonic p;
+      }.
 
+  Lemma polyCertRel_equiv {vX : X -> Prop} (P P' : restrictedP vX) R :
+    (forall x, P x <-> P' x)
+    -> polyCertRel P R <-> polyCertRel P' R.
+  Proof.
+    intros H. split;intros[].
+    all:eexists;try eassumption.
+    1,2:setoid_rewrite <- H.
+    3,4:setoid_rewrite H. all:easy.
+  Qed.
+  
 End NP_certificate_fix.
 
 Local Set Warnings "-cannot-define-projection".
 Record inNP {X} `{registered X} `(P:restrictedP (X:=X) vX) : Prop :=
   inNP_introSpec
     {
-      (*Y : Type;
-    reg__Y : registered Y;*)
-      R : X -> term -> Prop; (* fixed to term for simplicity *)
-      poly__R : inTimePoly (vX:= fun '(x,_) => vX x) (fun '(exist _ (x,y) Hx) => (R x y));
-      bal__R : polyBalanced R; (*TODO: What if moved to spec__R(better: move condition externally)? and only require that some small certificate satisfies condition? It seems that we might want that every certificate is valid, but there must exist a small one? *)
-      spec__R : forall x Hx, P (exist _ x Hx) <-> exists y, R x y
+      R : {x | vX x} -> term -> Prop; (* certificate fixed to term for simplicity *)
+      poly__R : inTimePoly (curryRestrRel R);
+      R__correct : polyCertRel P R; (*TODO: What if moved to spec__R(better: move condition externally)? and only require that some small certificate satisfies condition? It seems that we might want that every certificate is valid, but there must exist a small one? *)
     }.
 
 
-Lemma inNP_intro {X Y} `{_:registered X} `{registered Y} {_:decodable Y} `(P:@restrictedP X vX) (R:X -> Y -> Prop):
+
+Arguments curryRestrRel {_ _ _} R !x.
+
+Lemma inNP_intro {X Y} `{_:registered X} `{registered Y} {_:decodable Y} `(P:@restrictedP X vX) (R : _ -> Y -> Prop):
   polyTimeComputable (decode Y)
-  -> inTimePoly (vX:= fun '(x,_) => vX x) (fun '(exist _ (x,y) Hx) => (R x y))
-  -> polyBalanced R
-  ->  (forall x Hx, P (exist _ x Hx) <-> exists y, R x y)
+  -> inTimePoly (curryRestrRel R)
+  -> polyCertRel P R
   -> inNP P.
-Proof.
-  intros decode__comp poly_R bal_R spec_R.
+Proof. cbn.
+  intros decode__comp poly_R bal_R.
   eexists (fun x y => exists y', y = enc y' /\ R x y').
-  3:{ intros. rewrite spec_R. split;[intros (?&?)|intros (?&?&->&?)].
-      all:repeat eexists. all:try eassumption. }
-  2:{ destruct bal_R as (f&?&Hf&?). exists (fun x => f x * 11).
-      all:repeat split.
-      1,3:now smpl_inO.
-      -intros ? ? (?&->&?). rewrite size_term_enc. rewrite Hf. 2:eassumption. cbn. reflexivity.
+  2:{ destruct bal_R as [? ? ? ? ?].
+      exists (fun x => p x * 11).
+      3,4:now smpl_inO.
+      -intros x y' (y&->&Hy). eauto.
+      -intros x ?. edestruct polyCertRel_complete as (y&?&?). easy.
+       exists (enc y);split. easy.
+       rewrite size_term_enc. lia.
   }
   { destruct poly_R as (t__f&[f [] ?]&?&mono_t__f).
     destruct decode__comp as [? [] ? ? ?].
@@ -80,10 +99,10 @@ Proof.
        unfold t__f'. lia.
      +unfold f'. intros [x] Hx. cbn.
       destruct decode  as [y| ] eqn:H'.
-      *etransitivity. 2:eapply decInTime_correct. 2:eauto.
+      *etransitivity. 2:unshelve eapply decInTime_correct;easy. cbn.
        eapply decode_correct2 in H'. symmetry in H'.
        split;[intros (y'&?&?)|intros ?].
-       --enough (y = y') by congruence. eapply inj_enc. congruence.
+       --cbn. enough (y = y') by congruence. eapply inj_enc. congruence.
        --eauto.
       *split.  2:eauto.
        intros (?&->&?). rewrite decode_correct in H'.  easy.
@@ -96,28 +115,39 @@ Qed.
 
 Generalizable Variable vY.
 Record reducesPolyMO X Y `{registered X} `{registered Y} `(P : restrictedP vX) `(Q : restrictedP vY) :Prop :=
-  reducesPolyMO_intro {
+  reducesPolyMO_introSpec {
       f : X -> Y;
       f__comp : polyTimeComputable f;
-      f__correct : (forall x (Hx : vX x), {Hy : vY (f x) & (P (exist _ x Hx)) <-> (Q (exist _ (f x) Hy))})
+      f__condition : forall x, vX x -> vY (f x);
+      f__correct : forall x Hx,  P (exist vX x Hx) <-> Q (exist vY (f x) (f__condition Hx))
     }.
 
 Notation "P ⪯p Q" := (reducesPolyMO P Q) (at level 50).
 
-(*
-Lemma reducesPolyMO_intro X Y `{RX: registered X} `{RY:registered Y} `(P : restrictedP vX) `(Q : restrictedP vY) f:
+
+Lemma reducesPolyMO_intro X Y `{RX: registered X} `{RY:registered Y} `(P : restrictedP vX) `(Q : restrictedP vY) (f:X -> Y):
   polyTimeComputable f
-  -> (forall x (Hx : vX x), {Hy : vY (f x) & (P (exist _ x Hx)) <-> (Q (exist _ (f x) Hy))})
+  -> (forall x (Hx : vX x), {Hy : vY (f x) | (P (exist vX x Hx)) <-> (Q (exist vY (f x) Hy))})
   -> P ⪯p Q.
 Proof.
-  intros H H'. econstructor. eassumption. all:intros ? ?. all:try now eapply H'.
-Qed. *)
+  intros H H'. econstructor. eassumption. all:intros ? ?. apply (proj2_sig (H' _ Hx)).
+Qed.
+
+Lemma reducesPolyMO_elimCompact X Y `{RX: registered X} `{RY:registered Y} `(P : restrictedP vX) `(Q : restrictedP vY):
+  P ⪯p Q ->
+  exists f, polyTimeComputable f
+  /\ (forall x (Hx : vX x), {Hy : vY (f x) | (P (exist vX x Hx)) <-> (Q (exist vY (f x) Hy))}).
+Proof.
+  intros [f ? ? ?]. eexists;split. easy.
+  intros. eexists. easy.
+Qed.
 
 Lemma reducesPolyMO_restriction_antimonotone X `{R :registered X} {vP} (P:restrictedP vP) {vQ} (Q:restrictedP vQ):
-  (forall (x : X) HvP, {HvQ : vQ x & P (exist vP x HvP) <-> Q (exist vQ x HvQ)})
+  (forall x Hx, {Hy | P (exist vP x Hx) <-> Q (exist vQ x Hy)})
   -> P ⪯p Q.
 Proof.
-  exists (fun x => x). 2:now eauto. 
+  intros f . 
+  eapply reducesPolyMO_intro with (f := fun x => x). 2:easy.  
   exists (fun _ => 1).
   -constructor. extract. solverec.
   -smpl_inO.
@@ -127,19 +157,17 @@ Qed.
 
 Lemma reducesPolyMO_reflexive X {regX : registered X} `(P : restrictedP vX) : P ⪯p P.
 Proof.
-  eapply reducesPolyMO_restriction_antimonotone. esplit. reflexivity. 
+  eapply reducesPolyMO_restriction_antimonotone. intros ? H. exists H. reflexivity. 
 Qed.
 
 Lemma reducesPolyMO_transitive X Y Z {vX vY vZ} {regX : registered X} {regY : registered Y} {regZ : registered Z} (P : restrictedP (X:=X)vX) (Q : restrictedP (X:=Y)vY) (R : restrictedP (X:=Z)vZ) :
   P ⪯p Q -> Q ⪯p R -> P ⪯p R.
 Proof.
-  intros [f Cf Hf] [g Cg Hg].
-  exists (fun x =>g (f x)).
-  2:{intros ? ?;clear - Hf Hg.
-     edestruct Hf as (Hfx&Hf').
-     edestruct Hg as (Hgfx&Hg'). eexists. rewrite Hf',Hg'. reflexivity.
+  intros [f Cf Hf Hf'] [g Cg Hg Hg'].
+  eapply reducesPolyMO_intro with (f:= fun x =>g (f x)).
+  2:{intros ?. eexists. now rewrite Hf',Hg'. 
   }
-  clear Hf Hg.
+  clear dependent Hf. clear dependent Hg.
   destruct Cf as [t__f [] ? f__mono (sizef&H__sizef&?&?)], Cg as [t__g [] ? g__mono (size__g&?&?&?)].
   exists (fun x => t__f x + t__g (sizef x) + 1).
   -split. extract. solverec.
@@ -157,11 +185,10 @@ Qed.
 Lemma red_inNP X Y `{regX : registered X} `{regY : registered Y} `(P : restrictedP (X:=X) vX) `(Q : restrictedP (X:=Y) vY) :
   P ⪯p Q -> inNP Q -> inNP P.
 Proof.
-  intros [f Cf Hf] [R polyR bal specR].
-
-  eexists (*_ _*) (fun x z => R (f x) z).
+  intros [f Cf Hf] [R polyR certR]. 
+  unshelve eexists (fun '(exist _ x Hx) z => R (exist vY _ _) z). 1,2:easy. 
   -destruct Cf as [? [] ? ? (fs&H__fs&?&mono__fs)].
-   destruct polyR as (f'__t&[f' [comp__f'] H__f']&?&mono_f'__t).
+   destruct polyR as (f'__t&[f' [comp__f'] H__f']&?&mono_f'__t). 
    eexists (fun n => polyTimeC__t n + f'__t (fs n + n) + 7). split.
    +exists (fun '(x,z)=> f' (f x,z)).
     split.
@@ -172,21 +199,18 @@ Proof.
      erewrite mono_f'__t with (x':=_). reflexivity.
      rewrite H__fs.
      rewrite mono__fs with (x':=(size (enc a) + size (enc b) + 4)). all:Lia.nia.
-    *intros [x c] Hx. destruct (Hf _ Hx) as [Hfx _]. apply H__f' with (x:=(f x,c)). easy. 
+    *intros [x c] Hx. specialize (H__f' (f x,c) (Hf _ Hx)). now cbn in *.  
    +split.
     all:smpl_inO.
     { eapply inOPoly_comp. all:smpl_inO. }
-  -destruct bal as (f__bal&poly_f__bal&Hf__bal&Hf__mono).
-   destruct Cf as [? ? ? ? (fs&H__fs&?&mono__fs)].
-   exists (fun x =>  f__bal (fs x));split;[|split].
-   +eapply inOPoly_comp.  all:eassumption.
-   +intros ? ? H'. specialize Hf__bal with (1:=H').
-    rewrite Hf__bal.
-    hnf in Hf__mono.
-    rewrite Hf__mono. 2:eapply H__fs. reflexivity.
-   +eapply monotonic_comp. all:eassumption.
-  -intros x Hx.
-   specialize (Hf _ Hx) as (?&Hf). rewrite Hf. apply specR. 
+  -destruct certR as [? ? ? ? ?].
+   destruct Cf as [? ? ? ? (fs&H__fs&?&mono__fs)]. cbn.
+   exists (fun x =>  p (fs x)). 
+   +intros [] ? ?%polyCertRel_sound0;cbn. now apply f__correct.
+   +intros [] Hx;cbn. apply f__correct in Hx. edestruct polyCertRel_complete as (?&?&?). eauto. eexists;split. easy.
+    rewrite H1. cbn. apply mono__p. apply H__fs.
+   +now apply inOPoly_comp.
+   +smpl_inO.
 Qed.
 
 

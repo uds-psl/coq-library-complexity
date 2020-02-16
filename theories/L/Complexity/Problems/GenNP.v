@@ -10,14 +10,14 @@ Definition GenNP : term*nat*nat -> Prop:=
 
 Lemma NPhard_GenNP : NPhard (unrestrictedP GenNP).
 Proof.
-  intros X reg__X regP__X vX Q [R R__dec (f__Rbal&polyf__Rbal&bounds_f__Rbal&mono_f__Rbal) R__spec]. 
-  destruct R__dec as (t__R&[d__R [comp_d__R] spec_d__R]&poly_t__R&mono_t__R).
+  intros X reg__X regP__X vX Q [R R__comp [p Rsound Rcomplete p__poly p__mono]]. 
+  destruct R__comp as (t__R&[d__R [comp_d__R] spec_d__R]&poly_t__R&mono_t__R).
   pose (f x := fun c => d__R (x,c)).
   assert (computableTime' f (fun x _ => (1,fun c _ => (t__R (size (enc (x, c))) + 3,tt))));cbn [timeComplexity] in *.
   {intros. subst f. extract. solverec. }
-  specialize inOPoly_computable with (1:=polyf__Rbal) as (f__Rbal'&tf__Rbal'&[]&polyf__Rbal'&leq_f__Rbal'&?&?&?).
+  specialize inOPoly_computable with (1:=p__poly) as (f__Rbal'&tf__Rbal'&[]&polyf__Rbal'&leq_f__Rbal'&?&?&?).
   specialize inOPoly_computable with (1:=poly_t__R) as (t__R'&tt__R'&[]&poly_t__R'&leq_t__R'&?&?&?).
-  exists (fun x => (lam (extT f (enc x) 0),f__Rbal' (size (enc x)),t__R' (size (enc x) + f__Rbal' (size (enc x))+4)+5));cbn [fst snd GenNP]. 
+  eapply reducesPolyMO_intro with  (f := fun x => (lam (extT f (enc x) 0),f__Rbal' (size (enc x)),t__R' (size (enc x) + f__Rbal' (size (enc x))+4)+5));cbn [fst snd GenNP]. 
   -evar (f':nat -> nat). [f']:refine (fun x => _).
    eexists (fun x => f' x). 
    +split. extract.
@@ -31,32 +31,28 @@ Proof.
      generalize (size (enc x)). intros. reflexivity.
     *smpl_inO. all:eapply inOPoly_comp. all:smpl_inO.
     *smpl_inO.
-  -cbn [unrestrictedP]. intros x ?. exists Logic.I. 
-   rewrite R__spec. split.
-   +intros (c&H'). cbn - [GenNP]. specialize (spec_d__R (x,c) Hx). cbn beta iota in spec_d__R. apply ssreflect.iffLR with (2:=H') in spec_d__R. 
+  -cbn [unrestrictedP]. intros x ?. exists Logic.I. split.
+   +intros (c&HR & Hle)%Rcomplete. cbn - [GenNP].
+    specialize (spec_d__R (x,c) Hx). apply ssreflect.iffLR with (2:=HR) in spec_d__R. 
     unfold GenNP;cbn [snd].
     split. now Lproc.
     exists c. repeat split.
-    *rewrite bounds_f__Rbal. 2:eassumption. easy.
-    *eapply le_redLe_proper. 2,3:reflexivity.
-     2:{eapply redLe_trans_eq.
-     2:now Lsimpl.
-     2:{unfold f. rewrite spec_d__R. reflexivity. }
-     cbn [fst snd]. reflexivity. }
-     ring_simplify.
-     rewrite <- leq_t__R'. cbn.
+    *now etransitivity;eauto.
+    *eapply redLe_mono.
+     {Lsimpl. unfold f. now rewrite spec_d__R. }
+     cbn [fst snd]. ring_simplify. 
+     rewrite <- leq_t__R'.
      rewrite size_prod. cbn [fst snd].
      hnf in mono_t__R;rewrite mono_t__R. reflexivity.
-     rewrite bounds_f__Rbal. 2:eassumption.
-     rewrite leq_f__Rbal'. reflexivity.
+     rewrite Hle,leq_f__Rbal'. reflexivity.
     *Lproc.
    +unfold GenNP.
-    intros (?&c&size__c&R').
-    exists c. specialize (spec_d__R (x,c) Hx). cbn in spec_d__R. rewrite spec_d__R. 
+    intros (?&c&size__c&R'). eapply Rsound.
+    specialize (spec_d__R (x,c) Hx). cbn in spec_d__R. rewrite spec_d__R. 
     eapply inj_enc.
     eapply unique_normal_forms. 1,2:now Lproc.
     eapply evalLe_eval_subrelation, eval_star_subrelation in R'.
-    rewrite <- R'. fold (f x (enc c)). symmetry. eapply star_equiv_subrelation. clear R'.
+    rewrite <- R'. symmetry. eapply star_equiv_subrelation. clear R'.
     change (extT f) with (ext f). Lsimpl.
 Qed.
 
@@ -64,25 +60,19 @@ From Undecidability.L.Functions Require Import Proc.
 From Undecidability.L.AbstractMachines.Computable Require Import EvalForTimeBool.
 Import EvalForTime LargestVar.
 
+(** * The hardness proof of GewnNPHalt is prettier *)
 Lemma inNP_GenNP : inNP (unrestrictedP GenNP).
 Proof.
-  eexists (fun x (c:term) => exists (s':term) (maxSize steps :nat), 
+  eexists (fun '(exist _ x _) (c:term) => exists (s':term) (maxSize steps :nat), 
                x = (s',maxSize,steps) /\ proc s' /\ size (enc c) <= maxSize 
                /\ s' (enc c) ⇓(<=steps) (enc true)).
-  3:{ intros ((?,?),?) []. cbn. split.
-      -intros [? (?&?&?)]. eauto 10. 
-      -intros (?&?&?&?&[= <- <- <-]&?&?&?). eauto 10. }
-  2:{ exists (fun x => x). repeat split. 1,3:smpl_inO.
-      intros ? ? (?&?&?&->&?&->&?).
-      repeat setoid_rewrite size_prod. cbn [fst snd].
-      rewrite <- !size_nat_enc_r. lia. }
-  1:{
+  {
     evar (f__t : nat -> nat). [f__t]:intro n.
     eexists f__t. repeat eapply conj.
     eexists (fun '((s',maxSize,steps),c) =>
                if closedb s' && lambdab s' && (size (enc c) <=? maxSize)
                then
-                   evalForTimeBool true (N.of_nat steps) (s' (enc c))
+                 evalForTimeBool true (N.of_nat steps) (s' (enc c))
                else false). split.
     -extract. intros [[[s' maxSize] steps] c].
      remember (size (enc (s', maxSize, steps, c))) as n.
@@ -120,13 +110,18 @@ Proof.
      eapply ssrbool.equivP. eapply evalForTimeBool_spec.
      rewrite  !Nnat.Nat2N.id.
      split.
-     +intuition eauto 10.
+     +cbn. intuition eauto 10. 
      +intros (?&?&?&[= -> -> ->]&?). intuition eauto 10. Lproc.
     -unfold f__t.
      smpl_inO.
     -unfold f__t.
      smpl_inO.
   }
+  eexists (fun x => x). 3,4:smpl_inO.
+  all:intros [((?,?),?)]. all:cbn.
+  -intros ? (?&?&?&[= <- <- <-]&?&?&?). eauto 10.
+  -intros (?&?&?&?). eexists.  split. eauto 10.  repeat setoid_rewrite size_prod. cbn [fst snd].
+   rewrite <- !size_nat_enc_r. lia. 
 Qed.
 
 Lemma GenNP_complete :
