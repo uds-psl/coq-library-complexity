@@ -305,6 +305,7 @@ L/Complexity/AbstractTimeHierarchyTheorem.v
 L/Complexity/TimeHierarchyTheorem.v
 L/Complexity/Monotonic.v
 L/Complexity/ONotation.v
+L/Complexity/ONotationIsAppropriate.v
 L/Complexity/RegisteredP.v
 L/Complexity/LinTimeDecodable.v
 L/Complexity/NP.v
