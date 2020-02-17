@@ -1,11 +1,7 @@
 From Undecidability.L Require Import L Tactics.LTactics.
 From Undecidability.L.Datatypes Require Import LSum LBool LNat Lists.
 
-From Undecidability.L.AbstractMachines Require Import Programs.
-
-Require Import Undecidability.L.AbstractMachines.LargestVar.
-
-From Undecidability.L.AbstractMachines.Computable Require Import Shared.
+From Undecidability.L.AbstractMachines  Require Import FlatPro.Programs Computable.LPro.
 
 Definition time_decompile :=
   fix f (l:nat) (P:list Tok) A :=

@@ -42,6 +42,8 @@ Section NP_certificate_fix.
     1,2:setoid_rewrite <- H.
     3,4:setoid_rewrite H. all:easy.
   Qed.
+
+  (*TODO: here and below, specify the lemmas using restrictBy, as this is main intend in use. *)
   
 End NP_certificate_fix.
 

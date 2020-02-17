@@ -1,8 +1,8 @@
 (** * Semantics of the Heap Machine *)
 
-From Undecidability Require Import TM.Prelim TM.Relations.
+Require Import PslBase.Base.
 Require Import FunInd.
-From Undecidability Require Export L.AbstractMachines.Programs.
+From Undecidability.L Require Export Prelim.ARS Prelim.MoreBase AbstractMachines.FlatPro.Programs.
 
 Definition HAdd : Type := nat.
 Definition HClos : Type := HAdd * Pro.
@@ -201,7 +201,43 @@ Section Semantics.
     halt_state s -> steps_k k s s' -> s' = s /\ k = 0.
   Proof.
     intros HHalt HSteps. hnf in HHalt.
-    destruct HSteps; auto. now specialize (HHalt _ H).
+    destruct k;destruct HSteps; auto. destruct H. now specialize (HHalt _ H).
   Qed.
  
 End Semantics.
+
+Definition largestVarC : HClos -> nat := (fun '(_,P) => largestVarP P).
+
+Definition largestVarCs (T:list HClos) :=
+  maxl (map largestVarC T).
+
+Definition largestVarHE (h:HEntr) :=
+  match h with
+    None => 0
+  | Some (c,_) => largestVarC c
+  end.
+
+Definition largestVarH (H:list HEntr) :=
+  maxl (map largestVarHE H).
+
+(*
+Definition sizeC g :=
+  match g with
+    (s,a) => size s + a 
+  end.
+
+Definition sizeT t :=
+  match t with
+    appT => 1
+  | closT g => sizeC g
+  end.
+
+Definition sizeHE e :=
+  match e with
+    heapEntryC g b => sizeC g + b
+  end.
+Definition sizeH H :=
+  sumn (map sizeHE H).
+
+Definition sizeSt '(T,V,H) := sumn (map sizeC T) + sumn (map sizeC V) + sizeH H.
+*)

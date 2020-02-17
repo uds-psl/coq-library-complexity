@@ -315,8 +315,6 @@ L/Complexity/Problems/GenNPHalt.v
 L/Complexity/Reductions/TMGenNP/LToTMGenNP.v
 L/Complexity/Reductions/TMGenNP/IntermediateProblems.v
 
-L/AbstractMachines/Programs.v
-L/AbstractMachines/ProgramsDef.v
 L/AbstractMachines/AbstractSubstMachine.v
 L/AbstractMachines/AbstractHeapMachine.v
 L/AbstractMachines/AbstractHeapMachineDef.v
@@ -327,13 +325,20 @@ L/AbstractMachines/UnfoldTailRec.v
 L/AbstractMachines/Computable/Shared.v
 L/AbstractMachines/Computable/HeapMachine.v
 L/AbstractMachines/Computable/SubstMachine.v
-L/AbstractMachines/Computable/Decompile.v
 L/AbstractMachines/Computable/Unfolding.v
 L/AbstractMachines/Computable/Lookup.v
 L/AbstractMachines/Computable/UnivDecTime.v
 L/AbstractMachines/Computable/LargestVar.v
 L/AbstractMachines/Computable/EvalForTime.v
 L/AbstractMachines/Computable/EvalForTimeBool.v
+L/AbstractMachines/FlatPro/Computable/Decompile.v
+#L/AbstractMachines/FlatPro/Computable/JumpTarget.v
+#L/AbstractMachines/FlatPro/Computable/HeapStep.v
+L/AbstractMachines/FlatPro/Computable/LPro.v
+L/AbstractMachines/FlatPro/Programs.v
+L/AbstractMachines/FlatPro/ProgramsDef.v
+L/AbstractMachines/FlatPro/LM_heap_def.v
+L/AbstractMachines/FlatPro/LM_heap_correct.v
 
 L/Computability/Acceptability.v
 #L/Computability/AD.v
@@ -355,8 +360,6 @@ L/Computability/Synthetic.v
 #Reduction L to TM with abstract Heap Machine
 LAM/BaseExtension.v
 LAM/Prelims.v
-LAM/LM_heap_def.v
-LAM/LM_heap_correct.v
 # Abstract Machine simulator
 LAM/TM/SizeAnalysis.v
 LAM/TM/Alphabets.v

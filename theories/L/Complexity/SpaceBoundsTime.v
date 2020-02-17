@@ -1,4 +1,4 @@
-From Undecidability.L Require Import L Complexity.ResourceMeasures AbstractMachines.Programs.
+From Undecidability.L Require Import L Complexity.ResourceMeasures AbstractMachines.FlatPro.Programs.
 Require Import PslBase.Lists.BaseLists.
 
 Fixpoint L_Pro n {struct n}: list Pro :=

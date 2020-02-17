@@ -38,6 +38,14 @@ Proof.
   rewrite correct. reflexivity.
 Qed.
 
+Lemma decInTime_restriction_antimono_restrictBy X `{R :registered X} (vX vX' P : X -> Prop) (fT : nat -> nat):
+  (forall x, vX' x -> vX x)
+  -> decInTime (restrictBy vX  P) fT
+  -> decInTime (restrictBy vX' P) fT.
+Proof.
+  intros ?. apply decInTime_restriction_antimono. easy. cbn. easy.
+Qed.
+
 Definition inTimeO {X} `{R :registered X} `(P:restrictedP vX) f :=
   exists f', decInTime P f' /\ f' ∈O f.
 

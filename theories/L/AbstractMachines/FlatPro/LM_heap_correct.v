@@ -1,6 +1,7 @@
 From Undecidability.L Require Import L Seval Complexity.ResourceMeasures.
 From Undecidability.LAM Require Import Prelims.
-From Undecidability.LAM Require Import LM_heap_def.
+From Undecidability.L Require Import LM_heap_def.
+
 (** ** Direct correctness proof  *)
 
 (** *** Definition compile/representation *)

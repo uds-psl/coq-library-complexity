@@ -26,25 +26,34 @@ Check NPhard_GenNP.
 
 (** Have: Implementation of Heap-based machine (Not step-indexed) *)
 
-From Undecidability.LAM  Require LM_heap_def LM_heap_correct.
-From Undecidability.L Require AbstractMachines.Computable.Shared.
+From Undecidability.L.AbstractMachines.FlatPro Require LM_heap_def LM_heap_correct LPro Decompile.
 Section LMGenNPHalt.
-  Import LM_heap_def LM_heap_correct.
+  Import LM_heap_def LM_heap_correct LBool.
 
-  Definition initLMGen s c : (list (nat*list Tok)*list (nat*list Tok)*list (option ((nat * list Tok) * nat))):= ([(0,s)],[(0,c)],[]).
+  Definition initLMGen s c : (list (nat*list Tok)*list (nat*list Tok)*list (option ((nat * list Tok) * nat)))
+    := ([(0,s)],[(0,c)],[]).
+  
   Definition LMGenNPHalt' : list Tok*nat*nat -> Prop :=
-    fun '(s, maxSize, steps (*in unary*)) =>
-      exists (c:list Tok), size (enc c) <= maxSize /\ halts_k (initLMGen s c) steps.
+    fun '(P, maxSize, steps (*in unary*)) =>
+      exists (Q:list Tok), size (enc Q) <= maxSize /\ halts_k (initLMGen P Q) steps.
 
   Definition LMHaltsOrDiverges : list Tok*nat*nat -> Prop :=
-    fun '(s, maxSize, steps (*in unary*)) =>
-      exists c, size (enc c) <= maxSize -> forall k, halts_k (initLMGen s c) k -> k <= steps.
+    fun '(P, maxSize, steps (*in unary*)) =>
+      exists s, size (enc (compile s)) <= maxSize -> forall k, halts_k (initLMGen P (compile s)) k -> k <= steps.
 
   Definition LMGenNPHalt := restrictBy LMHaltsOrDiverges LMGenNPHalt'.
-
+  
+  From Undecidability.L Require Import Functions.LoopSum.
+  
   Lemma polyRed_GenNPHalt_to_LMGenNPHalt :
     GenNPHalt ⪯p LMGenNPHalt.
   Proof.
+    (*)pose (f__s s c :=
+            match decompile 0 c [] with
+               inl _ => 
+              | inr _ => false
+            end
+         ). *)
     pose (f := (fun '(s, maxSize, steps) => ([appT],cnst 0,cnst 1)): (term * nat * nat) -> _);cbn beta in f.
     eapply reducesPolyMO_intro with (f:=f).
 

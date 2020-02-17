@@ -1,6 +1,6 @@
 From Undecidability Require Import TM.Prelim.
 From Undecidability Require Import TM.Code.Code.
-From Undecidability.LAM Require Import LM_heap_def.
+From Undecidability Require Import LM_heap_def.
 
 (** * Alphabets *)
 

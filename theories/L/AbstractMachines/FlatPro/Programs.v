@@ -1,6 +1,6 @@
 From Undecidability.L Require Import Prelim.MoreBase L AbstractMachines.LargestVar.
 Require Import Lia.
-Require Export Undecidability.L.AbstractMachines.ProgramsDef.
+Require Export Undecidability.L.AbstractMachines.FlatPro.ProgramsDef.
 
 (** * Abstract L machines *)
 

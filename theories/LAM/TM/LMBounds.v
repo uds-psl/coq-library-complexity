@@ -2,9 +2,9 @@
 
 From Undecidability Require Import TM.PrettyBounds.PrettyBounds.
 From Undecidability Require Import TM.PrettyBounds.BaseCode.
-From Undecidability Require Import TM.PrettyBounds.MaxList.
+From Undecidability Require Import LM_heap_def TM.PrettyBounds.MaxList.
 
-From Undecidability.LAM Require Import LM_heap_def TM.Alphabets.
+From Undecidability.LAM Require Import TM.Alphabets.
 From Undecidability.LAM.TM Require Import CaseCom.
 From Undecidability.LAM.TM Require Import JumpTargetTM.
 
