@@ -327,6 +327,7 @@ L/AbstractMachines/UnfoldTailRec.v
 L/AbstractMachines/Computable/Shared.v
 L/AbstractMachines/Computable/HeapMachine.v
 L/AbstractMachines/Computable/SubstMachine.v
+L/AbstractMachines/Computable/Decompile.v
 L/AbstractMachines/Computable/Unfolding.v
 L/AbstractMachines/Computable/Lookup.v
 L/AbstractMachines/Computable/UnivDecTime.v
