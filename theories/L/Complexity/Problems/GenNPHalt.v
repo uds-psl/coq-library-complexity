@@ -14,7 +14,7 @@ Section GenNPHalt.
 
   Definition HaltsOrDiverges : term*nat*nat -> Prop :=
     fun '(s, maxSize, steps (*in unary*)) =>
-      closed s /\ forall (c:X__cert), size (enc c) <= maxSize -> forall k, (exists t, s (enc c) ⇓(k) t) -> k <= steps.
+      proc s /\ forall (c:X__cert), size (enc c) <= maxSize -> forall k t, s (enc c) ⇓(k) t -> k <= steps.
 
   Definition GenNPHalt := restrictBy HaltsOrDiverges GenNPHalt'.
   
@@ -120,7 +120,7 @@ Proof.
     }
     split.
     +split. now subst t0;Lproc.
-     intros c H' k (t&Ht). specialize (Ht0 c H') as (kt0&lt__j&Ht0).
+     intros c H' k t Ht. specialize (Ht0 c H') as (kt0&lt__j&Ht0).
      unshelve eassert (eqb := trueOrDiverge_eval _).
      3:{
        eapply equiv_eval_proper. 

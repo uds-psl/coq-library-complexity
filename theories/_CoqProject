@@ -359,7 +359,6 @@ L/Computability/Synthetic.v
 
 #Reduction L to TM with abstract Heap Machine
 LAM/BaseExtension.v
-LAM/Prelims.v
 # Abstract Machine simulator
 LAM/TM/SizeAnalysis.v
 LAM/TM/Alphabets.v
