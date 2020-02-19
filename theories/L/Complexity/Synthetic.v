@@ -1,8 +1,5 @@
 From Undecidability.L Require Import Tactics.LTactics Prelim.MoreList Prelim.MoreBase Datatypes.LBinNums.
-From Undecidability.L.Complexity Require Export Monotonic ONotation.
-
-Inductive is_computable_time {A} {t : TT A} (a : A) fT : Prop :=
-  C : computableTime a fT -> is_computable_time a fT.
+From Undecidability.L.Complexity Require Export Monotonic ONotation LinTimeDecodable.
 
 Global Generalizable Variable vX.
 
@@ -17,14 +14,25 @@ Arguments restrictBy {_} _ _ !_.
 Definition unrestrictedP {X} (P:X->Prop) : restrictedP (fun _ => True) := restrictBy _ P.
 Arguments unrestrictedP X P !x.
 
-Local Set Warnings "-cannot-define-projection".
-Record decInTime {X} `{R :registered X} `(P : restrictedP vX) (fT : nat -> nat) :Prop :=
+Record decInTime {X} `{R :registered X} `(P : restrictedP vX) (fT : nat -> nat) :Type :=
   decInTime_intro
   {
-    decInTime_decP : X -> bool ;
-    decInTime_compIn : is_computable_time (t:=TyArr (TyB X) (TyB bool)) decInTime_decP (fun x _ => (fT (L.size (enc x)),tt)) ;
-    decInTime_correct : forall x (Hx : vX x), P (exist _ x Hx) <-> decInTime_decP x  = true
+    f__decInTime : X -> bool ;
+    compIn__decInTime : computableTime (ty:=TyArr (TyB X) (TyB bool)) f__decInTime (fun x _ => (fT (L.size (enc x)),tt)) ;
+    correct__decInTime : forall x (Hx : vX x), P (exist _ x Hx) <-> f__decInTime x  = true
   }.
+
+Hint Extern 1 (computableTime (f__decInTime _) _) => solve [unshelve (simple apply @compIn__decInTime)] :typeclass_instances.
+
+Lemma complete__decInTime {X} `{R :registered X} `(P : restrictedP vX) (fT : nat -> nat) (P__dec:decInTime P fT) :
+  forall x (Hx : vX x), P (exist _ x Hx) -> f__decInTime P__dec x  = true.
+  apply correct__decInTime.
+Qed.
+
+Lemma sound__decInTime {X} `{R :registered X} `(P : restrictedP vX) (fT : nat -> nat) (P__dec:decInTime P fT) :
+  forall x, f__decInTime P__dec (proj1_sig x)  = true -> P x.
+  intros []. apply correct__decInTime.
+Qed.
 
 
 Lemma decInTime_restriction_antimono X `{R :registered X} vP vQ (P : restrictedP vP) (Q:restrictedP vQ) (fT : nat -> nat) :
@@ -33,9 +41,8 @@ Lemma decInTime_restriction_antimono X `{R :registered X} vP vQ (P : restrictedP
   -> decInTime P fT
   -> decInTime Q fT.
 Proof.
-  intros Hv Hx [decO compIn correct]. eexists. eauto.
-  intros x HQ. rewrite <- Hx with (H__P:=Hv _ HQ).
-  rewrite correct. reflexivity.
+  intros Hv Hx dP. eexists. apply compIn__decInTime with (d:=dP).
+  intros x HQ. rewrite <- Hx with (H__P:=Hv _ HQ). apply correct__decInTime.
 Qed.
 
 Lemma decInTime_restriction_antimono_restrictBy X `{R :registered X} (vX vX' P : X -> Prop) (fT : nat -> nat):
@@ -47,12 +54,12 @@ Proof.
 Qed.
 
 Definition inTimeO {X} `{R :registered X} `(P:restrictedP vX) f :=
-  exists f', decInTime P f' /\ f' ∈O f.
+  exists f', inhabited (decInTime P f') /\ f' ∈O f.
 
 Notation "P ∈TimeO f" := (inTimeO P f) (at level 70).
 
 Definition inTimeo {X} `{R :registered X} `(P:restrictedP vX) f :=
-  exists f', decInTime P f' /\ f' ∈o f.
+  exists f', inhabited (decInTime P f') /\ f' ∈o f.
 
 Notation "P ∈Timeo f" := (inTimeo P f) (at level 70).
 
@@ -81,19 +88,20 @@ Definition timeConstructible_computableTime' f (H:timeConstructible f) :
 Definition timeConstructible_inO f (H:timeConstructible f) :
   projT1 H ∈O f := fst (projT2 H).
 
-
-Class computableInO {X Y} `{registered X} `{registered Y} (f:X -> Y) (g: nat -> nat) : Type:=
+(*
+Record computableInO {X Y} `{registered X} `{registered Y} (f:X -> Y) (g: nat -> nat) : Type:=
   {
-    fT_inO : nat -> nat;
-    compO : computableTime' f (fun x _ => (fT_inO (size (enc x)),tt));
-    lin_t__enc : fT_inO ∈O g;
-    mono_t__enc : monotonic fT_inO;
+    time__cIO :> nat -> nat;
+    compO : computableTime' f (fun x _ => (time__cIO (size (enc x)),tt));
+    lin_t__enc : time__cIO ∈O g;
+    mono_t__enc : monotonic time__cIO;
   }.
 
+Hint Extern 5 => simple apply @compO;[|eassumption] :typeclass_instances.
 Smpl Add (simple apply mono_t__enc) : monotonic.
 
-Lemma smpl_fT_inO X Y `{registered X} `{registered Y} (f: X -> Y) (g:nat -> nat) {H':computableInO f g} h:
-  g ∈O h -> (fT_inO ∈O h).
+Lemma smpl_fT_inO X Y `{registered X} `{registered Y} (f: X -> Y) (g:nat -> nat) {cf:computableInO f g} h:
+  g ∈O h -> (cf ∈O h).
 Proof.
   intros <-. apply lin_t__enc. 
 Qed.
@@ -102,35 +110,107 @@ Smpl Add simple eapply smpl_fT_inO : inO.
 
 
 
-Lemma smpl_inOPoly_fT_inO X Y `{registered X} `{registered Y} (f: X -> Y) (g:nat -> nat) {H':computableInO f g}:
-  inOPoly g -> inOPoly fT_inO.
+Lemma smpl_inOPoly_fT_inO X Y `{registered X} `{registered Y} (f: X -> Y) (g:nat -> nat) (cF :computableInO f g):
+  inOPoly g -> inOPoly (time__cIO cF).
 Proof.
   intros. now rewrite lin_t__enc.
-Qed.
+Qed. 
+
+Smpl Add 12 simple eapply smpl_inOPoly_fT_inO : inO.
+*)
+
+Record resSizePoly X Y `{registered X} `{registered Y} (f : X -> Y) : Type :=
+  {
+    resSize__rSP : nat -> nat;
+    bounds__rSP : forall x, size (enc (f x)) <= resSize__rSP (size (enc x));
+    poly__rSP : inOPoly resSize__rSP;
+    mono__rSP : monotonic resSize__rSP;
+  }.
+
+Smpl Add 10 (simple apply poly__rSP) : inO.
+Smpl Add 10 (simple apply mono__rSP) : inO.
+
+Record polyTimeComputable X Y `{registered X} `{registered Y} (f : X -> Y): Type :=
+  polyTimeComputable_intro
+  {
+    time__polyTC : nat -> nat;
+    comp__polyTC : computableTime' f (fun x _ => (time__polyTC (L.size (enc x)),tt));
+    poly__polyTC : inOPoly time__polyTC ;
+    mono__polyTC : monotonic time__polyTC;
+    resSize__polyTC :> resSizePoly f;
+  }.
+
+Hint Extern 1 (computableTime _ _) => unshelve (simple apply @comp__polyTC);eassumption :typeclass_instances.
+
+Smpl Add 10 (simple apply poly__polyTC) : inO.
+Smpl Add 10 (simple apply mono__polyTC) : inO.
+
 
 Lemma inOPoly_computable (f:nat -> nat):
-  inOPoly f -> exists (f':nat -> nat) f__T, is_computable_time (t:=TyArr _ _) f' (fun n _ => (f__T n,tt)) /\ inOPoly f__T /\ (forall x, f x <= f' x) /\ inOPoly f' /\ monotonic f' /\ monotonic f__T.
+  inOPoly f -> exists f':nat -> nat , inhabited (polyTimeComputable f') /\ (forall x, f x <= f' x) /\ inOPoly f' /\ monotonic f'.
 Proof.
   intros (i&Hf).
   eapply inO__bound in Hf as (c&Hf).
-  exists (fun n => c + c*n^i),(fun n => 19 * i * n + 11 * i * n ^ i + 19 * i + 11 * n ^ i * c + 30 * c + 29).
-  split;split. 3:split;[easy|repeat split].
-  1:{ extract. solverec. }
-  all:smpl_inO.
-  all: eexists i; easy.
+  exists (fun n => c + c*n^i). split.
+  -evar (time : nat -> nat). [time]:intros n0.
+   split. exists time.
+   {extract. solverec.
+    rewrite Nat.pow_le_mono_l. 2:now apply LNat.size_nat_enc_r.
+    rewrite (LNat.size_nat_enc_r x) at 1.
+    set (n0:= (size (enc x))). unfold time. reflexivity.
+   }
+   3:eexists.
+   3:{intros. rewrite (LNat.size_nat_enc) at 1. rewrite Nat.pow_le_mono_l. 2:now apply (LNat.size_nat_enc_r). set (size (enc x)). instantiate (1:= fun n0 => _). cbn beta;reflexivity.
+   }
+   all:unfold time;smpl_inO.
+   -repeat apply conj. easy. all:smpl_inO.
 Qed.
 
 
-Smpl Add 12 simple eapply smpl_inOPoly_fT_inO : inO.
+Lemma resSizePoly_compSize X Y `{registered X} `{registered Y} (f: X -> Y):
+  resSizePoly f -> exists H : resSizePoly f, inhabited (polyTimeComputable (resSize__rSP H)).
+Proof.
+  intros R__spec. destruct (inOPoly_computable (poly__rSP R__spec)) as (p'&[?]&Hbounds&?&?).
+  unshelve eexists.
+  exists p'.
+  2-5:now eauto using resSize__polyTC. intros. rewrite bounds__rSP. easy.
+Qed.
 
+Lemma polyTimeComputable_compTime X Y `{registered X} `{registered Y} (f: X -> Y):
+  polyTimeComputable f -> exists H : polyTimeComputable f, inhabited (polyTimeComputable (time__polyTC H)) /\ inhabited (polyTimeComputable (resSize__rSP H)).
+Proof.
+  intros R__spec. destruct (inOPoly_computable (poly__polyTC R__spec)) as (p'&[?]&Hbounds&?&?).
+  destruct (resSizePoly_compSize R__spec) as (?&[]).
+  unshelve eexists.
+  exists p'.
+  2-5:now eauto. eexists. eapply computesTime_timeLeq. 2:now apply extTCorrect.
+  intros ? ?;cbn. now rewrite Hbounds.
+Qed.
 
-Record polyTimeComputable X Y `{registered X} `{registered Y} (f : X -> Y): Prop :=
-  polyTimeComputable_intro
-  {
-    polyTimeC__t : nat -> nat;
-    polyTimeC__comp : is_computable_time (t:=TyArr _ _) f (fun x _ => (polyTimeC__t (L.size (enc x)),tt));
-    polyTimeC__polyTime : inOPoly polyTimeC__t ;
-    polyTimeC__mono : monotonic polyTimeC__t;
-    polyTimeC__polyRes : exists f', (forall x, size (enc (f x))
-                                             <= f' (size (enc x)) ) /\ inOPoly f' /\ monotonic f'
-  }.
+Import Functions.Decoding LTerm LOptions.
+Lemma linDec_polyTimeComputable  X `{_:linTimeDecodable X}: polyTimeComputable (decode X).
+Proof.
+  evar (time:nat -> nat). [time]:intro n.
+  exists time.
+  -eexists _. 
+   eapply computesTime_timeLeq.
+   2:now eapply comp_enc_lin.
+   intros x _;cbn [fst snd]. split.
+   2:easy.
+   rewrite size_term_enc_r. generalize (size (enc x)) as n;intros.
+   unfold time. reflexivity.
+  -unfold time. smpl_inO.
+  -unfold time. smpl_inO.
+  -{evar (resSize : nat -> nat). [resSize]:intro n.
+    exists resSize.
+    -intros t.
+     specialize (decode_correct2 (X:=X) (t:=t)) as H'.
+     destruct decode.
+     setoid_rewrite <- H'. 2:reflexivity.
+     *rewrite size_option,LTerm.size_term_enc_r.
+      generalize (size (enc (enc x))). unfold resSize. reflexivity.
+     *unfold enc at 1. cbn. unfold resSize. nia.
+    -unfold resSize. smpl_inO.
+    -unfold resSize. smpl_inO.
+   }
+Qed.

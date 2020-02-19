@@ -30,7 +30,8 @@ From Coq.QArith Require QArith Qabs Qround.
 Module smallo_equiv.
   Import QArith Qabs Qround ZArith.
   Close Scope nat_scope.
-  Definition inoR (f g : Q -> Q) := (forall ε, 0 < ε -> exists x0, forall x : Q, x0 <= x -> Qabs (f x) < ε * (Qabs (g x)))%Q.
+  Definition inoR (f g : Q -> Q) :=
+    (forall ε, 0 < ε -> exists x0, forall x : Q, x0 <= x -> Qabs (f x) < ε * (Qabs (g x)))%Q.
 
   Definition NtoQ x := inject_Z (Z.of_nat x).
   Definition QtoNceil x:= Z.to_nat (Qceiling (Qabs x)).

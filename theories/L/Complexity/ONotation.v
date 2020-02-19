@@ -19,16 +19,16 @@ Proof.
 Qed.
 
 
-Instance inO_pointwise_leq : Proper ( Basics.flip (pointwise_relation _ le)  ==> eq ==> Basics.impl) inO.
+Instance inO_pointwise_leq : Proper ( Basics.flip (pointwise_relation _ le)  ==>  (pointwise_relation _ le) ==> Basics.impl) inO.
 Proof.
-  intros ? ? R1 ? ? <- (c1&n1&H').
-  eexists c1,n1. hnf in R1. intros. rewrite R1,H'. all:easy.
+  intros ? ? R1 ? ? R2. unfold inO. hnf in R1,R2|-*.
+  setoid_rewrite R1. setoid_rewrite R2. easy. 
 Qed.
 
-Instance inO_pointwise_le : Proper ((pointwise_relation _ eq) ==> eq ==> Basics.impl) inO.
+Instance inO_pointwise_eq: Proper ((pointwise_relation _ eq) ==> (pointwise_relation _ eq) ==> iff) inO.
 Proof.
-  intros ? ? R1 ? ? <-. hnf in R1.
-  eapply inO_pointwise_leq. 2:easy. hnf. intros. rewrite R1. easy.
+  intros ? ? R1 ? ? R2. hnf in R1,R2.
+  unfold inO. setoid_rewrite R1. setoid_rewrite R2. easy.
 Qed.
 
 
@@ -197,6 +197,15 @@ Proof.
   rewrite Nat.pow_add_r. Lia.nia.
 Qed.
 
+Lemma inOPoly_pow f c: inOPoly f -> inOPoly (fun x => f x ^ c).
+Proof.
+  intros (n&H). exists (n*c).
+  destruct H as (n0 & n1&H).
+  eexists _, n1.
+  intros ? H'%H. rewrite Nat.pow_le_mono_l. 2:eassumption.
+  rewrite Nat.pow_mul_l,Nat.pow_mul_r. reflexivity.
+Qed.
+
 Lemma inOPoly_comp f1 f2: monotonic f1 -> inOPoly f1 -> inOPoly f2 -> inOPoly (fun x => f1 (f2 x)).
 Proof.
   intros ? (n1&?) (n2&?).
@@ -218,10 +227,22 @@ Proof.
   rewrite Nat.pow_mul_r. reflexivity.
 Qed.
 
-Smpl Add 10 (first [ simple eapply inOPoly_add | simple eapply inOPoly_mul | simple eapply inOPoly_c | simple eapply inOPoly_x | eassumption])  : inO.
+Smpl Add 10 (first [ simple eapply inOPoly_add | simple eapply inOPoly_mul | simple eapply inOPoly_c | simple eapply inOPoly_pow | simple eapply inOPoly_x | eassumption])  : inO.
 
 
 Instance inO_inOPoly_trans : Proper (Basics.flip inO ==> Basics.impl) inOPoly.
 Proof.
   intros ? ? ? [? R2]. unfold inOPoly. eexists. setoid_rewrite <- R2. easy.
+Qed.
+
+
+Instance inOPoly_pointwise_leq: Proper (Basics.flip (pointwise_relation _ le) ==> Basics.impl) inOPoly.
+Proof.
+  unfold inOPoly.
+  intros ? ? R1. hnf in |-*. setoid_rewrite R1. easy.
+Qed.
+
+Instance inOPoly_pointwise_eq: Proper ((pointwise_relation _ eq) ==> iff) inOPoly.
+Proof.
+  unfold inOPoly. intros ? ? R1. hnf. setoid_rewrite R1. easy.
 Qed.

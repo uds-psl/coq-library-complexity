@@ -43,7 +43,7 @@ Section TimeHierarchy_Parametric.
   
   Lemma L_A_notIn_f : ~ (unrestrictedP L__f) ∈Timeo f.
   Proof.
-    intros (t__o&[fdec [fdec__intT] Hf]&Ht__o).
+    intros (t__o&[[fdec fdec__intT Hf]]&Ht__o).
     specialize (Ht__o 1) as (n0&Hn0). setoid_rewrite Nat.mul_1_l in Hn0.
     pose (w:=(extT fdec,n0)).  unfold extracted in w.
 
@@ -266,9 +266,9 @@ Section TimeHierarchy_Parametric.
     unrestrictedP L__f ∈TimeO (fun n => t__E n (2*n) (f n)).
   Proof.
     (* intros H_t__E H_t__step. *)
-    eexists (fun n => fT n + t__E n (2*n) (f n) + n * 221 + 12). split.
+    eexists (fun n => fT n + t__E n (2*n) (f n) + n * 221 + 12). split. split.
     exists U_spec.
-    -split. eexists.
+    -eexists.
      eapply computesTime_timeLeq with (fT:= (fun w _ => (_,tt))).
      2:{ exact U_correct. }
      +intros [s padding] [].

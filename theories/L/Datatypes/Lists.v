@@ -319,6 +319,12 @@ Proof.
             end a)) with (enc a). solverec. 
 Qed.
 
+Lemma size_list_cons (X : Type) (H : registered X) x (l : list X):
+  size (enc (x::l)) = size (enc x) + size (enc l) + 5.
+Proof.
+  rewrite !size_list. cbn. lia.
+Qed.
+
 Lemma size_list_enc_r {X} `{registered X} (l:list X):
   length l <= size (enc l).
 Proof.
@@ -328,4 +334,24 @@ Qed.
 Instance term_repeat A `{registered A}: computableTime' (@repeat A) (fun _ _ => (5, fun n _ => (n * 12 + 4,tt))).
 Proof.
   extract. solverec.
+Qed.
+
+
+(*MOVE*)
+Definition lengthEq A :=
+  fix f (t:list A) n :=
+    match n,t with
+      0,nil => true
+    | (S n), _::t => f t n
+    | _,_ => false
+    end.
+Lemma lengthEq_spec A (t:list A) n:
+| t | =? n = lengthEq t n.
+Proof.
+  induction n in t|-*;destruct t;now cbn.
+Qed.
+Definition lengthEq_time k := k * 15 + 9.
+Instance term_lengthEq A `{registered A} : computableTime' (lengthEq (A:=A)) (fun l _ => (5, fun n _ => (lengthEq_time (min (length l) n),tt))).
+Proof.
+  extract. unfold lengthEq_time. solverec.
 Qed.

@@ -34,7 +34,7 @@ Proof.
   -destruct execFlat_poly as (f''&Hf''&polyf''&monof'').
    evar (f':nat -> nat). [f']:intro x.
    exists f'. repeat eapply conj.
-   { cbn. 
+   { split. cbn. 
      eexists (fun '((M,maxSize,steps),t) =>
                 if (sizeOfmTapesFlat t <=? maxSize)
                 then match execFlatTM M t steps with
@@ -62,7 +62,6 @@ Proof.
                    split. eauto. instantiate (1 := (_,_)).
                    split;cbn. constructor.
      }
-     eexists.
      extract. 
      recRel_prettify.
      intros [[[M maxSize] steps] t] [].

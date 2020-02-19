@@ -595,6 +595,11 @@ Proof.
   now intros ? ? [].
 Qed.
 
+Instance evalIn_eval_subrelation i: subrelation (evalIn i) eval.
+Proof.
+  intros ? ? [?  ?]. split. eapply pow_star_subrelation. all:eauto. 
+Qed.
+
 Instance redLe_star_subrelation i: subrelation (redLe i) (star step).
 Proof.
   intros ? ? (j & leq & R). now rewrite R. 
@@ -724,3 +729,4 @@ Lemma rho_lambda s : lambda (rho s).
 Proof.
   eexists. reflexivity.
 Qed.
+

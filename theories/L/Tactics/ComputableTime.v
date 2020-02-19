@@ -31,15 +31,15 @@ Class computableTime {X : Type} (ty : TT X) (x : X) evalTime: Type :=
     extTCorrect : computesTime ty x extT evalTime
   }.
 
-Existing Instance extT|4.
-
-Hint Mode computableTime + - + -: typeclass_instances. (* treat argument as input and force evar-freeness*)
 
 Global Arguments computableTime {X} {ty} x.
 Global Arguments extT {X} {ty} x {_ computableTime} : simpl never.
 Global Arguments extTCorrect {X} ty x {_ computableTime} : simpl never.
 Definition evalTime X ty x evalTime (computableTime : @computableTime X ty x evalTime):=evalTime.
 Global Arguments evalTime {X} {ty} x {evalTime computableTime}.
+
+Hint Extern 3 (@extracted ?t ?f) => let ty := constr:(_ : TT t) in notypeclasses refine (extT (ty:=ty) f) : typeclass_instances.
+Hint Mode computableTime + + + -: typeclass_instances. (* treat argument as input and force evar-freeness*)
 
 (** A Notation to allow inference of the TT parameter for function types. Coq checks that functions only appear at positions where functions are allowed before it inferes holes, so t complains that f "is a product while it is expected to be '@timeComplexity (forall _ : _, _) ?ty'". *)
 Notation "'computableTime'' f" := (@computableTime _ ltac:(let t:=type of f in refine (_ : TT t);exact _) f) (at level 0,only parsing).

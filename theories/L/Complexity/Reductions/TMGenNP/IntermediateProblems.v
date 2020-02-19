@@ -2,8 +2,6 @@ From Undecidability.L Require Import Tactics.LTactics Prelim.MoreList Prelim.Mor
 From Undecidability.L.Complexity Require Import NP Synthetic Monotonic GenNPHalt.
 
 
-
-
 (** * From L to TMs *)
 
 (** Start: *)
@@ -32,30 +30,32 @@ Section LMGenNPHalt.
 
   Definition initLMGen s c : (list (nat*list Tok)*list (nat*list Tok)*list (option ((nat * list Tok) * nat)))
     := ([(0,s)],[(0,c)],[]).
-  
-  Definition LMGenNPHalt' : list Tok*nat*nat -> Prop :=
-    fun '(P, maxSize, steps (*in unary*)) =>
-      exists (Q:list Tok), size (enc Q) <= maxSize /\ halts_k (initLMGen P Q) steps.
 
-  Definition LMHaltsOrDiverges : list Tok*nat*nat -> Prop :=
-    fun '(P, maxSize, steps (*in unary*)) =>
-      exists s, size (enc (compile s)) <= maxSize -> forall k, halts_k (initLMGen P (compile s)) k -> k <= steps.
+  Section fixX.
+    Context (X:Type) `{R__X : registered X}.
+    
+    Definition LMGenNPHalt' : list Tok*nat*nat -> Prop :=
+      fun '(P, maxSize, steps (*in unary*)) =>
+        exists (c:X), size (enc c) <= maxSize /\ halts_k (initLMGen P (compile (enc c))) steps.
 
-  Definition LMGenNPHalt := restrictBy LMHaltsOrDiverges LMGenNPHalt'.
+    Definition LMHaltsOrDiverges : list Tok*nat*nat -> Prop :=
+      fun '(P, maxSize, steps (*in unary*)) =>
+        (exists s, P = compile s /\ closed s)
+        /\ forall (c : X), size (enc c) <= maxSize -> forall k, halts_k (initLMGen P (compile (enc c))) k -> k <= steps.
+
+    Definition LMGenNPHalt := restrictBy LMHaltsOrDiverges LMGenNPHalt'.
+  End fixX.
+  Arguments LMGenNPHalt : clear implicits.
+  Arguments LMGenNPHalt _ {_}.
   
   From Undecidability.L Require Import Functions.LoopSum.
   
-  Lemma polyRed_GenNPHalt_to_LMGenNPHalt :
-    GenNPHalt ⪯p LMGenNPHalt.
+  Lemma polyRed_GenNPHalt_to_LMGenNPHalt (X:Type) `{R__X : registered X}:
+    GenNPHalt X ⪯p LMGenNPHalt X.
   Proof.
-    (*)pose (f__s s c :=
-            match decompile 0 c [] with
-               inl _ => 
-              | inr _ => false
-            end
-         ). *)
-    pose (f := (fun '(s, maxSize, steps) => ([appT],cnst 0,cnst 1)): (term * nat * nat) -> _);cbn beta in f.
-    eapply reducesPolyMO_intro with (f:=f).
+    evar (f__maxSize : nat -> nat). [f__maxSize ]:intros n0. evar (f__steps : nat -> nat). [f__steps]:intros n0.
+    pose (f := (fun '(s, maxSize, steps) => (compile s,f__maxSize maxSize, f__steps steps))).
+    eapply reducesPolyMO_intro with (f:=f). 
 
 
   

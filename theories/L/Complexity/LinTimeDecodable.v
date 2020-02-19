@@ -1,7 +1,7 @@
 From Undecidability.L.Tactics Require Import LTactics.
 From Undecidability.L.Datatypes Require Import LNat Lists LTerm LOptions.
 
-From Undecidability.L Require Import Functions.Decoding Complexity.Synthetic.
+From Undecidability.L Require Import Functions.Decoding.
 
 Class linTimeDecodable `(X:Type) `{decodable X}: Type :=
   {
@@ -16,33 +16,6 @@ Arguments c__linDec : clear implicits.
 Arguments c__linDec _ {_ _ _}.
 
 Existing Instance comp_enc_lin.
-
-Lemma linDec_polyTimeComputable  X `{_:linTimeDecodable X}: polyTimeComputable (decode X).
-Proof.
-  evar (f:nat -> nat).
-  exists f.
-  -split. eexists _. 
-   eapply computesTime_timeLeq.
-   2:now eapply comp_enc_lin.
-   intros x _;cbn [fst snd]. split.
-   2:easy.
-   rewrite size_term_enc_r. generalize (size (enc x)) as n;intros.
-   [f]:intro. unfold f. reflexivity.
-  -unfold f. smpl_inO.
-  -unfold f. smpl_inO.
-  -evar (f':nat -> nat).
-   exists f'. 
-   repeat eapply conj.
-   +intros t.
-    specialize (decode_correct2 (X:=X) (t:=t)) as H'.
-    destruct decode.
-    setoid_rewrite <- H'. 2:reflexivity.
-    *rewrite size_option,LTerm.size_term_enc_r.
-    generalize (size (enc (enc x))). [f']:intro. unfold f'. reflexivity.
-    *unfold enc at 1. cbn. unfold f'. easy.
-   +unfold f'. smpl_inO.
-   +unfold f'. smpl_inO.
-Qed.
 
 Instance linDec_nat : linTimeDecodable nat.
 Proof.

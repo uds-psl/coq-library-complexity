@@ -1,5 +1,5 @@
 From Undecidability.L Require Import L.
-From Undecidability.L.Datatypes Require Import LProd LTerm.
+From Undecidability.L.Datatypes Require Import LProd LTerm LBool.
 From Undecidability.L.Complexity Require Import NP Synthetic Monotonic.
 From Undecidability.L.Functions Require Import Size.
 
@@ -8,22 +8,45 @@ Definition GenNP : term*nat*nat -> Prop:=
     (proc s'/\exists (c:term), size (enc c) <= maxSize
                          /\ s' (enc c) ⇓(<=steps) (enc true)).
 
+(** * The hardness proof of GewnNPHalt is prettier *)
 Lemma NPhard_GenNP : NPhard (unrestrictedP GenNP).
 Proof.
-  intros X reg__X regP__X vX Q [R R__comp [p Rsound Rcomplete p__poly p__mono]]. 
-  destruct R__comp as (t__R&[d__R [comp_d__R] spec_d__R]&poly_t__R&mono_t__R).
-  pose (f x := fun c => d__R (x,c)).
-  assert (computableTime' f (fun x _ => (1,fun c _ => (t__R (size (enc (x, c))) + 3,tt))));cbn [timeComplexity] in *.
+  intros X reg__X regP__X vX Q [R R__comp' R__spec'(*[p Rsound Rcomplete p__poly p__mono]*)].
+  destruct (polyCertRel_compPoly R__spec') as (R__spec&[pR__comp]);clear R__spec'.
+  destruct (inTimePoly_compTime R__comp') as (timeR&[timeR__comp]&[R__comp]&poly_t__R&mono_t__R);clear R__comp'.
+  pose (f x := fun c => f__decInTime R__comp (x,c)).
+  assert (computableTime' f (fun x _ => (1,fun c _ => (timeR (size (enc (x, c))) + 3,tt))));cbn [timeComplexity] in *.
   {intros. subst f. extract. solverec. }
-  specialize inOPoly_computable with (1:=p__poly) as (f__Rbal'&tf__Rbal'&[]&polyf__Rbal'&leq_f__Rbal'&?&?&?).
-  specialize inOPoly_computable with (1:=poly_t__R) as (t__R'&tt__R'&[]&poly_t__R'&leq_t__R'&?&?&?).
-  eapply reducesPolyMO_intro with  (f := fun x => (lam (extT f (enc x) 0),f__Rbal' (size (enc x)),t__R' (size (enc x) + f__Rbal' (size (enc x))+4)+5));cbn [fst snd GenNP]. 
-  -evar (f':nat -> nat). [f']:refine (fun x => _).
+  evar (mSize : X -> nat). [mSize]:intros n0. evar (steps : X -> nat). [steps]:intros n0.
+  eapply reducesPolyMO_intro with  (f := fun x => (lam (extT f (enc x) 0), mSize x (*)f__Rbal' (size (enc x))*), steps x (*time__R' (size (enc x) + f__Rbal' (size (enc x))+4)+5*)));cbn [fst snd GenNP].
+  2:{
+    cbn [unrestrictedP]. intros x ?. exists Logic.I. split.
+   +intros (c&HR & Hle)%(complete__pCR R__spec). cbn - [GenNP] in Hle|-*.
+    unfold GenNP;cbn [snd].
+    split. now Lproc.
+    exists c. split.
+    *rewrite Hle. cbn. set (size (enc x)). unfold mSize;reflexivity.
+    *eapply evalIn_mono.
+     {Lsimpl. unfold f. erewrite complete__decInTime. now Lsimpl. easy. }
+     cbn [fst snd]. ring_simplify.
+     rewrite (mono_t__R _). 2:{rewrite size_prod. cbn [fst snd]. rewrite Hle. reflexivity. }
+     unfold steps. reflexivity.
+   +unfold GenNP.
+    intros (?&c&size__c&R'). eapply (sound__pCR R__spec).
+    apply (correct__decInTime R__comp (x:=(x,c))).
+    eapply inj_enc.
+    eapply unique_normal_forms. 1,2:now Lproc.
+    eapply evalLe_eval_subrelation, eval_star_subrelation in R'.
+    apply star_equiv in R'. etransitivity. 2:exact R'. 
+    symmetry. eapply star_equiv_subrelation. clear R'.
+    change (extT f) with (ext f). Lsimpl.
+  }
+  -evar (f':nat -> nat). [f']:refine (fun x => _). subst mSize steps.   
    eexists (fun x => f' x). 
-   +split. extract.
-    recRel_prettify2. cbn [size].  generalize (size (enc x)). intro. unfold f'. reflexivity. 
-   +subst f'. cbn beta. smpl_inO. all:eapply inOPoly_comp. all:smpl_inO.
-   +subst f'. cbn beta. smpl_inO.
+   +extract.
+    recRel_prettify2. cbn [size]. set (size (enc x)). unfold f'. reflexivity. 
+   +subst f'. cbn beta. smpl_inO. all:eapply inOPoly_comp. all:try setoid_rewrite size_nat_enc. all:smpl_inO.
+   +subst f'. cbn beta. smpl_inO. all:try setoid_rewrite size_nat_enc. all:smpl_inO.
    + eexists (fun x => _);repeat split.
     *intros. 
      repeat (setoid_rewrite -> size_prod;cbn[fst snd]).
@@ -31,36 +54,13 @@ Proof.
      generalize (size (enc x)). intros. reflexivity.
     *smpl_inO. all:eapply inOPoly_comp. all:smpl_inO.
     *smpl_inO.
-  -cbn [unrestrictedP]. intros x ?. exists Logic.I. split.
-   +intros (c&HR & Hle)%Rcomplete. cbn - [GenNP].
-    specialize (spec_d__R (x,c) Hx). apply ssreflect.iffLR with (2:=HR) in spec_d__R. 
-    unfold GenNP;cbn [snd].
-    split. now Lproc.
-    exists c. repeat split.
-    *now etransitivity;eauto.
-    *eapply redLe_mono.
-     {Lsimpl. unfold f. now rewrite spec_d__R. }
-     cbn [fst snd]. ring_simplify. 
-     rewrite <- leq_t__R'.
-     rewrite size_prod. cbn [fst snd].
-     hnf in mono_t__R;rewrite mono_t__R. reflexivity.
-     rewrite Hle,leq_f__Rbal'. reflexivity.
-    *Lproc.
-   +unfold GenNP.
-    intros (?&c&size__c&R'). eapply Rsound.
-    specialize (spec_d__R (x,c) Hx). cbn in spec_d__R. rewrite spec_d__R. 
-    eapply inj_enc.
-    eapply unique_normal_forms. 1,2:now Lproc.
-    eapply evalLe_eval_subrelation, eval_star_subrelation in R'.
-    rewrite <- R'. symmetry. eapply star_equiv_subrelation. clear R'.
-    change (extT f) with (ext f). Lsimpl.
 Qed.
 
 From Undecidability.L.Functions Require Import Proc.
 From Undecidability.L.AbstractMachines.Computable Require Import EvalForTimeBool.
 Import EvalForTime LargestVar.
 
-(** * The hardness proof of GewnNPHalt is prettier *)
+
 Lemma inNP_GenNP : inNP (unrestrictedP GenNP).
 Proof.
   eexists (fun '(exist _ x _) (c:term) => exists (s':term) (maxSize steps :nat), 
@@ -68,12 +68,12 @@ Proof.
                /\ s' (enc c) ⇓(<=steps) (enc true)).
   {
     evar (f__t : nat -> nat). [f__t]:intro n.
-    eexists f__t. repeat eapply conj.
+    eexists f__t. repeat eapply conj. split. 
     eexists (fun '((s',maxSize,steps),c) =>
                if closedb s' && lambdab s' && (size (enc c) <=? maxSize)
                then
                  evalForTimeBool true (N.of_nat steps) (s' (enc c))
-               else false). split.
+               else false).
     -extract. intros [[[s' maxSize] steps] c].
      remember (size (enc (s', maxSize, steps, c))) as n.
      assert (H1 : ( size (enc s') <= n)) by (subst n;rewrite !size_prod;cbn;lia).

@@ -52,7 +52,7 @@ Proof.
   2:{ intros ? ? R'. unfold univStep. cbn. repeat (let eq := fresh in destruct _ eqn:eq);inv R';try congruence. }
   cbn [loopSum univStep heapStep] in R'.
   erewrite unfoldBoolean_complete in R'. 2:eassumption.
-  unshelve eapply uiter_sound in R'. 4:now exact _.
+  eapply (uiter_sound (H1:=_)) in R'.
   cbn -[plus mult] in R'.
   remember (4*k+2) as n0.
   erewrite uiterTime_bound_recRel with

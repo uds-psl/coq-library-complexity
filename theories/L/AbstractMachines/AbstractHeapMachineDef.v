@@ -80,7 +80,7 @@ Section Lin.
 End Lin.
 
 Module clos_notation.
-  Notation clos := (term * nat)%type.
+  Notation clos := (term * nat)%type (only parsing).
 End clos_notation.
 Import clos_notation.
 Hint Transparent state.
