@@ -256,10 +256,12 @@ Section list_prod.
 End list_prod.
 
 
+Definition c__listsizeCons := 5.
+Definition c__listsizeNil := 4.
 Lemma size_list X `{registered X} (l:list X):
-  size (enc l) = sumn (map (fun x => size (enc x) + 5) l)+ 4.
+  size (enc l) = sumn (map (fun x => size (enc x) + c__listsizeCons) l)+ c__listsizeNil.
 Proof.
-  change (enc l) with (list_enc l).
+  change (enc l) with (list_enc l). unfold c__listsizeCons, c__listsizeNil. 
   induction l.
   -easy.
   -cbn [list_enc map sumn size].

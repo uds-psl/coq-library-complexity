@@ -16,26 +16,26 @@ Proof.
 Qed. 
 
 Lemma list_app_size {X : Type} `{registered X} (l l' : list X) :
-  size(enc (l ++ l')) + 4= size(enc l) + size(enc l').
+  size(enc (l ++ l')) + c__listsizeNil = size(enc l) + size(enc l').
 Proof.
   repeat rewrite size_list. 
   rewrite map_app. rewrite sumn_app. lia. 
 Qed. 
 
-Lemma list_size_at_least {X : Type} `{registered X} (l : list X) : size(enc l) >= 4. 
+Lemma list_size_at_least {X : Type} `{registered X} (l : list X) : size(enc l) >= c__listsizeNil. 
 Proof. rewrite size_list. lia. Qed.
 
 Lemma list_app_size_l {X : Type} `{registered X} (l l' : list X) :
   size(enc (l ++ l')) >= size (enc l). 
 Proof. 
-  enough (size(enc (l++l')) + 4 >= size(enc l) + 4) by lia. 
+  enough (size(enc (l++l')) + c__listsizeNil >= size(enc l) + c__listsizeNil) by lia. 
   rewrite list_app_size.  specialize list_size_at_least with (l:= l'). lia. 
 Qed. 
 
 Lemma list_app_size_r {X : Type} `{registered X} (l l' : list X) :
   size(enc (l ++ l')) >= size (enc l'). 
 Proof. 
-  enough (size(enc (l++l')) + 4 >= size(enc l') + 4) by lia. 
+  enough (size(enc (l++l')) + c__listsizeNil >= size(enc l') + c__listsizeNil) by lia. 
   rewrite list_app_size.  specialize list_size_at_least with (l:= l). lia. 
 Qed. 
 
@@ -50,26 +50,26 @@ Proof.
   specialize list_app_size_l with (l:= l) (l':=D). lia. 
 Qed. 
 
-Lemma list_size_cons {X : Type} `{registered X} (l : list X) (a : X) : size(enc (a::l)) = size(enc a) + size(enc l) + 5.
+Lemma list_size_cons {X : Type} `{registered X} (l : list X) (a : X) : size(enc (a::l)) = size(enc a) + size(enc l) + c__listsizeCons.
 Proof. repeat rewrite size_list. cbn.  lia. Qed. 
 
 Lemma list_size_length {X : Type} `{registered X} (l : list X) : |l| <= size(enc l). 
 Proof. 
   rewrite size_list. induction l.
   - cbn; lia. 
-  - cbn. rewrite IHl. lia. 
+  - cbn. rewrite IHl. unfold c__listsizeCons; lia. 
 Qed. 
 
 Lemma list_size_enc_length {X : Type} `{registered X} (l : list X) : size (enc (|l|)) <= size (enc l). 
 Proof. 
-  rewrite size_list. rewrite size_nat_enc. induction l; cbn; lia. 
+  rewrite size_list. rewrite size_nat_enc. unfold c__natsizeS, c__natsizeO, c__listsizeNil, c__listsizeCons. induction l; cbn; lia. 
 Qed. 
 
-Lemma list_size_of_el {X : Type} `{registered X} (l : list X) (k : nat) : (forall a, a el l -> size(enc a) <= k) -> size(enc l) <= (k * (|l|)) + 5 * (|l|) +  4 . 
+Lemma list_size_of_el {X : Type} `{registered X} (l : list X) (k : nat) : (forall a, a el l -> size(enc a) <= k) -> size(enc l) <= (k * (|l|)) + c__listsizeCons * (|l|) +  c__listsizeNil . 
 Proof.
   intros H1. induction l. 
   - cbn. rewrite size_list. cbn.  lia.
-  - cbn. rewrite list_size_cons. rewrite IHl; [ |now firstorder]. rewrite H1; [|now left].
+  - cbn -[c__listsizeCons]. rewrite list_size_cons. rewrite IHl; [ |now firstorder]. rewrite H1; [|now left].
     solverec. 
 Qed. 
 

@@ -225,7 +225,7 @@ Section concat_fixX.
   Proof. 
     unfold concat_time. induction l; cbn -[Nat.add Nat.mul].
     - unfold poly__concat. nia. 
-    - rewrite IHl. unfold poly__concat. rewrite list_size_cons. rewrite list_size_length. nia.
+    - rewrite IHl. unfold poly__concat. rewrite list_size_cons. rewrite list_size_length. unfold c__concat, c__listsizeCons; nia.
   Qed. 
   Lemma concat_poly : monotonic poly__concat /\ inOPoly poly__concat. 
   Proof. 
@@ -242,15 +242,15 @@ Proof.
   unfold hflat_time, c__hflat. solverec. 
 Qed. 
 
-Definition c__hNatSize := 9.
+Definition c__hNatSize := c__listsizeCons + c__sizeBool + c__listsizeNil.
 Lemma hNat_size_bound sig n: size (enc (hNat sig n)) <= (sig + 1) * c__hNatSize. 
 Proof. 
-  specialize (list_size_of_el (l := (hNat sig n)) (k := 4)) as H1.  
+  specialize (list_size_of_el (l := (hNat sig n)) (k := c__sizeBool)) as H1.  
   rewrite H1. 2: { intros. apply size_bool. }
-  rewrite hNat_length. unfold c__hNatSize. lia. 
+  rewrite hNat_length. unfold c__hNatSize. nia. 
 Qed. 
 
-Lemma map_hNat_size_bound sig l : size (enc (map (hNat sig) l)) <= (|l|) * (sig + 1) * c__hNatSize + 5 * (|l|) + 4. 
+Lemma map_hNat_size_bound sig l : size (enc (map (hNat sig) l)) <= (|l|) * (sig + 1) * c__hNatSize + c__listsizeCons * (|l|) + c__listsizeNil. 
 Proof. 
   erewrite list_size_of_el. 
   2: { intros a H%in_map_iff. destruct H as (n & <- & H). apply hNat_size_bound. }
@@ -278,7 +278,7 @@ Proof.
   } 
   unfold poly__concat. 
   rewrite list_size_length.
-  unfold poly__hflat, c__hflatBound. unfold c__hNatSize, c__concat, c__hflat, c__map. nia. 
+  unfold poly__hflat, c__hflatBound. unfold c__hNatSize, c__concat, c__hflat, c__map, c__listsizeCons, c__listsizeNil, c__sizeBool. nia. 
 Qed. 
 Lemma hflat_poly : monotonic poly__hflat /\ inOPoly poly__hflat.    
 Proof. 
@@ -292,10 +292,11 @@ Proof.
   nia.
 Qed. 
 
-Lemma hflat_size_bound fpr l : size (enc (hflat fpr l)) <= 9 * (|l|) * (Sigma fpr) + 4. 
+Definition c__hflatSize := c__listsizeCons + c__sizeBool.
+Lemma hflat_size_bound fpr l : size (enc (hflat fpr l)) <= c__hflatSize * (|l|) * (Sigma fpr) + c__listsizeNil. 
 Proof. 
   rewrite list_size_of_el by (intros; apply size_bool).
-  rewrite hflat_length. nia.
+  rewrite hflat_length. unfold c__hflatSize. nia.
 Qed. 
 
 (*hwindow *)
@@ -320,7 +321,17 @@ Proof.
   unfold poly__hwindow; split; smpl_inO; apply hflat_poly. 
 Qed. 
 
-(*Lemma hwindow_size_bound fpr l : size (enc (hflat*)
+Definition c__hwindowSize1 := c__listsizeNil +  c__listsizeNil + c__sizePRWin. 
+Definition c__hwindowSize2 := 2 * c__hflatSize.
+Lemma hwindow_size_bound fpr win : 
+  FlatPR_wellformed fpr 
+  -> win el windows fpr -> size (enc (hwindow fpr win)) <= c__hwindowSize2 * (Sigma fpr) * (width fpr) + c__hwindowSize1.  
+Proof. 
+  intros (_ & _ & _ & _ & winWf & _) (H1 & H2)%winWf.  
+  unfold hwindow. destruct win. rewrite PRWin_enc_size. 
+  cbn -[Nat.mul Nat.add] in *. rewrite !hflat_size_bound, H1, H2.
+  unfold c__hwindowSize1, c__hwindowSize2. solverec. 
+Qed. 
 
 (*hwindows *)
 Definition c__hwindows := c__windows + 3. 
@@ -349,6 +360,19 @@ Proof.
   - eapply inOPoly_comp; [apply hwindow_poly | apply hwindow_poly | smpl_inO].
 Qed. 
 
+Definition c__hwindowsSize1 := c__hwindowSize1 + c__listsizeNil.
+Definition c__hwindowsSize2 := c__hwindowSize2 + c__hwindowSize1 + c__listsizeCons.
+Lemma hwindows_size_bound fpr : 
+  FlatPR_wellformed fpr 
+  -> size (enc (hwindows fpr)) <= c__hwindowsSize2 * (Sigma fpr + 1) * (width fpr) * (|windows fpr|) + c__hwindowsSize1. 
+Proof.
+  intros wf. unfold hwindows. rewrite list_size_of_el. 
+  2: { intros win (win' & <- & H2)%in_map_iff. rewrite hwindow_size_bound; [ reflexivity | easy | easy]. }
+  rewrite map_length. 
+  destruct wf as (H1 & _). unfold c__hwindowsSize1, c__hwindowsSize2. destruct (width fpr); [nia | ].
+  leq_crossout. 
+Qed. 
+
 (*hfinal *)
 Definition c__hfinal := c__final + 3. 
 Definition hfinal_time (fpr : FlatPR) := map_time (fun l => hflat_time fpr l) (final fpr) + c__hfinal. 
@@ -374,6 +398,17 @@ Proof.
   unfold poly__hfinal; split; smpl_inO. 
   - apply hflat_poly. 
   - eapply inOPoly_comp; [apply hflat_poly | apply hflat_poly | smpl_inO].
+Qed. 
+
+(*one could obtain a linear time bound, but a quadratic bound is easier to prove *)
+Definition c__hfinalSize := c__listsizeNil + c__listsizeCons. 
+Lemma hfinal_size_bound fpr : size (enc (hfinal fpr)) <= c__hflatSize * (Sigma fpr) * size (enc (final fpr))^2+ c__hfinalSize * size (enc (final fpr)) + c__listsizeNil. 
+Proof. 
+  unfold hfinal. rewrite list_size_of_el. 
+  2: { intros l (l' & <- & H1)%in_map_iff. rewrite hflat_size_bound. 
+       rewrite list_size_length. rewrite list_el_size_bound by apply H1. reflexivity. 
+  }
+  rewrite map_length, list_size_length. unfold c__hfinalSize. cbn [Nat.pow]. nia. 
 Qed. 
 
 (*hBinaryPR *)
@@ -406,6 +441,39 @@ Proof.
   eapply inOPoly_comp; [apply hflat_poly | apply hflat_poly | smpl_inO].
 Qed. 
 
+Proposition nat_mul_size_bound n m : size (enc (n * m)) <= size (enc n) * size (enc m). 
+Proof. 
+  rewrite !size_nat_enc. unfold c__natsizeS, c__natsizeO; nia.
+Qed. 
+
+Definition c__hBinaryPRSize := c__hflatSize + c__hwindowsSize2 + c__hfinalSize + 1. 
+Definition c__hBinaryPRSize2 := 2 * c__listsizeNil + c__hwindowsSize1 + 8.
+Lemma hBinaryPR_size_bound fpr : 
+  FlatPR_wellformed fpr -> size (enc (hBinaryPR fpr)) <= c__hBinaryPRSize * (size (enc fpr) + 1) ^3 + c__hBinaryPRSize2. 
+Proof. 
+  intros Hwf. unfold hBinaryPR. rewrite BinaryPR_enc_size; cbn -[Nat.mul Nat.add].
+  unfold hoffset, hwidth, hsteps. rewrite !nat_mul_size_bound. 
+  unfold hinit. rewrite hflat_size_bound. 
+  rewrite hwindows_size_bound, hfinal_size_bound by easy.
+  rewrite !list_size_length. 
+  replace_le (Sigma fpr) with (size (enc (Sigma fpr))) by (rewrite size_nat_enc; unfold c__natsizeS; nia) at 4. 
+  replace_le (Sigma fpr) with (size (enc (Sigma fpr))) by (rewrite size_nat_enc; unfold c__natsizeS; nia) at 5.
+  replace_le (Sigma fpr) with (size (enc (Sigma fpr))) by (rewrite size_nat_enc; unfold c__natsizeS; nia) at 3.
+  replace_le (width fpr) with (size (enc (width fpr))) by (rewrite size_nat_enc; unfold c__natsizeS; nia) at 2. 
+  
+  specialize (FlatPR_enc_size fpr) as H. 
+  replace_le (size (enc (Sigma fpr))) with (size (enc fpr)) by (rewrite H; nia).  
+  replace_le (size (enc (offset fpr))) with (size (enc fpr)) by (rewrite H; nia).
+  replace_le (size (enc (width fpr))) with (size (enc fpr)) by (rewrite H; nia).
+  replace_le (size (enc (init fpr))) with (size (enc fpr)) by (rewrite H; nia). 
+  replace_le (size (enc (windows fpr))) with (size (enc fpr)) by (rewrite H; nia). 
+  replace_le (size (enc (steps fpr))) with (size (enc fpr)) by (rewrite H; nia). 
+  cbn[Nat.pow].
+  replace_le (size (enc (final fpr))) with (size (enc fpr)) by (rewrite H; nia).
+
+  unfold c__hBinaryPRSize, c__hBinaryPRSize2. cbn [Nat.pow]. leq_crossout. 
+Qed. 
+
 (*reduction *)
 Definition c__reduction := 9. 
 Definition reduction_time (fpr : FlatPR) := FlatPR_wf_dec_time fpr + isValidFlattening_dec_time fpr + hBinaryPR_time fpr + c__reduction.
@@ -427,12 +495,18 @@ Proof.
 Qed. 
 
 (*size bound *)
-Lemma reduction_size_bound fpr : exists f, size (enc (reduction fpr)) <= f (size (enc fpr)) /\ inOPoly f /\ monotonic f.
+Lemma reduction_size_bound : exists f, (forall fpr, size (enc (reduction fpr)) <= f (size (enc fpr))) /\ inOPoly f /\ monotonic f.
 Proof. 
-  evar (f : nat -> nat). exists f. split; [ | split]. 
-  + unfold reduction. destruct andb. 
-    - unfold hBinaryPR. rewrite BinaryPR_enc_size; cbn. 
-      rewrite !size_nat_enc. 
+  exists (fun n => c__hBinaryPRSize * (n + 1)^3 + c__hBinaryPRSize2 + 32).
+  split; [ | split]. 
+  - intros fpr. unfold reduction. destruct andb eqn:H1. 
+    + apply andb_true_iff in H1 as (H1%FlatPR_wf_dec_correct & _). 
+      rewrite hBinaryPR_size_bound by apply H1. easy. 
+    + unfold trivialNoInstance. rewrite BinaryPR_enc_size. cbn -[Nat.mul Nat.add].
+      rewrite !size_nat_enc. rewrite !size_list. cbn. nia.
+  - unfold Nat.pow. smpl_inO. 
+  - smpl_inO. 
+Qed. 
 
 Lemma FlatPR_to_BinaryPR_poly : reducesPolyMO (unrestrictedP FlatPRLang) (unrestrictedP BinaryPRLang).
 Proof. 
@@ -443,10 +517,7 @@ Proof.
       all: specialize (reduction_time_bound x) as H1; unfold reduction_time, c__reduction in H1; nia.
     + apply reduction_poly.
     + apply reduction_poly. 
-    + evar (f : nat -> nat). exists f. split; [ | split]. 
-      * intros fpr. unfold reduction. 
-
-
-  
-
-
+    + apply reduction_size_bound. 
+  - intros fpr _. cbn. apply FlatPR_to_BinaryPR. 
+  - intros fpr _. cbn. easy.
+Qed. 

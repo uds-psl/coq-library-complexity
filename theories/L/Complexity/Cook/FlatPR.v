@@ -523,9 +523,10 @@ Section fix_X.
     extract. unfold cnst_conc. solverec. 
   Defined.
 
-  Lemma PRWin_enc_size (win : PRWin X) : size (enc win) = size (enc (prem win)) + size (enc (conc win)) + 4.
+  Definition c__sizePRWin := 4.
+  Lemma PRWin_enc_size (win : PRWin X) : size (enc win) = size (enc (prem win)) + size (enc (conc win)) + c__sizePRWin.
   Proof. 
-    destruct win. cbn. unfold enc. cbn. nia.
+    destruct win. cbn. unfold enc, c__sizePRWin. cbn. nia.
   Qed. 
 End fix_X. 
 
@@ -604,7 +605,7 @@ Section PRWin_of_size.
   Lemma PRWin_of_size_dec_time_bound width (win : PRWin X) : PRWin_of_size_dec_time width win <= (size(enc win) + 1) * c__prwinOfSizeDecBound. 
   Proof. 
     unfold PRWin_of_size_dec_time, nat_eqb_time. rewrite !Nat.le_min_l. rewrite !list_size_length.
-    rewrite PRWin_enc_size. unfold c__prwinOfSizeDecBound. nia.
+    rewrite PRWin_enc_size. unfold c__prwinOfSizeDecBound, c__sizePRWin. nia.
   Qed. 
 End PRWin_of_size. 
 

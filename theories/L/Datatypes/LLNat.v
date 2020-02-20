@@ -121,9 +121,12 @@ Proof.
   - right. intros [n A]. rewrite A in H. rewrite unenc_correct in H. inv H.
 Qed.
 
+Definition c__natsizeO := 4.
+Definition c__natsizeS := 4.
 Lemma size_nat_enc (n:nat) :
-  size (enc n) = n * 4 + 4.
+  size (enc n) = n * c__natsizeS + c__natsizeO.
 Proof.
+  unfold c__natsizeS, c__natsizeO. 
   induction n;cbv [enc registered_nat_enc] in *. all:cbn [size nat_enc] in *. all:solverec.
 Qed.
 
