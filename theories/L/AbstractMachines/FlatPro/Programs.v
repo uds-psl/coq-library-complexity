@@ -137,6 +137,13 @@ Proof.
   -autorewrite with list. rewrite IHs. reflexivity.
 Qed.
 
+
+Lemma decompile_correct l s:
+  decompile l (compile s) [] = inl [s].
+Proof.
+  specialize (decompile_correct' l s [] []) as H. autorewrite with list in H. rewrite H. easy.
+Qed.
+
 Lemma compile_inj s s' :
   compile s = compile s' -> s = s'.
 Proof.
