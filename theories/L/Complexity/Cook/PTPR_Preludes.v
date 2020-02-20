@@ -206,7 +206,7 @@ Section fixPTPRInstance.
       clear A3 A4. 
       intros (z & H1 & H2)%relpower_add_split. 
       exists z. apply relpower_inr_liftPrelude in H1; [ | auto]. split. 
-      - eauto. 
+      - apply H1. 
       - specialize (A1 Hinitial H1) as (? & ->). eapply relpower_inl_liftOrig. 
         + clear H2 A2. 
           apply relpower_valid_length_inv in H1. rewrite !map_length in H1. rewrite <-H1, (proj1 Hinitial). lia. 

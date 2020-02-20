@@ -5,8 +5,9 @@ Require Import Lia.
 
 (** *Reduction of FlatTPR to FlatPR*)
 
-(*we can completely re-use the construction and correctness results of the TPR-PR reduction *)
-(*as the reduction does not depend on the alphabet being finite *)
+(**We can completely re-use the construction and correctness results of the TPR-PR reduction,
+   as the reduction does not depend on the alphabet being finite.
+*)
 Definition FPR_instance (ftpr : FlatTPR) := Build_FlatPR (FlatTPR.Sigma ftpr) 1 3 (FlatTPR.init ftpr) (PR_windows (FlatTPR.windows ftpr)) (FlatTPR.final ftpr) (FlatTPR.steps ftpr).
 
 Lemma FlatTPR_to_FlatPR (ftpr : FlatTPR) : FlatTPRLang ftpr <-> FlatPRLang (FPR_instance ftpr). 
