@@ -5,7 +5,7 @@ Require Import Lia.
 
 (**Flat 3-Parallel Rewriting *)
 
-Record FlatTPR := {
+Inductive FlatTPR := {
   Sigma : nat;
   init : list nat;
   windows : list (TPRWin nat);
@@ -331,3 +331,131 @@ Proof.
   constructor; eauto.
   cbn. unfold finRepr. specialize (Card_Fint (Sigma f)). easy.
 Qed.
+
+(** *extraction *)
+
+From Undecidability.L.Tactics Require Import LTactics GenEncode.
+From Undecidability.L.Datatypes Require Import  LProd LOptions LLNat LLists.
+
+Section fix_X.
+  Variable (X:Type).
+  Context `{X_registered : registered X}.
+
+  (*TPRWinP *)
+  Run TemplateProgram (tmGenEncode "TPRWinP_enc" (TPRWinP X)).
+  Hint Resolve TPRWinP_enc_correct : Lrewrite.
+
+  Global Instance term_Build_TPRWinP : computableTime' (@Build_TPRWinP X) (fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, tt)))). 
+  Proof. 
+    extract constructor. solverec. 
+  Defined. 
+
+  Definition cnst_winEl1 := 6. 
+  Global Instance term_winEl1 : computableTime' (@winEl1 X) (fun _ _ => (cnst_winEl1, tt)). 
+  Proof. 
+    extract. unfold cnst_winEl1. solverec. 
+  Defined. 
+
+  Definition cnst_winEl2 := 6. 
+  Global Instance term_winEl2 : computableTime' (@winEl2 X) (fun _ _ => (cnst_winEl2, tt)). 
+  Proof. 
+    extract. unfold cnst_winEl2. solverec. 
+  Defined. 
+
+  Definition cnst_winEl3 := 6. 
+  Global Instance term_winEl3 : computableTime' (@winEl3 X) (fun _ _ => (cnst_winEl3, tt)). 
+  Proof. 
+    extract. unfold cnst_winEl3. solverec. 
+  Defined. 
+
+  Definition c__sizeTPRWinP := 5. 
+  Lemma TPRWinP_enc_size (w : TPRWinP X) : size (enc w) = size (enc (winEl1 w)) + size (enc (winEl2 w)) + size (enc (winEl3 w)) + c__sizeTPRWinP. 
+  Proof. 
+    destruct w. cbn. unfold enc, c__sizeTPRWinP; cbn. nia. 
+  Qed. 
+
+  (*extraction of TPRWinP_to_list *)
+  Definition c__TPRWinPToList := 12.
+  Global Instance term_TPRWinP_to_list : computableTime' (@TPRWinP_to_list X) (fun _ _ => (c__TPRWinPToList, tt)).
+  Proof. 
+    extract. unfold c__TPRWinPToList. solverec. 
+  Defined. 
+
+  (*TPRWin*)
+  Run TemplateProgram (tmGenEncode "TPRWin_enc" (TPRWin X)). 
+  Hint Resolve TPRWin_enc_correct : Lrewrite.
+
+  Global Instance term_Build_TPRWin : computableTime' (@Build_TPRWin X) (fun _ _ => (1, fun _ _ => (1, tt))).
+  Proof.
+    extract constructor. solverec. 
+  Defined. 
+
+  Definition cnst_prem := 5. 
+  Global Instance term_prem : computableTime' (@prem X) (fun _ _ => (cnst_prem, tt)).
+  Proof.
+    extract. unfold cnst_prem. solverec.
+  Defined. 
+
+  Definition cnst_conc := 5.
+  Global Instance term_conc : computableTime' (@conc X) (fun _ _ => (cnst_conc, tt)). 
+  Proof.
+    extract. unfold cnst_conc. solverec. 
+  Defined.
+
+  Definition c__sizeTPRWin := 4.
+  Lemma TPRWin_enc_size (win : TPRWin X) : size (enc win) = size (enc (prem win)) + size (enc (conc win)) + c__sizePRWin.
+  Proof. 
+    destruct win. cbn. unfold enc, c__sizePRWin. cbn. nia.
+  Qed. 
+End fix_X. 
+
+Hint Resolve TPRWinP_enc_correct : Lrewrite.
+Hint Resolve TPRWin_enc_correct : Lrewrite.
+
+Run TemplateProgram (tmGenEncode "FlatTPR_enc" (FlatTPR)).
+Hint Resolve FlatTPR_enc_correct : Lrewrite. 
+
+From Undecidability.L.Complexity Require Import PolyBounds. 
+
+Instance term_Build_FlatTPR : computableTime' Build_FlatTPR (fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, tt)))))).
+Proof.
+  extract constructor. solverec. 
+Defined. 
+
+Definition c__Sigma := 8.
+Instance term_FlatTPR_Sigma : computableTime' Sigma (fun _ _ => (c__Sigma, tt)). 
+Proof.
+  extract. unfold c__Sigma. solverec. 
+Defined. 
+
+Definition c__init := 8.
+Instance term_FlatTPR_init : computableTime' init (fun _ _ => (c__init, tt)). 
+Proof. 
+  extract. unfold c__init. solverec. 
+Defined. 
+
+Definition c__windows := 10.
+Instance term_FlatTPR_windows : computableTime' windows (fun _ _ => (c__windows, tt)). 
+Proof. 
+  extract. unfold c__windows. solverec. 
+Defined. 
+
+Definition c__final := 10.
+Instance term_FlatTPR_final : computableTime' final (fun _ _ => (c__final, tt)). 
+Proof. 
+  extract. unfold c__final. solverec. 
+Defined. 
+
+Definition c__steps := 10.
+Instance term_FlatTPR_steps : computableTime' steps (fun _ _ => (c__steps, tt)). 
+Proof. 
+  extract. unfold c__steps. solverec. 
+Defined. 
+
+Definition c__sizeFlatTPR := 7.
+Lemma FlatTPR_enc_size (fpr : FlatTPR) : size (enc fpr) = size (enc (Sigma fpr)) + size (enc (init fpr)) + size (enc (windows fpr)) + size (enc (final fpr)) + size (enc (steps fpr)) + c__sizeFlatTPR.
+Proof. 
+  destruct fpr. cbn. unfold enc. cbn. unfold c__sizeFlatTPR. nia.
+Qed. 
+
+

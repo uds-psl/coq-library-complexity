@@ -164,16 +164,16 @@ Ltac inv_valid := match goal with
 (** *TPR using list-based rules *)
 
 (*use an explicit representation instead of vectors of size 3 since this will make the problem closer to the flattened extractable problem *)
-Record TPRWinP (Sigma : Type) := {
-                                   winEl1 : Sigma;
-                                   winEl2 : Sigma;
-                                   winEl3 : Sigma
-                                 }.
+Inductive TPRWinP (Sigma : Type) := {
+         winEl1 : Sigma;
+         winEl2 : Sigma;
+         winEl3 : Sigma
+       }.
 
-Record TPRWin (Sigma : Type) := {
-                                  prem : TPRWinP Sigma;
-                                  conc : TPRWinP Sigma
-                                }.
+Inductive TPRWin (Sigma : Type) := {
+          prem : TPRWinP Sigma;
+          conc : TPRWinP Sigma
+        }.
 
 Definition TPRWinP_to_list (sig : Type) (a : TPRWinP sig) := match a with Build_TPRWinP a b c => [a; b; c] end. 
 Coercion TPRWinP_to_list : TPRWinP >-> list. 
