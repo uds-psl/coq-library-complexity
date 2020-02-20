@@ -802,6 +802,14 @@ We start off with an important lemma that allows us to split up a rewrite $h \st
   \end{align*}
 \end{proposition}
 
+Conversely, if we start out with a string of the form given in the previous proposition and rewrite to another string, the new string can also be split up accordingly. 
+\begin{proposition}\label{prop:rewrite_split_conv}
+  \begin{align*}
+    &(A \concat [a, b, c, d, e] \concat B) \strent{} s' \\
+    \rightarrow &~\exists A'~B'~a'~b'~c'~d'~e', s = A' \concat [a', b', c', d', e'] \concat B' \land \length{A} = \length{A'} \land \length{B} = \length{B'}
+  \end{align*}
+\end{proposition}
+
 The following two results are the main correctness statements for the Turing machine simulation.
 \begin{lemma}[Step Simulation]\label{lem:stepsim}~\\
   If $(q, tp) \reprc{} s$, $(q, tp) \succ (q', tp')$ and $\length{tp} < z$, then $\mexists s', s \strent{\Rsim} s' \land (q', tp') \reprc{} s'$. 
@@ -853,7 +861,26 @@ The following two results are the main correctness statements for the Turing mac
   The rewrites can be justified seperately by Lemma~\ref{lem:rewrite_split}.
 
   We have to do several case analyses on the transition that is taken and the shape of the left and right tape halves. As an example, we look at the case where $m = \OSome{\sigma}$ and $\delta(q, \OSome{\sigma}) = (q', \OSome{\sigma'}, \movel)$, $\tmleft{tp} = \rev{(\sigma_1 :: \sigma_2 :: left')}$, $\tmright{tp} = \sigma_3 :: right'$. 
-  By assumption, there are $h_1 = \sigma_1^{\pFlipi{p}} :: \sigma_2^{\pFlipi{p}} :: h_1'$, $h_2 = \sigma_3^p :: h_2'$ with $\sigma_1 :: \sigma_2 :: left' \reprtt{z}{p} h_1$ and $\sigma_3 :: right' \reprtt{z}{p} h_2$. 
+  By assumption, there are $h_1 = \sigma_1^{p} :: \sigma_2^{p} :: h_1'$, $h_2 = \sigma_3^p :: h_2'$ with $\sigma_1 :: \sigma_2 :: left' \reprtt{z}{p} h_1$ and $\sigma_3 :: right' \reprtt{z}{p} h_2$. 
+  Pictorially, the tape looks as follows:
+  \begin{center}
+    \begin{tikzpicture}
+      \draw (0, 0.75) -- (6, 0.75);
+      \draw (0, 0) -- (6, 0);
+      \draw (1.5, 0) -- (1.5, 0.75);
+      \draw (2.25, 0) -- (2.25, 0.75);
+      \draw (3, 0) -- (3, 0.75);
+      \draw (3.75, 0) -- (3.75, 0.75);
+      \draw (4.5, 0) -- (4.5, 0.75);
+      
+      \node at (0.75, 0.375) {left'};
+      \node at (1.875, 0.375) {$\sigma_2^p$};
+      \node at (2.625, 0.375) {$\sigma_1^p$};
+      \node at (3.375, 0.375) {$q^\sigma$};
+      \node at (4.125, 0.375) {$\sigma_3^p$};
+      \node at (5.25, 0.375) {right'};
+    \end{tikzpicture}
+  \end{center}
   Thus, we apply the window 
   \begin{center}
     \trewwin{\sigma_1^p}{q^{\sigma}}{\sigma_3^p}{\polpos{\sigma_2}}{{q'}^{\sigma_1}}{\polpos{\sigma'}}
@@ -862,27 +889,25 @@ The following two results are the main correctness statements for the Turing mac
   Doing one more case analysis for the left and right tape halves, we can determine the other two rewrite windows to use at the center.
 
   Next, we transform the two halves of the tape. The element $\sigma_1$ needs to be removed from the left tape half, while $\sigma'$ needs to be added to the right tape half. 
-  By Lemma~\ref{lem:tape_rem}, there is a unique \todo{continue with that}
+  By Lemma~\ref{lem:tape_rem}, there is a unique $h_1''$ such that 
+  \begin{align*}
+    \rev{\sigma_1^p :: \sigma_2^p :: h_1} \strent{} \rev{\polneg{\sigma_2} :: h_1''} \text{ and } \sigma_2 :: left' \reprtt{+}{z} \polpos{\sigma_2} :: h_1''. 
+  \end{align*}
+  Similarly, by Lemma~\ref{lem:tape_add}, there is a unique $h_2''$ such that
+  \begin{align*}
+    \sigma_3^p :: h_2' \strent{} \polpos{\sigma'} :: \polpos{\sigma_3} :: h_2'' \text{ and } \sigma' :: \sigma_3 :: right' \reprtt{+}{z} \polpos{\sigma'} :: \polpos{\sigma_3} :: h_2''. 
+  \end{align*}
 
-          %Next, we transform the two halves of the tape according to the Lemmas~\ref{lem:tapeadd} and~\ref{lem:taperem}. The element $m'$ needs to be added to the right half, while the element $\sigma_1$ has to be removed from the left one. 
-          %For the right half, we get a unique $RS'$ such that 
-          %\[\sigma_3^p :: RS \strent{} \polpos{m'} :: \polpos{\sigma_3} :: RS' \text{ and } m' :: \sigma_3 :: rsr \reprt{1} \polpos{m'} :: \polpos{\sigma_3} :: RS'.\]
-          %Similarly, for the left half, there is a unique $LS'$ such that 
-          %\[\rev{\sigma_1^p :: \sigma_2^p :: LS} \strent{} \rev{\polneg{\sigma_2} :: LS'} \text{ and } \sigma_2 :: lsr \reprt{1} \polpos{\sigma_2} :: LS'.\]
+  These two results can be used to justify the rewrite for the two tape halves. Moreover, we have to show that 
+  \begin{align*}
+    (q', tp') \reprc{} \rev{(\polpos{\sigma_2} :: h_1'')} \concat [{q'}^{\sigma_1}] \concat (\polpos{\sigma'} :: \polpos{\sigma_3} :: h_2''), 
+  \end{align*}
+  which is straightforward, as $tp' = \textsf{doAct}~tp~(\OSome{\sigma'}, \movel)$, i.e.
+  \begin{align*}
+    tp' = \textsf{midtape}~(\sigma_2 :: left')~\sigma_1~(\sigma' :: \sigma_3 :: right').
+  \end{align*}
 
-          %We now want to show that 
-          %\[\rev{(\sigma_1^p :: \sigma_2^p :: LS)} \concat [q^m] \concat (\sigma_3^p :: RS) \strent{} \rev{(\polpos{\sigma_2} :: LS')} \concat [{q'}^{\sigma_1}] \concat (\polpos{m'} :: \polpos{\sigma_3} :: RS') \]
-          %and 
-          %\[ 
-            %(q', \mathit{tape}') \reprc{} \rev{(\polpos{\sigma_2} :: LS')} \concat [{q'}^{\sigma_1}] \concat (\polpos{m'} :: \polpos{\sigma_3} :: RS') 
-          %\]
-          %where $\mathit{tape}'$ is the new tape obtained by $\textsf{doAct}~\mathit{tape}~(\Some{m'}, \textsf{L})$, i.e.\ 
-          %\[\mathit{tape}' = \textsf{midtape}~(\sigma_2 :: lsr)~\sigma_1~(m' :: \sigma_3 :: rsr).\]
-
-          %The latter is straightforward to prove. For the former, we have to show that at every offset of the the configuration strings, we can apply a valid rewrite window. We have already shown that for the position $-1$ as well as (by the transformations of the tape halves) for positions $\le -3$ and $\ge 1$ (where we consider these positions wrt.\ the left border of the window).
-          %For position $-2$ we have to use a window which has a state symbol in its rightmost cells, for position $0$ we have to use a window which has a state symbol in its leftmost cells.
-
-
+  Finally, we prove that the rewrite is unique. Assuming that the current configuration string rewrites to $s'$, we can also split up $s'$ along the state symbol by Proposition~\ref{prop:rewrite_split_conv}. We do an inversion on the rewrite windows used at the center and then use the uniqueness for both tape halves.
 \end{proof}
 
 \begin{lemma}[Halting Simulation]\label{lem:haltsim}~\\
@@ -925,14 +950,14 @@ If there is enough space left on the tape, the rewrite windows $\Rsim$ can exact
 \end{lemma}
 \begin{proof}
   Logically, a new line is appended to the tableau of configurations with each rewrite step. Thus, a direct induction over $s~\strent{\Rsim}^i s'$ fails: the definition of $\strent{\Rsim}^i$ prepends a new line with each step. By Proposition~\ref{prop:relpower}, we switch to $\prescript{i}{}{\strent{\Rsim}}$. 
-  Now, the induction goes through. In the successor case, we make a case analysis on $\textsf{halt}~q$ (which is also why the naive induction fails).
+  Now, the induction goes through. In the successor case, we make a case analysis on $\textsf{halt}~q$ (which is also the reason why the naive induction fails).
 \end{proof}
 
 \subsection{Soundness and Completeness}
 We do not directly define the set of final substrings according to the definition of \PR{}, but instead work with a more abstract notion for now.
 
 \begin{definition}[Halting String]
-  \[\haltString{s} \defeq \exists \gamma = p^m, \gamma \in s \land \textsf{halt}~p = \btrue \]
+  \[\haltString{s} \defeq \exists p~m, p^m \in s \land \textsf{halt}~p = \btrue \]
 \end{definition}
 
 \begin{lemma}\label{lem:finalcond}
@@ -1035,11 +1060,19 @@ $\expr{}~p~S \leftrightarrow \PR{}~S'$. From an abstract perspective, the proof 
 Most of the formal work is due to the handling of the different alphabets and the injections into the combined alphabet.
 
 We therefore only state the most important intermediate result. Intuitively, this allows us to split a sequence of rewrites in the combined instance $S'$ into $t'$ rewrites due to the prelude and $t$ rewrites due to the original instance $S$. 
-\begin{lemma}
+\begin{lemma}\label{lem:prelude_split}
   If $x_0 \strent{\Rcomb}^{t' + t} s$, then there exists $x_0'$ with $x_0 \strent{R'}^{t'} x_0'$, $x_0' \strent{R}^t s$ and $\isOrigString~s$. 
 \end{lemma}
 \begin{proof}
-  \todo{outline}
+  For the proof, we use the following simple facts:
+  \begin{enumerate}[1)]
+    \item If $n \le t'$ and $x_0 \strent{\Rcomb} b$, then $x_0 \strent{R'} b$. 
+    \item If $\length{s} \ge 3$, $\isOrigString~s$, and $s \strent{\Rcomb} b$, then $s \strent{R} b$ and $\isOrigString~b$. 
+  \end{enumerate}
+  We apply additivity of $\strent{}^{t+t'}$ (Proposition~\ref{prop:relpower}) to the assumption and choose the the resulting $x_0'$. 
+  It is known that $x_0 {\strent{\Rcomb}}^{t'} x_0'$ and $x_0' {\strent{\Rcomb}}^t s$. 
+  By 1), $x_0 \strent{R'} x_0'$, which shows the first part of the goal. 
+  Applying $(A_1)$, we get $\isOrigString~x_0'$. The proof is closed using 2).
 \end{proof}
 
 The main result is now a straightforward consequence.
@@ -1047,10 +1080,7 @@ The main result is now a straightforward consequence.
   \[\expr{}~p~S \leftrightarrow \PR{}~S' \]
 \end{theorem}
 \begin{proof}
-  \begin{description}
-    \item[$\Rightarrow$:]
-    \item[$\Leftarrow$:]
-  \end{description}
+  Using Lemma~\ref{lem:prelude_split} and the assumptions.
 \end{proof}
 
 \section{Guessing the Input}
@@ -1066,7 +1096,7 @@ In this section, we apply the technique presented in Section~\ref{sec:preludes} 
 
 The alphabet \mnotec{$\Delta$} of the prelude has four elements, where $q_0$ is the initial state.
 \[\Delta \defeq \nblank \bnfmid \nstar \bnfmid \ninit \bnfmid \ndelim \]
-As in the previous section, we implicitly lift $\Delta$ and $\Gamma$ to the combined alphabet $\mathcal{A}\defeq \Gamma + \Delta$.\mnote{$\mathcal{A}$}
+As in the previous section, we implicitly lift $\Delta$ and $\Gamma$ to the combined alphabet $\mathcal{A}\defeq \Gamma + \Delta$. This requires some additional work for the formal proofs which we omit on paper.\mnote{$\mathcal{A}$}
 
 Following Section~\ref{sec:informal_nondet}, the initial string has the following form:
 \begin{center}
@@ -1145,7 +1175,7 @@ This is advantageous as we can do simple inductive proofs for the right tape hal
   \end{enumerate}
 \end{lemma}
 \begin{proof}
-  For the first statement, existence and uniqueness both follow by routine inductions on $\strent{}$. 
+  For the first statement, existence follows by induction on $n$ and uniqueness follows by a routine induction on $\strent{}$. 
   In order to prove the second statement, we switch to the explicit characterisation (Lemma~\ref{lem:agree_valid}) and do an induction on the index.
 \end{proof}
 
@@ -1156,21 +1186,33 @@ Next, we show that a string starting with a number of wildcards $\nstar$ can be 
     \item $\nstar^{\length{s}} \concat \nstar^n \concat \nblank^{\hat{t}} \concat [\ndelim] \strent{\Rprelude} \withl \overline{x} \withm x \in s\withr \concat \nilstr{\circ}{(n+\hat{t})}$
   \end{enumerate}
 \end{lemma}
+\begin{proof}
+  \item Induction on $n$, using Lemma~\ref{lem:prelude_blank} for the base case.
+  \item Induction on $s$, using 1.\ for the base case.
+\end{proof}
 
 Of course, we cannot prove uniqueness in this setting. Instead, we prove the following statement.
 \begin{lemma}
   \[ \nstar^j \concat \nblank^{\hat{n}} \concat [\ndelim] \strent{\Rprelude} s \rightarrow \exists s', \length{s'} \le j \land s = \withl \overline{x} \withm x \in s \withr \concat \nilstr{\circ}{(j + \hat{n})} \]
 \end{lemma}
+\begin{proof}
+  Induction on $j$.
+\end{proof}
 
-This gives us all the tools we need to prove soundness ($A_4$) and completeness ($A_3$) of the prelude.
-
-\begin{lemma}[Soundness]
-  \[ \initStr \strent{\Rprelude} s \rightarrow \isInitString~s \]
-\end{lemma}
-
-\begin{lemma}[Completeness]
+This gives us all the tools we need to prove completeness ($A_3$) and soundness ($A_4$) of the prelude.
+\begin{lemma}[Completeness]\label{lem:prelude_complete}
   \[ \isInitString~s \land \length{s} = l \rightarrow \initStr \strent{\Rprelude} s \]
 \end{lemma}
+\begin{proof}
+  We do case analysis on the number of input symbols $k$ and the number of steps $t$ in order to determine five symbols at the center. Then, Lemma~\ref{lem:rewrite_split} allows us to decompose the rewriting. The different cases make use of the previous lemmas.
+\end{proof}
+
+\begin{lemma}[Soundness]\label{lem:prelude_sound}
+  \[ \initStr \strent{\Rprelude} s \rightarrow \isInitString~s \]
+\end{lemma}
+\begin{proof}
+  Again by doing a case analysis on the symbols at the center and then using the preceding lemmas and inversions. 
+\end{proof}
 
 Applying Theorem~\ref{thm:expr_to_pr}, we have now arrived at the full reduction of \gennp{} to 3-\PR{}.
 
@@ -1178,7 +1220,11 @@ Applying Theorem~\ref{thm:expr_to_pr}, we have now arrived at the full reduction
   \[\gennp~(\Sigma, M, k, t) \leftrightarrow \PR~(\mathcal{A}, 1, 3, \initStr, \Rprelude \concat \Rsim, \Rfinal, 1 + t) \]
 \end{theorem}
 \begin{proof}
-
+  We have previously reduced \gennp{} to Problem~\ref{prob:exinput}. Theorem~\ref{thm:expr_to_pr} for $t' = 1$ allows us to use the prelude we just constructed to reduce to the \PR{} instance.
+  It remains to show assumptions $(A_0) - (A_5)$. 
+  The structural requirements $(A_0)$ and $(A_5)$ on the initial prelude string hold by construction. 
+  Completeness $(A_3)$ is Lemma~\ref{lem:prelude_complete}, while Soundness $(A_4)$ is Lemma~\ref{lem:prelude_sound}. 
+  $(A_2)$ trivially holds as $k < 1$ implies $k = 0$. Finally, $(A_1)$, i.e.\ $\initStr \strent{\Rprelude} x_0' \rightarrow \isOrigString{x_0'}$, follows by an easy induction on $\strent{\Rprelude}$ due to the construction of the rewrite windows. 
 \end{proof}
 
 \section{Mechanisation}
