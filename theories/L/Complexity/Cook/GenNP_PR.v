@@ -13,7 +13,7 @@ Require Import PslBase.FiniteTypes.FinTypes.
 
 Notation "f $ x" := (f x) (at level 60, right associativity, only parsing).
 
-(*We build the tableau construction as a PR instance.
+(**We build the tableau construction as a PR instance.
   The translation to the FlatGenNP to FlatPR reduction is directly done in this file
   as Coq's section mechanism does not support multiple files
   (and it would be super tedious to explicitly pass in the fixed variables after leaving the section).*)
@@ -27,7 +27,8 @@ Section fixTM.
   Notation halt := (@halt Sigma 1 fTM). 
 
   Variable (t : nat).
-  Variable (k : nat). 
+  Variable (k' : nat). 
+  Variable (fixedInput : list Sigma). 
 
   Notation sconfig := (sconfig fTM). 
   Implicit Type (c : sconfig). 
@@ -36,6 +37,7 @@ Section fixTM.
   (*our nice 1-tape definition should not be reduced *)
   Arguments strans : simpl never. 
   
+  Definition k := (|fixedInput|) + k'. (*total input length: fixed input + certificate *)
   Definition z' := t + k. (*effectively available space on each side of the tape *)
   Definition wo := 2.     (*additional space for each side in order to make proofs more convenient *)
   Definition z := wo + z'. (*length of each tape side *)
@@ -2317,15 +2319,23 @@ Section fixTM.
 
 
   (*initial strings *)
-  Definition initialString (s : list Sigma) := stringForConfig start (initialTapeForString s). 
+  Definition fullInput (c : list Sigma) := fixedInput ++ c.
+  Definition initialString (c : list Sigma) := stringForConfig start (initialTapeForString (fullInput c)). 
 
-  Definition isValidInitialString (s : list Gamma) :=
-    exists s', s = initialString s' /\ isValidInput k s'. 
+  Definition isValidInitialString s := exists cert, isValidCert k' cert /\ s = initialString cert. 
 
-  Lemma initialString_reprConfig s : isValidInput k s -> (start, initialTapeForString s) ≃c initialString s. 
+  Lemma isValidCert_sizeOfTape cert: isValidCert k' cert -> sizeOfTape (initialTapeForString (fullInput cert)) <= k.
+  Proof. 
+    intros H. unfold fullInput. unfold isValidCert in H. 
+    unfold z', k. 
+    destruct fixedInput; [destruct cert | ]; cbn in *; [lia | lia | ]. 
+    rewrite app_length. lia.
+  Qed.
+
+  Lemma initialString_reprConfig cert : isValidCert k' cert -> (start, initialTapeForString (fullInput cert)) ≃c initialString cert. 
   Proof. 
     intros. unfold initialString. apply stringForConfig_reprConfig.
-    unfold isValidInput in H. destruct s; cbn in *; unfold z'; lia.  
+    rewrite isValidCert_sizeOfTape by apply H. unfold z'; lia.
   Qed. 
 
   (*final condition *)
@@ -2360,18 +2370,16 @@ Section fixTM.
   Qed.
 
   (*simulation lemma: for valid inputs, the PR instance does rewrite to a final string iff the Turing machine does accept *)
-  Lemma simulation : forall s,
-      isValidInput k s
-      -> PTPRLang (Build_PTPR (initialString s) simRules finalSubstrings  t) <-> exists f, loopM (initc fTM ([|initialTapeForString s|])) t = Some f.
+  Lemma simulation : forall cert,
+      isValidCert k' cert 
+      -> PTPRLang (Build_PTPR (initialString cert) simRules finalSubstrings  t) <-> exists f, loopM (initc fTM ([|initialTapeForString (fullInput cert)|])) t = Some f.
   Proof. 
     intros. split; intros. 
     - destruct H0 as (wf & finalStr & H1 & H2). cbn [Psteps Pinit Pwindows Pfinal ] in H1, H2.
-      (*erewrite relpower_congruent in H1.*)
-      (*2: eapply valid_congruent, rewHead_agreement_all.*)
-      specialize (@soundness start (initialTapeForString s) (initialString s) finalStr) as H3. 
+      specialize (@soundness start (initialTapeForString (fullInput cert)) (initialString cert) finalStr) as H3. 
       edestruct H3 as (q' & tape' & F1 & ((l & F2 & F3 & F4) & F)). 
       + apply initialString_reprConfig, H. 
-      + destruct s; cbn; unfold isValidInput in H; cbn in H; lia. 
+      + apply isValidCert_sizeOfTape, H.  
       + apply H1.
       + apply finalSubstrings_correct. apply H2. 
       + exists (mk_mconfig q' [|tape'|]). 
@@ -2388,8 +2396,8 @@ Section fixTM.
       eapply VectorDef.case0 with (v := t0). 
       intros H0. clear t0. 
       cbn [windows steps init final].
-      edestruct (@completeness start (initialTapeForString s) q' tape' (initialString s)) as (s' & F1 & F2 & F3). 
-      + destruct s; cbn; unfold isValidInput in H; cbn in *; lia. 
+      edestruct (@completeness start (initialTapeForString (fullInput cert)) q' tape' (initialString cert)) as (s' & F1 & F2 & F3). 
+      + apply isValidCert_sizeOfTape, H.  
       + apply initialString_reprConfig, H. 
       + apply loop_relpower_agree, H0. 
       + split. 
@@ -2401,10 +2409,10 @@ Section fixTM.
   Qed.  
 
   (*from this, we directly get a reduction to existential PR: does there exist an input string satisfying isValidInitialString for which the PR instance is a yes instance? *)
-  Lemma TM_reduction_to_ExPTPR : @ExPTPR (FinType(EqType Gamma)) simRules finalSubstrings t isValidInitialString l <-> (exists s, isValidInput k s /\ exists f, loopM (initc fTM ([|initialTapeForString s|])) t = Some f). 
+  Lemma TM_reduction_to_ExPTPR : @ExPTPR (FinType(EqType Gamma)) simRules finalSubstrings t isValidInitialString l <-> (exists cert, isValidCert k' cert /\ exists f, loopM (initc fTM ([|initialTapeForString (fullInput cert)|])) t = Some f). 
   Proof. 
     split; unfold ExPTPR.  
-    - intros (x0 & H1 & (s & H2 & H3) & H4). exists s. split; [apply H3 | ]. subst; now apply simulation.
+    - intros (x0 & H1 & (cert & H2 & H3) & H4). exists cert. split; [apply H2 | ]. subst; now apply simulation.
     - intros (s & H1 & H2%simulation). 2: apply H1. 
       exists (initialString s). split; [ | split; [unfold isValidInitialString; eauto | apply H2]]. 
       eapply string_reprConfig_length, initialString_reprConfig, H1. 
@@ -2416,7 +2424,7 @@ Section fixTM.
   (*initCond: isValidInitialString *)
   (*for that, a set of new rules is added which allow us to guess every allowed initial string using a single rewrite step *)
 
-  Inductive preludeSig' := nblank | nstar | ndelimC | ninit. 
+  Inductive preludeSig' := nblank | nstar | ndelimC | ninit | nsig σ. 
   Notation preludeSig := (sum Gamma preludeSig'). 
 
   Notation preludeRule := (preludeSig' -> preludeSig' -> preludeSig' -> preludeSig -> preludeSig -> preludeSig -> Prop). 
@@ -2426,12 +2434,23 @@ Section fixTM.
   | dbbC : preludeRules ndelimC nblank nblank (inl $ inr $ inl delimC) (inl $ inr $ inr (neutral, |_|)) (inl $ inr $ inr (neutral, |_|))
   | bbdC : preludeRules nblank nblank ndelimC (inl $ inr $ inr (neutral, |_|)) (inl $ inr $ inr (neutral, |_|)) (inl $ inr $ inl delimC)
   | bbiC : preludeRules nblank nblank ninit (inl $ inr $ inr (neutral, |_|)) (inl $ inr $ inr (neutral, |_|)) (inl $ inl (start, |_|))
+  | bifC σ: preludeRules nblank ninit (nsig σ) (inl $ inr $ inr (neutral, |_|)) (inl $ inl (start, |_|)) (inl $ inr $ inr (∘ Some σ))
   | bisC m : preludeRules nblank ninit nstar (inl $ inr $ inr (neutral, |_|)) (inl $ inl (start, |_|)) (inl $ inr $ inr (neutral, m))
   | bibC : preludeRules nblank ninit nblank (inl $ inr $ inr (neutral, |_|)) (inl $ inl (start, |_|)) (inl $ inr $ inr (neutral, |_|))
   | ibbC : preludeRules ninit nblank nblank (inl $ inl (start, |_|)) (inl $ inr $ inr (neutral, |_|)) (inl $ inr $ inr (neutral, |_|))
+  | ifsC σ1 m1: preludeRules ninit (nsig σ1) nstar (inl $ inl (start, |_|)) (inl $ inr $ inr (∘ Some σ1)) (inl $ inr $ inr (∘ m1))
+  | ifbC σ1 : preludeRules ninit (nsig σ1) nblank (inl $ inl (start, |_|)) (inl $ inr $ inr (∘ Some σ1)) (inl $ inr $ inr (∘ |_|))
+  | iffC σ1 σ2 : preludeRules ninit (nsig σ1) (nsig σ2) (inl $ inl (start, |_|)) (inl $ inr $ inr (∘ Some σ1)) (inl $ inr $ inr (∘ Some σ2))
   | isbC m : preludeRules ninit nstar nblank (inl $ inl (start, |_|)) (inl $ inr $ inr (neutral, m)) (inl $ inr $ inr (neutral, |_|))
   | issSC σ m : preludeRules ninit nstar nstar (inl $ inl (start, |_|)) (inl $ inr $ inr (neutral, Some σ)) (inl $ inr $ inr (neutral, m))
   | issBC : preludeRules ninit nstar nstar (inl $ inl (start, |_|)) (inl $ inr $ inr (neutral, |_|)) (inl $ inr $ inr (neutral, |_|))
+  | fffC σ1 σ2 σ3 : preludeRules (nsig σ1) (nsig σ2) (nsig σ3) (inl $ inr $ inr (∘ Some σ1)) (inl $ inr $ inr (∘ Some σ2)) (inl $ inr $ inr (∘ Some σ3))
+  | ffsC σ1 σ2 m1 : preludeRules (nsig σ1) (nsig σ2) nstar (inl $ inr $ inr (∘ Some σ1)) (inl $ inr $ inr (∘ Some σ2)) (inl $ inr $ inr (∘ m1))
+  | fssSC σ1 σ2 m1 : preludeRules (nsig σ1) nstar nstar (inl $ inr $ inr (∘ Some σ1)) (inl $ inr $ inr (∘ Some σ2)) (inl $ inr $ inr (∘ m1))
+  | fssBC σ1 : preludeRules (nsig σ1) nstar nstar (inl $ inr $ inr (∘ Some σ1)) (inl $ inr $ inr (∘ |_|)) (inl $ inr $ inr (∘ |_|)) 
+  | fsbC σ1 m1 : preludeRules (nsig σ1) nstar nblank (inl $ inr $ inr (∘ Some σ1)) (inl $ inr $ inr (∘ m1)) (inl $ inr $ inr (∘ |_|))
+  | ffbC σ1 σ2 : preludeRules (nsig σ1) (nsig σ2) nblank (inl $ inr $ inr (∘ Some σ1)) (inl $ inr $ inr (∘ Some σ2)) (inl $ inr $ inr (∘ |_|))
+  | fbbC σ1 : preludeRules (nsig σ1) nblank nblank (inl $ inr $ inr (∘ Some σ1)) (inl $ inr $ inr (∘ |_|)) (inl $ inr $ inr (∘ |_|))
   | sssSSC σ1 σ2 m: preludeRules nstar nstar nstar (inl $ inr $ inr (neutral, Some σ1)) (inl $ inr $ inr (neutral, Some σ2)) (inl $ inr $ inr (neutral, m))
   | sssSBC σ : preludeRules nstar nstar nstar (inl $ inr $ inr (neutral, Some σ)) (inl $ inr $ inr (neutral, |_|)) (inl $ inr $ inr (neutral, |_|))
   | sssBC : preludeRules nstar nstar nstar (inl  $ inr $ inr (neutral, |_|)) (inl $ inr $ inr (neutral, |_|)) (inl $ inr $ inr (neutral, |_|))
@@ -2442,14 +2461,14 @@ Section fixTM.
   Hint Constructors preludeRules. 
 
   Definition preludeInitialString : list preludeSig':=
-    [ndelimC] ++ rev (repEl z nblank) ++ [ninit] ++ repEl k nstar ++ repEl (z - k) nblank ++ [ndelimC]. 
+    [ndelimC] ++ rev (repEl z nblank) ++ [ninit] ++ map nsig fixedInput ++ repEl k' nstar ++ repEl (wo + t) nblank ++ [ndelimC]. 
 
   Lemma preludeInitialString_length : |preludeInitialString| = l. 
-  Proof. unfold preludeInitialString. rewrite !app_length, rev_length, !repEl_length. unfold l, z, z', wo; cbn[length]. lia. Qed. 
+  Proof. unfold preludeInitialString. rewrite !app_length, rev_length, !repEl_length, map_length. unfold l, z, z', k, wo; cbn[length]. lia. Qed. 
 
   Lemma lifted_preludeInitialString : map (inr (A := Gamma)) preludeInitialString = 
-    [inr ndelimC] ++ rev (repEl z (inr nblank)) ++ [inr ninit] ++ repEl k (inr nstar) ++ repEl (z - k) (inr nblank) ++ [inr ndelimC]. 
-  Proof.  unfold preludeInitialString. rewrite !map_app, map_rev, !map_repEl. reflexivity. Qed. 
+    [inr ndelimC] ++ rev (repEl z (inr nblank)) ++ [inr ninit] ++ map (fun σ => inr (nsig σ)) fixedInput ++ repEl k' (inr nstar) ++ repEl (wo + t) (inr nblank) ++ [inr ndelimC]. 
+  Proof.  unfold preludeInitialString. rewrite !map_app, map_rev, !map_repEl, map_map. reflexivity. Qed. 
 
   (** we now use the method from PTPR_Preludes to derive that the prelude does in fact solve the problem of guessing an initial string *)
 
@@ -2459,8 +2478,11 @@ Section fixTM.
   Lemma stringForTapeHalf'_eq s : stringForTapeHalf' (z - |s|) s = stringForTapeHalf s. 
   Proof. unfold stringForTapeHalf', stringForTapeHalf; easy. Qed. 
 
-  Lemma initialString_eq s : initialString s = rev (stringForTapeHalf []) ++ [inl (start, |_|)] ++ stringForTapeHalf s. 
-  Proof.  unfold initialString. destruct s; cbn; eauto.  Qed. 
+  Lemma initialString_eq s : initialString s = rev (stringForTapeHalf []) ++ [inl (start, |_|)] ++ stringForTapeHalf (fullInput s). 
+  Proof.  
+    unfold initialString, fullInput. 
+    destruct fixedInput; [destruct s | ]; cbn; eauto.  
+  Qed. 
 
   Hint Constructors valid. 
   Hint Constructors rewritesHeadInd. 
@@ -2600,7 +2622,7 @@ Section fixTM.
 
   (*but it can also be rewritten to a string starting with symbols of the tape alphabet, followed by blanks *)
   (*we'll later instantiate this with |s| <= k and n = t + k - |s| *)
-  Lemma prelude_right_half_rewrites_input s n : 
+  Lemma prelude_right_half_rewrites_cert s n : 
     valid (rewritesHeadInd (liftPrelude preludeRules)) (repEl (|s|) (inr nstar) ++ repEl n (inr nstar) ++ repEl (S (S t)) (inr nblank) ++ [inr ndelimC]) 
                                                        (map inl (stringForTapeHalf' (S (S (n + t))) s)). 
   Proof. 
@@ -2617,15 +2639,15 @@ Section fixTM.
   Qed. 
 
   (*a slightly different formulation of the same statement *)
-  Lemma prelude_right_half_rewrites_input' s n : 
+  Lemma prelude_right_half_rewrites_cert' s n : 
     valid (rewritesHeadInd (liftPrelude preludeRules)) (repEl (|s| + n) (inr nstar) ++ repEl (S (S t)) (inr nblank) ++ [inr ndelimC]) 
                                                        (map inl (stringForTapeHalf' (S (S (n + t))) s)).
   Proof. 
-    rewrite repEl_add. rewrite <- app_assoc. apply prelude_right_half_rewrites_input. 
+    rewrite repEl_add. rewrite <- app_assoc. apply prelude_right_half_rewrites_cert. 
   Qed. 
 
   (*a string starting with nstars can *only* rewrite to a string starting with (possibly zero) symbols of the tape alphabet, followed by blanks *)
-  Lemma prelude_right_half_rewrites_input_unique j i s: 
+  Lemma prelude_right_half_rewrites_cert_unique j i s: 
     valid (rewritesHeadInd (liftPrelude preludeRules)) (map inr (repEl (S (S j)) nstar ++ repEl (S (S i)) nblank ++ [ndelimC])) s 
     -> exists s', |s'| <= S(S j) /\ s = map inl (stringForTapeHalf' (S (S i) + (S (S j) - |s'|)) s'). 
   Proof. 
@@ -2652,7 +2674,7 @@ Section fixTM.
     | [H : preludeRules _ _ _ _ _ _ |- _] => inv H
     end. 
 
-  Lemma prelude_right_half_rewrites_input_unique' j i s : 
+  Lemma prelude_right_half_rewrites_cert_unique' j i s : 
     valid (rewritesHeadInd (liftPrelude preludeRules)) (map inr (repEl j nstar ++ repEl (S (S i)) nblank ++ [ndelimC])) s -> exists s', |s'| <= j /\ s = map inl (stringForTapeHalf' (S (S i) + j - (|s'|)) s'). 
   Proof. 
     intros H. 
@@ -2663,8 +2685,51 @@ Section fixTM.
       destruct m.
       + exists [e]. cbn; split; [ lia | ]. inv H2. rewrite Nat.add_comm. cbn. easy.
       + exists []. cbn; split; [ lia | ]. inv H2. rewrite Nat.add_comm. cbn. easy. 
-    - apply prelude_right_half_rewrites_input_unique in H as (s' & H1 & H2). 
+    - apply prelude_right_half_rewrites_cert_unique in H as (s' & H1 & H2). 
       rewrite Nat.add_sub_assoc in H2 by lia. eauto.
+  Qed. 
+
+  (** now we add the fixed input at the start*)
+  Lemma prelude_right_half_rewrites_input n finp s : 
+    valid (rewritesHeadInd (liftPrelude preludeRules)) 
+      (map (fun σ => inr (nsig σ)) finp ++ repEl (|s|) (inr nstar) ++ repEl n (inr nstar) ++ repEl (wo+ t) (inr nblank) ++ [inr ndelimC]) 
+      (map inl (stringForTapeHalf' (wo+ n + t) (finp ++ s))). 
+  Proof. 
+    induction finp. 
+    - cbn [map app]. apply prelude_right_half_rewrites_cert. 
+    - cbn. constructor 3; [ apply IHfinp | ]. 
+      destruct finp; [ | destruct finp; [ | cbn; solve [eauto 10]]]. 
+      + destruct s; [ | destruct s; [ | cbn; solve [eauto 10]]]. 
+        * destruct n; [ | destruct n]; cbn; eauto 10. 
+        * destruct n; cbn; eauto 10.
+      + destruct s; [ | cbn; eauto 10]. destruct n; cbn; eauto 10.
+  Qed. 
+
+  (*and inversion *)
+  Lemma prelude_right_half_rewrites_input_unique finp j i s : 
+    valid (rewritesHeadInd (liftPrelude preludeRules)) (map inr (map nsig finp ++ repEl j nstar ++ repEl (wo + i) nblank ++ [ndelimC])) s -> exists s', |s'| <= j /\ s = map inl (stringForTapeHalf' (wo + i + j - (|s'|)) (finp ++ s')).
+  Proof. 
+    intros H. revert s H. induction finp; intros.  
+    - cbn in H. apply prelude_right_half_rewrites_cert_unique' in H. apply H. 
+    - inv_valid.
+      1: { destruct finp; [ destruct nstar | destruct finp]; (destruct j; [ | destruct j]); cbn in H4; try lia. }
+      apply IHfinp in H2 as (s' & H2 & ->). clear IHfinp. 
+      destruct finp; [ | destruct finp]; cbn in *. 
+      + destruct j; [ | destruct j]; cbn in *. 
+        * destruct s'; [ | cbn in H2; lia]. cbn in *. prelude_inv_valid_constant. 
+          exists []. easy.
+        * destruct s'; [ | destruct s']; cbn in *; prelude_inv_valid_constant. 
+          -- exists []; easy.
+          -- exists [e]; easy. 
+        * destruct s' as [ | ? s']; [ | destruct s']; cbn in *; prelude_inv_valid_constant. 
+          -- exists []; easy. 
+          -- exists [e]; easy.
+          -- exists (e :: e0 :: s') ; easy.
+      + destruct j; [destruct s'; [ | cbn in H2; lia] | destruct s']; cbn in *; prelude_inv_valid_constant. 
+        * exists []; easy. 
+        * exists []; easy.
+        * exists (e0 :: s'); easy.
+      + prelude_inv_valid_constant. exists s'. easy.
   Qed. 
 
   (** we now put the above results together to obtain soundness and completeness. *)
@@ -2688,8 +2753,9 @@ Section fixTM.
   Lemma prelude_complete s : isValidInitialString s /\ |s| = l -> valid (rewritesHeadInd (liftPrelude preludeRules)) (map inr preludeInitialString) (map inl s). 
   Proof. 
     intros (H1 & H2). 
-    destruct H1 as (s' & -> & H1). 
-    unfold isValidInput in H1. 
+    destruct H1 as (s' & H1 & ->). 
+    unfold isValidCert in H1. 
+  (*TODO: adapt proofs from here *)
 
     (*main CA on k, t in order to determine the three center symbols *)
     destruct k as [ | k'] eqn:eqk; [ | destruct k']; [destruct t as [ | t'] eqn:eqt; [ | destruct t'] | destruct t as [ | t'] eqn:eqt; [ | destruct t'] | ]. 
