@@ -8,15 +8,69 @@ From Undecidability Require Import TM.Code.ProgrammingTools.
 From Undecidability.TM Require Import Basic.Mono Basic.Null Compound.Multi.
 Section PrimitiveMachines.
 
-  Check Mono.ReadChar_Sem.
+  Check ReadChar_Sem.
   
-  Check Mono.Write_Sem.
+  Check Write_Sem.
   
-  Check Mono.Move_Sem.
+  Check Move_Sem.
   
-  Check Multi.Nop_Sem.
+  Check Nop_Sem.
 
 End PrimitiveMachines.
+
+From Undecidability.TM Require Import Combinators.
+Section MachineCombinators.
+
+  Check Switch_Realise.
+
+  Check Switch_TerminatesIn.
+  
+  Check While_Realise.
+
+  Check While_TerminatesIn.
+
+  Check Return_Realise.
+
+  Check Return_Terminates.
+  
+  Print Seq.
+  
+  Print If.
+
+End MachineCombinators.
+
+
+From Undecidability.TM.Lifting Require Import LiftTapes LiftAlphabet.
+Section MachineLiftings.
+
+  Check LiftTapes_Realise.
+
+  Check LiftTapes_Terminates.
+  
+  Check LiftAlphabet_Realise.
+
+  Check LiftAlphabet_TerminatesIn.
+
+End MachineLiftings.
+
+
+Section EncodableTypes.
+
+  Check Encode_unit.
+
+  Check Encode_bool.
+
+  Check Encode_nat.
+
+  Check Encode_option.
+
+  Check Encode_list.
+
+  Check Encode_sum.
+
+  Check Encode_pair.
+  
+End EncodableTypes.
 
 
 From Undecidability.TM Require Import Univ.StepTM PrettyBounds.UnivBounds PrettyBounds.UnivSpaceBounds.
@@ -212,5 +266,3 @@ Section UniversalMachine.
   Qed.
 
 End UniversalMachine.
-
-Check Univ_Terminates_pretty.
