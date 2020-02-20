@@ -157,27 +157,27 @@ Section UniversalMachine.
 
   
 
-  Definition Univ_T_pretty M : tRel sig^+ 6 :=
-    let c := proj1_sig (Univ_nice.Univ_steps_nice M) in
+  Definition Univ_T_pretty c: tRel sig^+ 6 :=
     fun tin k =>
-        exists (tp : tape sigM) (q : states M) (k' : nat) (q' : states M) (tp' : tape sigM),
+        exists M (tp : tape sigM) (q : states M) (k' : nat) (q' : states M) (tp' : tape sigM),
         tin[@Fin0] = mapTape (fun s => inr (Retr_f (Retract := retr_sigTape_sig) s)) tp /\
         tin[@Fin1] ≃(retr_sigGraph_sig) (graph_of_TM M) /\
         tin[@Fin2] ≃(retr_sigCurrentState_sig) (halt q, index q) /\
         isRight tin[@Fin3] /\ isRight tin[@Fin4] /\ isRight tin[@Fin5] /\
         loopM (mk_mconfig q [|tp|]) k' = Some (mk_mconfig q' [|tp'|]) /\
-        c* (1+k') * size (graph_of_TM M) <= k.
+        c* (1+k') * size (graph_of_TM M) * (Cardinality.Cardinality (states M)) <= k.
 
 
   (** This lemma ransforms the lemma we proofed in Coq to the more readable version in the paper. *)
-  Lemma Univ_Terminates_pretty M: projT1 (Univ _ _) ↓ Univ_T_pretty M.
+  Lemma Univ_Terminates_pretty: { c & projT1 (Univ _ _) ↓ Univ_T_pretty c}.
   Proof.
+    eexists.
     eapply TerminatesIn_monotone.
     {apply Univ_Terminates. }
     unfold Univ_T_pretty,Univ_T.
     unfold containsWorkingTape,containsTrans,containsState.
     intros tin k.
-    intros H. exists M. revert H.
+    apply Morphisms_Prop.ex_impl_morphism;intro M;hnf.
     apply Morphisms_Prop.ex_impl_morphism;intro tp;hnf.
     apply Morphisms_Prop.ex_impl_morphism;intro q;hnf.
     apply Morphisms_Prop.ex_impl_morphism;intro k';hnf.
@@ -188,10 +188,27 @@ Section UniversalMachine.
     repeat eapply conj.
     1-3,5:easy.
     -intros i. destruct_fin i. all:easy.
-    -assert (Heq':=proj2_sig (Univ_nice.Univ_steps_nice M)).
+    -assert (Heq':=proj2_sig (Univ_nice.Univ_steps_nice sigM)).
      unfold PrettyBounds.dominatedWith in Heq'.
      rewrite Heq'.
-     rewrite <- Heq, Encode_nat_hasSize. now rewrite <-mult_assoc.
+     rewrite <- Heq, !Encode_nat_hasSize.
+     Import PrettyBounds.
+     do 3 rewrite <- mult_assoc.
+     refine (_:dominatedWith _ _ _).
+     eapply dominatedWith_mult_l.
+     eapply dominatedWith_mult.
+     {apply dominatedWith_refl with (c:=1). nia. }
+     eapply dominatedWith_mult.
+     {apply dominatedWith_refl with (c:=1). nia. }
+     instantiate (1:=2). hnf.
+     unfold Univ_nice.number_of_states, Cardinality.Cardinality.
+     enough (H':1<= | elem (states M)|).
+     {cbn [mult]. rewrite <- H' at 2. cbn. rewrite Nat.add_1_r. reflexivity. }
+     apply Univ_nice.enum_length_ge1.
+     assert (H':start M el elem (states M)) by apply elem_spec.
+     intros H''. setoid_rewrite H'' in H'. inv H'.
   Qed.
 
 End UniversalMachine.
+
+Check Univ_Terminates_pretty.

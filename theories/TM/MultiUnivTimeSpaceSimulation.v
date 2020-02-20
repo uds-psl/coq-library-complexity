@@ -753,16 +753,16 @@ Section U.
         fp M T k
         <=(c)
            let x := (size (vector_to_list (makeUnivTapes retr_sigSimGraph_sigUniv retr_sigSimTape_sigUniv M T)) + size k * size (graph_of_TM M)) in
-           x * x * (size k * size (graph_of_TM M))
+           x * x * (size k * size (graph_of_TM M) * size (Cardinality.Cardinality (states M)))
     }.
   Proof.
     eexists. intros. eapply dominatedWith_trans. apply (proj2_sig (fp_nice1 M)). apply dominatedWith_mult.
     - apply dominatedWith_quad. domWith_approx.
       eapply dominatedWith_trans.
-      apply (proj2_sig (UnivBounds.Univ_nice.Univ_steps_nice M)).
+      apply (proj2_sig (UnivBounds.Univ_nice.Univ_steps_nice sigM)).
       domWith_approx.
       apply dominatedWith_solve. enough (1 <= size (graph_of_TM M)) by nia. apply UnivBounds.Univ_nice.Encode_graph_hasSize_ge1.
-    - apply (proj2_sig (UnivBounds.Univ_nice.Univ_steps_nice M)).
+    - apply (proj2_sig (UnivBounds.Univ_nice.Univ_steps_nice sigM)).
   Qed.
 
   (** Throw away all constants that depend on [M] *)
