@@ -6,6 +6,8 @@ From Undecidability.L Require Import Tactics.LTactics Functions.Decoding TMflatF
 From Undecidability Require Import L.Functions.EqBool.
 From Undecidability Require Import L.Datatypes.LNat.
 
+(** Using this problem to establish NP-hardness as by Cook-levin would require us to construct TMs from L-terms. We don't want to do this. Instead, we define another problem (GenNPHalt_fixed_mTM) where the machine itself and some tape content is fixed, but a single tape has arbitrary content on it. *)
+
 (* Factorise proof over GenNP? *)
 Definition TMGenNP' sig n : mTM sig n * nat * nat -> Prop :=
   fun '(M, k, steps) =>

@@ -40,6 +40,12 @@ Proof.
   unfold sizeP. induction P as [|[]];cbn in *;try Lia.lia.
 Qed.
 
+
+Lemma length_compile_leq s : |compile s| <= 2*size s.
+Proof.
+  induction s;cbn. all:autorewrite with list;cbn. all:nia.
+Qed.
+
 (** *** Programm Decomposition *)
 
 

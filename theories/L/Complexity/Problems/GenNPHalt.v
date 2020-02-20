@@ -70,7 +70,7 @@ Proof with try eauto;smpl_inO.
   exists id...
 Qed.
 
-Lemma NPhard_GenNP X__cert `{R__cert : registered X__cert}:
+Lemma NPhard_GenNPHalt X__cert `{R__cert : registered X__cert}:
   canEnumTerms X__cert->  NPhard (GenNPHalt X__cert).
 Proof.
   intros enumTerm'.

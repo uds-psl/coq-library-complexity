@@ -310,10 +310,13 @@ L/Complexity/RegisteredP.v
 L/Complexity/LinTimeDecodable.v
 L/Complexity/NP.v
 L/Complexity/Problems/GenNP.v
-L/Complexity/Problems/TMGenNP.v
 L/Complexity/Problems/GenNPHalt.v
+L/Complexity/Problems/TMGenNP_fixed_mTM.v
+L/Complexity/Problems/TMGenNP.v
 L/Complexity/Reductions/TMGenNP/LToTMGenNP.v
 L/Complexity/Reductions/TMGenNP/IntermediateProblems.v
+L/Complexity/Reductions/TMGenNP/LMGenNPHalt.v
+
 
 L/AbstractMachines/AbstractSubstMachine.v
 L/AbstractMachines/AbstractHeapMachine.v
@@ -331,6 +334,7 @@ L/AbstractMachines/Computable/UnivDecTime.v
 L/AbstractMachines/Computable/LargestVar.v
 L/AbstractMachines/Computable/EvalForTime.v
 L/AbstractMachines/Computable/EvalForTimeBool.v
+L/AbstractMachines/FlatPro/Computable/Compile.v
 L/AbstractMachines/FlatPro/Computable/Decompile.v
 #L/AbstractMachines/FlatPro/Computable/JumpTarget.v
 #L/AbstractMachines/FlatPro/Computable/HeapStep.v

@@ -4,14 +4,6 @@ From Undecidability.L Require Import LM_heap_def.
 Import Lia.
 (** ** Direct correctness proof  *)
 
-(** *** Definition compile/representation *)
-Fixpoint compile (s: L.term) : Pro :=
-  match s with
-    var x => [varT x]
-  | app s t => compile s ++ compile t ++ [appT]
-  | lam s => lamT :: compile s ++ [retT]
-  end.
-
 Inductive reprP : Pro -> term -> Prop :=
   reprPC s : reprP (compile s) (lam s).
 
