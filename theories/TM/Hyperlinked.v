@@ -81,10 +81,9 @@ Section UniversalMachine.
        (Encode_pair (Encode_pair (Encode_Finite _) (Encode_pair Encode_bool Encode_nat))
                     (Encode_pair (Encode_Finite _) (Encode_pair Encode_bool Encode_nat)))).
 
-  Definition Univ_T_pretty : tRel sig^+ 6 :=
+  Definition Univ_T_pretty M : tRel sig^+ 6 :=
+    let c := proj1_sig (Univ_nice.Univ_steps_nice M) in
     fun tin k =>
-      exists (M : mTM sigM 1),
-        let c := proj1_sig (Univ_nice.Univ_steps_nice M) in
         exists (tp : tape sigM) (q : states M) (k' : nat) (q' : states M) (tp' : tape sigM),
         tin[@Fin0] = mapTape (fun s => inr (Retr_f (Retract := retr_sigTape_sig) s)) tp /\
         tin[@Fin1] ≃(retr_sigGraph_sig) (graph_of_TM M) /\
@@ -95,14 +94,14 @@ Section UniversalMachine.
 
 
   (** This lemma ransforms the lemma we proofed in Coq to the more readable version in the paper. *)
-  Lemma Univ_Terminates_pretty : projT1 (Univ _ _) ↓ Univ_T_pretty.
+  Lemma Univ_Terminates_pretty M: projT1 (Univ _ _) ↓ Univ_T_pretty M.
   Proof.
     eapply TerminatesIn_monotone.
     {apply Univ_Terminates. }
     unfold Univ_T_pretty,Univ_T.
     unfold containsWorkingTape,containsTrans,containsState.
     intros tin k.
-    apply Morphisms_Prop.ex_impl_morphism;intro M;hnf.
+    intros H. exists M. revert H.
     apply Morphisms_Prop.ex_impl_morphism;intro tp;hnf.
     apply Morphisms_Prop.ex_impl_morphism;intro q;hnf.
     apply Morphisms_Prop.ex_impl_morphism;intro k';hnf.
