@@ -92,7 +92,6 @@ Section UniversalMachine.
         tin[@Fin2] ≃(retr_sigCurrentState_sig; s2) (halt q, index q) ->
         isRight_size tin[@Fin3]  s3 -> isRight_size tin[@Fin4] s4 -> isRight_size tin[@Fin5] s5 ->
         exists k (oconf : mconfig sigM (states M) 1),
-          let size := Univ_size tp q k in
           loopM (mk_mconfig q [|tp|]) k = Some oconf /\
           tout[@Fin0] = mapTape (fun s => inr (Retr_f (Retract := retr_sigTape_sig) s)) (ctapes oconf)[@Fin0] /\
           tout[@Fin1]  ≃(retr_sigGraph_sig; s1) (graph_of_TM M) /\
@@ -167,7 +166,7 @@ Section UniversalMachine.
         tin[@Fin2] ≃(retr_sigCurrentState_sig) (halt q, index q) /\
         isRight tin[@Fin3] /\ isRight tin[@Fin4] /\ isRight tin[@Fin5] /\
         loopM (mk_mconfig q [|tp|]) k' = Some (mk_mconfig q' [|tp'|]) /\
-        c* (size k' * size (graph_of_TM M)) <= k.
+        c* (1+k') * size (graph_of_TM M) <= k.
 
 
   (** This lemma ransforms the lemma we proofed in Coq to the more readable version in the paper. *)
@@ -192,7 +191,7 @@ Section UniversalMachine.
     -assert (Heq':=proj2_sig (Univ_nice.Univ_steps_nice M)).
      unfold PrettyBounds.dominatedWith in Heq'.
      rewrite Heq'.
-     rewrite <- Heq. reflexivity.
+     rewrite <- Heq, Encode_nat_hasSize. now rewrite <-mult_assoc.
   Qed.
 
 End UniversalMachine.
