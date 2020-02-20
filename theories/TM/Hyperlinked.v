@@ -25,7 +25,7 @@ From Undecidability Require Import Basic.Duo.
 From Undecidability Require Import Code.CaseFin Code.CaseList Code.CasePair.
 From Undecidability Require Import Univ.LookupAssociativeListTM.
 
-Require Import PslBase.Bijection. (* [injective] *)
+Require Import PslBase.Bijection PslBase.FiniteTypes.Cardinality . (* [injective] *)
 
 Section UniversalMachine.
 
@@ -95,7 +95,7 @@ Section UniversalMachine.
           loopM (mk_mconfig q [|tp|]) k = Some oconf /\
           tout[@Fin0] = mapTape (fun s => inr (Retr_f (Retract := retr_sigTape_sig) s)) (ctapes oconf)[@Fin0] /\
           tout[@Fin1]  ≃(retr_sigGraph_sig; s1) (graph_of_TM M) /\
-          tout[@Fin2]  ≃(retr_sigCurrentState_sig;  max c s2 + Univ_nice.number_of_states M +2) (halt (cstate oconf), index (cstate oconf)) /\
+          tout[@Fin2]  ≃(retr_sigCurrentState_sig;  max c s2 + Cardinality (states M) +2) (halt (cstate oconf), index (cstate oconf)) /\
           isRight_size tout[@Fin3] (max c s3) /\
           isRight_size tout[@Fin4] (max c s4) /\
           isRight_size tout[@Fin5] (max c s5).
@@ -144,9 +144,11 @@ Section UniversalMachine.
      rewrite !UnivSpaceBounds.Encode_state_hasSize in H'''2.
      assert (Htmp:=state_index_lt q). apply Nat.lt_le_incl in Htmp. rewrite Htmp in H'''2.
      clear - H'''2.
-     remember (Univ_nice.number_of_states M).
+     unfold Univ_nice.number_of_states , Cardinality in *.
      remember (size (graph_of_TM M) + 1).
-     remember ((Univ_size tp q k)[@Fin2] s2). Lia.nia.
+     remember ((Univ_size tp q k)[@Fin2] s2). cbn in H'''2.
+     remember (| elem (states M) |) eqn: Heq.
+     setoid_rewrite <- Heq in H'''2. Lia.nia.
     -eapply isRight_size_monotone;[exact (Hout _)| ].
      rewrite H''1. cbn -[graph_of_TM size]. reflexivity.
     -eapply isRight_size_monotone;[exact (Hout _)| ].
@@ -165,7 +167,7 @@ Section UniversalMachine.
         tin[@Fin2] ≃(retr_sigCurrentState_sig) (halt q, index q) /\
         isRight tin[@Fin3] /\ isRight tin[@Fin4] /\ isRight tin[@Fin5] /\
         loopM (mk_mconfig q [|tp|]) k' = Some (mk_mconfig q' [|tp'|]) /\
-        c* (1+k') * size (graph_of_TM M) * (Cardinality.Cardinality (states M)) <= k.
+        c* (1+k') * size (graph_of_TM M) * (Cardinality (states M)) <= k.
 
 
   (** This lemma ransforms the lemma we proofed in Coq to the more readable version in the paper. *)
