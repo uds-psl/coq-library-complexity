@@ -309,13 +309,14 @@ L/Complexity/ONotationIsAppropriate.v
 L/Complexity/RegisteredP.v
 L/Complexity/LinTimeDecodable.v
 L/Complexity/NP.v
+L/Complexity/Problems/GenNPBool.v
 L/Complexity/Problems/GenNP.v
-L/Complexity/Problems/GenNPHalt.v
 L/Complexity/Problems/TMGenNP_fixed_mTM.v
 L/Complexity/Problems/TMGenNP.v
-L/Complexity/Reductions/TMGenNP/LToTMGenNP.v
+L/Complexity/Reductions/TMGenNP/LM_to_mTM.v
+L/Complexity/Reductions/TMGenNP/L_to_LM.v
 L/Complexity/Reductions/TMGenNP/IntermediateProblems.v
-L/Complexity/Reductions/TMGenNP/LMGenNPHalt.v
+L/Complexity/Reductions/TMGenNP/LMGenNP.v
 
 
 L/AbstractMachines/AbstractSubstMachine.v

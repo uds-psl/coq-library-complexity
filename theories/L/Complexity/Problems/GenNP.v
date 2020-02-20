@@ -3,129 +3,169 @@ From Undecidability.L.Datatypes Require Import LProd LTerm LBool.
 From Undecidability.L.Complexity Require Import NP Synthetic Monotonic.
 From Undecidability.L.Functions Require Import Size.
 
-Definition GenNP : term*nat*nat -> Prop:=
-  fun '(s', maxSize, steps (*in unary*)) =>
-    (proc s'/\exists (c:term), size (enc c) <= maxSize
-                         /\ s' (enc c) ⇓(<=steps) (enc true)).
 
-(** * The hardness proof of GewnNPHalt is prettier *)
-Lemma NPhard_GenNP : NPhard (unrestrictedP GenNP).
+Section GenNP.
+  Context (X__cert : Type) `{R__cert : registered X__cert}.
+
+  Definition GenNP' : term*nat*nat -> Prop :=
+    fun '(s, maxSize, steps (*in unary*)) =>
+      exists (c:X__cert), size (enc c) <= maxSize
+                   /\ exists t, s (enc c) ⇓(<=steps) t.
+
+  Definition HaltsOrDiverges : term*nat*nat -> Prop :=
+    fun '(s, maxSize, steps (*in unary*)) =>
+      proc s /\ forall (c:X__cert), size (enc c) <= maxSize -> forall k t, s (enc c) ⇓(k) t -> k <= steps.
+
+  Definition GenNP := restrictBy HaltsOrDiverges GenNP'.
+  
+
+  Record canEnumTerms : Type :=
+    {
+      f__toTerm : X__cert -> term;
+      comp__toTerm :> polyTimeComputable f__toTerm;
+      inSize__toTerm : nat -> nat;
+      complete__toTerm : (forall s:term, exists x:X__cert, f__toTerm x = s /\ size (enc x) <= inSize__toTerm (size (enc s)));
+      polyIn__toTerm : inOPoly inSize__toTerm;
+      monoIn__toTerm : monotonic inSize__toTerm;
+    }.
+
+  Hint Extern 2 (computableTime (f__toTerm _) _) => unshelve (simple apply @comp__polyTC);simple apply @comp__toTerm :typeclass_instances.
+
+  
+  Lemma canEnumTerms_compPoly:
+    canEnumTerms  -> exists H : canEnumTerms, inhabited (polyTimeComputable (time__polyTC H))
+                                       /\ inhabited (polyTimeComputable (inSize__toTerm H))
+                                       /\ inhabited (polyTimeComputable (resSize__rSP H)).
+  Proof.
+    intros Hin.
+    destruct (polyTimeComputable_compTime (comp__toTerm Hin)) as (?&?).
+    destruct (inOPoly_computable (polyIn__toTerm Hin)) as (p'&?&Hbounds&?&?).
+    unshelve eexists. eexists (f__toTerm Hin) p'. 5:cbn.
+    1,3,4,5:now eauto using comp__toTerm.
+    intros s. destruct (complete__toTerm Hin s) as (c&<-&Hc).
+    eexists;split. easy. now rewrite <- Hbounds. 
+  Qed.
+
+End GenNP.
+
+Smpl Add 10 (simple apply polyIn__toTerm) : inO.
+Smpl Add 10 (simple apply monoIn__toTerm) : inO.
+Hint Extern 2 (computableTime (f__toTerm _) _) => unshelve (simple apply @comp__polyTC);simple apply @comp__toTerm :typeclass_instances.
+
+
+Arguments GenNP : clear implicits.
+Arguments canEnumTerms : clear implicits.
+
+Arguments GenNP _ {_}.
+Arguments canEnumTerms _ {_}.
+
+Lemma terms_enum_themself : canEnumTerms term.
+Proof with try eauto;smpl_inO.
+  exists id id. 2-4:unfold id... 
+  evar (time : nat -> nat). [time]:intros n.
+  eexists time.
+  extract. solverec.
+  now cbv;reflexivity.
+  1,2:unfold time...
+  exists id...
+Qed.
+
+Lemma NPhard_GenNP X__cert `{R__cert : registered X__cert}:
+  canEnumTerms X__cert->  NPhard (GenNP X__cert).
 Proof.
+  intros enumTerm'.
+  destruct (canEnumTerms_compPoly enumTerm') as (enumTerm&[comp1]&[comp2]&[comp3]);clear enumTerm'.
   intros X reg__X regP__X vX Q [R R__comp' R__spec'(*[p Rsound Rcomplete p__poly p__mono]*)].
   destruct (polyCertRel_compPoly R__spec') as (R__spec&[pR__comp]);clear R__spec'.
   destruct (inTimePoly_compTime R__comp') as (timeR&[timeR__comp]&[R__comp]&poly_t__R&mono_t__R);clear R__comp'.
-  pose (f x := fun c => f__decInTime R__comp (x,c)).
-  assert (computableTime' f (fun x _ => (1,fun c _ => (timeR (size (enc (x, c))) + 3,tt))));cbn [timeComplexity] in *.
-  {intros. subst f. extract. solverec. }
-  evar (mSize : X -> nat). [mSize]:intros n0. evar (steps : X -> nat). [steps]:intros n0.
-  eapply reducesPolyMO_intro with  (f := fun x => (lam (extT f (enc x) 0), mSize x (*)f__Rbal' (size (enc x))*), steps x (*time__R' (size (enc x) + f__Rbal' (size (enc x))+4)+5*)));cbn [fst snd GenNP].
-  2:{
-    cbn [unrestrictedP]. intros x ?. exists Logic.I. split.
-   +intros (c&HR & Hle)%(complete__pCR R__spec). cbn - [GenNP] in Hle|-*.
-    unfold GenNP;cbn [snd].
-    split. now Lproc.
-    exists c. split.
-    *rewrite Hle. cbn. set (size (enc x)). unfold mSize;reflexivity.
-    *eapply evalIn_mono.
-     {Lsimpl. unfold f. erewrite complete__decInTime. now Lsimpl. easy. }
-     cbn [fst snd]. ring_simplify.
-     rewrite (mono_t__R _). 2:{rewrite size_prod. cbn [fst snd]. rewrite Hle. reflexivity. }
-     unfold steps. reflexivity.
-   +unfold GenNP.
-    intros (?&c&size__c&R'). eapply (sound__pCR R__spec).
-    apply (correct__decInTime R__comp (x:=(x,c))).
-    eapply inj_enc.
-    eapply unique_normal_forms. 1,2:now Lproc.
-    eapply evalLe_eval_subrelation, eval_star_subrelation in R'.
-    apply star_equiv in R'. etransitivity. 2:exact R'. 
-    symmetry. eapply star_equiv_subrelation. clear R'.
-    change (extT f) with (ext f). Lsimpl.
+  (*intros X reg__X regP__X vX Q [ R R__dec R__spec].
+    destruct R__dec as (time__R&[R__comp]&poly_t__R&mono_t__R). *)
+  pose (f x := fun c => f__decInTime R__comp (x,f__toTerm enumTerm c)).
+  evar (time : nat -> nat). [time]:intros n.
+  assert (computableTime' f (fun x _ => (1,fun c _ => (time (size (enc (x,c))) (*t__R (size (enc (x, c))) + 3*) ,tt))));cbn [timeComplexity] in *.
+  {subst f. extract.
+   recRel_prettify. intros x _. split. nia. intros c__t _. split. 2:easy.
+   remember (size (enc (x, c__t))) as n0 eqn:eqn0.
+   rewrite (mono__polyTC enumTerm (x':=n0)). 2:{ subst n0. rewrite size_prod. cbn;lia. }
+   erewrite (mono_t__R _).
+   2:{
+     rewrite size_prod in eqn0|-*;cbn [fst snd] in eqn0|-*.
+     rewrite (bounds__rSP enumTerm c__t). rewrite (mono__rSP _ (x':=n0)). 2:{subst n0;nia. }
+     instantiate (1:=n0 + resSize__rSP enumTerm n0). nia.
+   }
+   unfold time;reflexivity. 
   }
-  -evar (f':nat -> nat). [f']:refine (fun x => _). subst mSize steps.   
+  (*specialize inOPoly_computable with (1:=poly__pCR R__spec) as (p__cert'&tf__Rbal'&[]&polyf__Rbal'&leq_f__Rbal'&?&?&?).
+    specialize inOPoly_computable with (1:=poly_t__R) as (time__R'&tt__R'&[]&poly_t__R'&leq_t__R'&?&?&?). *)
+  evar (stepsInner : nat -> nat). [stepsInner]:intros n0.
+  evar (mSize : nat -> nat). [mSize]:intros n0. evar (steps : nat -> nat). [steps]:intros n0.
+  pose (g:= fun x => (lam (trueOrDiverge (extT f (enc x) 0)), mSize (size (enc x))(*f__Rbal' (size (enc x))*)
+                   ,steps (size (enc x))(*t__R' (size (enc x) + f__Rbal' (size (enc x))+4)+9*))).
+  apply reducesPolyMO_intro with (f:= g);cbn [fst snd].
+  2:{
+    intros x x__valid. remember (g x) as x0 eqn:eqx0. destruct x0 as ((t0,maxSize0),steps0).
+    unfold g in eqx0. injection eqx0. intros Hx0 Hsize0 Hsteps0. clear eqx0.
+    cbn [GenNP restrictBy fst snd].
+    unfold HaltsOrDiverges,GenNP'.
+    
+    set (n0:= size (enc x)).
+    assert (Ht0 : forall c, size (enc c) <= maxSize0 -> t0 (enc c) >(<= stepsInner n0) trueOrDiverge (enc (f x c))).
+    {intros c Hc. subst t0. eapply le_redLe_proper. 2,3:reflexivity. 2:Lsimpl.
+     cbn [fst snd]. ring_simplify.
+     rewrite size_prod. cbn [fst snd]. unfold time.
+     rewrite (mono__polyTC enumTerm). 2:now rewrite Hc.
+     hnf in mono_t__R;erewrite mono_t__R. 
+     2:{ rewrite (mono__rSP enumTerm). all:rewrite Hc. all:reflexivity. }
+     unfold stepsInner. subst maxSize0. fold n0. reflexivity.
+    }
+    split.
+    +split. now subst t0;Lproc.
+     intros c H' k t Ht. specialize (Ht0 c H') as (kt0&lt__j&Ht0).
+     unshelve eassert (eqb := trueOrDiverge_eval _).
+     3:{
+       eapply equiv_eval_proper. 
+       3:eapply evalIn_eval_subrelation;exact Ht. 2:reflexivity.
+       eapply pow_star in Ht0;rewrite Ht0. easy.
+     }
+     rewrite eqb in Ht0. 
+     edestruct evalIn_unique with (1:=Ht) as [eqk _].
+     {clear Ht. eapply evalIn_trans. exact Ht0. split. apply trueOrDiverge_true. Lproc. }
+     subst k steps0. rewrite lt__j. fold n0. unfold steps. reflexivity.
+    +split.
+     *intros (c&?&H')%(complete__pCR R__spec). cbn [proj1_sig] in H'. (*specialize (spec_d__R (x,c) x__valid). cbn [fst snd] in *. cbn in *. *)
+      destruct (complete__toTerm enumTerm c) as (c__X&eqf__term&le_c__X).
+      exists c__X. split. 
+      --rewrite le_c__X. subst maxSize0.
+        rewrite (monoIn__toTerm enumTerm (x:=_)). 2:exact H'.
+        set (n1:=size (enc x)). unfold mSize. reflexivity.
+      --exists I.
+        unshelve eassert (Hc'' := Ht0 c__X _).
+        {subst maxSize0. rewrite le_c__X. rewrite (monoIn__toTerm enumTerm (x:=_)). 2:exact H'. unfold mSize. reflexivity. }
+        eapply evalIn_mono.
+        {Lsimpl. unfold f. rewrite eqf__term.
+         erewrite (complete__decInTime R__comp). 2:cbn;easy. Lsimpl. }
+        subst steps0 steps. fold n0. easy.
+     *intros (c&size__c&?&R'). eapply (sound__pCR R__spec).
+      apply (sound__decInTime (P__dec:=R__comp) (x:=exist _ (x,_) _)). cbn.
+      eapply trueOrDiverge_eval with (t:=x0).
+      eapply equiv_eval_proper. 2:reflexivity.
+      {unfold f in Ht0. specialize (Ht0 _ size__c). apply redLe_star_subrelation in  Ht0.  rewrite <- Ht0.
+       symmetry. apply star_equiv_subrelation. eapply redLe_star_subrelation. apply R'.
+      }
+      destruct R'. Lreflexivity.
+  }
+  -unfold g. evar (f':nat -> nat). [f']:refine (fun x => _).
    eexists (fun x => f' x). 
-   +extract.
-    recRel_prettify2. cbn [size]. set (size (enc x)). unfold f'. reflexivity. 
-   +subst f'. cbn beta. smpl_inO. all:eapply inOPoly_comp. all:try setoid_rewrite size_nat_enc. all:smpl_inO.
-   +subst f'. cbn beta. smpl_inO. all:try setoid_rewrite size_nat_enc. all:smpl_inO.
-   + eexists (fun x => _);repeat split.
+   +unfold mSize, steps, stepsInner. extract.
+    recRel_prettify2. generalize (size (enc x)). intro. unfold f'. reflexivity.
+   +subst f'. cbn beta. setoid_rewrite size_nat_enc. all:smpl_inO. all:eapply inOPoly_comp. all:smpl_inO. all:eapply inOPoly_comp. all:smpl_inO. all:eapply inOPoly_comp. all:smpl_inO.
+   +subst f'. cbn beta. setoid_rewrite size_nat_enc. all:smpl_inO.
+   +unfold mSize,steps,stepsInner. eexists (fun x => _).
     *intros. 
      repeat (setoid_rewrite -> size_prod;cbn[fst snd]).
      rewrite !size_nat_enc,!size_term_enc. cbn [size]. 
      generalize (size (enc x)). intros. reflexivity.
-    *smpl_inO. all:eapply inOPoly_comp. all:smpl_inO.
+    *smpl_inO. all:eapply inOPoly_comp. all:smpl_inO. all:eapply inOPoly_comp. all:smpl_inO. all:eapply inOPoly_comp. all:smpl_inO. 
     *smpl_inO.
 Qed.
 
-From Undecidability.L.Functions Require Import Proc.
-From Undecidability.L.AbstractMachines.Computable Require Import EvalForTimeBool.
-Import EvalForTime LargestVar.
-
-
-Lemma inNP_GenNP : inNP (unrestrictedP GenNP).
-Proof.
-  eexists (fun '(exist _ x _) (c:term) => exists (s':term) (maxSize steps :nat), 
-               x = (s',maxSize,steps) /\ proc s' /\ size (enc c) <= maxSize 
-               /\ s' (enc c) ⇓(<=steps) (enc true)).
-  {
-    evar (f__t : nat -> nat). [f__t]:intro n.
-    eexists f__t. repeat eapply conj. split. 
-    eexists (fun '((s',maxSize,steps),c) =>
-               if closedb s' && lambdab s' && (size (enc c) <=? maxSize)
-               then
-                 evalForTimeBool true (N.of_nat steps) (s' (enc c))
-               else false).
-    -extract. intros [[[s' maxSize] steps] c].
-     remember (size (enc (s', maxSize, steps, c))) as n.
-     assert (H1 : ( size (enc s') <= n)) by (subst n;rewrite !size_prod;cbn;lia).
-     assert (H2 : ( size (enc maxSize) <= n)) by (subst n;rewrite !size_prod;cbn;lia).
-     assert (H3 : ( size (enc steps) <= n)) by (subst n;rewrite !size_prod;cbn;lia).
-     assert (H4 : ( size (enc c) <= n)) by (subst n;rewrite !size_prod;cbn;lia).
-     solverec.
-     unfold t__evalForTimeBool,t__evalForTime,HeapMachine.heapStep_timeBound,Unfolding.unfoldBool_time,Lookup.lookupTime.
-     all:rewrite <- size_term_enc_r in H1.
-     all:rewrite <- size_nat_enc_r in H2.
-          
-     all:rewrite !H1.
-     (* all:rewrite !size_term_enc_r with (s:=c). *)
-     all:rewrite !H4.
-     all:rewrite !H2.
-     all:rewrite Nat.min_id.
-     rewrite !Nnat.N2Nat.id, !Nnat.Nat2N.id.
-     rewrite !largestVar_size.
-     rewrite !Nat.max_lub with (p:=n + 1);[|lia..].
-     rewrite !LBinNums.N_size_nat_leq.
-     unfold LBinNums.time_N_of_nat.
-     rewrite Nat.log2_le_lin. 2:lia.
-     all:rewrite <- size_nat_enc_r in H3.
-     rewrite H3. unfold f__t.
-     reflexivity.
-     unfold f__t. lia.
-    -intros [[[s' maxSize] steps] c]. cbn [fst snd prod_curry]. unfold proc. 
-     destruct (closedb_spec s');cbn [andb]. 2:{ split;[|congruence];intros (?&?&?&[= -> -> ->]&?);tauto. }
-     destruct (lambdab_spec s');cbn [andb]. 2:{ split;[|congruence];intros (?&?&?&[= -> -> ->]&?);tauto. }
-
-     destruct (Nat.leb_spec0 (size (enc c)) maxSize);cbn [andb]. 2:{ split;[|congruence];intros (?&?&?&[= -> -> ->]&?);tauto. }
-     cbn [fst GenNP]. intros [].
-     eapply reflect_iff.
-     eapply ssrbool.equivP. eapply evalForTimeBool_spec.
-     rewrite  !Nnat.Nat2N.id.
-     split.
-     +cbn. intuition eauto 10. 
-     +intros (?&?&?&[= -> -> ->]&?). intuition eauto 10. Lproc.
-    -unfold f__t.
-     smpl_inO.
-    -unfold f__t.
-     smpl_inO.
-  }
-  eexists (fun x => x). 3,4:smpl_inO.
-  all:intros [((?,?),?)]. all:cbn.
-  -intros ? (?&?&?&[= <- <- <-]&?&?&?). eauto 10.
-  -intros (?&?&?&?). eexists.  split. eauto 10.  repeat setoid_rewrite size_prod. cbn [fst snd].
-   rewrite <- !size_nat_enc_r. lia. 
-Qed.
-
-Lemma GenNP_complete :
-  NPcomplete (unrestrictedP GenNP).
-Proof.
-  eauto using inNP_GenNP, NPhard_GenNP. 
-Qed.
