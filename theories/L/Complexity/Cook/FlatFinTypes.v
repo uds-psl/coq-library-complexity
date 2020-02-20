@@ -15,7 +15,7 @@ Definition ofFlatType (k : nat) (e : nat) := e < k.
 
 (*we just enumerate the elements starting at 0 *)
 (*we do not use ofFlatType in the definition in order to reduce necessary unfolds *)
-Definition finReprEl (X : finType) (n : nat) k (x : X) := finRepr X n /\ k < n /\ index x = k.  
+Definition finReprEl (X : finType) (n : nat) k (x : X) := finRepr X n /\ index x = k.  
 
 (*a weaker version that does not explicitly enforce x to have a flat type *)
 Definition finReprEl' (X : finType) (k : nat) (x : X) := index x = k. 
@@ -49,18 +49,16 @@ Smpl Add (apply finReprOption) : finRepr.
 
 Lemma finReprElSome (X : finType) n k x : finReprEl n k x -> @finReprEl (finType_CS (option X)) (flatOption n) (flatSome k) (Some x). 
 Proof. 
-  intros (H1 & H2 & H3). split; [ | split]; cbn in *.
+  intros (H1 & H2). split;cbn in *.
   - now apply finReprOption. 
-  - unfold flatSome, flatOption; lia. 
-  - rewrite getPosition_map. 2: unfold injective; congruence. now rewrite <- H3. 
+  - rewrite getPosition_map. 2: unfold injective; congruence. now rewrite <- H2. 
 Qed. 
 Smpl Add (apply finReprElSome) : finRepr.
 
 Lemma finReprElNone (X : finType) n : finRepr X n -> @finReprEl (finType_CS (option X)) (flatOption n) flatNone None. 
 Proof. 
-  intros. split; [ | split]; cbn. 
+  intros. split; cbn. 
   - now apply finReprOption.
-  - unfold flatNone, flatOption. lia. 
   - now unfold flatNone. 
 Qed. 
 Smpl Add (apply finReprElNone) : finRepr. 
@@ -75,31 +73,28 @@ Smpl Add (apply finReprSum) : finRepr.
 
 Lemma finReprElInl (A B : finType) (a b : nat) k x : finRepr B b -> finReprEl a k x -> @finReprEl (finType_CS (sum A B)) (flatSum a b) (flatInl k) (inl x). 
 Proof. 
-  intros H0 (H1 & H2 & H3). split; [ | split]. 
+  intros H0 (H1 & H2). split. 
   - now apply finReprSum. 
-  - now unfold flatInl, flatSum. 
-  - unfold finRepr in H1. rewrite H1 in *. 
+  - unfold finRepr in H1. 
     clear H0 H1. cbn. unfold toSumList1, toSumList2, flatInl. 
     rewrite getPosition_app1 with (k := k).
     + reflexivity. 
-    + now rewrite map_length. 
-    + unfold index in H3. rewrite <- getPosition_map with (f := (@inl A B)) in H3. 2: now unfold injective.
+    + rewrite map_length, <- H2. apply index_le. 
+    + unfold index in H2. rewrite <- getPosition_map with (f := (@inl A B)) in H2. 2: now unfold injective.
       easy. 
 Qed. 
 Smpl Add (apply finReprElInl) : finRepr.
 
 Lemma finReprElInr (A B : finType) (a b : nat) k x : finRepr A a -> finReprEl b k x -> @finReprEl (finType_CS (sum A B)) (flatSum a b) (flatInr a k) (inr x). 
 Proof. 
-  intros H0 (H1 & H2 & H3). split; [ | split ]. 
+  intros H0 (H1 & H2). split. 
   - now apply finReprSum. 
-  - now unfold flatInr, flatSum. 
-  - unfold finRepr in H1; rewrite H1 in *. clear H1. 
-    cbn. unfold toSumList1, toSumList2, flatInr. 
+  - clear H1. cbn. unfold toSumList1, toSumList2, flatInr. 
     rewrite getPosition_app2 with (k := k). 
     + rewrite map_length. unfold finRepr in H0. now cbn. 
-    + now rewrite map_length.
+    + rewrite map_length, <- H2. apply index_le. 
     + intros H1. apply in_map_iff in H1. destruct H1 as (? & ? &?); congruence. 
-    + unfold index in H3. rewrite <- getPosition_map with (f := (@inr A B)) in H3. 2: now unfold injective. 
+    + unfold index in H2. rewrite <- getPosition_map with (f := (@inr A B)) in H2. 2: now unfold injective. 
       easy. 
 Qed. 
 Smpl Add (apply finReprElInr) : finRepr. 
@@ -113,14 +108,14 @@ Smpl Add (apply finReprProd) : finRepr.
 
 Lemma finReprElPair (A B : finType) (a b : nat) k1 k2 x1 x2 : finReprEl a k1 x1 -> finReprEl b k2 x2 -> @finReprEl (finType_CS (prod A B)) (flatProd a b) (flatPair a b k1 k2) (pair x1 x2).
 Proof. 
-  intros (H1 & H2 & H3) (F1 & F2 & F3). split; [ | split]. 
+  intros (H1 & H2) (F1 & F2). split. 
   - now apply finReprProd. 
-  - unfold flatPair, flatProd. nia. 
-  - cbn. unfold flatPair. unfold finRepr in *. rewrite H1, F1 in *.
+  - cbn. unfold flatPair. unfold finRepr in *.
     rewrite getPosition_prodLists with (k1 := k1) (k2 := k2); eauto. 
+    + rewrite <- H2; apply index_le.
+    + rewrite <- F2; apply index_le.
 Qed. 
 Smpl Add (apply finReprElPair) : finRepr.
-
 
 (** flattened lists *)
 Definition isFlatListOf (X : finType) (l : list nat) (l' : list X) := l = map index l'.
@@ -160,9 +155,7 @@ Proof.
   intros. rewrite H0 in H1. rewrite utils.nth_error_map in H1. 
   destruct (nth_error b n); cbn in H1; [ | congruence ]. 
   inv H1. exists e.
-  split; [reflexivity | repeat split]. 
-  + apply H. 
-  + rewrite H. apply index_le. 
+  split; [reflexivity | repeat split]. apply H. 
 Qed. 
 
 Lemma isFlatListOf_incl1 (X : finType) (fin : list X) flat l:
@@ -241,7 +234,7 @@ Proof.
     unfold ofFlatType in H0. rewrite H in H0.
     unfold Cardinality in H0. apply nth_error_Some in H0. destruct nth_error; easy. 
   } 
-  exists a'. repeat split; [ easy | easy | ].
+  exists a'. split; [ easy | ].
   unfold index. specialize (nth_error_nth H2) as <-.
   apply getPosition_nth. 
   + apply Cardinality.dupfree_elements. 
@@ -263,7 +256,7 @@ Proof.
   revert x. induction l; intros.
   - exists []. unfold isFlatListOf. now cbn. 
   - apply list_ofFlatType_cons in H0 as (H0 & (L & H1)%IHl). 2: apply H.
-    specialize (finRepr_exists H H0) as (a' & (_ & _ & H2)). 
+    specialize (finRepr_exists H H0) as (a' & (_ &  H2)). 
     exists (a' :: L). unfold isFlatListOf. 
     now rewrite H1, <- H2. 
 Qed. 

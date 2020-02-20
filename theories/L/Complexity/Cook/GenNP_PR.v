@@ -1591,7 +1591,8 @@ Section fixTM.
   Lemma haltRules_statesym γ1 γ2 γ3 γ4 γ5 γ6 : haltRules γ1 γ2 γ3 γ4 γ5 γ6 -> exists q, halt q = true /\ (isSpecStateSym q γ1 \/ isSpecStateSym q γ2 \/ isSpecStateSym q γ3).  
   Proof. unfold isSpecStateSym. intros. haltRules_inv1; exists q; eauto. Qed.  
 
-  (* string representing a tape half can only be rewritten using the tape rules *) 
+  (*Lemma 5.29.1 *)
+  (** string representing a tape half can only be rewritten using the tape rules *) 
   Lemma rewHeadTrans_tape' u h h' p w: u ≃t(p, w) h -> rewHeadSim h h' -> rewHeadTape h h'.  
   Proof.  
     intros. inv H0.  
@@ -1606,6 +1607,7 @@ Section fixTM.
     + eauto.  
   Qed.  
 
+  (* Lemma 5.29.2*)
   Lemma rewHeadSim_tape u h h' p w : u ≃t(p, w) h -> valid rewHeadSim h h' -> valid rewHeadTape h h'.  
   Proof.  
     intros. revert u w H. induction H0; intros.  
@@ -1623,9 +1625,11 @@ Section fixTM.
       + now eapply rewHeadTrans_tape'. 
   Qed.  
 
-  (*we would also like to obtain the other direction for this result, i.e. for polarityRev h *) 
-  (*this is a bit more tricky because we cannot reverse h in the ≃t predicate - thus, a straightforward induction will not go through *) 
-  (*instead, we use the equivalent characterisation via rewritesAt *) 
+  (* Lemma 5.29.3*)
+  (**We would also like to obtain the other direction for this result, i.e. for polarityRev h.
+    This is a bit more tricky because we cannot reverse h in the ≃t predicate - thus, a straightforward induction will not go through.
+    Instead, we use the equivalent characterisation via rewritesAt 
+  *)
   Lemma rewHeadSim_tape_polarityRev u h h' p w : 
     u ≃t(p, w) h -> valid rewHeadSim (polarityRev h) (polarityRev h') 
     -> valid rewHeadTape (polarityRev h) (polarityRev h'). 
@@ -2179,7 +2183,7 @@ Section fixTM.
     apply H3 in H1. subst. apply H4.  
   Qed. 
 
-  (*Lemma 25 *)
+  (*Lemma 5.36 *)
   Lemma multistep_simulation q tp q' tp' l s :
     (q, tp) ≃c s
     -> (q, tp) ≻(l) (q', tp')
@@ -2207,7 +2211,7 @@ Section fixTM.
       + apply G3. 
   Qed.
 
-  (*Lemma 26 *)
+  (*Lemma 5.37 *)
   Lemma multistep_halt q tp s :
     (q, tp) ≃c s
     -> halt q = true
@@ -2224,9 +2228,7 @@ Section fixTM.
       + apply G3. 
   Qed. 
 
-  (*Lemma 27 *)
-  (*currently differs from the version in the memo: the additional sizeOfTape tp <= z' - j constraint is due to the similar constraint in Lemma 23 *)
-  (*the additional assumption z' >= j is needed for the same reason *)
+  (*Lemma 5.39 *)
   Lemma multistep_inversion q tp s s' j:
     (q, tp) ≃c s
     -> s ⇝(j) s'
@@ -2399,7 +2401,7 @@ Section fixTM.
   Qed.  
 
   (*from this, we directly get a reduction to existential PR: does there exist an input string satisfying isValidInitialString for which the PR instance is a yes instance? *)
-  Lemma TM_reduction_to_ExPTPR : @ExPTPR Gamma _ _ simRules finalSubstrings t isValidInitialString l <-> (exists s, isValidInput k s /\ exists f, loopM (initc fTM ([|initialTapeForString s|])) t = Some f). 
+  Lemma TM_reduction_to_ExPTPR : @ExPTPR (FinType(EqType Gamma)) simRules finalSubstrings t isValidInitialString l <-> (exists s, isValidInput k s /\ exists f, loopM (initc fTM ([|initialTapeForString s|])) t = Some f). 
   Proof. 
     split; unfold ExPTPR.  
     - intros (x0 & H1 & (s & H2 & H3) & H4). exists s. split; [apply H3 | ]. subst; now apply simulation.
@@ -2526,15 +2528,15 @@ Section fixTM.
   Qed. 
 
   (*in fact, nblanks do *only* rewrite to blanks *)
-  Lemma prelude_blank_tape_rewrites_right_unique j s: 
-    valid (rewritesHeadInd (liftPrelude preludeRules)) (map inr (repEl (S (S j)) nblank ++ [ndelimC])) s 
-    -> s = map inl (E neutral (S (S j))).
+  Lemma prelude_blank_tape_rewrites_right_unique n s: 
+    valid (rewritesHeadInd (liftPrelude preludeRules)) (map inr (repEl (S (S n)) nblank ++ [ndelimC])) s 
+    -> s = map inl (E neutral (S (S n))).
   Proof. 
-    intros. revert s H. induction j; intros.
+    intros. revert s H. induction n; intros.
     - cbn in H. prelude_inv_valid_constant. now cbn. 
     - inv H. 
       + cbn in H4; lia.  
-      + apply IHj in H2 as ->. clear IHj. 
+      + apply IHn in H2 as ->. clear IHn. 
         prelude_inv_valid_constant. eauto. 
   Qed. 
 
@@ -2643,6 +2645,28 @@ Section fixTM.
       + exists (σ1 :: e :: e0 :: s'). cbn. split; [lia | eauto]. 
   Qed. 
 
+  Ltac inv_prelude := 
+    repeat match goal with 
+    | [H : rewritesHeadInd _ _ _ |- _] => inv H
+    | [H : liftPrelude _ _ _ _ _ _ _ |- _] => inv H
+    | [H : preludeRules _ _ _ _ _ _ |- _] => inv H
+    end. 
+
+  Lemma prelude_right_half_rewrites_input_unique' j i s : 
+    valid (rewritesHeadInd (liftPrelude preludeRules)) (map inr (repEl j nstar ++ repEl (S (S i)) nblank ++ [ndelimC])) s -> exists s', |s'| <= j /\ s = map inl (stringForTapeHalf' (S (S i) + j - (|s'|)) s'). 
+  Proof. 
+    intros H. 
+    destruct j; [ | destruct j].
+    - exists []. cbn in H. apply prelude_blank_tape_rewrites_right_unique in H. cbn; split; [lia | ]. 
+      rewrite H. rewrite Nat.add_0_r; easy.
+    - cbn in H. inv_valid. inv_prelude. apply prelude_blank_tape_rewrites_right_unique in H2.
+      destruct m.
+      + exists [e]. cbn; split; [ lia | ]. inv H2. rewrite Nat.add_comm. cbn. easy.
+      + exists []. cbn; split; [ lia | ]. inv H2. rewrite Nat.add_comm. cbn. easy. 
+    - apply prelude_right_half_rewrites_input_unique in H as (s' & H1 & H2). 
+      rewrite Nat.add_sub_assoc in H2 by lia. eauto.
+  Qed. 
+
   (** we now put the above results together to obtain soundness and completeness. *)
   (*the proofs are not very interesting (as they just put together the above results), but very technical because of the needed case analyses at the center of the string in order to apply the individual results for the left and right tape halves *)
 
@@ -2666,10 +2690,11 @@ Section fixTM.
     intros (H1 & H2). 
     destruct H1 as (s' & -> & H1). 
     unfold isValidInput in H1. 
+
     (*main CA on k, t in order to determine the three center symbols *)
     destruct k as [ | k'] eqn:eqk; [ | destruct k']; [destruct t as [ | t'] eqn:eqt; [ | destruct t'] | destruct t as [ | t'] eqn:eqt; [ | destruct t'] | ]. 
     - destruct s'; [ clear H1 | cbn in H1; lia].
-      rewrite lifted_preludeInitialString. cbn; unfold z'; rewrite eqk, eqt; cbn. 
+      rewrite lifted_preludeInitialString; cbn; unfold z'; rewrite eqk, eqt; cbn. 
       do 5 (constructor 3; [ | eauto]). constructor 2; cbn; eauto.  
     - destruct s'; [ clear H1 | cbn in H1; lia].
       rewrite lifted_preludeInitialString. cbn; unfold z'; rewrite eqk, eqt; cbn. 
@@ -2754,157 +2779,49 @@ Section fixTM.
     unfold preludeInitialString in H. 
     unfold isValidInitialString.  
     unfold z, z' in H. replace (wo + (t + k) - k) with (wo + t) in H by lia. 
-    destruct k as [ | k'] eqn:eqk; [ | destruct k']; [destruct t as [ | t'] eqn:eqt; [ | destruct t'] | destruct t as [ | t'] eqn:eqt; [ | destruct t'] | ]; cbn in H. 
-    + exists []. cbn. unfold z, z'. subst. prelude_inv_valid_constant; cbn; eauto. 
-    + exists []. cbn. unfold z, z'. subst. prelude_inv_valid_constant; cbn; eauto. 
-    + exists [].
-      revert eqk eqt. 
-      rewrite Nat.add_comm in H. cbn in H. do 2 rewrite <- app_assoc in H. cbn in H. 
-      rewrite !map_app in H. cbn in H. rewrite app_fold in H. 
-      match type of H with 
-        context[?a :: ?b :: inr ninit :: ?c :: ?d :: ?r] => replace (a :: b :: inr ninit :: c :: d :: r) with ([a; b; inr ninit; c; d] ++ r) in H by (now cbn) 
-      end.
-      specialize (valid_conc_inv H) as (A' & B' & ? & ? & ? & ? & ? & F1 & F2 & F3). 
-      apply map_eq_app in F1 as (ls1 & ls2 & -> & -> & F1). symmetry in F1. 
-      apply map_eq_app in F1 as (ls3 & ls4 & -> & F1 & ->). 
-      inv_eqn_map. 
-      do 2 setoid_rewrite map_app in H at 2. cbn [map] in H. 
-      specialize (proj1 (valid_rewritesHeadInd_center _ _ _ _ _ _ _ _ _ _ _ _ _ _ _) (conj H (conj F2 F3))) as (G1 & G2 & G3 & G4 & G5). 
-      clear H. 
-      repeat match goal with 
-        | [ H : liftPrelude _ _ _ _ _ _ _ |- _] => inv H
-        | [ H : preludeRules _ _ _ _ _ _ |- _] => inv H
-      end.
-      rewrite map_rev in G1. 
-      replace ((inr ndelimC :: (rev (map inr (repEl t' nblank)) ++ [inr nblank]) ++ [inr nblank]) ++ [inr nblank; inr nblank]) with (inr ndelimC :: rev (map inr (repEl (S (S (S (S t')))) nblank)) : list preludeSig) in G1. 
-      2: { cbn. rewrite <- app_assoc. cbn. eauto. }
-      apply (prelude_blank_tape_rewrites_left_unique) in G1. 
-      apply (prelude_blank_tape_rewrites_right_unique (j := S (S t'))) in G2. 
-      cbn in G2. inv G2. symmetry in H0. inv_eqn_map. 
-      apply Prelim.map_inj in H1 as <- ; [ | unfold injective; congruence]. 
-      rewrite <- map_rev in G1. cbn in G1. rewrite <- app_assoc in G1. cbn in G1. 
-      rewrite map_app in G1. cbn in G1. 
-      apply app_eq_length in G1 as (G1 & _). 
-      * apply Prelim.map_inj in G1 as ->;[  | unfold injective; congruence ]. 
-        clear F2 F3. intros. cbn; unfold z', isValidInput. subst. rewrite Nat.add_comm. cbn. 
-           split; [ | lia]. rewrite <- !app_assoc. eauto. 
-      * clear F3 G1. rewrite <- F2. cbn. rewrite !app_length, !map_length, !app_length, !rev_length. 
-        rewrite repEl_length, E_length. cbn. lia.
-    + (*at most one relevant symbol *)
-      revert eqk eqt. (*so that they don't get in the way with inv/subst *)
-      replace ([inr ndelimC; inr nblank; inr nblank; inr nblank; inr ninit; inr nstar; inr nblank; inr nblank; inr ndelimC] : list preludeSig) with ([inr ndelimC; inr nblank] ++ [inr nblank; inr nblank; inr ninit; inr nstar; inr nblank] ++ [inr nblank; inr ndelimC] : list preludeSig) in H  by (now cbn). 
-      specialize (valid_conc_inv H) as (A' & B' & ? & ? & ? & ? & ? & F1 & F2 & F3). 
-      apply map_eq_app in F1 as (ls1 & ls2 & -> & -> & F1). symmetry in F1. 
-      apply map_eq_app in F1 as (ls3 & ls4 & -> & F1 & ->). 
-      inv_eqn_map. rewrite !map_app in H. cbn [map] in H. 
-      specialize (proj1 (valid_rewritesHeadInd_center _ _ _ _ _ _ _ _ _ _ _ _ _ _ _) (conj H (conj F2 F3))) as (G1 & G2 & G3 & G4 & G5).  
-      clear H. 
-      repeat match goal with 
-        | [ H : liftPrelude _ _ _ _ _ _ _ |- _] => inv H
-        | [ H : preludeRules _ _ _ _ _ _ |- _] => inv H
-      end.
-      rewrite map_length in *. 
-      cbn in F2, F3. list_length_inv. cbn in G1, G2. 
-      prelude_inv_valid_constant. intros. 
-      destruct m. 
-      - exists [e]. cbn. unfold z, z'. subst. unfold isValidInput. eauto. 
-      - exists []. cbn. unfold z, z'. subst. unfold isValidInput. eauto. 
-    + revert eqk eqt. (*so that they don't get in the way with inv/subst *)
-      (*apart from the replace call, this is the same as for the previous case *)
-      replace ([inr ndelimC; inr nblank; inr nblank; inr nblank; inr nblank; inr ninit; inr nstar; inr nblank; inr nblank; inr nblank; inr ndelimC] : list preludeSig) with ([inr ndelimC; inr nblank; inr nblank] ++ [inr nblank; inr nblank; inr ninit; inr nstar; inr nblank] ++ [inr nblank; inr nblank; inr ndelimC] : list preludeSig) in H  by (now cbn). 
-      specialize (valid_conc_inv H) as (A' & B' & ? & ? & ? & ? & ? & F1 & F2 & F3). 
-      apply map_eq_app in F1 as (ls1 & ls2 & -> & -> & F1). symmetry in F1. 
-      apply map_eq_app in F1 as (ls3 & ls4 & -> & F1 & ->). 
-      inv_eqn_map. rewrite !map_app in H. cbn [map] in H. 
-      specialize (proj1 (valid_rewritesHeadInd_center _ _ _ _ _ _ _ _ _ _ _ _ _ _ _) (conj H (conj F2 F3))) as (G1 & G2 & G3 & G4 & G5).  
-      clear H. 
-      repeat match goal with 
-        | [ H : liftPrelude _ _ _ _ _ _ _ |- _] => inv H
-        | [ H : preludeRules _ _ _ _ _ _ |- _] => inv H
-      end.
-      rewrite map_length in *. 
-      cbn in F2, F3. list_length_inv. cbn in G1, G2. 
-      prelude_inv_valid_constant. intros. 
-      destruct m. 
-      - exists [e]. cbn. unfold z, z'. subst. unfold isValidInput. eauto. 
-      - exists []. cbn. unfold z, z'. subst. unfold isValidInput. eauto.
-    + revert eqk eqt. 
-      rewrite Nat.add_comm in H. cbn in H. do 2 rewrite <- app_assoc in H. cbn in H. 
-      rewrite !map_app in H. cbn in H. rewrite app_fold in H. 
-      match type of H with 
-        context[?a :: ?b :: inr ninit :: ?c :: ?d :: ?r] => replace (a :: b :: inr ninit :: c :: d :: r) with ([a; b; inr ninit; c; d] ++ r) in H by (now cbn) 
-      end.
-      specialize (valid_conc_inv H) as (A' & B' & ? & ? & ? & ? & ? & F1 & F2 & F3). 
-      apply map_eq_app in F1 as (ls1 & ls2 & -> & -> & F1). symmetry in F1. 
-      apply map_eq_app in F1 as (ls3 & ls4 & -> & F1 & ->). 
-      inv_eqn_map. 
-      do 2 setoid_rewrite map_app in H at 2. cbn [map] in H. 
-      specialize (proj1 (valid_rewritesHeadInd_center _ _ _ _ _ _ _ _ _ _ _ _ _ _ _) (conj H (conj F2 F3))) as (G1 & G2 & G3 & G4 & G5). 
-      clear H. 
-      repeat match goal with 
-        | [ H : liftPrelude _ _ _ _ _ _ _ |- _] => inv H
-        | [ H : preludeRules _ _ _ _ _ _ |- _] => inv H
-      end.
 
-      inv G2. 1: now cbn in H4. 
-      inv H4. inv_eqn_map. inv H0. inv H4.  
-      rewrite map_rev in G1. 
-      replace ((inr ndelimC :: ((rev (map inr (repEl t' nblank)) ++ [inr nblank]) ++ [inr nblank]) ++ [inr nblank]) ++ [inr nblank; inr nblank] : list preludeSig) with (inr ndelimC :: rev (map inr (repEl (S (S (S (S (S t'))))) nblank)) : list preludeSig) in G1.
-      2: { cbn. rewrite <- app_assoc. cbn. eauto. }
-      apply (prelude_blank_tape_rewrites_left_unique) in G1. 
-      apply (prelude_blank_tape_rewrites_right_unique (j := S (S t'))) in H2. 
-      cbn in H2. inv H2. symmetry in H0. inv_eqn_map. 
-      apply Prelim.map_inj in H1 as <- ; [ | unfold injective; congruence]. 
-      rewrite <- map_rev in G1. cbn in G1. rewrite <- app_assoc in G1. cbn in G1. 
-      rewrite map_app in G1. cbn in G1. 
-      apply app_eq_length in G1 as (G1 & _). 
-      * apply Prelim.map_inj in G1 as ->;[  | unfold injective; congruence ]. 
-        clear F2 F3. intros. destruct m. 
-        -- exists [e]; cbn; unfold z', isValidInput. subst. rewrite Nat.add_comm. cbn. 
-           split; [ | lia]. rewrite <- !app_assoc. eauto. 
-        -- exists []; cbn; unfold z', isValidInput. subst. rewrite Nat.add_comm. cbn. 
-          split; [ | lia]. rewrite <- !app_assoc. eauto. 
-      * clear F3 G1. rewrite <- F2. cbn. rewrite !app_length, !map_length, !app_length, !rev_length. 
-        rewrite repEl_length, E_length. cbn. lia. 
-     + revert eqk. 
-       rewrite Nat.add_comm in H. cbn in H. do 2 rewrite <- app_assoc in H. cbn in H. 
-       rewrite !map_app in H. cbn in H. rewrite app_fold in H. 
-       match type of H with 
-         context[?a :: ?b :: inr ninit :: ?c :: ?d :: ?r] => replace (a :: b :: inr ninit :: c :: d :: r) with ([a; b; inr ninit; c; d] ++ r) in H by (now cbn) 
-       end.
-       specialize (valid_conc_inv H) as (A' & B' & ? & ? & ? & ? & ? & F1 & F2 & F3). 
-       apply map_eq_app in F1 as (ls1 & ls2 & -> & -> & F1). symmetry in F1. 
-       apply map_eq_app in F1 as (ls3 & ls4 & -> & F1 & ->). 
-       inv_eqn_map. 
-       do 2 setoid_rewrite map_app in H at 2. cbn [map] in H. 
-       specialize (proj1 (valid_rewritesHeadInd_center _ _ _ _ _ _ _ _ _ _ _ _ _ _ _) (conj H (conj F2 F3))) as (G1 & G2 & G3 & G4 & G5). 
-       clear H. 
-       rewrite map_rev in G1. 
-       replace ((inr ndelimC :: (rev (map inr (repEl (k' + t) nblank)) ++ [inr nblank]) ++ [inr nblank]) ++ [inr nblank; inr nblank] : list preludeSig) with (inr ndelimC :: rev (map inr (repEl (S (S (S (S k' + t)))) nblank)) : list preludeSig) in G1.
-       2: { cbn. rewrite <- app_assoc. eauto. }
-       apply (prelude_blank_tape_rewrites_left_unique) in G1. 
-       rewrite <- map_rev in G1. cbn in G1. rewrite <- app_assoc in G1. cbn in G1. 
-       rewrite map_app in G1. cbn in G1. 
-       apply app_eq_length in G1 as (G1 & _).
-       * apply Prelim.map_inj in G1 as ->;[  | unfold injective; congruence ]. 
-         apply prelude_right_half_rewrites_input_unique in G2 as (s' & H1 & H2). 
-         apply (Prelim.map_inj) with (A := s2 :: s3 :: ls4) in H2; [ | unfold injective; congruence]. 
-         destruct s'; [ | destruct s']; cbn in H2; inv H2;
-         repeat match goal with 
-           | [ H : liftPrelude _ _ _ _ _ _ _ |- _] => inv H
-           | [ H : preludeRules _ _ _ _ _ _ |- _] => inv H
-         end; intros.
-         -- exists []. cbn. unfold isValidInput, z'. subst. cbn. split; [ | lia]. 
-            rewrite !Nat.add_comm with (n := t). cbn. rewrite <- !app_assoc. eauto. 
-         -- exists [e]. cbn. unfold isValidInput, z'. subst. cbn. split; [ | lia]. 
-            rewrite !Nat.add_comm with (n := t). cbn. rewrite <- !app_assoc. eauto. 
-         -- exists (e :: e0 :: s'). cbn. unfold isValidInput, z'. subst. cbn in *. split; [ | lia]. 
-            rewrite !Nat.add_comm with (n := t). 
-            replace (S (S k') + t - (|s'|)) with (S (S (k' - (|s'|) + t))) by lia. cbn. 
-            rewrite <- !app_assoc. eauto.
-      * clear G1 G2 G3 G4 G5. rewrite <- F2. 
-        cbn; rewrite !map_length, !app_length, !map_length, !rev_length.
-       rewrite E_length, repEl_length. cbn. lia. 
+    assert (|repEl k nstar ++ repEl (wo + t) nblank| >= 2) as H0. 
+    { rewrite app_length, !repEl_length; unfold wo; lia. }
+    remember (repEl k nstar ++ repEl (wo + t) nblank) as rs. 
+    replace (([ndelimC] ++ rev (repEl (wo + (t + k)) nblank) ++ [ninit] ++ repEl k nstar ++ repEl (wo + t) nblank ++ [ndelimC])) with (([ndelimC] ++ rev (repEl (wo + (t + k)) nblank) ++ [ninit] ++ rs ++ [ndelimC])) in H. 
+    2: { rewrite Heqrs. firstorder. }
+    destruct rs as [ | r0 rs]; [ | destruct rs as [ | r1 rs]]; cbn in H0; try lia; clear H0.
+    unfold wo in H; cbn in H.  
+    do 2 rewrite <- app_assoc in H. cbn in H. 
+    rewrite !map_app in H. cbn in H. rewrite app_fold in H. 
+    match type of H with 
+      context[?a :: ?b :: inr ninit :: ?c :: ?d :: ?r] => replace (a :: b :: inr ninit :: c :: d :: r) with ([a; b; inr ninit; c; d] ++ r) in H by (now cbn) 
+    end.
+    specialize (valid_conc_inv H) as (A' & B' & ? & ? & ? & ? & ? & F1 & F2 & F3). 
+    apply map_eq_app in F1 as (ls1 & ls2 & -> & -> & F1). symmetry in F1. 
+    apply map_eq_app in F1 as (ls3 & ls4 & -> & F1 & ->). 
+    inv_eqn_map. 
+    do 2 setoid_rewrite map_app in H at 2. cbn [map] in H. 
+    specialize (proj1 (valid_rewritesHeadInd_center _ _ _ _ _ _ _ _ _ _ _ _ _ _ _) (conj H (conj F2 F3))) as (G1 & G2 & G3 & G4 & G5).
+    replace ((inr ndelimC :: map inr (rev (repEl (t + k) nblank))) ++ [inr nblank; inr nblank] : list preludeSig) with ((inr ndelimC :: map inr (rev (repEl (S (S t) + k) nblank)) : list preludeSig)) in G1. 
+    2: { cbn. rewrite <- !app_assoc, map_app. cbn. easy. }
+    rewrite map_rev in G1. 
+    apply prelude_blank_tape_rewrites_left_unique in G1. fold Nat.add in G1. 
+    
+    rewrite <- map_rev in G1. cbn in G1. rewrite <- app_assoc in G1. cbn in G1. 
+    rewrite map_app in G1. cbn in G1. 
+    apply app_eq_length in G1 as (G1 & G1'). 
+    2: { clear F3 G1. rewrite <- F2. cbn. rewrite !map_length, !rev_length. 
+        rewrite repEl_length, E_length. cbn. lia. }
+    apply Prelim.map_inj in G1 as ->;[  | unfold injective; congruence ]. 
+    inv G1'. 
+    replace (inr r0 :: inr r1 :: map inr (rs ++ [ndelimC])) with (map inr ((r0 ::r1 ::rs) ++ [ndelimC]) : list preludeSig) in G2 by easy.
+    rewrite Heqrs, <- app_assoc in G2. 
+    apply prelude_right_half_rewrites_input_unique' in G2 as (s' & G2' & G2). 
+    replace (inl s2 :: inl s3 :: map inl ls4) with (map inl (s2 :: s3 :: ls4) : list preludeSig) in G2 by easy.
+    apply Prelim.map_inj in G2; [ | easy].
+
+    exists s'. 
+    split. 
+    - cbn. rewrite G2. clear G4 G5. inv_prelude.
+      do 2 rewrite rev_fold. 
+      unfold initialString. unfold stringForConfig, stringForTapeHalf', z'. destruct s'; [ | destruct s']; cbn -[rev]; unfold z'; easy. 
+    - apply G2'.
   Qed. 
 
   Definition allRules := combP simRules preludeRules. 
@@ -2916,7 +2833,7 @@ Section fixTM.
   Proof. exists [nblank; nstar; ndelimC; ninit]. intros []; simpl; dec; congruence. Defined.
 
   (*the result which is given by the prelude *)
-  Lemma prelude_reduction_from_ExPTPR : @ExPTPR Gamma _ _ simRules finalSubstrings t isValidInitialString l <-> PTPRLang (@Build_PTPR (FinType (EqType preludeSig)) (map inr preludeInitialString) allRules (map (map inl) finalSubstrings) (1 + t)).  
+  Lemma prelude_reduction_from_ExPTPR : @ExPTPR (FinType (EqType Gamma)) simRules finalSubstrings t isValidInitialString l <-> PTPRLang (@Build_PTPR (FinType (EqType preludeSig)) (map inr preludeInitialString) allRules (map (map inl) finalSubstrings) (1 + t)).  
   Proof. 
     eapply prelude_ok. 
     - unfold l. lia. 
@@ -2946,8 +2863,9 @@ Section fixTM.
   Definition Fpolarity := finType_CS polarity.
 
   (** *list-based rule infrastructure *)
-  (*we use a abstract representation of elements of the alphabet Gamma with holes where the elements of the abstract TM alphabets Sigma and states need to be placed *)
-  (*the following development is centered around the goal of easily being able to instantiate the abstract fGamma elements with finTypes and with the flat representation using natural numbers *)
+  (**We use a abstract representation of elements of the alphabet Gamma with holes where the elements of the abstract TM alphabets Sigma and states need to be placed. 
+  The following development is centered around the goal of easily being able to instantiate the abstract fGamma elements with finTypes and with the flat representation using natural numbers. 
+  *)
   Inductive fstateSigma := blank | someSigmaVar : nat -> fstateSigma | stateSigmaVar : nat -> fstateSigma. 
   Inductive fpolarity := polConst : polarity -> fpolarity | polVar : nat -> fpolarity.
   Definition fpolSigma := prod fpolarity fstateSigma.
@@ -2963,7 +2881,7 @@ Section fixTM.
                               stateEnv : list W
                       }.
 
-  (*variables are bound to the elements at the corresponding index *)
+  (** variables are bound to the elements at the corresponding index *)
   Definition boundVar (X : Type) (l : list X) (n : nat) := n < length l. 
   Section fixEnv. 
     Context {X Y Z W : Type}.
@@ -3015,7 +2933,7 @@ Section fixTM.
   Definition evalEnvFin := evalEnv Fpolarity Sigma FstateSigma states. 
   Definition evalEnvFlat := evalEnv nat nat nat nat.
 
-  (*a reification procedure is canonical if it uses exactly the bound variables *)
+  (** a reification procedure is canonical if it uses exactly the bound variables *)
   Definition reifyCanonical {X Y Z W M : Type} (reify : evalEnv X Y Z W -> fAlphabet -> option M) := 
               forall (env : evalEnv X Y Z W) (c : fAlphabet), bound_Alphabet env c <-> exists e, reify env c = Some e. 
 
@@ -3205,22 +3123,17 @@ Section fixTM.
 
   Lemma flattenPolarity_reprEl p : finReprEl flatPolarity (flattenPolarity p) p. 
   Proof. 
-    unfold finReprEl. 
-    split; [ | split]. 
+    unfold finReprEl. split. 
     - unfold finRepr. unfold flatPolarity. unfold elem. now cbn.
-    - destruct p; unfold flatPolarity; cbn; lia. 
     - destruct p; cbn; lia.
   Qed. 
 
   Lemma flattenPreludeSig'_reprEl x : finReprEl flatPreludeSig' (flattenPreludeSig' x) x. 
   Proof. 
-    unfold finReprEl. 
-    split; [ | split]. 
+    unfold finReprEl. split.
     - unfold finRepr, flatPreludeSig', elem. now cbn. 
-    - destruct x; unfold flatPreludeSig'; cbn; lia. 
     - destruct x; cbn; lia. 
   Qed. 
-
 
   Lemma Sigma_finRepr : finRepr Sigma flatSigma. 
   Proof. 
@@ -3253,9 +3166,8 @@ Section fixTM.
 
   Lemma delimC_reprEl : finReprEl flatDelim flatDelimC delimC.  
   Proof. 
-    split; [ | split]. 
+    split. 
     - unfold finRepr. auto. 
-    - auto. 
     - auto. 
   Qed. 
 
@@ -3561,14 +3473,10 @@ Section fixTM.
   Proof.
     intros. rewrite H0; clear H0. unfold list_finReprEl. split.
     - intros. apply in_map_iff in H0 as (x' & <- & H0).
-      exists x'. split; [ repeat split | apply H0].
-      + apply H.
-      + rewrite H. apply index_le. 
+      exists x'. split; [ repeat split | apply H0]. apply H.
     - intros. exists (index b). split; [ | apply in_map_iff; eauto]. 
-      split; [ apply H| split; [ | reflexivity]]. 
-      rewrite H. apply index_le. 
+      split; [ apply H| reflexivity]. 
   Qed.  
-
 
   Lemma makeRules'_isFlatTWindowsOf  (envFlatList : list evalEnvFlat) (envFinList : list evalEnvFin) rule :
     list_isFlatEnvOf envFlatList envFinList ->
@@ -3629,16 +3537,14 @@ Section fixTM.
     unfold list_finReprEl. split.
     - intros. apply in_seq in H. destruct (nth_error (elem T) n ) eqn:H1.  
       + exists e. split; [ | now apply nth_error_In in H1 ].
-        split; [ | split].
-        * easy. 
+        split.
         * easy. 
         * apply nth_error_nth in H1. rewrite <- H1. apply getPosition_nth. 2: easy.
           apply dupfree_elements.   
       + destruct H. cbn in H0. apply nth_error_Some in H0. congruence. 
     - intros. exists (getPosition (elem T) b). apply In_nth with (d := b) in H as (n & H1 & <-). split.
-      + split; [ | split]. 
+      + split. 
         * easy. 
-        * rewrite getPosition_nth; auto. apply dupfree_elements. 
         * reflexivity.
       + rewrite getPosition_nth; [ | | assumption].
         * apply in_seq.  lia. 
@@ -3744,23 +3650,22 @@ Section fixTM.
 
   Lemma agreement_mtr: rules_list_ind_agree (@liftOrig Gamma shiftRightRules preludeSig') finMTRRules. 
   Proof.
-    (*unfold rules_list_ind_agree; intros; split. *)
-    (*- intros. inv H. rewHeadTape_inv2; apply in_makeRules_iff. *)
-      (*+ exists (Build_evalEnv [p] [σ1; σ2; σ3; σ4] [] []). solve_agreement_tape. *)
-      (*+ exists (Build_evalEnv [p] [σ1; σ1; σ1; σ1] [] []). solve_agreement_tape. *)
-      (*+ exists (Build_evalEnv [p] [] [] []). solve_agreement_tape. *)
-      (*+ exists (Build_evalEnv [p] [σ1; σ2] [] []). solve_agreement_tape. *)
-      (*+ exists (Build_evalEnv [p] [σ1; σ2; σ3] [] []). solve_agreement_tape. *)
-      (*+ exists (Build_evalEnv [p] [σ1] [] []). solve_agreement_tape. *)
-      (*+ exists (Build_evalEnv [p] [σ1; σ2] [] []). solve_agreement_tape. *)
-      (*+ exists (Build_evalEnv [p] [σ1; σ2; σ3] [] []). solve_agreement_tape. *)
-    (*- intros. apply in_makeRules_iff in H as (env & rule & H1 & H2 & H3).  *)
-      (*destruct env. apply in_makeAllEvalEnv_iff in H2. *)
-      (*destruct H2 as ((F1 & _) & (F2 & _) & (F3 & _) & (F4 & _)). *)
-      (*destruct_var_env F1; destruct_var_env F3; destruct_var_env F4; destruct_var_env F2.  *)
-      (*all: cbn in H1; destruct_or H1; subst; cbn in H3; inv H3; eauto. *)
-  (*Qed. *)
-  Admitted. 
+    unfold rules_list_ind_agree; intros; split. 
+    - intros. inv H. rewHeadTape_inv2; apply in_makeRules_iff. 
+      + exists (Build_evalEnv [p] [σ1; σ2; σ3; σ4] [] []). solve_agreement_tape. 
+      + exists (Build_evalEnv [p] [σ1; σ1; σ1; σ1] [] []). solve_agreement_tape. 
+      + exists (Build_evalEnv [p] [] [] []). solve_agreement_tape. 
+      + exists (Build_evalEnv [p] [σ1; σ2] [] []). solve_agreement_tape. 
+      + exists (Build_evalEnv [p] [σ1; σ2; σ3] [] []). solve_agreement_tape. 
+      + exists (Build_evalEnv [p] [σ1] [] []). solve_agreement_tape. 
+      + exists (Build_evalEnv [p] [σ1; σ2] [] []). solve_agreement_tape. 
+      + exists (Build_evalEnv [p] [σ1; σ2; σ3] [] []). solve_agreement_tape. 
+    - intros. apply in_makeRules_iff in H as (env & rule & H1 & H2 & H3).  
+      destruct env. apply in_makeAllEvalEnv_iff in H2. 
+      destruct H2 as ((F1 & _) & (F2 & _) & (F3 & _) & (F4 & _)). 
+      destruct_var_env F1; destruct_var_env F3; destruct_var_env F4; destruct_var_env F2.  
+      all: cbn in H1; destruct_or H1; subst; cbn in H3; inv H3; eauto. 
+  Qed. 
 
   Definition pFlipAlphabet (a : Alphabet) := 
     match a with 
@@ -3778,39 +3683,37 @@ Section fixTM.
   Lemma agreement_mtl x1 x2 x3 x4 x5 x6 :
     @liftOrig Gamma shiftRightRules preludeSig' (pFlipAlphabet x1) (pFlipAlphabet x2) (pFlipAlphabet x3) (pFlipAlphabet x4) (pFlipAlphabet x5) (pFlipAlphabet x6) <-> {x3, x2, x1} / {x6, x5, x4} el finMTLRules.
   Proof. 
-    (*split; intros. *)
-    (*- inv H. repeat match goal with [H : inl _ = pFlipAlphabet _ |- _] => apply pFlipAlphabet_pFlipGamma_eqn in H end.*)
-      (*subst. rewHeadTape_inv2; apply in_makeRules_iff. *)
-      (*+ exists (Build_evalEnv [polarityFlip p] [σ3; σ2; σ1; σ4] [] []). solve_agreement_tape.       *)
-      (*+ exists (Build_evalEnv [polarityFlip p] [σ1; σ1; σ1; σ1] [] []). solve_agreement_tape. *)
-      (*+ exists (Build_evalEnv [polarityFlip p] [] [] []). solve_agreement_tape. *)
-      (*+ exists (Build_evalEnv [polarityFlip p] [σ1; σ2] [] []). solve_agreement_tape. *)
-      (*+ exists (Build_evalEnv [polarityFlip p] [σ2; σ1; σ3] [] []). solve_agreement_tape. *)
-      (*+ exists (Build_evalEnv [polarityFlip p] [σ1] [] []). solve_agreement_tape. *)
-      (*+ exists (Build_evalEnv [polarityFlip p] [σ2; σ1] [] []). solve_agreement_tape. *)
-      (*+ exists (Build_evalEnv [polarityFlip p] [σ3; σ2; σ1] [] []). solve_agreement_tape. *)
-    (*- intros. apply in_makeRules_iff in H as (env & rule & H1 & H2 & H3).  *)
-      (*destruct env. apply in_makeAllEvalEnv_iff in H2. *)
-      (*destruct H2 as ((F1 & _) & (F2 & _) & (F3 & _) & (F4 & _)). *)
-      (*destruct_var_env F1; destruct_var_env F3; destruct_var_env F4; destruct_var_env F2.  *)
-      (*all: try (now (cbn in H1; destruct_or H1; subst; cbn in H3; inv H3; cbn; eauto)).*)
-  (*Qed. *)
-  Admitted. 
+    split; intros. 
+    - inv H. repeat match goal with [H : inl _ = pFlipAlphabet _ |- _] => apply pFlipAlphabet_pFlipGamma_eqn in H end.
+      subst. rewHeadTape_inv2; apply in_makeRules_iff. 
+      + exists (Build_evalEnv [polarityFlip p] [σ3; σ2; σ1; σ4] [] []). solve_agreement_tape.       
+      + exists (Build_evalEnv [polarityFlip p] [σ1; σ1; σ1; σ1] [] []). solve_agreement_tape. 
+      + exists (Build_evalEnv [polarityFlip p] [] [] []). solve_agreement_tape. 
+      + exists (Build_evalEnv [polarityFlip p] [σ1; σ2] [] []). solve_agreement_tape. 
+      + exists (Build_evalEnv [polarityFlip p] [σ2; σ1; σ3] [] []). solve_agreement_tape. 
+      + exists (Build_evalEnv [polarityFlip p] [σ1] [] []). solve_agreement_tape. 
+      + exists (Build_evalEnv [polarityFlip p] [σ2; σ1] [] []). solve_agreement_tape. 
+      + exists (Build_evalEnv [polarityFlip p] [σ3; σ2; σ1] [] []). solve_agreement_tape. 
+    - intros. apply in_makeRules_iff in H as (env & rule & H1 & H2 & H3).  
+      destruct env. apply in_makeAllEvalEnv_iff in H2. 
+      destruct H2 as ((F1 & _) & (F2 & _) & (F3 & _) & (F4 & _)). 
+      destruct_var_env F1; destruct_var_env F3; destruct_var_env F4; destruct_var_env F2.  
+      all: try (now (cbn in H1; destruct_or H1; subst; cbn in H3; inv H3; cbn; eauto)).
+  Qed. 
 
   Lemma agreement_mti: rules_list_ind_agree (@liftOrig Gamma identityRules preludeSig') finMTIRules. 
   Proof. 
-    (*unfold rules_list_ind_agree; intros. split.*)
-    (*- intros. inv H. rewHeadTape_inv2; apply in_makeRules_iff. *)
-      (*+ exists (Build_evalEnv [p] [] [m1; m2; m3] []). solve_agreement_tape. *)
-      (*+ exists (Build_evalEnv [p; p'] [] [] []). solve_agreement_tape. *)
-      (*+ exists (Build_evalEnv [p; p'] [] [] []). solve_agreement_tape. *)
-    (*- intros. apply in_makeRules_iff in H as (env & rule & H1 & H2 & H3).  *)
-      (*destruct env. apply in_makeAllEvalEnv_iff in H2. *)
-      (*destruct H2 as ((F1 & _) & (F2 & _) & (F3 & _) & (F4 & _)). *)
-      (*destruct_var_env F1; destruct_var_env F3; destruct_var_env F4; destruct_var_env F2.  *)
-      (*all: cbn in H1; destruct_or H1; subst; cbn in H3; inv H3; eauto.*)
-  (*Qed. *)
-  Admitted. 
+    unfold rules_list_ind_agree; intros. split.
+    - intros. inv H. rewHeadTape_inv2; apply in_makeRules_iff. 
+      + exists (Build_evalEnv [p] [] [m1; m2; m3] []). solve_agreement_tape. 
+      + exists (Build_evalEnv [p; p'] [] [] []). solve_agreement_tape. 
+      + exists (Build_evalEnv [p; p'] [] [] []). solve_agreement_tape. 
+    - intros. apply in_makeRules_iff in H as (env & rule & H1 & H2 & H3).  
+      destruct env. apply in_makeAllEvalEnv_iff in H2. 
+      destruct H2 as ((F1 & _) & (F2 & _) & (F3 & _) & (F4 & _)). 
+      destruct_var_env F1; destruct_var_env F3; destruct_var_env F4; destruct_var_env F2.  
+      all: cbn in H1; destruct_or H1; subst; cbn in H3; inv H3; eauto.
+  Qed. 
 
   Lemma agreement_tape : rules_list_ind_agree (@liftOrig Gamma tapeRules preludeSig') finTapeRules.  
   Proof. 
@@ -3828,9 +3731,10 @@ Section fixTM.
   Qed. 
 
   (** *agreement for transitions *)
-  (*for the transition rules, the current and next state as well the read and written symbols are fixed *)
-  (*still, we model them as variables, but do not instantiate them with all possible environments, but only with environments where these variables are fixed *)
-  (*for that, we first generate the environments and then add the values of the constant variables *)
+  (**For the transition rules, the current and next state as well the read and written symbols are fixed. 
+    Still, we model them as variables, but do not instantiate them with all possible environments, but only with environments where these variables are fixed. 
+    For that, we first generate the environments and then add the values of the constant variables.
+  *)
 
   Section fixAbstractTypes.
     Variable (X Y Z W M : Type). 
@@ -3842,7 +3746,7 @@ Section fixTM.
     (*only add states (used for the None/None case) *)
     Definition transEnvAddS (q q' : W) (env : evalEnv X Y Z W) := envAddState q $ envAddState q' env.
 
-    Definition transEnvAddSM (q q' : W) (m m' : Z) (env : evalEnv X Y Z W) := envAddSSigma m' $ envAddSSigma m $ transEnvAddS q q' env.
+    Definition transEnvAddSM (q q' : W) (m m' : Z) (env : evalEnv X Y Z W) := envAddSSigma m $ envAddSSigma m' $ transEnvAddS q q' env.
 
     (*we define the transition generation functions over abstract makeRules instantiations *)
     Definition makeRulesT := list (evalEnv X Y Z W) -> list (window fAlphabet) -> list (window M).
@@ -3912,12 +3816,12 @@ Section fixTM.
           ].
   End fixAbstractTypes.
 
-  (*the environments which assign values to the non-constant variables of the transition rules *)
+  (**The environments which assign values to the non-constant variables of the transition rules *)
   Definition fin_baseEnv := makeAllEvalEnvFin 1 0 3 0. 
   Definition fin_baseEnvNone := makeAllEvalEnvFin 2 2 2 0. 
   Definition fin_baseEnvHalt := makeAllEvalEnvFin 1 0 3 0. 
 
-  (*given a state and a current symbol, generate the rules for the corresponding transition *)
+  (**Given a state and a current symbol, generate the rules for the corresponding transition *)
   Definition generateRulesForFinNonHalt (q : states) (m : stateSigma) :=
     match m, (trans (q, m)) with
     | _, (q', (Some σ, L)) => makeSomeRight q q' m (Some σ) makeRulesFin fin_baseEnv
@@ -3931,21 +3835,22 @@ Section fixTM.
     | None, (q', (None, N)) => makeNoneStay q q' makeRulesFin fin_baseEnvNone
     end.
 
-  (*given a state, generate the rules needed for halting states *)
+  (**Given a state, generate the rules needed for halting states *)
   Definition generateRulesForFinHalt (q : states) := makeHalt q makeRulesFin fin_baseEnvHalt. 
   (*given a state, generate either transition rules or halting rules for it *)
   Definition generateRulesForFin (q : states) :=
     if halt q then generateRulesForFinHalt q else
       concat (map (fun m => generateRulesForFinNonHalt q m) (elem FstateSigma)). 
-  (*generate rules for all states*)
+  (**generate rules for all states*)
   Definition finStateRules := concat (map generateRulesForFin (elem states)).  
 
   (** *proof of transition agreement *)
-  (*We first define the inductive rules structured in a different way, in order for it to resemble the structure of the list-based rules *)
-  (*(writing the list-based rules in a way which resembles the inductive predicates is not possible in an elegant way) *)
+  (**We first define the inductive rules structured in a different way, in order for it to resemble the structure of the list-based rules.
+    (writing the list-based rules in a way which resembles the inductive predicates is not possible in an elegant way)
+  *)
 
-  (* bundling predicates *)
-  (*we first group together according to the shift direction: left/right/stay *)
+  (** bundling predicates *)
+  (**we first group together according to the shift direction: left/right/stay *)
 
   Inductive etransSomeLeft : states -> states -> stateSigma -> stateSigma -> transRule :=
   | etransSomeLeftLeftC q q' (a b : stateSigma)  γ1 γ2 γ3 γ4 γ5 γ6: transSomeLeftLeft q q' a γ1 γ2 γ3 γ4 γ5 γ6 -> etransSomeLeft q q' a b γ1 γ2 γ3 γ4 γ5 γ6
@@ -4036,14 +3941,13 @@ Section fixTM.
 
   Lemma esim_sim_agree x1 x2 x3 x4 x5 x6: simRules x1 x2 x3 x4 x5 x6 <-> esimRules x1 x2 x3 x4 x5 x6. 
   Proof. 
-  (*   split. *)
-  (*   - intros. inv H.  *)
-  (*     erewHeadSim_inv; try destruct m; eauto 7 with trans. *)
-  (*   - intros. inv H. destruct H0 as [H0 | [H0 | H0]].  *)
-  (*     + transRules_inv2; eauto 7 with trans.  *)
-  (*     + haltRules_inv1; eauto 7 with trans. *)
-  (*     + eauto with trans.  *)
-  (* Qed.   *)
+     (*split. *)
+     (*- intros. destruct H as [H | [H | H]].  *)
+       (*+ transRules_inv2; eauto 7 with trans.  *)
+       (*+ haltRules_inv1; eauto 7 with trans. *)
+       (*+ eauto with trans.*)
+     (*- intros. erewHeadSim_inv; try destruct m; eauto 7 with trans. *)
+   (*Qed.   *)
     Admitted. 
 
   Section listDestructLength.
@@ -4109,7 +4013,7 @@ Section fixTM.
       (*1-18: try destruct m.*)
       (*all: rewrite H; apply in_makeRules_iff, agreement_trans_unfold_env.*)
       (*some things are easy to automate, some aren't... *)
-      (** exists (Build_evalEnv [p] [] [m1; m2] []).  solve_agreement_trans.*)
+      (** exists (Build_evalEnv [p] [] [m1; m2] []). solve_agreement_trans.*)
       (** exists (Build_evalEnv [p] [] [m1; m2] []). solve_agreement_trans. *)
       (** exists (Build_evalEnv [p] [] [m1; m2] []). solve_agreement_trans. *)
       (** exists (Build_evalEnv [p] [] [m1; m2] []). solve_agreement_trans. *)
@@ -4265,14 +4169,6 @@ Section fixTM.
       | [ |- ex (fun x => (x el ?h /\ _))] => rec_exists h ltac:(split; [ force_In | split; [ | cbn; reflexivity]])
     end;
     apply in_makeAllEvalEnv_iff; repeat split; cbn; solve_agreement_incl.
-
-    (*split;*)
-    (*[ apply in_makeAllEvalEnv_iff; repeat split; cbn; solve_agreement_incl*)
-    (*| apply in_map_iff; unfold listPreludeRules;*)
-      (*match goal with*)
-      (*| [ |- ex (fun x => _ /\ x el ?h)] => rec_exists h ltac:(cbn; split; [reflexivity | now eauto])*)
-      (*end*)
-    (*].*)
 
   Lemma agreement_prelude : rules_list_ind_agree (@liftPrelude Gamma preludeSig' preludeRules) finPreludeRules.
   Proof. 
@@ -4696,7 +4592,7 @@ Section fixTM.
     unfold flat_haltingStates. rewrite in_filter_iff. split; intros. 
     - destruct H as (H1 & H2).
       rewrite states_finRepr in H1. apply finType_enum_list_finReprEl in H1 as (q & H1 & H3). 
-      exists q. destruct H1 as (_ & _ &<-). split; [ easy | ].
+      exists q. destruct H1 as (_ &<-). split; [easy | ].
       destruct flatTM_TM_compat. destruct R__halt. rewrite <- R__halt. easy.
     - destruct H as (q & -> & H). split. 
       + apply in_seq. cbn; split; [ lia | ]. rewrite states_finRepr. apply index_le. 
@@ -4709,9 +4605,8 @@ Section fixTM.
 
   Lemma finReprEl'_finReprEl (X: finType) (A : X) a x: finRepr X x -> finReprEl' a A -> finReprEl x a A.
   Proof. 
-    intros. repeat split. 
+    intros. split. 
     - apply H. 
-    - rewrite <- H0, H. apply index_le.
     - apply H0.
   Qed. 
 

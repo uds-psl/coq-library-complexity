@@ -209,6 +209,13 @@ Proof.
   - replace (S n) with (n + 1) by lia. eauto using relpower_trans. 
 Qed. 
 
+Lemma relpower_add_split (X : Type) (R : X -> X -> Prop) n m x y: relpower R (n + m) x y -> exists z, relpower R n x z /\ relpower R m z y.
+Proof. 
+  revert x y. induction n; intros. 
+  - cbn in H. eauto. 
+  - inv H. apply IHn in H2 as (z & H3 & H4). exists z. eauto.
+Qed. 
+
 Notation injective := Prelim.Injective.
 
 Lemma getPosition_map (X Y : eqType) (f : X -> Y) (l : list X) (x : X) : injective f -> getPosition (map f l) (f x) = getPosition l x. 

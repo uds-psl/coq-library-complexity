@@ -118,12 +118,12 @@ Section fixInstance.
 
   (*agreement of rewritesHead *)
   Lemma rewritesHead_homomorphism_iff win a b : 
-    win el windows -> rewritesHead win a b <-> rewritesHead (hwindow win) (h a) (h b). 
+    rewritesHead win a b <-> rewritesHead (hwindow win) (h a) (h b). 
   Proof. 
     split.
     - unfold hwindow. destruct win. intros ((c1 & H1) & (c2 & H2)). 
       subst. split; cbn -[canonicalHom]; rewrite (proj1 h_unifHom); unfold prefix; eauto.
-    - intros. unfold hwindow in H0. destruct win. destruct H0 as ((c1 & H1) & (c2 & H2)). 
+    - intros. unfold hwindow in H. destruct win. destruct H as ((c1 & H1) & (c2 & H2)). 
       cbn in *. destruct A as (_ & _ & _ & _ & A4 & _ ). 
       eapply h_app_inv in H1 as (a1 & a2 & -> & H1 & <-); [ | rewrite Nat.mul_comm; apply h_multiplier].  
       eapply h_app_inv in H2 as (b1 & b2 & -> & H2 & <-); [ | rewrite Nat.mul_comm; apply h_multiplier]. 
@@ -190,8 +190,8 @@ Section fixInstance.
       * rewrite <- !(proj1 h_unifHom). apply rewritesHead_homomorphism_iff; assumption.
   Qed. 
 
-  (*for the other direction, we again prove a stronger result saying that the conclusion is in the image of the homomorphism *)
-  (*The lemma decomposes to two interesting cases: 
+  (**For the other direction, we again prove a stronger result saying that the conclusion is in the image of the homomorphism. 
+    The lemma decomposes to two interesting cases: 
     - the case where a single rewrite window covers the whole string
     - the case where a part of the string is already covered by some windows and we add a new window at the front
   *)
@@ -228,7 +228,7 @@ Section fixInstance.
       assert (b2 = []) as ->.
       { rewrite h_multiplier, app_length in H0. unfold hwidth in H0. destruct b2; [easy | cbn in H0; nia]. }
       rewrite app_nil_r. econstructor; [lia | lia | apply H1 | ].
-      apply rewritesHead_homomorphism_iff; [ apply H1 | ].
+      apply rewritesHead_homomorphism_iff.
       rewrite H3, H4, !app_nil_r in H20. apply H20.
     - unfold hoffset, hwidth in *. unfold hwindows in H2. apply in_map_iff in H2 as (rule' & <- & H10). 
       symmetry in Heql. eapply h_app_inv in Heql as (a1 & a2 & -> & F1 & F2); [ | rewrite Nat.mul_comm; apply H]. 
@@ -240,7 +240,7 @@ Section fixInstance.
           rewrite <- !(proj1 h_unifHom) in H3. apply rewritesHead_homomorphism_iff in H3; eauto.
   Qed. 
 
-  (*we can obtain an equivalence, but its second direction is significantly weaker than the direction which we've just shown *)
+  (**we can obtain an equivalence, but its second direction is significantly weaker than the direction which we've just shown *)
   Lemma valid_homomorphism_iff a b : 
     |a| >= width 
     -> valid offset width windows a b <-> valid hoffset hwidth hwindows (h a) (h b).
@@ -252,7 +252,7 @@ Section fixInstance.
       + apply H0. 
   Qed. 
 
-  (*this lifts to powers of valid*)
+  (**this lifts to powers of valid*)
   Lemma valid_relpower_homomorphism1 a b steps : 
     |a| >= width 
     -> relpower (valid offset width windows) steps a b 
@@ -276,7 +276,7 @@ Section fixInstance.
       + exists c'; split; [ easy | ]. econstructor; easy. 
   Qed. 
 
-  (*again a slightly weaker equivalence *)
+  (**again a slightly weaker equivalence *)
   Lemma valid_relpower_homomorphism_iff a b steps : 
     |a| >= width 
     -> relpower (valid offset width windows) steps a b <-> relpower (valid (k * offset) (k * width) hwindows) steps (h a) (h b).
@@ -287,7 +287,7 @@ Section fixInstance.
       symmetry in Heq; apply h_injective in Heq. easy. 
   Qed. 
 
-  (*agreement of the final constraints *)
+  (**agreement of the final constraints *)
   Lemma final_agree sf : 
     |init| = |sf| 
     -> satFinal offset (length init) final sf <-> satFinal hoffset (length hinit) hfinal (h sf). 
@@ -318,7 +318,7 @@ Section fixInstance.
       + rewrite h_multiplier. rewrite firstn_length. nia. 
   Qed. 
       
-  (*the transformed instance is a YES-instance iff the original instance is a YES-instance *)
+  (**the transformed instance is a YES-instance iff the original instance is a YES-instance *)
   Lemma PR_homomorphism_iff : 
     (exists sf, relpower (valid offset width windows) steps init sf /\ satFinal offset (|init|) final sf) 
     <-> (exists sf, relpower (valid hoffset hwidth hwindows) hsteps hinit sf /\ satFinal hoffset (|hinit|) hfinal sf). 

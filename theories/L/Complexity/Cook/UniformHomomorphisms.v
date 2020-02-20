@@ -38,7 +38,7 @@ Section fixX.
     now rewrite map_app, concat_app. 
   Qed. 
 
-  Lemma canonicalHom_is_unique h' : forall h'', homomorphism h'' ->  (forall x, h'' [x] = h' x) -> forall x, h'' x = canonicalHom h' x. 
+  Lemma canonicalHom_is_unique h' : forall h'', homomorphism h'' -> (forall x, h'' [x] = h' x) -> forall x, h'' x = canonicalHom h' x. 
   Proof. 
     intros. induction x. 
     - cbn. erewrite homo_nil; easy.
@@ -63,6 +63,22 @@ Section fixX.
       replace (a :: x) with ([a] ++ x) by now cbn. replace (x0 :: y) with ([x0] ++ y) by now cbn. 
       rewrite !H1. rewrite !app_length. erewrite H2 with (y := x0). 
       rewrite IHx with (y := y); eauto. 
+  Qed. 
+
+  Lemma unif_homo_eps_free h : uniform_homomorphism h -> forall x, h x = [] -> x = []. 
+  Proof. 
+    intros (H1 & H2 & H3) x H. 
+    destruct x as [ | x y]; [easy | ]. rewrite homo_cons in H by easy. 
+    apply list_eqn_length in H. rewrite app_length in H. cbn in H. 
+    specialize (H3 x); lia. 
+  Qed. 
+
+  Lemma canonical_uniform_homo f k : (forall x, |f x| = k) -> k > 0 -> uniform_homomorphism (canonicalHom f). 
+  Proof. 
+    intros H1 H2. repeat split. 
+    - apply canonicalHom_is_homomorphism. 
+    - intros x y. cbn. now rewrite !app_nil_r, !H1. 
+    - intros x. cbn. rewrite !app_nil_r, H1. lia. 
   Qed. 
 
   Variable (h : list X -> list Y). 
