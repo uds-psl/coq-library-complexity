@@ -14,6 +14,13 @@
 \usepackage{multirow}
 \usepackage{bm}
 
+\usetikzlibrary{external}
+\tikzexternalize[prefix=figures/]
+
+\usepackage{marginnote}
+
+\newcommand{\mnote}[1]{\marginnote{\centering\fbox{#1}}}
+\newcommand{\mnotec}[1]{#1\mnote{#1}}
 
 \settitle{Towards a Formal Proof of the Cook-Levin Theorem}
 \setauthor{Lennard Gäher}
@@ -51,6 +58,11 @@
 }
 
 \makeglossaries
+
+%no tikz externalize for todo notes
+\makeatletter
+\renewcommand{\todo}[2][]{\tikzexternaldisable\@todo[#1]{#2}\tikzexternalenable}
+\makeatother
 
 \begin{document}
 

@@ -590,7 +590,7 @@ Formally, for each of the rewrite rules depicted in Example~\ref{ex:polarities},
 
 Finally, we need to enforce that the final configuration is a halting configuration. This can be encoded by requiring that an element of $[q^m~|~\textsf{halt}~q = \btrue, m : \Sigma + \{\blank\}]$ is contained in the last line of the tableau.\todo{fix notation for type}
 
-\section{Nondeterministic Input}
+\section{Nondeterministic Input}\label{sec:informal_nondet}
 The construction presented in the previous section can simulate a deterministic Turing machine given an initial configuration. \gennp{}, however, asks for the existence of an input which the Turing machine accepts. 
 This nondeterminism of the input can be encoded by prepending a new line to the tableau:
 \begin{center}
