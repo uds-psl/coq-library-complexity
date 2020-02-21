@@ -1,4 +1,4 @@
-From Undecidability.L Require Import Tactics.LTactics Prelim.MoreList Prelim.MoreBase.
+(*From Undecidability.L Require Import Tactics.LTactics Prelim.MoreList Prelim.MoreBase.
 From Undecidability.L.Complexity Require Import NP Synthetic Monotonic GenNP.
 
 
@@ -21,10 +21,10 @@ Da der simulierte Term evtl aber mit groesserer Schranke haelt muesste man dann 
 Print GenNP'.
 Check NPhard_GenNP.
 
-From Undecidability Require Import TMGenNP.LMGenNP.
+From Undecidability Require Import LMGenNP.
 
 Print LMGenNP'.
-About GenNP_to_LMGenNP.
+About GenNP_to_LMGenNP.*)
 
 (** Not Complete: nice form of Time bound *)
 (*From Undecidability.LAM  Require TM.LMBounds. *)

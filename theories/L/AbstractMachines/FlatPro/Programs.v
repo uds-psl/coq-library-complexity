@@ -144,6 +144,22 @@ Proof.
   specialize (decompile_correct' l s [] []) as H. autorewrite with list in H. rewrite H. easy.
 Qed.
 
+(** We can not show a lemma that if decompile produces a term, the inout was a compilation as decompile itself sometimes decompiles incorrect programs if the lamTs are at wrong positions*)
+Lemma decompile_resSize l P A B:
+  decompile l P A = inl B -> sumn (map size B) <= sumn (map size A) + sumn (map sizeT P).
+Proof.
+  induction P as [ |[] P] in l,A|-*.
+  -cbn. intros [= ->]. nia.
+  -cbn. intros ->%IHP. cbn. nia.
+  -destruct A as [ | ? []]. 1,2:easy.
+   intros ->%IHP. cbn. nia.
+  -cbn.  intros ->%IHP. nia.
+  -destruct l. easy.
+   destruct A as []. 1:easy.
+   intros ->%IHP. cbn. nia.
+   all:cbn.
+Qed.
+
 Lemma compile_inj s s' :
   compile s = compile s' -> s = s'.
 Proof.

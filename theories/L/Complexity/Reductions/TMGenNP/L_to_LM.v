@@ -4,13 +4,13 @@ From Undecidability.L.Complexity Require Import NP Synthetic Monotonic GenNP LMG
 From Undecidability.L Require Import LM_heap_def LM_heap_correct LBool ResourceMeasures Compile LNat LTerm Compile.
 
 Lemma GenNP_to_LMGenNP (X:Type) `{R__X : registered X}:
-  GenNP X ⪯p LMGenNP X.
+  restrictBy (LHaltsOrDiverges X) (GenNP X) ⪯p restrictBy (LMHaltsOrDiverges X) (LMGenNP X).
 Proof.
   evar (f__steps : nat -> nat). [f__steps]:intros n0.
   pose (f := (fun '(s, maxSize, steps) => (compile s,maxSize : nat, f__steps steps))).
   eapply reducesPolyMO_intro_restrictBy with (f:=f).
   2:{
-    intros [[s' maxSize] steps]. cbn - [GenNP' LMGenNP'].
+    intros [[s' maxSize] steps].
     intros (cs&Hsize). assert (lambda s') as [s0 eq] by Lproc. set (s:=lam s0) in *. subst s'.
     split.
     -split. easy.
@@ -59,8 +59,10 @@ Proof.
   }
 Qed.
 
+(*
 Lemma NPhard_LMGenNP X__cert `{R__cert : registered X__cert}:
   canEnumTerms X__cert->  NPhard (LMGenNP X__cert).
 Proof.
   intros ?%NPhard_GenNP. now eapply (red_NPhard GenNP_to_LMGenNP).
 Qed.
+*)

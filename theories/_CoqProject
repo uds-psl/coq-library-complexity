@@ -325,10 +325,12 @@ L/Complexity/LinTimeDecodable.v
 L/Complexity/NP.v
 L/Complexity/Problems/GenNPBool.v
 L/Complexity/Problems/GenNP.v
+L/Complexity/Problems/GenNP_is_hard.v
 L/Complexity/Problems/TMGenNP_fixed_mTM.v
 L/Complexity/Problems/TMGenNP.v
-L/Complexity/Reductions/TMGenNP/LM_to_mTM.v
 L/Complexity/Reductions/TMGenNP/L_to_LM.v
+L/Complexity/Reductions/TMGenNP/LM_to_mTM.v
+L/Complexity/Reductions/TMGenNP/mTM_to_singleTapeTM.v
 L/Complexity/Reductions/TMGenNP/IntermediateProblems.v
 L/Complexity/Reductions/TMGenNP/LMGenNP.v
 

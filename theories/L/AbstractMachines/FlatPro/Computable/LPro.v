@@ -1,5 +1,5 @@
 From Undecidability.L Require Import L Tactics.LTactics.
-From Undecidability.L.AbstractMachines.FlatPro Require Import ProgramsDef.
+From Undecidability.L.AbstractMachines Require Import FlatPro.Programs.
 From Undecidability.L Require Import Tactics.GenEncode.
 
 From Undecidability.L.Datatypes Require Import LNat.
@@ -14,3 +14,10 @@ Qed.
 (* Instance term_tok_eqb : computableTime' Tok_eqb (fun t _ => (1,fun t' _ => (min (sizeT t) (sizeT t') * 17 + 10,tt))). *)
 (* extract. solverec. *)
 (* Qed. *)
+
+
+Lemma size_Tok_enc_r t: sizeT t <= size (enc t).
+Proof.
+  destruct t;cbn. 2-4:now cbv.
+  unfold enc;cbn. now rewrite <- LNat.size_nat_enc_r.
+Qed.

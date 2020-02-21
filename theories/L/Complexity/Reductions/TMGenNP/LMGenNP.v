@@ -10,19 +10,16 @@ Definition initLMGen s c : (list (nat*list Tok)*list (nat*list Tok)*list (option
   := ([(0,s++c++[appT])],[],[]).
 
 Section fixX.
-  Context (X:Type) `{R__X : registered X}.
-  
-  Definition LMGenNP' : list Tok*nat*nat -> Prop :=
-    fun '(P, maxSize, k (*in unary*)) =>
-      exists (c:X), size (enc c) <= maxSize /\ (exists sigma' k', k' <= k /\ evaluatesIn step k' (initLMGen P (compile (enc c))) sigma').
+  Local Unset Implicit Arguments.
+  Context (X:Type) `{R__X : registered X}.   
 
   Definition LMHaltsOrDiverges : list Tok*nat*nat -> Prop :=
     fun '(P, maxSize, steps (*in unary*)) =>
       (exists s, P = compile s /\ proc s)
       /\ forall (c : X), size (enc c) <= maxSize -> forall k sigma', evaluatesIn step k (initLMGen P (compile (enc c))) sigma' -> k <= steps.
 
-  Definition LMGenNP := restrictBy LMHaltsOrDiverges LMGenNP'.
+  Definition LMGenNP : list Tok*nat*nat -> Prop:= 
+               (fun '(P, maxSize, k (*in unary*)) =>
+                  exists (c:X), size (enc c) <= maxSize /\ (exists sigma' k', k' <= k /\ evaluatesIn step k' (initLMGen P (compile (enc c))) sigma')).
 End fixX.
 
-Arguments LMGenNP : clear implicits.
-Arguments LMGenNP _ {_}.
