@@ -21,7 +21,7 @@ Compute Vector.to_list _. (1 ::: _).
 *)
 
 
-(* TODO This should go to TM/TM.v *)
+(* MOVE TODO This should go to TM/TM.v *)
 
 Lemma tape_move_niltape (sig : Type) (m : move) :
   tape_move (niltape sig) m = niltape sig.
@@ -62,7 +62,7 @@ Proof.
 Qed.
 
 
-(* TODO: ~> somewhere else *)
+(* MOVE TODO: ~> somewhere else *)
 Lemma vector_to_list_inj (X : Type) (n : nat) (xs ys : Vector.t X n) :
   vector_to_list xs = vector_to_list ys -> xs = ys.
 Proof.
@@ -74,6 +74,7 @@ Qed.
 
 Section Fin.
 
+  (* MOVE & Not global *)
   Global Coercion fin_to_nat (n : nat) (i : Fin.t n) : nat := proj1_sig (Fin.to_nat i).
   Global Set Printing Coercions.
 
