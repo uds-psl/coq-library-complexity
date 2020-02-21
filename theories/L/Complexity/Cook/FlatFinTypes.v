@@ -260,4 +260,30 @@ Proof.
     exists (a' :: L). unfold isFlatListOf. 
     now rewrite H1, <- H2. 
 Qed. 
+
+(*deciders for isValidFlattening*)
+Definition ofFlatType_dec (b a : nat) := leb (S a) b.
+Definition list_ofFlatType_dec (t : nat)  (s : list nat) := forallb (ofFlatType_dec t) s. 
+
+Lemma leb_iff a b : leb a b = true <-> a <= b. 
+Proof. 
+  split; intros. 
+  - now apply leb_complete. 
+  - now apply leb_correct. 
+Qed.
+
+Lemma list_ofFlatType_dec_correct s t : list_ofFlatType_dec t s = true <-> list_ofFlatType t s. 
+Proof. 
+  unfold list_ofFlatType_dec, list_ofFlatType. rewrite forallb_forall. 
+  unfold ofFlatType_dec. setoid_rewrite leb_iff. 
+  split; intros H; intros; now apply H.
+Qed. 
  
+(*unflattening *)
+Lemma unflattenString (f : list nat) k : list_ofFlatType k f -> {f' : list (finType_CS (Fin.t k)) & isFlatListOf f f'}.
+Proof. 
+  intros H. 
+  eapply finRepr_exists_list with (X := finType_CS (Fin.t k)) in H as (a' & H). 
+  2: { unfold finRepr. specialize (Card_Fint k). unfold Cardinality. easy. }
+  eauto.
+Qed. 

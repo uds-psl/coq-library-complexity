@@ -123,25 +123,7 @@ Section fixInstance.
 End fixInstance.
 
 (*deciders for isValidFlattening and well-formedness *)
-Definition ofFlatType_dec (b a : nat) := leb (S a) b.
-Definition list_ofFlatType_dec (t : nat)  (s : list nat) := forallb (ofFlatType_dec t) s. 
-
 Definition PRWin_ofFlatType_dec (Sigma : nat) (win : PRWin nat) := list_ofFlatType_dec Sigma (prem win) && list_ofFlatType_dec Sigma (conc win). 
-
-Lemma leb_iff a b : leb a b = true <-> a <= b. 
-Proof. 
-  split; intros. 
-  - now apply leb_complete. 
-  - now apply leb_correct. 
-Qed.
-
-Lemma list_ofFlatType_dec_correct s t : list_ofFlatType_dec t s = true <-> list_ofFlatType t s. 
-Proof. 
-  unfold list_ofFlatType_dec, list_ofFlatType. rewrite forallb_forall. 
-  unfold ofFlatType_dec. setoid_rewrite leb_iff. 
-  split; intros H; intros; now apply H.
-Qed. 
-
 Lemma PRWin_ofFlatType_dec_correct win Sigma : PRWin_ofFlatType_dec Sigma win = true <-> PRWin_ofFlatType win Sigma. 
 Proof. 
   unfold PRWin_ofFlatType_dec, PRWin_ofFlatType. rewrite andb_true_iff. 
