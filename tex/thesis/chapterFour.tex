@@ -50,25 +50,24 @@ Therefore, we believe that the most practical path of reducing from L to \SAT{} 
 
 We start from a generic problem for Turing machines. A definition of such a problem the reader might be familiar with is the following:
 \begin{center}
-  Given a nondeterministic Turing machine $M$, an input $inp$ and a number of steps $t$, does $M$ accept $inp$ in at most $t$ steps?
+  Given a nondeterministic Turing machine $M$, an input $in$ and a number of steps $t$, does $M$ accept $in$ in at most $t$ steps?
 \end{center}
 This definition explicitly employs nondeterminism, making it hard to reason formally. Therefore, we use a characterisation that relates to this one in a similar way the verifier characterisation of \NP{} relates to the one using nondeterminism: the nondeterminism is moved into the input.
 \begin{center}
   \gennp{}:
-  Given a deterministic Turing machine $M$, a maximal input length $k$ and a number of steps $t$, does there exists an input $inp$ with $\length{inp} \le k$ such that $M$ accepts $inp$ in at most $t$ steps?
+  Given a deterministic Turing machine $M$, an input $in$, a maximal certificate length $k'$ and a number of steps $t$, does there exists a certificate $cert$ with $\length{cert} \le k'$ such that $M$ accepts $in \concat cert$ in at most $t$ steps?
 \end{center}
-Note that we treat the whole input as being a nondeterministic certificate. This does not impose a restriction as the ``regular'' input can just be hardcoded into the Turing machine.
-
 
 In a theory with Turing machines as the computational model, \gennp{} would be almost trivially \NP{}-hard, although it would not be a natural problem as it depends on the model of computation.
 Using L, however, the hardness is not trivial anymore. In this setting, we just see \gennp{} the same as any other problem.\todo{more on that?}
 
 \section{Deterministic Simulation: Tableau of Configurations}
-We first consider how the computation of a deterministic Turing machine can be encoded for an arbitrary input of which we only know that its size is at most $k$. The nondetermistic ``guessing'' of an input of such a form will be covered in the next section.
+We first consider how the computation of a deterministic Turing machine can be encoded for an arbitrary input of which we only know that its size is at most $k$. 
+It will be covered in the next section how we can come up with such an input in the first place, i.e.\ we we can ``guess'' a certificate.
 
 At a first glance, it might seem unintuitive that one can encode the computation of a Turing machine using a fixed-size formula as it is not known a priori how much time or space the Turing machine needs on a particular input.
-The key is that \gennp{} just asks us to simulate a Turing machine $M$ for a bounded number of steps $t$ on inputs of a bounded size $\le k$. 
-Thus, the formula can be made large enough to account for the worst-case: $t$ computational steps and a space usage of $t + k$ tape cells as the Turing machine can visit at most one cell per computational step\footnote{The bound is $t +k$ and not $t$ since we count the input even if the Turing machine does not read it.}. 
+The key is that \gennp{} just asks us to simulate a Turing machine $M$ for a bounded number of steps $t$ on inputs of a bounded size $\le k \defeq \length{in} + k'$. 
+Thus, the formula can be made large enough to account for the worst-case: $t$ computational steps and a space usage of $t + k$ tape cells as the Turing machine can visit at most one cell per computational step\footnote{The bound is $t +k$ and not $t$ since we need the space for the input even if the Turing machine does not read it.}. 
 
 \begin{figure}
   \begin{center}
@@ -591,7 +590,7 @@ Formally, for each of the rewrite rules depicted in Example~\ref{ex:polarities},
 Finally, we need to enforce that the final configuration is a halting configuration. This can be encoded by requiring that an element of $[q^m~|~\textsf{halt}~q = \btrue, m : \Sigma + \{\blank\}]$ is contained in the last line of the tableau.\todo{fix notation for type}
 
 \section{Nondeterministic Input}\label{sec:informal_nondet}
-The construction presented in the previous section can simulate a deterministic Turing machine given an initial configuration. \gennp{}, however, asks for the existence of an input which the Turing machine accepts. 
+The construction presented in the previous section can simulate a deterministic Turing machine given an initial configuration. In the definition of \gennp{}, however, one part of the input, the certificate, is existentially quantified. 
 This nondeterminism of the input can be encoded by prepending a new line to the tableau:
 \begin{center}
   \begin{tikzpicture}[scale=1.2]
@@ -607,20 +606,23 @@ This nondeterminism of the input can be encoded by prepending a new line to the 
     \draw (5, 0.5) -- (5, 0);
     \draw (5.5, 0.5) -- (5.5, 0);
     \draw (4.5, 0.5) -- (4.5, 0);
-    \draw (6, 0.5) -- (6, 0);
-    \draw (7.5, 0.5) -- (7.5, 0);
+    %\draw (6, 0.5) -- (6, 0);
+    \draw (6.5, 0.5) -- (6.5, 0);
+    %\draw (7, 0.5) -- (7, 0);
+    %\draw (7.5, 0.5) -- (7.5, 0);
     \draw (8, 0.5) -- (8, 0);
     \draw (8.5, 0.5) -- (8.5, 0);
 
     \node at (9, 0.25) {$\cdots$};
-    \node at (6.75, 0.25) {$\cdots$};
+    \node at (7.25, 0.25) {$\cdots$};
     \node at (2.75, 0.25) {$\cdots$};
 
     \node at (0.25, 0.25) {\underline{\#}};
     \node at (0.75, 0.24) {$\underline{\blank}$};
     \node at (4.75, 0.25) {$\underline{\blank}$};
     \node at (5.25, 0.25) {$\underline{q^{\blank}}$};
-    \node at (5.75, 0.25) {$\underline{*}$};
+    \node at (6, 0.25) {\underline{in}};
+    \node at (6.75, 0.25) {$\underline{*}$};
     \node at (7.75, 0.25) {$\underline{*}$};
     \node at (8.25, 0.25) {$\underline{\blank}$};
     \node at (9.75, 0.25) {$\underline{\blank}$};
@@ -637,9 +639,11 @@ This nondeterminism of the input can be encoded by prepending a new line to the 
     \draw (5, -0.5) -- (5, 0);
     \draw (5.5, -0.5) -- (5.5, 0);
     \draw (4.5, -0.5) -- (4.5, 0);
-    \draw (6, -0.5) -- (6, 0);
+    %\draw (6, -0.5) -- (6, 0);
     \draw (6.5, -0.5) -- (6.5, 0);
     \draw (7, -0.5) -- (7, 0);
+    \draw (7.5, -0.5) -- (7.5, 0);
+    \draw (8, -0.5) -- (8, 0);
     %\draw (7.5, -0.5) -- (7.5, 0);
     %\draw (8, -0.5) -- (8, 0);
     %\draw (8.5, -0.5) -- (8.5, 0);
@@ -649,10 +653,11 @@ This nondeterminism of the input can be encoded by prepending a new line to the 
     \node at (0.75, -0.25) {\blank};
     \node at (4.75, -0.25) {\blank};
     \node at (5.25, -0.25) {$q^{\blank}$};
-    \node at (5.75, -0.25) {$\sigma_1$};
-    \node at (6.25, -0.25) {$\sigma_2$};
-    \node at (6.75, -0.25) {\blank};
-    \node at (8.25, -0.25) {$\cdots$};
+    \node at (6, -0.25) {in};
+    \node at (6.75, -0.25) {$\sigma_1$};
+    \node at (7.25, -0.25) {$\sigma_2$};
+    \node at (7.75, -0.25) {\blank};
+    \node at (8.75, -0.25) {$\cdots$};
     \node at (9.75, -0.25) {\blank};
     \node at (10.25, -0.25) {\#};
 

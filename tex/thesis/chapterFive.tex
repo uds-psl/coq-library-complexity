@@ -26,7 +26,8 @@
 
 \newcommand{\isSpecStateSym}[2]{\textsf{stateSym}~#1~#2}
 \newcommand{\haltString}[1]{\textsf{haltingString}~#1}
-\newcommand{\validInput}[1]{\textsf{validInput}~#1}
+\newcommand{\validCert}[1]{\textsf{validCert}~#1}
+\newcommand{\validInput}[1]{\textbf{REPLACE ME}}
 
 \newcommand{\stringForTapeHalf}{\textsf{stringForTapeHalf}}
 \newcommand{\stringForConfig}{\textsf{stringForConfig}}
@@ -56,10 +57,10 @@ First of all, we make the informal description of \gennp{} given in the previous
 \begin{definition}[TMGenNP]\label{def:tmgennp}
   \mnotec{TMGenNP}
   \begin{align*}
-    \gennp{} (\Sigma, M : \textsf{TM}~\Sigma~1, k, t) \defeq \exists~in, \length{in} \le k \land \exists f, ({\textsf{start}}_M, \textsf{initTape}~in) \rhd^{\le t} f, 
+    \gennp{} (\Sigma, M,  in, k', t) \defeq \exists~cert, \length{cert} \le k' \land \exists f, ({\textsf{start}}_M, \textsf{initTape}~(in \concat cert)) \rhd^{\le t} f, 
   \end{align*}
   where 
-  \[\gennp{} : \sigtype{{\Sigma}}. (TM~\Sigma~1 \times \nat \times \nat) \rightarrow \Prop \]
+  \[\gennp{} : \sigtype{{\Sigma}}. (TM~\Sigma~1 \times \listsof{\Sigma} \times \nat \times \nat) \rightarrow \Prop \]
   and 
   \begin{align*}
     \mnotec{\textsf{initTape}}~[] \defeq \textsf{niltape} \\
@@ -68,7 +69,7 @@ First of all, we make the informal description of \gennp{} given in the previous
   that is, the head is initially positioned left of the input.
 \end{definition}
 
-Syntactically, it is important that the numbers $t$ and $k$ are given in a unary encoding instead of a binary encoding: with a binary encoding, a verifier for \gennp{} could not even take time linear in the number of steps. 
+Syntactically, it is important that the numbers $t$ and $k'$ are given in a unary encoding instead of a binary encoding: with a binary encoding, a verifier for \gennp{} could not even take time linear in the number of steps. 
 
 \section{Parallel Rewriting}\label{sec:pr}
 Parallel Rewriting works over a finite alphabet $\Sigma$. Given an initial string $x_0$, a set of rewrite windows $R$, a number of steps $t$, and a final constraint $\Rfinal$, we are tasked with determining whether there exists a sequence of valid rewrites $x_0 \strent{} \ldots \strent{} x_t$ such that $x_t$ satisfies a substring constraint $\Rfinal$, written $x_t \models \Rfinal$.
@@ -200,11 +201,11 @@ We use the notation introduced in the previous chapter to denote the window $((x
 Sometimes, we also use $\irewwin{x_1}{x_2}{x_3}{x_4}{x_5}{x_6}$ if we need to write down a window in-line.
 
 \section{Encoding Tapes and Configurations}
-We move to the construction of the Turing machine simulation. Our goal is to devise and verify a 3-\PR{} instance simulating a Turing machine. 
-For the rest of the chapter, let us fix a \gennp{} instance consisting of a finite tape alphabet $\Sigma$, a single-tape Turing machine $M = (Q, \delta, q_0, \textsf{halt})$ over $\Sigma$, a number $t$ of steps, and a maximum size $k$ of the input. 
+We move to the construction of the Turing machine simulation. Our goal is to devise and verify a 3-\PR{} instance simulating a given Turing machine. 
+For the rest of the chapter, let us fix a \gennp{} instance consisting of a finite tape alphabet $\Sigma$, a single-tape Turing machine $M = (Q, \delta, \textsf{start}, \textsf{halt})$ over $\Sigma$, an input $in$, a number $t$ of steps, and a maximum size $k'$ of the certificate. 
 
 \begin{definition}
-  \[\validInput~s \defeq \length{s} \le k \mnote{$\validInput$}\]
+  \[\validCert~c \defeq \length{c} \le k' \mnote{$\validCert$}\]
 \end{definition}
 
 Formalising the intuitions from Chapter~\ref{chap:informaloverview}, we define the alphabet $\Gamma$ of the Parallel Rewriting instance for the deterministic simulation\footnote{This does not include the part for generating the initial configuration.}.
@@ -246,12 +247,14 @@ Note that we are already using an implicit lifting of $\pFlip{}$ in the definiti
 \end{fact}
 
 Figure~\ref{fig:configlayout} shows the layout of a configuration string again. We refer to the center symbol as the \emph{state symbol} and to the substrings left and right of it as the \emph{left tape half} and the \emph{right tape half}.
-In dependence of $t$ and $k$, we define the following numbers:
+In dependence of $t$, $k'$, and $in$, we define the following numbers:
 \begin{align*}
+  k &\defeq \length{in} + k' \\
   z &\defeq t + k \mnote{z}\\
   \forall n, \hat{n} &\defeq n + 2 \mnote{$\hat{n}$}\\
   l &\defeq 2 \cdot (\hat{z} + 1) + 1 \mnote{l}
 \end{align*}
+The real input size after accounting for the fixed input $in$ and the nondeterministic certificate is $k$.
 $z$ is the amount of space available for the Turing machine and thus $z$ units of space need to be available to the left and to the right in the configuration string as the tape can be shifted to be completely on one side of the state symbol.
 For technical reasons, we want three symbols to be available to either side of the state symbol even if $t = k = 0$. One of those symbols will be the delimiter $\#$, the other two are additional blanks which will never be used by the Turing machine. Thus $\hat{z}$ is the number of symbols on each side excluding the delimiter. 
 Finally, $l$ is the length of the whole configuration string including the center state symbol.
@@ -988,12 +991,12 @@ For the definition of initial strings, we use the notion of valid initial tapes 
 
 \begin{definition}[Initial Strings]
   \begin{align*}
-    \mnotec{\initString}~s \defeq \stringForConfig~q_0~(\textsf{initTape}~s) \\
-    \mnotec{\isInitString}~s \defeq \exists s', s = \initString~s' \land \validInput~s'
+    \mnotec{\initString}~c \defeq \stringForConfig~q_0~(\textsf{initTape}~(in \concat c)) \\
+    \mnotec{\isInitString}~s \defeq \exists s', s = \initString~s' \land \validCert{s'}
   \end{align*}
 \end{definition}
 
-\begin{definition}{Final Substrings}
+\begin{definition}[Final Substrings]
   \mnote{$\Rfinal$}
   \[\Rfinal \defeq \withl q^m \withm \textsf{halt}~q = \btrue \withr \]
 \end{definition}
@@ -1004,7 +1007,7 @@ For the definition of initial strings, we use the notion of valid initial tapes 
 
 We have now reduced \gennp{} to the following question: 
 \begin{problem}\label{prob:exinput}~\\
-  Given an input $s$ with $\validInput{s}$, does $\PR{}~(\Gamma, 1, 3, \initString~s, \Rsim, \Rfinal, t)$ hold?
+  Given a string $s$ with $\isInitString~s$, does $\PR{}~(\Gamma, 1, 3, s, \Rsim, \Rfinal, t)$ hold?
 \end{problem}
 
 \section{Interlude: Nondeterministic Preludes}\label{sec:preludes}
@@ -1083,19 +1086,20 @@ The main result is now a straightforward consequence.
   Using Lemma~\ref{lem:prelude_split} and the assumptions.
 \end{proof}
 
-\section{Guessing the Input}
-In this section, we apply the technique presented in Section~\ref{sec:preludes} to ``guess'' an accepted input for the Turing machine. To that end, we design an initial string and nondeterministic rewrite rules that generate an input in a single rewrite step.
+\section{Guessing the Certificate}
+In this section, we apply the technique presented in Section~\ref{sec:preludes} to ``guess'' an accepted certificate and thus generate a full input for the Turing machine. To that end, we design an initial string and nondeterministic rewrite rules that generate an input in a single rewrite step.
 
 \newcommand{\nblank}{\ensuremath{\underline{\blank}}}
 \newcommand{\ndelim}{\ensuremath{\underline{\#}}}
 \newcommand{\nstar}{\ensuremath{\underline{*}}}
 \newcommand{\ninit}{\ensuremath{\underline{q_0^{\blank}}}}
+\newcommand{\nsig}[1]{\ensuremath{\underline{#1}}}
 
 \newcommand{\initStr}{\textsf{initStr}}
 \newcommand{\Rprelude}{\ensuremath{R_{\text{prelude}}}}
 
-The alphabet \mnotec{$\Delta$} of the prelude has four elements, where $q_0$ is the initial state.
-\[\Delta \defeq \nblank \bnfmid \nstar \bnfmid \ninit \bnfmid \ndelim \]
+The alphabet \mnotec{$\Delta$} of the prelude has $4 + \length{\Sigma}$ elements, where $q_0 = \textsf{start}$ is the initial state.
+\[\Delta \defeq \nblank \bnfmid \nstar \bnfmid \ninit \bnfmid \ndelim \bnfmid \nsig{\sigma} \qquad \sigma : \Sigma\]
 As in the previous section, we implicitly lift $\Delta$ and $\Gamma$ to the combined alphabet $\mathcal{A}\defeq \Gamma + \Delta$. This requires some additional work for the formal proofs which we omit on paper.\mnote{$\mathcal{A}$}
 
 Following Section~\ref{sec:informal_nondet}, the initial string has the following form:
@@ -1113,30 +1117,35 @@ Following Section~\ref{sec:informal_nondet}, the initial string has the followin
     \draw (5, 0.5) -- (5, 0);
     \draw (5.5, 0.5) -- (5.5, 0);
     \draw (4.5, 0.5) -- (4.5, 0);
-    \draw (6, 0.5) -- (6, 0);
-    \draw (7.5, 0.5) -- (7.5, 0);
+    \draw (6.5, 0.5) -- (6.5, 0);
+    %\draw (7, 0.5) -- (7, 0);
+    %\draw (7.5, 0.5) -- (7.5, 0);
     \draw (8, 0.5) -- (8, 0);
     \draw (8.5, 0.5) -- (8.5, 0);
 
     \node at (9, 0.25) {$\cdots$};
-    \node at (6.75, 0.25) {$\cdots$};
+    \node at (7.25, 0.25) {$\cdots$};
     \node at (2.75, 0.25) {$\cdots$};
 
-    \node at (0.25, 0.25) {\ndelim};
-    \node at (0.75, 0.24) {\nblank};
-    \node at (4.75, 0.25) {\nblank};
-    \node at (5.25, 0.25) {\ninit};
-    \node at (5.75, 0.25) {\nstar};
-    \node at (7.75, 0.25) {\nstar};
-    \node at (8.25, 0.25) {\nblank};
-    \node at (9.75, 0.25) {\nblank};
-    \node at (10.25, 0.25) {\ndelim};
+    \node at (0.25, 0.25) {\underline{\#}};
+    \node at (0.75, 0.24) {$\underline{\blank}$};
+    \node at (4.75, 0.25) {$\underline{\blank}$};
+    \node at (5.25, 0.25) {$\underline{q^{\blank}}$};
+    \node at (6, 0.25) {\underline{in}};
+    \node at (6.75, 0.25) {$\underline{*}$};
+    \node at (7.75, 0.25) {$\underline{*}$};
+    \node at (8.25, 0.25) {$\underline{\blank}$};
+    \node at (9.75, 0.25) {$\underline{\blank}$};
+    \node at (10.25, 0.25) {\underline{\#}};
 
     \path[<->] (5.5, 1) edge node[fill=white, anchor=center, pos= 0.5] {\small $k$} (8, 1);
     \path[<->] (0.5, 1) edge node [fill = white, anchor=center, pos=0.5] {\small $\hat{z}$} (5, 1);
     \path[<->] (8, 1) edge node [fill = white, anchor =center, pos=0.5] {\small $\hat{z}-k$} (10, 1);
+    \path[<->] (6.5, -0.5) edge node[fill=white, anchor=center,pos=0.5] {\small $k'$} (8, -0.5);
   \end{tikzpicture}
 \end{center}
+
+
 Let $\initStr : \listsof{\Delta}$ be this initial string.\mnote{$\initStr$}
 
 For the rewrite windows, we have to ensure that all elements of $\Sigma$ are placed contiguously and that also inputs of length $< k$ are allowed. Exploiting the fact that the rewrite windows overlap, this is easy to achieve.
@@ -1167,7 +1176,7 @@ Therefore, the elegant approach of proving results for the right tape half and a
 This is advantageous as we can do simple inductive proofs for the right tape half (in contrast to the left tape half where the reversion is causing trouble).
 
 
-\begin{lemma}\leavevmode
+\begin{lemma}\label{lem:prelude_blank}\leavevmode
   We can produce exactly a blank string from a string not containing any wildcards \nstar.
   \begin{enumerate}
     \item $\mexists s, \nblank^{\hat{n}} \concat [\ndelim] \strent{\Rprelude} s \land s = \nilstr{\circ}{\hat{n}}$
@@ -1187,8 +1196,10 @@ Next, we show that a string starting with a number of wildcards $\nstar$ can be 
   \end{enumerate}
 \end{lemma}
 \begin{proof}
-  \item Induction on $n$, using Lemma~\ref{lem:prelude_blank} for the base case.
-  \item Induction on $s$, using 1.\ for the base case.
+  \begin{enumerate}
+    \item Induction on $n$, using Lemma~\ref{lem:prelude_blank} for the base case.
+    \item Induction on $s$, using 1.\ for the base case.
+  \end{enumerate}
 \end{proof}
 
 Of course, we cannot prove uniqueness in this setting. Instead, we prove the following statement.
@@ -1199,12 +1210,22 @@ Of course, we cannot prove uniqueness in this setting. Instead, we prove the fol
   Induction on $j$.
 \end{proof}
 
+Lastly, we show that we can prefix the fixed input string to that.
+\begin{lemma}\leavevmode
+  \begin{enumerate}
+    \item $\withl \underline{\sigma} \withm \sigma \in f \withr \concat{} \nstar^{\length{s} + n} \concat{} \nblank^{\hat{t}} \concat{} [\ndelim] \strent{\Rprelude} \withl \overline{x} \withm x \in f \concat{} s\withr \concat{} \nilstr{\circ}{(n+\hat{t})}$
+    \item $\withl \underline{\sigma} \withm \sigma \in f \withr \concat{} \nstar^j \concat \nblank^{\hat{n}} \concat{} [\ndelim] \strent{} s \rightarrow \exists s', \length{s'} \le j \land s = \withl \overline{x} \withm x \in f \concat{} s \withr \concat{} \nilstr{\circ}{(j + \hat{n})} $
+  \end{enumerate}
+\end{lemma}
+
+
+
 This gives us all the tools we need to prove completeness ($A_3$) and soundness ($A_4$) of the prelude.
 \begin{lemma}[Completeness]\label{lem:prelude_complete}
   \[ \isInitString~s \land \length{s} = l \rightarrow \initStr \strent{\Rprelude} s \]
 \end{lemma}
 \begin{proof}
-  We do case analysis on the number of input symbols $k$ and the number of steps $t$ in order to determine five symbols at the center. Then, Lemma~\ref{lem:rewrite_split} allows us to decompose the rewriting. The different cases make use of the previous lemmas.
+  We do case analysis on the input string $in$ and the number of certificate symbols $k'$ in order to determine five symbols at the center. Then, Lemma~\ref{lem:rewrite_split} allows us to decompose the rewriting. The different cases make use of the previous lemmas.
 \end{proof}
 
 \begin{lemma}[Soundness]\label{lem:prelude_sound}
