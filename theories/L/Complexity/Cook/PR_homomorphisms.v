@@ -30,10 +30,6 @@ Section fixInstance.
   (*of course, we need injectivity *)
   Context (A2 : injective h'). 
 
-  (*finally, we require the source alphabet to be non-trivial *)
-  (*this is wlog as the PR instance is trivial if Sigma is empty *)
-  Context (A3 : |elem Sigma| > 0). 
-
   (*we show basic results about h *)
   Lemma h_unifHom : uniform_homomorphism h. 
   Proof. 
@@ -341,5 +337,3 @@ Section fixInstance.
       + apply A4. 
   Qed. 
 End fixInstance. 
-
-

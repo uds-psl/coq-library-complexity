@@ -112,6 +112,21 @@ Section fixX.
     rewrite (proj1 h_unifHom) in H.  apply list_eqn_length in H. rewrite app_length in H. 
     specialize (proj2 (proj2 h_unifHom) x). cbn in H; lia.
   Qed. 
+
 End fixX. 
 
+Lemma h_length_multiply (X : finType) (Y : Type) (h : list X -> list Y) : uniform_homomorphism h -> { k : nat & forall x, |h x| = k * |x| }. 
+Proof. 
+  intros (H1 & H2 & H3). 
+  destruct (elem X) eqn:H4. 
+  - exists 42. intros []. 
+    + rewrite homo_nil by auto. easy.
+    + specialize (elem_spec e) as H5. rewrite H4 in H5. destruct H5. 
+  - exists (|h [e]|).  
+    induction x. 
+    + rewrite homo_nil by auto; easy.
+    + rewrite homo_cons by auto. rewrite app_length, IHx. enough (|h[a]| = |h[e]|) by firstorder. 
+      apply H2. 
+Defined. 
+      
 

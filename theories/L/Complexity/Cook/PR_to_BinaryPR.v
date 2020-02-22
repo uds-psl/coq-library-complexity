@@ -55,16 +55,6 @@ Section fixInstance.
   (*now, the homomorphism for finite types is defined by composing hNat and index *)
   Definition h' (x : Sigma) := hNat (|elem Sigma|) (index x). 
 
-  Lemma h'_ge1 x : |h' x | >= 1. 
-  Proof. 
-    unfold h'. rewrite hNat_length. lia. 
-  Qed. 
-
-  Lemma h'_uniform x y : |h' x| = |h' y|. 
-  Proof. 
-    unfold h'. rewrite !hNat_length. easy.
-  Qed. 
-
   Lemma h'_injective : injective h'. 
   Proof. 
     intros x y H. unfold h', hNat in H. 
@@ -117,7 +107,7 @@ Section fixInstance.
       apply PR_homomorphism_iff; eauto; [ apply h'_length | apply h'_injective].
     - destruct H as (_ & H1).
       split; [ apply A | ]. 
-      apply (PR_homomorphism_iff h'_length A1 h'_injective A1) in H1; [apply H1 | apply A]. 
+      apply (PR_homomorphism_iff h'_length A1 h'_injective) in H1; [apply H1 | apply A]. 
   Qed. 
 End fixInstance. 
 

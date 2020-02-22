@@ -9,7 +9,7 @@ Require Import PslBase.FiniteTypes.FinTypes.
 (*TODO: exchange names of z, z' *)
 (*consistent usage of the words 'rule' and 'window' *)
 
-(** *Reduction of GenNP to PTPR, TPR and of FlatGenNP to FlatPR *)
+(** * Reduction of GenNP to PTPR, TPR and of FlatGenNP to FlatPR *)
 
 Notation "f $ x" := (f x) (at level 60, right associativity, only parsing).
 
@@ -145,7 +145,7 @@ Section fixTM.
 
   Smpl Add (apply polarityRev_involution) : involution. 
 
-  (** *representation of tapes *)
+  (** * representation of tapes *)
   Notation stape := (list Sigma). 
 
   Notation halftape := (list Gamma).
@@ -197,7 +197,7 @@ Section fixTM.
     - rewrite H2. unfold mapPolarity, polarityFlipGamma. rewrite map_app, map_map, E_polarityFlip. easy. 
   Qed. 
 
-  (** *representation of configurations *)
+  (** * representation of configurations *)
   Notation strconfig := (list Gamma).
 
   Definition embedState (q : states) (m : stateSigma) : Gamma := inl (q, m). 
@@ -242,7 +242,7 @@ Section fixTM.
       split; cbn; [reflexivity | split; apply stringForTapeHalf_reprTape; cbn in *; try rewrite app_length, rev_length in H; cbn in H; easy].  
   Qed. 
 
-  (** *automation for discrimination of the tape relation *)
+  (** * automation for discrimination of the tape relation *)
 
   Lemma tape_repr_step u h a b p w : (a :: u) ≃t(p, S w) (b :: h) -> u ≃t(p, w) h. 
   Proof. 
@@ -428,7 +428,7 @@ Section fixTM.
                         repeat match goal with [H : ?h = ?h |- _] => clear H end.
 
 
-  (** *inductive rules for tape rewrites *)
+  (** * inductive rules for tape rewrites *)
   (*For easier automation, we define the rewrite rules using inductive predicates *)
 
   (*we use the rewritesHeadInd predicate from TPR.v *)
@@ -727,7 +727,7 @@ Section fixTM.
       apply E_polarityFlip. 
   Qed. 
 
-  (** *the following results generalise Lemma 16 -17 to arbitrary tapes *)
+  (** * the following results generalise Lemma 16 -17 to arbitrary tapes *)
 
   (*Lemma 18 *)
   (*we can add a symbol to an arbitrary tape string if there is enough space left *)
@@ -872,7 +872,7 @@ Section fixTM.
    - apply tape_repr_polarityFlip in H2. destruct e; cbn in H2; easy. 
   Qed. 
 
-  (** *preliminaries for transitions *)
+  (** * preliminaries for transitions *)
 
   Notation "s '≻' s'" := (halt (configState s) = false /\ sstep s = s') (at level 50). 
 
@@ -914,7 +914,7 @@ Section fixTM.
                     end; try congruence.
 
 
-  (** *transition rules *)
+  (** * transition rules *)
   (*again, we use inductive definitions *)
   Create HintDb trans discriminated. 
   Definition transRule := Gamma -> Gamma -> Gamma -> Gamma -> Gamma -> Gamma -> Prop.
@@ -1174,7 +1174,7 @@ Section fixTM.
 
   Hint Constructors transRules : trans. 
 
-  (** *inversion of transition rules*)
+  (** * inversion of transition rules*)
   Ltac transRules_inv1 :=
     match goal with
     | [H : transRules _ _ _ _ _ _ |- _] => inv H
@@ -1221,7 +1221,7 @@ Section fixTM.
 
    Ltac transRules_inv2 := repeat transRules_inv2_once. 
 
-   (*manual inversion lemmas because of performance *) 
+  (*manual inversion lemmas because of performance *) 
   Lemma transSomeSome_inv1 q q0 m γ2 γ3 γ4 γ5 γ6 : transSomeSome q (inl (q0, m)) γ2 γ3 γ4 γ5 γ6 -> q0 = q /\ (exists σ, m = Some σ) /\ exists q' m', γ4 = inl (q', m') /\ transSomeSomeLeft q (inl (q, m)) γ2 γ3 (inl (q', m')) γ5 γ6. 
   Proof. 
     intros. inv H. 
@@ -1324,7 +1324,7 @@ Section fixTM.
                     | _ => inv H 
                     end.  
 
-   (*inversions for the second level of the hierarchy of predicates *) 
+  (*inversions for the second level of the hierarchy of predicates *) 
   Ltac inv_trans_prim := repeat match goal with 
         | [H : transSomeSome _ _ _ (inl (_, _)) _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transSomeSome_inv3 in H as (<- & (? & Heqn') & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn' 
         | [H : transSomeSome _ (inl (_, _)) _ _ _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transSomeSome_inv1 in H as (<- & (? & Heqn') & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn' 
@@ -1452,7 +1452,7 @@ Section fixTM.
   Lemma transNoneNoneCenter_inv3 q q' γ1 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (None, neutral)) -> transNoneNoneCenter q  γ1 (inl (q, None)) γ3 γ4 γ5 γ6 -> transNoneStayCenter q q' γ1 (inl (q, None)) γ3 γ4 γ5 γ6. 
   Proof. intros. inv H0; simp_eqn. Qed. 
 
-   (*apply the inversion lemmas from above *) 
+  (*apply the inversion lemmas from above *) 
   Ltac inv_trans_sec := 
   match goal with 
   | [H : trans (_, _) = (_, (_, neutral)) |- _] => 
@@ -1503,9 +1503,9 @@ Section fixTM.
   end.  
 
 
-  (** *predicate for halting extensions *)
+  (** * predicate for halting extensions *)
 
-  (*these are the rules that leave the configuration unchanged in a halting configuration *)
+  (** these are the rules that leave the configuration unchanged in a halting configuration *)
   Inductive haltRules : transRule := 
   | haltCenter q (m1 m2 : stateSigma) m p : halt q = true -> haltRules (inr (inr (p, m1))) (inl (q, m)) (inr (inr (p, m2))) (inr (inr (neutral, m1))) (inl (q, m)) (inr (inr (neutral, m2)))
   | haltRight q (m1 m2 m : stateSigma) p : halt q = true -> haltRules (inr (inr (p, m1))) (inr (inr (p, m2))) (inl (q, m)) (inr (inr (neutral, m1))) (inr (inr (neutral, m2))) (inl (q, m)) 
@@ -1535,7 +1535,7 @@ Section fixTM.
 
   Hint Constructors valid : trans. 
 
-  (*tape strings do not contain state symbols *)
+  (** tape strings do not contain state symbols *)
   Definition isStateSym (γ : Gamma) := exists η, γ = inl η. 
   Definition isSpecStateSym (q : states) (γ : Gamma) := exists m, γ = inl (q, m). 
 
@@ -1713,7 +1713,7 @@ Section fixTM.
               end.  
   Qed.  
 
-  (** *a few more technical facts regarding rewrites *) 
+  (** * a few more technical facts regarding rewrites *) 
 
   Lemma valid_reprConfig_unfold pred s q tp : 
     (exists s', valid pred s s' /\ (forall s'', valid pred s s'' -> s'' = s') /\ (q, tp) ≃c s') 
@@ -1844,7 +1844,7 @@ Section fixTM.
   Lemma app_fold5 (X : Type) (a b c d e: X) (l : list X) : a :: b :: c :: d :: e :: l = [a; b; c; d; e] ++ l.  
   Proof. now cbn. Qed.  
 
-  (** *automation for the simulation proofs *) 
+  (** * automation for the simulation proofs *) 
 
   (*brings the goal into a form in which valid_rewHeadSim_center can be applied *) 
   (*precondition: the tape strings have been destructed such that there are at least two symbols available in each direction, both in premise and conclusion *) 
@@ -2132,9 +2132,10 @@ Section fixTM.
     eapply rewHeadSim_tape in K2; [ | eapply F2]; apply W3 in K2;  
     simp_eqn;  
     cbn; try rewrite <- !app_assoc; cbn; reflexivity). 
+    Set Default Goal Selector "1".
   Qed. 
 
-  (** *multi-step simulation *)
+  (** * multi-step simulation *)
 
   Notation "s '≻(' k ')' s'" := (relpower (@sstepRel Sigma fTM) k s s') (at level 40). 
 
@@ -2161,7 +2162,7 @@ Section fixTM.
     apply F2 in H2.  subst.
     exists q'. split.
     + exists tp'. split.
-      * repeat split. apply F3. now cbn. 
+      * repeat split; [apply F3 | now cbn]. 
       * intros. destruct H2 as (_ & _ & H2); congruence. 
     + intros. destruct H2 as (? & (_ & _ & H2) & _).  congruence. 
   Qed. 
@@ -2418,7 +2419,7 @@ Section fixTM.
       eapply string_reprConfig_length, initialString_reprConfig, H1. 
   Qed. 
 
-  (** *nondeterministic guessing of input *)
+  (** * nondeterministic guessing of input *)
   (*we apply the procedure from PTPR_Preludes *)
 
   (*initCond: isValidInitialString *)
@@ -2929,7 +2930,7 @@ Section fixTM.
     rewrite <- prelude_reduction_from_ExPTPR. apply TM_reduction_to_ExPTPR.
   Qed. 
 
-  (** *list-based rules *)
+  (** * list-based rules *)
   Notation Alphabet := ((Gamma + preludeSig')%type). 
 
   Hint Constructors preludeSig'. 
@@ -2938,7 +2939,7 @@ Section fixTM.
   Definition FstateSigma := finType_CS stateSigma. 
   Definition Fpolarity := finType_CS polarity.
 
-  (** *list-based rule infrastructure *)
+  (** * list-based rule infrastructure *)
   (**We use a abstract representation of elements of the alphabet Gamma with holes where the elements of the abstract TM alphabets Sigma and states need to be placed. 
   The following development is centered around the goal of easily being able to instantiate the abstract fGamma elements with finTypes and with the flat representation using natural numbers. 
   *)
@@ -3224,7 +3225,7 @@ Section fixTM.
       end; eauto; try congruence. 
   Qed.
 
-  (** *We now prove that the outputs of both reification procedures are related via finReprEl *)
+  (** * We now prove that the outputs of both reification procedures are related via finReprEl *)
 
   Lemma flattenPolarity_reprEl p : finReprEl flatPolarity (flattenPolarity p) p. 
   Proof. 
@@ -3345,7 +3346,7 @@ Section fixTM.
     all: try finRepr_simpl; eauto.
   Qed. 
 
-  (** *reification of rewrite windows *)
+  (** * reification of rewrite windows *)
 
   Definition reifyWindow (X Y Z W M: Type) (r : evalEnv X Y Z W -> fAlphabet -> option M) (env : evalEnv X Y Z W) rule :=
     match rule with {a, b, c} / {d, e, f} =>
@@ -3853,7 +3854,7 @@ Section fixTM.
         subst. constructor. constructor 1. now rewrite !polarityFlipGamma_involution.  
   Qed. 
 
-  (** *agreement for transitions *)
+  (** * agreement for transitions *)
   (**For the transition rules, the current and next state as well the read and written symbols are fixed. 
     Still, we model them as variables, but do not instantiate them with all possible environments, but only with environments where these variables are fixed. 
     For that, we first generate the environments and then add the values of the constant variables.
@@ -3967,7 +3968,7 @@ Section fixTM.
   (**generate rules for all states*)
   Definition finStateRules := concat (map generateRulesForFin (elem states)).  
 
-  (** *proof of transition agreement *)
+  (** * proof of transition agreement *)
   (**We first define the inductive rules structured in a different way, in order for it to resemble the structure of the list-based rules.
     (writing the list-based rules in a way which resembles the inductive predicates is not possible in an elegant way)
   *)
