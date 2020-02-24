@@ -1,8 +1,68 @@
-\chapter{Reducing Binary PR to Formula Satisfiability}\label{chap:bpr_fsat}
 
+\chapter{Reducing Binary PR to Formula Satisfiability}\label{chap:bpr_fsat}
+In this chapter, we finally encode \PR{} over a binary alphabet as a Boolean formula. This formula will not be in CNF, yet.
+The main idea of the encoding is to explicitly unfold the tableau induced by the \BPR{} instance.
+As we are working over a binary alphabet, each character of the involved strings can be accomodated by one Boolean variable. A satisfying assignment to the formula will therefore resemble a sequence of valid rewrites, starting with the initial string and ending up with a string satisfying the final substring constraint.
+The formula $\phi$ we generate is a conjunction of three gadgets: a formula $\phi_{init}$ enforcing that the first line of the tableau matches the initial string, a formula $\phi_{trans}$ encoding that the individual lines follow from each other according to the rewrite windows, and a formula $\phi_{final}$ which makes the final substring constraint hold. 
+
+\newcommand{\formula}{\textsf{formula}}
 \section{Formula Satisfiability (FSAT)}
+We start by introducing a generalised variant of \SAT{} that does not require the formula to be in CNF.
+
+Formulas are defined inductively: 
+\[f : \formula \defeq \btrue \bnfmid v \bnfmid f_1 \lor f_2 \bnfmid f_1 \land f_2 \bnfmid \lnot f \qquad v : \bvar \]
+
+One can directly derive the operators $\land$ and $\lor$ for more than two operands, which we will denote as $\bigwedge_{f \in l} f$ and $\bigvee_{f \in l} f$ for $ l : \listsof{\formula}$. 
+
+Assignments $a : \assgn$ are defined in the same way as for CNFs, see Section~\ref{sec:sat}.
+An evaluation function $\eval : \assgn \rightarrow \formula \rightarrow \bool$ can then be derived in the canonical way. We say that an assignment $a$ satisfies $f$, written $a \models f$, if $\evalA{a}{f} = \btrue$.
+
+\begin{definition}[Formula Satisfiability]
+  \[\fsat{}~f \defeq \exists a, a \models f \]
+\end{definition}
+
+We could prove that \fsat{} is in \NP{} using the same notion of small assignments as for CNF satisfiability. This will, however, already follow from the reduction of \fsat{} to \SAT{} in Chapter~\ref{chap:fsat_sat}. 
+
+\subsection{Explicit Assignments}
+The assignments we use, where we just store a list of variables to which the value $\btrue$ is assigned and to all other variables the value $\bfalse$ is assigned implicitly, are quite indirect and unstructured. 
+For the rest of this chapter a more explicit characterisation bearing resemblance to the Boolean strings over which \BPR{} is defined, will be quite convenient.
+One such characterisation is a list of Booleans $e : \listsof{\bool}$. The value $e[i]$ at position $i$ at this list is the value assigned to variable $i$. To variables $i \ge \length{e}$, no value is assigned.
+
+We can naturally convert back and forth between such explicit assignments and assignments $a : \assgn$.
+First, we present a function that generates an explicit assignments for the variables in range $[\text{lower}, \text{lower} + \text{len})$. 
+
+\newcommand{\explicitA}{\textsf{explicitAssgn}}
+\begin{align*}
+  \explicitA &: \assgn \rightarrow \nat \rightarrow \nat \rightarrow \listsof{\nat} \\
+  \explicitA~a~\textsf{lower}~0 &\defeq \nil \\
+  \explicitA~a~\textsf{lower}~(\natS{\textsf{len}}) &\defeq \explicitA~a~\textsf{lower}~\textsf{len} \concat [(\textsf{lower} + \textsf{len}) \overset{?}{\in} a]
+\end{align*}
+
+\begin{lemma}[Properties of \explicitA]\leavevmode
+  \begin{enumerate}
+    \item $\length{\explicitA~a~\textsf{lower}~\textsf{len}} = \textsf{len}$
+    \item $k < \textsf{len} \rightarrow (\explicitA~a~\textsf{lower}~\textsf{len})[k] = \OSome{(\evalA{a}{(\textsf{lower} + k)})}$
+    \item $\explicitA~a~l~(l_1 + l_2) = \explicitA~a~l~l_1 \concat \explicitA~a~(l + l_1)~l_2$ 
+  \end{enumerate}
+\end{lemma}
+
+\newcommand{\expandA}{\textsf{expandAssgn}}
+Of course, we can go back to a full assignment: 
+\begin{proposition} 
+  Let $e : \listsof{\bool}$ and a lower variable index $s$ be given. Then:
+  \[\sigtype{a}. \forall x, x \in a \leftrightarrow x \ge s \land e[x-s] = \OSome{\btrue} \]
+  Moreover, if $a$ satisfies $\forall x, x \in a \leftrightarrow x \ge s \land e[x-s] = \OSome{\btrue}$, then:
+  \[\explicitA~a~s~(\length{e}) = e \]
+\end{proposition}
+\todo{maybe define explicitly}
+
+\newcommand{\projVars}{\textsf{projVars}}
+Given an explicit assignment, we can project out the assignment to a particular range of variables $[\textsf{start}, \textsf{start} + \textsf{len})$:
+\[\projVars~e~\textsf{start}~\textsf{len} \defeq e[\textsf{start}\ldots\textsf{start}+\textsf{len}),\]
+where $e[s\ldots s +l)\defeq (e[l\ldots])[\ldots s-1]$.
 
 \section{Encoding Properties using Boolean Formulas}
+Based on explicit assignments, we now present ways to encode predicates using formulas $f : \formula$ and show that this representation is closed under conjunction and disjunction, the main composition operations we need for the reduction.
 
 \section{The Reduction}
 

@@ -1,9 +1,128 @@
+
 \chapter{Reducing $k$-SAT to Clique}\label{chap:ksat_clique}
+In this chapter, we give a first formalisation of a polynomial-time from the $k$-\SAT{} problem to the \Clique{} problem on undirected graphs. The main purpose of this chapter is to introduce the style of proofs we use. In particular, we comment on some of the more technical aspects of doing the running time analysis in Coq so that we can focus on the less technical aspects in the later chapters.
+
+The satisfiablity problem on CNFs is well-known: given a Boolean formula in conjunctive normal form, we determine whether there exists a satisfying assignment to the variables. 
+\Clique{} is a graph-based problem. Given an undirected graph $G = (V, E)$, a $k$-Clique is a set of vertices $C \subseteq V$ such that $\length{C} = k$ and all possible edges between nodes of $C$ are present in $E$. 
 
 \section{Satisfiability of Conjunctive Normal Forms (CNF)}
+We start by formalising the satisfiablity problem \SAT{}.
+A literal is either a Boolean variable or its negation. The disjunction of a number of literals is a clause. Clauses can be combined conjunctively to form a conjunctive normal form. 
+
+\newcommand*{\bvar}{\textsf{var}}
+\newcommand*{\literal}{\textsf{literal}}
+\newcommand*{\clause}{\textsf{clause}}
+\newcommand*{\cnf}{\textsf{cnf}}
+\newcommand*{\assgn}{\textsf{assgn}}
+\newcommand*{\eval}{\mathcal{E}}
+\newcommand*{\evalA}[2]{\eval~#1~#2}
+\begin{align*}
+  v : \bvar &\defeq \nat \mnote{\bvar}\\
+  l : \literal &\defeq \bool \times \nat \mnote{\literal}\\
+  C : \clause &\defeq \listsof{\literal} \mnote{\clause}\\
+  N : \cnf &\defeq \listsof{\clause} \mnote{\cnf}
+\end{align*}
+Here, the Boolean $b$ of a literal $(b, v)$ denotes the literal's emph{sign}. If the sign is negative (i.e.\ $b = \bfalse$), the literal represents the negation of $v$, otherwise it represents $v$.
+
+An assignment to a CNF assigns a Boolean value to each of its variables. We choose to model an assignment as the list of variables which are assigned the value $\btrue$. All other variables are implicitly assigned the value $\bfalse$.
+\[a : \assgn \defeq \listsof{\bvar}\mnote{\assgn} \]
+
+One can define evaluation functions \mnotec{$\eval$} for variables, literals, clauses, and CNFs in a straightforward way. 
+We will mainly use the function $\eval : \assgn \rightarrow \cnf \rightarrow \bool$ for CNFs, but refer to the other functions using the same name. 
+Which function we mean will always be clear from the context. 
+
+We have the following characterisation of evaluation:
+\begin{lemma}
+  \begin{enumerate}
+    \item $\evalA{a}{v} = \btrue \leftrightarrow v \in a$
+    \item $\evalA{a}{(b, v)} = \btrue \leftrightarrow \evalA{a}{v} = b$
+    \item $\evalA{a}{C} = \btrue \leftrightarrow \exists l \in C, \evalA{a}{l} = \btrue$
+    \item $\evalA{a}{N} = \btrue \leftrightarrow \forall C \in N, \evalA{a}{C} = \btrue$
+  \end{enumerate}
+\end{lemma}
+
+We say that $a$ satisfies the CNF $N$, denoted \mnotec{$a \models N$}, if $\evalA{a}{N} = \btrue$. 
+A similar notation is used for the satisfaction of clauses, literals and variables.
+
+Now, we are able to define the problem \SAT{}:
+\begin{definition}[Satisfiability of CNFs]
+  \[\SAT{}~N \defeq \exists a, a \models N \]
+\end{definition}
+
+In the sequel, we show that \SAT{} is in \NP{}, which we prove by giving a verifier for \SAT{}. A sensible choice for a certificate of a CNF $N$ being in \SAT{} is a satisfying assignment. However, the verifier must only accept certificates which have a size polynomial in the size of $N$. 
+As a list $a$ containing the variables to which we assign $\btrue$ may contain duplicates and variables which are not even used by the CNF, we need to restrict the assignments which are valid certificates.
+We introduce the notion of \emph{small} assignments. 
+
+\newcommand{\varsOfLiteral}{\textsf{varsOfLiteral}}
+\newcommand{\varsOfClause}{\textsf{varsOfClause}}
+\newcommand{\varsOfCnf}{\textsf{varsOfCnf}}
+\begin{definition}[Used Variables]
+  We can define functions
+  \begin{itemize}
+    \item $\varsOfLiteral : \literal \rightarrow \listsof{\bvar}$,\mnote{\varsOfLiteral}
+    \item $\varsOfClause : \clause \rightarrow \listsof{\bvar}$, \mnote{\varsOfClause}
+    \item $\varsOfCnf : \cnf \rightarrow \listsof{\bvar}$, \mnote{\varsOfCnf}
+  \end{itemize}
+  calculating a list of variables contained in a literal, clause, or CNF.\
+\end{definition}
+
+\newcommand{\smallA}{\textsf{small}}
+\newcommand{\dupfree}{\textsf{dupfree}}
+\begin{definition}[Small Assignments]
+  An assignment $a$ is small with respect to a CNF $N$ if it is duplicate-free and only contains variables used by the CNF:\ 
+  \[ \smallA~N~a \defeq \dupfree~a \land a \subseteq \varsOfCnf~N\]
+  \mnote{$\smallA~N~a$}
+\end{definition}
+\todo{introduce \dupfree, $\subseteq$}
+
+Given an arbitrary assignment $a$ for a CNF $N$, we can compute another assignment $a'$ which is equivalent to $a$ and is small with respect to $N$ by removing duplicates and variables not occuring in the CNF.\
+
+\newcommand{\compressA}{\textsf{compress}}
+\newcommand{\dedup}{\textsf{dedup}}
+\newcommand{\intersect}{\textsf{intersect}}
+
+\begin{align*}
+  \dedup &: \assgn \rightarrow \assgn\mnote{\dedup} \\
+  \dedup~\nil &\defeq \nil \\
+  \dedup~(x::A) &\defeq \ITE{x \overset{?}{\in} A}{\dedup~A}{x::\dedup~A} \\[0.7em]
+  \intersect &: \assgn \rightarrow \assgn \rightarrow \assgn \mnote{\intersect}\\
+  \intersect~\nil~B &\defeq \nil \\
+  \intersect~(x::A)~B &\defeq \ITE{x \overset{?}{\in} B}{x::\intersect~A~B}{\intersect~A~B} \\[0.7em]
+  \compressA &: \cnf \rightarrow \assgn \rightarrow \assgn\mnote{\compressA}\\
+  \compressA~N~a &\defeq \dedup~(\intersect~a~(\varsOfCnf~N))
+\end{align*}
+
+\begin{proposition}[Correctness of \dedup]\leavevmode
+  \begin{enumerate}
+    \item $x \in \dedup~a \leftrightarrow x \in a$
+    \item $\dupfree~(\dedup~a)$
+  \end{enumerate}
+\end{proposition}
+
+\begin{proposition}[Correctness of \intersect]
+  \[x \in \intersect~a~b \leftrightarrow x \in a \land x \in b \]
+\end{proposition}
+
+\begin{lemma}[Correctness of \compressA]\leavevmode
+  \begin{enumerate}
+    \item $\smallA~N~(\compressA~N~a)$
+    \item $v \in \varsOfCnf~N \rightarrow \evalA{a}{v} = \evalA{(\compressA~N~a)}{v}$
+    \item $a \models N \leftrightarrow \compressA~N~a \models N$
+  \end{enumerate}
+\end{lemma}
+
+A verifier now is easy to define: given a CNF $N$ and an assignment $a$, it needs to check whether $a$ is satisfying and $a$ is small with respect to $N$. 
+
+\begin{lemma}[\SAT{} is in \NP{}]\label{lem:sat_in_np}
+  \[\SAT{} \in \NP{} \]
+\end{lemma}
+
+In order to prove Lemma~\ref{lem:sat_in_np}, we need to show that there are valid certificates of polynomial size exactly for those CNFs $N$ for which $\SAT{} N$ holds. 
+Moreover, we need to show that the verifier runs in polynomial time and only accepts certificates of polynomial size. 
+As these proofs are quite technical, we omit them on paper, but will instead comment on some of the more interesting aspects of their mechanisation in Section~\ref{sec:technical_mechanisation}.
 
 \section{Cliques in Undirected Graphs}
 
 \section{The Reduction}
 
-\section{Mechanisation}
+\section{Mechanisation}\label{sec:technical_mechanisation}
