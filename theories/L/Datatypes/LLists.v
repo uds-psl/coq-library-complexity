@@ -315,6 +315,32 @@ Section list_in.
       + now apply list_in_decb_iff in H.
       + reflexivity.
   Qed. 
+
+  Fixpoint list_incl_decb (a b : list X) := 
+    match a with 
+    | [] => true
+    | (x::a) => list_in_decb b x && list_incl_decb a b
+    end. 
+
+  Lemma list_incl_decb_iff (a b : list X) : a <<= b <-> list_incl_decb a b = true. 
+  Proof. 
+    induction a; cbn; [firstorder | ]. 
+    split; intros. 
+    - rewrite andb_true_iff. split; [ | apply IHa; firstorder]. 
+      apply list_in_decb_iff; firstorder.
+    - apply andb_true_iff in H as (H1 & H2). intros x [-> | H3]. 
+      + now apply list_in_decb_iff. 
+      + apply IHa in H2. apply H2, H3. 
+  Qed. 
+
+  Lemma list_incl_decb_iff' (a b : list X) : not (a <<= b) <-> list_incl_decb a b = false.
+  Proof. 
+    split.
+    - intros H'. destruct (list_incl_decb a b) eqn:H.
+      + now apply list_incl_decb_iff in H.
+      + reflexivity.
+    - intros H H'. apply list_incl_decb_iff in H'. congruence.
+  Qed. 
 End list_in.
 Section list_in_time.
   Variable (X : Type).
@@ -330,6 +356,19 @@ Section list_in_time.
     extract. 
     solverec. all: unfold c__list_in_decb; solverec. 
   Qed. 
+
+  Definition c__list_incl_decb := 22.
+  Fixpoint list_incl_decb_time (eqbT : X -> X -> nat) (a b : list X) := 
+    match a with 
+    | [] => c__list_incl_decb
+    | (x::a) => list_in_decb_time eqbT b x + list_incl_decb_time eqbT a b + c__list_incl_decb
+    end. 
+  
+  Global Instance term_list_incl_decb : computableTime' (@list_incl_decb X) 
+    (fun _ eqbT => (5, fun a _ => (5, fun b _ => (list_incl_decb_time (callTime2 eqbT) a b, tt)))). 
+  Proof. 
+    extract. solverec. all: unfold c__list_incl_decb; solverec. 
+  Defined. 
 End list_in_time. 
 
 Section dupfree_dec.
@@ -360,7 +399,6 @@ Section dupfree_dec.
     specialize (dupfreeb_correct l) as H0.
     destruct dupfreeb. inv H0. split; eauto. inv H0; split; eauto. 
   Qed.
-
 End dupfree_dec. 
 
 Section dupfree_dec_time.
@@ -418,3 +456,16 @@ Section foldr_time.
   Qed. 
 End foldr_time.
 
+(*concat *)
+Section concat_fixX. 
+  Context {X : Type}.
+  Context `{registered X}.
+  
+  Definition c__concat := 19.
+  Definition concat_time (l : list (list X)) := fold_right (fun l acc => c__concat * (|l|) + acc + c__concat) c__concat l.
+  Global Instance term_concat : computableTime' (@concat X) (fun l _ => (concat_time l, tt)). 
+  Proof. 
+    extract. unfold concat_time, c__concat. solverec. 
+  Qed. 
+  
+End concat_fixX. 

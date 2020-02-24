@@ -514,3 +514,12 @@ Proof.
   intros. apply nth_error_Some in H0. destruct nth_error eqn:H1; [ | congruence].
   clear H0. apply nth_error_nth' with (y := def) in H1. easy.
 Qed. 
+
+Lemma in_concat_map_iff (X Y : Type) (f : X -> list Y) (l : list X) y : y el concat (map f l) <-> exists x, x el l /\ y el f x. 
+Proof. 
+  split; intros. 
+  - apply in_concat_iff in H as (? & H1 & (? & <- & H3)%in_map_iff). eauto. 
+  - apply in_concat_iff. destruct H as (x & H1 & H2). exists (f x). eauto. 
+Qed. 
+
+

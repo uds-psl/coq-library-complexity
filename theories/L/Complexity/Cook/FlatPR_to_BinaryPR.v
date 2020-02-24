@@ -208,31 +208,6 @@ Proof.
   unfold poly__hNat; split; smpl_inO; apply repEl_poly. 
 Qed. 
 
-(*concat *)
-Section concat_fixX. 
-  Context {X : Type}.
-  Context `{registered X}.
-  
-  Definition c__concat := 19.
-  Definition concat_time (l : list (list X)) := fold_right (fun l acc => c__concat * (|l|) + acc + c__concat) c__concat l.
-  Global Instance term_concat : computableTime' (@concat X) (fun l _ => (concat_time l, tt)). 
-  Proof. 
-    extract. unfold concat_time, c__concat. solverec. 
-  Qed. 
-  
-  Definition poly__concat n := (n + 1) * c__concat.
-  Lemma concat_time_bound l : concat_time l <= poly__concat (size (enc l)). 
-  Proof. 
-    unfold concat_time. induction l; cbn -[Nat.add Nat.mul].
-    - unfold poly__concat. nia. 
-    - rewrite IHl. unfold poly__concat. rewrite list_size_cons. rewrite list_size_length. unfold c__concat, c__listsizeCons; nia.
-  Qed. 
-  Lemma concat_poly : monotonic poly__concat /\ inOPoly poly__concat. 
-  Proof. 
-    split; unfold poly__concat; smpl_inO. 
-  Qed. 
-End concat_fixX. 
-
 (*hflat *)
 Definition c__hflat := c__Sigma + 3. 
 Definition hflat_time (fpr : FlatPR) (l : list nat) := map_time (fun m => hNat_time (Sigma fpr) m) l + concat_time (map (hNat (Sigma fpr)) l) + c__hflat.

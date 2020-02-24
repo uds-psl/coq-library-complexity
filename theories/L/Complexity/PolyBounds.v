@@ -112,6 +112,16 @@ Proof.
   unfold leb_time. rewrite Nat.le_min_r. rewrite size_nat_enc_r with (n:= b) at 1. lia. 
 Qed. 
 
+Lemma nat_eqb_time_bound_l a b : nat_eqb_time a b <= (size (enc a) + 1) * c__nat_eqb. 
+Proof. 
+  unfold nat_eqb_time. rewrite Nat.le_min_l. rewrite size_nat_enc_r with (n := a) at 1. lia. 
+Qed. 
+
+Lemma nat_eqb_time_bound_r a b : nat_eqb_time a b <= (size (enc b) + 1) * c__nat_eqb. 
+Proof. 
+  unfold nat_eqb_time. rewrite Nat.le_min_r. rewrite size_nat_enc_r with (n := b) at 1. lia. 
+Qed. 
+
 Section fixX.
   Context {X : Type}.
   Context {H : registered X}.
@@ -135,12 +145,21 @@ Section fixX.
       cbn. solverec. 
   Qed. 
 
-  (*
-     TODO:two possible approaches for higher order functions
-              - either conditional polynomial: but has the problem that one needs lazier overapproximations which evokes difficulties with nia etc
-              - tighter bounds that are non-compositional: see higher order functions as a template, their running time bounds do not tell the fulls story -> need to restate parts of the functions if it is used by another higher-order functin
-
-   *)
+  Lemma list_incl_decb_time_bound_env (eqbT : Y -> (X -> X -> nat)) (f : nat -> nat) :
+    (forall (a b : X) (y : Y), eqbT y a b <= f (size (enc a) + size (enc b) + size (enc y))) /\ monotonic f
+    -> forall (a b : list X) (y : Y), list_incl_decb_time (eqbT y) a b <= ((|a|) + 1) * ((|b|) + 1) * (f (size (enc b) + size (enc a) + size (enc y)) + c__list_in_decb) + (|a|+1) * c__list_incl_decb.
+  Proof. 
+    intros [H1 H2] a b env. induction a. 
+    - cbn -[c__list_incl_decb c__list_in_decb]. lia.
+    - cbn -[c__list_incl_decb c__list_in_decb]. rewrite list_in_decb_time_bound_env by easy.
+      rewrite IHa. 
+      unfold monotonic in H2. 
+      rewrite H2. 
+      2: { replace_le (size (enc a)) with (size (enc (a::a0))) by (rewrite list_size_cons; lia). reflexivity. }
+      setoid_rewrite H2 at 2. 
+      2: { replace_le (size (enc a0)) with (size (enc (a::a0))) by (rewrite list_size_cons; lia). reflexivity. }
+      nia. 
+  Qed. 
 
   Definition c__dupfreeBound := c__dupfreeb + c__list_in_decb. 
   Lemma dupfreeb_time_bound_env (eqbT : Y -> X -> X -> nat) (f : nat -> nat): 
@@ -188,7 +207,18 @@ Section fixX.
       setoid_rewrite H2 at 2. 2: (replace_le (size (enc l)) with (size (enc (a::l))) by (rewrite list_size_cons; lia)); reflexivity. 
       nia. 
   Qed. 
-  
+
+  Definition poly__concat n := (n + 1) * c__concat.
+  Lemma concat_time_bound (l : list (list X)) : concat_time l <= poly__concat (size (enc l)). 
+  Proof. 
+    unfold concat_time. induction l; cbn -[Nat.add Nat.mul].
+    - unfold poly__concat. nia. 
+    - rewrite IHl. unfold poly__concat. rewrite list_size_cons. rewrite list_size_length. unfold c__concat, c__listsizeCons; nia.
+  Qed. 
+  Lemma concat_poly : monotonic poly__concat /\ inOPoly poly__concat. 
+  Proof. 
+    split; unfold poly__concat; smpl_inO. 
+  Qed. 
 End fixX.
 
 Section fixXY.
@@ -236,4 +266,6 @@ Section fixXY.
       nia.
   Qed. 
 End fixXY.
+
+
 

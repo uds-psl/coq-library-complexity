@@ -4108,13 +4108,6 @@ Section fixTM.
             | [H : |?l| <= 3 |- _] => apply list_length_le3 in H as [-> | [ (? & ->) | [(? & ? & ->) | (? & ? & ? & ->)]]]
       end. 
 
-  Lemma in_concat_map_iff (X Y : Type) (f : X -> list Y) (l : list X) y : y el concat (map f l) <-> exists x, x el l /\ y el f x. 
-  Proof. 
-    split; intros. 
-    - apply in_concat_iff in H as (? & H1 & (? & <- & H3)%in_map_iff). eauto. 
-    - apply in_concat_iff. destruct H as (x & H1 & H2). exists (f x). eauto. 
-  Qed. 
-
   Lemma agreement_trans_unfold_env (X Y Z W M: Type) l (envList : list (evalEnv X Y Z W)) win' (f : evalEnv X Y Z W -> evalEnv X Y Z W) r : 
     (exists env rule, rule el l /\ env el map f envList /\ Some win' = reifyWindow r env rule) 
     <-> (exists env rule, rule el l /\ env el envList /\ Some win' = reifyWindow (M:=M) r (f env) rule).
