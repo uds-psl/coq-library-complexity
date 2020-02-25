@@ -38,6 +38,33 @@ Definition isMarked (sig : Type) (s : sigTape sig) : bool :=
   | UnmarkedSymbol _ => false
   end.
 
+(*MOVE*)
+Definition isNilBlank {sig : Type} (s : sigTape sig) : bool :=
+  match s with
+    NilBlank => true
+  | _ => false
+  end.
+
+(*MOVE*)
+Definition isLeftBlank {sig : Type} (s : sigTape sig) : bool :=
+  match s with
+  | LeftBlank _  => true
+  | _ => false
+  end.
+
+(*MOVE*)
+Definition isRightBlank {sig : Type} (s : sigTape sig) : bool :=
+  match s with
+  | RightBlank _ => true
+  | _ => false
+  end.
+
+(*MOVE*)
+Definition isSymbol {sig : Type} (s : sigTape sig) : bool :=
+  match s with
+  | UnmarkedSymbol _ | MarkedSymbol _ => true
+  | _ => false
+  end.
 
 Definition encode_tape (sig : Type) (t : tape sig) : list (sigTape sig) :=
   match t with

@@ -167,12 +167,14 @@ TM/Compound/TMTac.v
 TM/Compound/Multi.v
 TM/Compound/WriteString.v
 TM/Compound/MoveToSymbol.v
+TM/Compound/MoveToSymbol_niceSpec.v
 TM/Compound/CopySymbols.v
 TM/Compound/Shift.v
 TM/Compound/Compare.v
 
 # Programming
 TM/Code/Code.v
+TM/Code/Decode.v
 TM/Code/CodeTM.v
 TM/Code/WriteValue.v
 TM/Code/ChangeAlphabet.v
@@ -207,6 +209,8 @@ TM/Code/BinNumbers/NTM.v
 # Multi-Tape to Single-Tape Compiler
 TM/Single/EncodeTapes.v
 TM/Single/StepTM.v
+TM/Single/EncodeTapesInvariants.v
+TM/Single/DecodeTapes.v
 
 # Univ
 TM/Univ/LookupAssociativeListTM.v
