@@ -341,6 +341,7 @@ L/Complexity/Cook/BinaryPR.v
 L/Complexity/Cook/PR_homomorphisms.v
 L/Complexity/Cook/FlatPR_to_BinaryPR.v
 L/Complexity/Cook/FSAT.v
+L/Complexity/Cook/SAT.v
 L/Complexity/Cook/BinaryPR_to_FSAT.v
 L/Complexity/Cook/PR_to_BinaryPR.v
 L/Complexity/Cook/UniformHomomorphisms.v

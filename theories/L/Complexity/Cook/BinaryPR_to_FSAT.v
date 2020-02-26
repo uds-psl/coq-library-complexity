@@ -237,7 +237,7 @@ Section fixInstance.
   Definition combinedLength start1 start2 l1 l2 := max (start1 +l1) (start2 + l2) - min start1 start2. 
   Definition combinedStart start1 start2 := min start1 start2. 
 
-  (*from the combined assignment for the combination of two formulas, we can restore an assigment for the first formula *)
+  (*from the combined assignment for the combination of two formulas, we can restore an assignment for the first formula *)
   Lemma projVars_combined1 s1 s2 l1 l2 a: explicitAssignment a s1 l1 = projVars (s1 - combinedStart s1 s2) l1 (explicitAssignment a (combinedStart s1 s2) (combinedLength s1 s2 l1 l2)).
   Proof. 
     unfold projVars. 
@@ -514,7 +514,7 @@ Section fixInstance.
     apply (@encodeWindowsInLine'_encodesPredicate start llength); [easy | apply A].
   Qed. 
 
-  (*encoding of windows in all lines of the tableua *)
+  (*encoding of windows in all lines of the tableau *)
   Fixpoint encodeWindowsInAllLines' (start : nat) (t : nat)  := 
     match t with 
     | 0 => Ftrue
@@ -712,8 +712,14 @@ Section fixInstance.
       setoid_rewrite H3. eauto.
   Qed. 
 
+  Definition encodeFinalConstraint' := encodeFinalConstraint (steps *llength).
+  Lemma encodeFinalConstraint_encodesPredicate' : encodesPredicateAt (steps * llength) llength encodeFinalConstraint' (fun m => satFinal offset llength final m). 
+  Proof. 
+    apply encodeFinalConstraint_encodesPredicate. 
+  Qed.
+
   (*encoding of the whole tableau: the initial constraint, window constraints and the final constraint are combined conjunctively *)
-  Definition encodeTableau := encodeListAt 0 init ∧ encodeWindowsInAllLines ∧ encodeFinalConstraint (steps * llength).
+  Definition encodeTableau := encodeListAt 0 init ∧ encodeWindowsInAllLines ∧ encodeFinalConstraint'.
   Lemma encodeTableau_encodesPredicate : 
     encodesPredicateAt 0 (S steps * llength) encodeTableau 
     (fun m => projVars 0 llength m = init 
@@ -722,7 +728,7 @@ Section fixInstance.
   Proof. 
     specialize (encodesPredicate_and (encodeListAt_encodesPredicate 0 init) encodeWindowsInAllLines_encodesPredicate) as H. 
     encodesPredicateAt_comp_simp H.  
-    specialize (encodesPredicate_and H (encodeFinalConstraint_encodesPredicate (steps * llength))) as H1.
+    specialize (encodesPredicate_and H encodeFinalConstraint_encodesPredicate') as H1.
     clear H. 
     encodesPredicateAt_comp_simp H1. 
     unfold encodeTableau. 

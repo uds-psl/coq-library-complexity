@@ -2610,9 +2610,9 @@ Section fixTM.
   Qed. 
 
   (*a string consisting of nstars followed by nblanks can be rewritten to the empty tape *)
-  Lemma prelude_right_half_rewrites_blank n : 
-    valid (rewritesHeadInd (liftPrelude preludeRules)) (repEl n (inr nstar) ++ repEl (S (S t)) (inr nblank) ++ [inr ndelimC]) 
-                                                       (map inl (E neutral (S (S (n + t))))). 
+  Lemma prelude_right_half_rewrites_blank n n' : 
+    valid (rewritesHeadInd (liftPrelude preludeRules)) (repEl n (inr nstar) ++ repEl (S (S n')) (inr nblank) ++ [inr ndelimC]) 
+                                                       (map inl (E neutral (S (S (n + n'))))). 
   Proof. 
     induction n; cbn. 
     - apply prelude_blank_tape_rewrites_right. 
@@ -2623,9 +2623,9 @@ Section fixTM.
 
   (*but it can also be rewritten to a string starting with symbols of the tape alphabet, followed by blanks *)
   (*we'll later instantiate this with |s| <= k and n = t + k - |s| *)
-  Lemma prelude_right_half_rewrites_cert s n : 
-    valid (rewritesHeadInd (liftPrelude preludeRules)) (repEl (|s|) (inr nstar) ++ repEl n (inr nstar) ++ repEl (S (S t)) (inr nblank) ++ [inr ndelimC]) 
-                                                       (map inl (stringForTapeHalf' (S (S (n + t))) s)). 
+  Lemma prelude_right_half_rewrites_cert s n n' : 
+    valid (rewritesHeadInd (liftPrelude preludeRules)) (repEl (|s|) (inr nstar) ++ repEl n (inr nstar) ++ repEl (S (S n')) (inr nblank) ++ [inr ndelimC]) 
+                                                       (map inl (stringForTapeHalf' (S (S (n + n'))) s)). 
   Proof. 
     induction s.  
     - cbn. 
@@ -2640,9 +2640,9 @@ Section fixTM.
   Qed. 
 
   (*a slightly different formulation of the same statement *)
-  Lemma prelude_right_half_rewrites_cert' s n : 
-    valid (rewritesHeadInd (liftPrelude preludeRules)) (repEl (|s| + n) (inr nstar) ++ repEl (S (S t)) (inr nblank) ++ [inr ndelimC]) 
-                                                       (map inl (stringForTapeHalf' (S (S (n + t))) s)).
+  Lemma prelude_right_half_rewrites_cert' s n n': 
+    valid (rewritesHeadInd (liftPrelude preludeRules)) (repEl (|s| + n) (inr nstar) ++ repEl (S (S n')) (inr nblank) ++ [inr ndelimC]) 
+                                                       (map inl (stringForTapeHalf' (S (S (n + n'))) s)).
   Proof. 
     rewrite repEl_add. rewrite <- app_assoc. apply prelude_right_half_rewrites_cert. 
   Qed. 

@@ -1,5 +1,6 @@
 From Undecidability.L Require Import L.
 From Undecidability.L.Datatypes Require Import LLists. 
+Require Import Lia. 
 
 (** *Formula Satisfiability: the satisfiability problem on arbitrary Boolean formulas *)
 
@@ -49,3 +50,74 @@ Proof. cbn. unfold evalVar. rewrite list_in_decb_iff; [easy | intros ]. now rewr
 (*satisfaction of formulas *)
 Definition satisfies a f := evalFormula a f = true. 
 Definition FSAT f := exists a, satisfies a f. 
+
+(** bounds on the number of used variables *)
+Inductive varBound_formula (n : nat) : formula -> Prop :=
+  | varBound_forVar v : n > v -> varBound_formula n v 
+  | varBound_forTrue : varBound_formula n Ftrue
+  | varBound_forAnd n1 n2 f1 f2 : varBound_formula n1 f1 -> varBound_formula n2 f2 -> n >= n1 -> n >= n2 -> varBound_formula n (f1 ∧ f2)
+  | varBound_forOr n1 n2 f1 f2 : varBound_formula n1 f1 -> varBound_formula n2 f2 -> n >= n1 -> n >= n2 -> varBound_formula n (f1 ∨ f2)
+  | varBound_forNeg f : varBound_formula n f -> varBound_formula n (¬ f). 
+Hint Constructors varBound_formula. 
+
+Lemma varBound_formula_mnotonic (f : formula) (n n' : nat) : n <= n' -> varBound_formula n f -> varBound_formula n' f. 
+Proof. 
+  intros H0 H. induction H; econstructor; eauto; lia.
+Qed. 
+
+(*A computable notion of boundedness *)
+Fixpoint formula_maxVar (f : formula) := match f with
+  | Ftrue => 0
+  | Fvar v => S v
+  | Fand f1 f2 => Nat.max (formula_maxVar f1) (formula_maxVar f2)
+  | For f1 f2 => Nat.max (formula_maxVar f1) (formula_maxVar f2)
+  | Fneg f => formula_maxVar f
+end. 
+
+Lemma formula_bound_varBound f: varBound_formula (formula_maxVar f) f. 
+Proof. 
+  induction f; cbn.
+  - eauto.
+  - eauto. 
+  - econstructor; eauto; lia. 
+  - econstructor; eauto; lia. 
+  - eauto.
+Qed. 
+
+Lemma formula_varBound_bound f n : varBound_formula n f -> formula_maxVar f <= n. 
+Proof. 
+  induction 1; cbn; lia.
+Qed. 
+
+(** size of formulas *)
+Fixpoint formula_size (f : formula) := match f with 
+  | Ftrue => 0
+  | Fvar _ => 0
+  | For f1 f2 => formula_size f1 + formula_size f2 + 1
+  | Fand f1 f2 => formula_size f1 + formula_size f2 + 1
+  | Fneg f => formula_size f + 1
+end. 
+
+(** extraction *)
+From Undecidability.L.Tactics Require Import LTactics GenEncode.
+From Undecidability.L.Datatypes Require Import  LProd LOptions LBool LLNat LLists LUnit.
+From Undecidability.L.Complexity Require Import PolyBounds. 
+
+
+Run TemplateProgram (tmGenEncode "formula_enc" formula).
+Hint Resolve formula_enc_correct : Lrewrite.
+
+(*the encoding size of a formula relates linearly to formula_size f * formula_maxVar f *)
+Definition c__formulaBound1 := c__natsizeS. 
+Definition c__formulaBound2 := size (enc Ftrue) + 10 + c__natsizeO.
+Lemma formula_enc_size_bound : forall f, size (enc f) <= c__formulaBound1 * (formula_size f + 1) * formula_maxVar f + c__formulaBound2 * (formula_size f + 1).
+Proof. 
+  induction f. 
+  - unfold c__formulaBound2. nia.
+  - unfold enc. cbn -[Nat.mul]. rewrite size_nat_enc. unfold c__formulaBound1, c__formulaBound2. lia. 
+  - unfold enc. cbn -[Nat.mul Nat.add].
+    rewrite IHf0, IHf2. unfold c__formulaBound1, c__formulaBound2. 
+Admitted. 
+(*leq_crossout. nia. *)
+
+

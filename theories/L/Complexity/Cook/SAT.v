@@ -12,7 +12,6 @@ Notation literal := ((bool * var)%type) (only parsing).
 Notation clause := (list literal) (only parsing). 
 Notation cnf := (list clause) (only parsing).
 
-
 (*Bounds on the number of used variables*)
 Inductive varBound_clause (n : nat) : clause -> Prop :=
   | varBound_clauseB : varBound_clause n []
@@ -57,23 +56,6 @@ Proof.
   now apply varBound_clause_monotonic with (n:= n). assumption. 
 Qed.
 
-(*Assignments as lists of natural numbers: contain the indices of variables that are mapped to true *)
-Notation assgn := (list nat). 
-Implicit Type (a : assgn).
-
-Definition evalVar a v := list_in_decb Nat.eqb a v. 
-Definition evalLiteral (a : assgn) (l : literal) : bool := match l with
-  | (s, v) => Bool.eqb (evalVar a v) s 
-end. 
-
-(*Empty disjunction evaluates to false*)
-Definition evalClause_step a lit acc := orb acc (evalLiteral a lit). 
-Definition evalClause (a : assgn) (l : clause) : bool := fold_right (evalClause_step a) false l. 
-
-(*Empty conjunction evaluates to true *)
-Definition evalCnf_step a cl acc := andb acc (evalClause a cl). 
-Definition evalCnf a (l : cnf) : bool := fold_right (evalCnf_step a) true l. 
-
 (*A computable notion of boundedness *)
 Definition clause_maxVar (c : clause) := fold_right (fun '(_, v) acc => Nat.max acc v) 0 c. 
 Definition cnf_maxVar (c : cnf) := fold_right (fun cl acc => Nat.max acc (clause_maxVar cl)) 0 c.
@@ -97,6 +79,26 @@ Proof.
     + eapply varBound_cnf_monotonic. 2: apply IHc. cbn. unfold cnf_maxVar. lia.  
 Qed. 
 
+(*size of CNF in terms of number of operators *)
+Definition size_clause (c : clause) := length c. (*we should subtract 1 here, but this would only complicate things *)
+Definition size_cnf (c : cnf) := sumn (map size_clause c) + length c. 
+
+(*Assignments as lists of natural numbers: contain the indices of variables that are mapped to true *)
+Notation assgn := (list nat). 
+Implicit Type (a : assgn).
+
+Definition evalVar a v := list_in_decb Nat.eqb a v. 
+Definition evalLiteral (a : assgn) (l : literal) : bool := match l with
+  | (s, v) => Bool.eqb (evalVar a v) s 
+end. 
+
+(*Empty disjunction evaluates to false*)
+Definition evalClause_step a lit acc := orb acc (evalLiteral a lit). 
+Definition evalClause (a : assgn) (l : clause) : bool := fold_right (evalClause_step a) false l. 
+
+(*Empty conjunction evaluates to true *)
+Definition evalCnf_step a cl acc := andb acc (evalClause a cl). 
+Definition evalCnf a (l : cnf) : bool := fold_right (evalCnf_step a) true l. 
 
 (*more helpful properties *)
 (*a characterisation of one processing step of evalClause *)
@@ -115,6 +117,11 @@ Proof.
   - rewrite <- H. eauto. 
   - destruct H as (b1 & b2 & <- & <- & ->). eauto.
 Qed. 
+
+Lemma evalVar_in_iff a v : evalVar a v = true <-> v el a. 
+Proof. 
+  unfold evalVar. rewrite list_in_decb_iff; [easy | symmetry; apply Nat.eqb_eq].
+Qed.
 
 Lemma evalLiteral_var_iff a b v : 
   evalLiteral a (b, v) = true <-> evalVar a v = b. 
@@ -148,7 +155,8 @@ Proof.
       apply IHcn; eauto.
 Qed. 
 
-Definition SAT (c : cnf) : Prop := exists (a : assgn), evalCnf a c = true. 
+Definition satisfies a c := evalCnf a c = true.
+Definition SAT (c : cnf) : Prop := exists (a : assgn), satisfies a c. 
 
 (** * Verifier for SAT*)
 (** The certificate is a satisfying assignment.
@@ -392,6 +400,26 @@ Proof.
 Qed. 
 
 (** ** extraction *)
+
+(** size of encoding in terms of size of the cnf  *)
+Definition c__clauseSize1 := c__listsizeNil.
+Definition c__clauseSize2 := c__listsizeCons + c__sizeBool + c__natsizeO + c__natsizeS + 4.
+Lemma clause_enc_size_bound (c : clause) : size (enc c) <= (clause_maxVar c + 1) * (size_clause c + 1) + c__clauseSize1. 
+Proof. 
+  induction c.
+  - rewrite size_list; cbn. unfold c__clauseSize1. lia. 
+  - rewrite list_size_cons. rewrite IHc. cbn. destruct a. 
+    fold (clause_maxVar c). 
+    rewrite size_prod; cbn. rewrite size_bool. rewrite size_nat_enc. 
+    unfold size_clause. 
+    unfold c__clauseSize1, c__clauseSize2. 
+(*leq_crossout. nia.*)
+    (*() * |c| + c__natsizeS * clause_maxVar c*)
+    (*setoid_rewrite Nat.le_max_r with (n := clause_maxVar c). foat 3.*)
+    (*SearchAbout Nat.max.*)
+    (*rewrite IHc. *)
+Admitted. 
+
 (*evalVar *)
 Definition c__evalVar := 7. 
 Definition evalVar_time a (v : var) := list_in_decb_time (fun x y => c__nat_eqb2 + nat_eqb_time x y) a v + c__evalVar.
@@ -767,7 +795,6 @@ Proof.
   1, 2: apply assignment_small_decb_poly.
 Qed. 
 
-
 Lemma sat_NP : inNP (unrestrictedP SAT).
 Proof.
   apply inNP_intro with (R:= sat_verifier). 
@@ -787,6 +814,11 @@ Proof.
 
   unfold inTimePoly. exists poly__sat_verifierb. repeat split.
   - exists (sat_verifierb). 
-    + constructor. extract. 
-      (*TODO: why is extraction failing!? *)
-Admitted. 
+    + constructor. (* extract. fails. *)
+      eexists. 
+      eapply computesTime_timeLeq. 2: apply term_sat_verifierb.
+      cbn. intros [N a] _. split; [ apply sat_verifierb_time_bound | easy]. 
+    + intros [N a] _. apply sat_verifierb_correct.
+  - apply sat_verifierb_poly. 
+  - apply sat_verifierb_poly. 
+Qed. 
