@@ -60,7 +60,7 @@ Inductive varBound_formula (n : nat) : formula -> Prop :=
   | varBound_forNeg f : varBound_formula n f -> varBound_formula n (¬ f). 
 Hint Constructors varBound_formula. 
 
-Lemma varBound_formula_mnotonic (f : formula) (n n' : nat) : n <= n' -> varBound_formula n f -> varBound_formula n' f. 
+Lemma varBound_formula_monotonic (f : formula) (n n' : nat) : n <= n' -> varBound_formula n f -> varBound_formula n' f. 
 Proof. 
   intros H0 H. induction H; econstructor; eauto; lia.
 Qed. 
@@ -91,8 +91,8 @@ Qed.
 
 (** size of formulas *)
 Fixpoint formula_size (f : formula) := match f with 
-  | Ftrue => 0
-  | Fvar _ => 0
+  | Ftrue => 1
+  | Fvar _ => 1
   | For f1 f2 => formula_size f1 + formula_size f2 + 1
   | Fand f1 f2 => formula_size f1 + formula_size f2 + 1
   | Fneg f => formula_size f + 1
@@ -110,14 +110,18 @@ Hint Resolve formula_enc_correct : Lrewrite.
 (*the encoding size of a formula relates linearly to formula_size f * formula_maxVar f *)
 Definition c__formulaBound1 := c__natsizeS. 
 Definition c__formulaBound2 := size (enc Ftrue) + 10 + c__natsizeO.
-Lemma formula_enc_size_bound : forall f, size (enc f) <= c__formulaBound1 * (formula_size f + 1) * formula_maxVar f + c__formulaBound2 * (formula_size f + 1).
+Lemma formula_enc_size_bound : forall f, size (enc f) <= c__formulaBound1 * formula_size f * formula_maxVar f + c__formulaBound2 * formula_size f.
+(** (formula_size f + 1).*)
 Proof. 
   induction f. 
-  - unfold c__formulaBound2. nia.
+  - unfold c__formulaBound2. cbn. nia.
   - unfold enc. cbn -[Nat.mul]. rewrite size_nat_enc. unfold c__formulaBound1, c__formulaBound2. lia. 
   - unfold enc. cbn -[Nat.mul Nat.add].
-    rewrite IHf0, IHf2. unfold c__formulaBound1, c__formulaBound2. 
-Admitted. 
-(*leq_crossout. nia. *)
+    rewrite IHf1, IHf2. unfold c__formulaBound2. nia.
+  - unfold enc. cbn -[Nat.mul Nat.add].
+    rewrite IHf1, IHf2. unfold c__formulaBound2. nia.
+  - unfold enc. cbn -[Nat.mul Nat.add]. 
+    rewrite IHf. unfold c__formulaBound2. nia. 
+Qed. 
 
 

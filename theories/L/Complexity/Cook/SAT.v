@@ -21,6 +21,8 @@ Inductive varBound_cnf (n : nat) : cnf -> Prop :=
    | varBound_cnfB : varBound_cnf n [] 
    | varBound_cnfS : forall cl c, varBound_clause n cl -> varBound_cnf n c -> varBound_cnf n (cl :: c).  
 
+Hint Constructors varBound_clause varBound_cnf. 
+
 Lemma varBound_clause_iff (n : nat) (c : clause) : varBound_clause n c <-> forall (s : bool) (k : nat), (s, k) el c -> k < n.
 Proof.
   split.
@@ -55,6 +57,15 @@ Proof.
   intros H1 H2. induction H2; constructor.
   now apply varBound_clause_monotonic with (n:= n). assumption. 
 Qed.
+
+Lemma varBound_cnf_app (c1 c2 : cnf) (n : nat) : varBound_cnf n c1 /\ varBound_cnf n c2 <-> varBound_cnf n (c1 ++ c2).
+Proof.
+  induction c1; cbn. 
+  - split; [ tauto | intros H; split; eauto  ]. 
+  - split. 
+    + intros (H1 & H2). inv H1. constructor; [eauto | now apply IHc1].
+    + intros H. inv H. apply IHc1 in H3 as (H3 & H4). split; eauto. 
+Qed. 
 
 (*A computable notion of boundedness *)
 Definition clause_maxVar (c : clause) := fold_right (fun '(_, v) acc => Nat.max acc v) 0 c. 
@@ -402,23 +413,33 @@ Qed.
 (** ** extraction *)
 
 (** size of encoding in terms of size of the cnf  *)
-Definition c__clauseSize1 := c__listsizeNil.
-Definition c__clauseSize2 := c__listsizeCons + c__sizeBool + c__natsizeO + c__natsizeS + 4.
-Lemma clause_enc_size_bound (c : clause) : size (enc c) <= (clause_maxVar c + 1) * (size_clause c + 1) + c__clauseSize1. 
+Definition c__clauseSize1 := c__listsizeCons + c__sizeBool + c__natsizeO + 4 + c__listsizeNil.
+Lemma clause_enc_size_bound (c : clause) : size (enc c) <= c__natsizeS * (clause_maxVar c + 1) * (size_clause c + 1) + c__clauseSize1 * (size_clause c + 1). 
 Proof. 
   induction c.
-  - rewrite size_list; cbn. unfold c__clauseSize1. lia. 
-  - rewrite list_size_cons. rewrite IHc. cbn. destruct a. 
+  - rewrite size_list; cbn -[Nat.mul Nat.add]. unfold c__clauseSize1. lia. 
+  - rewrite list_size_cons. rewrite IHc. cbn -[Nat.mul Nat.add]. destruct a. 
     fold (clause_maxVar c). 
-    rewrite size_prod; cbn. rewrite size_bool. rewrite size_nat_enc. 
+    rewrite size_prod; cbn -[Nat.mul Nat.add]. rewrite size_bool. rewrite size_nat_enc. 
     unfold size_clause. 
-    unfold c__clauseSize1, c__clauseSize2. 
-(*leq_crossout. nia.*)
-    (*() * |c| + c__natsizeS * clause_maxVar c*)
-    (*setoid_rewrite Nat.le_max_r with (n := clause_maxVar c). foat 3.*)
-    (*SearchAbout Nat.max.*)
-    (*rewrite IHc. *)
+    unfold c__clauseSize1. nia. 
+Qed. 
+
+Definition c__cnfSize1 := c__listsizeNil + c__listsizeCons + c__clauseSize1.
+Lemma cnf_enc_size_bound (c : cnf) : size (enc c) <= c__natsizeS * (cnf_maxVar c + 1) * (size_cnf c + 1) + (size_cnf c + 1) * c__cnfSize1.
+Proof. 
+  induction c. 
+  - rewrite size_list. cbn -[Nat.mul Nat.add]. unfold c__cnfSize1. nia.
+  - rewrite list_size_cons. rewrite IHc. rewrite clause_enc_size_bound. 
+    cbn -[c__clauseSize1 c__cnfSize1 c__listsizeCons c__natsizeS].
+    fold (cnf_maxVar c). 
+    replace (size_clause a + sumn (map size_clause c) + S (|c|) + 1) with (size_clause a + size_cnf c + 2) by (unfold size_cnf; cbn; lia).
+    (* missing: c__listsizeCons*)
+    (*unfold c__cnfSize1.*)
+    (*nia.*)
 Admitted. 
+    
+
 
 (*evalVar *)
 Definition c__evalVar := 7. 
