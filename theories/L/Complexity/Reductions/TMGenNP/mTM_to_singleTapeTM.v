@@ -13,8 +13,10 @@ From Undecidability.TM.Single Require EncodeTapes StepTM DecodeTapes. (** In ema
 
 Section multiToMono.
 
-  Import EncodeTapes.
-  Context (sig F:finType) (n:nat) `{R__sig : registered sig}  (M : pTM sig F (S n)).
+  Import EncodeTapes DecodeTapes Single.StepTM.
+  Context (sig F:finType) (n:nat) (M : pTM sig F (S n)).
+
+  
 
   Eval cbn in (StepTM.ToSingleTape M).
 
