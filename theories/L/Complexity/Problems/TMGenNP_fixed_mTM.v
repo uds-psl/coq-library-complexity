@@ -24,7 +24,7 @@ Arguments TMGenNP_fixed_mTM {_ _ _}.
 
 Definition TMGenNP_fixed_singleTapeTM (sig : finType) `{registered sig} (M : mTM sig 1)
   := (fun '(ts, maxSize, steps) =>
-        exists s1 (t1 : list sig), length t1 <= maxSize /\ exists f, loopM (initc M [|leftof s1 (t1++ts)|] ) steps = Some f).
+        exists s1 (t1 : list sig), ts = s1 :: tl ts /\ length t1 <= maxSize /\ exists f, loopM (initc M [|leftof s1 (ts++t1)|] ) steps = Some f).
 
 Arguments TMGenNP_fixed_singleTapeTM : clear implicits.
 Arguments TMGenNP_fixed_singleTapeTM {_ _}.

@@ -11,13 +11,6 @@ Proof.
   induction l;cbn in *. easy. autorewrite with list. cbn;destruct f. all:cbn;now autorewrite with list;congruence.
 Qed.
 Hint Rewrite filter_rev : list. 
-
-Tactic Notation "length_not_eq" "in" constr(H):=
-  let H' := fresh "H" in
-  specialize (f_equal (@length _) H) as H';repeat (try autorewrite with list in H';cbn in H');nia.
-
-Ltac length_not_eq :=
-  let H := fresh "H" in intros H;exfalso;length_not_eq in H.
 (* MOVE END*)
 
 

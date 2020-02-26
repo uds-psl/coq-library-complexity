@@ -7,13 +7,13 @@ From Undecidability.L.Complexity  Require GenNP.
 From Undecidability.L.Complexity  Require Import LMGenNP TMGenNP_fixed_mTM.
 
 
-From Undecidability.TM.Single Require EncodeTapes StepTM DecodeTapes. (** In emacs: coq-prefer-top-of-conclusion: t; *)
+From Undecidability.TM.Single Require EncodeTapes StepTM DecodeTape. (** In emacs: coq-prefer-top-of-conclusion: t; *)
 
 
 
 Section multiToMono.
 
-  Import EncodeTapes DecodeTapes Single.StepTM.
+  Import EncodeTapes DecodeTape Single.StepTM.
   Context (sig F:finType) (n:nat) (M : pTM sig F (S n)).
 
   

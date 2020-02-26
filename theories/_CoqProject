@@ -210,7 +210,7 @@ TM/Code/BinNumbers/NTM.v
 TM/Single/EncodeTapes.v
 TM/Single/StepTM.v
 TM/Single/EncodeTapesInvariants.v
-TM/Single/DecodeTapes.v
+TM/Single/DecodeTape.v
 
 # Univ
 TM/Univ/LookupAssociativeListTM.v
