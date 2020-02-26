@@ -23,8 +23,8 @@ For an arbitrary list $A$, $\length{A}$ is the length of $A$.
 The concatenation of two lists $A$ and $B$ is written as $A \con{} B$. 
 We use positions to refer to the elements of a list at a certain offset, starting at 0. The valid positions of a list $A$ are the numbers $0, \ldots, \length{A}-1$. 
 Given a position $i$, the element of $A$ at $i$ is denoted by $A[i]$. Formally, this is an option value: if $i$ is not a valid position, $A[i]$ is defined to be $\ONone{}$. 
-\todo{skipn, firstn subscripting notation as used in chapter 5}
-\todo{repetition by superscripting}
+The list $A[i..]$ is the sublist of $A$ containing all elements from position $i$ onwards (and potentially no elements if $\length{A} \le i$). Similarly, the list $A[..i)$ contains all elements up to (but excluding) position $i$. 
+By $a^n$, we denote the list consisting of the $n$-fold repetition of the element $a$.
 
 The type of vectors of length $n$ over $X$ is written $X^n$. For length and subscripting, we use the same notations as for lists.
 
@@ -36,8 +36,11 @@ Sigma types $\sigtype{x}.p~x$ allow us to define pairs where the type of the sec
 
 A type $X$ is called \emph{discrete} if equality on it is decidable, that is, there exists a function $\textsf{eq}_X : X \rightarrow X \rightarrow \bool$ such that $\textsf{eq}_X~a~b = \btrue$ if, and only if, $a = b$. We also write $\eqb{a}{b}$ instead of $\textsf{eq}_X~a~b$, omitting the type which can be inferred from the context. 
 
+More generally, we extend the notation $\eqb{a}{b}$ to other decidable binary predicates, for instance to $a~\overset{\le}{?} b$ for deciding the relation $\le$.
+
 We also need \emph{finite types}. Finite types are discrete types with a finite number of elements. Formally, we require a list of all values of the type as a witness that it is finite~\cite{menz2016}.
 For any number $n$, there is a type with exactly $n$ elements, which we call $F_n$. 
+
 
 \section{Relations}
 As is common in type theory, we model relations on a type $X$ using binary predicates of type $X \rightarrow X \rightarrow \Prop$. 

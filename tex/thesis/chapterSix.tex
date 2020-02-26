@@ -13,11 +13,11 @@ While one usually uses string homomorphisms over a finite alphabet, we do not re
 
 \newcommand{\homomorphism}{\textsf{homomorphism}}
 \begin{definition}[String Homomorphisms]
-  Given types $\Sigma_1, \Sigma_2$, $h : \listsof{\Sigma_1} \rightarrow \listsof{\Sigma_2}$ is a homomorphism, written \mnotec{$\homomorphism~h$}, if $h (a_1 \concat a_2) = h~a_1 \concat h~a_2$ for all $a_1, a_2 : \listsof{\Sigma_1}$. 
+  Given types $\Sigma_1, \Sigma_2$, $h : \str{\Sigma_1} \rightarrow \str{\Sigma_2}$ is a homomorphism, written \mnotec{$\homomorphism~h$}, if $h (a_1 \concat a_2) = h~a_1 \concat h~a_2$ for all $a_1, a_2 : \str{\Sigma_1}$. 
 \end{definition}
 
 \begin{fact}
-  Fix a homomorphism $h : \listsof{\Sigma_1} \rightarrow \listsof{\Sigma_2}$. 
+  Fix a homomorphism $h : \str{\Sigma_1} \rightarrow \str{\Sigma_2}$. 
   \begin{enumerate}
     \item $h~\nil = \nil$
     \item $h (a :: b) = h [a] \concat h~b$
@@ -25,7 +25,7 @@ While one usually uses string homomorphisms over a finite alphabet, we do not re
   \end{enumerate}
 \end{fact}
 
-Given a function $f : \Sigma_1 \rightarrow \listsof{\Sigma_2}$, we can define a canonical homomorphism lifting $f$ to lists.
+Given a function $f : \Sigma_1 \rightarrow \str{\Sigma_2}$, we can define a canonical homomorphism lifting $f$ to lists.
 \newcommand{\canonicalHom}{\textsf{canonicalHom}}
 \begin{definition}[Canonical Homomorphism]
   \mnote{\canonicalHom}
@@ -33,14 +33,14 @@ Given a function $f : \Sigma_1 \rightarrow \listsof{\Sigma_2}$, we can define a 
 \end{definition}
 
 \begin{proposition}
-  Let $f : \Sigma_1 \rightarrow \listsof{\Sigma_2}$. 
+  Let $f : \Sigma_1 \rightarrow \str{\Sigma_2}$. 
   \begin{enumerate}
     \item $\homomorphism~(\canonicalHom~f)$
     \item $\forall h, \homomorphism~h \rightarrow (\forall x, h [x] = f~x) \rightarrow h \equiv \canonicalHom~f$
   \end{enumerate}
 \end{proposition}
 
-A uniform homomorphism is a special kind of homomorphism. First of all, it is $\varepsilon$-free, meaning that it only maps $\nil$ to $\nil$. Secondly, it maps all pairs of strings $a, b$ with $\length{a} = \length{b}$ to strings of the same length. 
+A uniform homomorphism is a special kind of homomorphism. First of all, it is \emph{$\varepsilon$-free}, meaning that it only maps $\nil$ to $\nil$. Secondly, it maps all pairs of strings $a, b$ with $\length{a} = \length{b}$ to strings of the same length. 
 Put differently, the length of every string is multiplied by a constant $k$ when passing through the homomorphism. 
 
 \newcommand{\uniformHomo}{\textsf{uniformHom}}
@@ -50,16 +50,16 @@ Put differently, the length of every string is multiplied by a constant $k$ when
 \end{definition}
 Note that the definition is in terms of singleton lists. The more general property follows directly by using the properties of a homomorphism:
 \begin{proposition}
-  Let $h : \listsof{\Sigma_1} \rightarrow \listsof{\Sigma_2}$ with $\uniformHomo~h$.
+  Let $h : \str{\Sigma_1} \rightarrow \str{\Sigma_2}$ with $\uniformHomo~h$.
   \begin{enumerate}
     \item $\length{l_1} = \length{l_2} \rightarrow \length{h~l_1} = \length{h~l_2}$
     \item $h~l = \nil \rightarrow l = \nil$
   \end{enumerate}
 \end{proposition}
 
-Again, we can define a canonical uniform homomorphism starting from a function $f : \Sigma_1 \rightarrow \listsof{\Sigma_2}$ satisfying $\length{f~x} = k > 0$ for all $x : \Sigma_1$. 
+Again, we can define a canonical uniform homomorphism starting from a function $f : \Sigma_1 \rightarrow \str{\Sigma_2}$ satisfying $\length{f~x} = k > 0$ for all $x : \Sigma_1$. 
 \begin{proposition}[Canonical Uniform Homomorphisms]
-  Let $f : \Sigma_1 \rightarrow \listsof{\Sigma_2}$ with $\forall x, \length{f~x} = k$ for some $k > 0$. 
+  Let $f : \Sigma_1 \rightarrow \str{\Sigma_2}$ with $\forall x, \length{f~x} = k$ for some $k > 0$. 
   Then $\uniformHomo~(\canonicalHom~f)$. 
 \end{proposition}
 
@@ -70,22 +70,22 @@ Conversely, we can formalise the above intuition that the length of a string is 
 \begin{proof}
   As $\Sigma$ is a finite type, inhabitation is decidable. If $\length{\Sigma} = 0$, then we pick 42. 
   Otherwise, let $\sigma : \Sigma$ and pick $\length{h}~[\sigma]$. 
-  For arbitrary $x : \listsof{\Sigma}$, the statement follows by induction on $x$ and using the defining properties of a uniform homomorphism.
+  For arbitrary $x : \str{\Sigma}$, the statement follows by induction on $x$ and using the defining properties of a uniform homomorphism.
 \end{proof}
 
 \section{Applying Uniform Homomorphisms to PR}\label{sec:unif_hom_pr}
-We can now show that \PR{} is invariant under injective uniform homomorphisms. That is, given a uniform homomorphism $h$ and a \PR{} instance $S$, we can define another \PR{} instance $S'$ where we have applied $h$ to all strings of $S$. $S'$ is a yes-instance if, and only if, $S$ is a yes-instance. 
-
-We assume that $\length{\Sigma_1} > 0$. Instances of \PR{} not satisfying this property are trivial no-instances. 
+We can show that \PR{} is invariant under injective uniform homomorphisms. That is, given a uniform homomorphism $h$ and a \PR{} instance $S$, we can define another \PR{} instance $S'$ where we have applied $h$ to all strings of $S$. $S'$ is a yes-instance if, and only if, $S$ is a yes-instance. 
 
 Fix a \PR{} instance $S = (\Sigma_1, o, \omega, x_0, R, \Rfinal, t)$. 
-Without loss of generality\footnote{This follows from the results of the previous section}, we assume that the homomorphism is given as $h' : \Sigma_1 \rightarrow \Sigma_2$ with 
+Assume that $\length{\Sigma_1} > 0$. Instances of \PR{} not satisfying this property are trivial no-instances. 
+
+Without loss of generality\footnote{This follows from the results of the previous section.}, we assume that the homomorphism is given as $h' : \Sigma_1 \rightarrow \Sigma_2$ with 
 \begin{gather*}
   (A_1) \quad \length{h'~x} = k~\text{for a fixed } k > 0 \\
   (A_2) \quad \textsf{injective}~h'
 \end{gather*}
 
-We then define $h \defeq \canonicalHom~h'$. 
+Then define the full homomorphism $h \defeq \canonicalHom~h'$. 
 Properties $(A_1)$ and $(A_2)$ carry over to $h$:
 \begin{proposition}\label{prop:h_properties}
   \begin{enumerate}
@@ -96,7 +96,7 @@ Properties $(A_1)$ and $(A_2)$ carry over to $h$:
 \end{proposition}
 
 The following lemma allows us to split the image of $h$ along multiples of $k$ and follows from the properties of uniform homomorphisms in a straightforward way.
-\begin{lemma}[Inversion of $h$]\label{lem:h_inv}
+\begin{lemma}[Inversion of $h$]\label{lem:h_inv}\leavevmode
   \begin{enumerate}
     \item $h~a = u \concat v \rightarrow \length{u} = k \rightarrow \exists a_1~a_2, a = a_1 :: a_2 \land h~[a_1] = u \land h~a_2 = v$
     \item $h~a = u \concat v \rightarrow \length{u} = c \cdot k \rightarrow \exists a_1~a_2, a = a_1 \concat a_2 \land h~a_1 = u \land h~a_2 = v$ 
@@ -116,14 +116,14 @@ The transformed \PR{} instance is defined as
   \mnote{$S'$}
 \end{align*}
 Note that the offset and the width both need to be multiplied by the multiplicative factor $k$ of $h$.
-It is easy to see that this definition is well-formed, that is, $S'$ does again satisfy the syntactic constraints of \PR{}.
+It is easy to see that this definition is well-formed, that is, $S'$ does again satisfy the syntactic constraints of \PR{} (Definition~\ref{def:pr}).
 The goal for the rest of this section is to show that $\PR{}~S \leftrightarrow \PR{}~s'$. 
 
 We start with the agreement of $\textsf{rewHead}$.
-The first statement of the following Lemma~\ref{lem:rewHead_agree} is the equivalence one would expect. However, it is rather weak, as the backwards direction requires that we know the premise and conclusion to be in the image of $h$.
+The first statement of the following lemma is the equivalence one would expect. However, it is rather weak, as the backwards direction requires that we know the premise and conclusion to be in the image of $h$.
 For the proof of equivalence of $S$ and $S'$, we need a stronger statement: if we have a string $h~a$ that rewrites to a string $s$, we need to be able to derive that $s$ is in the image of $h$.
 
-\begin{lemma}[Agreement of $\rewHead{}{}{}$]\label{lem:rewHead_agree}\leavevmode
+\begin{lemma}[Agreement of $\textsf{rewHead}$]\label{lem:rewHead_agree}\leavevmode
   \begin{enumerate}
     \item $\rewHead{w}{a}{b} \leftrightarrow \rewHead{(h_{\text{window}}~w)}{(h~a)}{(h~b)}$
     \item If $w \in \textsf{hwindows}$, $\length{a_1} = o$, $\length{u} = k \cdot o$, and $\rewHead{w}{(h~a_1 \concat h~a_2)}{(u \concat v)}$, then there exists $b_1$ with $u = h~b_1$ and $\length{b_1} = o$.
@@ -141,7 +141,7 @@ This can be lifted to $\strent{}$. For the proof, yet another characterisation o
 \end{gather*}
 To some extent, this is the most intuitive characterisation of validity: it does not allow vacuous rewrites (i.e.\ allows only rewrites of length $\ge \omega$). Accordingly, it is not fully equivalent to $\strent{}$:
 \begin{lemma}[Agreement of $\strent{}$ and $\strentD{}$]
-  \[a \strent{R} b \land a \ge \omega \leftrightarrow a \strentD{R} b \]
+  \[a \strent{R} b \land \length{a} \ge \omega \leftrightarrow a \strentD{R} b \]
 \end{lemma}
 
 The restriction to strings of length at least $\omega$ does not pose a problem as Definition~\ref{def:pr} imposes that as a syntactic constraint.
@@ -176,7 +176,7 @@ We can now obtain the main agreement lemma:
 \end{lemma}
 Thus, the transformed \PR{} instance is equivalent to the original instance.
 
-\section{The Reduction}
+\section{Reduction to \BPR{}}
 The previous section's results can be applied to an injective uniform homomorphism into $\bool$ to directly obtain the reduction of \PR{} to \BPR{}. 
 We use a homomorphism which just computes a unary encoding of the alphabet's elements over a binary alphabet. The $i$-th element $\sigma_i$ (counting from zero) of the finite type $\Sigma$ is mapped to the string $0^i10^{\length{\Sigma}-i-1}$.
 
@@ -186,33 +186,38 @@ The following definition is almost the homomorphism we need.
 \begin{definition}\label{def:hnat_hsig}
   \begin{align*}
     \mnote{$h_{\nat}$}
-    h_{\nat}~sig~n\defeq \ITE{n~\overset{?}{<}~sig}{\bfalse^n \concat [\btrue] \concat \bfalse^{sig -n -1}}{\bfalse^{sig}} \\
-    h_{\Sigma}~\sigma : \listsof{\bool} \defeq h_{\nat}~(\length{\Sigma})~(\textsf{index}~\sigma)
+    h_{\nat}~sig~n&\defeq \ITE{n~\overset{?}{<}~sig}{\bfalse^n \concat [\btrue] \concat \bfalse^{sig -n -1}}{\bfalse^{sig}} \\
+    h_{\Sigma}~\sigma : \listsof{\bool} &\defeq h_{\nat}~(\length{\Sigma})~(\textsf{index}~\sigma)
   \end{align*}
 \end{definition}
 The corresponding homomorphism can be obtained by using $\canonicalHom$. However, the technique of Section~\ref{sec:unif_hom_pr} justs asks us to provide a function operating on single symbols.
 
-Properties $(A_1)$ and $(A_2)$ are now straightforward to verify.
+Properties $(A_1)$ and $(A_2)$ are straightforward to verify.
 
-\begin{lemma}[Uniformity]
+\begin{lemma}[Uniformity]\leavevmode
   \begin{enumerate}
     \item $\length{h_{\nat}}~sig~n = sig$
     \item $\length{h_{\Sigma}~\sigma} = \length{\Sigma}$
   \end{enumerate}
 \end{lemma}
 
-\begin{lemma}[Injectivity]
+\begin{lemma}[Injectivity]\leavevmode
   \begin{enumerate}
     \item $h_{\nat}~sig~m = \bfalse^n \concat [\btrue] \concat \bfalse^{sig - n - 1} \rightarrow m = n$
     \item $\textsf{injective}~h_{\Sigma}$
   \end{enumerate}
 \end{lemma}
 
-The reduction now follows directly by Lemma~\ref{lem:hom_pr_equiv}.
+The reduction now directly follows by Lemma~\ref{lem:hom_pr_equiv}.
 In the special case of $\length{\Sigma} = 0$, the reduction maps to a trivial no-instance of \BPR{}. 
 
+\begin{lemma}[\PR{} Reduces to \BPR{}]
+  \[\PR{}~S \leftrightarrow \BPR{}~S', \]
+  where $S'$ is defined as in Section~\ref{sec:unif_hom_pr}.
+\end{lemma}
+
 \section{Mechanisation}
-We briefly comment on the differences in the Coq mechanisation and the proof of computability. 
+We briefly comment on the differences of the Coq mechanisation and the proof on paper as well as on the proof of computability. 
 
 First of all, \BPR{} is defined as a syntactically different problem in the Coq mechanisation. The only change is that the alphabet is fixed to $\bool$. Nevertheless, nearly all definitions (for instance the definition of $\strent{}$) can be re-used and do not need to be stated explicitly again.
 
@@ -231,4 +236,4 @@ Remember that we enforce the syntactic constraints on valid \PR{} instances (cf.
 \end{center}
 
 The main verification is done for the reduction of \PR{} to \BPR{}, as described in this chapter. As this reduction cannot be extracted, we define a separate reduction of \FlatPR{} to \BPR{}. This reduction basically uses the $h_{\nat}$ function of Definition~\ref{def:hnat_hsig} to transform the finite subset of $\nat$ to $\bool$. 
-For the verification of this reduction, we show that for instances of \FlatPR{} and \PR{} that are the same up to representation of finite types, the output of the respective reductions to \BPR{} is the same up to reordering of elements in lists. Logically, the reduction thus consists of two parts: a reduction from \FlatPR{} to \PR{}, converting the finite subset $\{0, \ldots, n-1\}$ of $\nat$ into the finite type $F_n$, and the reduction from \PR{} to \BPR{}. Computationally, however, this is shortcut to a single direct reduction.
+For the verification of this reduction, we show that for instances of \FlatPR{} and \PR{} that are the same up to representation of finite types $\approx$, the output of the respective reductions to \BPR{} is the same up to reordering of elements in lists. Logically, the reduction thus consists of two parts: a reduction from \FlatPR{} to \PR{}, converting the finite subset $\{0, \ldots, n-1\}$ of $\nat$ into the finite type $F_n$, and the reduction from \PR{} to \BPR{}. Computationally, however, this is shortcut to a single direct reduction.

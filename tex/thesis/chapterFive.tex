@@ -1,6 +1,6 @@
 \newcommand{\winw}[2]{\textsf{window}_{#1}{(#2)}}
 \newcommand{\win}[1]{\textsf{window}{(#1)}}
-\newcommand{\str}[1]{\textsf{string}{(#1)}}
+\newcommand{\str}[1]{#1^*}
 \newcommand{\prem}[1]{\textsf{prem}~#1}
 \newcommand{\conc}[1]{\textsf{conc}~#1}
 \newcommand{\rewHead}[3]{\textsf{rewHead}~#1~#2~#3}
@@ -55,16 +55,16 @@ we introduce the string-based \emph{Parallel Rewriting} (\PR{}) problem which fo
 
 First of all, we make the informal description of \gennp{} given in the previous chapter precise.
 \begin{definition}[TMGenNP]\label{def:tmgennp}
-  \mnotec{TMGenNP}
+  \mnote{TMGenNP}
   \begin{align*}
-    \gennp{} (\Sigma, M,  in, k', t) \defeq \exists~cert, \length{cert} \le k' \land \exists f, ({\textsf{start}}_M, \textsf{initTape}~(in \concat cert)) \rhd^{\le t} f, 
+    \gennp{} (\Sigma, M,  in, k', t) \defeq \exists~cert, \length{cert} \le k' \land \exists f, ({\textsf{start}}_M, \textsf{initTape}~(in \concat cert)) \rhd_M^{\le t} f, 
   \end{align*}
   where 
   \[\gennp{} : \sigtype{{\Sigma}}. (TM~\Sigma~1 \times \listsof{\Sigma} \times \nat \times \nat) \rightarrow \Prop \]
   and 
   \begin{align*}
     \mnotec{\textsf{initTape}}~[] \defeq \textsf{niltape} \\
-    \textsf{initTape}~x::xs \defeq \textsf{leftof}~x~xs,
+    \textsf{initTape}~(x::xs) \defeq \textsf{leftof}~x~xs,
   \end{align*}
   that is, the head is initially positioned left of the input.
 \end{definition}
@@ -86,17 +86,17 @@ Parallel Rewriting works over a finite alphabet $\Sigma$. Given an initial strin
     \item $\Rfinal : \listsof{\str{\Sigma}}$ is a set of final substrings,
     \item $t : \nat$ is the number of rewrite steps.
   \end{itemize}
-  Here, $\winw{\omega}{\Sigma} := {\Sigma}^\omega \times {\Sigma}^\omega$\mnote{$\winw{\omega}{\Sigma}$} denotes the type of windows of width $w$ over $\Sigma$ and $\str{\Sigma} := \listsof{\Sigma}$. 
+  Here, $\winw{\omega}{\Sigma} := {\Sigma}^\omega \times {\Sigma}^\omega$\mnote{$\winw{\omega}{\Sigma}$} denotes the type of windows of width $w$ over $\Sigma$.
 \end{definition}
 If it is clear from the context, we write $\win{\Sigma}$ instead of $\winw{\omega}{\Sigma}$, omitting the width.
-Instead of directly using the projections $\pi_1$ and $\pi_2$ on a window $w$, we usually write $\prem{w}$ and $\conc{w}$\mnote{$\prem{}, \conc{}$}. 
+Instead of directly using the projections $\pi_1$ and $\pi_2$ on a window $w$, we usually write $\prem{w}$ and $\conc{w}$\mnote{$\prem, \conc$}. 
 
 Pictorially, $o$ symbols are always grouped together to form one abstract symbol, explaining the divisibility constraints. Throughout this chapter, we always work with an offset of 1 and the more general case will only become relevant in Chapter~\ref{chap:pr_bpr}.
 
 Let us fix the structural parameters $\Sigma$, $o$ and $\omega$ satisfying the conditions stated in the definition for the rest of this section.
 
 \subsection{Validity}
-
+We start by defining what it means for a string $a$ to validly rewrite to another string $b$, denoted as $a \strent{} b$.
 \begin{definition}[Matching Windows]\label{def:rewHead}
   \mnote{\textsf{rewHead}}
   \begin{gather*}
@@ -112,6 +112,8 @@ Let us fix the structural parameters $\Sigma$, $o$ and $\omega$ satisfying the c
 \end{definition}
 \todo{maybe mention the facts (tail invariance, ...) which are routinely used?}
 
+Intuitively, a rewrite $a \strent{} b$ is possible if we can find a rewrite window jusifying a local rewrite for every possible offset. ``Possible offsets'' are those in the range $[0, \length{a} - \omega]$, as the windows have a width of $\omega$. Additionally, we only need rewrites at multiples of the offset, again supporting the view that $o$ symbols together form a unit.
+
 \begin{definition}[Validity (Explicit Characterisation)]
   Given a set of rewrite windows $R$, the validity of a rewrite of $a : \str{\Sigma}$ to $b : \str{\Sigma}$, written \mnotec{$a \strentE{R} b$}, is defined by:
   \begin{align*}
@@ -120,8 +122,6 @@ Let us fix the structural parameters $\Sigma$, $o$ and $\omega$ satisfying the c
     \land \quad & \forall 0 \le i = j \cdot o \le \length{a} - \omega, \exists w, w \in R \land \rewAt{w}{i}{a}{b} 
   \end{align*}
 \end{definition}
-
-Intuitively, the definition says that a rewrite is possible if we can find a rewrite window justifying a local rewrite for every possible offset. ``Possible offsets'' are those in the range $[0, \length{a} - \omega]$, as the windows have a width of $\omega$. Additionally, we only need rewrites at multiples of the offset, again supporting the view that $o$ symbols together form a unit.
 
 Note that the dependency on $o$ and $\omega$ is not made explicit in the notation, instead they need to be inferred from the context. If the set of rewrite windows $R$ is clear, we may also drop that.
 
@@ -191,7 +191,7 @@ The inductive definition of validity can be simplified a bit:
 \begin{align*}
   \infer{\nil \strent{R} \nil}{} \quad
   \infer{x::a \strent{R} y ::b}{a \strent{R} b \quad \length{a} < 2} \quad
-  \infer{x::a \strent{R} y :: b}{a \strent{R} b \quad w \in R \quad \rewHead{w}{x::a}{y::b}}
+  \infer{x::a \strent{R} y :: b}{a \strent{R} b \quad w \in R \quad \rewHead{w}{(x::a)}{(y::b)}}
 \end{align*}
 
 We use the notation introduced in the previous chapter to denote the window $((x_1, x_2, x_3), (x_4, x_5, x_6))$: 
@@ -201,11 +201,11 @@ We use the notation introduced in the previous chapter to denote the window $((x
 Sometimes, we also use $\irewwin{x_1}{x_2}{x_3}{x_4}{x_5}{x_6}$ if we need to write down a window in-line.
 
 \section{Encoding Tapes and Configurations}
-We move to the construction of the Turing machine simulation. Our goal is to devise and verify a 3-\PR{} instance simulating a given Turing machine. 
+We start with the construction of the Turing machine simulation. Our goal is to devise and verify a 3-\PR{} instance simulating a given Turing machine. 
 For the rest of the chapter, let us fix a \gennp{} instance consisting of a finite tape alphabet $\Sigma$, a single-tape Turing machine $M = (Q, \delta, \textsf{start}, \textsf{halt})$ over $\Sigma$, an input $in$, a number $t$ of steps, and a maximum size $k'$ of the certificate. 
 
 \begin{definition}
-  \[\validCert~c \defeq \length{c} \le k' \mnote{$\validCert$}\]
+  $\validCert~c \defeq \length{c} \le k' \mnote{$\validCert$}$
 \end{definition}
 
 Formalising the intuitions from Chapter~\ref{chap:informaloverview}, we define the alphabet $\Gamma$ of the Parallel Rewriting instance for the deterministic simulation\footnote{This does not include the part for generating the initial configuration.}.
@@ -229,18 +229,18 @@ Formalising the intuitions from Chapter~\ref{chap:informaloverview}, we define t
 We need the subalphabets at various points. When we write down elements of $\Gamma$, we leave the injections into the sum types and option types implicit. Sometimes, we also implicitly lift functions from a smaller alphabet to a larger one.
 We use the metavariables $\sigma : \Sigma$, $m : \tapeSigma$, $p : \polarity$, $\gamma : \Gamma$, $u : \str{\Sigma}$, and $h : \str{\Gamma}$. 
 \mnote{$\polneg{m}, \polpos{m}, \polneut{m}$}
-Given $m$, we write $\polpos{m}$ for $(+, m)$, $\polneg{m}$ for $(-, m)$, and $\polneut{m}$ for $(\circ, m)$. For an unknown polarity $p$, we write \mnotec{$m^p$}.
+Given $m$, we write $\polpos{m}$ for $(+, m)$, $\polneg{m}$ for $(-, m)$, and $\polneut{m}$ for $(\circ, m)$. For an unknown polarity $p$, we use \mnotec{$m^p$}.
 
 \begin{definition}[Polarity Reversion]
   \begin{align*}
     \pFlip{p} &\defeq \match p \withl \circ~\Rightarrow \circ \withm +~\Rightarrow - \withm -~\Rightarrow +\withr \\
-    \pRev~h &\defeq \rev{\withl\pFlip{x} \bnfmid x \in h\withr}
+    \pRev~(h : \str{\Gamma}) : \str{\Gamma} &\defeq \rev{\withl\pFlip{x} \bnfmid x \in h\withr}
     \mnote{\pRev}
   \end{align*}
   Notationally, we write \mnotec{$\pFlipi{p}$} for $\pFlip{p}$. 
 \end{definition}
 $\pRev$ reverses a string and flips the polarities the symbols are annotated with.
-Note that we are already using an implicit lifting of $\pFlip{}$ in the definition of $\pRev$. 
+Note that we are already using an implicit lifting of $\pFlip{}$ from \polarity{} to $\Gamma$ in the definition of $\pRev$. 
 
 \begin{fact}[Involutions]\label{fact:prev_involution}
   $\pFlip{}$ and $\pRev{}$ are involutions, that is, $\pFlip{(\pFlip{p})} = p$ and $\pRev{(\pRev~h)} = h$. 
@@ -254,9 +254,9 @@ In dependence of $t$, $k'$, and $in$, we define the following numbers:
   \forall n, \hat{n} &\defeq n + 2 \mnote{$\hat{n}$}\\
   l &\defeq 2 \cdot (\hat{z} + 1) + 1 \mnote{l}
 \end{align*}
-The real input size after accounting for the fixed input $in$ and the nondeterministic certificate is $k$.
+The real maximum input size after accounting for the fixed input $in$ and the nondeterministic certificate is $k$.
 $z$ is the amount of space available for the Turing machine and thus $z$ units of space need to be available to the left and to the right in the configuration string as the tape can be shifted to be completely on one side of the state symbol.
-For technical reasons, we want three symbols to be available to either side of the state symbol even if $t = k = 0$. One of those symbols will be the delimiter $\#$, the other two are additional blanks which will never be used by the Turing machine. Thus $\hat{z}$ is the number of symbols on each side excluding the delimiter. 
+For technical reasons, we want three symbols to be available to either side of the state symbol even if $t = k = 0$. One of those symbols is the delimiter $\#$, the other two are additional blanks which will never be used by the Turing machine. Thus $\hat{z}$ is the number of symbols on each side excluding the delimiter. 
 Finally, $l$ is the length of the whole configuration string including the center state symbol.
 
 \begin{figure}
@@ -315,16 +315,17 @@ Finally, $l$ is the length of the whole configuration string including the cente
 In order to make reasoning about configuration strings possible, we define representation relations for tape halves and configurations.
 
 \begin{definition}[Tape Representation]
-  \mnote{$u \reprtt{n}{p} h$}
-  \begin{align*}
-    u \reprtt{n}{p} h &\defeq \length{u} \le n \land h = \withl(p, x) \withm x \in u\withr \concat \nilstr{p}{(\hat{n} - \length{u})}\\
-  u \reprt{p} h &\defeq u \reprtt{z}{p}, \mnote{$ u \reprt{p} h$}
-  \end{align*}
-  where $E$ is the string representing the empty tape:
+  The string $E$ represents the empty tape: 
   \mnote{$\nilstr{p}{n}$}
   \begin{align*}
     \nilstr{p}{0} &\defeq [\#] \\
     \nilstr{p}{(\natS{n})} &\defeq (p, \blank) :: \nilstr{p}{n}
+  \end{align*}
+  Tape representation is defined as:
+  \mnote{$u \reprtt{n}{p} h$}
+  \begin{align*}
+    u \reprtt{n}{p} h &\defeq \length{u} \le n \land h = \withl(p, x) \withm x \in u\withr \concat \nilstr{p}{(\hat{n} - \length{u})}\\
+  u \reprt{p} h &\defeq u \reprtt{z}{p}, \mnote{$ u \reprt{p} h$}
   \end{align*}
 \end{definition}
 $u \reprtt{n}{p} h$ means that $h$ contains the elements of $u$ annotated with polarity $p$ where a total of $n$ symbols are available for the simulation to use.
@@ -350,14 +351,15 @@ A configuration $c = (q, tp)$ is represented by a string containing the state sy
 
 
 \mnote{$\stringForTapeHalf$}
-Both $\reprt{}$ and $\reprc{}$ are computational in the sense that, given a tape string or a configuration, respectively, we can compute a string representing the corresponding tape half or configuration. 
-Let $\stringForTapeHalf : \listsof{\Sigma} \rightarrow \listsof{\Gamma}$ and $\stringForConfig : Q \rightarrow \textsf{tape}~(\Sigma) \rightarrow \listsof{\Gamma}$ be such functions.
+Both $\reprt{}$ and $\reprc{}$ are computational in the sense that, given a tape half or a configuration, respectively, we can compute a string representing this tape half or configuration. 
+Let $\stringForTapeHalf : \str{\Sigma} \rightarrow \str{\Gamma}$ and $\stringForConfig : Q \rightarrow \textsf{tape}~(\Sigma) \rightarrow \str{\Gamma}$ be such functions.
 \mnote{$\stringForConfig$}
 
 \section{Modifying Tapes}\label{sec:taperules}
 In this section, we introduce the rewrite rules for shifting tape halves and prove the main results for manipulating the representation of a tape half.
 
 \subsection{Tape Rules}
+Recall that we need rules for shifting the tape to the left, to the right, or leaving its position unchanged.
 The rules are annotated with the tape halves they can be used on. These annotations have no formal meaning but help with the intuition.
 
 \paragraph{Right Shifts}
@@ -384,14 +386,14 @@ The rules implicitly encode the invariant that all symbols used by the Turing ma
   \quad
   \trewwin{\sigma_1}{\blank}{\blank}{\polpos{\blank}}{\polpos{\sigma_1}}{\polpos{\blank}}
 \end{center}
-In the first case, the premise prevents the rule from ever being applicable. In the second case, the overlap of the rewrite windows and the state symbol which stands between both tape halves is the reason. 
+In the first case, the premise prevents the rule from ever being applicable. In the second case, the overlap of the rewrite windows and the state symbol which stands between both tape halves makes it impossible to have the substring $\blank \polpos{\sigma_1} \blank$. 
 We call such instantiations of a rewrite rule \emph{spurious}.
 
 Knowing this, we write down the above rules in a more succinct way as 
 \begin{center}
   \trewwin{m_1}{m_2}{m_3}{\polpos{m_4}}{\polpos{m_1}}{\polpos{m_2}}
 \end{center}
-While we would be fine having the spurious rewrite windows, they do make additional reasoning necessary in some cases. Therefore, we just regard this as a notation for the expanded form above, instead of actually seeing spurious instantitions as valid. One can easily derive the rules which are actually relevant.
+While we would be fine having the spurious rewrite windows, they do make additional reasoning necessary in some cases. Therefore, we just regard this as a notation for the expanded form above, instead of actually having the spurious instantitions. One can easily derive the rules which are actually relevant.
 
 \paragraph{Left Shifts}
 We only write down the abbreviated form:
@@ -406,10 +408,9 @@ Note that this rule exactly mirrors the rule for shifting the tape to the right.
   \trewwin{\#}{\blank}{\blank}{\#}{\blank}{\blank} 
   \quad \trewwin{\blank}{\blank}{\#}{\blank}{\blank}{\#}
 \end{center}
-We need no windows which contain both the delimiter $\#$ and an element of $\Sigma$ as the Turing machine (by construction) cannot use the two blanks adjacent to the delimiters within the number of steps it is given.
+We need no windows which contain both the delimiter $\#$ and an element of $\Sigma$ as the Turing machine (by construction of $z$) cannot use the two blanks adjacent to the delimiters within the number of steps it is given.
 
 The collection of all windows generated by these rules is referred to as \mnotec{$\Rtape$}.
-Throughout the rest of this section, we implicitly always use $\Rtape$ as the set of rewrite windows when talking about validity.
 
 \begin{remark}
   It now becomes clear why we need the delimiter $\#$. Without it, symbols could just be introduced at the edge of the string. For instance, the rule 
@@ -469,9 +470,9 @@ These results are each proven for the right tape half and then derived for the l
   \begin{enumerate}
     \item The first statement follows by induction on $n$. For the second one, we unfold $\hat{n} = \natS{(\natS{n})}$ and generalise $\natS{n}$ to arbitrary $n \ge 1$. The statement then follows by induction on $n$: the base case is contradictory. In the successor case, we do another case analysis on $n$. If $n =0$, the statement follows by inversion on the used rewrite rule. 
       Otherwise, $n = \natS{n'}$. We have $\nilstr{p}{(3+n')} \strent{} (p', \blank) :: s$ and show $s = \nilstr{p'}{(2 + n)}$. By inversion on the rewrite rule used at the head, we get four cases and in each one, $s = (p', \blank) :: s'$ and $\nilstr{p}{(2+n)} \strent{} (p', \blank) :: s'$. As $\natS{n'} \ge 1$, we apply the inductive hypothesis and get $s' = \nilstr{p'}{(\natS{n})}$, closing the proof. 
-    \item For the first statement, it suffices to show $\rev~{(\nilstr{(\pFlipi{\pFlipi{p}})}{\hat{n}})} \strent{\Rtape} \rev~{(\nilstr{(\pFlipi{\pFlipi{p}})}{\hat{n}})}$. By Proposition~\ref{prop:tapefacts}.1, we can pull out one of the $\pFlip$s to turn the $\rev$ into a $\pRev$. Applying Lemma~\ref{lem:symm_tape_rew}.1, we are left with $\withl \pFlipi{\gamma} \withm \gamma \in \nilstr{p}{\hat{n}} \withr \strent{\Rtape} \withl \pFlipi{\gamma} \withm \gamma \in \nilstr{p'}{\hat{n}} \withr$. This follows by another application of Proposition~\ref{prop:tapefacts}.1) and part 1). 
+    \item For the first statement, it suffices to show $\rev~{(\nilstr{(\pFlipi{\pFlipi{p}})}{\hat{n}})} \strent{\Rtape} \rev~{(\nilstr{(\pFlipi{\pFlipi{p}})}{\hat{n}})}$. By Proposition~\ref{prop:tapefacts}.1, we can pull out one of the $\pFlip$s to turn the $\rev$ into a $\pRev$. Applying Lemma~\ref{lem:symm_tape_rew}.1, we are left with $\withl \pFlipi{\gamma} \withm \gamma \in \nilstr{p}{\hat{n}} \withr \strent{\Rtape} \withl \pFlipi{\gamma} \withm \gamma \in \nilstr{p'}{\hat{n}} \withr$. This follows by another application of Proposition~\ref{prop:tapefacts}.1 and part 1. 
 
-      The second part is proved in a similar way: we use that $\pFlip$ is involutive, apply Lemma~\ref{lem:symm_tape_rew}.2), and use part 1).
+      The second part is proved in a similar way: we use that $\pFlip$ is involutive, apply Lemma~\ref{lem:symm_tape_rew}.2, and use part 1.
   \end{enumerate}
 \end{proof}
 
@@ -484,6 +485,7 @@ The important idea of Lemma~\ref{lem:nilstr_blank} is that the rewrite is unique
   In the successor case, we know $\nilstr{p}{(2 + n)} \strent{} (p', \blank) :: s$ and we have to prove $s = \nilstr{p'}{(1 + n)}$. If we now do an inversion on the rewrite rule used at the head, we cannot, for instance, directly rule out that $s = \polneg{\sigma} :: s'$ (by the rewrite rule $[\blank, \blank]~/~[\polneg{\blank}, \polneg{\sigma}]$\footnote{The modification of the rules to width 2 is straightforward.}). In order to rule out cases like this, we would need to do a case analysis on $n$ and then do more inversions on the rewrite rules at the next position. 
 
   Rewrite windows of size 3 do not necessitate these additional inversions: they directly encode structural information such as $\nilstr{p}{(3+n)} \not\strent{} \polneg{\blank} :: \polneg{\sigma} :: s'$. 
+  We think, however, that using rewrite windows of size 2 would have been a valid design choice, too.
 \end{remark}
 
 \newcommand{\mexists}{\overline{\exists}!}
@@ -494,8 +496,8 @@ Thus, Lemma~\ref{lem:nilstr_blank}.1 now reads as follows:
 
 \begin{lemma}[Empty Tape Half: Adding a Symbol]\label{lem:nilstr_add}\leavevmode
   \begin{enumerate}
-    \item $\mexists s, \nilstr{p}{(\natS{\hat{n}})} \strent{} \polpos{\sigma} :: s \land s = \nilstr{(+)}{\hat{n}}$
-    \item $\mexists s, \rev{(\nilstr{p}{(\natS{\hat{n}})})} \strent{} \rev{(\polneg{\sigma} :: s)} \land s = \nilstr{(-)}{\hat{n}}$
+    \item $\mexists s, \nilstr{p}{(\natS{\hat{n}})} \strent{\Rtape} \polpos{\sigma} :: s \land s = \nilstr{(+)}{\hat{n}}$
+    \item $\mexists s, \rev{(\nilstr{p}{(\natS{\hat{n}})})} \strent{\Rtape} \rev{(\polneg{\sigma} :: s)} \land s = \nilstr{(-)}{\hat{n}}$
   \end{enumerate}
 \end{lemma}
 \begin{proof}
@@ -529,16 +531,16 @@ The results are all proved by using induction on the tape half that is represent
   We look at the first statement, the second statement is again derived by Lemma~\ref{lem:symm_tape_rew}. 
   The proof proceeds by induction on $rs$. In the base case, we choose $h' = \nilstr{(+)}{(\natS{n})}$ and apply Lemma~\ref{lem:nilstr_add}. 
 
-  In the successor case, we have $\sigma_1 :: rs \reprtt{p}{n} h$, $\natS{\length{rs}} < n$. By inversion on $\reprtt{p}{n}$, we have $h = (p, \sigma_1) :: h_0$ and $n = \natS{n'}$. We show 
+  In the successor case, we have $\sigma_1 :: rs \reprtt{p}{n} h$, $\natS{\length{rs}} < n$. By inversion on $\reprtt{p}{n}$, we know $h = (p, \sigma_1) :: h_0$ and $n = \natS{n'}$. We show 
   \begin{align*}
     \mexists h', (p, \sigma_1) :: h_0 \strent{} \polpos{\sigma} :: h' \land \sigma::\sigma_1 ::rs \reprtt{p}{\natS{n'}} \polpos{\sigma} :: h'  
   \end{align*}
   In order to determine a rewrite rule to apply at the head, we need to know two more symbols at the head of $h_0$. Thus we do a case analysis on $rs$: either $rs = \nil$, $rs = [\sigma_2]$, or $rs = \sigma_2 :: \sigma_3 :: rs'$. The interesting case is the third one, for which we need the inductive hypothesis. 
 
-  By inversion on $\reprtt{\natS{n'}}{p}$, we get $h_0 = (p, \sigma_2) :: (p, \sigma_3) :: h_1$ and $n' = 2 + n_0$, with $\sigma_1 :: \sigma_2 :: \sigma_3 :: rs' \reprtt{(3 + n_0)}{p} (p, \sigma_1) :: (p, \sigma_2) :: (p, \sigma_3) :: h_1$. 
-  Thus, $\sigma_2 :: \sigma_3 :: rs' \reprtt{(2 + n_0)}{p} (p, \sigma_2) :: (p, \sigma_3) :: h_1$, 
+  By inversion on $\reprtt{\natS{n'}}{p}$, we get $h_0 = (p, \sigma_2) :: (p, \sigma_3) :: h_1$ and $n' = 2 + n_0$, with $\sigma_1 :: \sigma_2 :: \sigma_3 :: rs' \reprtt{3 + n_0}{p} (p, \sigma_1) :: (p, \sigma_2) :: (p, \sigma_3) :: h_1$. 
+  Thus, $\sigma_2 :: \sigma_3 :: rs' \reprtt{2 + n_0}{p} (p, \sigma_2) :: (p, \sigma_3) :: h_1$, 
   to which the inductive hypothesis can be applied for $\sigma := \sigma_1$ to obtain a unique $h'$ 
-  with $\sigma_2 :: \sigma_3 :: h_1 \strent{} \polpos{\sigma_1} :: h'$ and $\sigma_1 :: \sigma_2 :: \sigma_3 :: rs' \reprtt{(2 + n_0)}{+} \polpos{\sigma_1} :: h'$. By inversion on $\reprtt{2+n_0}{+}$, we have $h' = \polpos{\sigma_2} :: \polpos{\sigma_3} :: h_2$. 
+  with $\sigma_2 :: \sigma_3 :: h_1 \strent{} \polpos{\sigma_1} :: h'$ and $\sigma_1 :: \sigma_2 :: \sigma_3 :: rs' \reprtt{2 + n_0}{+} \polpos{\sigma_1} :: h'$. By inversion on $\reprtt{2+n_0}{+}$, we have $h' = \polpos{\sigma_2} :: \polpos{\sigma_3} :: h_2$. 
 
   By using the rewrite window $\irewwin{(p, \sigma_1)}{(p, \sigma_2)}{(p, \sigma_3)}{\polpos{\sigma}}{\polpos{\sigma_1}}{\polpos{\sigma_2}}$, we directly get existence. 
   Uniqueness follows by inversion on the rewrite at the head of the string and by using the uniqueness from the inductive hypothesis.
@@ -583,7 +585,7 @@ We make the following observations regarding the Turing machine's behaviour on a
   \end{tabular}
 \end{center}
 Even if $m' = \ONone$, we can interpret that as the Turing machine just writing the current symbol again, if the head is currently on a symbol. 
-The rewrite windows for all of the cases except for the one where $m = \ONone$ and $m' = \ONone$ look very similar. The last case needs a special treatment: if the symbol currently under the head is a blank, the machine does not write a symbol, and the transition function dictates to move in a direction where the next symbol is a blank again, the tape must not be shifted.
+The rewrite windows for all of the cases except for the one where $m = \ONone$ and $m' = \ONone$ look very similar. This last case needs a special treatment: if the symbol currently under the head is a blank, the machine does not write a symbol, and the transition function dictates to move in a direction where the next symbol is a blank again, the tape must not be shifted.
 This resembles the semantics of the Turing machine; for instance, if the tape is currently $\textsf{leftof}~\sigma~rs$ and $\delta(q, \ONone) = (p, \ONone, \movel)$, the successor tape is $\textsf{leftof}~\sigma~rs$ again.
 
 We start with the cases where $m, m' \neq \ONone$.
@@ -725,7 +727,7 @@ Next, we prove basic facts about the composition of the three sets of windows.
 \end{definition}
 
 The following lemma is based on the fact that a string representing a tape half cannot contain a state symbol.
-\begin{lemma}\leavevmode
+\begin{lemma}\label{lem:sim_inv1}\leavevmode
   \begin{enumerate}
     \item $u \reprtt{n}{p} h \rightarrow (\exists w \in \Rsim, \rewHead{w}{h}{h'}) \rightarrow (\exists w \in \Rtape, \rewHead{w}{h}{h'})$
     \item $u \reprtt{n}{p} h \rightarrow h \strent{\Rsim} h' \rightarrow h \strent{\Rtape} h'$
@@ -741,7 +743,7 @@ The following lemma is based on the fact that a string representing a tape half 
 \end{proof}
 
 
-\begin{lemma}\leavevmode
+\begin{lemma}\label{lem:sim_inv2}\leavevmode
   Let $\gamma_1, \gamma_2, \gamma_3, \gamma_4, \gamma_5, \gamma_6 : \Gamma$ and $\isSpecStateSym{q}{\gamma_1} \lor \isSpecStateSym{q}{\gamma_2} \lor \isSpecStateSym{q}{\gamma_3}$, $w := \irewwin{\gamma_1}{\gamma_2}{\gamma_3}{\gamma_4}{\gamma_5}{\gamma_6}$. 
   Then:
   \begin{enumerate}
@@ -894,7 +896,7 @@ The following two results are the main correctness statements for the Turing mac
   Next, we transform the two halves of the tape. The element $\sigma_1$ needs to be removed from the left tape half, while $\sigma'$ needs to be added to the right tape half. 
   By Lemma~\ref{lem:tape_rem}, there is a unique $h_1''$ such that 
   \begin{align*}
-    \rev{\sigma_1^p :: \sigma_2^p :: h_1} \strent{} \rev{\polneg{\sigma_2} :: h_1''} \text{ and } \sigma_2 :: left' \reprtt{+}{z} \polpos{\sigma_2} :: h_1''. 
+    \rev{(\sigma_1^p :: \sigma_2^p :: h_1)} \strent{} \rev{(\polneg{\sigma_2} :: h_1'')} \text{ and } \sigma_2 :: left' \reprtt{+}{z} \polpos{\sigma_2} :: h_1''. 
   \end{align*}
   Similarly, by Lemma~\ref{lem:tape_add}, there is a unique $h_2''$ such that
   \begin{align*}
@@ -910,7 +912,7 @@ The following two results are the main correctness statements for the Turing mac
     tp' = \textsf{midtape}~(\sigma_2 :: left')~\sigma_1~(\sigma' :: \sigma_3 :: right').
   \end{align*}
 
-  Finally, we prove that the rewrite is unique. Assuming that the current configuration string rewrites to $s'$, we can also split up $s'$ along the state symbol by Proposition~\ref{prop:rewrite_split_conv}. We do an inversion on the rewrite windows used at the center and then use the uniqueness for both tape halves.
+  Finally, we prove that the rewrite is unique. Assuming that the current configuration string rewrites to $s'$, we can also split up $s'$ along the state symbol by Proposition~\ref{prop:rewrite_split_conv}. We do an inversion on the rewrite windows used at the center, applying Lemmas~\ref{lem:sim_inv1} and ~\ref{lem:sim_inv2} in the process, and then use the uniqueness for both tape halves.
 \end{proof}
 
 \begin{lemma}[Halting Simulation]\label{lem:haltsim}~\\
@@ -1012,13 +1014,14 @@ We have now reduced \gennp{} to the following question:
 
 \section{Interlude: Nondeterministic Preludes}\label{sec:preludes}
 In this section, we give a recipe to reduce existential questions as in Problem~\ref{prob:exinput}, where the initial string of a \PR{} instance is unknown, to full \PR{} instances with a fixed initial string. 
-While all rewrite windows seen so far only allowed for deterministic rewriting, the key here is to make the rewrite windows nondeterministic. The results presented here can also be seen as providing a (very limited) form of compositionality for \PR{}.
+While all rewrite windows seen so far only allowed for deterministic rewriting, the key is to make the rewrite windows nondeterministic. The results presented here can also be seen as providing a (very limited) form of compositionality for \PR{}.
 
 The construction works by adding new rewrite windows and a new initial string, which together form a \emph{prelude} to the given \PR{} instance. 
 Of course, we have to make sure that the new windows do not interfere with the ``old'' ones. To a large part, this can be ensured syntactically by expanding the alphabet. Additionally, we require the rewrite windows to produce a string of the old alphabet in exactly $t'$ steps, which we call the number of \emph{prelude steps}. 
 
 We present the results for the special case of 3-\PR{}, albeit they transfer directly to the more general setting.
 
+The following definition generalises the question stated by Problem~\ref{prob:exinput}.
 \newcommand{\expr}{\textbf{Ex3PR}}
 \begin{definition}[Existential 3-\PR{} (\expr{})]
   \mnote{\expr{}}
@@ -1026,7 +1029,6 @@ We present the results for the special case of 3-\PR{}, albeit they transfer dir
   \[\expr{}~(\Gamma, l, R, \Rfinal, t)~p \defeq \exists s, \length{s} = l \land p~l \land \PR{}~(\Gamma, 1, 3, s, R, \Rfinal, t) \]
 \end{definition}
 
-Note that this definition directly generalises the question posed by Problem~\ref{prob:exinput}. 
 Let us fix an \expr{} instance $S = (\Gamma, l, R, \Rfinal, t)$ over input predicate $p$. 
 Moreover, let a \emph{prelude alphabet} $\Delta : \finType$, a list of prelude windows $R' : \listsof{(\textsf{window}~\Delta~(\Gamma + \Delta))}$, a number of prelude steps $t'$, and an initial string $x_0 : \listsof{\Delta}$ be given. Collectively, we refer to $(\Delta, R', t', x_0)$ as a \emph{prelude}. 
 Here, the new notation $\textsf{window}~\Delta~(\Gamma + \Delta)$ means that the premises of the windows are over type $\Delta$, while the conclusions are over type $\Gamma + \Delta$. The latter is necessary because the prelude should eventually generate an input for $S$, while the new windows should not be applicable to strings of the original instance after the prelude has finished.
@@ -1035,9 +1037,10 @@ The alphabet of the new \PR{} instance will be $\mathcal{A} \defeq \Gamma + \Del
 
 \newcommand{\isOrigString}{\textsf{origString}}
 \newcommand{\isPreludeString}{\textsf{preludeString}}
-\mnote{\isOrigString}
 
-Throughout this section, we implicitly lift elements of $\Gamma$ and $\Delta$ to $A$, the same applies to strings and windows over these alphabets. Where it is needed, we use the predicates $\isOrigString, \isPreludeString : \listsof{A} \rightarrow \Prop$ to distinguish strings over $\Gamma$ and $\Delta$. 
+\mnote{\isOrigString}
+Throughout this section, we implicitly lift elements of $\Gamma$ and $\Delta$ to $A$, the same applies to strings and windows over these alphabets. 
+Where it is needed, we use the predicates $\isOrigString, \isPreludeString : \listsof{A} \rightarrow \Prop$ to distinguish strings over $\Gamma$ and $\Delta$. 
 \mnote{\isPreludeString}
 
 \begin{assumption}[Structural Assumptions on the Prelude]
@@ -1069,8 +1072,8 @@ We therefore only state the most important intermediate result. Intuitively, thi
 \begin{proof}
   For the proof, we use the following simple facts:
   \begin{enumerate}[1)]
-    \item If $n \le t'$ and $x_0 \strent{\Rcomb} b$, then $x_0 \strent{R'} b$. 
-    \item If $\length{s} \ge 3$, $\isOrigString~s$, and $s \strent{\Rcomb} b$, then $s \strent{R} b$ and $\isOrigString~b$. 
+    \item If $n \le t'$ and $x_0 \strent{\Rcomb}^n b$, then $x_0 \strent{R'} b$. 
+    \item If $\length{s} \ge 3$, $\isOrigString~s$, and $s \strent{\Rcomb}^n b$, then $s \strent{R}^n b$ and $\isOrigString~b$. 
   \end{enumerate}
   We apply additivity of $\strent{}^{t+t'}$ (Proposition~\ref{prop:relpower}) to the assumption and choose the the resulting $x_0'$. 
   It is known that $x_0 {\strent{\Rcomb}}^{t'} x_0'$ and $x_0' {\strent{\Rcomb}}^t s$. 
@@ -1102,7 +1105,7 @@ The alphabet \mnotec{$\Delta$} of the prelude has $4 + \length{\Sigma}$ elements
 \[\Delta \defeq \nblank \bnfmid \nstar \bnfmid \ninit \bnfmid \ndelim \bnfmid \nsig{\sigma} \qquad \sigma : \Sigma\]
 As in the previous section, we implicitly lift $\Delta$ and $\Gamma$ to the combined alphabet $\mathcal{A}\defeq \Gamma + \Delta$. This requires some additional work for the formal proofs which we omit on paper.\mnote{$\mathcal{A}$}
 
-Following Section~\ref{sec:informal_nondet}, the initial string has the following form:
+Following Section~\ref{sec:informal_nondet}, the initial string has the following form, where $\underline{in} = \withl \underline{\sigma} \withm \sigma \in in \withr$:
 \begin{center}
   \begin{tikzpicture}[scale=1.2]
     \draw (0, 0.5) -- (10.5, 0.5);
@@ -1148,24 +1151,24 @@ Following Section~\ref{sec:informal_nondet}, the initial string has the followin
 
 Let $\initStr : \listsof{\Delta}$ be this initial string.\mnote{$\initStr$}
 
-For the rewrite windows, we have to ensure that all elements of $\Sigma$ are placed contiguously and that also inputs of length $< k$ are allowed. Exploiting the fact that the rewrite windows overlap, this is easy to achieve.
+For the rewrite windows, we have to ensure that all elements of $\Sigma$ are placed contiguously and that inputs of length $< k$ are allowed, too. Exploiting the fact that the rewrite windows overlap, this is easy to achieve.
 \begin{center}
   \trewwin{\nblank}{\nblank}{\nblank}{\polneut\blank}{\polneut\blank}{\polneut\blank}
   \quad \trewwin{\ndelim}{\nblank}{\nblank}{\#}{\polneut\blank}{\polneut\blank}
-  \quad \trewwin{\nblank}{\nblank}{\ndelim}{\polneut\blank}{\polneut\blank}{\#} \\
-  \trewwin{\nblank}{\nblank}{\ninit}{\polneut\blank}{\polneut\blank}{q_0^\blank} 
-  \quad \trewwin{\nblank}{\ninit}{\nstar}{\polneut\blank}{q_0^\blank}{\polneut{m_1}} 
-  \quad \trewwin{\nblank}{\ninit}{\nblank}{\polneut\blank}{q_0^\blank}{\polneut\blank} \\
-  \trewwin{\ninit}{\nblank}{\nblank}{q_0^\blank}{\polneut\blank}{\polneut\blank} 
-  \quad \trewwin{\ninit}{\nstar}{\nblank}{q_0^\blank}{\polneut{m_1}}{\polneut\blank} 
-  \quad \trewwin{\ninit}{\nstar}{\nstar}{q_0^\blank}{\polneut{\sigma_1}}{\polneut{m_1}} 
-  \quad \trewwin{\ninit}{\nstar}{\nstar}{q_0^\blank}{\polneut\blank}{\polneut\blank} \\
-  \trewwin{\nstar}{\nstar}{\nstar}{\polneut{\sigma_1}}{\polneut{\sigma_2}}{\polneut{m_1}} 
-  \quad \trewwin{\nstar}{\nstar}{\nstar}{\polneut{\sigma_1}}{\polneut\blank}{\polneut\blank} 
-  \quad \trewwin{\nstar}{\nstar}{\nstar}{\polneut\blank}{\polneut\blank}{\polneut\blank}\\
-  \trewwin{\nstar}{\nstar}{\nblank}{\polneut{\sigma_1}}{\polneut{m_1}}{\polneut{\blank}}
-  \quad \trewwin{\nstar}{\nstar}{\nblank}{\polneut{\blank}}{\polneut{\blank}}{\polneut{\blank}}
-  \quad \trewwin{\nstar}{\nblank}{\nblank}{\polneut{m_1}}{\polneut{\blank}}{\polneut{\blank}}
+  \quad \trewwin{\nblank}{\nblank}{\ndelim}{\polneut\blank}{\polneut\blank}{\#}\\
+  \trewwin{\nblank}{\nblank}{\ninit}{\polneut\blank}{\polneut\blank}{q_0^\blank}
+  \quad \trewwin{\nblank}{\ninit}{\nstar}{\polneut\blank}{q_0^\blank}{\polneut{m_1}}
+  \quad \trewwin{\nblank}{\ninit}{\nblank}{\polneut\blank}{q_0^\blank}{\polneut\blank}\\
+  \trewwin{\ninit}{\nblank}{\nblank}{q_0^\blank}{\polneut\blank}{\polneut\blank}
+  \quad \trewwin{\ninit}{\nstar}{\nblank}{q_0^\blank}{\polneut{m_1}}{\polneut\blank}
+  \quad \trewwin{\ninit}{\nstar}{\nstar}{q_0^\blank}{\polneut{\sigma_1}}{\polneut{m_1}}
+  \quad \trewwin{\ninit}{\nstar}{\nstar}{q_0^\blank}{\polneut\blank}{\polneut\blank}\\
+  \trewwin{\nstar}{\nstar}{\nstar}{\polneut{\sigma_1}}{\polneut{\sigma_2}}{\polneut{m_1}}
+  \quad\trewwin{\nstar}{\nstar}{\nstar}{\polneut{\sigma_1}}{\polneut\blank}{\polneut\blank}
+  \quad\trewwin{\nstar}{\nstar}{\nstar}{\polneut\blank}{\polneut\blank}{\polneut\blank}\\
+  \hspace{0.10mm}\trewwin{\nstar}{\nstar}{\nblank}{\polneut{\sigma_1}}{\polneut{m_1}}{\polneut{\blank}}
+  \quad\trewwin{\nstar}{\nstar}{\nblank}{\polneut{\blank}}{\polneut{\blank}}{\polneut{\blank}}
+  \quad\trewwin{\nstar}{\nblank}{\nblank}{\polneut{m_1}}{\polneut{\blank}}{\polneut{\blank}}
 \end{center}
 The windows enforce that, if we decide to replace a $\nstar$ with a blank instead of an element of $\Sigma$, all $\nstar$'s to the right of it are also replaced by a blank.
 Let \mnotec{$\Rprelude$} denote the set of prelude rewrite windows.
@@ -1173,14 +1176,14 @@ Let \mnotec{$\Rprelude$} denote the set of prelude rewrite windows.
 We prove that these rewrite windows exactly produce valid initial strings in a single rewrite step.
 In contrast to the Turing machine simulation and the tape rules presented in Section~\ref{sec:taperules}, the prelude does not treat both tape halves symmetrically. 
 Therefore, the elegant approach of proving results for the right tape half and afterwards transferring them to the left tape half is not possible. However, for the left tape half we only need to prove that it rewrites exactly to the string representing a blank tape. Everything which is interesting is happening on the right half. 
-This is advantageous as we can do simple inductive proofs for the right tape half (in contrast to the left tape half where the reversion is causing trouble).
+This is advantageous as we can do simple inductive proofs for the right tape half (in contrast to the left tape half where the reversion is causing trouble). Recall that the right tape half consists of three regions: the fixed input string, the wildcards for the certificate, and a number of blanks. The plan of attack is thus to stack these components on top of each other.
 
 
 \begin{lemma}\label{lem:prelude_blank}\leavevmode
-  We can produce exactly a blank string from a string not containing any wildcards \nstar.
+  We can produce exactly a blank string from a blank prelude string.
   \begin{enumerate}
-    \item $\mexists s, \nblank^{\hat{n}} \concat [\ndelim] \strent{\Rprelude} s \land s = \nilstr{\circ}{\hat{n}}$
-    \item $\mexists s, \rev (\nblank^{\hat{n}} \concat [\ndelim]) \strent{\Rprelude} s \land s = \rev(\nilstr{\circ}{\hat{n}})$
+    \item $\mexists s, \nblank^{\hat{n}} \concat [\ndelim] \strent{\Rprelude} s \land s = \nilstr{(\circ)}{\hat{n}}$
+    \item $\mexists s, \rev (\nblank^{\hat{n}} \concat [\ndelim]) \strent{\Rprelude} s \land s = \rev(\nilstr{(\circ)}{\hat{n}})$
   \end{enumerate}
 \end{lemma}
 \begin{proof}
@@ -1191,8 +1194,8 @@ This is advantageous as we can do simple inductive proofs for the right tape hal
 Next, we show that a string starting with a number of wildcards $\nstar$ can be rewritten to either a blank string or a blank string prefixed by a string over $\Sigma$.
 \begin{lemma}\leavevmode
   \begin{enumerate}
-    \item $\nstar^{n} \concat \nblank^{\hat{t}} \concat [\ndelim] \strent{\Rprelude} \nilstr{\circ}{(n + \hat{t})}$
-    \item $\nstar^{\length{s}} \concat \nstar^n \concat \nblank^{\hat{t}} \concat [\ndelim] \strent{\Rprelude} \withl \overline{x} \withm x \in s\withr \concat \nilstr{\circ}{(n+\hat{t})}$
+    \item $\nstar^{n} \concat \nblank^{\hat{j}} \concat [\ndelim] \strent{\Rprelude} \nilstr{(\circ)}{(n + \hat{j})}$
+    \item $\nstar^{\length{s}} \concat \nstar^n \concat \nblank^{\hat{j}} \concat [\ndelim] \strent{\Rprelude} \withl \overline{x} \withm x \in s\withr \concat \nilstr{(\circ)}{(n+\hat{j})}$
   \end{enumerate}
 \end{lemma}
 \begin{proof}
@@ -1204,7 +1207,7 @@ Next, we show that a string starting with a number of wildcards $\nstar$ can be 
 
 Of course, we cannot prove uniqueness in this setting. Instead, we prove the following statement.
 \begin{lemma}
-  \[ \nstar^j \concat \nblank^{\hat{n}} \concat [\ndelim] \strent{\Rprelude} s \rightarrow \exists s', \length{s'} \le j \land s = \withl \overline{x} \withm x \in s \withr \concat \nilstr{\circ}{(j + \hat{n})} \]
+  \[ \nstar^j \concat \nblank^{\hat{n}} \concat [\ndelim] \strent{\Rprelude} s \rightarrow \exists s', \length{s'} \le j \land s = \withl \overline{x} \withm x \in s \withr \concat \nilstr{(\circ)}{(j + \hat{n})} \]
 \end{lemma}
 \begin{proof}
   Induction on $j$.
@@ -1213,8 +1216,8 @@ Of course, we cannot prove uniqueness in this setting. Instead, we prove the fol
 Lastly, we show that we can prefix the fixed input string to that.
 \begin{lemma}\leavevmode
   \begin{enumerate}
-    \item $\withl \underline{\sigma} \withm \sigma \in f \withr \concat{} \nstar^{\length{s} + n} \concat{} \nblank^{\hat{t}} \concat{} [\ndelim] \strent{\Rprelude} \withl \overline{x} \withm x \in f \concat{} s\withr \concat{} \nilstr{\circ}{(n+\hat{t})}$
-    \item $\withl \underline{\sigma} \withm \sigma \in f \withr \concat{} \nstar^j \concat \nblank^{\hat{n}} \concat{} [\ndelim] \strent{} s \rightarrow \exists s', \length{s'} \le j \land s = \withl \overline{x} \withm x \in f \concat{} s \withr \concat{} \nilstr{\circ}{(j + \hat{n})} $
+    \item $\withl \underline{\sigma} \withm \sigma \in f \withr \concat{} \nstar^{\length{s} + n} \concat{} \nblank^{\hat{j}} \concat{} [\ndelim] \strent{\Rprelude} \withl \overline{x} \withm x \in f \concat{} s\withr \concat{} \nilstr{(\circ)}{(n+\hat{j})}$
+    \item $\withl \underline{\sigma} \withm \sigma \in f \withr \concat{} \nstar^j \concat \nblank^{\hat{n}} \concat{} [\ndelim] \strent{} s \rightarrow \exists s', \length{s'} \le j \land s = \withl \overline{x} \withm x \in f \concat{} s \withr \concat{} \nilstr{(\circ)}{(j + \hat{n})} $
   \end{enumerate}
 \end{lemma}
 
@@ -1245,7 +1248,7 @@ Applying Theorem~\ref{thm:expr_to_pr}, we have now arrived at the full reduction
   It remains to show assumptions $(A_0) - (A_5)$. 
   The structural requirements $(A_0)$ and $(A_5)$ on the initial prelude string hold by construction. 
   Completeness $(A_3)$ is Lemma~\ref{lem:prelude_complete}, while Soundness $(A_4)$ is Lemma~\ref{lem:prelude_sound}. 
-  $(A_2)$ trivially holds as $k < 1$ implies $k = 0$. Finally, $(A_1)$, i.e.\ $\initStr \strent{\Rprelude} x_0' \rightarrow \isOrigString{x_0'}$, follows by an easy induction on $\strent{\Rprelude}$ due to the construction of the rewrite windows. 
+  $(A_2)$ holds trivially as $k < 1$ implies $k = 0$. Finally, $(A_1)$, i.e.\ $\initStr \strent{\Rprelude} x_0' \rightarrow \isOrigString~x_0'$, follows by an easy induction on $\strent{\Rprelude}$ due to the construction of the rewrite windows. 
 \end{proof}
 
 \section{Mechanisation}
@@ -1256,7 +1259,7 @@ First of all, we impose the syntactic constraints (like $\omega > 0$) on \PR{} i
 It is not possible to use a Sigma type, for instance, as this would make the extraction to L impossible. 
 Similarly, we do not model windows as elements of type $\Sigma^\omega \times \Sigma^\omega$ using vectors, but instead use lists: $\listsof{\Sigma} \times \listsof{\Sigma}$. The constraint that the lists have length $\omega$ is separate.
 
-In order to ease the mechanisation of the reduction, the variant 3-\PR{} is defined explicitly as a new problem using a separate inductive predicate for validity (cf. Section~\ref{sec:3pr}). 
+In order to ease the mechanisation of the reduction, the variant 3-\PR{} is defined explicitly as a new problem using a separate inductive predicate for validity (cf. Section~\ref{sec:3pr}) and an inductive datatype for storing the three symbols of the premise or conclusion of a window instead of lists.
 We then do another reduction from 3-\PR{} to \PR{}, which is just a trivial embedding.
 
 Our definition of validity for 3-\PR{} is parameterised over an abstract $\textsf{rewritesHead} : \listsof{\Sigma} \rightarrow \listsof{\Sigma} \rightarrow \Prop$ predicate which determines whether the prefix of the first list rewrites to the prefix of the second list. The $\textsf{rewHead}$ predicate of Definition~\ref{def:rewHead} is an instance of that.
@@ -1266,12 +1269,12 @@ with arguments corresponding to the six elements determining a rewrite window.
 Using inductive predicates instead of lists has the huge advantage of easier automation in Coq: inversions are straightforward and proving that a rewrite is possible can be done by \texttt{eauto} with suitable hints.
 
 \subsection{Organisation of Rewrite Rules}
-Another debatable decision is the organisation of rewrite rules. Regarding $\Rtape$, we have opted for two inductive predicates $\textsf{shiftRightRules}$ and $\textsf{identityRules}$, which are then combined into $\textsf{tapeRules}$. The definition of $\textsf{identityRules}$ is abbreviated as presented in Section~\ref{sec:taperules} and thus includes spurious rules, while we explicitly make the distinction between $\sigma : \Sigma$ and blanks for \textsf{shiftRightRules}: the spurious rules for shifting make inversions much harder. 
+Another debatable decision is the organisation of rewrite rules. Regarding $\Rtape$, we have opted for two inductive predicates $\textsf{shiftRightRules}$ and $\textsf{identityRules}$, which are then combined into $\textsf{tapeRules}$. The definition of $\textsf{identityRules}$ is abbreviated as presented in Section~\ref{sec:taperules} and thus includes spurious windows, while we explicitly make the distinction between $\sigma : \Sigma$ and blanks for \textsf{shiftRightRules}: the spurious windows for shifting make inversions much harder. 
 The rules for shifting the tape to the left are \emph{defined} to be the polarity reversion of the right-shifting rules, which makes Lemma~\ref{lem:symm_rtape} almost trivial.
 
-For the transitions, the rules are much more complicated. We have a hierarchy of inductive predicates that organises the rules (Figure~\ref{fig:orga_rules}). First, we differentiate according to the syntactic form of the read and written symbols. For instance, the inductive predicate for (Some, None) corresponds to transitions of the form $\delta (q, \OSome{\sigma}) = (q', \ONone, a)$. 
+For the transitions, the rules are much more complicated. We have a hierarchy of inductive predicates that organises them (Figure~\ref{fig:orga_rules}). First, we differentiate according to the syntactic form of the read and written symbols. For instance, the inductive predicate for (Some, None) corresponds to transitions of the form $\delta (q, \OSome{\sigma}) = (q', \ONone, a)$. 
 Next is a case analysis on the location of the state symbol, and finally, we distinguish between the three types of movement.
-It might seem peculiar that we analyse the state symbol location before the movement. The reason is that this makes the inversions in the proofs of Lemmas~\ref{lem:stepsim} and~\ref{lem:haltsim} more efficient. Based on the location of the state symbol, one arrives at a contradiction earlier. Moving to this organisation provided a significant reduction in RAM usage when running the proof. 
+It might seem peculiar that we analyse the state symbol location before the movement as the transition function determines the movement but not the location. The reason is that this makes the inversions in the proofs of Lemmas~\ref{lem:stepsim} and~\ref{lem:haltsim} more efficient. Based on the location of the state symbol, one arrives at a contradiction earlier. Moving to this organisation provided a significant reduction in RAM usage when running the proof. 
 \begin{figure}
   \begin{center}
     \begin{tikzpicture}[level 1/.style={sibling distance=2.7cm}, level 2/.style={sibling distance =1.3cm}]
@@ -1295,7 +1298,7 @@ It might seem peculiar that we analyse the state symbol location before the move
 
 The bottom level of the hierarchy can be shared among all four cases except for (None, None), where we need the special handling for the edge of the used tape region. Moreover, for all cases but the (None, None) case, we implement the simplified rules. The spurious windows do not result in any complication in the proofs.
 
-As noted in the proof outline of Lemma~\ref{lem:stepsim}, the number of cases for this lemma is huge: in the end, there are 100 non-contradictory cases left after analysing the possible transitions the Turing machine can take and accounting for the possible symbols at the heads of the two tape halves. The proof thus heavily relies on automation. There is \texttt{LTac} code that analyses the transition the Turing machine can take, destructs the two tape halves far enough, and then puts together the needed lemmas. Moreover, custom tactics to invert the tape representation relation $\reprt{}$ are quite important.
+As noted in the proof outline of Lemma~\ref{lem:stepsim}, the number of cases for this lemma is huge: in the end, there are 100 non-contradictory cases left after analysing the possible transitions the Turing machine can take and accounting for the possible symbols at the heads of the two tape halves. The proof thus heavily relies on automation. There is \texttt{LTac} code that analyses the transition the Turing machine can take, destructs the two tape halves far enough, and then puts together the needed lemmas. Custom tactics to invert the tape representation relation $\reprt{}$ are quite important.
 Running the proof takes about 35 minutes\footnote{Measured on an Intel Ivy Bridge Core i7-3740QM @ 3.5GHz with 24GB RAM.} and 4 gigabytes of RAM, despite handwritten inversion lemmas for the second and third level of Figure~\ref{fig:orga_rules}. 
 
 \subsection{List-based Rules}
@@ -1304,14 +1307,21 @@ Of course, one still needs to derive a list-based version of the rewrite rules (
 \begin{definition}[Representation of Finite Types]
   Let $T : \finType$, $t : T$, and $k, n : \nat$. 
   \begin{gather*}
-    n \approx T \defeq n = \length{T} \\
-    k \approx_{T, n} t \defeq k = \textsf{index}~t \land n \approx T
+    n \approx T \defeq n = \length{T} \mnote{$n \approx T$}\\
+    k \approx_{T, n} t \defeq k = \textsf{index}~t \land n \approx T \mnote{$k \approx_{T, n} t$}
   \end{gather*}
 \end{definition}
 
 Using this definition, it is easy to encode type constructors like $\opt{\cdot}$, $\cdot \times \cdot$, and $\cdot + \cdot$, as well as value constructors like $\OSome{\cdot}$, $( \cdot, \cdot)$, and $\textsf{inl}~\cdot$. 
 
-The proof of agreement of the inductive rules with the flat list-based rules proceeds in two steps: first, we define list-based rules still using finite types and show their agreement with the inductive rules. As the hierarchy of Figure~\ref{fig:orga_rules} does not admit an easy computation of the windows (it is not at all natural to do a case analysis on the position of the state symbol when \emph{computing} the windows), we first define the inductive predicates using an alternative hierarchy that closely matches the way the windows can be computed (but is notably slower to invert). The advantage of this approach is that the agreement between the two hierarchies can be proved fully automatically at the level of inductive predicates.
+\begin{example}[Encoding of option types]
+  We define $\textsf{flatOpt}~t \defeq \natS{t}$, $\textsf{flatSome}~k \defeq \natS{k}$ and $\textsf{flatNone} \defeq 0$. 
+  Assuming that $n \approx T$ and $k \approx_{T, n} t$, we have:
+  \begin{align*}
+  \textsf{flatOpt}~n \approx \opt{T} \quad \textsf{flatNone} \approx_{\opt{T}, \textsf{flatOpt}~n} \ONone \quad \textsf{flatSome}~k \approx_{\opt{T}, \textsf{flatOpt}~n}~\OSome{t} \end{align*}
+\end{example}
+
+The proof of agreement of the inductive rules with the flat list-based rules proceeds in two steps: first, we define list-based rules still using finite types and show their agreement with the inductive rules. As the hierarchy of Figure~\ref{fig:orga_rules} does not admit an easy computation of the windows (it is not at all natural to do a case analysis on the position of the state symbol when \emph{computing} the windows), we additionally define the inductive predicates using an alternative hierarchy that closely matches the way the windows can be computed (but is notably slower to invert). The advantage of this approach is that the agreement between the two hierarchies can be proved fully automatically at the level of inductive predicates.
 In the second step, the flat list-based rules are defined and it is shown that they agree with the finite-type list-based rules, modulo the representation defined by $\approx$. 
 
 We desire that the finite-type and flat rules are defined in one go, with a minimal effort required to show their agreement.
@@ -1330,5 +1340,7 @@ The proof of agreement with the inductive rules can mostly be automated and only
 
 Finally, we have a separate variant of 3-\PR{} that uses the flat encoding of finite types. The agreement of this flat variant with 3-\PR{} using finite types proceeds in a similar way as in Chapter~\ref{chap:ksat_clique}.\todo{more on that?}
 The reduction produces an instance of this flat variant, where the flat reification of the rewrite windows is used. 
+
+\todo{maybe diagram of the logical reduction}
 
 %\todo{comment on design choice of blanks having polarities: makes inversions and generation of list-based rules a whole lot easier}
