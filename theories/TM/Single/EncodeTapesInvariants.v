@@ -1,4 +1,4 @@
-From Undecidability.TM Require Import TM ProgrammingTools Single.EncodeTapes Single.StepTM.
+From Undecidability.TM Require Import TM ProgrammingTools Single.EncodeTapes.
 
 Import Lia.
 

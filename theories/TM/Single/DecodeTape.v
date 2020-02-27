@@ -1,6 +1,6 @@
 From Undecidability.TM Require Import TM ProgrammingTools Code.Decode.
 
-From Undecidability.TM Require Single.EncodeTapes Single.StepTM Single.EncodeTapesInvariants .
+From Undecidability.TM Require Single.EncodeTapes Single.EncodeTapesInvariants .
 Require Import FunInd Lia Ring Arith Program.Wf.
 Import EncodeTapes EncodeTapesInvariants.
 
@@ -49,7 +49,7 @@ Module CheckEncodesTape.
     
     Notation sig__M := (sigTape sig).
 
-    Definition Rel : pRel tau bool 1 := ContainsEncoding.Rel (Encode_tape sig) Retr_f.
+    Let Rel : pRel tau bool 1 := ContainsEncoding.Rel (Encode_tape sig) Retr_f.
 
     Definition M__step : bool*bool -> pTM tau ((bool*bool) + bool) 1 :=
       fun '(haveSeenMark,haveSeenSymbol) =>
@@ -341,10 +341,11 @@ Module CheckEncodesTape.
       f t = (b,t')
       -> Rel [|t|] (b,[|t'|]).
     Proof.
-      unfold f;cbn. destruct Option.bind eqn:Hcur.
+      unfold f,Rel;cbn. destruct Option.bind eqn:Hcur.
       2:{ intros [= <- <-];cbn;intros ? ? ?. destruct x;cbn;eexists _,_;(split;[reflexivity| ]). all:intros ->;cbn in Hcur. all:now rewrite retract_g_adjoint in Hcur. }
       destruct t as [ | | | t__L s' t__R];cbn in *. 1-3:now inversion Hcur.
-      apply retract_g_inv in Hcur as ->. 
+      apply retract_g_inv in Hcur as ->.
+      unfold ContainsEncoding.Rel. cbn. 
       destruct isLeftBlank eqn:H__LB.
       2:destruct isNilBlank eqn:H__NB.
       2:{ intros [= <- <- ]. destruct s;inv H__NB. eexists (@niltape _),t__L,t__R;cbn.
@@ -367,7 +368,7 @@ Module CheckEncodesTape.
         *rewrite (app_comm_cons' _ _ (Retr_f (LeftBlank marked))). rewrite <- tl_app. 2: length_not_eq.
          rewrite <- app_assoc. cbn. rewrite <- Hx. cbn. now rewrite map_rev.
         *apply (f_equal (hd (Retr_f c'))) in Hx. destruct rev;cbn in *. all: easy.
-      -intros ? x ?.
+      -hnf. intros ? x ?.
        destruct encode_tape eqn:eqx. now destruct x.
        do 3 eexists. cbn. easy. intros [= <- <-%retract_f_injective H''].
        destruct l. 1:{ destruct x;cbn in eqx;try now inv eqx. all:length_not_eq in eqx. }

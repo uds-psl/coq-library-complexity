@@ -17,6 +17,7 @@ Module CheckEncodeTapes.
 
     Let I__X : Retract (sigTape sig) tau := ComposeRetract I _. 
     Existing Instance I__X.
+    Local Arguments ComposeRetract : simpl never.
     
     Local Remove Hints Retract_id : typeclass_instances.
     
@@ -31,12 +32,41 @@ Module CheckEncodeTapes.
                               else t1[@Fin0]=t' /\ b = false)
                 \/ (Option.bind Retr_g (current t) <> Some sigList_cons /\ b = false)
         end.
+    
+    Fixpoint M n : pTM tau bool 1 :=
+      match n with
+        0 => Relabel ReadChar (fun c => match Option.bind Retr_g c with Some sigList_nil => true | _ => false end)
+      | S n => If (Relabel ReadChar (fun c => match Option.bind Retr_g c with Some sigList_cons => true | _ => false end))
+                 (Move R;; If (CheckEncodesTape.M (I:=I__X)) (Move R;;M n) (Return Nop false))
+                 (Return Nop false)
+      end.
+
+    Lemma Realises n: M n ⊨ (fun t '(b,t') => R_syntactic n t[@Fin0] b t'[@Fin0]).
+    Proof.
+      induction n.
+      -cbn. eapply Realise_monotone. now TM_Correct.
+       hnf. cbn. intros t (b,t') (f&Hf&->&<-). split. 2:easy. split.
+       decide (Option.bind Retr_g (current t'[@Fin0]) = Some sigList_nil) as [H|H].
+       {rewrite H in Hf. subst b. now constructor. }
+       destruct (Option.bind Retr_g (current t'[@Fin0])) as [ [] | ]. all:subst b;constructor. all:easy.
+      -cbn. eapply Realise_monotone.
+       { TM_Correct. now apply CheckEncodesTape.Realises. eassumption. }
+       hnf;cbn. intros t (b,t') [H|H].
+       2:{ right.  destruct H as (?&(?&Hb&->&->)&->&_&<-). split. 2:easy. intros H. rewrite H in Hb. easy. }
+       left. destruct H as (?&(?&Hb&->&->)&_&tmp&->&H). clear tmp.
+       decide (Option.bind Retr_g (current t[@Fin0]) = Some sigList_cons) as [Ht|Ht].
+       2:now destruct Option.bind as [[]| ]. split. easy.
+       destruct H as [(t1&Ht1&?&?&->&Rsynt)|(?&Ht'&->&_&<-)].
+       2:{ eexists _,false. split. 2:easy. cbn. now apply CheckEncodesTape.f_spec in Ht'. }
+       eexists _,true. split. 1:{ apply CheckEncodesTape.f_spec in Ht1. exact Ht1. }
+       easy.
+    Qed.
 
     Lemma R_syntactic__spec n t b t':
       R_syntactic n t b t'
       -> Rel n [|t|] (b,[|t'|]).
     Proof.
-      unfold Rel. unfold encode,Encode_tapes,encode_tapes. 
+      unfold Rel,ContainsEncoding.Rel. unfold encode,Encode_tapes,encode_tapes. cbn.
       induction n in t |-*;cbn [R_syntactic].
       {unfold Rel, ContainsEncoding.Rel. intros [[Hb] <-]. destruct Hb.
        -destruct t;inv e. apply retract_g_inv in H0 as ->.
@@ -74,24 +104,6 @@ Module CheckEncodeTapes.
        edestruct IHn as (?&?&?&Hneq). apply Hneq. cbn. rewrite H. cbn.
        f_equal.
     Qed.
-
-    (*
-    Definition M__step : pTM tau (option bool) 1 :=
-      Switch ReadChar
-          (fun x =>
-             match Option.bind Retr_g x with
-               None => Return Nop (inr false)
-             | Some c =>
-               if (isMarked c && haveSeenMark) || isNilBlank c || isLeftBlank c || isRightBlank c
-               then Return Nop (inr (isRightBlank c && (xorb haveSeenMark (isMarked c)) && haveSeenSymbol))
-               else Return (Move R) (inl (haveSeenMark || isMarked c,haveSeenSymbol || isSymbol c))
-             end).
-
-    
-
-    Definition M' (bs : bool*bool) := 
-      StateWhile M__step bs.
-     *)
     
   End checkEncodeTapes.
 End CheckEncodeTapes.

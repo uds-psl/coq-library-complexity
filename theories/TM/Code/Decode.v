@@ -26,3 +26,4 @@ Module ContainsEncoding.
         end.
   End containsEncoding.
 End ContainsEncoding.
+Arguments ContainsEncoding.Rel : simpl never.
