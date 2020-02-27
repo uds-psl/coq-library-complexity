@@ -154,6 +154,13 @@ Proof.
       * fold (evalClause a cl). erewrite (proj2 IHcl); [easy | eauto].
 Qed. 
 
+Corollary evalClause_app a cl1 cl2 : 
+  evalClause a (cl1 ++ cl2) = true <-> (evalClause a cl1 = true \/ evalClause a cl2 = true). 
+Proof. 
+  rewrite !evalClause_literal_iff. setoid_rewrite in_app_iff. firstorder.
+Qed.
+
+
 Lemma evalCnf_clause_iff a (cn : cnf) : 
   evalCnf a cn = true <-> (forall cl, cl el cn -> evalClause a cl = true). 
 Proof. 
@@ -165,6 +172,13 @@ Proof.
     + intros H. unfold evalCnf_step. rewrite (H a0 (or_introl eq_refl)), andb_true_r. 
       apply IHcn; eauto.
 Qed. 
+
+Corollary evalCnf_app_iff a cn1 cn2 : 
+  evalCnf a (cn1 ++ cn2) = true <-> (evalCnf a cn1 = true /\ evalCnf a cn2 = true). 
+Proof. 
+  rewrite !evalCnf_clause_iff. setoid_rewrite in_app_iff. firstorder.
+Qed.
+
 
 Definition satisfies a c := evalCnf a c = true.
 Definition SAT (c : cnf) : Prop := exists (a : assgn), satisfies a c. 

@@ -41,7 +41,7 @@ Proof. cbn. now rewrite andb_true_iff. Qed.
 Lemma evalFormula_or_iff a f1 f2 : evalFormula a (f1 ∨ f2) = true <-> evalFormula a f1 = true \/ evalFormula a f2 = true. 
 Proof. cbn. now rewrite orb_true_iff. Qed. 
 
-Lemma evalFormula_negb_iff a f : evalFormula a (¬ f) = true <-> not (evalFormula a f = true).
+Lemma evalFormula_not_iff a f : evalFormula a (¬ f) = true <-> not (evalFormula a f = true).
 Proof. cbn. rewrite negb_true_iff. split; eauto. Qed. 
 
 Lemma evalFormula_prim_iff a v : evalFormula a v = true <-> v el a. 
