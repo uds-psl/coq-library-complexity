@@ -211,6 +211,8 @@ TM/Single/EncodeTapes.v
 TM/Single/StepTM.v
 TM/Single/EncodeTapesInvariants.v
 TM/Single/DecodeTape.v
+TM/Single/DecodeTapes.v
+
 
 # Univ
 TM/Univ/LookupAssociativeListTM.v
