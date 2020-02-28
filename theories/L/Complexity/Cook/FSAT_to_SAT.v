@@ -4,10 +4,46 @@ From Undecidability.L.Complexity.Cook Require Import Prelim FSAT SAT.
 From Undecidability.L.Datatypes Require Import LLists. 
 Require Import Lia. 
 
+(** * eliminate ORs *)
+
+Inductive orFree : formula -> Prop := 
+  | orFreeTrue : orFree Ftrue
+  | orFreeVar (v: var) : orFree v
+  | orFreeAnd f1 f2 : orFree f1 -> orFree f2 -> orFree (f1 ∧ f2)
+  | orFreeNot f : orFree f -> orFree (¬ f). 
+
+Hint Constructors orFree.
+
+Fixpoint eliminateOR f := match f with
+  | Ftrue => Ftrue
+  | Fvar v => Fvar v
+  | Fand f1 f2 => Fand (eliminateOR f1) (eliminateOR f2)
+  | Fneg f => Fneg (eliminateOR f)
+  | For f1 f2 => ¬((¬ (eliminateOR f1)) ∧ (¬ (eliminateOR f2)))
+  end. 
+
+Lemma orFree_eliminate f : orFree (eliminateOR f). 
+Proof. 
+  induction f; cbn; eauto.
+Qed. 
+
+Lemma eliminateOR_eval a f : evalFormula a f = evalFormula a (eliminateOR f). 
+Proof. 
+  induction f; cbn; try easy.
+  rewrite <- IHf1, <- IHf2. clear IHf1 IHf2. 
+  destruct evalFormula, evalFormula; now cbn.
+Qed. 
+
+Lemma eliminateOR_FSAT_equiv f : FSAT f <-> FSAT (eliminateOR f). 
+Proof. 
+  unfold FSAT. unfold FSAT.satisfies. now setoid_rewrite <- eliminateOR_eval. 
+Qed. 
+
+(** * Tseytin transformation*) 
+
 Definition varInLiteral v (l : literal) := exists b, l = (b, v).
 Definition varInClause v c := exists l, l el c /\ varInLiteral v l. 
 Definition varInCnf v cn := exists cl, cl el cn /\ varInClause v cl. 
-
 
 Definition clause_varsIn (p : nat -> Prop) c := forall v, varInClause v c -> p v. 
 Definition cnf_varsIn (p : nat -> Prop) c := forall v, varInCnf v c -> p v. 
@@ -425,108 +461,6 @@ Proof.
     + apply (IH62 _ H3), H6.
 Qed. 
 
-Lemma or_compat f1 f2 b: 
-  varBound_formula b f1 -> varBound_formula b f2 
-  -> (forall nf nf' v N, nf >= b -> tseytin' nf f1 = (v, N, nf') -> cnf_varsIn (fun n => n < b \/ (n >= nf /\ n < nf')) N /\ v >= nf /\ v < nf' /\ tseytin_formula_repr f1 N v b nf nf')
-  -> (forall nf nf' v N, nf >= b -> tseytin' nf f2 = (v, N, nf') -> cnf_varsIn (fun n => n < b \/ (n >= nf /\ n < nf')) N /\ v >= nf /\ v < nf' /\ tseytin_formula_repr f2 N v b nf nf')
-  -> forall nf nf' v N, nf >= b -> tseytin' nf (f1 ∨ f2) = (v, N, nf') -> cnf_varsIn (fun n => n < b \/ (n >= nf /\ n < nf')) N /\ v >= nf /\ v < nf' /\ tseytin_formula_repr (f1 ∨ f2) N v b nf nf'. 
-Proof. 
-  cbn. intros bound1 bound2 IHf1 IHf2 nf nf' v N H H0. 
-  destruct (tseytin' nf f1) as ((rv1 & N1) & nfVar1) eqn:F1. 
-  destruct (tseytin' nfVar1 f2) as ((rv2 & N2) & nfVar2) eqn:F2. 
-  specialize (IHf1 nf nfVar1 _ _ ltac:(lia) F1) as (IH1 & IH2 & IH2' & (IH31 & IH32)). 
-  specialize (tseytin'_nf_monotonic F1) as H7. 
-  specialize (tseytin'_nf_monotonic F2) as H8.
-  specialize (IHf2 nfVar1 nfVar2 _ _ ltac:(lia) F2) as (IH4 & IH5 & IH5' & (IH61 & IH62)). clear F1 F2.
-  symmetry in H0. inv H0. split; [ | split; [lia | split; [lia | split;[ | split]]]]. 
-  - repeat rewrite cnf_varsIn_app. 
-    repeat split.
-    + eapply cnf_varsIn_monotonic, IH1; cbn; intros. lia. 
-    + eapply cnf_varsIn_monotonic, IH4; cbn; intros; lia. 
-    + eapply cnf_varsIn_monotonic, tseytinOr_cnf_varsIn; cbn; intros; lia.
-  - intros a H0'. clear IH32 IH62. 
-    (*unfold FSAT.satisfies in H0. apply evalFormula_or_iff in H0 as [He | He].*)
-    (*+ apply IH31 in He as (a1' & G1 & G2); [ | apply H0']. *)
-      (*specialize (IH63 a H0') as (a2' & G3 & G4). *)
-      (*exists (nfVar2 :: a'). split.*)
-      (*{ rewrite app_singleton. apply assgn_varsIn_app; split. *)
-        (*- intros v' [-> | []]. lia.*)
-        (*- eapply assgn_varsIn_monotonic, G1. cbn; intros; lia. *)
-      (*} *)
-      (*unfold join. cbn. rewrite app_singleton. setoid_rewrite app_singleton at 3. unfold satisfies. rewrite !evalCnf_app_iff.  *)
-      (*rewrite app_singleton in G2. unfold satisfies in G2. rewrite evalCnf_app_iff in G2. destruct G2 as [G2 G2'].*)
-      (*repeat split.*)
-      (** cbn. now rewrite Nat.eqb_refl.*)
-      (** replace ([nfVar2] ++ a' ++a) with (join [nfVar2] (a' ++a)) by (unfold join; easy).*)
-        (*rewrite <- join_extension_cnf_sat with (p2 := fun n => n = nfVar2).*)
-        (*-- apply G2'.*)
-        (*-- apply IH1. *)
-        (*-- intros v' [-> | []]; cbn; lia.*)
-        (*-- cbn; intros; lia.*)
-      (** replace ([nfVar2] ++ a' ++ a) with (join ([nfVar2] ++ a') a) by (unfold join; firstorder).*)
-        (*rewrite <- join_extension_cnf_sat with (p2 := fun n => n = nfVar2 \/ (n >= nf /\ n < nfVar1)).*)
-        (*-- apply IH63, H0'. *)
-        (*-- apply IH4.*)
-        (*-- apply assgn_varsIn_app. split; [intros v' [-> | []]; cbn; lia | ].*)
-           (*eapply assgn_varsIn_monotonic, G1; cbn; intros; lia.*)
-        (*-- cbn; intros; lia.*)
-      (** apply tseytinOr_sat. cbn in G2. apply eqb_prop in G2.*)
-        (*split; [ intros _ | intros _; cbn; now rewrite Nat.eqb_refl]. left. *)
-        (*replace ([nfVar2 ] ++ a' ++ a) with (join [nfVar2] (join a' a)) by (unfold join; firstorder). *)
-        (*erewrite <- join_extension_var_sat with (p1 := fun n => n = rv1) (p2 := fun n => n = nfVar2). *)
-        (*-- apply G2.*)
-        (*-- easy.*)
-        (*-- intros v' [-> | []]; cbn; lia.*)
-        (*-- intros; cbn; lia.*)
-    (*+ apply IH61 in He as (a' & G1 & G2); [ | apply H0']. exists (nfVar2 :: a'). split.*)
-      (*{ rewrite app_singleton. apply assgn_varsIn_app; split. *)
-        (*- intros v' [-> | []]. lia.*)
-        (*- eapply assgn_varsIn_monotonic, G1. cbn; intros; lia. *)
-      (*} *)
-      (*unfold join. cbn. rewrite app_singleton. setoid_rewrite app_singleton at 3. unfold satisfies. rewrite !evalCnf_app_iff.  *)
-      (*rewrite app_singleton in G2. unfold satisfies in G2. rewrite evalCnf_app_iff in G2. destruct G2 as [G2 G2'].*)
-      (*repeat split.*)
-      (** cbn. now rewrite Nat.eqb_refl.*)
-      (** replace ([nfVar2] ++ a' ++ a) with (join ([nfVar2] ++ a') a) by (unfold join; firstorder).*)
-        (*rewrite <- join_extension_cnf_sat with (p2 := fun n => n = nfVar2 \/ (n >= nfVar1 /\ n < nfVar2)).*)
-        (*-- apply IH33, H0'. *)
-        (*-- apply IH1.*)
-        (*-- apply assgn_varsIn_app. split; [intros v' [-> | []]; cbn; lia | ].*)
-           (*eapply assgn_varsIn_monotonic, G1; cbn; intros; lia.*)
-        (*-- cbn; intros; lia.*)
-      (** replace ([nfVar2] ++ a' ++a) with (join [nfVar2] (a' ++a)) by (unfold join; easy).*)
-        (*rewrite <- join_extension_cnf_sat with (p2 := fun n => n = nfVar2).*)
-        (*-- apply G2'.*)
-        (*-- apply IH4. *)
-        (*-- intros v' [-> | []]; cbn; lia.*)
-        (*-- cbn; intros; lia.*)
-      (** apply tseytinOr_sat. cbn in G2. apply eqb_prop in G2.*)
-        (*split; [ intros _ | intros _; cbn; now rewrite Nat.eqb_refl]. right.*)
-        (*replace ([nfVar2 ] ++ a' ++ a) with (join [nfVar2] (join a' a)) by (unfold join; firstorder). *)
-        (*erewrite <- join_extension_var_sat with (p1 := fun n => n = rv2) (p2 := fun n => n = nfVar2). *)
-        (*-- apply G2.*)
-        (*-- easy.*)
-        (*-- intros v' [-> | []]; cbn; lia.*)
-        (*-- intros; cbn; lia.*)
-  (*- clear IH61 IH31 IH63 IH33. intros a H0.*)
-    (*cbn. apply evalFormula_or_iff.*)
-    (*rewrite app_singleton in H0. unfold satisfies in H0. rewrite !evalCnf_app_iff in H0. *)
-    (*destruct H0 as (X1 & X2 & X3 & X4).*)
-    (*cbn in X1. apply eqb_prop in X1.*)
-    (*apply tseytinOr_sat in X4. apply X4 in X1 as [X1 | X1].*)
-    (** left. apply IH32. *)
-      (*unfold satisfies. rewrite app_singleton, evalCnf_app_iff. *)
-      (*split; [ cbn; now rewrite X1 | apply X2]. *)
-    (** right. apply IH62. *)
-      (*unfold satisfies. rewrite app_singleton, evalCnf_app_iff. *)
-      (*split; [ cbn; now rewrite X1 | apply X3]. *)
-  (*- clear IH61 IH31 IH62 IH32. intros a He. unfold satisfies. rewrite !evalCnf_app_iff. *)
-    (*split; [apply IH33, He | split; [ apply IH63, He | ]].*)
-    (*apply tseytinOr_sat. erewrite !evalVar_not_assgn_varsIn_false. 1: tauto.*)
-    (*1, 3, 5: apply He. all: cbn; lia. *)
-(*Qed. *)
-Admitted. 
-
 Lemma not_compat f b : 
   varBound_formula b f 
   -> (forall nf nf' v N, nf >= b -> tseytin' nf f = (v, N, nf') -> cnf_varsIn (fun n => n < b \/ (n >= nf /\ n < nf')) N /\ v >= nf /\ v < nf' /\ tseytin_formula_repr f N v b nf nf')
@@ -584,9 +518,10 @@ Proof.
     + intros H2. apply H0'. rewrite IH32. now apply evalFormula_not_iff in H2.
 Qed.
 
-Lemma tseytin'_repr b f nf v N nf' : varBound_formula b f -> nf >= b -> tseytin' nf f = (v, N, nf') -> cnf_varsIn (fun n => n < b \/ (n >= nf /\ n < nf')) N /\ v >= nf /\ v < nf' /\ tseytin_formula_repr f N v b nf nf'. 
+Lemma tseytin'_repr b f nf v N nf' : 
+  orFree f -> varBound_formula b f -> nf >= b -> tseytin' nf f = (v, N, nf') -> cnf_varsIn (fun n => n < b \/ (n >= nf /\ n < nf')) N /\ v >= nf /\ v < nf' /\ tseytin_formula_repr f N v b nf nf'. 
 Proof. 
-  intros H. revert nf nf' v N. induction f; intros. 
+  intros Hor H. revert nf nf' v N. induction f; intros. 
   - inv H. cbn in H1. inv H1. split. 
     1 : { intros v'. intros (c & [<- | []] & (l & [<- | []] & H)). destruct H as (? & H). inv H. lia. } 
     split; [ lia | split; [lia | split]]. 
@@ -615,10 +550,9 @@ Proof.
       2, 3: symmetry; apply Nat.eqb_eq. unfold restrict; rewrite in_filter_iff.
       rewrite Nat.ltb_lt. tauto.
   - inv H. apply (varBound_formula_monotonic H6) in H4. apply (varBound_formula_monotonic H7) in H5. 
-    now apply (and_compat H4 H5  (IHf1 H4) (IHf2 H5)).
-  - inv H. apply (varBound_formula_monotonic H6) in H4. apply (varBound_formula_monotonic H7) in H5. 
-    now apply (or_compat H4 H5  (IHf1 H4) (IHf2 H5)).
-  - inv H. now apply (not_compat H3 (IHf H3)). 
+    inv Hor. now apply (and_compat H4 H5 (IHf1 H3 H4) (IHf2 H8 H5)).
+  - inv Hor. 
+  - inv H. inv Hor. now apply (not_compat H3 (IHf H2 H3)). 
 Qed. 
 
 Proposition assgn_varsIn_restrict a b: assgn_varsIn (fun n => n < b) (restrict a b). 
@@ -642,20 +576,25 @@ Proof.
     exists (restrict a (formula_maxVar f)). apply H3. 
 Qed. 
 
-Theorem tseytin_repr f v N : tseytin f = (v, N) -> formula_repr f N v. 
+Theorem tseytin_repr f v N : orFree f -> tseytin f = (v, N) -> formula_repr f N v. 
 Proof. 
+  intros Hor. 
   unfold tseytin. destruct tseytin' as ((repVar & N1) & nfvar') eqn:H1.
   intros H; inv H. 
   eapply tseytin'_repr in H1. 
   - eapply tseytin_formula_repr_s, H1. 
+  - apply Hor. 
   - apply formula_bound_varBound. 
   - lia.
 Qed.
 
-Definition reduction f := let (v, N) := tseytin f in [(true, v)] :: N. 
+Definition reduction f := let (v, N) := tseytin (eliminateOR f) in [(true, v)] :: N. 
 
 Lemma FSAT_to_SAT f : FSAT f <-> SAT (reduction f). 
 Proof. 
-  unfold reduction. destruct (tseytin f) eqn:H1. 
-  apply tseytin_repr in H1 as (H1 & H2). tauto. 
+  unfold reduction. destruct (tseytin (eliminateOR f)) eqn:H1. 
+  apply tseytin_repr in H1 as (H1 & H2). 
+  - rewrite eliminateOR_FSAT_equiv. tauto.
+  - apply orFree_eliminate. 
 Qed.  
+
