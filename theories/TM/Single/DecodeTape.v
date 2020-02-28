@@ -149,7 +149,7 @@ Module CheckEncodesTape.
       nia.
     Qed.
     
-    Lemma Realises : M ⊨ (fun tin '(b,tout) => f tin[@Fin0] = (b,tout[@Fin0])).
+    Lemma Realises_intern : M ⊨ (fun tin '(b,tout) => f tin[@Fin0] = (b,tout[@Fin0])).
     Proof.
       eapply Realise_monotone.
       { unfold M. TM_Correct_step. 1,3:now TM_Correct.
@@ -177,7 +177,7 @@ Module CheckEncodesTape.
 
     
     Definition Ter : tRel tau 1:=
-      fun t k => 4 * (| tape_local (tape_move_right t[@Fin0]) |) + 9 <= k.
+      fun t k => 4 * (| right (t[@Fin0]) |) + 9 <= k.
 
     Lemma Terminates : projT1 M ↓ Ter.
     Proof.
@@ -189,63 +189,68 @@ Module CheckEncodesTape.
         eapply TerminatesIn_monotone. 1:{ TM_Correct_step. now eapply Realises__step. now apply Terminates__step. }
         evar (c0:nat).
         evar (time : nat -> nat). [time]:intros n0.
-        apply StateWhileCoInduction with (T:= fun _ t k => time (length (tape_local t[@Fin0])) +c0 <= k). all:cbn - [f__step].
+        apply StateWhileCoInduction with (T:= fun _ t k => time (| right (t[@Fin0]) | + Option.apply (fun _ => 1) 0 (current (t[@Fin0]))) +c0 <= k). all:cbn - [f__step].
         -intros l t k Hk. infTer 2. intros y' t'.
          unfold f__step. destruct Option.bind eqn:Hc.
          2:{intros [= <- _]; rewrite <- Hk. enough (3 <= c0). now nia. shelve. }
          destruct _ eqn:Hs. all: intros [= <- Ht']. 1:{ enough (3 <= c0). now nia. shelve. }
          rewrite <- Ht'. infTer 2. rewrite <- Hk.
-         destruct t[@Fin0] as [ | | | ? ? t__R]. 1-3:easy. destruct t__R;cbn.
-         [time]:refine (n0*4). all:unfold time. all: nia.
+         destruct t[@Fin0] as [ | | | ? ? t__R]. 1-3:easy. destruct t__R;cbn - [plus mult];ring_simplify.
+         [time]:refine (n0*4). all:unfold time. all:ring_simplify. all: nia.
       } Unshelve. [c0]:exact 3. 2-3:subst c0;nia.
       cbn. intros ? ? HT. infTer 5.
       2:{ intros t ? (?&->&->&<-). destruct _.
           { infTer 5. intros ? ? [-> ->]. infTer 5. intros ? ? ->. reflexivity. }
           nia.
       }
-      ring_simplify. hnf in HT. cbn in *. nia.
+      ring_simplify. hnf in HT.  rewrite <- HT.
+      destruct (x[@Fin0]) as [ | | | ? ? t__R];cbn - [plus mult];ring_simplify. 1-3:nia.
+      destruct t__R;cbn - [plus mult];nia. 
     Qed.
     
-    Lemma f'_spec (seenMark seenSymbol b : bool) (c:tau) t__L' t__L t__R res:
+    Lemma f'_spec (seenMark seenSymbol b : bool) (c:tau) t__L' t__L t__R res tin:
       (length (filter (@isMarked _) (t__L'++[LeftBlank b])) = if seenMark then 1 else 0)
       -> (forall x, x el t__L' -> isSymbol x = true)
       -> reflect (t__L' <> []) seenSymbol
-      -> res =  f' (seenMark,seenSymbol) (midtape (map Retr_f (t__L'++[LeftBlank b])++t__L) c t__R)
-      ->  if fst res then
+      -> tin = (midtape (map Retr_f (t__L'++[LeftBlank b])++t__L) c t__R)
+      -> res = f' (seenMark,seenSymbol) tin 
+      ->  (if fst res then
            exists (x:tape sig) t__R1 (t__R2 : list tau) c',
              t__R = map Retr_f t__R1++t__R2
              /\ c = Retr_f c'
              /\ encode_tape x = LeftBlank b :: rev t__L'++c'::t__R1
              /\ snd res = midtape (tail (rev (map Retr_f t__R1)++[c])++map Retr_f (t__L'++[LeftBlank b])++t__L) (hd c (rev (map Retr_f t__R1)++[c])) t__R2
          else
-           forall x t__R1 (t__R2 : list tau) c',
+           (forall x t__R1 (t__R2 : list tau) c',
              t__R = map Retr_f t__R1++t__R2 ->
              c = Retr_f c' ->
-             encode_tape x <> LeftBlank b :: rev t__L'++c'::t__R1.
+             encode_tape x <> LeftBlank b :: rev t__L'++c'::t__R1)) /\ exists k, snd res = nat_rect _ tin (fun _ => @tape_move_right _) k.
     Proof.
       rewrite map_app;cbn.
-      remember (length t__R) as n0 eqn: Hn0. revert t__R Hn0 t__L' c res seenMark seenSymbol.
-      induction n0 as [n0 IH] using lt_wf_ind. intros ? -> ? ? res ? ?;cbn in *.
-      intros H__seenMark H__symbs H__seenSymbol Hres. 
+      remember (length t__R) as n0 eqn: Hn0. revert tin t__R Hn0 t__L' c res seenMark seenSymbol.
+      induction n0 as [n0 IH] using lt_wf_ind. intros ? ? -> ? ? res ? ?;cbn in *.
+      intros H__seenMark H__symbs H__seenSymbol -> Hres. 
       rewrite f'_equation in Hres. remember (f__step _ _) as f eqn:Hf. unfold f__step in Hf;cbn in Hf.
       destruct (Retr_g c) as [ [] | ] eqn:Hgc ;cbn. 1-3,6:clear IH.
-      -replace (fst res) with false.
-       2:{ destruct marked;cbn in Hf. destruct seenMark in Hf;cbn in Hf. all:now subst. }
-       clear Hf Hres. 
+      -cbn in Hf. rewrite orb_true_r in Hf;cbn in Hf. subst f;cbn in Hres;subst res. cbn.
+       split. 2:exists 0;now auto.
        intros ? ? ? ? -> [= ->] ((init__R&b__R&H__R&Hsym)&Hmarks&Hlength)%encode_tape_invariants_partial;cbn in *. 2:now setoid_rewrite <- in_rev.
        retract_adjoint. inv Hgc. destruct init__R;inv H__R.  ediscriminate (Hsym (LeftBlank _)). easy.     
-      -cbn in Hf. rewrite !orb_true_r in Hf. subst f. revert Hres. 
+      -cbn in Hf. rewrite !orb_true_r in Hf. subst f. revert Hres. cbn.
        destruct marked;cbn in *. destruct seenMark;cbn in *. all:intros ->;cbn. 3:destruct seenMark;cbn. 2,3:destruct seenSymbol;cbn.
-       +intros ? ? ? ? -> [= ->] ((init__R&b__R&H__R&Hsym)&Hmarks&Hlength)%encode_tape_invariants_partial;cbn in *. 2:now setoid_rewrite <- in_rev.
+       +split. 2:exists 0;split;now auto.
+        intros ? ? ? ? -> [= ->] ((init__R&b__R&H__R&Hsym)&Hmarks&Hlength)%encode_tape_invariants_partial;cbn in *. 2:now setoid_rewrite <- in_rev.
         retract_adjoint. inv Hgc. cbn in Hmarks;autorewrite with list in *. nia.
        +edestruct invert_symbols_0_marked with (t:= t__L') as (t__R2&->).
         1,2:autorewrite with list in *. now nia. now intros;eapply H__symbs.
         destruct b. 1:{exfalso. autorewrite with list in H__seenMark. now cbn in H__seenMark;nia. } 
         destruct t__R2 as [ | c' cs] eqn:Htp. 1:{exfalso. inversion H__seenSymbol. easy. }
         apply retract_g_inv in Hgc as ->.
+        split. 2:exists 0;split;now auto.
         eexists (rightof _ _),[],_,_. repeat eapply conj. 1,2,4:reflexivity. cbn.
         autorewrite with list;cbn.  setoid_rewrite <- map_rev with (l:=cs) at 2. easy.
-       +intros ? ? ? ? -> [= ->] ((init__R&b__R&H__R&Hsym)&Hmarks&Hlength)%encode_tape_invariants_partial;cbn in *. 2:now setoid_rewrite <- in_rev.
+       +split. 2:exists 0;split;now auto.
+        intros ? ? ? ? -> [= ->] ((init__R&b__R&H__R&Hsym)&Hmarks&Hlength)%encode_tape_invariants_partial;cbn in *. 2:now setoid_rewrite <- in_rev.
         retract_adjoint. inv Hgc.
         destruct t__L'. all:inv H__seenSymbol. 2:now apply H. cbn in *;autorewrite with list in *.
         destruct init__R;inv H__R. 2:{ ediscriminate (Hsym (RightBlank _)). easy. }
@@ -255,39 +260,41 @@ Module CheckEncodesTape.
          1,2:autorewrite with list in *;cbn in *. now nia. now intros;eapply H__symbs.
          destruct t__R2 eqn:?. 1:{exfalso. inversion H__seenSymbol. easy. }
          destruct (rev t__R2) eqn:Htp. 1:{exfalso. subst. revert Htp. length_not_eq. }
-          apply retract_g_inv in Hgc as ->.
+         apply retract_g_inv in Hgc as ->.
+         split. 2:exists 0;split;now auto.
          eexists (leftof _ _),[],_,_. repeat eapply conj. 1,2,4:reflexivity. rewrite <- Heql. cbn.
          setoid_rewrite <- map_rev with (l:=t__R2). now rewrite Htp.
         *edestruct @invert_symbols_1_marked with (t:= t__L') as (?&?&?&->).
          1,2:autorewrite with list in *;cbn in *. now nia. now intros;eapply H__symbs.
          apply retract_g_inv in Hgc as ->.
+         split. 2:exists 0;split;now auto.
          eexists (midtape _ _ _),[],_,_. repeat eapply conj. 1,2,4:reflexivity. cbn.
          repeat (autorewrite with list;cbn).  setoid_rewrite map_rev. easy.
-       +intros ? ? ? ? -> [= -> ] ((init__R&b__R&H__R&Hsym)&Hmarks&Hlength)%encode_tape_invariants_partial;cbn in *.
+       +split. 2:exists 0;split;now auto. intros ? ? ? ? -> [= -> ] ((init__R&b__R&H__R&Hsym)&Hmarks&Hlength)%encode_tape_invariants_partial;cbn in *.
         2:now setoid_rewrite <- in_rev. retract_adjoint. inv Hgc.
         destruct init__R;inv H__R. 2:{ ediscriminate (Hsym (RightBlank _)). easy. }
         cbn in *. assert (t__L' = []) as ->. 1:{ destruct t__L'. easy. inversion H__seenSymbol. destruct H. easy. }
         cbn in *;nia.
-       +intros ? ? ? ? -> [= ->] ((init__R&b__R&H__R&Hsym)&Hmarks&Hlength)%encode_tape_invariants_partial;cbn in *.
+       +split. 2:exists 0;split;now auto. intros ? ? ? ? -> [= ->] ((init__R&b__R&H__R&Hsym)&Hmarks&Hlength)%encode_tape_invariants_partial;cbn in *.
         2:now setoid_rewrite <- in_rev. retract_adjoint. inv Hgc. 
         destruct init__R;inv H__R. 2:{ ediscriminate (Hsym (RightBlank _)). easy. }
         cbn in *. autorewrite with list in *. nia.
-      -replace (fst res) with false.
-       2:{ cbn in Hf. destruct seenMark in Hf;cbn in Hf. all:now subst. }
-       clear Hf Hres. 
+      -cbn in Hf; rewrite orb_true_r in Hf; cbn in Hf. subst f;cbn in Hres;subst res;cbn.
+       split. 2:exists 0;split;now auto.
        intros ? ? ? ? -> [= ->]((init__R&b__R&H__R&Hsym)&Hmarks&Hlength)%encode_tape_invariants_partial;cbn in *. 2:now setoid_rewrite <- in_rev.
         retract_adjoint. inv Hgc.
        destruct init__R;inv H__R. discriminate (Hsym (NilBlank)). easy.   
-      -subst f res;cbn. intros ? ? ? ? _ ->. edestruct (retract_g_None Hgc). easy.
+      -subst f res;cbn. split. 2:exists 0;split;now auto. intros ? ? ? ? _ ->. edestruct (retract_g_None Hgc). easy.
       -revert Hf Hres. cbn. destruct seenMark;cbn.
        {clear IH. intros -> ->;cbn.
+        split. 2:exists 0;split;now auto. 
         intros ? ? ? ? -> [= ->]((init__R&b__R&H__R&Hsym)&Hmarks&Hlength)%encode_tape_invariants_partial;cbn in *. 2:now setoid_rewrite <- in_rev.
         retract_adjoint. inv Hgc. cbn in *.
         autorewrite with list in *. nia.
        } intros ->;cbn.
        destruct t__R.
        { clear IH. cbn. rewrite f'_equation;cbn.  
-         intros ->;cbn.
+         intros ->;cbn. split. 2:exists 1;split;now auto.
          intros ? ? ? ? Hnil [= ->] ((init__R&b__R&H__R&Hsym)&Hmarks&Hlength)%encode_tape_invariants_partial;cbn in *.
          2:now setoid_rewrite <- in_rev. retract_adjoint. inv Hgc.
          destruct init__R;inv H__R. length_not_eq in Hnil. 
@@ -296,17 +303,19 @@ Module CheckEncodesTape.
        autorewrite with list in H__seenMark. destruct b;cbn in H__seenMark. now nia. 
        specialize IH with (t__L' := MarkedSymbol s :: t__L');cbn in IH. erewrite <- !(retract_g_inv Hgc) in IH.
        pose (H' := H);eapply IH in H';clear IH.
-       3:reflexivity. 2:nia. 2:now autorewrite with list in *;nia. 2:now intros ? [<- | ];eauto.
+       3,7:reflexivity. 2:nia. 2:now autorewrite with list in *;nia. 2:now intros ? [<- | ];eauto.
        2:now rewrite orb_true_r;constructor.
        destruct res as [[] t'];cbn in *.
-       +destruct H' as (x&t__R1&t__R2&c'&->&->&Hx&->).
+       +destruct H' as [(x&t__R1&t__R2&c'&->&->&Hx&->) Hres].
+        split. 2:{ destruct Hres as (k&->). exists (S k). now rewrite nat_rect_succ_r. } clear Hres.
         eexists x,(_::t__R1),t__R2,_.
         repeat (cbn in Hx|-*;autorewrite with list in Hx|-* ).
         apply retract_g_inv in Hgc as ->.
         split. 2:split. 3:split.
         1,2:reflexivity. easy.
         destruct (rev (map Retr_f t__R1));cbn;now autorewrite with list.
-       +intros x ? ? ? H__R [= ->] Hx. specialize encode_tape_invariants_partial with (1:=Hx) as ((init__R&b__R&H__R'&Hsym)&Hmarks&Hlength);cbn in *. now setoid_rewrite <- in_rev.
+       +split. 2:{ destruct H' as [_ [k H']]. exists (S k). now rewrite nat_rect_succ_r. }
+        intros x ? ? ? H__R [= ->] Hx. specialize encode_tape_invariants_partial with (1:=Hx) as ((init__R&b__R&H__R'&Hsym)&Hmarks&Hlength);cbn in *. now setoid_rewrite <- in_rev.
         retract_adjoint. inv Hgc.
         destruct init__R;inv H__R'.
         destruct (init__R ++ [RightBlank b__R]) eqn:eq. now length_not_eq in eq. revert H__R;intros [= -> ->].
@@ -314,7 +323,7 @@ Module CheckEncodesTape.
       -revert Hf Hres. cbn. intros ->;cbn.
        destruct t__R.
        { clear IH. cbn. rewrite f'_equation;cbn.  
-         intros ->;cbn.
+         intros ->;cbn. split. 2:{ cbn. now exists 1. }
          intros ? ? ? ? Hnil [= ->] ((init__R&b__R&H__R&Hsym)&Hmarks&Hlength)%encode_tape_invariants_partial;cbn in *.
          retract_adjoint. inv Hgc. 
          2:now setoid_rewrite <- in_rev.  destruct t__R1. 2:easy. destruct init__R.  2:length_not_eq in H__R. inv H__R. 
@@ -322,8 +331,10 @@ Module CheckEncodesTape.
        cbn;intros H.
        specialize IH with (t__L' := UnmarkedSymbol s :: t__L');cbn in IH. erewrite <- !(retract_g_inv Hgc) in IH.
        pose (H' := H);eapply IH in H';clear IH.
-       3:reflexivity. 2:lia. 3:now intros ? [<- | ];eauto. 3:now rewrite orb_true_r;constructor.
+       3,7:reflexivity. 2:lia. 3:now intros ? [<- | ];eauto. 3:now rewrite orb_true_r;constructor.
        2:{ autorewrite with list in *. destruct seenMark;cbn in *;nia. }
+       destruct H' as [H' Hres].
+       split. 2:{ destruct Hres as (k&->). exists (S k). now rewrite nat_rect_succ_r. } clear Hres.
        destruct res as [[] t'];cbn in *.
        +destruct H' as (x&t__R1&t__R2&c'&->&->&Hx&->).
         apply retract_g_inv in Hgc as ->. 
@@ -342,21 +353,23 @@ Module CheckEncodesTape.
       -> Rel [|t|] (b,[|t'|]).
     Proof.
       unfold f,Rel;cbn. destruct Option.bind eqn:Hcur.
-      2:{ intros [= <- <-];cbn;intros ? ? ?. destruct x;cbn;eexists _,_;(split;[reflexivity| ]). all:intros ->;cbn in Hcur. all:now rewrite retract_g_adjoint in Hcur. }
+      2:{ intros [= <- <-];cbn;split. 2:now exists 0. intros ? ? ?. destruct x;cbn;eexists _,_;(split;[reflexivity| ]). all:intros ->;cbn in Hcur. all:now rewrite retract_g_adjoint in Hcur. }
       destruct t as [ | | | t__L s' t__R];cbn in *. 1-3:now inversion Hcur.
       apply retract_g_inv in Hcur as ->.
       unfold ContainsEncoding.Rel. cbn. 
       destruct isLeftBlank eqn:H__LB.
       2:destruct isNilBlank eqn:H__NB.
-      2:{ intros [= <- <- ]. destruct s;inv H__NB. eexists (@niltape _),t__L,t__R;cbn.
+      2:{ intros [= <- <- ]. destruct s;inv H__NB. split. 2:now eexists 0. eexists (@niltape _),t__L,t__R;cbn.
           split. eexists _, nil;cbn. easy. eexists nil,_;cbn. easy. }
-      2:{ intros [= <- <- ]. intros ? x ?. destruct x;cbn;eexists _,_;(split;[reflexivity | ]).
+      2:{ intros [= <- <- ]. split. 2:now eexists 0. intros ? x ?. destruct x;cbn;eexists _,_;(split;[reflexivity | ]).
           all:intros [= <- ->%retract_f_injective ->]. all:easy. }
       destruct s;inv H__LB.
-      destruct t__R. 1:{ cbn. rewrite f'_equation. cbn. intros [= <- <-]. intros ? x ?.
+      destruct t__R. 1:{ cbn. rewrite f'_equation. cbn. intros [= <- <-]. split. 2:{now exists 1. } intros ? x ?.
                        destruct x;cbn;eexists _,_;(split;[reflexivity | ]). all:intros [= <- ?%retract_f_injective ?]. easy. all:revert H0. all:length_not_eq. }
-      intros H';symmetry in H'. assert (H:=H'). revert H. intros H%(f'_spec (t__L':=[])).
-      2:now destruct marked;cbn;nia. 2:easy. 2:now constructor. destruct b;cbn  in H.
+      intros H';symmetry in H'. assert (H:=H'). revert H. eintros [H Hres]%(f'_spec (t__L':=[])). 5:reflexivity. 
+      2:now destruct marked;cbn;nia. 2:easy. 2:now constructor.
+        split. 2:{ cbn in Hres;destruct Hres as (k&->). exists (S k). now rewrite nat_rect_succ_r. } clear Hres.
+      destruct b;cbn  in H.
       -destruct H as (x&t__R1&t__R2&c'&->& -> &Hx&->).
        eexists _,_,_;split.
        +rewrite Hx;cbn. do 3 eexists. easy. cbn. eauto.
@@ -373,6 +386,13 @@ Module CheckEncodesTape.
        do 3 eexists. cbn. easy. intros [= <- <-%retract_f_injective H''].
        destruct l. 1:{ destruct x;cbn in eqx;try now inv eqx. all:length_not_eq in eqx. }
        inv H''. eapply H. 1,2:reflexivity. eassumption.
+    Qed.
+
+    Lemma Realises : M ⊨ Rel.
+    Proof.
+      eapply Realise_monotone. now apply Realises_intern. intros t [? t'] ?%f_spec.
+      unfold tapes in *. 
+      destruct_vector. easy.
     Qed.
 
   End checkEncodesTape.

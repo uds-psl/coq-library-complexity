@@ -20,10 +20,10 @@ Module ContainsEncoding.
           true => exists (x:X) t__L t__R,
                  (exists x__hd x__tl, encode x = x__hd::x__tl /\  tin[@Fin0] = midtape t__L (f x__hd) (map f x__tl++t__R) )
                  /\ exists x__init x__last , encode x = x__init ++ [x__last] /\ tout[@Fin0] = midtape (map f (rev x__init)++ t__L) (f x__last) t__R
-        | false => forall t__L (x:X) t__R,
-            exists x__hd x__tl, map f (encode x) = x__hd::x__tl /\ 
-            tin[@Fin0] <> midtape t__L x__hd (x__tl++t__R)
-        end.
+        | false => (forall t__L (x:X) t__R,
+                      exists x__hd x__tl, map f (encode x) = x__hd::x__tl /\ 
+                                 tin[@Fin0] <> midtape t__L x__hd (x__tl++t__R))                 
+        end /\ exists k, tout[@Fin0] = nat_rect _ tin[@Fin0] (fun _ => @tape_move_right _) k .
   End containsEncoding.
 End ContainsEncoding.
 Arguments ContainsEncoding.Rel : simpl never.
