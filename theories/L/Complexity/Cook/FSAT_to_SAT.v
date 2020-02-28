@@ -48,32 +48,6 @@ Definition varInCnf v cn := exists cl, cl el cn /\ varInClause v cl.
 Definition clause_varsIn (p : nat -> Prop) c := forall v, varInClause v c -> p v. 
 Definition cnf_varsIn (p : nat -> Prop) c := forall v, varInCnf v c -> p v. 
 
-Lemma clause_varsIn_varBound c n : clause_varsIn (fun v => v < n) c <-> varBound_clause n c. 
-Proof. 
-  induction c. 
-  - split; intros H; [eauto | intros v (? & [] &_)].
-  - split; intros H.
-    + destruct a as (b & v). econstructor.
-      * apply (H v). exists (b, v). split; [now left | exists b; easy].
-      * apply IHc. intros v' (l & H1). apply H. exists l. easy.
-    + inv H. apply IHc in H3. intros v (l & [<- | H4] & H5). 
-      * destruct H5 as (b' & H5). inv H5. lia. 
-      * apply H3. exists l. easy.
-Qed.
-
-Lemma cnf_varsIn_varBound c n: cnf_varsIn (fun v => v < n) c <-> varBound_cnf n c. 
-Proof. 
-  induction c. 
-  - split; intros H; [eauto | intros v (? & [] & _) ]. 
-  - split; intros H. 
-    + econstructor.
-      * apply clause_varsIn_varBound. intros v H1. apply H. exists a. easy. 
-      * apply IHc. intros v' (cl & H1). apply H. exists cl. easy.
-    + inv H. apply IHc in H3. apply clause_varsIn_varBound in H2. intros v (cl & [<- | H4] & H5). 
-      * apply (H2 v H5). 
-      * apply H3. exists cl. easy.
-Qed.
-
 Lemma cnf_varsIn_app c1 c2 p : cnf_varsIn p (c1 ++ c2) <-> cnf_varsIn p c1 /\ cnf_varsIn p c2. 
 Proof. 
   unfold cnf_varsIn. unfold varInCnf. setoid_rewrite in_app_iff. split; [intros H  |intros [H1 H2]].
@@ -85,7 +59,6 @@ Lemma cnf_varsIn_monotonic (p1 p2 : nat -> Prop) c : (forall n, p1 n -> p2 n) ->
 Proof. 
   intros H H1 v H2. apply H, H1, H2. 
 Qed. 
-
 
 (*v <-> (v1 ∧ v2) *)
 Definition tseytinAnd (v v1 v2 : var) : cnf := 
@@ -190,10 +163,6 @@ Proof.
   apply IHf in H2. inv H1. lia. 
 Qed.
 
-Hint Resolve varBound_cnf_monotonic.
-Hint Resolve varBound_cnf_app. 
-
-Hint Constructors varBound_cnf varBound_clause. 
 
 (*for the proof of correctness, a stronger notion of representation is needed *)
 Definition assgn_varsIn (p : nat -> Prop) a := forall v, v el a -> p v. 
@@ -207,40 +176,6 @@ Qed.
 
 Lemma assgn_varsIn_monotonic (p1 p2 : nat -> Prop) a : (forall n, p1 n -> p2 n) -> assgn_varsIn p1 a -> assgn_varsIn p2 a.
 Proof. intros H H1 v H0. eauto. Qed. 
-
-Lemma evalVar_monotonic a a' v : a <<= a' -> evalVar a v = true -> evalVar a' v = true.
-Proof. 
-  intros H1 H2. rewrite evalVar_in_iff in *. firstorder.
-Qed. 
-
-Lemma evalVar_assgn_equiv a a' v : a === a' -> evalVar a v = evalVar a' v. 
-Proof. 
-  intros H. enough (evalVar a v = true <-> evalVar a' v = true).
-  { destruct evalVar, evalVar; firstorder. }
-  split; apply evalVar_monotonic; apply H. 
-Qed.
-
-Lemma evalLiteral_assgn_equiv a1 a2 l : a1 === a2 -> evalLiteral a1 l = evalLiteral a2 l. 
-Proof. 
-  intros [H1 H2]. destruct l as (b & v). unfold evalLiteral. destruct (evalVar a1 v) eqn:Hev1. 
-  - apply (evalVar_monotonic H1) in Hev1. easy.
-  - destruct (evalVar a2 v) eqn:Hev2; [ | easy]. 
-    apply (evalVar_monotonic H2) in Hev2. congruence. 
-Qed.
-
-Lemma evalClause_assgn_equiv a1 a2 c : a1 === a2 -> evalClause a1 c = evalClause a2 c. 
-Proof. 
-  intros H. enough (evalClause a1 c = true <-> evalClause a2 c = true).
-  - destruct evalClause; destruct evalClause; firstorder; easy. 
-  - rewrite !evalClause_literal_iff. now setoid_rewrite (evalLiteral_assgn_equiv _ H). 
-Qed.
-
-Lemma evalCnf_assgn_equiv a1 a2 c : a1 === a2 -> evalCnf a1 c = evalCnf a2 c. 
-Proof. 
-  intros H. enough (evalCnf a1 c = true <-> evalCnf a2 c = true). 
-  - destruct evalCnf; destruct evalCnf; firstorder; easy.
-  - rewrite !evalCnf_clause_iff. now setoid_rewrite (evalClause_assgn_equiv _ H).
-Qed. 
 
 (*an actually usable version of the lemma without useless bool2Prop stuff *)
 Lemma in_filter_iff (X : Type) (x : X) (p : X -> bool) (A : list X): x el filter p A <-> x el A /\ p x = true. 
@@ -280,6 +215,7 @@ Proof.
   apply evalVar_in_iff in H2. now apply H in H2. 
 Qed.
 
+(** Lemmas for extending an assignment by another one talking about a different range of variables. *)
 Lemma join_extension_var_sat a a' (p1 p2 : nat -> Prop) v : p1 v -> assgn_varsIn p2 a' -> (forall n, not (p1 n /\ p2 n)) -> evalVar a v = evalVar (join a' a) v.
 Proof. 
   intros H1 H2 H3. 
@@ -319,24 +255,18 @@ Ltac list_equiv := let x := fresh "x" in let Hx := fresh "Hx" in
   try rewrite <- !app_assoc;
   split; intros x; rewrite !in_app_iff; intros Hx; destruct_or Hx; eauto.
 
-(*it does not suffice to use formula_maxVar f instead of the parameter bound: the induction will fail 
-  as we have to show that formula_maxVar (f1 ∧ f2) is a lower bound...*)
+(** In order for the correctness proof of Tseytin to go through, having formula_repr for the inductive hypothesis does not suffice.
+  The following relation strenghtens the original one by giving additional information on the relation of the assignments for the formula and the CNF.*)
 Definition tseytin_formula_repr (f : formula) (N : cnf) (v : var) (b nf nf' : nat):= 
   (forall a, assgn_varsIn (fun n => n < b) a -> exists a', assgn_varsIn (fun n => n >= nf /\ n < nf') a' /\ SAT.satisfies (join a' a) N /\ (FSAT.satisfies a f <-> evalVar (join a' a) v = true))
   /\ (forall a, SAT.satisfies a N -> (evalVar a v = true <-> FSAT.satisfies (restrict a b) f)). 
 
-Lemma evalFormula_and_iff' f1 f2 a: evalFormula a (f1 ∧ f2) = false <-> evalFormula a f1 = false \/ evalFormula a f2 = false. 
-Proof. 
-  cbn.  destruct (evalFormula a f1), (evalFormula a f2); cbn; tauto.
-Qed. 
-
 Lemma and_compat f1 f2 b: 
-  varBound_formula b f1 -> varBound_formula b f2 
-  -> (forall nf nf' v N, nf >= b -> tseytin' nf f1 = (v, N, nf') -> cnf_varsIn (fun n => n < b \/ (n >= nf /\ n < nf')) N /\ v >= nf /\ v < nf' /\ tseytin_formula_repr f1 N v b nf nf')
+  (forall nf nf' v N, nf >= b -> tseytin' nf f1 = (v, N, nf') -> cnf_varsIn (fun n => n < b \/ (n >= nf /\ n < nf')) N /\ v >= nf /\ v < nf' /\ tseytin_formula_repr f1 N v b nf nf')
   -> (forall nf nf' v N, nf >= b -> tseytin' nf f2 = (v, N, nf') -> cnf_varsIn (fun n => n < b \/ (n >= nf /\ n < nf')) N /\ v >= nf /\ v < nf' /\ tseytin_formula_repr f2 N v b nf nf')
   -> forall nf nf' v N, nf >= b -> tseytin' nf (f1 ∧ f2) = (v, N, nf') -> cnf_varsIn (fun n => n < b \/ (n >= nf /\ n < nf')) N /\ v >= nf /\ v < nf' /\ tseytin_formula_repr (f1 ∧ f2) N v b nf nf'. 
 Proof. 
-  cbn. intros bound1 bound2 IHf1 IHf2 nf nf' v N H H0. 
+  cbn. intros IHf1 IHf2 nf nf' v N H H0. 
   destruct (tseytin' nf f1) as ((rv1 & N1) & nfVar1) eqn:F1. 
   destruct (tseytin' nfVar1 f2) as ((rv2 & N2) & nfVar2) eqn:F2. 
   specialize (IHf1 nf nfVar1 _ _ ltac:(lia) F1) as (IH1 & IH2 & IH2' & (IH31 & IH32)). 
@@ -462,11 +392,10 @@ Proof.
 Qed. 
 
 Lemma not_compat f b : 
-  varBound_formula b f 
-  -> (forall nf nf' v N, nf >= b -> tseytin' nf f = (v, N, nf') -> cnf_varsIn (fun n => n < b \/ (n >= nf /\ n < nf')) N /\ v >= nf /\ v < nf' /\ tseytin_formula_repr f N v b nf nf')
+  (forall nf nf' v N, nf >= b -> tseytin' nf f = (v, N, nf') -> cnf_varsIn (fun n => n < b \/ (n >= nf /\ n < nf')) N /\ v >= nf /\ v < nf' /\ tseytin_formula_repr f N v b nf nf')
   -> forall nf nf' v N, nf >= b -> tseytin' nf (¬ f) = (v, N, nf') -> cnf_varsIn (fun n => n < b \/ (n >= nf /\ n < nf')) N /\ v >= nf /\ v < nf' /\ tseytin_formula_repr (¬ f) N v b nf nf'.
 Proof. 
-  cbn. intros bound IHf nf nf' v N H H0.  
+  cbn. intros IHf nf nf' v N H H0.  
   destruct (tseytin' nf f) as ((rv & N') & nfVar') eqn:F1. 
   specialize (IHf nf nfVar' _ _ ltac:(lia) F1) as (IH1 & IH2 & IH2' & (IH31 & IH32)). 
   specialize (tseytin'_nf_monotonic F1) as H1. 
@@ -550,9 +479,9 @@ Proof.
       2, 3: symmetry; apply Nat.eqb_eq. unfold restrict; rewrite in_filter_iff.
       rewrite Nat.ltb_lt. tauto.
   - inv H. apply (varBound_formula_monotonic H6) in H4. apply (varBound_formula_monotonic H7) in H5. 
-    inv Hor. now apply (and_compat H4 H5 (IHf1 H3 H4) (IHf2 H8 H5)).
+    inv Hor. now apply (and_compat (IHf1 H3 H4) (IHf2 H8 H5)).
   - inv Hor. 
-  - inv H. inv Hor. now apply (not_compat H3 (IHf H2 H3)). 
+  - inv H. inv Hor. now apply (not_compat (IHf H2 H3)). 
 Qed. 
 
 Proposition assgn_varsIn_restrict a b: assgn_varsIn (fun n => n < b) (restrict a b). 
@@ -598,3 +527,98 @@ Proof.
   - apply orFree_eliminate. 
 Qed.  
 
+(** * size analysis *)
+
+Definition c__eliminateOrSize := 4.
+Lemma eliminateOR_size f : formula_size (eliminateOR f) <= c__eliminateOrSize * formula_size f. 
+Proof. 
+  induction f; cbn -[Nat.mul]; unfold c__eliminateOrSize in *; try lia.
+Qed. 
+
+Definition c__tseytinSize := 10.
+Lemma tseytin'_size nf nf' v N f: tseytin' nf f = (v, N, nf') -> size_cnf N <= c__tseytinSize * formula_size f. 
+Proof. 
+  revert nf nf' v N. induction f; cbn -[c__tseytinSize]; intros nf nf' v N H.
+  - inv H. cbn. lia. 
+  - inv H. cbn. lia.
+  - destruct (tseytin' nf f1) as ((rv1 & N1) & nfVar1) eqn:H1. 
+    destruct (tseytin' nfVar1 f2) as ((rv2 & N2) & nfVar2) eqn:H2. 
+    eapply IHf1 in H1. eapply IHf2 in H2. 
+    inv H. 
+    rewrite !size_cnf_app. rewrite H1, H2. 
+    cbn -[c__tseytinSize]. unfold c__tseytinSize; lia. 
+  - destruct (tseytin' nf f1) as ((rv1 & N1) & nfVar1) eqn:H1. 
+    destruct (tseytin' nfVar1 f2) as ((rv2 & N2) & nfVar2) eqn:H2. 
+    eapply IHf1 in H1. eapply IHf2 in H2. 
+    inv H. 
+    rewrite !size_cnf_app. rewrite H1, H2. 
+    cbn -[c__tseytinSize]. unfold c__tseytinSize; lia. 
+  - destruct (tseytin' nf f) as ((rv & N') & nfVar') eqn:H1. 
+    eapply IHf in H1. inv H.
+    rewrite size_cnf_app. rewrite H1.
+    cbn -[c__tseytinSize]. unfold c__tseytinSize; lia. 
+Qed. 
+
+Lemma tseytin'_nf_bound nf nf' v N f : tseytin' nf f = (v, N, nf') -> nf' <= nf + formula_size f. 
+Proof. 
+  revert nf nf' v N. induction f; cbn; intros nf nf' v N H. 
+  - inv H. lia. 
+  - inv H. lia. 
+  - destruct (tseytin' nf f1) as ((rv1 & N1) & nfVar1) eqn:H1. 
+    destruct (tseytin' nfVar1 f2) as ((rv2 & N2) & nfVar2) eqn:H2. 
+    eapply IHf1 in H1. eapply IHf2 in H2. 
+    inv H. rewrite H2, H1. lia. 
+  - destruct (tseytin' nf f1) as ((rv1 & N1) & nfVar1) eqn:H1. 
+    destruct (tseytin' nfVar1 f2) as ((rv2 & N2) & nfVar2) eqn:H2. 
+    eapply IHf1 in H1. eapply IHf2 in H2. 
+    inv H. rewrite H2, H1. lia. 
+  - destruct (tseytin' nf f) as ((rv & N') & nfVar') eqn:H1. 
+    eapply IHf in H1. inv H.
+    rewrite H1. lia. 
+Qed. 
+
+Lemma tseytin'_varBound nf nf' v N f : varBound_formula nf f -> tseytin' nf f = (v, N, nf') -> v < nf' /\ varBound_cnf nf' N. 
+Proof. 
+  revert nf nf' v N. induction f; cbn; intros nf nf' v N H0 H. 
+  - inv H. split; [ lia | eauto]. 
+  - inv H. split; [ lia | ]. unfold tseytinEquiv. inv H0. eauto 20. 
+  - destruct (tseytin' nf f1) as ((rv1 & N1) & nfVar1) eqn:H1. 
+    destruct (tseytin' nfVar1 f2) as ((rv2 & N2) & nfVar2) eqn:H2. 
+    inv H0. 
+    apply (varBound_formula_monotonic H7) in H5. 
+    specialize (IHf1 _ _ _ _ H5 H1) as (IH1 & IH2).
+    eapply (varBound_formula_monotonic (n' := nfVar1)) in H6. 
+    2: { apply tseytin'_nf_monotonic in H1. lia. }
+    specialize (IHf2 _ _ _ _ H6 H2) as (IH3 & IH4). 
+    inv H. 
+    apply tseytin'_nf_monotonic in H1. apply tseytin'_nf_monotonic in H2. 
+    split; [lia | ]. 
+    rewrite <- !varBound_cnf_app. split; [ | split]. 
+    + eapply varBound_cnf_monotonic, IH2. lia. 
+    + eapply varBound_cnf_monotonic, IH4. lia.
+    + unfold tseytinAnd. repeat constructor; lia. 
+  - destruct (tseytin' nf f1) as ((rv1 & N1) & nfVar1) eqn:H1. 
+    destruct (tseytin' nfVar1 f2) as ((rv2 & N2) & nfVar2) eqn:H2. 
+    inv H0. 
+    apply (varBound_formula_monotonic H7) in H5. 
+    specialize (IHf1 _ _ _ _ H5 H1) as (IH1 & IH2).
+    eapply (varBound_formula_monotonic (n' := nfVar1)) in H6. 
+    2: { apply tseytin'_nf_monotonic in H1. lia. }
+    specialize (IHf2 _ _ _ _ H6 H2) as (IH3 & IH4). 
+    inv H. 
+    apply tseytin'_nf_monotonic in H1. apply tseytin'_nf_monotonic in H2. 
+    split; [lia | ]. 
+    rewrite <- !varBound_cnf_app. split; [ | split]. 
+    + eapply varBound_cnf_monotonic, IH2. lia. 
+    + eapply varBound_cnf_monotonic, IH4. lia.
+    + unfold tseytinOr. repeat constructor; lia. 
+  - destruct (tseytin' nf f) as ((rv & N') & nfVar') eqn:H1. 
+    inv H. 
+    split; [ lia | ].
+    inv H0. 
+    specialize (IHf _ _ _ _ H2 H1) as (IH1 & IH2). 
+    apply tseytin'_nf_monotonic in H1. 
+    rewrite <- !varBound_cnf_app. split. 
+    + eapply varBound_cnf_monotonic, IH2. lia. 
+    + unfold tseytinNot. repeat constructor; lia. 
+Qed. 
