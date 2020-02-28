@@ -25,16 +25,23 @@ Proof.
   fold add. solverec.
 Defined.
 
-Instance termT_mult : computableTime' mult (fun x xT => (5,(fun y yT => (x * (11 * y) + 19*x+ 4,tt)))).
+Definition c__mult1 := 5.
+Definition c__mult := 19.
+Definition mult_time x y := x * y * c__mult + c__mult * (x+ 1) .
+Instance termT_mult : computableTime' mult (fun x xT => (c__mult1,(fun y yT => (mult_time x y,tt)))).
 Proof.
-  extract.
-  fold mul. solverec.
+  extract. solverec.
+  all: unfold mult_time, c__mult1, c__mult; solverec. 
 Defined.
 
-Instance term_sub : computableTime' Nat.sub (fun n _ => (5,fun m _ => (min n m*14 + 8,tt)) ).
+Definition c__sub1 := 5.
+Definition c__sub := 14. 
+Definition sub_time x y := (min x y + 1) * c__sub.
+Instance term_sub : computableTime' Nat.sub (fun n _ => (c__sub1,fun m _ => (sub_time n m ,tt)) ).
 Proof.
-  extract. recRel_prettify_arith. solverec.
-Qed.
+  extract. solverec.
+  all: unfold sub_time, c__sub1, c__sub; solverec. 
+Defined.
 
 Definition c__leb := 14.
 Definition c__leb2 := 5. 
@@ -62,15 +69,18 @@ Qed.
 Instance termT_nat_max : computableTime' Nat.max (fun x _ => (5, fun y _ => (8 + 15 * min x y, tt))).
 Proof. extract. solverec. Qed. 
 
+Definition c__pow1 := 5.
+Definition c__pow2 := 10 + c__mult1.
+Fixpoint pow_time x n := match n with 
+  | 0 => c__pow2 
+  | S n => pow_time x n + mult_time x (x ^n) + c__pow2
+end.
 Instance termT_pow:
-  computableTime' Init.Nat.pow   (fun (x : nat) _ => (5,fun (n : nat) _ => (n* (x*19+x^n*11+19) + 5, tt))).
+  computableTime' Init.Nat.pow   (fun (x : nat) _ => (c__pow1,fun (n : nat) _ => (pow_time x n, tt))).
 Proof.
-  extract. fold Nat.pow. solverec.
-  decide (1<=x2).
-  1:Lia.nia. replace x2 with 0 by lia. ring_simplify.
-  decide (1<=n). now rewrite Nat.pow_0_l;Lia.nia.
-  Lia.nia.
-Qed.
+  extract. fold Nat.pow. solverec. 
+  all: unfold pow_time, c__pow1, c__pow2; solverec. 
+Defined.
 
 Definition c__divmod := 20.
 Definition divmod_time (x: nat) := c__divmod * (1+x).
@@ -80,12 +90,14 @@ Proof.
   extract. solverec. all: unfold divmod_time, c__divmod; solverec. 
 Defined. 
 
-Definition c__modulo := 34. 
-Definition modulo_time (x :nat) (y : nat) := divmod_time x + c__modulo * (1 + y).
+Definition c__modulo := 21 + c__sub1. 
+Definition modulo_time (x :nat) (y : nat) := divmod_time x + c__sub * y + c__modulo.
 Instance termT_modulo : 
   computableTime' Init.Nat.modulo (fun x _ => (1, fun y _ => (modulo_time x y, tt))). 
 Proof. 
-  extract. solverec; unfold modulo_time, divmod_time, c__divmod, c__modulo; solverec. 
+  extract. solverec. 
+  - unfold modulo_time, c__modulo; solverec. 
+  - unfold sub_time. rewrite Nat.le_min_l. unfold modulo_time, c__modulo. solverec. 
 Defined. 
 
 (* now some more encoding-related properties:*)

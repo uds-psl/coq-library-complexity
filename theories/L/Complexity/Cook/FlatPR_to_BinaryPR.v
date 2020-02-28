@@ -180,17 +180,26 @@ Section fixX.
   Qed. 
 End fixX. 
 
+Fact sub_time_bound_l n m: sub_time n m  <= (n + 1) * c__sub.
+Proof. 
+  unfold sub_time. nia.
+Qed.
+Fact sub_time_bound_r n m : sub_time n m <= (m + 1) * c__sub.
+Proof. 
+  unfold sub_time. nia. 
+Qed.
+
 (*hNat *)
-Definition c__hNat := 2 * (c__leb2 + 2 * c__repEl2 + 82).
+Definition c__hNat := 2 * (c__leb2 + 2 * c__repEl2 + 42 + 2 * c__sub + 2 * c__sub1).
 Definition hNat_time sig n := (leb_time (S n) sig + repEl_time sig + sig + 1) * c__hNat. 
 Instance term_hNat : computableTime' hNat (fun sig _ => (1, fun n _ => (hNat_time sig n, tt))). 
 Proof. 
   specialize (repEl_time_mono) as H1. unfold monotonic in H1. 
   extract. solverec. 
-  - setoid_rewrite Nat.le_min_r at 2. rewrite Nat.mul_1_r. rewrite repEl_length. 
+  - setoid_rewrite sub_time_bound_r at 2. rewrite repEl_length. 
     apply leb_iff in H. rewrite H1 with (x' := x) by lia. setoid_rewrite H1 with (x' := x) at 2. 2: lia. 
-    rewrite Nat.le_min_l. 
-    unfold hNat_time, c__hNat. cbn[Nat.add]. nia. 
+    rewrite sub_time_bound_l.
+    unfold hNat_time, c__hNat. cbn[Nat.add]. unfold c__sub1, c__sub. nia. 
   - cbn[Nat.add]. unfold hNat_time, c__hNat. apply Nat.leb_gt in H. 
     unfold repEl_time. nia. 
 Qed. 
@@ -387,14 +396,14 @@ Proof.
 Qed. 
 
 (*hBinaryPR *)
-Definition c__hBinaryPR := 2 * c__Sigma + c__offset + c__width + c__init + c__windows + c__steps + 28.
-Definition c__hBinaryPR2 := 38.
+Definition c__hBinaryPR := 2 * c__Sigma + c__offset + c__width + c__init + c__windows + c__steps + 2 * c__mult1 + 2 * c__mult + 8.
+Definition c__hBinaryPR2 := 2 * c__mult + 1.
 Definition hBinaryPR_time (fpr : FlatPR) := c__hBinaryPR2 * (Sigma fpr * offset fpr + Sigma fpr * width fpr + Sigma fpr + hflat_time fpr (init fpr) + hwindows_time fpr + hfinal_time fpr) + c__hBinaryPR.
 Instance term_hBinaryPR : computableTime' hBinaryPR (fun fpr _ => (hBinaryPR_time fpr, tt)).
 Proof. 
   unfold hBinaryPR. unfold hoffset, hwidth, hsteps, hinit.  
-  extract. solverec. 
-  unfold hBinaryPR_time, c__hBinaryPR, c__hBinaryPR2. solverec. 
+  extract. solverec. unfold mult_time. 
+  unfold hBinaryPR_time, c__hBinaryPR, c__hBinaryPR2. leq_crossout. 
 Defined. 
 
 Definition poly__hBinaryPR n := c__hBinaryPR2 * (2 * n * n + n + poly__hflat (n +n) + poly__hwindows n + poly__hfinal n) + c__hBinaryPR. 

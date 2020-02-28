@@ -94,7 +94,7 @@ Tactic Notation "poly_mono" constr(H) :=
 Lemma le_add_l n m : m <= n + m. 
 Proof. lia. Qed. 
 
-Definition c__moduloBound :=  c__divmod + c__modulo.
+Definition c__moduloBound :=  c__divmod + c__modulo + c__sub.
 Lemma modulo_time_bound x y: 
   modulo_time x y <= (size (enc x) + size (enc y) + 1) * c__moduloBound. 
 Proof. 

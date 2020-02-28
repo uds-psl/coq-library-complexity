@@ -2775,7 +2775,7 @@ Section fixTM.
         * specialize (prelude_blank_tape_rewrites_left (wo + k'' + t))...
         * specialize (prelude_right_half_rewrites_cert [e] (S k''))...
         * specialize (prelude_blank_tape_rewrites_left (wo + k'' + t))...
-        * specialize (prelude_right_half_rewrites_cert' (e::e0 ::s') (k'' - (|s'|))).
+        * specialize (prelude_right_half_rewrites_cert' (e::e0 ::s') (k'' - (|s'|)) t).
           cbn in H1. replace (S (S (k'' - (|s'|) + t))) with (S (S k'') + t - (|s'|)) by lia.
           cbn [length]. replace (S (S (|s'|)) + (k'' - (|s'|))) with (S (S k'')) by lia.
           cbn. now rewrite map_app.
@@ -2952,7 +2952,7 @@ Section fixTM.
   Inductive fpreludeSig' := fnblank | fnstar | fndelimC | fninit | fnsigVar (n : nat). 
   Definition fAlphabet := sum fGamma fpreludeSig'. 
 
-  Record evalEnv X Y Z W := {
+  Inductive evalEnv X Y Z W := {
                               polarityEnv : list X;
                               sigmaEnv : list Y;
                               stateSigmaEnv : list Z;
