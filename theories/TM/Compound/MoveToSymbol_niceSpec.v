@@ -20,6 +20,9 @@ Qed.
 Local Arguments removelast : simpl nomatch.
 Local Arguments last : simpl nomatch.
 
+(** TIPP: Look in ./Copy.v **)
+(** I have no Idea anymore why i called this nicer ... *)
+
 Definition MoveToSymbol_Rel_nice (sig':finType) (f:sig' -> bool) (g:sig' -> sig') t t' := 
   ((current t = None /\ t = t')
    \/ (exists t__L c t__R1 t__R2,

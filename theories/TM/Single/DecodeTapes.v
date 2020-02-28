@@ -6,8 +6,8 @@ Unset Printing Coercions.
 From Coq.ssr Require ssrfun.
 Module Option := ssrfun.Option.
 
-Module CheckEncodeTapes.
-  Section checkEncodeTapes.
+Module CheckEncodesTapes.
+  Section checkEncodesTapes.
 
     (* This actually checks for the encoding of lists of a given. *)
 
@@ -156,5 +156,5 @@ Module CheckEncodeTapes.
     Qed.
           
     
-  End checkEncodeTapes.
-End CheckEncodeTapes.
+  End checkEncodesTapes.
+End CheckEncodesTapes.
