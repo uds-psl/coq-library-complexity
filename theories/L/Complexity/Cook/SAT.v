@@ -1,4 +1,5 @@
 From Undecidability.L.Complexity.Cook Require Import Prelim.
+From Undecidability.L.Complexity.Cook Require Export SharedSAT.
 Require Import Lia. 
 From Undecidability.L.Datatypes Require Import LLists. 
 
@@ -98,7 +99,6 @@ Definition size_cnf (c : cnf) := sumn (map size_clause c) + length c.
 Notation assgn := (list nat). 
 Implicit Type (a : assgn).
 
-Definition evalVar a v := list_in_decb Nat.eqb a v. 
 Definition evalLiteral (a : assgn) (l : literal) : bool := match l with
   | (s, v) => Bool.eqb (evalVar a v) s 
 end. 
@@ -128,11 +128,6 @@ Proof.
   - rewrite <- H. eauto. 
   - destruct H as (b1 & b2 & <- & <- & ->). eauto.
 Qed. 
-
-Lemma evalVar_in_iff a v : evalVar a v = true <-> v el a. 
-Proof. 
-  unfold evalVar. rewrite list_in_decb_iff; [easy | symmetry; apply Nat.eqb_eq].
-Qed.
 
 Lemma evalLiteral_var_iff a b v : 
   evalLiteral a (b, v) = true <-> evalVar a v = b. 

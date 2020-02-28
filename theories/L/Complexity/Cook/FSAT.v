@@ -1,10 +1,9 @@
 From Undecidability.L Require Import L.
 From Undecidability.L.Datatypes Require Import LLists. 
+From Undecidability.L.Complexity.Cook Require Export SharedSAT.
 Require Import Lia. 
 
 (** *Formula Satisfiability: the satisfiability problem on arbitrary Boolean formulas *)
-
-Notation var := (nat) (only parsing). 
 
 Inductive formula : Type := 
   | Ftrue : formula
@@ -22,10 +21,8 @@ Notation "⋁ [ x , .. , z , y ]" := (For x .. (For z y) ..).
 Notation "⋀ [ x , .. , z , y ]" := (Fand x .. (Fand z y) ..). 
 
 (*assignments: we list the variables which are assigned the value true; all other variables are assigned the value false *)
-Notation assgn := (list var). 
 Implicit Types (a : assgn) (f : formula) (v : var). 
 
-Definition evalVar a v  := list_in_decb Nat.eqb a v.
 Fixpoint evalFormula a f := 
   match f with 
   | Ftrue => true
