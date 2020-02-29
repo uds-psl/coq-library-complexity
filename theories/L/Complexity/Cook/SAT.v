@@ -72,6 +72,13 @@ Qed.
 Definition clause_maxVar (c : clause) := fold_right (fun '(_, v) acc => Nat.max acc v) 0 c. 
 Definition cnf_maxVar (c : cnf) := fold_right (fun cl acc => Nat.max acc (clause_maxVar cl)) 0 c.
 
+Lemma cnf_maxVar_app c1 c2 : cnf_maxVar (c1 ++ c2) = Nat.max (cnf_maxVar c1) (cnf_maxVar c2). 
+Proof. 
+  induction c1. 
+  - easy.
+  - cbn. fold (cnf_maxVar (c1 ++ c2)). fold (cnf_maxVar c1). rewrite IHc1. lia. 
+Qed. 
+
 Lemma clause_maxVar_bound (c : clause) : varBound_clause (S (clause_maxVar c)) c.
 Proof.
   induction c.
@@ -91,9 +98,32 @@ Proof.
     + eapply varBound_cnf_monotonic. 2: apply IHc. cbn. unfold cnf_maxVar. lia.  
 Qed. 
 
+(** In principle, we would expect a strict inequality here. The reason for non-strictness is that cnf_maxVar returns 0 in case of an empty CNF. *)
+Lemma clause_maxVar_bound_le (c : clause) n : varBound_clause n c -> clause_maxVar c <= n.
+Proof. 
+  induction 1 as [ | ? ? ? ? ? IH]; cbn; [lia | ].
+  rewrite IH. lia. 
+Qed. 
+
+Lemma cnf_maxVar_bound_le (c : cnf) n : varBound_cnf n c -> cnf_maxVar c <= n. 
+Proof. 
+  induction 1 as [ | ? ? ? ? IH]; cbn; [ lia | ].
+  rewrite IH. rewrite clause_maxVar_bound_le by apply H. lia. 
+Qed. 
+
 (*size of CNF in terms of number of operators *)
 Definition size_clause (c : clause) := length c. (*we should subtract 1 here, but this would only complicate things *)
 Definition size_cnf (c : cnf) := sumn (map size_clause c) + length c. 
+
+Lemma size_clause_app c1 c2 : size_clause (c1 ++ c2) = size_clause c1 + size_clause c2. 
+Proof. 
+  unfold size_clause. now rewrite app_length. 
+Qed.
+
+Lemma size_cnf_app c1 c2 : size_cnf (c1 ++ c2) = size_cnf c1 + size_cnf c2. 
+Proof. 
+  unfold size_cnf. rewrite map_app, sumn_app, app_length. lia.
+Qed. 
 
 (*Assignments as lists of natural numbers: contain the indices of variables that are mapped to true *)
 Notation assgn := (list nat). 
@@ -155,7 +185,6 @@ Proof.
   rewrite !evalClause_literal_iff. setoid_rewrite in_app_iff. firstorder.
 Qed.
 
-
 Lemma evalCnf_clause_iff a (cn : cnf) : 
   evalCnf a cn = true <-> (forall cl, cl el cn -> evalClause a cl = true). 
 Proof. 
@@ -177,6 +206,28 @@ Qed.
 
 Definition satisfies a c := evalCnf a c = true.
 Definition SAT (c : cnf) : Prop := exists (a : assgn), satisfies a c. 
+
+Lemma evalLiteral_assgn_equiv a1 a2 l : a1 === a2 -> evalLiteral a1 l = evalLiteral a2 l. 
+Proof. 
+  intros [H1 H2]. destruct l as (b & v). unfold evalLiteral. destruct (evalVar a1 v) eqn:Hev1. 
+  - apply (evalVar_monotonic H1) in Hev1. easy.
+  - destruct (evalVar a2 v) eqn:Hev2; [ | easy]. 
+    apply (evalVar_monotonic H2) in Hev2. congruence. 
+Qed.
+
+Lemma evalClause_assgn_equiv a1 a2 c : a1 === a2 -> evalClause a1 c = evalClause a2 c. 
+Proof. 
+  intros H. enough (evalClause a1 c = true <-> evalClause a2 c = true).
+  - destruct evalClause; destruct evalClause; firstorder; easy. 
+  - rewrite !evalClause_literal_iff. now setoid_rewrite (evalLiteral_assgn_equiv _ H). 
+Qed.
+
+Lemma evalCnf_assgn_equiv a1 a2 c : a1 === a2 -> evalCnf a1 c = evalCnf a2 c. 
+Proof. 
+  intros H. enough (evalCnf a1 c = true <-> evalCnf a2 c = true). 
+  - destruct evalCnf; destruct evalCnf; firstorder; easy.
+  - rewrite !evalCnf_clause_iff. now setoid_rewrite (evalClause_assgn_equiv _ H).
+Qed. 
 
 (** * Verifier for SAT*)
 (** The certificate is a satisfying assignment.
@@ -439,18 +490,64 @@ Lemma cnf_enc_size_bound (c : cnf) : size (enc c) <= c__natsizeS * (cnf_maxVar c
 Proof. 
   induction c. 
   - rewrite size_list. cbn -[Nat.mul Nat.add]. unfold c__cnfSize1. nia.
-  - rewrite list_size_cons. rewrite IHc. rewrite clause_enc_size_bound. 
+  - rewrite list_size_cons. rewrite clause_enc_size_bound. 
     cbn -[c__clauseSize1 c__cnfSize1 c__listsizeCons c__natsizeS].
     fold (cnf_maxVar c). 
     replace (size_clause a + sumn (map size_clause c) + S (|c|) + 1) with (size_clause a + size_cnf c + 2) by (unfold size_cnf; cbn; lia).
-    (* missing: c__listsizeCons*)
-    (*unfold c__cnfSize1.*)
-    (*nia.*)
-Admitted. 
-    
+    rewrite IHc. 
+    (*nia and leq_crossout need some help to see that this holds*)
+    replace_le (c__natsizeS * (clause_maxVar a + 1) * (size_clause a + 1) + c__clauseSize1 * (size_clause a + 1) + (c__natsizeS * (cnf_maxVar c + 1) * (size_cnf c + 1) + (size_cnf c + 1) * c__cnfSize1) + c__listsizeCons) 
+    with (c__natsizeS * (Nat.max (cnf_maxVar c) (clause_maxVar a) + 1) * (size_clause a + size_cnf c + 2) + c__clauseSize1 * (size_clause a + 1) + (size_cnf c + 1) * c__cnfSize1 + c__listsizeCons) by nia. 
+    unfold c__cnfSize1. nia.
+Qed. 
+
+(** conversely, we can bound the size of the cnf in terms of the encoding size *)
+(** we only get a quadratic bound because of the huge overapproximation by taking cnf_maxVar *)
+
+Lemma clause_maxVar_size_enc_bound (c : clause) : clause_maxVar c + 1 <= size (enc c).
+Proof. 
+  induction c; cbn; [rewrite size_list; unfold c__listsizeNil; lia| ]. 
+  fold (clause_maxVar c). destruct a. rewrite list_size_cons, size_prod. cbn. 
+  rewrite size_nat_enc_r with (n := n) at 1. nia. 
+Qed. 
+
+Lemma clause_size_enc_bound (c : clause) : size_clause c + 1 <= size (enc c). 
+Proof. 
+  unfold size_clause. induction c. 
+  - rewrite size_list; cbn; unfold c__listsizeNil; lia. 
+  - rewrite list_size_cons; cbn. unfold c__listsizeCons; lia. 
+Qed. 
 
 
-(*evalVar *)
+Lemma clause_size_total_enc_bound (c : clause) : (size_clause c + 1) * (clause_maxVar c + 1) <= size (enc c) * size (enc c). 
+Proof. 
+  now rewrite clause_maxVar_size_enc_bound, clause_size_enc_bound. 
+Qed. 
+
+Lemma cnf_size_enc_bound (c : cnf) : (size_cnf c + 1) <= size (enc c). 
+Proof. 
+  induction c; cbn. 
+  - rewrite size_list; unfold c__listsizeNil; lia. 
+  - replace (size_clause a + sumn (map size_clause c) + S (|c|) + 1) with ((size_clause a + 1) + (size_cnf c + 1)). 
+    2: { unfold size_cnf. lia. }
+    rewrite IHc. rewrite list_size_cons. rewrite clause_size_enc_bound. lia.
+Qed. 
+
+Lemma cnf_maxVar_size_enc_bound (c : cnf) : cnf_maxVar c + 1 <= size (enc c). 
+Proof. 
+  induction c; cbn. 
+  - rewrite size_list; unfold c__listsizeNil; lia.
+  - fold (cnf_maxVar c). rewrite list_size_cons. 
+    specialize (clause_maxVar_size_enc_bound a). unfold c__listsizeCons. lia. 
+Qed. 
+
+Lemma cnf_size_total_enc_bound (c : cnf) : (size_cnf c + 1) * (cnf_maxVar c + 1) <= size (enc c) * size (enc c). 
+Proof. 
+  rewrite cnf_maxVar_size_enc_bound, cnf_size_enc_bound.  lia. 
+Qed. 
+
+
+(** extraction of evalVar *)
 Definition c__evalVar := 7. 
 Definition evalVar_time a (v : var) := list_in_decb_time (fun x y => c__nat_eqb2 + nat_eqb_time x y) a v + c__evalVar.
 Instance term_evalVar : computableTime' evalVar (fun a _ => (1, fun v _ => (evalVar_time a v, tt))). 

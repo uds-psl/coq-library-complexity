@@ -1,5 +1,5 @@
 From Undecidability.L Require Import L.
-From Undecidability.L.Datatypes Require Import LLists. 
+From Undecidability.L.Datatypes Require Import LLists LLNat. 
 From Undecidability.L.Complexity.Cook Require Export SharedSAT.
 Require Import Lia. 
 
@@ -34,6 +34,11 @@ Fixpoint evalFormula a f :=
 
 Lemma evalFormula_and_iff a f1 f2 : evalFormula a (f1 ∧ f2) = true <-> evalFormula a f1 = true /\ evalFormula a f2 = true. 
 Proof. cbn. now rewrite andb_true_iff. Qed. 
+
+Lemma evalFormula_and_iff' f1 f2 a: evalFormula a (f1 ∧ f2) = false <-> evalFormula a f1 = false \/ evalFormula a f2 = false. 
+Proof. 
+  cbn.  destruct (evalFormula a f1), (evalFormula a f2); cbn; tauto.
+Qed. 
 
 Lemma evalFormula_or_iff a f1 f2 : evalFormula a (f1 ∨ f2) = true <-> evalFormula a f1 = true \/ evalFormula a f2 = true. 
 Proof. cbn. now rewrite orb_true_iff. Qed. 
@@ -97,28 +102,76 @@ end.
 
 (** extraction *)
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import  LProd LOptions LBool LLNat LLists LUnit.
+From Undecidability.L.Datatypes Require Import  LProd LOptions LBool LLists LUnit LLNat.
 From Undecidability.L.Complexity Require Import PolyBounds. 
-
 
 Run TemplateProgram (tmGenEncode "formula_enc" formula).
 Hint Resolve formula_enc_correct : Lrewrite.
 
-(*the encoding size of a formula relates linearly to formula_size f * formula_maxVar f *)
+Lemma formula_enc_size f: size (enc f) = match f with 
+  | Ftrue => 10
+  | Fvar v => 10 + size (nat_enc v )
+  | Fand f1 f2 => 10 + size (enc f1) + size (enc f2) 
+  | For f1 f2 => 9 + size (enc f1) + size (enc f2) 
+  | Fneg f => 7 + size (enc f) 
+  end. 
+Proof. 
+  unfold enc; destruct f; cbn; try lia. 
+  unfold LNat.nat_enc, nat_enc. lia. 
+Qed. 
+
+Instance term_Fvar : computableTime' Fvar (fun v _ => (1, tt)). 
+Proof. 
+  extract constructor. solverec. 
+Defined. 
+
+Instance term_Fand : computableTime' Fand (fun f1 _ => (1, fun f2 _ => (1, tt))).
+Proof. 
+  extract constructor. solverec. 
+Defined. 
+
+Instance term_For : computableTime' For (fun f1 _ => (1, fun f2 _ => (1, tt))). 
+Proof. 
+  extract constructor. solverec. 
+Defined. 
+
+Instance term_Fneg : computableTime' Fneg (fun f _ => (1, tt)). 
+Proof. 
+  extract constructor. solverec. 
+Defined. 
+
+
+(** the encoding size of a formula relates is bounded linearly by formula_size f * formula_maxVar f *)
 Definition c__formulaBound1 := c__natsizeS. 
 Definition c__formulaBound2 := size (enc Ftrue) + 10 + c__natsizeO.
 Lemma formula_enc_size_bound : forall f, size (enc f) <= c__formulaBound1 * formula_size f * formula_maxVar f + c__formulaBound2 * formula_size f.
-(** (formula_size f + 1).*)
 Proof. 
-  induction f. 
+  induction f; rewrite formula_enc_size. 
   - unfold c__formulaBound2. cbn. nia.
-  - unfold enc. cbn -[Nat.mul]. rewrite size_nat_enc. unfold c__formulaBound1, c__formulaBound2. lia. 
-  - unfold enc. cbn -[Nat.mul Nat.add].
+  - rewrite size_nat_enc. unfold c__formulaBound1, c__formulaBound2. cbn -[Nat.add Nat.mul]. lia. 
+  - cbn -[Nat.mul Nat.add].
     rewrite IHf1, IHf2. unfold c__formulaBound2. nia.
-  - unfold enc. cbn -[Nat.mul Nat.add].
+  - cbn -[Nat.mul Nat.add].
     rewrite IHf1, IHf2. unfold c__formulaBound2. nia.
-  - unfold enc. cbn -[Nat.mul Nat.add]. 
+  - cbn -[Nat.mul Nat.add]. 
     rewrite IHf. unfold c__formulaBound2. nia. 
 Qed. 
 
+(** conversely, we can only obtain a quadratic bound due to the overapproximation provided by maxVar *)
+
+Lemma formula_size_enc_bound f : formula_size f <= size (enc f). 
+Proof. 
+  induction f; rewrite formula_enc_size; cbn -[Nat.add Nat.mul]; try lia.
+Qed.  
+
+Lemma formula_maxVar_enc_bound f : formula_maxVar f <= size (enc f).
+Proof. 
+  induction f; rewrite formula_enc_size; cbn -[Nat.add Nat.mul]; try lia. 
+  rewrite (size_nat_enc_r n) at 1. unfold enc. cbn. nia. 
+Qed. 
+
+Lemma formula_total_size_enc_bound f : formula_size f * formula_maxVar f <= size (enc f) * size (enc f). 
+Proof. 
+  rewrite formula_size_enc_bound, formula_maxVar_enc_bound. lia. 
+Qed. 
 

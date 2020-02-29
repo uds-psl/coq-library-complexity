@@ -343,9 +343,11 @@ L/Complexity/Cook/FlatPR_to_BinaryPR.v
 L/Complexity/Cook/SharedSAT.v
 L/Complexity/Cook/FSAT.v
 L/Complexity/Cook/SAT.v
+L/Complexity/Cook/FSAT_to_SAT.v
 L/Complexity/Cook/BinaryPR_to_FSAT.v
 L/Complexity/Cook/PR_to_BinaryPR.v
 L/Complexity/Cook/UniformHomomorphisms.v
+L/Complexity/Cook/FlatFinTypes_extraction.v
 L/Datatypes/LLists.v
 L/Datatypes/LLNat.v
 

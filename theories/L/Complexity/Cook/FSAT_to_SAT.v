@@ -129,7 +129,6 @@ Proof.
   unfold tseytinEquiv. cnf_varsIn_force.
 Qed.
 
-
 Fixpoint tseytin' (nfVar : var) (f : formula) : (var * cnf * var) := 
   match f with 
   | Ftrue => (nfVar, [[(true, nfVar)]], S nfVar)
@@ -535,6 +534,19 @@ Proof.
   induction f; cbn -[Nat.mul]; unfold c__eliminateOrSize in *; try lia.
 Qed. 
 
+Lemma eliminateOR_varBound f n : varBound_formula n f <-> varBound_formula n (eliminateOR f). 
+Proof. 
+  split.
+  - induction 1; cbn; eauto.
+  - induction f; cbn; intros H; inv H; eauto 8 using varBound_formula_monotonic. 
+    econstructor; eauto; inv H1; inv H2; inv H3; eauto 8 using varBound_formula_monotonic.
+Qed. 
+
+Lemma eliminateOR_maxVar_eq f : formula_maxVar f = formula_maxVar (eliminateOR f).
+Proof. 
+  induction f; cbn; eauto.
+Qed. 
+
 Definition c__tseytinSize := 10.
 Lemma tseytin'_size nf nf' v N f: tseytin' nf f = (v, N, nf') -> size_cnf N <= c__tseytinSize * formula_size f. 
 Proof. 
@@ -622,3 +634,114 @@ Proof.
     + eapply varBound_cnf_monotonic, IH2. lia. 
     + unfold tseytinNot. repeat constructor; lia. 
 Qed. 
+
+Lemma tseytin_size f v N : tseytin f = (v, N) -> size_cnf N <= c__tseytinSize * formula_size f.
+Proof. 
+  unfold tseytin. destruct (tseytin') eqn:H1. destruct p as (rv & N'). intros H; inv H.  
+  apply tseytin'_size in H1. easy.
+Qed. 
+
+Lemma tseytin_varBound f v N : tseytin f = (v, N) -> v < formula_maxVar f + formula_size f /\ varBound_cnf (formula_maxVar f + formula_size f) N. 
+Proof. 
+  unfold tseytin. destruct tseytin' eqn:H1. destruct p as (v' & N'). 
+  intros H; inv H.
+  specialize (tseytin'_varBound ltac:(apply formula_bound_varBound) H1) as (H2 & H3).
+  apply tseytin'_nf_bound in H1. 
+  split; [lia | ].
+  eapply varBound_cnf_monotonic, H3. apply H1. 
+Qed. 
+
+Definition c__redFSize := c__eliminateOrSize * c__tseytinSize. 
+Lemma reduction_size f: size_cnf (reduction f) <= c__redFSize * formula_size f + 2. 
+Proof. 
+  unfold reduction. 
+  destruct tseytin eqn:H1. apply tseytin_size in H1. 
+  rewrite app_singleton. rewrite size_cnf_app. rewrite H1. 
+  rewrite eliminateOR_size. cbn -[c__tseytinSize c__eliminateOrSize].
+  unfold c__redFSize. lia. 
+Qed. 
+
+Lemma reduction_varBound f : varBound_cnf (formula_maxVar f + c__eliminateOrSize * formula_size f + 1) (reduction f). 
+Proof. 
+  unfold reduction. destruct tseytin eqn:H1. 
+  apply tseytin_varBound in H1 as (H1 &H2). 
+  constructor.
+  - repeat constructor. rewrite H1. rewrite <-eliminateOR_maxVar_eq. specialize (eliminateOR_size f). nia. 
+  - eapply varBound_cnf_monotonic, H2. 
+    rewrite <- eliminateOR_maxVar_eq. rewrite eliminateOR_size. lia.
+Qed. 
+
+(** Now we have all the ingredients to show that the encoding size only blows up polynomially.*)
+From Undecidability.L.Tactics Require Import LTactics GenEncode.
+From Undecidability.L.Datatypes Require Import  LProd LOptions LBool LLists LUnit LLNat.
+From Undecidability.L.Complexity Require Import PolyBounds.
+
+Lemma reduction_poly_size f : 
+  { p: nat -> nat& size (enc (reduction f)) <= p (size (enc f)) /\ monotonic p /\ inOPoly p }.
+Proof. 
+  evar (p : nat -> nat). exists p. 
+  rewrite cnf_enc_size_bound.
+  erewrite cnf_maxVar_bound_le by apply reduction_varBound.
+  rewrite reduction_size.
+  rewrite formula_size_enc_bound.
+  rewrite formula_maxVar_enc_bound.
+  split. 
+  - [p] : intros n. subst p. cbn -[Nat.add Nat.mul]. reflexivity. 
+  - split; subst p; smpl_inO. 
+Qed. 
+
+
+(** Running-time analysis *)
+
+(** eliminateOr *)
+Definition c__eliminateOR := 18.
+Fixpoint eliminateOR_time (f : formula) := match f with 
+| Ftrue => 0 
+| Fvar _ => 0
+| Fand f1 f2 => eliminateOR_time f1 + eliminateOR_time f2
+| For f1 f2 => eliminateOR_time f1 + eliminateOR_time f2
+| Fneg f => eliminateOR_time f
+end + c__eliminateOR.
+Instance term_eliminateOR : computableTime' eliminateOR (fun f _ => (eliminateOR_time f, tt)). 
+Proof. 
+  extract. solverec. 
+  all: unfold eliminateOR_time, c__eliminateOR; solverec.
+Defined. 
+
+(** tseytinAnd *)
+Definition c__tseytinAnd := 35.
+Instance term_tseytinAnd : computableTime' tseytinAnd (fun v _ => (1, fun v1 _ => (1, fun v2 _ => (c__tseytinAnd, tt)))). 
+Proof. 
+  extract. solverec. unfold c__tseytinAnd; solverec. 
+Defined. 
+
+(** tseytinOr *)
+Definition c__tseytinOr := 35.
+Instance term_tseytinOr : computableTime' tseytinOr (fun v _ => (1, fun v1 _ => (1, fun v2 _ => (c__tseytinOr, tt)))). 
+Proof. 
+  extract. solverec. unfold c__tseytinOr; solverec. 
+Defined. 
+
+(** tseytinNot *)
+Definition c__tseytinNot := 21.
+Instance term_tseytinNot : computableTime' tseytinNot (fun v _ => (1, fun v' _ => (c__tseytinNot, tt))). 
+Proof. 
+  extract. solverec. unfold c__tseytinNot; solverec. 
+Defined. 
+
+(** tseytinEquiv *)
+Definition c__tseytinEquiv := 21.
+Instance term_tseytinEquiv : computableTime' tseytinEquiv (fun v _ => (1, fun v' _ => (c__tseytinEquiv, tt))). 
+Proof. 
+  extract. solverec. unfold c__tseytinEquiv; solverec. 
+Defined.
+
+(** tseytin' *)
+Fixpoint tseytin'_time (nf : nat) (f : formula) := 1.
+Instance term_tseytin' : computableTime' tseytin' (fun nf _ => (1, fun f _ => (tseytin'_time nf f, tt))). 
+Proof. 
+  extract. (*TODO: why is simplification failing? *)
+Admitted. 
+ 
+
+
