@@ -19,19 +19,23 @@ Proof.
   solverec.
 Defined.
 
-Instance termT_plus' : computableTime' add (fun x xT => (5,(fun y yT => (11*x+4,tt)))).
+Definition c__add := 11. 
+Definition c__add1 := 5.
+Definition add_time x := (x + 1) * c__add.
+Instance termT_plus' : computableTime' add (fun x xT => (c__add1,(fun y yT => (add_time x,tt)))).
 Proof.
   extract.
-  fold add. solverec.
+  fold add. solverec. 
+  all: unfold add_time, c__add1, c__add; solverec. 
 Defined.
 
 Definition c__mult1 := 5.
-Definition c__mult := 19.
+Definition c__mult := c__add + c__add1 + 10.
 Definition mult_time x y := x * y * c__mult + c__mult * (x+ 1) .
 Instance termT_mult : computableTime' mult (fun x xT => (c__mult1,(fun y yT => (mult_time x y,tt)))).
 Proof.
-  extract. solverec.
-  all: unfold mult_time, c__mult1, c__mult; solverec. 
+  extract. solverec. 
+  all: unfold mult_time, c__mult1, c__mult, add_time, c__add1, c__add; solverec. 
 Defined.
 
 Definition c__sub1 := 5.

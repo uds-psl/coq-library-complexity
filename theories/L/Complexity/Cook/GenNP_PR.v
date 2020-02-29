@@ -2945,12 +2945,13 @@ Section fixTM.
   *)
   Inductive fstateSigma := blank | someSigmaVar : nat -> fstateSigma | stateSigmaVar : nat -> fstateSigma. 
   Inductive fpolarity := polConst : polarity -> fpolarity | polVar : nat -> fpolarity.
-  Definition fpolSigma := prod fpolarity fstateSigma.
-  Definition ftapeSigma := sum delim fpolSigma.
-  Definition fStates := prod nat fstateSigma.
-  Definition fGamma := sum fStates ftapeSigma. 
+  (*these are notations instead of definitions because extraction cannot deal with aliases *)
+  Notation fpolSigma  := (prod fpolarity fstateSigma).
+  Notation ftapeSigma := (sum delim fpolSigma).
+  Notation fStates := (prod nat fstateSigma).
+  Notation fGamma := (sum fStates ftapeSigma).
   Inductive fpreludeSig' := fnblank | fnstar | fndelimC | fninit | fnsigVar (n : nat). 
-  Definition fAlphabet := sum fGamma fpreludeSig'. 
+  Notation fAlphabet := (sum fGamma fpreludeSig'). 
 
   Inductive evalEnv X Y Z W := {
                               polarityEnv : list X;
@@ -3306,14 +3307,14 @@ Section fixTM.
     isFlatEnvOf envFlat envFin -> bound_Alphabet envFin c <-> bound_Alphabet envFlat c. 
   Proof. 
     intros (H1 & H2 & H3 & H4). 
-    destruct c; cbn in *. 
-    - destruct f; cbn in *. 
+    destruct c as [f | f]; cbn in *. 
+    - destruct f as [f | f]; cbn in *. 
       + destruct f; cbn. destruct f; cbn.
         * rewrite H4. unfold boundVar. rewrite map_length. tauto.
         * rewrite H4, H2; unfold boundVar. rewrite !map_length. tauto.
         * rewrite H4, H3; unfold boundVar. rewrite !map_length; tauto.
-      + destruct f; cbn; [tauto | ]. 
-        destruct f; cbn. destruct f, f0; cbn. 
+      + destruct f as [f | f]; cbn; [tauto | ]. 
+        destruct f as [f f0]; cbn. destruct f, f0; cbn. 
         all: try rewrite H1; try rewrite H2; try rewrite H3; try rewrite H4.
         all: unfold boundVar; try rewrite !map_length; tauto.  
     - destruct f; cbn in *; try easy. unfold boundVar. now rewrite H2, map_length.  
