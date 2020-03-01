@@ -137,9 +137,43 @@ Module CheckTapeContains.
        repeat (autorewrite with list;cbn). rewrite Ht5. easy.
     Qed.
 
-    (* TODO: Termination *)
+    Context T__X (Terminates_M_checkX : projT1 M_checkX ↓ T__X).
 
-
+    Lemma Terminates: projT1 M ↓ (fun t k => exists k', T__X ([|tape_move_right t[@Fin0]|]) k'
+                                                  /\ k' + 4 * (| right t[@Fin0] |) + 19 <= k ).
+    Proof.
+      eapply TerminatesIn_monotone.
+      { unfold M. TM_Correct. all:eassumption. }
+      intros t k (k'&HT__X&?). infTer 3. shelve.
+      cbn. intros tout b (?&Hb&->&->).
+      destruct b. 2:now apply Nat.le_0_l.
+      infTer 8. 1:{ intros ? _ Heq. unfold tapes in t,tout. destruct_vector;cbn in *.
+                    rewrite <- Heq in HT__X. eassumption. }
+      intros ? ? (_&t1&Ht&Hx). destruct b. 2:now apply Nat.le_0_l.
+      infTer 4. intros t2 _ Ht2.
+      infTer 4. intros ? b' (?&Hb'&->&->).
+      destruct b'. 2:now apply Nat.le_0_l.
+      infTer 4. intros t3 _ Ht3.
+      infTer 4. intros ? b2 (?&Hb2&->&->). destruct b2.  2:now apply Nat.le_0_l.
+      infTer 4. intros t4 _ ->.
+      destruct (current t3[@Fin0]) eqn: Hc3;inv Hb2.
+      destruct (current t2[@Fin0]) as [[[] | ]| ] eqn: Hc2 ;inv Hb'.
+      erewrite Ht3,tape_move_right_left. 2:eassumption. rewrite Ht3 in Hc3.  clear t3 Ht3 t4.
+      rewrite Ht2. hnf in Hx. destruct Hx as [(x&t__L&t__R&(x__hd&x__tl&eqx__hd&Ht1x)&(x__init&x__last&eqx__init&Htoutx)) _].
+      rewrite Htoutx in *. clear Htoutx tout. rewrite Ht2 in Hc2;cbn in Hc2. 
+      destruct t__R; cbn in *;inv Hc2. rewrite Ht2 in Hc3. destruct t__R;cbn in *. 2:easy. clear Hc3 t2 Ht2. 
+      (destruct (current t[@Fin0])  as [ [ [] | ] | ] eqn:Hct;inv Hb);[].
+      rewrite Ht1x in Ht. clear Ht1x t1.
+      revert Ht. destruct (t[@Fin0]) eqn:Heqt;inv Hct. unfold retract_inr_f. destruct l0;cbn. easy. intros [= -> <- <-].
+      rewrite MoveToSymbol_L_steps_local with (sym:=inl START). 3:easy. 
+      2:{ cbn. instantiate (2:=(_::_::_)). reflexivity. }
+      setoid_rewrite (_ : (| inl STOP :: inr (Retr_f x__last) :: map (fun a : sig => inr (Retr_f a)) (rev x__init) |) = (|right t[@Fin0] |) ). reflexivity.
+      rewrite Heqt. apply (f_equal (@length _)) in eqx__hd. apply (f_equal (@length _)) in eqx__init.
+      cbn.  repeat (cbn [length] in *;autorewrite with list in * ). Lia.nia.
+      Unshelve.
+      Import Ring Arith.
+      ring_simplify. rewrite <- H. cbn - [plus mult]. Lia.nia.
+    Qed.
     
   End fixx.
 End CheckTapeContains.

@@ -6,38 +6,54 @@ Import EncodeTapes EncodeTapesInvariants.
 
 From Coq.ssr Require ssrfun.
 Module Option := ssrfun.Option.
-From Coq Require ssreflect ssrfun ssrbool.
 
-Section wlog.
-  (*Import ssreflect ssrfun ssrbool.
-  Set Implicit Arguments.
-  Unset Strict Implicit.
-  Unset Printing Implicit Defensive.*)
-  Global Instance tape_encode_prefixInjective sig: Encode_prefixInjective (Encode_tape sig).
-  Proof.
-    (** General Idea: encode_tape_invariants can be used to show equal length
-    Then we could prove a lemma that it suffices that the dame symbol is marked and tape_to_list is the same or something... *)
-    
-    (*econstructor.
-    unfold encode;cbn.
-    intros x x'.
-    wlog: x x' / (length (encode_tape x) <= length (encode_tape x')).
-    {intros H. decide (length (encode_tape x) <= length (encode_tape x')). now apply H.
-     intros. symmetry. eapply H. nia. now setoid_rewrite H0. }
-    intros Hle t t' H.
-    specialize encode_tape_invariants with (t0:=x) as [-> | (b__L&b__R&t__x&Hx&Hsymb__x&Hmark__x&neq__x)]. now destruct x';inv H.
-    specialize encode_tape_invariants with (t0:=x') as [-> | (b__L'&b__R'&t__x'&Hx'&Hsymb__x'&Hmark__x'&neq__x')]. now destruct x;inv H.
-(* TODO: 
--may eb seperate invariants into seperat lemmas?*)
-    
-    (*assert (Hfst := f_equal (firstn (| encode_tape x |)) H). assert (Hskip := f_equal (skipn (| encode_tape x |)) H).
-    rewrite firstn_all2 with (l:=)
-    
-    
-    ssreflect.ssr_wlog *) *)
-  Admitted.
-End wlog.
-    
+Lemma tape_encode_injective sig (t t' : tape sig): encode_tape t = encode_tape t' -> t = t'.
+Proof.
+  intros H. specialize (f_equal (fun l => hd_error (rev l)) H ) as Hlast. cbn in Hlast.
+  destruct t;destruct t';cbn in H,Hlast|-*;inv H;repeat (autorewrite with list in Hlast;cbn in Hlast);inv Hlast.
+  -easy. 
+  -eapply app_inv_tail in H2. rewrite Prelim.map_inj in H2. congruence. now intros ? ? [=]. 
+  -apply (f_equal (@rev _)) in H1. autorewrite with list in H1. cbn in H1.
+   rewrite !map_rev,!rev_involutive in H1. inv H1. rewrite Prelim.map_inj in H2. congruence. now intros ? ? [=]. 
+  -rewrite <- (rev_involutive l), <- (rev_involutive l1);revert H1.
+   generalize (rev l1), (rev l);clear l l1;intros t t' Heq.
+   induction t in t',Heq|-*. all:destruct t';cbn in Heq;revert Heq. 2,3:now intros [=].
+   +intros [= -> Heq].
+    eapply app_inv_tail in Heq. rewrite Prelim.map_inj in Heq. congruence. now intros ? ? [=].
+   +intros [= ->  Heq]. cbn. apply IHt in Heq as [= <- <- <-]. easy.
+Qed.
+
+Instance tape_encode_prefixInjective sig: Encode_prefixInjective (Encode_tape sig).
+Proof.
+  econstructor.
+  unfold encode;cbn.
+  enough (H:(forall x x' : tape sig,
+            | encode_tape x | <= | encode_tape x' | ->
+                                                   forall t t' : list (sigTape sig), encode_tape x ++ t = encode_tape x' ++ t' -> x = x')).
+  {intros x x'. decide (length (encode_tape x) <= length (encode_tape x')). now apply H.
+   intros. symmetry. eapply H. nia. now setoid_rewrite H0. } 
+  intros x x' Hle t t' H.
+  specialize encode_tape_invariants with (t0:=x) as [-> | (b__L&b__R&t__x&Hx&Hsymb__x&Hmark__x&neq__x)]. now destruct x';inv H.
+  specialize encode_tape_invariants with (t0:=x') as [-> | (b__L'&b__R'&t__x'&Hx'&Hsymb__x'&Hmark__x'&neq__x')]. now destruct x;inv H.
+  assert (Hl_eq:| encode_tape x | = | encode_tape x' |).
+  { decide (| encode_tape x | < | encode_tape x' |) as [Hlt | Hlt]. 2:nia. exfalso.
+    rewrite Hx, Hx' in Hlt. cbn in Hlt. apply lt_S_n in Hlt. autorewrite with list in Hlt. apply Nat.add_lt_mono_r in Hlt.
+    assert (Hlast:nth_error (encode_tape x ++ t) (1 +  | t__x |) = Some (RightBlank b__R)).
+    { rewrite Hx. rewrite nth_error_app1. 2:now cbn;autorewrite with list;cbn;nia.
+      setoid_rewrite (nth_error_app2 (LeftBlank b__L :: t__x)). 2:cbn;nia.
+      replace ((1 + (| t__x |) - (| LeftBlank b__L :: t__x |))) with 0 by (cbn;nia). easy.
+    }
+    rewrite H, Hx' in Hlast.
+    rewrite nth_error_app1 in Hlast. 2:now cbn;autorewrite with list;cbn;nia.
+    cbn in Hlast. setoid_rewrite nth_error_app1 in Hlast. 2:nia.
+    ediscriminate (Hsymb__x' (RightBlank _)). eapply nth_error_In;eassumption.
+  }
+  specialize (f_equal (firstn (| encode_tape x |)) H) as Heq. rewrite Hl_eq in Heq at 2.
+  rewrite !firstn_app , !Nat.sub_diag, !firstn_all in Heq. apply app_inv_tail in Heq.
+  rewrite <- Heq in *. clear Hle Hl_eq Hmark__x'.
+  now apply tape_encode_injective.
+Qed.
+
 Module CheckEncodesTape.
   Section checkEncodesTape.
 
