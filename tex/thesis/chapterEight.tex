@@ -1,5 +1,270 @@
-\chapter{Reducing Formula Satisfiability To SAT}\label{chap:fsat_sat}
 
-\section{The Tseytin Transformation}
+\chapter{Reducing Formula Satisfiability To SAT}\label{chap:fsat_sat}
+In this chapter, we finally show how to convert an arbitrary logical formula $f : \formula$ into CNF. 
+If one does the conversion in a naive way, this incurs an exponential blowup. Consider, for instance, the formula $\phi_1 \lor \phi_2$ for two arbitrary formulas $\phi_1, \phi_2$. If we were to first recursively convert $\phi_1, \phi_2$ to CNFs $N_1, N_2$ and then apply distributivity to end up with a new CNF $N$ equivalent to $N_1 \lor N_2$, the number of clauses in $N$ were in $\bigO{\length{N_1} \cdot \length{N_2}}$. 
+\begin{example}\label{ex:cnf_large}
+  Assume, for instance, that $N_1 = [C_1, C_2]$ and $N_2 = [C_3, C_4]$. Then
+  \begin{align*}
+    N \leftrightarrow & N_1 \lor N_2 \\
+    \leftrightarrow & (C_1 \lor (C_3 \land C_4)) \land (C_2 \lor (C_3 \land C_4)) \\
+    \leftrightarrow & [C_1 \concat C_3, C_1 \concat C_4, C_2 \concat C_3, C_2 \concat C_4]
+  \end{align*}
+\end{example}
+
+Clearly, this does not work if we want to obtain a polynomial-time reduction. Instead, we use the Tseytin transformation~\cite{Tseitin1983}. The key insight behind the transformation is that the exponential blowup is caused by having to duplicate subformulas, as can be seen in Example~\ref{ex:cnf_large}. This can be prevented by introducing new variables which represent the subformulas, so that we may use the variable instead of duplicating the whole formula.
+Introducing new variables is fine since we only require the resulting CNF $N$ to be \emph{equisatisfiable} to the original formula $f$, i.e. $\SAT{}~N \leftrightarrow \fsat{}~f$, but not equivalent.  
+
+In the Tseytin transformation, each subformula $f'$ of the formula $f$ is represented by a variable $v'$ together with a CNF $N'$, such that $\fsat{}~f' \leftrightarrow \SAT{}~(v' \land N')$. Intuitively, the CNF $N'$ forces variable $v'$ to be equivalent to $f'$ for any assignment.
+\begin{example}
+  As an example, we consider the transformation for the disjunctive formula $f = \phi_1 \lor \phi_2$. First of all, we recursively apply the transformation to $\phi_1$ and $\phi_2$ in order to obtain variables $v_1$ and $v_2$ and CNFs $N_1$ and $N_2$ that represent the respective formulas. Of course, we have to take care that the new variables introduced for the transformation of $\phi_1$ and $\phi_2$ do not overlap.
+  We now introduce a fresh variable $v$ for the subformula $\phi_1 \lor \phi_2$ and build a CNF $N$ such that $v \land N$ is equisatisfiable to $\phi_1 \lor \phi_2$. $N$ should enforce that $v \leftrightarrow (v_1 \lor v_2)$ and that $v_1$ and $v_2$ represent $\phi_1$ and $\phi_2$, respectively.
+  Therefore, set $N = N_1 \land N_2 \land N'$, where $N'$ is the CNF 
+  \[ N' \defeq (\lnot v \lor v_1 \lor v_2) \land (\lnot v_1  \lor v) \land (\lnot v_2 \lor v), \]
+  which is equivalent to $v \leftrightarrow (v_1 \lor v_2)$.
+\end{example}
+
+\section{Preliminaries: Composing Partial Assignments}
+As mentioned in the introduction, the Tseytin transformation introduces new variables. In order to prove the transformation correct, we need some tools to be able to introduce fresh variables and compose assignments to different ranges of variables.
+
+In Section~\ref{todo}, we already introduced the predicate \varBound{} which allows us to give a bound on the variables used by a CNF. For the Tseytin transformation, this control is not fine-grained enough, as we will need to reason about non-contiguous ranges of variables such as $[0, b_1) \cup [b_2, b_3]$. We therefore generalise this notion to arbitrary ranges of variables.
+Variable ranges are formalised as predicates $r : \nat \rightarrow \Prop$. For instance, the range $[0, b1) \cup [b_2, b_3]$ is represented as $\lambda n. n < b_1 \lor (n \ge b_2 \land n \le b_3)$. Nevertheless, we use the more intuitive mathematical notation on paper and write $v \in r$ for $r~v$ and $r_1 \subseteq r_2$ for $\forall v, r_1~v \rightarrow r_2~v$.
+
+We start by introducing a predicate formalising what it means for a variable to be contained in a CNF.
+\newcommand{\inlit}{\ensuremath{\in_{\textsf{lit}}}}
+\newcommand{\inclause}{\ensuremath{\in_{\textsf{clause}}}}
+\newcommand{\incnf}{\ensuremath{\in_{\textsf{cnf}}}}
+
+\begin{align*}
+  v \inlit l &\defeq \exists b, l = (b, v) \mnote{$v \inlit{} l$}\\
+  v \inclause C &\defeq \exists l, l \in C \land v \inlit l \mnote{$v \inclause{} C$}\\
+  v \incnf N &\defeq \exists C, C \in N \land v \inclause C \mnote{$v \incnf{} N$}
+\end{align*}
+
+\begin{remark}
+  We could also have defined these relations using \varsOfCnf{} and the corresponding functions for literals and clauses. However, the direct definition makes some proofs a bit simpler.
+\end{remark}
+
+\begin{definition}[Variable Containment]
+  Let a range $r : \nat \rightarrow \Prop$ and a CNF $N$ be given. 
+  $N$ only uses variables of $r$, written \mnotec{$N \subseteq r$}, if $\forall v, v \incnf N \rightarrow v \in r$. 
+\end{definition}
+
+This definition corresponds to \varBound{} in the intuitive way:
+\begin{fact}
+  $\varBound{}~b~N \leftrightarrow N \subseteq [0, b)$
+\end{fact}
+
+Of course, variable containment is monotonous. 
+\begin{proposition}\label{prop:var_contain}\leavevmode
+  \begin{enumerate}
+    \item $r_1 \subseteq r_2 \rightarrow N \subseteq r_1 \rightarrow N \subseteq r_2$
+    \item $(N_1 \concat N_2) \subseteq r \leftrightarrow N_1 \subseteq r \land N_2 \subseteq r$
+  \end{enumerate}
+\end{proposition}
+
+\todo{maxVar, varBound for formulas}
+
+We now turn to the composition of assignments. Recall that assignments are represented by a list of variables to which $\btrue$ is assigned and to all other variables, $\bfalse$ is assigned implicitly. 
+In principle, this form of assignments is completely non-compositional, as all assignments are total. 
+However, we may still get a form of composition by overriding implicit $\bfalse$ values. If we only compose assignments over disjoint variable ranges, we may still obtain the properties one would intuitively expect. 
+
+We define variable containment $a \subseteq r$ in a similar way as for CNFs:
+\[a \subseteq r \defeq \forall v, v \in a \rightarrow v \in r \]
+Note that this definition only talks about variables to which $\btrue$ is assigned.
+We obtain the same properties as in Proposition~\ref{prop:var_contain}.
+Moreover, the following property will be quite helpful in the sequel:
+\begin{proposition}
+  Let $a \subseteq r$ and $v \notin r$. Then $\eval{a}{v} = \bfalse$.
+\end{proposition}
+
+\begin{definition}[Composition and Restriction]
+  For two assignments $a_1, a_2$, the composition $a_1 \cup a_2$ is given as $a_1 \cup a_2 \defeq a_1 \concat a_2$. 
+  That is, we assign $\btrue$ to the variables to which either $a_1$ or $a_2$ assigns $\btrue$, and assign $\bfalse$ only to those values to which neither $a_1$ nor $a_2$ assigns $\btrue$.
+
+  The restriction of $a$ to the range $[0, b)$ is defined as $a|_b \defeq \withl v \withm v \in a \land v \overset{?}{<} b \withr$.\footnote{We restrict this to ranges $[0, b)$ as we would have to reason about Boolean deciders for arbitrary ranges $r$ otherwise.} 
+\end{definition}
+
+Regarding composition, we can show that adding an assignment to variables which are disjoint from the variables used in a CNF does not change the result of evaluation. 
+\begin{proposition}
+  Let ranges $r, r' : \nat \rightarrow \Prop$ and assignments $a, a'$ be given with $a' \subseteq r'$ and $\forall n, \lnot (n \in r \land n \in r')$, i.e.\ $r$ and $r'$ are disjoint. Then:
+  \begin{enumerate}
+    \item $v \in r \rightarrow \evalA{a}{v} = \evalA{(a \cup a')}{v}$
+    \item $N \subseteq r_1 \rightarrow (\evalA{a}{N} = \btrue \leftrightarrow \evalA{(a \cup a')}{N} = \btrue)$
+  \end{enumerate}
+\end{proposition}
+
+\todo{restrict formula equisat}
+
+\begin{remark}
+  During the development of the proof, we also considered various other forms of assignments which directly allow for partial assignments and thus admit a more intuitive form of composition (for instance the explicit assignments of Chapter~\ref{chap:bpr_fsat}). 
+  However, we need to directly reason about evaluation for much of the proof of correctness. Partial assignments require us to define the result of evaluation as an option value, which requires additional reasoning. 
+  We thus think that the added expressivity of partial assignments is not worth it.
+\end{remark}
+
+\section{Correctness of the Tseytin Transformation}
+In this section, we formally define the Tseytin transformation and verify its correctness. 
+The main effort will be to justify the individual tranformations for the operators $\land, \lor$ and $\lnot$ due to the need to compose the new variables introduced by the subformulas. With this in mind, our first step is to eliminate $\lor$ in the formula so that we can omit the proof of correctness for this operator without loss of generality. Then, the main step for proving the correctness is to define a relation between formulas and CNFs that is strong enough for an inductive proof to go through.
+
+\newcommand{\eliminateOr}{\textsf{eliminateOr}}
+\newcommand{\orFree}{\textsf{orFree}}
+
+The operator $\lor$ can directly be eliminated by applying De Morgan's law $f_1 \lor f_2 \leftrightarrow \lnot (\lnot f_1 \land \lnot f_2)$. We assume a function $\eliminateOr : \formula \rightarrow \formula$ applying this law recursively. 
+Moreover, we use an inductive predicate $\orFree : \formula \rightarrow \Prop$ that holds exactly for all formulas not containing an application of $\lor$. 
+We have the following properties:
+\begin{proposition}[Properties of \eliminateOr]\label{prop:eliminateOr}\leavevmode
+  \begin{enumerate}
+    \item $\orFree~(\eliminateOr~f)$
+    \item $\evalA{a}{f} = \evalA{a}{(\eliminateOr~f)}$
+  \end{enumerate}
+\end{proposition}
+
+\newcommand{\tseytin}{\textsf{tseytin}}
+\newcommand{\var}{\textsf{var}}
+\subsection{The Tseytin Transformation}
+Now, we define the transformation function. The main challenge is to keep track of the used variables, such that we can easily introduce a fresh variable as needed. 
+To that end, we define an auxiliary function $\tseytin' : \var \rightarrow \formula \rightarrow \var \times \cnf \times \var$ (Fig.~\ref{lst:tseytin}). 
+It first argument is the next unused variable $nf$ (short for ``next free''), followed by the formula $f$ we would like to transform. It returns a triple $(rv, N, nf')$, where $rv$ is the variable representing the formula, $N$ is the accompanying CNF, and $nf'$ is the next free variable after transforming $f$. 
+The function's different cases make use of primitive functions introducing the CNF constraints. They can be found in Fig.~\ref{fig:prim_cnfs}, together with their correctness statements. 
+Note that we introduce a fresh variable for the variable base case, too, and force this variable to be equivalent to the original one. This is a design choice we make to simplify the invariant for the proof of correctness a bit. Alternatively, this case could read $\tseytin'~nf~v \defeq (v, \nil, nf)$, returning just the original variable with an empty CNF.
+
+\todo{introduce var in earier chapter}
+\begin{figure}
+\begin{align*}
+  \tseytin' &: \var \rightarrow \formula \rightarrow \var \times \cnf \times \var \\
+  \tseytin'~nf~\btrue &\defeq (nf, \textsf{tseytinTrue}~nf, \natS{nf}) \\
+  \tseytin'~nf~v &\defeq (nf, \textsf{tseytinEquiv}~v~nf, \natS{nf}) \\
+  \tseytin'~nf~(f_1 \land f_2) &\defeq \begin{aligned}[t] 
+    &\llet \\
+    & \quad (rv_1, N_1, nf_1) = \tseytin'~nf~f_1 \\
+    & \quad (rv_2, N_2, nf_2) = \tseytin'~nf_1~f_2 \\
+    & \lin (nf_2, N_1 \concat N_2 \concat \textsf{tseytinAnd}~nf_2~rv_1~rv_2, \natS{nf_2})
+  \end{aligned}\\
+    \tseytin'~nf~(\lnot f) &\defeq \begin{aligned}[t]
+      &\llet (rv, N, nf') = \tseytin'~nf~f \\
+      &\lin (nf', N \concat \textsf{tseytinNot}~nf'~rv, \natS{nf})
+    \end{aligned} \\
+  \tseytin'~nf~(f_1 \lor f_2) &\defeq \ldots \\[0.8em]
+  \tseytin & : \formula \rightarrow \var \times \cnf \\
+  \tseytin~f &\defeq \llet (v, N, \_) = \tseytin'~(\natS{\textsf{maxVar}~f})~\lin (v, N) 
+\end{align*}
+\caption{The Tseytin transformation is defined via a an auxiliary function keeping track of the next free variable, which is initialised with the successor variable of the maximum variable used by the formula. The omitted case for $\lor$ is defined analogously to $\land$, replacing \textsf{tseytinAnd} with \textsf{tseytinOr}.}\label{lst:tseytin}
+\end{figure}
+
+\begin{figure}
+  \begin{center}
+    \begin{tabular}{c|c} 
+      Function & CNF \\
+      \midrule{}
+      $\textsf{tseytinAnd}~v~v_1~v_2$ & $(\overline{v} \lor v_1) \land (\overline{v} \lor v_2) \land (v \lor \overline{v_1} \lor \overline{v_2})$ \\
+      $\textsf{tseytinOr}~v~v_1~v_2$ & $(\overline{v} \lor v_1 \lor v_2) \land (v \lor \overline{v_1}) \land (v \lor \overline{v_2})$ \\
+      $\textsf{tseytinNot}~v~v'$ & $(\overline{v} \lor \overline{v'}) \land (v \lor v')$ \\
+      $\textsf{tseytinEquiv}~v~v'$ & $(v \lor \overline{v'}) \land (\overline{v} \lor v')$ \\
+      $\textsf{tseytinTrue}~v$ & $v$ 
+      %$a \models \textsf{tseytinAnd}~v~v_1~v_2 \leftrightarrow (\evalA{a}{v} = \btrue \leftrightarrow \evalA{a}{v_1} = \btrue \land \evalA{a}{v_2} = \btrue)$ 
+    \end{tabular}
+  \end{center}
+  \caption{The primitive CNFs for the Tseytin transformation. We use the notation $\overline{v}$ for $\lnot v$.}\label{fig:prim_cnfs}
+\end{figure}
+
+\subsection{Proof of Correctness}
+We now show \tseytin{} to be correct, in the sense that the resulting pair $(v, N)$ of representing variable $v$ and CNF $N$ is equisatisfiable to the original formula. Formally, we define the following relation:
+\newcommand{\frepr}{\sdststile{}{}}
+\begin{definition}[Representation of Formulas by CNFs]
+  \[ f \frepr{} (v, N) \defeq \fsat{}~f \leftrightarrow \SAT{}~([(\btrue, v)] :: N)\]
+\end{definition}
+
+The statement we would like to prove is that $\tseytin~f = (v, N) \rightarrow f \frepr{} (v, N)$. As the function is defined in terms of $\tseytin'$, we first prove a statement for this function. The first direct generalisation one might come up with is
+\[\varBound~b~f \rightarrow nf \ge b \rightarrow \tseytin'~nf~f = (v, N, nf') \rightarrow f \frepr{} (v, N), \]
+where we have generalised the initial value $\natS{\textsf{maxVar}~f}$ for $nf$.
+However, an inductive proof still does not go through: in the cases where an operator is used, we do not have enough information to do any reasoning about the assignments as the relation does not hold any information on the structure of the CNFs and assignments. 
+We therefore define a stronger relation parameterised over $b$, $nf$, and $nf'$. Intuitively, the variable range $[0, b)$ is used by the original formula and $[nf, nf')$ is the range of new variables introduced by the transformation.
+
+\newcommand{\Frepr}[3]{\sdststile{\ensuremath{#3}}{\ensuremath{#1, #2}}}
+\begin{definition}[Strengthened Representation Relation]~\\
+  $f \Frepr{nf}{nf'}{b} (v, N)$, if the following conditions hold:
+  \begin{itemize}
+    \item $N \subseteq ([0, b) \cup [nf, nf'))$,
+    \item $v \in [nf, nf')$,
+    \item for all $a \subseteq [0, b)$, there exists $a' \subseteq [nf, nf')$ such that $(a \cup a') \models N$ and $a \models f \leftrightarrow \evalA{(a \cup a')}{v} = \btrue$,
+    \item and for all $a$ with $a \models N$, the equivalence $\evalA{a}{v} = \btrue \leftrightarrow (a |_b) \models f$ holds.
+  \end{itemize}
+\end{definition}
+
+The first two conditions make the expected statements about the range of used variables. Note that the second condition would be too strong if we had not chosen to introduce a new variable in the variable case of the transformation.
+
+The third condition states that for any assignment to the original variables $[0, b)$, we can extend this assignment to the new variables in range $[nf, nf')$ such that the CNF $N$ is satisfied. Moreover, this assignment satisfies $f$ if, and only if, $a'$ assigns $\btrue$ to the representing variable.
+Intuitively, the condition does hold since the CNF produced by the Tseytin transformation only contains constraints which relate the original variables to the new variables; therefore, for any assignment to the original variables, we should be able to find a consistent assignment for the new variables. Only if we force the representing variable to be $\btrue$ is $N$ actually equisatisfiable to $f$.
+
+Finally, the fourth condition says that an assignment satifying $N$ assigns the value $\btrue$ to the representing variable $v$ if, and only if, the corresponding assignment to the original variables satisfies $f$. 
+\todo{leave out the restriction?}
+
+Based on this relation, we can prove the following statement by induction on $f$: 
+\[\varBound~b~f \rightarrow nf \ge b \rightarrow \tseytin'~nf~f = (v, N, nf') \rightarrow f \Frepr{nf}{nf'}{b} (v, N) \]
+
+We factor out the inductive steps into compatbility lemmas for the operators. 
+
+\begin{lemma}[Compatibility with $\land$]\label{lem:compat_and}
+  Assume that 
+  \begin{itemize}
+    \item $\forall nf~nf'~v~N, nf \ge b \rightarrow \tseytin'~nf~f_1 = (v, N, nf') \rightarrow f_1 \Frepr{nf}{nf'}{b} (v, N)$,
+    \item $\forall nf~nf'~v~N, nf \ge b \rightarrow \tseytin'~nf~f_2 = (v, N, nf') \rightarrow f_2 \Frepr{nf}{nf'}{b} (v, N)$.
+  \end{itemize}
+  Then $\forall nf~nf'~v~N, nf \ge b \rightarrow \tseytin'~nf~(f_1 \land f_2) = (v, N, nf') \rightarrow (f_1 \land f_2) \Frepr{nf}{nf'}{b} (v, N)$.
+\end{lemma}
+\begin{proof}
+  TODO
+\end{proof}
+
+\begin{lemma}[Compatiblity with $\lnot$]\label{lem:compat_not}~\\
+  Assume $\forall nf~nf'~v~N, nf \ge b \rightarrow \tseytin'~nf~f = (v, N, nf') \rightarrow f \Frepr{nf}{nf'}{b} (v, N)$. 
+  Then $\forall nf~nf'~v~N, nf \ge b \rightarrow \tseytin'~nf~(\lnot f) = (v, N, nf') \rightarrow (\lnot f) \Frepr{nf}{nf'}{b} (v, N)$. 
+\end{lemma}
+\begin{proof}
+  TODO
+\end{proof}
+
+Assuming that the formula does not contain $\lor$'s, we can now prove the desired statement. 
+\begin{theorem}[Correctness of $\tseytin'$]
+  \[\orFree~f \rightarrow \varBound~b~f \rightarrow nf \ge b \rightarrow \tseytin'~nf~f = (v, N, nf') \rightarrow f \Frepr{nf}{nf'}{b} (v, N)\] 
+\end{theorem}
+\begin{proof}
+  By induction on $f$.
+  \begin{description}
+    \item[$f = \btrue$:] TODO
+    \item[$f = v$:] TODO
+    \item[$f = f_1 \land f_2$:] By inversion on $\varBound~b~f$ and Lemma~\ref{lem:compat_and}.
+    \item[$f = f_1 \lor f_2$:] Contradictory.
+    \item[$f = \lnot f'$:] By inversion on $\varBound~b~f$ and Lemma~\ref{lem:compat_not}.
+  \end{description}
+\end{proof}
+
+We get the correctness statement for \tseytin{} as a straightforward corollary, after having shown that $\Frepr{nf}{nf'}{b}$ is indeed stronger than $\frepr$.
+
+\begin{proposition}
+  Let $b \defeq \natS{\maxVar{}~f}$. Then $f \Frepr{nf}{nf'}{b} (v, N) \rightarrow f \frepr{} (v, N)$. 
+\end{proposition}
+
+\begin{corollary}[Correctness of \tseytin]\label{cor:tseytin_correct}
+  Assume that $\orFree~f$. Then $\tseytin~f = (v, N) \rightarrow f \frepr{} (v, N)$. 
+\end{corollary}
+
+The full reduction first eliminates disjunctions and then applies the Tseytin transformation.
+\[\textsf{reduction} f \defeq \llet (v, N) = \tseytin~(\eliminateOr~f) \lin [(\btrue, v)] \concat N \]
+\begin{lemma}[\fsat{} Reduces to \SAT{}]
+  \[\fsat{}~f \leftrightarrow \SAT{}~(\textsf{reduction}~f) \]
+\end{lemma}
+\begin{proof}
+  By combining Proposition~\ref{prop:eliminateOr} and Corollary~\ref{cor:tseytin_correct}.
+\end{proof}
+
+One quickly notes that the CNFs produced by this reduction have a clause size of at most 3. We can easily adapt the reduction to produce 3-CNFs by making the clause size exactly 3. For that, we duplicate some of the literals in the clauses produced by the functions in Fig.~\ref{fig:prim_cnfs} and the function \textsf{reduction}.
+Thus, we directly obtain a reduction to 3-\SAT{}, too.
+
+\begin{lemma}[\fsat{} Reduces to 3-\SAT{}]
+  \[\fsat{}~f \leftrightarrow 3-\SAT{}~(\textsf{reduction}'~f), \]
+  where $\textsf{reduction}'$ is the reduction obtained by the modifications described above.
+\end{lemma}
+
+\section{Linear Size Increase}
 
 \section{Mechanisation}
