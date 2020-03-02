@@ -13,117 +13,6 @@ Notation literal := ((bool * var)%type) (only parsing).
 Notation clause := (list literal) (only parsing). 
 Notation cnf := (list clause) (only parsing).
 
-(*Bounds on the number of used variables*)
-Inductive varBound_clause (n : nat) : clause -> Prop :=
-  | varBound_clauseB : varBound_clause n []
-  | varBound_clauseS : forall b k c, k < n -> varBound_clause n c -> varBound_clause n ((b, k) :: c).  
-
-Inductive varBound_cnf (n : nat) : cnf -> Prop :=
-   | varBound_cnfB : varBound_cnf n [] 
-   | varBound_cnfS : forall cl c, varBound_clause n cl -> varBound_cnf n c -> varBound_cnf n (cl :: c).  
-
-Hint Constructors varBound_clause varBound_cnf. 
-
-Lemma varBound_clause_iff (n : nat) (c : clause) : varBound_clause n c <-> forall (s : bool) (k : nat), (s, k) el c -> k < n.
-Proof.
-  split.
-  - induction 1.
-    + intros s k []. 
-    + intros s k0 [H1 | H1].
-      * inv H1. now apply H. 
-      * now apply IHvarBound_clause with (s := s). 
-  - induction c.
-    + intros. constructor. 
-    + intros. destruct a. constructor.
-      * apply H with (s := b). firstorder.  
-      * apply IHc. firstorder.  
-Qed. 
-
-Lemma varBound_cnf_iff (n : nat) (c : cnf) : varBound_cnf n c <-> forall (cl : clause), cl el c -> varBound_clause n cl.
-Proof.
-  split.
-  - induction 1. 
-    + intros cl [].
-    + intros cl' [-> |Hel]. assumption. now apply IHvarBound_cnf. 
-  - intros H. induction c; constructor.
-    + now apply H. 
-    + apply IHc. firstorder.
-Qed. 
-
-Lemma varBound_clause_monotonic (c : clause) (n n' : nat) : n <= n' -> varBound_clause n c -> varBound_clause n' c. 
-Proof. intros H1 H2. induction H2. constructor. constructor. lia. auto. Qed. 
-
-Lemma varBound_cnf_monotonic (c : cnf) (n n' : nat) : n <= n' -> varBound_cnf n c -> varBound_cnf n' c.
-Proof.
-  intros H1 H2. induction H2; constructor.
-  now apply varBound_clause_monotonic with (n:= n). assumption. 
-Qed.
-
-Lemma varBound_cnf_app (c1 c2 : cnf) (n : nat) : varBound_cnf n c1 /\ varBound_cnf n c2 <-> varBound_cnf n (c1 ++ c2).
-Proof.
-  induction c1; cbn. 
-  - split; [ tauto | intros H; split; eauto  ]. 
-  - split. 
-    + intros (H1 & H2). inv H1. constructor; [eauto | now apply IHc1].
-    + intros H. inv H. apply IHc1 in H3 as (H3 & H4). split; eauto. 
-Qed. 
-
-(*A computable notion of boundedness *)
-Definition clause_maxVar (c : clause) := fold_right (fun '(_, v) acc => Nat.max acc v) 0 c. 
-Definition cnf_maxVar (c : cnf) := fold_right (fun cl acc => Nat.max acc (clause_maxVar cl)) 0 c.
-
-Lemma cnf_maxVar_app c1 c2 : cnf_maxVar (c1 ++ c2) = Nat.max (cnf_maxVar c1) (cnf_maxVar c2). 
-Proof. 
-  induction c1. 
-  - easy.
-  - cbn. fold (cnf_maxVar (c1 ++ c2)). fold (cnf_maxVar c1). rewrite IHc1. lia. 
-Qed. 
-
-Lemma clause_maxVar_bound (c : clause) : varBound_clause (S (clause_maxVar c)) c.
-Proof.
-  induction c.
-  - cbn. constructor.
-  - destruct a. constructor; cbn.
-    + lia.   
-    + eapply varBound_clause_monotonic.
-      2: apply IHc. unfold clause_maxVar. cbn. lia. 
-Qed.
-
-Lemma cnf_maxVar_bound (c : cnf) : varBound_cnf (S (cnf_maxVar c)) c.
-Proof.
-  induction c.
-  - cbn; constructor.
-  - constructor.
-    + cbn. eapply varBound_clause_monotonic. 2: apply clause_maxVar_bound. lia. 
-    + eapply varBound_cnf_monotonic. 2: apply IHc. cbn. unfold cnf_maxVar. lia.  
-Qed. 
-
-(** In principle, we would expect a strict inequality here. The reason for non-strictness is that cnf_maxVar returns 0 in case of an empty CNF. *)
-Lemma clause_maxVar_bound_le (c : clause) n : varBound_clause n c -> clause_maxVar c <= n.
-Proof. 
-  induction 1 as [ | ? ? ? ? ? IH]; cbn; [lia | ].
-  rewrite IH. lia. 
-Qed. 
-
-Lemma cnf_maxVar_bound_le (c : cnf) n : varBound_cnf n c -> cnf_maxVar c <= n. 
-Proof. 
-  induction 1 as [ | ? ? ? ? IH]; cbn; [ lia | ].
-  rewrite IH. rewrite clause_maxVar_bound_le by apply H. lia. 
-Qed. 
-
-(*size of CNF in terms of number of operators *)
-Definition size_clause (c : clause) := length c. (*we should subtract 1 here, but this would only complicate things *)
-Definition size_cnf (c : cnf) := sumn (map size_clause c) + length c. 
-
-Lemma size_clause_app c1 c2 : size_clause (c1 ++ c2) = size_clause c1 + size_clause c2. 
-Proof. 
-  unfold size_clause. now rewrite app_length. 
-Qed.
-
-Lemma size_cnf_app c1 c2 : size_cnf (c1 ++ c2) = size_cnf c1 + size_cnf c2. 
-Proof. 
-  unfold size_cnf. rewrite map_app, sumn_app, app_length. lia.
-Qed. 
 
 (*Assignments as lists of natural numbers: contain the indices of variables that are mapped to true *)
 Notation assgn := (list nat). 
@@ -227,6 +116,75 @@ Proof.
   intros H. enough (evalCnf a1 c = true <-> evalCnf a2 c = true). 
   - destruct evalCnf; destruct evalCnf; firstorder; easy.
   - rewrite !evalCnf_clause_iff. now setoid_rewrite (evalClause_assgn_equiv _ H).
+Qed. 
+
+(** Bounds on the number of used variables*)
+Inductive varBound_clause (n : nat) : clause -> Prop :=
+  | varBound_clauseB : varBound_clause n []
+  | varBound_clauseS : forall b k c, k < n -> varBound_clause n c -> varBound_clause n ((b, k) :: c).  
+
+Inductive varBound_cnf (n : nat) : cnf -> Prop :=
+   | varBound_cnfB : varBound_cnf n [] 
+   | varBound_cnfS : forall cl c, varBound_clause n cl -> varBound_cnf n c -> varBound_cnf n (cl :: c).  
+
+Hint Constructors varBound_clause varBound_cnf. 
+
+Lemma varBound_clause_iff (n : nat) (c : clause) : varBound_clause n c <-> forall (s : bool) (k : nat), (s, k) el c -> k < n.
+Proof.
+  split.
+  - induction 1.
+    + intros s k []. 
+    + intros s k0 [H1 | H1].
+      * inv H1. now apply H. 
+      * now apply IHvarBound_clause with (s := s). 
+  - induction c.
+    + intros. constructor. 
+    + intros. destruct a. constructor.
+      * apply H with (s := b). firstorder.  
+      * apply IHc. firstorder.  
+Qed. 
+
+Lemma varBound_cnf_iff (n : nat) (c : cnf) : varBound_cnf n c <-> forall (cl : clause), cl el c -> varBound_clause n cl.
+Proof.
+  split.
+  - induction 1. 
+    + intros cl [].
+    + intros cl' [-> |Hel]. assumption. now apply IHvarBound_cnf. 
+  - intros H. induction c; constructor.
+    + now apply H. 
+    + apply IHc. firstorder.
+Qed. 
+
+Lemma varBound_clause_monotonic (c : clause) (n n' : nat) : n <= n' -> varBound_clause n c -> varBound_clause n' c. 
+Proof. intros H1 H2. induction H2. constructor. constructor. lia. auto. Qed. 
+
+Lemma varBound_cnf_monotonic (c : cnf) (n n' : nat) : n <= n' -> varBound_cnf n c -> varBound_cnf n' c.
+Proof.
+  intros H1 H2. induction H2; constructor.
+  now apply varBound_clause_monotonic with (n:= n). assumption. 
+Qed.
+
+Lemma varBound_cnf_app (c1 c2 : cnf) (n : nat) : varBound_cnf n c1 /\ varBound_cnf n c2 <-> varBound_cnf n (c1 ++ c2).
+Proof.
+  induction c1; cbn. 
+  - split; [ tauto | intros H; split; eauto  ]. 
+  - split. 
+    + intros (H1 & H2). inv H1. constructor; [eauto | now apply IHc1].
+    + intros H. inv H. apply IHc1 in H3 as (H3 & H4). split; eauto. 
+Qed. 
+
+(*size of CNF in terms of number of operators *)
+Definition size_clause (c : clause) := length c. (*we should subtract 1 here, but this would only complicate things *)
+Definition size_cnf (c : cnf) := sumn (map size_clause c) + length c. 
+
+Lemma size_clause_app c1 c2 : size_clause (c1 ++ c2) = size_clause c1 + size_clause c2. 
+Proof. 
+  unfold size_clause. now rewrite app_length. 
+Qed.
+
+Lemma size_cnf_app c1 c2 : size_cnf (c1 ++ c2) = size_cnf c1 + size_cnf c2. 
+Proof. 
+  unfold size_cnf. rewrite map_app, sumn_app, app_length. lia.
 Qed. 
 
 (** * Verifier for SAT*)
@@ -468,6 +426,49 @@ Proof.
   unfold sat_verifier, sat_verifierb. rewrite and_comm. 
   rewrite andb_true_iff. rewrite assignment_small_decb_iff. 
   tauto. 
+Qed. 
+
+(** A computable notion of boundedness *)
+Definition clause_maxVar (c : clause) := fold_right (fun '(_, v) acc => Nat.max acc v) 0 c. 
+Definition cnf_maxVar (c : cnf) := fold_right (fun cl acc => Nat.max acc (clause_maxVar cl)) 0 c.
+
+Lemma cnf_maxVar_app c1 c2 : cnf_maxVar (c1 ++ c2) = Nat.max (cnf_maxVar c1) (cnf_maxVar c2). 
+Proof. 
+  induction c1. 
+  - easy.
+  - cbn. fold (cnf_maxVar (c1 ++ c2)). fold (cnf_maxVar c1). rewrite IHc1. lia. 
+Qed. 
+
+Lemma clause_maxVar_bound (c : clause) : varBound_clause (S (clause_maxVar c)) c.
+Proof.
+  induction c.
+  - cbn. constructor.
+  - destruct a. constructor; cbn.
+    + lia.   
+    + eapply varBound_clause_monotonic.
+      2: apply IHc. unfold clause_maxVar. cbn. lia. 
+Qed.
+
+Lemma cnf_maxVar_bound (c : cnf) : varBound_cnf (S (cnf_maxVar c)) c.
+Proof.
+  induction c.
+  - cbn; constructor.
+  - constructor.
+    + cbn. eapply varBound_clause_monotonic. 2: apply clause_maxVar_bound. lia. 
+    + eapply varBound_cnf_monotonic. 2: apply IHc. cbn. unfold cnf_maxVar. lia.  
+Qed. 
+
+(** In principle, we would expect a strict inequality here. The reason for non-strictness is that cnf_maxVar returns 0 in case of an empty CNF. *)
+Lemma clause_maxVar_bound_le (c : clause) n : varBound_clause n c -> clause_maxVar c <= n.
+Proof. 
+  induction 1 as [ | ? ? ? ? ? IH]; cbn; [lia | ].
+  rewrite IH. lia. 
+Qed. 
+
+Lemma cnf_maxVar_bound_le (c : cnf) n : varBound_cnf n c -> cnf_maxVar c <= n. 
+Proof. 
+  induction 1 as [ | ? ? ? ? IH]; cbn; [ lia | ].
+  rewrite IH. rewrite clause_maxVar_bound_le by apply H. lia. 
 Qed. 
 
 (** ** extraction *)
@@ -922,6 +923,7 @@ Proof.
   1, 2: apply assignment_small_decb_poly.
 Qed. 
 
+(** We obtain that SAT is in NP *)
 Lemma sat_NP : inNP (unrestrictedP SAT).
 Proof.
   apply inNP_intro with (R:= sat_verifier). 

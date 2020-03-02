@@ -70,13 +70,13 @@ Qed.
 (*A computable notion of boundedness *)
 Fixpoint formula_maxVar (f : formula) := match f with
   | Ftrue => 0
-  | Fvar v => S v
+  | Fvar v => v
   | Fand f1 f2 => Nat.max (formula_maxVar f1) (formula_maxVar f2)
   | For f1 f2 => Nat.max (formula_maxVar f1) (formula_maxVar f2)
   | Fneg f => formula_maxVar f
 end. 
 
-Lemma formula_bound_varBound f: varBound_formula (formula_maxVar f) f. 
+Lemma formula_bound_varBound f: varBound_formula (S (formula_maxVar f)) f. 
 Proof. 
   induction f; cbn.
   - eauto.

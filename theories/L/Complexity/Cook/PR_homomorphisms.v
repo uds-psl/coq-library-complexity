@@ -3,8 +3,8 @@ From Undecidability.L.Complexity.Cook Require Import Prelim PR UniformHomomorphi
 From Undecidability.L.Complexity.Cook Require BinaryPR .
 Require Import Lia.
 
-(** *Results on the behaviour of PR under string homomorphisms *)
-(*specifically, we show that we can obtain equivalent PR instances by applying injective uniform homomorphisms*)
+(** * Results on the behaviour of PR under string homomorphisms *)
+(** Specifically, we show that we can obtain equivalent PR instances by applying injective uniform homomorphisms. *)
 
 Section fixInstance.  
   Variable (Y : finType). (*target alphabet of the homomorphism *)
@@ -18,19 +18,19 @@ Section fixInstance.
   Notation final := (final fpr).
   Notation steps := (steps fpr). 
 
-  (*a unique homomorphism is defined by h' *)
+  (** A unique homomorphism is defined by h' *)
   Variable (h' : Sigma -> list Y).
   Definition h := canonicalHom h'. 
   
-  (*A0 and A1 model uniformity and ε-freeness *)
+  (** A0 and A1 model uniformity and ε-freeness *)
   Variable (k : nat). 
   Context (A0 : forall x, |h' x| = k). 
   Context (A1 : k >= 1). 
 
-  (*of course, we need injectivity *)
+  (** of course, we need injectivity *)
   Context (A2 : injective h'). 
 
-  (*we show basic results about h *)
+  (** we show basic results about h *)
   Lemma h_unifHom : uniform_homomorphism h. 
   Proof. 
     repeat split. 
@@ -85,7 +85,7 @@ Section fixInstance.
       + apply H6. 
   Qed. 
 
-  (*the transformed PR instance *)
+  (** the transformed PR instance *)
   Definition hoffset := k * offset. 
   Definition hwidth := k * width. 
   Definition hinit := h init. 
@@ -96,7 +96,7 @@ Section fixInstance.
 
   Definition hPR := Build_PR hoffset hwidth hinit hwindows hfinal hsteps.
 
-  (*from now on, we assume a well-formed instance for the main results *)
+  (** from now on, we assume a well-formed instance for the main results *)
   Context (A : PR_wellformed fpr). 
 
   Lemma hPR_wf : PR_wellformed hPR. 
@@ -110,9 +110,9 @@ Section fixInstance.
     - destruct F6 as (k0 & F6). exists k0. rewrite h_multiplier. nia. 
   Qed. 
 
-  (*we show equivalence of the original instance and the transformed instance*)
+  (** we show equivalence of the original instance and the transformed instance*)
 
-  (*agreement of rewritesHead *)
+  (** agreement of rewritesHead *)
   Lemma rewritesHead_homomorphism_iff win a b : 
     rewritesHead win a b <-> rewritesHead (hwindow win) (h a) (h b). 
   Proof. 
@@ -128,7 +128,7 @@ Section fixInstance.
       split; unfold prefix; eauto.  
   Qed. 
 
-  (*for the direction from homomorphisms to the original instance, we actually need a stronger result telling us that 
+  (** For the direction from homomorphisms to the original instance, we actually need a stronger result telling us that 
     the conclusion is again in the image of the homomorphism
     *)
   Lemma rewritesHead_homomorphism2 win a1 a2 u v: 
@@ -157,7 +157,7 @@ Section fixInstance.
       + unfold prefix. exists c2. now rewrite (proj1 h_unifHom), <- app_assoc. 
   Qed. 
 
-  (*agreement for valid*)
+  (** agreement for valid*)
   Hint Constructors valid. 
 
   Lemma valid_homomorphism1 a b : 
@@ -186,7 +186,7 @@ Section fixInstance.
       * rewrite <- !(proj1 h_unifHom). apply rewritesHead_homomorphism_iff; assumption.
   Qed. 
 
-  (**For the other direction, we again prove a stronger result saying that the conclusion is in the image of the homomorphism. 
+  (** For the other direction, we again prove a stronger result saying that the conclusion is in the image of the homomorphism. 
     The lemma decomposes to two interesting cases: 
     - the case where a single rewrite window covers the whole string
     - the case where a part of the string is already covered by some windows and we add a new window at the front
@@ -236,7 +236,7 @@ Section fixInstance.
           rewrite <- !(proj1 h_unifHom) in H3. apply rewritesHead_homomorphism_iff in H3; eauto.
   Qed. 
 
-  (**we can obtain an equivalence, but its second direction is significantly weaker than the direction which we've just shown *)
+  (** we can obtain an equivalence, but its second direction is significantly weaker than the direction which we've just shown *)
   Lemma valid_homomorphism_iff a b : 
     |a| >= width 
     -> valid offset width windows a b <-> valid hoffset hwidth hwindows (h a) (h b).
@@ -248,7 +248,7 @@ Section fixInstance.
       + apply H0. 
   Qed. 
 
-  (**this lifts to powers of valid*)
+  (** this lifts to powers of valid*)
   Lemma valid_relpower_homomorphism1 a b steps : 
     |a| >= width 
     -> relpower (valid offset width windows) steps a b 
@@ -272,7 +272,7 @@ Section fixInstance.
       + exists c'; split; [ easy | ]. econstructor; easy. 
   Qed. 
 
-  (**again a slightly weaker equivalence *)
+  (** again a slightly weaker equivalence *)
   Lemma valid_relpower_homomorphism_iff a b steps : 
     |a| >= width 
     -> relpower (valid offset width windows) steps a b <-> relpower (valid (k * offset) (k * width) hwindows) steps (h a) (h b).
@@ -283,7 +283,7 @@ Section fixInstance.
       symmetry in Heq; apply h_injective in Heq. easy. 
   Qed. 
 
-  (**agreement of the final constraints *)
+  (** agreement of the final constraints *)
   Lemma final_agree sf : 
     |init| = |sf| 
     -> satFinal offset (length init) final sf <-> satFinal hoffset (length hinit) hfinal (h sf). 
@@ -314,7 +314,7 @@ Section fixInstance.
       + rewrite h_multiplier. rewrite firstn_length. nia. 
   Qed. 
       
-  (**the transformed instance is a YES-instance iff the original instance is a YES-instance *)
+  (** the transformed instance is a YES-instance iff the original instance is a YES-instance *)
   Lemma PR_homomorphism_iff : 
     (exists sf, relpower (valid offset width windows) steps init sf /\ satFinal offset (|init|) final sf) 
     <-> (exists sf, relpower (valid hoffset hwidth hwindows) hsteps hinit sf /\ satFinal hoffset (|hinit|) hfinal sf). 
@@ -335,5 +335,13 @@ Section fixInstance.
         * apply relpower_valid_length_inv in H1; easy. 
         * apply H2. 
       + apply A4. 
+  Qed. 
+
+  Corollary PR_homomorphism_inst_iff : 
+    PRLang fpr <-> PRLang hPR. 
+  Proof. 
+    split; intros [H1 H2%PR_homomorphism_iff].
+    - split; [apply hPR_wf | apply H2].
+    - split; [apply A | apply H2]. 
   Qed. 
 End fixInstance. 
