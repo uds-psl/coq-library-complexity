@@ -13,7 +13,7 @@ Formulas are defined inductively:
 \mnote{$\formula$}
 \[f : \formula \defeq \btrue \bnfmid v \bnfmid f_1 \lor f_2 \bnfmid f_1 \land f_2 \bnfmid \lnot f \qquad v : \bvar \]
 
-One can directly derive the operators $\land$ and $\lor$ for more than two operands, which we will denote as $\bigwedge_{f \in l} f$ and $\bigvee_{f \in l} f$ for $ l : \listsof{\formula}$. 
+One can directly derive the operators $\land$ and $\lor$ for more than two operands, which we will denote by $\bigwedge_{f \in l} f$ and $\bigvee_{f \in l} f$ for $ l : \listsof{\formula}$. 
 
 Assignments $a : \assgn$ are defined in the same way as for CNFs, see Section~\ref{sec:sat}.
 An evaluation function $\eval : \assgn \rightarrow \formula \rightarrow \bool$ can be derived in the canonical way. We say that an assignment $a$ satisfies $f$, written $a \models f$, if $\evalA{a}{f} = \btrue$.
@@ -61,13 +61,11 @@ Of course, we can go back to a full assignment:
   Moreover, if $a$ satisfies $\forall x, x \in a \leftrightarrow x \ge s \land e[x-s] = \OSome{\btrue}$, then:
   \[\explicitA~a~s~(\length{e}) = e \]
 \end{proposition}
-\todo{maybe define explicitly}
-
 
 \newcommand{\projVars}{\textsf{projVars}}
 Given an explicit assignment $e$, we can project out the assignment to a particular range of variables $I = [\textsf{start}.. +\textsf{len})$:
 \[e[I] = e[\textsf{start}..+\textsf{len}) \defeq (e[\textsf{len} ..])[.. \textsf{start}).\] 
-\mnote{$e[s..+l]$} %link to projVars
+\mnote{$e[I]$} %link to projVars
 The subscripting notation thus is overloaded for full assignments and for explicit assignments, but this will not pose a problem as it will always be clear from the context what we mean.
 
 \section{Encoding Properties using Boolean Formulas}
@@ -77,7 +75,7 @@ Based on explicit assignments, we now present ways to encode predicates using fo
 \begin{definition}[Encoding of Predicates]
   \mnote{\encodesPred}
   A formula $f$ encodes a predicate $p$ on a range of variables $I = [\textsf{start}.. \textsf{start} + \textsf{len})$ if, for every assignment $a$, $a \models f$ is equivalent to satisfaction of $p$ under the partial assignment given by $I$:
-  \[\encodesPred~\textsf{start}~l~f~p \defeq \forall a, a \models f \leftrightarrow p~(a[\textsf{start} . + l]) \]
+  \[\encodesPred~\textsf{start}~l~f~p \defeq \forall a, a \models f \leftrightarrow p~(a[\textsf{start}.. + l]) \]
 \end{definition}
 
 This encoding scheme is rather simple: we can only prove statements about contiguous ranges of variables. 
@@ -85,7 +83,7 @@ A more elaborate definition allowing a more fine-grained control would be possib
 
 To stay in line with the variable range notation, we also write $\encodesPred~I~f~p$ for a range of variables $I$.
 
-A rather trivial but important fact is that \encodesPred{} is congruent. This will be quite convenient for proving correctness of encodings by switching to an equivalent characterisation of the predicate we want to encode.
+A rather trivial but important fact is that \encodesPred{} is congruent with respect to the encoded predicate. This will be quite convenient for proving correctness of encodings by switching to an equivalent characterisation of the predicate we want to encode.
 \begin{fact}\label{fact:enc_congruent}
   Let $\forall e, \length{e} = l \rightarrow p_1~e \leftrightarrow p_2~e$. Then
   \[\encodesPred~s~l~f~p_1 \leftrightarrow \encodesPred~s~l~f~p_2. \]
@@ -107,10 +105,10 @@ Our simple representation model does not allow to accurately depict this, hence 
 \begin{align*}
   \cStart~s_1~s_2 &\defeq \min~s_1~s_2 \mnote{\cStart}\\
   \cLength~s_1~s_2~l_1~l_2 &\defeq \max~(s_1 + l_1) (s_2 + l_2) - \min~s_1~s_2 \mnote{\cLength}\\
-  [s_1, s_1 + l_1) \sqcup [s_2, s_2 + l_2) &\defeq [\cStart~s_1~s_2, \cLength~s_1~s_2~l_1~l_2) \mnote{$I_1 \sqcup I_2$}
+  [s_1, s_1 + l_1) \sqcup [s_2, s_2 + l_2) &\defeq [\cStart~s_1~s_2.. +\cLength~s_1~s_2~l_1~l_2) \mnote{$I_1 \sqcup I_2$}
 \end{align*}
 
-Using \projVars, we can restore the assignment to $I_1$ and $I_2$ given an assignment to $I_1 \sqcup I_2$:
+Using $e[s..+l]$, we can restore the assignments to $I_1$ and $I_2$ given an assignment to $I_1 \sqcup I_2$:
 \begin{proposition}\label{prop:comb_proj}
   Let $I_1 = [s_1 ..+ l_1)$ and $I_2 = [s_2 ..+l_2)$. 
   \begin{enumerate}
@@ -160,6 +158,64 @@ In this section, we show how to encode the three subformulas $\phi_{\textsf{init
 As most of the encodings are straightforward to see from the definition of \PR{}, we only give an informal description for some of them. 
 
 From now on, fix a \BPR{} instance $(o, \omega, x_0, R, \Rfinal, t)$ that satisfies the syntactic constraints of Definition~\ref{def:pr}.
+For our convenience, we define $m \defeq \length{x_0}$ to be the length of each of the tableau's lines. \mnote{$m$}
+
+The variable layout of the formula we produce is demonstrated by Figure~\ref{fig:varlayout}
+\begin{figure}
+  \begin{center}
+    \begin{tikzpicture}
+      \draw (1.5, -0.75) -- (1.5, 3) -- (10, 3) -- (10, -0.75) -- (1.5, -0.75);
+      %\draw (2, -4) -- (2, 3);
+      %\draw (2.5, 3) -- (1.5, 2);
+      %\draw (9.5, -4) -- (9.5, 3);
+      \draw (1.5, 2.25) -- (10, 2.25);
+      \draw (1.5, 0) -- (10, 0);
+      \draw (1.5, 1.5) -- (10, 1.5);
+
+      \draw (2.5, 1.5) -- (2.5, 3);
+      \draw (9, 1.5) -- (9, 3);
+      \draw (2.5, 0) -- (2.5, -0.75);
+      \draw (9, 0) -- (9, -0.75);
+      
+      \node at (2, 2.625) {\small$x_0$};
+      \node at (9.5, 2.625) {\small$x_{m-1}$};
+      \node at (2, 1.875) {\small$x_m$};
+      \node at (9.5, 1.875) {\small$x_{2m-1}$};
+      \node at (2, -0.375) {\small$x_{t\cdot m}$};
+      %\node at (9.75, 0.25) {\small$x_{(t+1) \cdot m -1}$};
+
+      %\draw (4.5, 3) -- (4.5, 2);
+      %\draw (5, 3) -- (5, 2);
+      %\draw (5.5, 3) -- (5.5, 2);
+      %\draw (6, 3) -- (6, 2);
+      %\draw (7, 3) -- (7, 2);
+      %\draw (7.5, 3) -- (7.5, 2);
+      %\draw (8, 3) -- (8, 2);
+      %\draw (9, 3) -- (9, 2);
+
+      %\node at (2.25, 2.75) {\textvisiblespace};
+      %\node at (3.5, 2.75) {$\ldots$};
+      %\node at (4.75, 2.75) {\textvisiblespace};
+      %\node at (5.25, 2.75) {\small $q_0^{\blank}$};
+      %\node at (5.75, 2.75) {\small $\sigma_1$};
+      %\node at (6.5, 2.75) {$\ldots$};
+      %\node at (7.25, 2.75) {\small $\sigma_l$};
+      %\node at (7.75, 2.75) {\textvisiblespace};
+      %\node at (8.5, 2.75) {$\ldots$};
+      %\node at (9.25, 2.75) {\textvisiblespace};
+
+      \node at (5.75, -0.375) {$\cdots$};
+      \node at (5.75, 2.625) {$\cdots$};
+      \node at (5.75, 0.875) {$\vdots$};
+      %\node at (9.75, -0.375) {$\vdots$};
+
+      \path[<->] (1, -0.75) edge node[fill=white, anchor=center, pos= 0.5] {\small $t+1$} (1, 3);
+      \path[<->] (1.5, -1.25) edge node[fill=white, anchor=center, pos=0.5] {\small $m$} (10, -1.25);
+    \end{tikzpicture}     
+  \end{center}
+  \caption{The variable layout of the constructed \fsat{} instance does directly mirror the layout of the \PR{} strings in a tableau.}\label{fig:varlayout}
+\end{figure}
+
 
 We start with the encoding of $\phi_{\textsf{trans}}$.
 First of all, we need to be able to encode a single rewrite window. As a rewrite windows just encodes two lists, this is straightforward to derive. Since the premise of the window needs to match in one line of the tableau while the conclusion needs to hold for the next line, the encoding is parameterised over two indices $s_1$ and $s_2$ giving the respective start of the encoding. 
@@ -167,6 +223,7 @@ First of all, we need to be able to encode a single rewrite window. As a rewrite
 \[ \encodeWindow~s_1~s_2~w \defeq \encodeList~s_1~(\prem~w) \land \encodeList~s_2~(\conc~w)\mnote{\encodeWindow} \]
 The correctness statement of course also needs to range over all the variables between the two starting indices.
 \begin{proposition}[Correctness of \encodeWindow]
+  Let $s, l : \nat$ and $win : \win{\bool}$.
   \begin{align*}
     \encodesPred~s~(l + \omega)~&(\encodeWindow~s~(s + l)~win)\\
     & (\lambda e. e[0 ..+\omega) = \prem~win \land e[l ..+\omega) = \conc~win )
@@ -174,8 +231,9 @@ The correctness statement of course also needs to range over all the variables b
 \end{proposition}
 
 \newcommand{\encodeWindows}{\textsf{encodeWindows}}
-Of course, this can be lifted to express that one of the windows of $R$ holds by computing a disjunction over the list of windows. We assume a function $\encodeWindows : \nat \rightarrow \nat \rightarrow \formula$ taking the two start indices for that purpose, without going into more detail.
+Of course, this can be lifted to express that one of the windows of $R$ holds by computing a disjunction over the list of windows. We assume a function $\encodeWindows : \nat \rightarrow \nat \rightarrow \formula$ taking the two start indices for that purpose, without going into more detail.\mnote{\encodeWindows}
 \begin{proposition}[Correctness of \encodeWindows]
+  Let $s, l : \nat$.
   \begin{align*}
     \encodesPred~s~(l + \omega)~&(\encodeWindows~s~(s + l)) \\
                                 &(\lambda e. \exists w, w \in R \land e[0 ..+ \omega) = \prem~w \land e[l .. + \omega) = \conc~w) 
@@ -183,26 +241,30 @@ Of course, this can be lifted to express that one of the windows of $R$ holds by
 \end{proposition}
 
 A bit more interesting is the function needed to encode all windows at every offset of a string. Technically, this is a conjunction over all possible offsets. The fact that the windows only need to hold at multiples of $o$ is a minor inconvenience as this means that we cannot define the function computing the formula using direct structural recursion over the position at which we encode the windows next\footnote{Coq requires functions to be structurally recursive.}.
-Instead, we employ a step index which is initialised to the length $\length{x_0}$ of the lines of the tableau to make the function structurally recursive.
+Instead, we employ a step index which is initialised to the length $m = \length{x_0}$ of the lines of the tableau to make the function structurally recursive.
 \newcommand{\encodeWindowsLine}{\textsf{encodeWindowsLine}}
 \begin{align*}
   &\encodeWindowsLine'~\textsf{step}~l~s_1~s_2 \defeq \textbf{if}~{l \overset{?}{<} \omega}~\textbf{then}~{\btrue} \\
   &\quad\textbf{else}~\match \textsf{step} \withl 
     0 \Rightarrow \btrue \withm \natS{\textsf{step}}  
     \begin{aligned}[t]
-      \Rightarrow&~\encodeWindows~s_1~s_2  \mnote{\encodeWindowsLine}\\
+      \Rightarrow&~\encodeWindows~s_1~s_2  \\
       \land &~\encodeWindowsLine'~\textsf{step}~(l - o)~(s_1 + o)~(s_2 + o)\withr
     \end{aligned} \\[0.7em]
-            &\encodeWindowsLine~\textsf{step}~s \defeq \encodeWindowsLine'~(\length{x_0})~(\length{x_0})~s~(s + \length{x_0}) 
+            &\encodeWindowsLine~\textsf{step}~s \defeq \encodeWindowsLine'~m~m~s~(s + m) 
+            %\mnote{\encodeWindowsLine}
 \end{align*}
-\begin{proposition}[Correctness of \encodeWindowsLine']
-  Let $l \le \length{x_0}$. 
+Intuitively, the parameter $s_1$ of $\encodeWindowsLine'$ determines the first index starting at which the premises of the windows are placed, while $s_2$ is the starting index of the conclusions.
+
+\todo{find solution for encodeWindowsLine box}
+\begin{proposition}[Correctness of $\encodeWindowsLine'$]
+  Let $l \le m$. 
   \begin{align*}
-    \encodesPred~s~(l + \length{x_0})~&(\encodeWindowsLine'~l~l~s~(s + \length{x_0})) \\
-                                      &(\lambda e. (e[0 ..+l)) \strent{R} (e[\length{x_0} .. +l))
+    \encodesPred~s~(l + m)~&(\encodeWindowsLine'~l~l~s~(s + m)) \\
+                                      &(\lambda e. (e[0 ..+l)) \strent{R} (e[m .. +l))
   \end{align*} 
   Moreover, we have
-  \[\encodesPred~s~(2 \cdot \length{x_0}) (\encodeWindowsLine~s) (\lambda e. (e[0 ..+\length{x_0})) \strent{R} (e[\length{x_0} ..+\length{x_0})) \]
+  \[\encodesPred~s~(2 \cdot m) (\encodeWindowsLine~s) (\lambda e. (e[0 ..+m)) \strent{R} (e[m ..+m)) \]
 \end{proposition}
 \begin{proof}
   The second statement is the first one instantiated with $l \defeq \length{x_0}$. 
@@ -212,19 +274,18 @@ Instead, we employ a step index which is initialised to the length $\length{x_0}
 Now we can obtain the formula \mnotec{$\phi_{\textsf{trans}}$} by forming a conjunction over all lines of the tableau.
 \begin{lemma}[Correctness of $\phi_{\textsf{trans}}$]
   \begin{align*}
-    \encodesPred~&0~((\natS{t}) \cdot \length{x_0})~\phi_{\textsf{trans}} \\
-                                                   &(\lambda e. \forall 0 \le i < t, ((e[i \cdot \length{x_0}..+\length{x_0})) \strent{R} (e[(\natS{i}) \cdot \length{x_0} ..+\length{x_0})))
+    \encodesPred~&0~((\natS{t}) \cdot m)~\phi_{\textsf{trans}} \\
+                                                   &(\lambda e. \forall 0 \le i < t, ((e[i \cdot m..+m)) \strent{R} (e[(\natS{i}) \cdot m ..+m)))
   \end{align*}
 \end{lemma}
 
 \todo{more intuitive explanation of all this stuff}
-\todo{define constant for $\length{x_0}$}
 
 The final constraint can be encoded similarly: we have a nested disjunction over the strings in $\Rfinal$ and the possible positions at which they can match. For the latter, remember that the final substrings need to match at positions which are multiples of the offset $o$. Therefore, we employ a step-indexing technique similar to the one for \encodeWindowsLine. 
 
 \begin{lemma}[Correctness of $\phi_{\textsf{final}}$]
   \mnote{$\phi_{\textsf{final}}$}
-  \[\encodesPred~(t \cdot \length{x_0})~(\length{x_0})~\phi_{\textsf{final}}~(\lambda e. e \models \Rfinal) \]
+  \[\encodesPred~(t \cdot m)~m~\phi_{\textsf{final}}~(\lambda e. e \models \Rfinal) \]
 \end{lemma}
 
 Finally, the initial constraint is simply an instance of \encodeList: the first $\length{x_0}$ variables have to match $x_0$. 
@@ -233,10 +294,10 @@ Therefore, in the end the whole formula is
 
 \begin{lemma}[Correctness of $\phi$]\label{lem:phi_correct}
   \begin{align*}
-    \encodesPred~&0~((\natS{t}) \cdot \length{x_0})~\phi \\
+    \encodesPred~&0~((\natS{t}) \cdot m)~\phi \\
                  &(\lambda e. \begin{aligned}[t]
-                  &e[0..\length{x_0}) = x_0 \\
-                   \land &  (\forall 0 \le i < t, ((e[i \cdot \length{x_0}..+\length{x_0})) \strent{R} (e[(\natS{i}) \cdot \length{x_0} ..+\length{x_0}))) \\
+                  &e[0..m) = x_0 \\
+                   \land &  (\forall 0 \le i < t, ((e[i \cdot m..+m)) \strent{R} (e[(\natS{i}) \cdot m..+m))) \\
                   \land & e \models \Rfinal)
                 \end{aligned}
   \end{align*}
@@ -250,13 +311,13 @@ Therefore, in the end the whole formula is
     \item[$\rightarrow$:]
       As $\fsat{}~\phi$, we have a satisfying assignment $a$. 
       By Lemma~\ref{lem:phi_correct}, the corresponding explicit assignment to the first $(\natS{t}) \cdot \length{x_0}$ variables witnesses a valid rewrite sequence satisfying the final constraint. 
-      We prove that $(e[0 ..\length{x_0}) \strent{R}^t e[t \cdot \length{x_0} ..+ \length{x_0})$ by switching to $\prescript{t}{}{\strent{R}}$ and doing an induction on $t$.
+      We prove that $(e[0 ..m) \strent{R}^t e[t \cdot m ..+ m)$ by switching to $\prescript{t}{}{\strent{R}}$ and doing an induction on $t$.
     \item[$\leftarrow$:]
       From the proof that the initial string rewrites in $t$ steps to a final string we have to generate a sequence of intermediate strings that together form a satisfying assignment. 
-      For this, we generalise to arbitrary strings $x, y$ with $\length{x} = \length{x_0}$ and show that, if $x \strent{R}^n y$, then there exists $e$ with $\length{e} = (\natS{n}) \cdot \length{x_0}$ and 
+      For this, we generalise to arbitrary strings $x, y$ with $\length{x} = \length{x_0} = m$ and show that, if $x \strent{R}^n y$, then there exists $e$ with $\length{e} = (\natS{n}) \cdot m$ and 
       \begin{align*}
-        &e[0..+ \length{x_0}) = x \land e[n \cdot \length{x_0} ..+ \length{x_0}) = y \\
-        \land & (\forall 0 \le i < n, (e[i \cdot \length{x_0} ..+ \length{x_0})) \strent{R} e[(\natS{i}) \cdot \length{x_0} ..+ \length{x_0}))).
+        &e[0..+ m) = x \land e[n \cdot m ..+ m) = y \\
+        \land & (\forall 0 \le i < n, (e[i \cdot m ..+ m)) \strent{R} e[(\natS{i}) \cdot m ..+ m))).
       \end{align*}
       This statement follows by an induction on $x \strent{R} y$.
   \end{description}

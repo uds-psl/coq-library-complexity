@@ -87,7 +87,7 @@ Without loss of generality\footnote{This follows from the results of the previou
 
 Then define the full homomorphism $h \defeq \canonicalHom~h'$. 
 Properties $(A_1)$ and $(A_2)$ carry over to $h$:
-\begin{proposition}\label{prop:h_properties}
+\begin{proposition}\label{prop:h_properties}\leavevmode
   \begin{enumerate}
     \item $\uniformHomo~h$
     \item $\length{h~x} = k \cdot \length{x}$
@@ -106,7 +106,7 @@ The following lemma allows us to split the image of $h$ along multiples of $k$ a
 Homomorphisms can, of course, be lifted to rewrite windows. 
 \begin{definition}
   \mnote{$h_{\text{window}}$}
-  \[h_\text{window}~w\defeq (h~(\prem w), h~(\conc~w)) \]
+  $h_\text{window}~w\defeq (h~(\prem w), h~(\conc~w)) $
 \end{definition}
 The transformed \PR{} instance is defined as
 \begin{align*}
@@ -147,7 +147,7 @@ To some extent, this is the most intuitive characterisation of validity: it does
 The restriction to strings of length at least $\omega$ does not pose a problem as Definition~\ref{def:pr} imposes that as a syntactic constraint.
 Using the new characterisation, we can now prove the equivalence for $\strent{}$.
 \begin{lemma}[Agreement of $\strent{}$]
-  Let $a$ be given with $\length{a} \ge \omega$.
+  Let $a$ with $\length{a} \ge \omega$ be given.
   \begin{enumerate}
     \item $(h~a) \strent{R_h} b' \rightarrow \exists b, b' = h~b \land a \strent{R} b$. 
     \item $a \strent{R} b \leftrightarrow (h~a) \strent{R_h} (h~b)$
@@ -162,18 +162,24 @@ Using the new characterisation, we can now prove the equivalence for $\strent{}$
 \end{proof}
 
 The equivalence trivially transfers to $\strent{}^n$: 
-\begin{lemma}[Agreement of $\strent{}^n$]
+\begin{proposition}[Agreement of $\strent{}^n$]
   Let $a$ with $\length{a} \ge \omega$ be given.
   \begin{enumerate}
     \item $(h~a) \strent{R}^n b' \rightarrow \exists b, b' = h~b \land a \strent{R}^n b$
     \item $a \strent{R}^n b \leftrightarrow (h~a) \strent{R}^n (h~b)$
 \end{enumerate}
+\end{proposition}
+
+Finally, it needs to be shown that the final constraints agree:
+\begin{lemma}[Agreement of the Final Constraints]
+  Let $x_t$ with $\length{x_t} = \length{x_0}$ be given. Then 
+  \[x_t \models \Rfinal \leftrightarrow h~x_t \models \withl h~l \withm l \in \Rfinal \withr. \]
 \end{lemma}
 
-We can now obtain the main agreement lemma:
-\begin{lemma}\label{lem:hom_pr_equiv}
-  \[(\exists x_t, x_0 \strent{R}^t x_t \land x_t \models \Rfinal) \leftrightarrow (\exists x_t, h~x_0 \strent{R_h}^t x_t \land x_t \models \withl h~l \withm l \in \Rfinal \withr) \]
-\end{lemma}
+We can now obtain the main agreement result.
+\begin{theorem}\label{thm:hom_pr_equiv}
+  $\PR{}~S \leftrightarrow \PR{}~S'$
+\end{theorem}
 Thus, the transformed \PR{} instance is equivalent to the original instance.
 
 \section{Reduction to \BPR{}}
@@ -208,7 +214,7 @@ Properties $(A_1)$ and $(A_2)$ are straightforward to verify.
   \end{enumerate}
 \end{lemma}
 
-The reduction now directly follows by Lemma~\ref{lem:hom_pr_equiv}.
+The reduction now directly follows by Theorem~\ref{thm:hom_pr_equiv}.
 In the special case of $\length{\Sigma} = 0$, the reduction maps to a trivial no-instance of \BPR{}. 
 
 \begin{lemma}[\PR{} Reduces to \BPR{}]
