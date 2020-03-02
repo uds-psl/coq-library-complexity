@@ -148,7 +148,7 @@ Module CheckTapeContains.
       cbn. intros tout b (?&Hb&->&->).
       destruct b. 2:now apply Nat.le_0_l.
       infTer 8. 1:{ intros ? _ Heq. unfold tapes in t,tout. destruct_vector;cbn in *.
-                    rewrite <- Heq in HT__X. eassumption. }
+                    rewrite <- Heq in HT__X. eassumption. } 
       intros ? ? (_&t1&Ht&Hx). destruct b. 2:now apply Nat.le_0_l.
       infTer 4. intros t2 _ Ht2.
       infTer 4. intros ? b' (?&Hb'&->&->).

@@ -12,7 +12,8 @@ Given n tapes and a sizeBound and a step bound, does there exist a (small enough
 (** We contain this on haltsOrDiverges as out MutiTape2SingleTape-translation probably only knows upper bounds of the step count.  *)
 Definition HaltsOrDiverges_fixed_mTM (sig : finType) `{registered sig} n (M : mTM sig (S n)) : Vector.t (tape sig) n * nat * nat -> Prop :=
   fun '(ts, maxSize, steps) =>
-    forall t1, sizeOfTape t1 <= maxSize -> forall k f, loopM (initc M (t1:::ts)) steps = Some f -> k <= steps.
+    forall t1, sizeOfTape t1 <= maxSize ->
+          forall k f, loopM (initc M (t1:::ts)) k = Some f -> k <= steps.
 
 Definition TMGenNP_fixed_mTM (sig : finType) `{registered sig} n (M : mTM sig (S n))
   := (fun '(ts, maxSize, steps) =>
@@ -24,7 +25,7 @@ Arguments TMGenNP_fixed_mTM {_ _ _}.
 
 Definition TMGenNP_fixed_singleTapeTM (sig : finType) `{registered sig} (M : mTM sig 1)
   := (fun '(ts, maxSize, steps) =>
-        exists s1 (t1 : list sig), ts = s1 :: tl ts /\ length t1 <= maxSize /\ exists f, loopM (initc M [|leftof s1 (ts++t1)|] ) steps = Some f).
+        exists s1 (t1 : list sig), head ts = Some s1 /\ length t1 <= maxSize /\ exists f, loopM (initc M [|leftof s1 (tl ts++t1)|] ) steps = Some f).
 
 Arguments TMGenNP_fixed_singleTapeTM : clear implicits.
 Arguments TMGenNP_fixed_singleTapeTM {_ _}.

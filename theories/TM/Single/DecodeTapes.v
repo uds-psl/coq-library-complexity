@@ -1,10 +1,24 @@
 From Undecidability.TM Require Import TM ProgrammingTools Code.Decode Code Single.DecodeTape.
+From Undecidability.L Require Import MoreBase.
 Require Import Lia Ring Arith Program.Wf.
 Import While Mono Multi Switch If Combinators EncodeTapes.
 
 Unset Printing Coercions.
 From Coq.ssr Require ssrfun.
 Module Option := ssrfun.Option.
+
+Instance tapes_encode_prefixInjective sig n: Encode_prefixInjective (Encode_tapes sig n).
+Proof.
+  constructor. unfold Encode_tapes;cbn.
+  induction n.
+  {cbn. intros x x'. rewrite (destruct_vector_nil x),(destruct_vector_nil x'). reflexivity. }
+  intros v v'. destruct (destruct_vector_cons v) as (x&xs&->). destruct (destruct_vector_cons v') as (x'&xs'&->). cbn.
+  intros t t' [= Heq].
+  unshelve erewrite ( _ : (fun x : sigTape sig => sigList_X x) = Retr_f) in Heq. 1:reflexivity.
+  rewrite <- !app_assoc in Heq. 
+  specialize (map_retract_prefix_inj Heq) as (tmp&tmp'&Htmp). eapply (encode_prefixInjective (cX:=Encode_tape sig)) in Htmp as ->.
+  eapply app_inv_head in Heq. now apply IHn in Heq as ->.
+Qed.
 
 Module CheckEncodesTapes.
   Section checkEncodesTapes.
@@ -21,7 +35,7 @@ Module CheckEncodesTapes.
     
     Local Remove Hints Retract_id : typeclass_instances.
     
-    Definition Rel n : pRel tau bool 1 := ContainsEncoding.Rel (Encode_tapes sig n) Retr_f.
+    Let Rel n : pRel tau bool 1 := ContainsEncoding.Rel (Encode_tapes sig n) Retr_f.
     
     Fixpoint R_syntactic n (t: tape tau) (b:bool) t' : Prop :=
         match n with
@@ -60,8 +74,6 @@ Module CheckEncodesTapes.
        2:{ eexists _,false. split. 2:easy. easy. }
        eexists _,true. split. eassumption. easy.
     Qed.
-
-    From Undecidability Require Import LTactics.
     
     Definition Ter n : tRel tau 1:=
       fun t k => n * ((| right t[@Fin0] |) * 4 + 9 + 7) + 1 <= k.
@@ -75,7 +87,7 @@ Module CheckEncodesTapes.
     (*MOVE*)
     Lemma length_right_tape_move_right sig' (t : tape sig'): | right (tape_move_right t) | <= | right t |.
     Proof.
-      destruct t eqn:Ht;cbn. 1-3:nia. now destruct l0;cbn.
+      destruct t eqn:Ht;cbn. 1-3:nia. now destruct l0;cbn;nia.
     Qed.
       
     Lemma Terminates n: projT1 (M n) ↓ Ter n. 
@@ -93,7 +105,7 @@ Module CheckEncodesTapes.
             intros ? ? ?. destruct b.
             -infTer 5. intros ? ? ->.
              rewrite !Ht. cbn in *. fold n0.  destruct H as [_ (k&H)].
-             rewrite H. rewrite iter_transitive with (g:=fun x => | right x |) (R:=le). 2:easy. 2:apply Ht.
+             rewrite H. rewrite iter_transitive with (g:=fun x => | right x |) (R:=le). 2:eauto. 2:apply Ht.
              rewrite Htout,Ht. fold n0. reflexivity.
             -nia.
             -nia.
