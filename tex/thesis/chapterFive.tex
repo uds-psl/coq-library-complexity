@@ -1194,8 +1194,8 @@ This is advantageous as we can do simple inductive proofs for the right tape hal
 Next, we show that a string starting with a number of wildcards $\nstar$ can be rewritten to either a blank string or a blank string prefixed by a string over $\Sigma$.
 \begin{lemma}\leavevmode
   \begin{enumerate}
-    \item $\nstar^{n} \concat \nblank^{\hat{j}} \concat [\ndelim] \strent{\Rprelude} \nilstr{(\circ)}{(n + \hat{j})}$
-    \item $\nstar^{\length{s}} \concat \nstar^n \concat \nblank^{\hat{j}} \concat [\ndelim] \strent{\Rprelude} \withl \overline{x} \withm x \in s\withr \concat \nilstr{(\circ)}{(n+\hat{j})}$
+    \item $\nstar^{n} \concat \nblank^{\hat{\jmath}} \concat [\ndelim] \strent{\Rprelude} \nilstr{(\circ)}{(n + \hat{\jmath})}$
+    \item $\nstar^{\length{s}} \concat \nstar^n \concat \nblank^{\hat{\jmath}} \concat [\ndelim] \strent{\Rprelude} \withl \overline{x} \withm x \in s\withr \concat \nilstr{(\circ)}{(n+\hat{\jmath})}$
   \end{enumerate}
 \end{lemma}
 \begin{proof}
@@ -1221,6 +1221,7 @@ Lastly, we show that we can prefix the fixed input string to that.
   \end{enumerate}
 \end{lemma}
 
+\todo{simplify proofs: split in center is not needed at all}
 
 
 This gives us all the tools we need to prove completeness ($A_3$) and soundness ($A_4$) of the prelude.
@@ -1342,5 +1343,6 @@ Finally, we have a separate variant of 3-\PR{} that uses the flat encoding of fi
 The reduction produces an instance of this flat variant, where the flat reification of the rewrite windows is used. 
 
 \todo{maybe diagram of the logical reduction}
+\todo{comment on the definition of the flat problems, why are existentially-defined problems ugly}
 
 %\todo{comment on design choice of blanks having polarities: makes inversions and generation of list-based rules a whole lot easier}

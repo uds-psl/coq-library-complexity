@@ -5,7 +5,7 @@ From PslBase Require Import FinTypes.
 Record UGraph := 
   { 
     V : finType;
-    E : N * N -> Prop; 
+    E : V * V -> Prop; 
     E_dec : forall v1 v2, {E (v1, v2)} + {~ E (v1, v2)};
     E_symm: forall v1 v2, E (v1, v2) <-> E (v2, v1)
   }.
