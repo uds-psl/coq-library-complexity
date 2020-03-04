@@ -795,17 +795,17 @@ From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import  LProd LOptions LBool LLists LUnit LLNat.
 From Undecidability.L.Complexity Require Import PolyBounds.
 
-Lemma reduction_poly_size f : 
-  { p: nat -> nat& size (enc (reduction f)) <= p (size (enc f)) /\ monotonic p /\ inOPoly p }.
+Lemma reduction_poly_size: 
+  { p: nat -> nat & (forall f, size (enc (reduction f)) <= p (size (enc f))) /\ monotonic p /\ inOPoly p }.
 Proof. 
-  evar (p : nat -> nat). exists p. 
-  rewrite cnf_enc_size_bound with (c := reduction f).
-  erewrite cnf_maxVar_bound_le by apply reduction_varBound.
-  rewrite reduction_size.
-  rewrite formula_size_enc_bound.
-  rewrite formula_maxVar_enc_bound.
-  split. 
-  - [p] : intros n. subst p. cbn -[Nat.add Nat.mul]. reflexivity. 
+  evar (p : nat -> nat). exists p. split. 
+  - intros f. 
+    rewrite cnf_enc_size_bound with (c := reduction f).
+    erewrite cnf_maxVar_bound_le by apply reduction_varBound.
+    rewrite reduction_size.
+    rewrite formula_size_enc_bound.
+    rewrite formula_maxVar_enc_bound. 
+    [p] : intros n. generalize (size (enc f)). subst p. cbn -[Nat.add Nat.mul]. reflexivity. 
   - split; subst p; smpl_inO. 
 Qed. 
 
@@ -825,6 +825,21 @@ Proof.
   extract. solverec. 
   all: unfold eliminateOR_time, c__eliminateOR; solverec.
 Defined. 
+
+Definition poly__eliminateOR n := c__eliminateOR * n.
+Lemma eliminateOR_time_bound f : eliminateOR_time f <= poly__eliminateOR (size (enc f)). 
+Proof.
+  unfold eliminateOR_time, poly__eliminateOR. induction f. 
+  - rewrite formula_enc_size. lia. 
+  - rewrite formula_enc_size. nia. 
+  - rewrite IHf1, IHf2. setoid_rewrite formula_enc_size at 3. nia. 
+  - rewrite IHf1, IHf2. setoid_rewrite formula_enc_size at 3. nia.
+  - rewrite IHf. setoid_rewrite formula_enc_size at 2. nia. 
+Qed. 
+Lemma eliminateOR_poly : monotonic poly__eliminateOR /\ inOPoly poly__eliminateOR. 
+Proof. 
+  unfold poly__eliminateOR; split; smpl_inO. 
+Qed.
 
 (** tseytinAnd *)
 Definition c__tseytinAnd := 43.
@@ -862,11 +877,132 @@ Proof.
 Defined. 
 
 (** tseytin' *)
-Fixpoint tseytin'_time (nf : nat) (f : formula) := 1.
-Instance term_tseytin' : computableTime' tseytin' (fun nf _ => (5, fun f _ => (tseytin'_time nf f, tt))). 
+Definition c__tseytinP1 := 16 * c__tseytinSize. 
+Definition c__tseytinP2 := 60.
+
+Fixpoint tseytin'_time (f : formula) := match f with 
+| Ftrue => c__tseytinTrue 
+| Fvar _ => c__tseytinEquiv
+| For f1 f2 => tseytin'_time f1 + tseytin'_time f2 + c__tseytinP1 * (formula_size f1 + formula_size f2) + c__tseytinOr
+| Fand f1 f2 => tseytin'_time f1 + tseytin'_time f2 + c__tseytinP1 * (formula_size f1 + formula_size f2) + c__tseytinAnd
+| Fneg f => tseytin'_time f + c__tseytinP1 * formula_size f + c__tseytinNot
+end + c__tseytinP2.  
+
+Fact size_cnf_ge_length N : |N| <= size_cnf N. 
 Proof. 
-  (*extract. solverec.*)
-Admitted. 
- 
+  now unfold size_cnf. 
+Qed. 
 
+Instance term_tseytin' : computableTime' tseytin' (fun nf _ => (5, fun f _ => (tseytin'_time f, tt))). 
+Proof. 
+  extract. solverec. 
+  - unfold c__tseytinP2; solverec. 
+  - unfold c__tseytinP2; solverec. 
+  - fold tseytin' in H2, H0. 
+    apply tseytin'_size in H0. apply tseytin'_size in H2. 
+    rewrite !size_cnf_ge_length, H0, H2. unfold c__tseytinP1, c__tseytinP2. solverec. 
+  - fold tseytin' in H2, H0. 
+    apply tseytin'_size in H0. apply tseytin'_size in H2. 
+    rewrite !size_cnf_ge_length, H0, H2. unfold c__tseytinP1, c__tseytinP2. solverec. 
+  - fold tseytin' in H0. apply tseytin'_size in H0.
+    rewrite size_cnf_ge_length, H0. unfold c__tseytinP1, c__tseytinP2. solverec. 
+Defined.  
 
+Definition c__tseytinPBound1 := c__tseytinTrue + c__tseytinEquiv + c__tseytinAnd + c__tseytinOr + c__tseytinNot + c__tseytinP2.
+Definition poly__tseytin' n := c__tseytinP1 * n * n + c__tseytinPBound1 * n. 
+Lemma tseytin'_time_bound f : tseytin'_time f <= poly__tseytin' (size (enc f)). 
+Proof. 
+  unfold tseytin'_time. induction f; rewrite formula_enc_size. 
+  - unfold poly__tseytin', c__tseytinPBound1. solverec. 
+  - unfold poly__tseytin', c__tseytinPBound1. nia. 
+  - fold tseytin'_time in IHf1, IHf2. 
+    rewrite IHf1, IHf2. rewrite !formula_size_enc_bound. 
+    unfold poly__tseytin', c__tseytinPBound1. leq_crossout.  
+  - fold tseytin'_time in IHf1, IHf2. 
+    rewrite IHf1, IHf2. rewrite !formula_size_enc_bound. 
+    unfold poly__tseytin', c__tseytinPBound1. leq_crossout.  
+  - fold tseytin'_time in IHf. rewrite IHf. 
+    rewrite formula_size_enc_bound. 
+    unfold poly__tseytin', c__tseytinPBound1. leq_crossout. 
+Qed. 
+Lemma tseytin'_poly : monotonic poly__tseytin' /\ inOPoly poly__tseytin'. 
+Proof. 
+  unfold poly__tseytin'; split; smpl_inO. 
+Qed. 
+
+(** tseytin *)
+Definition c__tseytin := 17. 
+Definition tseytin_time (f : formula) := formula_maxVar_time f + tseytin'_time f + c__tseytin.
+Instance term_tseytin : computableTime' tseytin (fun f _ => (tseytin_time f, tt)). 
+Proof. 
+  extract. solverec. 
+  unfold tseytin_time, c__tseytin. solverec. 
+Defined. 
+
+Definition poly__tseytin n := poly__formulaMaxVar n + poly__tseytin' n + c__tseytin. 
+Lemma tseytin_time_bound f : tseytin_time f <= poly__tseytin (size (enc f)). 
+Proof. 
+  unfold tseytin_time. rewrite tseytin'_time_bound, formula_maxVar_time_bound. 
+  unfold poly__tseytin; lia.  
+Qed.
+Lemma tseytin_poly : inOPoly poly__tseytin /\ monotonic poly__tseytin. 
+Proof. 
+  unfold poly__tseytin; split; smpl_inO; first [apply formula_maxVar_poly | apply tseytin'_poly]. 
+Qed. 
+
+(** reduction *)
+Lemma eliminateOR_enc_size_bound f : size (enc (eliminateOR f)) <= c__eliminateOrSize * size (enc f). 
+Proof. 
+  unfold c__eliminateOrSize. induction f. 
+  + cbn[eliminateOR]. lia. 
+  + cbn[eliminateOR]. lia. 
+  + cbn -[Nat.mul]. rewrite formula_enc_size. setoid_rewrite formula_enc_size at 3. lia. 
+  + cbn-[Nat.mul]. do 3 rewrite formula_enc_size. setoid_rewrite formula_enc_size at 2. setoid_rewrite formula_enc_size at 3. 
+    rewrite IHf1, IHf2. lia. 
+  + cbn -[Nat.mul]. rewrite formula_enc_size, IHf. setoid_rewrite formula_enc_size at 2. lia.  
+Qed. 
+
+Definition c__reduction := 19. 
+Definition reduction_time (f : formula) := eliminateOR_time f + tseytin_time (eliminateOR f) + c__reduction.
+Instance term_reduction : computableTime' reduction (fun f _ => (reduction_time f, tt)). 
+Proof. 
+  extract. solverec. unfold reduction_time, c__reduction. solverec. 
+Defined. 
+
+Definition poly__reduction n := poly__eliminateOR n + poly__tseytin (c__eliminateOrSize * n) + c__reduction.
+Lemma reduction_time_bound f : reduction_time f <= poly__reduction (size (enc f)). 
+Proof. 
+  unfold reduction_time. rewrite eliminateOR_time_bound, tseytin_time_bound. 
+  poly_mono tseytin_poly. 2: apply eliminateOR_enc_size_bound. 
+  unfold poly__reduction. nia. 
+Qed. 
+Lemma reduction_poly : monotonic poly__reduction /\ inOPoly poly__reduction. 
+Proof. 
+  unfold poly__reduction; split; smpl_inO; try apply inOPoly_comp; smpl_inO; first [apply tseytin_poly | apply eliminateOR_poly]. 
+Qed. 
+  
+  
+(** full reduction *)
+Theorem FSAT_reduces_to_SAT : reducesPolyMO (unrestrictedP FSAT) (unrestrictedP SAT). 
+Proof. 
+  apply reducesPolyMO_intro with (f := reduction). 
+  - exists poly__reduction. 
+    + eexists. eapply computesTime_timeLeq. 2: apply term_reduction. 
+      cbn -[Nat.add Nat.mul]. intros f _. split; [ | easy]. apply reduction_time_bound. 
+    + apply reduction_poly. 
+    + apply reduction_poly. 
+    + destruct (reduction_poly_size) as (h & H1 & H2). exists h; [apply H1 | apply H2 | apply H2]. 
+  - cbn. intros f _. exists Logic.I. apply FSAT_to_SAT. 
+Qed. 
+
+Theorem FSAT_reduces_to_3SAT : reducesPolyMO (unrestrictedP FSAT) (unrestrictedP (kSAT 3)). 
+Proof. 
+  apply reducesPolyMO_intro with (f := reduction). 
+  - exists poly__reduction. 
+    + eexists. eapply computesTime_timeLeq. 2: apply term_reduction. 
+      cbn -[Nat.add Nat.mul]. intros f _. split; [ | easy]. apply reduction_time_bound. 
+    + apply reduction_poly. 
+    + apply reduction_poly. 
+    + destruct (reduction_poly_size) as (h & H1 & H2). exists h; [apply H1 | apply H2 | apply H2]. 
+  - cbn. intros f _. exists Logic.I. apply FSAT_to_3SAT. 
+Qed.

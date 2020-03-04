@@ -111,14 +111,13 @@ Hint Resolve formula_enc_correct : Lrewrite.
 
 Lemma formula_enc_size f: size (enc f) = match f with 
   | Ftrue => 10
-  | Fvar v => 10 + size (nat_enc v )
+  | Fvar v => 10 + size (LNat.nat_enc v )
   | Fand f1 f2 => 10 + size (enc f1) + size (enc f2) 
   | For f1 f2 => 9 + size (enc f1) + size (enc f2) 
   | Fneg f => 7 + size (enc f) 
   end. 
 Proof. 
   unfold enc; destruct f; cbn; try lia. 
-  unfold LNat.nat_enc, nat_enc. lia. 
 Qed. 
 
 Instance term_Fvar : computableTime' Fvar (fun v _ => (1, tt)). 
@@ -141,7 +140,7 @@ Proof.
   extract constructor. solverec. 
 Defined. 
 
-(** the encoding size of a formula relates is bounded linearly by formula_size f * formula_maxVar f *)
+(** the encoding size of a formula is bounded linearly by formula_size f * formula_maxVar f *)
 Definition c__formulaBound1 := c__natsizeS. 
 Definition c__formulaBound2 := size (enc Ftrue) + 10 + c__natsizeO.
 Lemma formula_enc_size_bound : forall f, size (enc f) <= c__formulaBound1 * formula_size f * formula_maxVar f + c__formulaBound2 * formula_size f.
@@ -173,5 +172,47 @@ Qed.
 Lemma formula_total_size_enc_bound f : formula_size f * formula_maxVar f <= size (enc f) * size (enc f). 
 Proof. 
   rewrite formula_size_enc_bound, formula_maxVar_enc_bound. lia. 
+Qed. 
+
+
+(**extraction of formula_maxVar *)
+
+Definition c__formulaMaxVar := 13 + c__max1. 
+Fixpoint formula_maxVar_time (f : formula) := match f with 
+  | Ftrue => 0
+  | Fvar _ => 0
+  | Fand f1 f2 => formula_maxVar_time f1 + formula_maxVar_time f2 + max_time (formula_maxVar f1) (formula_maxVar f2)  
+  | For f1 f2 => formula_maxVar_time f1 + formula_maxVar_time f2 + max_time (formula_maxVar f1) (formula_maxVar f2)
+  | Fneg f => formula_maxVar_time f 
+  end + c__formulaMaxVar. 
+Instance term_formula_maxVar : computableTime' formula_maxVar (fun f _ => (formula_maxVar_time f, tt)). 
+Proof. 
+  extract. solverec. 
+  - now unfold c__formulaMaxVar. 
+  - now unfold c__formulaMaxVar. 
+  - fold formula_maxVar. unfold c__formulaMaxVar; solverec. 
+  - fold formula_maxVar. unfold c__formulaMaxVar; solverec. 
+  - unfold c__formulaMaxVar; solverec. 
+Defined. 
+
+Definition c__formulaMaxVarBound1 := c__formulaMaxVar + c__max2.
+Definition poly__formulaMaxVar n := (n+1) * (n + 1) * c__formulaMaxVarBound1.
+(*+ (n + 1) * c__formulaMaxVarBound1.*)
+Lemma formula_maxVar_time_bound (f : formula) : formula_maxVar_time f <= poly__formulaMaxVar (size (enc f)). 
+Proof. 
+  induction f; cbn -[Nat.add Nat.mul].
+  - unfold poly__formulaMaxVar, c__formulaMaxVarBound1; nia.
+  - unfold poly__formulaMaxVar, c__formulaMaxVarBound1; nia. 
+  - rewrite IHf1, IHf2. unfold max_time. rewrite Nat.le_min_l. 
+    rewrite formula_maxVar_enc_bound. setoid_rewrite formula_enc_size at 4. 
+    unfold poly__formulaMaxVar, c__formulaMaxVarBound1. leq_crossout. 
+  - rewrite IHf1, IHf2. unfold max_time. rewrite Nat.le_min_l. 
+    rewrite formula_maxVar_enc_bound. setoid_rewrite formula_enc_size at 4. 
+    unfold poly__formulaMaxVar, c__formulaMaxVarBound1. leq_crossout. 
+  - rewrite IHf. setoid_rewrite formula_enc_size at 2. unfold poly__formulaMaxVar, c__formulaMaxVarBound1. leq_crossout. 
+Qed. 
+Lemma formula_maxVar_poly : monotonic poly__formulaMaxVar /\ inOPoly poly__formulaMaxVar. 
+Proof. 
+  split; unfold poly__formulaMaxVar; smpl_inO. 
 Qed. 
 
