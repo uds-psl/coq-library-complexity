@@ -124,9 +124,9 @@ We have the following properties:
 \newcommand{\var}{\textsf{var}}
 \subsection{The Tseytin Transformation}
 Now, we define the transformation function. The main challenge is to keep track of the used variables, such that we can easily introduce a fresh variable as needed. 
-To that end, we define an auxiliary function $\tseytin' : \var \rightarrow \formula \rightarrow \var \times \cnf \times \var$ (Fig.~\ref{lst:tseytin}). 
+To that end, we define an auxiliary function $\tseytin' : \var \rightarrow \formula \rightarrow \var \times \cnf \times \var$ (Figure~\ref{lst:tseytin}). 
 It first argument is the next unused variable $nf$ (short for ``next free''), followed by the formula $f$ we would like to transform. It returns a triple $(rv, N, nf')$, where $rv$ is the variable representing the formula, $N$ is the accompanying CNF, and $nf'$ is the next free variable after transforming $f$. 
-The function's different cases make use of primitive functions introducing the CNF constraints. They can be found in Fig.~\ref{fig:prim_cnfs}, together with their correctness statements. 
+The function's different cases make use of primitive functions introducing the CNF constraints. They can be found in Figure~\ref{fig:prim_cnfs}, together with their correctness statements. 
 Note that we introduce a fresh variable for the variable base case, too, and force this variable to be equivalent to the original one. This is a design choice we make to simplify the invariant for the proof of correctness a bit. Alternatively, this case could read $\tseytin'~nf~v \defeq (v, \nil, nf)$, returning just the original variable with an empty CNF.
 
 \begin{figure}
@@ -282,7 +282,7 @@ The full reduction first eliminates disjunctions and then applies the Tseytin tr
   By combining Proposition~\ref{prop:eliminateOr} and Corollary~\ref{cor:tseytin_correct}.
 \end{proof}
 
-One quickly notes that the CNFs produced by this reduction have a clause size of at most 3. We can easily adapt the reduction to produce 3-CNFs by making the clause size exactly 3. For that, we duplicate some of the literals in the clauses produced by the functions in Fig.~\ref{fig:prim_cnfs} and the function \textsf{reduction}.
+One quickly notes that the CNFs produced by this reduction have a clause size of at most 3. We can easily adapt the reduction to produce 3-CNFs by making the clause size exactly 3. For that, we duplicate some of the literals in the clauses produced by the functions in Figure~\ref{fig:prim_cnfs} and the function \textsf{reduction}.
 Thus, we directly obtain a reduction to 3-\SAT{}, too.
 
 \begin{lemma}[\fsat{} Reduces to 3-\SAT{}]

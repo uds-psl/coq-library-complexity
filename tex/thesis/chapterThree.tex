@@ -2,10 +2,10 @@
 \newcommand{\maxVar}{\textsf{maxVar}}
 
 \chapter{Reducing $k$-SAT to Clique}\label{chap:ksat_clique}
-In this chapter, we give a first formalisation of a polynomial-time from the $k$-\SAT{} problem to the \Clique{} problem on undirected graphs. The main purpose of this chapter is to introduce the style of proofs we use. In particular, we comment on some of the more technical aspects of doing the running time analysis in Coq so that we can focus on the less technical aspects in the later chapters.
+In this chapter, we give a first formalisation of a polynomial-time reduction from the $k$-\SAT{} problem to the \Clique{} problem on undirected graphs. The main purpose of this chapter is to introduce the style of proofs we use. In particular, we comment on some of the more technical aspects of doing the running time analysis in Coq so that we can focus on the less technical aspects in the later chapters.
 
 The satisfiablity problem on CNFs is well-known: given a Boolean formula in conjunctive normal form, we determine whether there exists a satisfying assignment to the variables. 
-\Clique{} is a graph-based problem. Given an undirected graph $G = (V, E)$, a $k$-Clique is a set of vertices $C \subseteq V$ such that $\length{C} = k$ and all possible edges between nodes of $C$ are present in $E$. 
+\Clique{} is a graph-based problem. Given an undirected graph $G = (V, E)$, a $k$-clique is a set of vertices $C \subseteq V$ such that $\length{C} = k$ and all possible edges between nodes of $C$ are present in $E$. Given $G$ and $k$, the \Clique{} problem asks whether there exists a $k$-clique in the graph $G$. 
 
 \section{Satisfiability of Conjunctive Normal Forms (CNF)}\label{sec:sat}
 We start by formalising the satisfiablity problem \SAT{}.
@@ -24,7 +24,7 @@ A literal is either a Boolean variable or its negation. The disjunction of a num
   C : \clause &\defeq \listsof{\literal} \mnote{\clause}\\
   N : \cnf &\defeq \listsof{\clause} \mnote{\cnf}
 \end{align*}
-Here, the Boolean $b$ of a literal $(b, v)$ denotes the literal's emph{sign}. If the sign is negative (i.e.\ $b = \bfalse$), the literal represents the negation of $v$, otherwise it represents $v$.
+Here, the Boolean $b$ of a literal $(b, v)$ denotes the literal's \emph{sign}. If the sign is negative (i.e.\ $b = \bfalse$), the literal represents $v$'s negation, otherwise it represents $v$.
 
 An assignment to a CNF assigns a Boolean value to each of its variables. We choose to model an assignment as the list of variables which are assigned the value $\btrue$. All other variables are implicitly assigned the value $\bfalse$.
 \[a : \assgn \defeq \listsof{\bvar}\mnote{\assgn} \]
@@ -33,8 +33,8 @@ One can define evaluation functions \mnotec{$\eval$} for variables, literals, cl
 We will mainly use the function $\eval : \assgn \rightarrow \cnf \rightarrow \bool$ for CNFs, but refer to the other functions using the same name. 
 Which function we mean will always be clear from the context. 
 
-We have the following characterisation of evaluation:
-\begin{lemma}
+We have the following characterisations of evaluation:
+\begin{lemma}[Evaluation Equivalences]\leavevmode
   \begin{enumerate}
     \item $\evalA{a}{v} = \btrue \leftrightarrow v \in a$
     \item $\evalA{a}{(b, v)} = \btrue \leftrightarrow \evalA{a}{v} = b$
@@ -52,8 +52,8 @@ Now, we are able to define the problem \SAT{}:
 \end{definition}
 
 In the sequel, we show that \SAT{} is in \NP{}, which we prove by giving a verifier for \SAT{}. A sensible choice for a certificate of a CNF $N$ being in \SAT{} is a satisfying assignment. However, the verifier must only accept certificates which have a size polynomial in the size of $N$. 
-As a list $a$ containing the variables to which we assign $\btrue$ may contain duplicates and variables which are not even used by the CNF, we need to restrict the assignments which are valid certificates.
-We introduce the notion of \emph{small} assignments. 
+As a list $a$ containing the variables to which $\btrue$ is assigned may contain duplicates and variables which are not even used by the CNF, we need to restrict the assignments which are valid certificates.
+For that purpose, we introduce the notion of \emph{small} assignments. 
 
 \newcommand{\varsOfLiteral}{\textsf{varsOfLiteral}}
 \newcommand{\varsOfClause}{\textsf{varsOfClause}}
@@ -71,25 +71,26 @@ We introduce the notion of \emph{small} assignments.
 \newcommand{\smallA}{\textsf{small}}
 \newcommand{\dupfree}{\textsf{dupfree}}
 \begin{definition}[Small Assignments]
-  An assignment $a$ is small with respect to a CNF $N$ if it is duplicate-free and only contains variables used by the CNF:\ 
-  \[ \smallA~N~a \defeq \dupfree~a \land a \subseteq \varsOfCnf~N\]
   \mnote{$\smallA~N~a$}
+  An assignment $a$ is small with respect to a CNF $N$ if it is duplicate-free and only contains variables used by the CNF:\ 
+  \[ \smallA~N~a \defeq \dupfree~a \land a \subseteq \varsOfCnf~N,\]
+  where $\dupfree : \forall X, \listsof{X} \rightarrow \Prop$ is a predicate capturing the absence of duplicates.
 \end{definition}
-\todo{introduce \dupfree, $\subseteq$}
-
-Given an arbitrary assignment $a$ for a CNF $N$, we can compute another assignment $a'$ which is equivalent to $a$ and is small with respect to $N$ by removing duplicates and variables not occuring in the CNF.\
 
 \newcommand{\compressA}{\textsf{compress}}
 \newcommand{\dedup}{\textsf{dedup}}
 \newcommand{\intersect}{\textsf{intersect}}
 
+Given an arbitrary assignment $a$ for a CNF $N$, we can compute another assignment $a'$ which is equivalent to $a$ and is small with respect to $N$ by removing duplicates and variables not occuring in the CNF.
+\mnote{\dedup}
+To that end, we assume functions $\dedup : \forall (X : \eqType), \listsof{X} \rightarrow \listsof{X}$ and $\intersect : \forall (X : \eqType), \listsof{X} \rightarrow \listsof{X} \rightarrow \listsof{X}$ where \dedup{} removes duplicates from a list and \mnotec{\intersect} yields a list that does exactly contain those elements that occur in both of its input lists.
+  %\dedup &: \assgn \rightarrow \assgn\mnote{\dedup} \\
+  %\dedup~\nil &\defeq \nil \\
+  %\dedup~(x::A) &\defeq \ITE{x \overset{?}{\in} A}{\dedup~A}{x::\dedup~A} \\[0.7em]
+  %\intersect &: \assgn \rightarrow \assgn \rightarrow \assgn \mnote{\intersect}\\
+  %\intersect~\nil~B &\defeq \nil \\
+  %\intersect~(x::A)~B &\defeq \ITE{x \overset{?}{\in} B}{x::\intersect~A~B}{\intersect~A~B} \\[0.7em]
 \begin{align*}
-  \dedup &: \assgn \rightarrow \assgn\mnote{\dedup} \\
-  \dedup~\nil &\defeq \nil \\
-  \dedup~(x::A) &\defeq \ITE{x \overset{?}{\in} A}{\dedup~A}{x::\dedup~A} \\[0.7em]
-  \intersect &: \assgn \rightarrow \assgn \rightarrow \assgn \mnote{\intersect}\\
-  \intersect~\nil~B &\defeq \nil \\
-  \intersect~(x::A)~B &\defeq \ITE{x \overset{?}{\in} B}{x::\intersect~A~B}{\intersect~A~B} \\[0.7em]
   \compressA &: \cnf \rightarrow \assgn \rightarrow \assgn\mnote{\compressA}\\
   \compressA~N~a &\defeq \dedup~(\intersect~a~(\varsOfCnf~N))
 \end{align*}

@@ -8,6 +8,7 @@
 \newcommand*{\tmcurrent}[1]{\textsf{current}~#1}
 
 \newcommand{\finType}{\textsf{finType}}
+\newcommand{\eqType}{\textsf{eqType}}
 
 
 \chapter{Preliminaries}\label{chap:preliminaries}
@@ -26,7 +27,8 @@ Given a position $i$, the element of $A$ at $i$ is denoted by $A[i]$. Formally, 
 The list $A[i..]$ is the sublist of $A$ containing all elements from position $i$ onwards (and potentially no elements if $\length{A} \le i$). Similarly, the list $A[..i)$ contains all elements up to (but excluding) position $i$. 
 By $a^n$, we denote the list consisting of the $n$-fold repetition of the element $a$.
 Often, we need to apply a function $f : X \rightarrow Y$ to every element of a list $A : \listsof{X}$. We write $\withl f~x \withm x \in A \withr$ for this list. Note that, in contrast to the use of this notation in set theory, the order of the list's elements stays the same. 
-Similarly, we write $\withl x \withm x \in A \land p~x \withr$, where $p : X \rightarrow \bool$, for the list $A$ filtered to contain only the elements for which the predicate $p$ holds.
+Similarly, we use $\withl x \withm x \in A \land p~x \withr$, where $p : X \rightarrow \bool$, for the list $A$ filtered to contain only the elements for which the predicate $p$ holds.
+Given two lists $A, B : \listsof{X}$, $A \subseteq B$ denotes that all elements of $A$ are also contained in $B$ (possibly with duplicates or in a diffferent order), i.e.\ $A \subseteq B \defeq \forall x, x \in A \rightarrow x \in B$. 
 
 The type of vectors of length $n$ over $X$ is written $X^n$. For length and subscripting, we use the same notations as for lists.
 
@@ -36,7 +38,7 @@ The sum type $X + Y$ of the types $X$ and $Y$ consists of the elements of $X$ an
 
 Sigma types $\sigtype{x}.p~x$ allow us to define pairs where the type of the second component depends on the first component (therefore its inhabitants are also called \emph{dependent pairs}). We write $(x, s)$ for the dependent pair consisting of $x$ and $s : p~x$. 
 
-A type $X$ is called \emph{discrete} if equality on it is decidable, that is, there exists a function $\textsf{eq}_X : X \rightarrow X \rightarrow \bool$ such that $\textsf{eq}_X~a~b = \btrue$ if, and only if, $a = b$. We also write $\eqb{a}{b}$ instead of $\textsf{eq}_X~a~b$, omitting the type which can be inferred from the context. 
+A type $X$ is called \emph{discrete} if equality on it is decidable, that is, there exists a function $\textsf{eq}_X : X \rightarrow X \rightarrow \bool$ such that $\textsf{eq}_X~a~b = \btrue$ if, and only if, $a = b$. We also write $\eqb{a}{b}$ instead of $\textsf{eq}_X~a~b$, omitting the type which can be inferred from the context. We use the type $\eqType$ to refer to those types which are discrete.
 
 More generally, we extend the notation $\eqb{a}{b}$ to other decidable binary predicates, for instance to $a~\overset{?}{\le} b$ for deciding the relation $\le$.
 
