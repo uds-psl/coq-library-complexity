@@ -1,7 +1,6 @@
 From PslBase Require Import Base. 
+From Undecidability.L.Datatypes Require Import LLists.
 From Undecidability.L.Complexity.Cook Require Import Prelim FSAT SAT kSAT.
-(*From Undecidability.L.Complexity Require Import Tactics. *)
-From Undecidability.L.Datatypes Require Import LLists. 
 Require Import Lia. 
 
 (** * eliminate ORs *)
@@ -800,7 +799,7 @@ Lemma reduction_poly_size f :
   { p: nat -> nat& size (enc (reduction f)) <= p (size (enc f)) /\ monotonic p /\ inOPoly p }.
 Proof. 
   evar (p : nat -> nat). exists p. 
-  rewrite cnf_enc_size_bound.
+  rewrite cnf_enc_size_bound with (c := reduction f).
   erewrite cnf_maxVar_bound_le by apply reduction_varBound.
   rewrite reduction_size.
   rewrite formula_size_enc_bound.
@@ -809,7 +808,6 @@ Proof.
   - [p] : intros n. subst p. cbn -[Nat.add Nat.mul]. reflexivity. 
   - split; subst p; smpl_inO. 
 Qed. 
-
 
 (** Running-time analysis *)
 
@@ -856,11 +854,18 @@ Proof.
   extract. solverec. unfold c__tseytinEquiv; solverec. 
 Defined.
 
+(** tseytinTrue *)
+Definition c__tseytinTrue := 15.
+Instance term_tseytinTrue : computableTime' tseytinTrue (fun v _ => (c__tseytinTrue, tt)). 
+Proof. 
+  extract. solverec. unfold c__tseytinTrue. solverec. 
+Defined. 
+
 (** tseytin' *)
 Fixpoint tseytin'_time (nf : nat) (f : formula) := 1.
-Instance term_tseytin' : computableTime' tseytin' (fun nf _ => (1, fun f _ => (tseytin'_time nf f, tt))). 
+Instance term_tseytin' : computableTime' tseytin' (fun nf _ => (5, fun f _ => (tseytin'_time nf f, tt))). 
 Proof. 
-  extract. (*TODO: why is simplification failing? *)
+  (*extract. solverec.*)
 Admitted. 
  
 

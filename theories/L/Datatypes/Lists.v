@@ -319,6 +319,12 @@ Proof.
             end a)) with (enc a). solverec. 
 Qed.
 
+Lemma size_list_cons (X : Type) (H : registered X) x (l : list X):
+  size (enc (x::l)) = size (enc x) + size (enc l) + 5.
+Proof.
+  rewrite !size_list. cbn. lia.
+Qed.
+
 Lemma size_list_enc_r {X} `{registered X} (l:list X):
   length l <= size (enc l).
 Proof.
@@ -330,136 +336,21 @@ Proof.
   extract. solverec.
 Qed.
 
-Section list_in.
-  Variable (X : Type). 
-  Variable (eqb : X -> X -> bool). 
-  Variable eqb_correct : forall a b,  a = b <-> eqb a b = true.  
-
-  Definition list_in_decb := fix rec (l : list X) (x : X) : bool :=
-  match l with [] => false
-          | (l :: ls) => eqb l x || rec ls x
-  end. 
-
-  Lemma list_in_decb_iff (l : list X) : forall x, list_in_decb l x = true <-> x el l. 
-  Proof. 
-    intros x. induction l.
-    - cbn. firstorder. 
-    - split. 
-      + intros [H1 | H1]%orb_true_elim. left. now apply eqb_correct. 
-        apply IHl in H1. now right. 
-      + intros [H | H].
-        cbn. apply orb_true_intro; left; now apply eqb_correct. 
-        cbn. apply orb_true_intro; right; now apply IHl. 
-  Qed. 
-
-  Lemma list_in_decb_iff' (l : list X) : forall x, list_in_decb l x = false <-> not (x el l).
-  Proof. 
-    intros x. split.
-    - intros H H'. apply list_in_decb_iff in H'. congruence.
-    - intros H'. destruct (list_in_decb l x) eqn:H.
-      + now apply list_in_decb_iff in H.
-      + reflexivity.
-  Qed. 
-End list_in.
-Section list_in_time.
-  Variable (X : Type).
-  Context {H : registered X}.
-
-  Definition c__list_in_decb := 16. 
-  Fixpoint list_in_decb_time (eqbT: X -> X -> nat) (l : list X) (e : X) : nat :=
-    match l with [] => c__list_in_decb | (l :: ls) => eqbT l e + c__list_in_decb + list_in_decb_time eqbT ls e end. 
-
-  Global Instance term_list_in_decb : computableTime' (@list_in_decb X)
-  (fun eqb eqbT => (1, fun l _ => (5, fun x _ => (list_in_decb_time (callTime2 eqbT) l x, tt)))). 
-  Proof. 
-    extract. 
-    solverec. all: unfold c__list_in_decb; solverec. 
-  Qed. 
-End list_in_time. 
-
-Section dupfree_dec.
-  Variable (X : Type).
-  Variable (eqbX : X -> X -> bool).
-  Variable (eqbX_correct : forall a b, a = b <-> eqbX a b = true). 
-
-  Fixpoint dupfreeb (l : list X) : bool :=
-    match l with [] => true
-            | (x :: ls) => negb (list_in_decb eqbX ls x) && dupfreeb ls
-  end. 
-
-  Lemma dupfreeb_correct (l : list X) : reflect (dupfree l) (dupfreeb l).
-  Proof.
-    destruct dupfreeb eqn:H; constructor. 
-    - induction l; constructor. all: cbn in H; apply andb_prop in H. 
-      all: cbn in H; destruct H. apply ssrbool.negbTE in H.
-      now intros H1%(list_in_decb_iff eqbX_correct).
-      now apply IHl.  
-    - intros H0. induction H0. cbn in H; congruence. 
-      apply IHdupfree. cbn in H; apply andb_false_elim in H. destruct H.
-      apply ssrbool.negbFE in e. apply (list_in_decb_iff eqbX_correct) in e. tauto. 
-      assumption. 
-  Qed.
-
-  Lemma dupfreeb_iff (l : list X) : dupfreeb l = true <-> dupfree l. 
-  Proof. 
-    specialize (dupfreeb_correct l) as H0.
-    destruct dupfreeb. inv H0. split; eauto. inv H0; split; eauto. 
-  Qed.
-
-End dupfree_dec. 
-
-Section dupfree_dec_time.
-  Context {X : Type}.
-  Context {H : registered X}. 
-
-  Definition c__dupfreeb := 25. 
-  Fixpoint dupfreeb_time (eqbT : X -> X -> nat) (l : list X) := 
-    match l with 
-    | [] => c__dupfreeb 
-    | l :: ls => list_in_decb_time eqbT ls l + c__dupfreeb + dupfreeb_time eqbT ls 
+(*MOVE*)
+Definition lengthEq A :=
+  fix f (t:list A) n :=
+    match n,t with
+      0,nil => true
+    | (S n), _::t => f t n
+    | _,_ => false
     end.
-
-  Global Instance term_dupfreeb: computableTime' (@dupfreeb X) (fun eqb eqbT => (1, fun l _ => (dupfreeb_time (callTime2 eqbT) l, tt))).
-  Proof.
-    extract. 
-    solverec. all: unfold c__dupfreeb; solverec. 
-  Defined.
-End dupfree_dec_time. 
-
-Section foldl_time.
-  Context {X Y : Type}.
-  Context {H : registered X}.
-  Context {F : registered Y}.
-
-  Definition c__fold_left := 15. 
-  Definition c__fold_left2 := 5.
-  Fixpoint fold_left_time (f : X -> Y -> X) (t__f : X -> Y -> nat) (l : list Y) (acc : X) :=
-  (match l with
-       | [] =>c__fold_left 
-       | (l :: ls) => t__f acc l + c__fold_left + fold_left_time f t__f ls (f acc l)
-       end ).
-
-  Global Instance term_fold_left :
-    computableTime' (@fold_left X Y) (fun f fT => (c__fold_left2, fun l _ => (c__fold_left2, fun acc _ => (fold_left_time f (callTime2 fT) l acc, tt)))). 
-  Proof.
-    extract. 
-    solverec. all: unfold c__fold_left, c__fold_left2; solverec. 
-  Qed. 
-End foldl_time.
-
-Section foldr_time.
-  Context {X Y: Type}.
-  Context {H:registered X}.
-  Context {H0: registered Y}.
-
-  Definition c__fold_right := 15.
-  Fixpoint fold_right_time (f : Y -> X -> X) (tf : Y -> X -> nat) (l : list Y) (acc : X) :=
-      match l with [] => c__fold_right
-              | l::ls => tf l (fold_right f acc ls) + c__fold_right + fold_right_time f tf ls acc
-      end. 
-  Global Instance term_fold_right : computableTime' (@fold_right X Y) (fun f fT => (1, fun acc _ => (1, fun l _ => (fold_right_time f (callTime2 fT) l acc + c__fold_right, tt)))).
-  Proof.
-    extract. solverec. all: unfold fold_right, c__fold_right; solverec.  
-  Qed. 
-End foldr_time.
-
+Lemma lengthEq_spec A (t:list A) n:
+| t | =? n = lengthEq t n.
+Proof.
+  induction n in t|-*;destruct t;now cbn.
+Qed.
+Definition lengthEq_time k := k * 15 + 9.
+Instance term_lengthEq A `{registered A} : computableTime' (lengthEq (A:=A)) (fun l _ => (5, fun n _ => (lengthEq_time (min (length l) n),tt))).
+Proof.
+  extract. unfold lengthEq_time. solverec.
+Qed.

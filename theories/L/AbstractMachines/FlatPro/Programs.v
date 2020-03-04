@@ -1,25 +1,8 @@
 From Undecidability.L Require Import Prelim.MoreBase L AbstractMachines.LargestVar.
 Require Import Lia.
+Require Export Undecidability.L.AbstractMachines.FlatPro.ProgramsDef.
 
 (** * Abstract L machines *)
-(** ** Encoding Terms as Programs *)
-
-Inductive Tok := varT (n :nat) | appT | lamT | retT.
-Notation Pro := (list Tok) (only parsing).
-
-Instance Tok_eq_dec : eq_dec Tok.
-repeat intro. hnf. repeat decide equality.
-Qed.
-
-Fixpoint compile (s: L.term) : Pro :=
-  match s with
-    var x => [varT x]
-  | app s t => compile s ++ compile t ++ [appT]
-  | lam s => lamT :: compile s ++ [retT]
-  end.
-
-Inductive reprP : Pro -> term -> Prop :=
-  reprPC s : reprP (compile s) (lam s).
 
 (** *** Program size *)
 
@@ -55,6 +38,12 @@ Lemma le_length_sizeP P :
   length P <= sizeP P.
 Proof.
   unfold sizeP. induction P as [|[]];cbn in *;try Lia.lia.
+Qed.
+
+
+Lemma length_compile_leq s : |compile s| <= 2*size s.
+Proof.
+  induction s;cbn. all:autorewrite with list;cbn. all:nia.
 Qed.
 
 (** *** Programm Decomposition *)
@@ -146,6 +135,29 @@ Proof.
   -congruence.
   -autorewrite with list. rewrite IHs1. cbn. rewrite IHs2. reflexivity.
   -autorewrite with list. rewrite IHs. reflexivity.
+Qed.
+
+
+Lemma decompile_correct l s:
+  decompile l (compile s) [] = inl [s].
+Proof.
+  specialize (decompile_correct' l s [] []) as H. autorewrite with list in H. rewrite H. easy.
+Qed.
+
+(** We can not show a lemma that if decompile produces a term, the inout was a compilation as decompile itself sometimes decompiles incorrect programs if the lamTs are at wrong positions*)
+Lemma decompile_resSize l P A B:
+  decompile l P A = inl B -> sumn (map size B) <= sumn (map size A) + sumn (map sizeT P).
+Proof.
+  induction P as [ |[] P] in l,A|-*.
+  -cbn. intros [= ->]. nia.
+  -cbn. intros ->%IHP. cbn. nia.
+  -destruct A as [ | ? []]. 1,2:easy.
+   intros ->%IHP. cbn. nia.
+  -cbn.  intros ->%IHP. nia.
+  -destruct l. easy.
+   destruct A as []. 1:easy.
+   intros ->%IHP. cbn. nia.
+   all:cbn.
 Qed.
 
 Lemma compile_inj s s' :

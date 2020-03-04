@@ -1,5 +1,5 @@
 From Undecidability.L Require Import L Tactics.LTactics.
-From Undecidability.L.AbstractMachines Require Import Programs FunctionalDefinitions.
+From Undecidability.L.AbstractMachines Require Import FunctionalDefinitions.
 From Undecidability.L.Datatypes Require Import LTerm LOptions.
 
 From Undecidability.L Require Import AbstractMachines.LargestVar.

@@ -414,6 +414,7 @@ Ltac computable_using_noProof Lter:=
 
 Ltac extractAs s :=
   lazymatch goal with
+  | [ H : @extracted _ |- _ ] => idtac "WARNING: extraction is buggy if used while a term of type 'extracted _' is in Context"
   | [ |- computable ?t ] =>
     (run_template_program (tmExtract None t)
                          (fun e =>  pose (s:= ( e : extracted t))))

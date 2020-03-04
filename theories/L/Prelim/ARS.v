@@ -446,3 +446,5 @@ Definition computesRel {X Y} (f : X -> option Y) (R:X -> Y -> Prop) :=
          Some y => R x y
        | None => terminal R x
        end.
+
+Definition evaluatesIn (X : Type) (R : X -> X -> Prop) n (x y : X) := pow R n x y /\ terminal R y.

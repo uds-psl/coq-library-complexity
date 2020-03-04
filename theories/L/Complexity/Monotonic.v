@@ -55,6 +55,11 @@ Smpl Add 20 (lazymatch goal with
                end)
              end) : monotonic.
 
+Instance monotonic_pointwise_eq: Proper ((pointwise_relation _ eq)  ==> iff) monotonic.
+Proof.
+  intros ? ? R1. unfold monotonic. setoid_rewrite R1. all:easy.
+Qed.
+
 (*
 Inductive TTnat: Type -> Type :=
   TTnatBase : TTnat nat

@@ -1,6 +1,5 @@
-From Undecidability.L.Complexity Require Import NP Synthetic Monotonic GenNPHalt.
-
-
+(*From Undecidability.L Require Import Tactics.LTactics Prelim.MoreList Prelim.MoreBase.
+From Undecidability.L.Complexity Require Import NP Synthetic Monotonic GenNP.
 
 
 (** * From L to TMs *)
@@ -18,25 +17,20 @@ Da der simulierte Term evtl aber mit groesserer Schranke haelt muesste man dann 
 
 (* Weitere Idee: Prädikat nutzen, um Probleminstanzen weiter einzuschränken? *)
 
-Print GenNPHalt.
 
+Print GenNP'.
 Check NPhard_GenNP.
 
+From Undecidability Require Import LMGenNP.
 
-(** Have: Implementation of Heap-based machine (Not step-indexed) *)
-
-From Undecidability.LAM  Require TM.HaltingProblem.
-
-
-Print HaltingProblem.Loop_Rel.
-Print HaltingProblem.Loop_T.
+Print LMGenNP'.
+About GenNP_to_LMGenNP.*)
 
 (** Not Complete: nice form of Time bound *)
-From Undecidability.LAM  Require TM.LMBounds.
-Print LMBounds.LM.
+(*From Undecidability.LAM  Require TM.LMBounds. *)
 
 
 (** Approach: simulate step-indexed L interpreter inside TM *)
 (** Problems: Well-formedness of certificate-input? *)
 
-(** Maybe intermediate problem in terms of Heap-Machine?)
+(** Maybe intermediate problem in terms of Heap-Machine? *)

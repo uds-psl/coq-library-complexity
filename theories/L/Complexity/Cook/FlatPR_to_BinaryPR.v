@@ -479,7 +479,7 @@ Proof.
 Qed. 
 
 (*size bound *)
-Lemma reduction_size_bound : exists f, (forall fpr, size (enc (reduction fpr)) <= f (size (enc fpr))) /\ inOPoly f /\ monotonic f.
+Lemma reduction_size_bound : {f | (forall fpr, size (enc (reduction fpr)) <= f (size (enc fpr))) /\ inOPoly f /\ monotonic f}.
 Proof. 
   exists (fun n => c__hBinaryPRSize * (n + 1)^3 + c__hBinaryPRSize2 + 32).
   split; [ | split]. 
@@ -494,14 +494,12 @@ Qed.
 
 Lemma FlatPR_to_BinaryPR_poly : reducesPolyMO (unrestrictedP FlatPRLang) (unrestrictedP BinaryPRLang).
 Proof. 
-  exists reduction.
+  apply reducesPolyMO_intro with (f := reduction).
   - exists poly__reduction. 
-    + constructor. 
-      extract.  solverec. 
+    + extract. solverec. 
       all: specialize (reduction_time_bound x) as H1; unfold reduction_time, c__reduction in H1; nia.
     + apply reduction_poly.
     + apply reduction_poly. 
-    + apply reduction_size_bound. 
-  - intros fpr _. cbn. apply FlatPR_to_BinaryPR. 
-  - intros fpr _. cbn. easy.
+    + destruct (reduction_size_bound) as (f & H1 & H2 & H3). exists f; auto.
+  - intros fpr ?. cbn. exists Logic.I. apply FlatPR_to_BinaryPR. 
 Qed. 

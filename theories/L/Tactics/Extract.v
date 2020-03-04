@@ -141,6 +141,7 @@ Definition tmArgsOfConstructor ind i :=
 Class extracted {A : Type} (a : A) := int_ext : L.term.
 Arguments int_ext {_} _ {_}.
 Typeclasses Transparent extracted. (* This is crucial to use this inside monads  *)
+Hint Extern 0 (extracted _) => progress (cbn [Common.my_projT1]): typeclass_instances. 
 
 Class encodable (A : Type) := enc_f : A -> L.term.  
 
@@ -360,10 +361,10 @@ Definition tmDependentArgs x:=
   | _ => (*tmPrint ("tmDependentArgs not supported");;*)ret 0
   end.
  *)
-
+Require Import Template.kernel.Checker.
 Fixpoint inferHead' (s:Ast.term) (revArg R: list Ast.term) : TemplateMonad (L.term * list Ast.term)  :=
-  s' <- tmEval cbn (if forallb (fun _ => false) revArg then s else Ast.tApp s (rev revArg));;
-  s' <- tmUnquote s';;
+  s'0 <- tmEval cbn (if forallb (fun _ => false) revArg then s else Ast.tApp s (rev revArg));;
+  s' <- tmUnquote s'0;;
   s'' <- tmEval cbn (my_projT2 s');;
   res <- tmInferInstance None (extracted (A:=my_projT1 s') s'');;
   match res with
@@ -376,8 +377,10 @@ Fixpoint inferHead' (s:Ast.term) (revArg R: list Ast.term) : TemplateMonad (L.te
     in
     match doSplit,R with
       true,r::R => inferHead' s (r::revArg) R
-    | _,_ =>  tmPrint ("could not infer any instance for initial segment of ",s''," with further arguments ",R)
-                     ;;tmFail "Could not extract in inferHead'"
+    | _,_ =>  let lhs := string_of_term s'0 in
+             let rhs := string_of_list string_of_term R in
+             tmMsg "More readable: initial segment:";;tmPrint s'';;tmMsg "With remainder:";;tmPrint R;;
+             tmFail ("Could not extract in inferHead (moreReadable version in *coq*): could not infer any instance for initial segment of " ++lhs ++ " with further arguments "++ rhs)
     end
   end.
   
@@ -465,7 +468,7 @@ Fixpoint extract (env : nat -> nat) (s : Ast.term) (fuel : nat) : TemplateMonad 
   | tSort _ =>     tmFail "tSort is not supported"
   | tCast _ _ _ => tmFail "tCast is not supported"
   | tProd _ _ _ => tmFail "tProd is not supported"
-  | tInd _ _ =>    tmFail "tInd is not supported (probably there is a type not in prenex-normal form)" 
+  | tInd a _ =>  tmPrint a;;tmFail "tInd is not supported (probably there is a type not in prenex-normal form)" 
   | tProj _ _ =>   tmFail "tProj is not supported"
   | tCoFix _ _ =>  tmFail "tCoFix is not supported"
   end end.

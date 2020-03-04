@@ -167,12 +167,14 @@ TM/Compound/TMTac.v
 TM/Compound/Multi.v
 TM/Compound/WriteString.v
 TM/Compound/MoveToSymbol.v
+TM/Compound/MoveToSymbol_niceSpec.v
 TM/Compound/CopySymbols.v
 TM/Compound/Shift.v
 TM/Compound/Compare.v
 
 # Programming
 TM/Code/Code.v
+TM/Code/Decode.v
 TM/Code/CodeTM.v
 TM/Code/WriteValue.v
 TM/Code/ChangeAlphabet.v
@@ -180,7 +182,7 @@ TM/Code/Copy.v
 TM/Code/CompareValue.v
 TM/Code/ProgrammingTools.v
 
-# Casees and constructors
+# Cases and constructors
 TM/Code/CaseNat.v
 TM/Code/CaseSum.v
 TM/Code/CaseList.v
@@ -192,9 +194,25 @@ TM/Code/CasePair.v
 TM/Code/NatTM.v
 TM/Code/ListTM.v
 
+# Binary Numbers
+TM/Code/BinNumbers/EncodeBinNumbers.v
+TM/Code/BinNumbers/PosDefinitions.v
+TM/Code/BinNumbers/PosPointers.v
+TM/Code/BinNumbers/PosHelperMachines.v
+TM/Code/BinNumbers/PosIncrementTM.v
+TM/Code/BinNumbers/PosCompareTM.v
+TM/Code/BinNumbers/PosShiftTM.v
+TM/Code/BinNumbers/PosAddTM.v
+TM/Code/BinNumbers/PosMultTM.v
+TM/Code/BinNumbers/NTM.v
+
 # Multi-Tape to Single-Tape Compiler
 TM/Single/EncodeTapes.v
 TM/Single/StepTM.v
+TM/Single/EncodeTapesInvariants.v
+TM/Single/DecodeTape.v
+TM/Single/DecodeTapes.v
+
 
 # Univ
 TM/Univ/LookupAssociativeListTM.v
@@ -213,6 +231,8 @@ TM/PrettyBounds/UnivSpaceBounds.v
 
 # Multi-Univ Simulation Theorem
 TM/MultiUnivTimeSpaceSimulation.v
+
+TM/Hyperlinked.v
 
 L/Prelim/MoreBase.v
 L/Prelim/ARS.v
@@ -305,14 +325,22 @@ L/Complexity/AbstractTimeHierarchyTheorem.v
 L/Complexity/TimeHierarchyTheorem.v
 L/Complexity/Monotonic.v
 L/Complexity/ONotation.v
+L/Complexity/ONotationIsAppropriate.v
 L/Complexity/RegisteredP.v
 L/Complexity/LinTimeDecodable.v
 L/Complexity/NP.v
 
+L/Complexity/Problems/GenNPBool.v
 L/Complexity/Problems/GenNP.v
+L/Complexity/Problems/GenNP_is_hard.v
+L/Complexity/Problems/TMGenNP_fixed_mTM.v
 L/Complexity/Problems/TMGenNP.v
-L/Complexity/Problems/GenNPHalt.v
-L/Complexity/Reductions/TMGenNP/LToTMGenNP.v
+L/Complexity/Reductions/TMGenNP/L_to_LM.v
+L/Complexity/Reductions/TMGenNP/LM_to_mTM.v
+L/Complexity/Reductions/TMGenNP/mTM_to_singleTapeTM.v
+L/Complexity/Reductions/TMGenNP/IntermediateProblems.v
+L/Complexity/Reductions/TMGenNP/LMGenNP.v
+
 
 L/Complexity/PolyBounds.v
 L/Complexity/Tactics.v
@@ -355,7 +383,6 @@ L/Complexity/Cook/FlatFinTypes_extraction.v
 L/Datatypes/LLists.v
 L/Datatypes/LLNat.v
 
-L/AbstractMachines/Programs.v
 L/AbstractMachines/AbstractSubstMachine.v
 L/AbstractMachines/AbstractHeapMachine.v
 L/AbstractMachines/AbstractHeapMachineDef.v
@@ -372,6 +399,15 @@ L/AbstractMachines/Computable/UnivDecTime.v
 L/AbstractMachines/Computable/LargestVar.v
 L/AbstractMachines/Computable/EvalForTime.v
 L/AbstractMachines/Computable/EvalForTimeBool.v
+L/AbstractMachines/FlatPro/Computable/Compile.v
+L/AbstractMachines/FlatPro/Computable/Decompile.v
+#L/AbstractMachines/FlatPro/Computable/JumpTarget.v
+#L/AbstractMachines/FlatPro/Computable/HeapStep.v
+L/AbstractMachines/FlatPro/Computable/LPro.v
+L/AbstractMachines/FlatPro/Programs.v
+L/AbstractMachines/FlatPro/ProgramsDef.v
+L/AbstractMachines/FlatPro/LM_heap_def.v
+L/AbstractMachines/FlatPro/LM_heap_correct.v
 
 L/Computability/Acceptability.v
 #L/Computability/AD.v
@@ -392,9 +428,6 @@ L/Computability/Synthetic.v
 
 #Reduction L to TM with abstract Heap Machine
 LAM/BaseExtension.v
-LAM/Prelims.v
-LAM/LM_heap_def.v
-LAM/LM_heap_correct.v
 # Abstract Machine simulator
 LAM/TM/SizeAnalysis.v
 LAM/TM/Alphabets.v

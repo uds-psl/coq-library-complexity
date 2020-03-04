@@ -308,6 +308,11 @@ Proof.
   repeat econstructor.
 Qed.
 
+Lemma lam_terminal u: lambda u -> terminal step u.
+Proof.
+  intros H ? R;inv H;inv R.  
+Qed.
+
 (** Properties of the reflexive, transitive closure of reduction *)
 
 Notation "s '>*' t" := (star step s t) (at level 50).
@@ -590,6 +595,11 @@ Proof.
   now intros ? ? [].
 Qed.
 
+Instance evalIn_eval_subrelation i: subrelation (evalIn i) eval.
+Proof.
+  intros ? ? [?  ?]. split. eapply pow_star_subrelation. all:eauto. 
+Qed.
+
 Instance redLe_star_subrelation i: subrelation (redLe i) (star step).
 Proof.
   intros ? ? (j & leq & R). now rewrite R. 
@@ -601,10 +611,22 @@ Proof.
   exists i. split. omega. tauto.
 Qed.
 
+Lemma redLe_mono s t n n' :
+  s >(<=n) t -> n <= n' -> s >(<=n') t.
+Proof.
+  intros ? <-. easy.
+Qed.
+
 Instance le_evalLe_proper: Proper (le ==> eq ==> eq ==> Basics.impl) evalLe.
 Proof.
   intros ? ? H' ? ? -> ? ? -> [H p].
   split. 2:tauto. now rewrite <- H'.
+Qed.
+
+Lemma evalIn_mono s t n n' :
+  s ⇓(<=n) t -> n <= n' -> s ⇓(<=n') t.
+Proof.
+  intros ? <-. easy.
 Qed.
 
 Lemma evalIn_trans s t u i j :
@@ -642,6 +664,14 @@ Qed.
 Instance redLe_refl : Reflexive (redLe 0).
 Proof.
   intro. eexists; split;reflexivity.  
+Qed.
+
+Lemma evalIn_unique s k1 k2 v1 v2 :
+  s ⇓(k1) v1 -> s ⇓(k2) v2 -> k1 = k2 /\ v1 = v2.
+Proof.
+  intros (R1&L1) (R2&L2).
+  eapply uniform_confluence_parameterized_both_terminal.
+  all:eauto using lam_terminal,uniform_confluence.
 Qed.
 
 (* Helpfull Lemmas*)
@@ -699,3 +729,4 @@ Lemma rho_lambda s : lambda (rho s).
 Proof.
   eexists. reflexivity.
 Qed.
+

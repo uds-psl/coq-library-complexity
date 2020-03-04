@@ -1,6 +1,6 @@
 From Undecidability.L.Datatypes Require Import LNat LBool.
 From Undecidability.L Require Import Tactics.LTactics AbstractMachines.Computable.Unfolding Prelim.LoopSum Functions.UnboundIteration AbstractMachines.LargestVar.
-From Undecidability.L.AbstractMachines Require Import AbstractHeapMachine FunctionalDefinitions Programs UnfoldHeap UnfoldTailRec. 
+From Undecidability.L.AbstractMachines Require Import AbstractHeapMachine FunctionalDefinitions UnfoldHeap UnfoldTailRec. 
 From Undecidability.L.AbstractMachines.Computable Require Import Shared HeapMachine Unfolding.
 
 Definition univStep '(T,V,H) : _ + bool :=
@@ -39,12 +39,6 @@ Proof.
   intros ? ? ? R1 R2;inv R1;inv R2. all:left;congruence.
 Qed.
 
-Lemma evalIn_mono s t n n' :
-  s ⇓(<=n) t -> n <= n' -> s ⇓(<=n') t.
-Proof.
-  intros ? <-. easy.
-Qed.
-
 Lemma univDecTime_complete (s:term) (b:bool) k:
   closed s ->
   s ⇓(k) (enc b) ->
@@ -58,7 +52,7 @@ Proof.
   2:{ intros ? ? R'. unfold univStep. cbn. repeat (let eq := fresh in destruct _ eqn:eq);inv R';try congruence. }
   cbn [loopSum univStep heapStep] in R'.
   erewrite unfoldBoolean_complete in R'. 2:eassumption.
-  unshelve eapply uiter_sound in R'. 4:now exact _.
+  eapply (uiter_sound (H1:=_)) in R'.
   cbn -[plus mult] in R'.
   remember (4*k+2) as n0.
   erewrite uiterTime_bound_recRel with

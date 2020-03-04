@@ -29,11 +29,7 @@ Proof.
   specialize (IHxs ys). nia.
 Qed.
 
-(*MOVE*)
-Instance term_repeat A `{registered A}: computableTime' (@repeat A) (fun _ _ => (5, fun n _ => (n * 12 + 4,tt))).
-Proof.
-  extract. solverec.
-Qed.
+
 
 From Undecidability.L Require Import Functions.FinTypeLookup.
 Definition stepFlat_time (f : nat) (c:mconfigFlat) := 153 * (| snd c |) + f * size (enc (fst c, map (current (sig:=nat)) (snd c))) * c__eqbComp (nat * list (option nat)) + 24 * f + 89.
@@ -198,12 +194,6 @@ Proof.
   nia.
 Qed.
 
-(*MOVE*)
-Lemma size_list_cons (X : Type) (H : registered X) x (l : list X):
-  size (enc (x::l)) = size (enc x) + size (enc l) + 5.
-Proof.
-  rewrite !size_list. cbn. lia.
-Qed.
 
 Definition isInjFinfuncTable_time X Y {HX:registered X} {HY:registered Y}
            `{eqbCompT X (R:=HX)} `{eqbCompT Y (R:=HY)} l sf :=
@@ -346,26 +336,6 @@ Proof.
   2:{ intros ? (?&<-&?)%in_map_iff. rewrite Nat.le_min_r. unfold c;reflexivity. }
   rewrite map_length. fold (sizeOfTape x0).
   unfold isValidFlatTape_time,c. lia.
-Qed.
-
-
-(*MOVE*)
-Definition lengthEq A :=
-  fix f (t:list A) n :=
-    match n,t with
-      0,nil => true
-    | (S n), _::t => f t n
-    | _,_ => false
-    end.
-Lemma lengthEq_spec A (t:list A) n:
-| t | =? n = lengthEq t n.
-Proof.
-  induction n in t|-*;destruct t;now cbn.
-Qed.
-Definition lengthEq_time k := k * 15 + 9.
-Instance term_lengthEq A `{registered A} : computableTime' (lengthEq (A:=A)) (fun l _ => (5, fun n _ => (lengthEq_time (min (length l) n),tt))).
-Proof.
-  extract. unfold lengthEq_time. solverec.
 Qed.
 
 Definition  isValidFlatTapes_time (sig lt mt :nat) := lt*(isValidFlatTape_time sig mt + 30) + 28.

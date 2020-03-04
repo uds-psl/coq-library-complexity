@@ -101,8 +101,9 @@ Fixpoint formula_size (f : formula) := match f with
 end. 
 
 (** extraction *)
+From Undecidability.L.Datatypes Require Import LLNat.
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import  LProd LOptions LBool LLists LUnit LLNat.
+From Undecidability.L.Datatypes Require Import  LProd LOptions LBool LLists LUnit.
 From Undecidability.L.Complexity Require Import PolyBounds. 
 
 Run TemplateProgram (tmGenEncode "formula_enc" formula).
@@ -139,7 +140,6 @@ Instance term_Fneg : computableTime' Fneg (fun f _ => (1, tt)).
 Proof. 
   extract constructor. solverec. 
 Defined. 
-
 
 (** the encoding size of a formula relates is bounded linearly by formula_size f * formula_maxVar f *)
 Definition c__formulaBound1 := c__natsizeS. 

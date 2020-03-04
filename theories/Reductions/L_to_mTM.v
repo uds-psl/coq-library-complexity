@@ -1,6 +1,5 @@
 From Undecidability Require Import Problems.Reduction Problems.cbvLambda Problems.TM.
-From Undecidability.L Require Import L Seval.
-From Undecidability.LAM Require Import Prelims LM_heap_def LM_heap_correct.
+From Undecidability.L Require Import L Seval LM_heap_def LM_heap_correct.
 Require Import Undecidability.LAM.TM.HaltingProblem.
 
 (** * L to TM *)

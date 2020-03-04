@@ -61,3 +61,11 @@ Proof.
   intros H.
   rewrite <- IHl,<- H. all:now eauto.
 Qed.
+
+Lemma sumn_map_le_pointwise X (xs:list X) f1 f2:
+  (forall x, x el xs -> f1 x <= f2 x) -> sumn (map f1 xs) <= sumn (map f2 xs).
+Proof.
+  intros Hle. 
+  induction xs. easy.
+  cbn. rewrite Hle. 2:easy. rewrite IHxs. easy. intros. eauto.
+Qed.

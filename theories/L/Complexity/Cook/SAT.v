@@ -926,28 +926,24 @@ Qed.
 (** We obtain that SAT is in NP *)
 Lemma sat_NP : inNP (unrestrictedP SAT).
 Proof.
-  apply inNP_intro with (R:= sat_verifier). 
-  4 : {
-    unfold SAT, sat_verifier. intros cn H0; split.
-    - cbn. intros [a H]. exists (compressAssignment a cn). split.
-      + apply compressAssignment_cnf_equiv in H. apply H. 
-      + apply compressAssignment_small. 
-    - intros (a & H1 &H2). exists a; tauto.
-  }
-  3 : {
-    unfold polyBalanced. exists (fun n => n * (1 + c__listsizeCons + c__listsizeNil)). 
-    repeat split; [smpl_inO | | smpl_inO].
-    intros cn a [H1 H2]. apply assignment_small_size, H2. 
-  }
+  apply inNP_intro with (R:= fun (a : { cnf | True}) => sat_verifier (proj1_sig a)). 
   1 : apply linDec_polyTimeComputable.
+  2 : {
+    exists (fun n => n * (1 + c__listsizeCons + c__listsizeNil)). 
+    3, 4: smpl_inO.
+    - unfold SAT, sat_verifier.
+      intros (cn & ?) a (H1 & H2). cbn. exists a; tauto.  
+    - unfold SAT, sat_verifier. intros (cn & ?) [a H]. exists (compressAssignment a cn). split. 
+      + apply compressAssignment_cnf_equiv in H. cbn. split; [apply H | apply compressAssignment_small]. 
+      + apply assignment_small_size. cbn. apply compressAssignment_small. 
+  }
 
   unfold inTimePoly. exists poly__sat_verifierb. repeat split.
   - exists (sat_verifierb). 
-    + constructor. (* extract. fails. *)
-      eexists. 
+    + eexists. 
       eapply computesTime_timeLeq. 2: apply term_sat_verifierb.
       cbn. intros [N a] _. split; [ apply sat_verifierb_time_bound | easy]. 
-    + intros [N a] _. apply sat_verifierb_correct.
+    + intros [N a] ?. cbn. apply sat_verifierb_correct.
   - apply sat_verifierb_poly. 
   - apply sat_verifierb_poly. 
 Qed. 

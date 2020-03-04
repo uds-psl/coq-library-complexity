@@ -43,7 +43,7 @@ Section TimeHierarchy_Parametric.
   
   Lemma L_A_notIn_f : ~ (unrestrictedP L__f) ∈Timeo f.
   Proof.
-    intros (t__o&[fdec [fdec__intT] Hf]&Ht__o).
+    intros (t__o&[[fdec fdec__intT Hf]]&Ht__o).
     specialize (Ht__o 1) as (n0&Hn0). setoid_rewrite Nat.mul_1_l in Hn0.
     pose (w:=(extT fdec,n0)).  unfold extracted in w.
 
@@ -57,8 +57,7 @@ Section TimeHierarchy_Parametric.
       rewrite size_prod. unfold w;cbn [fst snd]. rewrite size_nat_enc. lia.
     }
     clear Hn0.
-    
-    specialize (Hf w Logic.I) as f_dec_spec.
+    specialize (Hf w Logic.I) as f_dec_spec. cbn in f_dec_spec.
     unfold L__f in f_dec_spec. cbn in *. unfold w in f_dec_spec at 1 3.  cbn [start fst snd] in *. fold w in f_dec_spec.
     clearbody w.
 
@@ -267,9 +266,9 @@ Section TimeHierarchy_Parametric.
     unrestrictedP L__f ∈TimeO (fun n => t__E n (2*n) (f n)).
   Proof.
     (* intros H_t__E H_t__step. *)
-    eexists (fun n => fT n + t__E n (2*n) (f n) + n * 221 + 12). split.
+    eexists (fun n => fT n + t__E n (2*n) (f n) + n * 221 + 12). split. split.
     exists U_spec.
-    -split. eexists.
+    -eexists.
      eapply computesTime_timeLeq with (fT:= (fun w _ => (_,tt))).
      2:{ exact U_correct. }
      +intros [s padding] [].
@@ -284,7 +283,7 @@ Section TimeHierarchy_Parametric.
        Lia.lia.
       *rewrite size_prod. cbn [start fst snd size].
        rewrite size_prod. cbn [fst snd]. rewrite size_term_enc_r with (s:=s). change (term_enc) with (@enc term _). Lia.lia. 
-    -intros w _. cbn. rewrite <- spec_L__f.
+    -intros w ?. cbn. rewrite <- spec_L__f.
      eapply reflect_iff. apply U_reflects_U_spec.
     -repeat apply inO_add_l.
      +etransitivity. exact f_TC.

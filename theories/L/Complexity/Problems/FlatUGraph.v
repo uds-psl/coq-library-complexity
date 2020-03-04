@@ -34,7 +34,7 @@ Definition fedges_wf_decb n E := forallb (fedge_wf_decb n) E.
 
 Definition fraph_wf_decb G := let (V, E) := G in fedges_symmetric_decb E && fedges_wf_decb V E. 
 
-Lemma fedge_eqb_iff e1 e2 : fedge_eqb e1 e2 = true <-> e1 = e2. 
+(*Lemma fedge_eqb_iff e1 e2 : fedge_eqb e1 e2 = true <-> e1 = e2. *)
 
 
 (** We relate UGraph and fgraph instances in the following way *)

@@ -1,7 +1,7 @@
 From PslBase Require Import Base. 
-From Undecidability.L.Complexity.Cook Require Import Prelim FSAT BinaryPR.
 From Undecidability.L.Complexity Require Import Tactics. 
 From Undecidability.L.Datatypes Require Import LLists. 
+From Undecidability.L.Complexity.Cook Require Import Prelim BinaryPR FSAT.
 Require Import Lia. 
 
 (** *Reduction of BinaryPR to FSAT *)

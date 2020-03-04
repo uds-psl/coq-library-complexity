@@ -15,7 +15,7 @@ Section TimeHierarchy.
   Hypothesis f_geq_n : forall n, n <= f n.
 
   Let fT := projT1 TC__f.
-  Check timeConstructible_inO TC__f.
+
   Definition comp_t__E: computableTime' (fun n => N.of_nat (f n)) (fun n _ => (fT n,tt)) := timeConstructible_computableTime' TC__f.
   Definition inO_time_t__E: fT ∈O f := timeConstructible_inO TC__f.
   

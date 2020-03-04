@@ -134,9 +134,9 @@ Defined.
 
 Lemma FlatTPR_to_FlatPR_poly : reducesPolyMO (unrestrictedP FlatTPRLang) (unrestrictedP FlatPRLang).
 Proof. 
-  exists FPR_instance.
+  apply reducesPolyMO_intro with (f := FPR_instance).
   - exists (fun n => c__FPR_instance + poly__PRWindows n).  
-    + constructor. extract. solverec. rewrite PR_windows_time_bound. 
+    + extract. solverec. rewrite PR_windows_time_bound. 
       poly_mono PRWindows_poly. 
       2: (replace_le (size (enc (FlatTPR.windows x))) with (size (enc x)) by (rewrite FlatTPR_enc_size; lia)); reflexivity. unfold c__FPR_instance; lia. 
     + smpl_inO. apply PRWindows_poly. 
@@ -149,7 +149,5 @@ Proof.
         rewrite FlatTPR_enc_size. cbn -[Nat.add Nat.mul]. nia.
       * subst f. smpl_inO. 
       * subst f. smpl_inO. 
-  - intros fpr _. cbn. apply FlatTPR_to_FlatPR. 
-  - intros fpr _. cbn. easy.
+  - intros fpr ?. cbn. exists Logic.I. apply FlatTPR_to_FlatPR. 
 Qed. 
-
