@@ -355,6 +355,7 @@ L/Complexity/MorePrelim.v
 L/Complexity/Problems/UGraph.v
 L/Complexity/Problems/FlatUGraph.v
 L/Complexity/Problems/newClique.v
+L/Complexity/Problems/FlatClique.v
 
 L/Complexity/Cook/Prelim.v
 L/Complexity/Cook/PR.v

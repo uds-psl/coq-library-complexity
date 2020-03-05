@@ -3,7 +3,7 @@ From Undecidability.L.Datatypes Require Import Lists LVector.
 From Undecidability.L.Complexity Require Import NP Synthetic Monotonic.
 From Undecidability.TM Require Import TM.
 
-From Undecidability.L.Complexity  Require GenNP.
+From Undecidability.L.Complexity.Problems  Require GenNP.
 From Undecidability.L.Complexity  Require Import LMGenNP TMGenNP_fixed_mTM GenNP_is_hard.
 From Undecidability.L.AbstractMachines Require Import FlatPro.Programs FlatPro.Computable.LPro Computable.Compile Computable.Decompile.
 

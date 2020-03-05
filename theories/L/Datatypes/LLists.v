@@ -1,6 +1,7 @@
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import LBool LOptions LProd LLNat.
 Require Export List PslBase.Lists.Filter Datatypes.
+Require Undecidability.L.Datatypes.Lists. 
 
 (** ** Encoding of lists *)
 
@@ -8,8 +9,8 @@ Section Fix_X.
   Variable (X:Type).
   Context {intX : registered X}.
 
-  Run TemplateProgram (tmGenEncode "list_enc" (list X)).  
-  Hint Resolve list_enc_correct : Lrewrite.
+  (*Run TemplateProgram (tmGenEncode "list_enc" (list X)).  *)
+  (*Hint Resolve list_enc_correct : Lrewrite.*)
   
   (* now we must register the non-constant constructors*)
   
@@ -19,10 +20,10 @@ Section Fix_X.
     solverec.
   Qed.
 
-  (* Lemma list_enc_correct (A:list X) (s t:term): proc s -> proc t -> enc A s t >(2) match A with nil => s | cons a A' => t (enc a) (enc (A')) end. *)
-  (* Proof. *)
-  (*   extract match.  *)
-  (* Qed. *)
+   Lemma list_enc_correct (A:list X) (s t:term): proc s -> proc t -> enc A s t >(2) match A with nil => s | cons a A' => t (enc a) (enc (A')) end. 
+   Proof. 
+     extract match.  
+   Qed. 
   
 
   Global Instance termT_append : computableTime' (@List.app X) (fun A _ => (5,fun B _ => (length A * 16 +4,tt))).
@@ -115,7 +116,7 @@ Section Fix_X.
 
 End Fix_X.
 
-Hint Resolve list_enc_correct : Lrewrite.
+Hint Resolve Lists.list_enc_correct : Lrewrite.
 
 Definition c__map := 12. 
 Fixpoint map_time {X} (fT:X -> nat) xs :=
@@ -261,10 +262,10 @@ Definition c__listsizeNil := 4.
 Lemma size_list X `{registered X} (l:list X):
   size (enc l) = sumn (map (fun x => size (enc x) + c__listsizeCons) l)+ c__listsizeNil.
 Proof.
-  change (enc l) with (list_enc l). unfold c__listsizeCons, c__listsizeNil. 
+  change (enc l) with (Lists.list_enc l). unfold c__listsizeCons, c__listsizeNil. 
   induction l.
   -easy.
-  -cbn [list_enc map sumn size].
+  -cbn [Lists.list_enc map sumn size].
    change ((match H with
             | @mk_registered _ enc _ _ => enc
             end a)) with (enc a). solverec. 

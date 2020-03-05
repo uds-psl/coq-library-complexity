@@ -224,6 +224,9 @@ Proof.
     + apply (proj2 H), H0. 
 Qed. 
 
+Definition list_finReprEl' (f : finType) (l : list nat) (L : list f ) := 
+  (forall v, v el l -> exists v', v' el L /\ v = index v') /\ (forall v, v el L -> index v el l).
+
 (*given a representation of a finite type by natural numbers, we can restore original elements *)
 Lemma finRepr_exists (X : finType) (x : nat) (a : nat) : 
   finRepr X x -> ofFlatType x a -> sigT (fun (a' : X) => finReprEl x a a'). 

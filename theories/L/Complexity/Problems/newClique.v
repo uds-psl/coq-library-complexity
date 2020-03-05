@@ -6,10 +6,9 @@ Section fixGraph.
   Notation V := (V g).
   Notation E := (@E g).
 
-  Definition isClique (l : list V) := forall v1 v2, v1 el l -> v2 el l -> E (v1, v2). 
+  Definition isClique (l : list V) := (forall v1 v2, v1 el l -> v2 el l -> v1 <> v2 -> E (v1, v2)) /\ dupfree l. 
   Definition isKClique k (l : list V) := |l| = k /\ isClique l. 
 End fixGraph. 
   
 Definition Clique (i : UGraph * nat) := let (g, k) := i in exists l, @isKClique g k l.  
-
 
