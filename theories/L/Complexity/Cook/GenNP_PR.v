@@ -3134,12 +3134,12 @@ Section fixTM.
   (*this works because of the way we defined the list of values for the instance declaration*)
   Definition flattenPreludeSig' (p : preludeSig') := index p. 
 
-  Notation flatStateSigma := (flatOption flatSigma).
-  Notation flatPolSigma := (flatProd flatPolarity flatStateSigma).
-  Notation flatTapeSigma := (flatSum flatDelim flatPolSigma).
-  Notation flatStates := (flatProd flatstates flatStateSigma).
-  Notation flatGamma := (flatSum flatStates flatTapeSigma). 
-  Notation flatAlphabet := (flatSum flatGamma flatPreludeSig'). 
+  Definition flatStateSigma := (flatOption flatSigma).
+  Definition flatPolSigma := (flatProd flatPolarity flatStateSigma).
+  Definition flatTapeSigma := (flatSum flatDelim flatPolSigma).
+  Definition flatStates := (flatProd flatstates flatStateSigma).
+  Definition flatGamma := (flatSum flatStates flatTapeSigma). 
+  Definition flatAlphabet := (flatSum flatGamma flatPreludeSig'). 
 
   Notation window := TPRWin.
 
@@ -3424,9 +3424,9 @@ Section fixTM.
   Qed. 
 
   (*list_prod: cons every element of the first list to every element of the second list*)
-  Fixpoint list_prod (X : Type) (l : list X) (l' : list (list X)) : list (list X) :=
+  Definition list_prod (X : Type) := fix rec (l : list X) (l' : list (list X)) : list (list X) :=
     match l with [] => []
-            | (h :: l) => map (fun l => h :: l) l' ++ list_prod l l'
+            | (h :: l) => map (@cons X h) l' ++ rec l l'
     end. 
 
   Lemma in_list_prod_iff (X : Type) (l : list X) (l' : list (list X)) l0:
@@ -3549,7 +3549,7 @@ Section fixTM.
     - apply seq_isFlatListOf.
     - rewrite Sigma_finRepr. apply seq_isFlatListOf.
     - assert (flatStateSigma = |elem FstateSigma|) as ->. 
-      { cbn. rewrite map_length. rewrite Sigma_finRepr. now cbn. }
+      { cbn. rewrite map_length. rewrite <- Sigma_finRepr. now cbn. }
       apply seq_isFlatListOf. 
     - rewrite states_finRepr. apply seq_isFlatListOf.
   Qed. 
@@ -3863,82 +3863,93 @@ Section fixTM.
 
   Section fixAbstractTypes.
     Variable (X Y Z W M : Type). 
-    (*add states and read/written symbols *)
+    (**add states and read/written symbols *)
     Definition envAddState (q : W) (env : evalEnv X Y Z W) := Build_evalEnv (polarityEnv env) (sigmaEnv env) (stateSigmaEnv env) (q :: stateEnv env). 
     Definition envAddSSigma (m : Z) (env : evalEnv X Y Z W) := Build_evalEnv (polarityEnv env) (sigmaEnv env) (m :: stateSigmaEnv env) (stateEnv env).
-
 
     (*only add states (used for the None/None case) *)
     Definition transEnvAddS (q q' : W) (env : evalEnv X Y Z W) := envAddState q $ envAddState q' env.
 
     Definition transEnvAddSM (q q' : W) (m m' : Z) (env : evalEnv X Y Z W) := envAddSSigma m $ envAddSSigma m' $ transEnvAddS q q' env.
 
-    (*we define the transition generation functions over abstract makeRules instantiations *)
+    (**we define the transition generation functions over abstract makeRules instantiations *)
     Definition makeRulesT := list (evalEnv X Y Z W) -> list (window fAlphabet) -> list (window M).
+  
+    (** the environments in envList should contain q, q'; m, m' at the head *)
+    Definition makeSome_base (ruleList : list (window fAlphabet)) (q q' : W) (m m' : Z) (r : makeRulesT) (envList : list (evalEnv X Y Z W)) :=
+      r (map (transEnvAddSM q q' m m') envList) ruleList. 
 
-    (*the environments in envList should contain q, q'; m, m' at the head *)
-    Definition makeSomeRight (q q' : W) (m m' : Z) (r : makeRulesT) (envList : list (evalEnv X Y Z W)) :=
-      r (map (transEnvAddSM q q' m m') envList) 
-        [{inl $ inr $ inr (polVar 0, stateSigmaVar 2), inl $ inl (0, stateSigmaVar 0), inl $ inr $ inr (polVar 0, stateSigmaVar 3)} / {inl $ inr $ inr (polConst positive, stateSigmaVar 4), inl $ inl (1, stateSigmaVar 2), inl $ inr $ inr (polConst positive, stateSigmaVar 1)};
-            {inl $ inr $ inr (polVar 0, stateSigmaVar 2), inl $ inr $ inr (polVar 0, stateSigmaVar 3), inl $ inl (0, stateSigmaVar 0)} / {inl $ inr $ inr (polConst positive, stateSigmaVar 4), inl $ inr $ inr (polConst positive, stateSigmaVar 2), inl $ inl (1, stateSigmaVar 3)};
-          {inl $ inl (0, stateSigmaVar 0), inl $ inr $ inr (polVar 0, stateSigmaVar 2), inl $ inr $ inr (polVar 0, stateSigmaVar 3)} / {inl $ inl (1, stateSigmaVar 4), inl $ inr $ inr (polConst positive, stateSigmaVar 1), inl $ inr $ inr (polConst positive, stateSigmaVar 2)}].
+    Definition makeSomeRight_rules : list (window fAlphabet):= 
+      [{inl $ inr $ inr (polVar 0, stateSigmaVar 2), inl $ inl (0, stateSigmaVar 0), inl $ inr $ inr (polVar 0, stateSigmaVar 3)} / {inl $ inr $ inr (polConst positive, stateSigmaVar 4), inl $ inl (1, stateSigmaVar 2), inl $ inr $ inr (polConst positive, stateSigmaVar 1)};
+       {inl $ inr $ inr (polVar 0, stateSigmaVar 2), inl $ inr $ inr (polVar 0, stateSigmaVar 3), inl $ inl (0, stateSigmaVar 0)} / {inl $ inr $ inr (polConst positive, stateSigmaVar 4), inl $ inr $ inr (polConst positive, stateSigmaVar 2), inl $ inl (1, stateSigmaVar 3)};
+       {inl $ inl (0, stateSigmaVar 0), inl $ inr $ inr (polVar 0, stateSigmaVar 2), inl $ inr $ inr (polVar 0, stateSigmaVar 3)} / {inl $ inl (1, stateSigmaVar 4), inl $ inr $ inr (polConst positive, stateSigmaVar 1), inl $ inr $ inr (polConst positive, stateSigmaVar 2)}].
+
+    Definition makeSomeRight := makeSome_base makeSomeRight_rules. 
+
+    Definition makeSomeLeft_rules : list (window fAlphabet) := 
+      [{inl $ inr $ inr (polVar 0, stateSigmaVar 2), inl $ inl (0, stateSigmaVar 0), inl $ inr $ inr (polVar 0, stateSigmaVar 3)} / {inl $ inr $ inr (polConst negative, stateSigmaVar 1), inl $ inl (1, stateSigmaVar 3), inl $ inr $ inr (polConst negative, stateSigmaVar 4)}; 
+       {inl $ inl (0, stateSigmaVar 0), inl $ inr $ inr (polVar 0, stateSigmaVar 2), inl $ inr $ inr (polVar 0, stateSigmaVar 3)} / {inl $ inl (1, stateSigmaVar 2), inl $ inr $ inr (polConst negative, stateSigmaVar 3), inl $ inr $ inr (polConst negative, stateSigmaVar 4)};
+       {inl $ inr $ inr (polVar 0, stateSigmaVar 2), inl $ inr $ inr (polVar 0, stateSigmaVar 3), inl $ inl (0, stateSigmaVar 0)} / {inl $ inr $ inr (polConst negative, stateSigmaVar 3), inl $ inr $ inr (polConst negative, stateSigmaVar 1), inl $ inl (1, stateSigmaVar 4)}].
     
-    Definition makeSomeLeft (q q' : W) (m m' : Z) (r :makeRulesT) (envList : list (evalEnv X Y Z W)) :=
-      r (map (transEnvAddSM q q' m m') envList) 
-        [{inl $ inr $ inr (polVar 0, stateSigmaVar 2), inl $ inl (0, stateSigmaVar 0), inl $ inr $ inr (polVar 0, stateSigmaVar 3)} / {inl $ inr $ inr (polConst negative, stateSigmaVar 1), inl $ inl (1, stateSigmaVar 3), inl $ inr $ inr (polConst negative, stateSigmaVar 4)}; 
-         {inl $ inl (0, stateSigmaVar 0), inl $ inr $ inr (polVar 0, stateSigmaVar 2), inl $ inr $ inr (polVar 0, stateSigmaVar 3)} / {inl $ inl (1, stateSigmaVar 2), inl $ inr $ inr (polConst negative, stateSigmaVar 3), inl $ inr $ inr (polConst negative, stateSigmaVar 4)};
-         {inl $ inr $ inr (polVar 0, stateSigmaVar 2), inl $ inr $ inr (polVar 0, stateSigmaVar 3), inl $ inl (0, stateSigmaVar 0)} / {inl $ inr $ inr (polConst negative, stateSigmaVar 3), inl $ inr $ inr (polConst negative, stateSigmaVar 1), inl $ inl (1, stateSigmaVar 4)}]. 
+    Definition makeSomeLeft := makeSome_base makeSomeLeft_rules. 
 
-    Definition makeSomeStay (q q' : W) (m m' : Z) (r : makeRulesT) (envList : list (evalEnv X Y Z W)) :=
-      r (map (transEnvAddSM q q' m m') envList)
-        [{inl $ inr $ inr (polVar 0, stateSigmaVar 2), inl $ inl (0, stateSigmaVar 0), inl $ inr $ inr (polVar 0, stateSigmaVar 3)} / {inl $ inr $ inr (polConst neutral, stateSigmaVar 2), inl $ inl (1, stateSigmaVar 1), inl $ inr $ inr (polConst neutral, stateSigmaVar 3)};
-         {inl $ inl (0, stateSigmaVar 0), inl $ inr $ inr (polVar 0, stateSigmaVar 2), inl $ inr $ inr (polVar 0, stateSigmaVar 3)} / {inl $ inl (1, stateSigmaVar 1), inl $ inr $ inr (polConst neutral, stateSigmaVar 2), inl $ inr $ inr (polConst neutral, stateSigmaVar 3)};
-         {inl $ inr $ inr (polVar 0, stateSigmaVar 2), inl $ inr $ inr (polVar 0, stateSigmaVar 3), inl $ inl (0, stateSigmaVar 0)} / {inl $ inr $ inr (polConst neutral, stateSigmaVar 2), inl $ inr $ inr (polConst neutral, stateSigmaVar 3), inl $ inl (1, stateSigmaVar 1)}].
+    Definition makeSomeStay_rules : list (window fAlphabet) := 
+      [{inl $ inr $ inr (polVar 0, stateSigmaVar 2), inl $ inl (0, stateSigmaVar 0), inl $ inr $ inr (polVar 0, stateSigmaVar 3)} / {inl $ inr $ inr (polConst neutral, stateSigmaVar 2), inl $ inl (1, stateSigmaVar 1), inl $ inr $ inr (polConst neutral, stateSigmaVar 3)};
+       {inl $ inl (0, stateSigmaVar 0), inl $ inr $ inr (polVar 0, stateSigmaVar 2), inl $ inr $ inr (polVar 0, stateSigmaVar 3)} / {inl $ inl (1, stateSigmaVar 1), inl $ inr $ inr (polConst neutral, stateSigmaVar 2), inl $ inr $ inr (polConst neutral, stateSigmaVar 3)};
+       {inl $ inr $ inr (polVar 0, stateSigmaVar 2), inl $ inr $ inr (polVar 0, stateSigmaVar 3), inl $ inl (0, stateSigmaVar 0)} / {inl $ inr $ inr (polConst neutral, stateSigmaVar 2), inl $ inr $ inr (polConst neutral, stateSigmaVar 3), inl $ inl (1, stateSigmaVar 1)}].
 
-    (*the none rules are a bit more complicated again *)
+    Definition makeSomeStay := makeSome_base makeSomeStay_rules.
 
-    Definition makeNoneRight (q q' : W) (r : makeRulesT) (envList : list (evalEnv X Y Z W)) :=
-      r (map (transEnvAddS q q') envList)
-          [
-            {inl $ inr $ inr (polVar 0, blank), inl $ inl (0, blank), inl $ inr $ inr (polVar 0, stateSigmaVar 0)} / {inl $ inr $ inr (polConst neutral, blank), inl $ inl (1, blank), inl $ inr $ inr (polConst neutral, stateSigmaVar 0)};
-              {inl $ inr $ inr (polVar 0, someSigmaVar 0), inl $ inl (0, blank), inl $ inr $ inr (polVar 0, blank)} / {inl $ inr $ inr (polConst positive, stateSigmaVar 0), inl $ inl (1, someSigmaVar 0), inl $ inr $ inr (polConst positive, blank)};
-              {inl $ inr $ inr (polVar 0, blank), inl $ inr $ inr (polVar 0, blank), inl $ inl (0, blank)} / {inl $ inr $ inr (polVar 1, blank), inl $ inr $ inr (polVar 1, blank), inl $ inl (1, blank)};
-              {inl $ inr $ inr (polVar 0, blank), inl $ inr $ inr (polVar 0, someSigmaVar 0), inl $ inl (0, blank)} / {inl $ inr $ inr (polVar 1, blank), inl $ inr $ inr (polVar 1, blank), inl $ inl (1, someSigmaVar 0)};
-              {inl $ inr $ inr (polVar 0, someSigmaVar 0), inl $ inr $ inr (polVar 0, someSigmaVar 1), inl $ inl (0, blank)} / {inl $ inr $ inr (polConst positive, stateSigmaVar 0), inl $ inr $ inr (polConst positive, someSigmaVar 0), inl $ inl (1, someSigmaVar 1)};
-              {inl $ inl (0, blank), inl $ inr $ inr (polVar 0, blank), inl $ inr $ inr (polVar 0, blank)} / {inl $ inl (1, stateSigmaVar 0), inl $ inr $ inr (polVar 1, blank), inl $ inr $ inr (polVar 1, blank)};
-              {inl $ inl (0, blank), inl $ inr $ inr (polVar 0, someSigmaVar 0), inl $ inr $ inr (polVar 0, stateSigmaVar 0)} / {inl $ inl (1, blank), inl $ inr $ inr (polVar 1, someSigmaVar 0), inl $ inr $ inr (polVar 1, stateSigmaVar 0)}
-          ].
+    (** the none rules are a bit more complicated again *)
+    Definition makeNone_base (ruleList : list (window fAlphabet)) (q q' : W) (r : makeRulesT) (envList : list (evalEnv X Y Z W))  := 
+      r (map (transEnvAddS q q') envList) ruleList.
 
-    Definition makeNoneLeft (q q' : W) (r : makeRulesT) (envList : list (evalEnv X Y Z W)) :=
-      r (map (transEnvAddS q q') envList) 
-          [
-            {inl $ inr $ inr (polVar 0, stateSigmaVar 0), inl $ inl (0, blank), inl $ inr $ inr (polVar 0, blank)} / {inl $ inr $ inr (polConst neutral, stateSigmaVar 0), inl $ inl (1, blank), inl $ inr $ inr (polConst neutral, blank)};
-              {inl $ inr $ inr (polVar 0, blank), inl $ inl (0, blank), inl $ inr $ inr (polVar 0, someSigmaVar 0)} / {inl $ inr $ inr (polConst negative, blank), inl $ inl (1, someSigmaVar 0), inl $ inr $ inr (polConst negative, stateSigmaVar 0)};
-              {inl $ inl (0, blank), inl $ inr $ inr (polVar 0, blank), inl $ inr $ inr (polVar 0, blank)} / {inl $ inl (1, blank), inl $ inr $ inr (polVar 1, blank), inl $ inr $ inr (polVar 1, blank)};
-              {inl $ inl (0, blank), inl $ inr $ inr (polVar 0, someSigmaVar 0), inl $ inr $ inr (polVar 0, blank)} / {inl $ inl (1, someSigmaVar 0), inl $ inr $ inr (polVar 1, blank), inl $ inr $ inr (polVar 1, blank)};
-              {inl $ inl (0, blank), inl $ inr $ inr (polVar 0, someSigmaVar 0), inl $ inr $ inr (polVar 0, someSigmaVar 1)} / {inl $ inl (1, someSigmaVar 0), inl $ inr $ inr (polConst negative, someSigmaVar 1), inl $ inr $ inr (polConst negative, stateSigmaVar 0)};
-              {inl $ inr $ inr (polVar 0, blank), inl $ inr $ inr (polVar 0, blank), inl $ inl (0, blank)} / {inl $ inr $ inr (polVar 1, blank), inl $ inr $ inr (polVar 1, blank), inl $ inl (1, stateSigmaVar 0)};
-              {inl $ inr $ inr (polVar 0, stateSigmaVar 0), inl $ inr $ inr (polVar 0, someSigmaVar 0), inl $ inl (0, blank)} / {inl $ inr $ inr (polConst neutral, stateSigmaVar 0), inl $ inr $ inr (polConst neutral, someSigmaVar 0), inl $ inl (1, blank)}
-          ].
+    Definition makeNoneRight_rules : list (window fAlphabet) := 
+      [
+        {inl $ inr $ inr (polVar 0, blank), inl $ inl (0, blank), inl $ inr $ inr (polVar 0, stateSigmaVar 0)} / {inl $ inr $ inr (polConst neutral, blank), inl $ inl (1, blank), inl $ inr $ inr (polConst neutral, stateSigmaVar 0)};
+        {inl $ inr $ inr (polVar 0, someSigmaVar 0), inl $ inl (0, blank), inl $ inr $ inr (polVar 0, blank)} / {inl $ inr $ inr (polConst positive, stateSigmaVar 0), inl $ inl (1, someSigmaVar 0), inl $ inr $ inr (polConst positive, blank)};
+        {inl $ inr $ inr (polVar 0, blank), inl $ inr $ inr (polVar 0, blank), inl $ inl (0, blank)} / {inl $ inr $ inr (polVar 1, blank), inl $ inr $ inr (polVar 1, blank), inl $ inl (1, blank)};
+        {inl $ inr $ inr (polVar 0, blank), inl $ inr $ inr (polVar 0, someSigmaVar 0), inl $ inl (0, blank)} / {inl $ inr $ inr (polVar 1, blank), inl $ inr $ inr (polVar 1, blank), inl $ inl (1, someSigmaVar 0)};
+        {inl $ inr $ inr (polVar 0, someSigmaVar 0), inl $ inr $ inr (polVar 0, someSigmaVar 1), inl $ inl (0, blank)} / {inl $ inr $ inr (polConst positive, stateSigmaVar 0), inl $ inr $ inr (polConst positive, someSigmaVar 0), inl $ inl (1, someSigmaVar 1)};
+        {inl $ inl (0, blank), inl $ inr $ inr (polVar 0, blank), inl $ inr $ inr (polVar 0, blank)} / {inl $ inl (1, stateSigmaVar 0), inl $ inr $ inr (polVar 1, blank), inl $ inr $ inr (polVar 1, blank)};
+        {inl $ inl (0, blank), inl $ inr $ inr (polVar 0, someSigmaVar 0), inl $ inr $ inr (polVar 0, stateSigmaVar 0)} / {inl $ inl (1, blank), inl $ inr $ inr (polVar 1, someSigmaVar 0), inl $ inr $ inr (polVar 1, stateSigmaVar 0)}
+      ].
 
-    Definition makeNoneStay (q q' : W) (r : makeRulesT) (envList : list (evalEnv X Y Z W)) :=
-      r (map (transEnvAddS q q') envList)
-          [
-            {inl $ inr $ inr (polVar 0, stateSigmaVar 0), inl $ inl (0, blank), inl $ inr $ inr (polVar 0, blank)} / {inl $ inr $ inr (polConst neutral, stateSigmaVar 0), inl $ inl (1, blank), inl $ inr $ inr (polConst neutral, blank)};
-              {inl $ inr $ inr (polVar 0, blank), inl $ inl (0, blank), inl $ inr $ inr (polVar 0, stateSigmaVar 0)} / {inl $ inr $ inr (polConst neutral, blank), inl $ inl (1, blank), inl $ inr $ inr (polConst neutral, stateSigmaVar 0)};
-              {inl $ inl (0, blank), inl $ inr $ inr (polVar 0, someSigmaVar 0), inl $ inr $ inr (polVar 0, stateSigmaVar 0)} / {inl $ inl (1, blank), inl $ inr $ inr (polConst neutral, someSigmaVar 0), inl $ inr $ inr (polConst neutral, stateSigmaVar 0)};
-              {inl $ inl (0, blank), inl $ inr $ inr (polVar 0, blank), inl $ inr $ inr (polVar 0, blank)} / {inl $ inl (1, blank), inl $ inr $ inr (polConst neutral, blank), inl $ inr $ inr (polConst neutral, blank)};
-              {inl $ inr $ inr (polVar 0, stateSigmaVar 0), inl $ inr $ inr (polVar 0, someSigmaVar 0), inl $ inl (0, blank)} / {inl $ inr $ inr (polConst neutral, stateSigmaVar 0), inl $ inr $ inr (polConst neutral, someSigmaVar 0), inl $ inl (1, blank)};
-              {inl $ inr $ inr (polVar 0, blank), inl $ inr $ inr (polVar 0, blank), inl $ inl (0, blank)} / {inl $ inr $ inr (polConst neutral, blank), inl $ inr $ inr (polConst neutral, blank), inl $ inl (1, blank)}
-          ].
+    Definition makeNoneRight := makeNone_base makeNoneRight_rules. 
 
-    Definition makeHalt (q : W) (r : makeRulesT) (envList : list (evalEnv X Y Z W)) :=
-      r (map (envAddState q) envList) 
-          [
-            {inl $ inr $ inr (polVar 0, stateSigmaVar 0), inl $ inl (0, stateSigmaVar 1), inl $ inr $ inr (polVar 0, stateSigmaVar 2)} / {inl $ inr $ inr (polConst neutral, stateSigmaVar 0), inl $ inl (0, stateSigmaVar 1), inl $ inr $ inr (polConst neutral, stateSigmaVar 2)};
-              {inl $ inr $ inr (polVar 0, stateSigmaVar 0), inl $ inr $ inr (polVar 0, stateSigmaVar 1), inl $ inl (0, stateSigmaVar 2)} / {inl $ inr $ inr (polConst neutral, stateSigmaVar 0), inl $ inr $ inr (polConst neutral, stateSigmaVar 1), inl $ inl (0, stateSigmaVar 2)};
-              {inl $ inl (0, stateSigmaVar 0), inl $ inr $ inr (polVar 0, stateSigmaVar 1), inl $ inr $ inr (polVar 0, stateSigmaVar 2)} / {inl $ inl (0, stateSigmaVar 0), inl $ inr $ inr (polConst neutral, stateSigmaVar 1), inl $ inr $ inr (polConst neutral, stateSigmaVar 2)}
-          ].
+    Definition makeNoneLeft_rules : list (window fAlphabet) := 
+     [
+        {inl $ inr $ inr (polVar 0, stateSigmaVar 0), inl $ inl (0, blank), inl $ inr $ inr (polVar 0, blank)} / {inl $ inr $ inr (polConst neutral, stateSigmaVar 0), inl $ inl (1, blank), inl $ inr $ inr (polConst neutral, blank)};
+        {inl $ inr $ inr (polVar 0, blank), inl $ inl (0, blank), inl $ inr $ inr (polVar 0, someSigmaVar 0)} / {inl $ inr $ inr (polConst negative, blank), inl $ inl (1, someSigmaVar 0), inl $ inr $ inr (polConst negative, stateSigmaVar 0)};
+        {inl $ inl (0, blank), inl $ inr $ inr (polVar 0, blank), inl $ inr $ inr (polVar 0, blank)} / {inl $ inl (1, blank), inl $ inr $ inr (polVar 1, blank), inl $ inr $ inr (polVar 1, blank)};
+        {inl $ inl (0, blank), inl $ inr $ inr (polVar 0, someSigmaVar 0), inl $ inr $ inr (polVar 0, blank)} / {inl $ inl (1, someSigmaVar 0), inl $ inr $ inr (polVar 1, blank), inl $ inr $ inr (polVar 1, blank)};
+        {inl $ inl (0, blank), inl $ inr $ inr (polVar 0, someSigmaVar 0), inl $ inr $ inr (polVar 0, someSigmaVar 1)} / {inl $ inl (1, someSigmaVar 0), inl $ inr $ inr (polConst negative, someSigmaVar 1), inl $ inr $ inr (polConst negative, stateSigmaVar 0)};
+        {inl $ inr $ inr (polVar 0, blank), inl $ inr $ inr (polVar 0, blank), inl $ inl (0, blank)} / {inl $ inr $ inr (polVar 1, blank), inl $ inr $ inr (polVar 1, blank), inl $ inl (1, stateSigmaVar 0)};
+        {inl $ inr $ inr (polVar 0, stateSigmaVar 0), inl $ inr $ inr (polVar 0, someSigmaVar 0), inl $ inl (0, blank)} / {inl $ inr $ inr (polConst neutral, stateSigmaVar 0), inl $ inr $ inr (polConst neutral, someSigmaVar 0), inl $ inl (1, blank)}
+      ].
+
+    Definition makeNoneLeft := makeNone_base makeNoneLeft_rules. 
+
+    Definition makeNoneStay_rules : list (window fAlphabet) := 
+      [
+        {inl $ inr $ inr (polVar 0, stateSigmaVar 0), inl $ inl (0, blank), inl $ inr $ inr (polVar 0, blank)} / {inl $ inr $ inr (polConst neutral, stateSigmaVar 0), inl $ inl (1, blank), inl $ inr $ inr (polConst neutral, blank)};
+        {inl $ inr $ inr (polVar 0, blank), inl $ inl (0, blank), inl $ inr $ inr (polVar 0, stateSigmaVar 0)} / {inl $ inr $ inr (polConst neutral, blank), inl $ inl (1, blank), inl $ inr $ inr (polConst neutral, stateSigmaVar 0)};
+        {inl $ inl (0, blank), inl $ inr $ inr (polVar 0, someSigmaVar 0), inl $ inr $ inr (polVar 0, stateSigmaVar 0)} / {inl $ inl (1, blank), inl $ inr $ inr (polConst neutral, someSigmaVar 0), inl $ inr $ inr (polConst neutral, stateSigmaVar 0)};
+        {inl $ inl (0, blank), inl $ inr $ inr (polVar 0, blank), inl $ inr $ inr (polVar 0, blank)} / {inl $ inl (1, blank), inl $ inr $ inr (polConst neutral, blank), inl $ inr $ inr (polConst neutral, blank)};
+        {inl $ inr $ inr (polVar 0, stateSigmaVar 0), inl $ inr $ inr (polVar 0, someSigmaVar 0), inl $ inl (0, blank)} / {inl $ inr $ inr (polConst neutral, stateSigmaVar 0), inl $ inr $ inr (polConst neutral, someSigmaVar 0), inl $ inl (1, blank)};
+        {inl $ inr $ inr (polVar 0, blank), inl $ inr $ inr (polVar 0, blank), inl $ inl (0, blank)} / {inl $ inr $ inr (polConst neutral, blank), inl $ inr $ inr (polConst neutral, blank), inl $ inl (1, blank)}
+     ].
+
+    Definition makeNoneStay := makeNone_base makeNoneStay_rules. 
+
+    Definition makeHalt_rules : list (window fAlphabet) := 
+      [
+        {inl $ inr $ inr (polVar 0, stateSigmaVar 0), inl $ inl (0, stateSigmaVar 1), inl $ inr $ inr (polVar 0, stateSigmaVar 2)} / {inl $ inr $ inr (polConst neutral, stateSigmaVar 0), inl $ inl (0, stateSigmaVar 1), inl $ inr $ inr (polConst neutral, stateSigmaVar 2)};
+        {inl $ inr $ inr (polVar 0, stateSigmaVar 0), inl $ inr $ inr (polVar 0, stateSigmaVar 1), inl $ inl (0, stateSigmaVar 2)} / {inl $ inr $ inr (polConst neutral, stateSigmaVar 0), inl $ inr $ inr (polConst neutral, stateSigmaVar 1), inl $ inl (0, stateSigmaVar 2)};
+        {inl $ inl (0, stateSigmaVar 0), inl $ inr $ inr (polVar 0, stateSigmaVar 1), inl $ inr $ inr (polVar 0, stateSigmaVar 2)} / {inl $ inl (0, stateSigmaVar 0), inl $ inr $ inr (polConst neutral, stateSigmaVar 1), inl $ inr $ inr (polConst neutral, stateSigmaVar 2)}
+      ].
+
+    Definition makeHalt (q : W) (r : makeRulesT) (envList : list (evalEnv X Y Z W)) := r (map (envAddState q) envList) makeHalt_rules. 
   End fixAbstractTypes.
 
   (**The environments which assign values to the non-constant variables of the transition rules *)
@@ -4130,6 +4141,7 @@ Section fixTM.
     (*- inv H. erewHeadSim_inv; unfold generateRulesForFinNonHalt.*)
       (*1-18: try destruct m.*)
       (*all: rewrite H; apply in_makeRules_iff, agreement_trans_unfold_env.*)
+      (*all: unfold makeSomeStay_rules, makeSomeLeft_rules, makeSomeRight_rules, makeNoneLeft_rules, makeNoneRight_rules, makeNoneStay_rules. *)
       (*some things are easy to automate, some aren't... *)
       (** exists (Build_evalEnv [p] [] [m1; m2] []). solve_agreement_trans.*)
       (** exists (Build_evalEnv [p] [] [m1; m2] []). solve_agreement_trans. *)
@@ -4196,7 +4208,7 @@ Section fixTM.
   Lemma agreement_halt q: rules_list_ind_agree (@liftOrig Gamma (ehaltRules q) preludeSig') (generateRulesForFinHalt q). 
   Proof.
     split; intros. 
-    - inv H. erewHeadSim_inv; unfold generateRulesForFinHalt.
+    - inv H. erewHeadSim_inv; unfold generateRulesForFinHalt, makeHalt, makeHalt_rules.
       all: apply in_makeRules_iff, agreement_trans_unfold_env.
       + exists (Build_evalEnv [p] [] [m1; m; m2] []). solve_agreement_trans. 
       + exists (Build_evalEnv [p] [] [m1; m2; m] []). solve_agreement_trans. 
@@ -4354,7 +4366,7 @@ Section fixTM.
       * apply agreement_sim in H. eauto. 
   Qed. 
 
-  (*the reduction using the list-based rules *)
+  (** the reduction using the list-based rules *)
   Lemma GenNP_to_TPR : 
     TPRLang (@Build_TPR (FinType (EqType preludeSig)) (map inr preludeInitialString) allFinRules (map (map inl) finalSubstrings) (1 + t))
     <-> GenNP (existT _ Sigma (fTM, fixedInput, k', t)). 
@@ -4364,7 +4376,7 @@ Section fixTM.
     * apply fin_agreement. 
   Qed.
 
-  (** flat windows *)
+  (** * flat windows *)
   (*tape rules *)
   Definition flatMTRWindows := makeRulesFlat (makeAllEvalEnvFlat 1 4 0 0) mtrRules.
   Definition flatMTIWindows := makeRulesFlat (makeAllEvalEnvFlat 2 0 4 0) mtiRules.
@@ -4392,7 +4404,7 @@ Section fixTM.
     all: apply seq_isFlatListOf. 
   Qed. 
 
-  (*transition rules *)
+  (** transition rules *)
   Definition opt_finReprEl' (X : finType) (a : option nat) (b : option X) := a = option_map index b. 
   Lemma opt_finReprEl'_case (X : finType) (a : option nat) (b : option X) : opt_finReprEl' a b ->
     match a with 
@@ -4423,7 +4435,7 @@ Section fixTM.
 
   Definition fOpt a := match a with None => 0 | Some a => S a end. 
 
-  (*given a state and a current symbol, generate the rules for the corresponding transition *)
+  (** given a state and a current symbol, generate the rules for the corresponding transition *)
   Definition opt_generateRulesForFlatNonHalt (q : nat) (m : option nat) transt:=
     match m, transt with
     | _, (q', (Some x, L)) => makeSomeRight q q' (fOpt m) (fOpt $ Some x) makeRulesFlat flat_baseEnv
@@ -4437,10 +4449,10 @@ Section fixTM.
     | None, (q', (None, N)) => makeNoneStay q q' makeRulesFlat flat_baseEnvNone
     end.
 
-  (*given a state, generate the rules needed for halting states *)
+  (** given a state, generate the rules needed for halting states *)
   Definition generateWindowsForFlatHalt (q : nat) := makeHalt q makeRulesFlat flat_baseEnvHalt. 
 
-  (*we need to use the Boolean version of lookup for it to be extractable *)
+  (** we need to use the Boolean version of lookup for it to be extractable *)
   Import Undecidability.L.Functions.FinTypeLookup Undecidability.L.Functions.EqBool.
   Definition inp_eqb := LProd.prod_eqb Nat.eqb (Lists.list_eqb (LOptions.option_eqb Nat.eqb)).
   Instance eqBool_inp_eqb : eqbClass inp_eqb. 

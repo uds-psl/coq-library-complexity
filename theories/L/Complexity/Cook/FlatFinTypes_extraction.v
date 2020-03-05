@@ -35,7 +35,7 @@ Defined.
 (*Definition flatInr_time a := c__add1 + add_time a + 3. *)
 (*Instance term_flatInr : computableTime' flatInr (fun a _ => (1, fun k _ => (flatInr_time a, tt))). *)
 (*Proof. *)
-  (*extract. solverec. unfold flatSum_time. unfold flatInr_time; solverec. *)
+  (*extract. solverec. unfold flatInr_time; solverec. *)
 (*Defined. *)
 
 Definition c__flatPair := c__add1 + 2 + c__mult1. 
