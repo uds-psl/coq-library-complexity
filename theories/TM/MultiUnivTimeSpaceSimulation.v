@@ -4,7 +4,7 @@ From Undecidability Require Import TM.Code.ProgrammingTools.
 From Undecidability Require Import TM.Univ.StepTM. (* [Univ] for single-tape Turing machines *)
 From Undecidability Require Import TM.Single.EncodeTapes TM.Single.StepTM. (* Compiler for multi-tape Turing machines to single-tape Turing machines *)
 
-From Undecidability Require Import PrettyBounds.
+From Undecidability Require Import PrettyBounds PrettyBounds.SizeBounds MaxList.
 From Undecidability Require UnivBounds.
 From Undecidability Require UnivSpaceBounds.
 From Undecidability Require M2MBounds.
@@ -25,32 +25,7 @@ Lemma vector_const_cons (X : Type) (n : nat) (x : X) :
   Vector.const x (S n) = x ::: Vector.const x n.
 Proof. cbn. reflexivity. Qed.
 *)
-             
-From Undecidability Require Import MaxList.
 
-
-(** Technical compatibility lemma: Coq's standard library is soo inconsistent... *)
-Lemma fold_left_vector_to_list (X Y : Type) (n : nat) (f : Y -> X -> Y) (v : Vector.t X n) (a : Y) :
-  Vector.fold_left f a v = fold_left f (vector_to_list v) a.
-Proof. revert a. induction v as [ | x n v IH]; intros; cbn in *; f_equal; auto. Qed.
-
-Lemma max_list_rec_eq_foldl (a : nat) (xs : list nat) :
-  fold_left max xs a = max_list_rec a xs.
-Proof.
-  revert a. induction xs as [ | x xs IH]; intros; cbn in *.
-  - reflexivity.
-  - rewrite IH. rewrite !max_list_rec_max. nia.
-Qed.
-
-Lemma sizeOfmTapes_max_list_map (sig : Type) (n : nat) (T : tapes sig n) :
-  sizeOfmTapes T = max_list_map (@sizeOfTape _) (vector_to_list T).
-Proof.
-  unfold sizeOfmTapes.
-  rewrite fold_left_vector_to_list.
-  rewrite <- vector_to_list_map.
-  unfold max_list_map, max_list.
-  apply max_list_rec_eq_foldl.
-Qed.
 
 Lemma max_list_rec_repeat (a : nat) (s : nat) (n : nat) :
   n <> 0 ->
@@ -81,26 +56,6 @@ Qed.
 Lemma vector_const_to_list (X : Type) (a : X) (n : nat) :
   vector_to_list (Vector.const a n) = repeat a n.
 Proof. induction n; intros; cbn in *; now f_equal. Qed.
-
-Lemma vector_to_list_In (X : Type) (n : nat) (xs : Vector.t X n) (x : X) :
-  In x (vector_to_list xs) <-> Vector.In x xs.
-Proof.
-  split.
-  - induction xs as [ | y n xs IH]; intros; cbn in *.
-    + auto.
-    + destruct H as [ <- | H].
-      * now constructor.
-      * now constructor; auto.
-  - induction xs as [ | y n xs IH]; intros; cbn in *.
-    + inv H.
-    + apply In_cons in H as [<- | H].
-      * now constructor.
-      * now constructor; auto.
-Qed.
-
-Lemma sizeOfmTapes_upperBound (sig : Type) (n : nat) (tps : tapes sig n) :
-  forall t, Vector.In t tps -> sizeOfTape t <= sizeOfmTapes tps.
-Proof. intros. rewrite sizeOfmTapes_max_list_map. apply max_list_map_ge. now apply vector_to_list_In. Qed.
 
 
 (*

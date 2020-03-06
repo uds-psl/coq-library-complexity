@@ -1,6 +1,6 @@
 From Undecidability Require Import ProgrammingTools.
 
-
+From Undecidability Require Export PrettyBounds.SizeBounds.
 
 Inductive sigTape (sig : Type) : Type :=
 | LeftBlank (marked : bool)
@@ -99,51 +99,7 @@ Qed.
 
 
 (* We encode a vector of tapes simply as a list of tapes *)
-
-Fixpoint vector_to_list (X : Type) (n : nat) (v : Vector.t X n) : list X :=
-  match v with
-  | Vector.nil _ => List.nil
-  | Vector.cons _ x n v' => x :: vector_to_list v'
-  end.
-
-
-Lemma vector_to_list_correct (X : Type) (n : nat) (v : Vector.t X n) :
-  vector_to_list v = Vector.to_list v.
-Proof.
-  induction v.
-  - cbn. auto.
-  - cbn. f_equal. auto.
-Qed.
-
-Lemma vector_to_list_length (X : Type) (n : nat) (v : Vector.t X n) :
-  length (vector_to_list v) = n.
-Proof.
-  induction v.
-  - cbn. auto.
-  - cbn. f_equal. auto.
-Qed.
-
-
-Lemma vector_to_list_map (X Y : Type) (f : X -> Y) (n : nat) (v : Vector.t X n) :
-  map f (vector_to_list v) = vector_to_list (Vector.map f v).
-  induction v.
-  - cbn. auto.
-  - cbn. f_equal. auto.
-Qed.
-
-Lemma vector_to_list_cast (X : Type) (n1 n2 : nat) (H : n1 = n2) (v : Vector.t X n1) :
-  vector_to_list (Vector.cast v H) = vector_to_list v.
-Proof. subst. rename n2 into n. induction v as [ | x n v IH]; cbn; f_equal; auto. Qed.
-
-Lemma vector_to_list_eta (X : Type) (n : nat) (v : Vector.t X (S n)) :
-  Vector.hd v :: vector_to_list (Vector.tl v) = vector_to_list v.
-Proof. destruct_vector. cbn. reflexivity. Qed.
-
-Lemma vector_to_list_map2_eta (X Y Z : Type) (n : nat) (f : X -> Y -> Z) (xs : Vector.t X (S n)) (ys : Vector.t Y (S n)) :
-  f (Vector.hd xs) (Vector.hd ys) :: vector_to_list (Vector.map2 f (Vector.tl xs) (Vector.tl ys)) =
-  vector_to_list (Vector.map2 f xs ys).
-Proof. now destruct_vector. Qed.
-  
+ 
 
 Definition encode_tapes (sig : Type) (n : nat) (t : tapes sig n) :=
   encode_list (@Encode_tape sig) (vector_to_list t).

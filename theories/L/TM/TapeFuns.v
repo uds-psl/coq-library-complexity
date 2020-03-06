@@ -64,34 +64,46 @@ Section fix_sig.
     Proof.
       extract. unfold sizeOfTape. solverec.
     Qed.
-    (*
+
+    (*MOVE*)
+    Lemma Vector_fold_right_to_list (A B : Type) (f : A -> B -> B) (n : nat) (v : Vector.t A n) (a : B):
+      Vector.fold_right f v a = fold_right f a (Vector.to_list v).
+    Proof. unfold Vector.to_list.
+           induction n. all:destruct_vector. all:cbn;congruence.
+    Qed.
+    Lemma Vector_fold_left_to_list (A B : Type) (f : A -> B -> A) (n : nat) (v : VectorDef.t B n) (a : A):
+      VectorDef.fold_left f a v = fold_left f (Vector.to_list v) a.
+    Proof. unfold Vector.to_list.
+           induction n in v,a|-*. all:destruct_vector. all:cbn;congruence.
+    Qed.
+    Lemma Vector_map_to_list (A B : Type) (f : A -> B) (n : nat) (v : VectorDef.t A n):
+       Vector.to_list (VectorDef.map f v) = map f (Vector.to_list v).
+    Proof. unfold Vector.to_list. induction n in v|-*. all:destruct_vector. all:cbn;congruence.
+    Qed.
+
     Global Instance term_sizeOfmTapes n:
-      computableTime' (@sizeOfmTapes sig n) (fun t _ => ((sizeOfmTapes t) * n*cnst 1 + cnst 0,tt)).
+      computableTime' (@sizeOfmTapes sig n) (fun t _ => ((sizeOfmTapes t*65+61) * n + 16,tt)).
     Proof.
       set (f:= (fix sizeOfmTapes acc (ts : list (tape sig)) : nat :=
-                        match ts with
-                        | [] => acc
-                        | t :: ts0 => sizeOfmTapes (Init.Nat.max acc (sizeOfTape t)) ts0
-                        end)).
+                  match ts with
+                  | [] => acc
+                  | t :: ts0 => sizeOfmTapes (Init.Nat.max acc (sizeOfTape t)) ts0
+                  end)).
       
       assert (H' : extEq (fun v => f 0 (Vector.to_list v)) (@sizeOfmTapes sig n)).
       { intros x. hnf. unfold sizeOfmTapes. generalize 0.
         induction x using Vector.t_ind;intros acc. cbn. nia.        
         cbn in *. rewrite <- IHx. unfold Vector.to_list. nia.
       }
-      (*TODO: express runtime nicely, e.g. better computational behaviour for sizeOfmTapse. *)
-      assert (computableTime' f (fun acc _ => (5, fun t _ => ((max acc (Vector.fold_right Init.Nat.max (Vector.map (sizeOfTape (sig:=sig))(Vector.of_list t)) 0)*65 + 61) * (length t) + 9,tt)))).
-      { unfold f. extract. solverec. set (Vector.fold_right _ _ _). nia. }
+      assert (computableTime' f (fun acc _ => (5, fun t _ => ((max acc (fold_right max 0 (map (sizeOfTape (sig:=sig))t))*65 + 61) * (length t) + 9,tt)))).
+      { unfold f. extract. solverec. nia. }
 
       eapply computableTimeExt. exact H'.
-      extract. solverec. unfold sizeOfmTapes. rewrite Vector.fold_left_right_assoc_eq. 2:intros;nia.
-      Check (Vector.of_list (Vector.to_list x)).
-      rewrite Vector.of_list.
-      set (Vector.fold_right _ _ _). 
-      cbn eta. rewrite 
-      extract. unfold sizeOfmTapesFlat_time. solverec. 
+      extract. solverec. unfold sizeOfmTapes. rewrite Vector_fold_left_to_list,fold_symmetric. 2,3:intros;nia.
+      rewrite Vector_map_to_list,to_list_length.
+      set (fold_right _ _ _). nia. 
     Qed.
-*)
+
     Global Instance term_current: computableTime' ((current (sig:=sig))) (fun _ _ => (10,tt)).
     Proof.
       extract.
