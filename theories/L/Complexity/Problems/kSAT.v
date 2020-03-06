@@ -1,108 +1,84 @@
-From Undecidability.L Require Import L.
-From Undecidability.L.Tactics Require Import LTactics ComputableTactics.
-From Undecidability.L.Datatypes Require Import LProd LTerm LNat Lists LOptions.
-From Undecidability.L.Complexity Require Import NP Synthetic Monotonic.
-From Undecidability.L.Functions Require Import Size.
+From Undecidability.L.Complexity.Problems Require Export SAT.
+From Undecidability.L.Datatypes Require Import LProd LTerm LLNat LLists LOptions.
 
-From Undecidability.L.Complexity Require Export Problems.SAT Tactics.
+(** * k-SAT  *)
+(** A CNF is a k-CNF if each of its clauses has exactly k literals. k-SAT is SAT restricted to k-CNFs. *)
 
 Inductive kCNF (k : nat) : cnf -> Prop :=
-| kCNFB : k > 0 -> kCNF k []
+| kCNFB : kCNF k []
 | kCNFS (c : cnf) (cl : clause) : (|cl|) = k -> kCNF k c -> kCNF k (cl :: c).               
 
-Lemma kCNF_kge (k : nat) (c : cnf) : kCNF k c -> k > 0.
-Proof. induction 1; assumption. Qed.
+Hint Constructors kCNF.
 
-Lemma kCNF_clause_length (k : nat) (c : cnf) : kCNF k c -> forall cl, cl el c -> |cl| =k.
+Lemma kCNF_clause_length (k : nat) (c : cnf) : kCNF k c <-> forall cl, cl el c -> |cl| =k.
 Proof.
-  induction 1. 
-  - intros cl [].
-  - intros cl' [-> | Hel]; [assumption | now apply IHkCNF]. 
+  split. 
+  - induction 1. 
+    + intros cl [].
+    + intros cl' [-> | Hel]; [assumption | now apply IHkCNF]. 
+  - intros H. induction c; [eauto | ].
+    constructor; [now apply H | apply IHc; eauto].
 Qed. 
 
-Lemma kCNF_inv_app (k : nat) (l1 l2 : cnf) : kCNF k (l1 ++ l2) -> kCNF k l1 /\ kCNF k l2.
-Proof.
-  remember (l1 ++ l2). intros H. revert l1 l2 Heql. induction H. 
-  - intros; split; destruct l1, l2; cbn in Heql; try congruence; now constructor.  
-  - intros. destruct l1. 
-    + destruct l2; cbn in Heql; try congruence. 
-      assert (cl = l) by congruence. rewrite H1 in Heql, H; clear H1. 
-      split.
-      * constructor. now eapply kCNF_kge. 
-      * now constructor. 
-    + cbn in Heql. assert (cl = l) by congruence. rewrite H1 in Heql, H; clear H1. 
-      assert (c = l1 ++ l2) by congruence. specialize (IHkCNF l1 l2 H1). split. 
-      * now constructor.
-      * easy.
-Qed. 
-
-Definition kSAT (k : nat) (c : cnf) : Prop := kCNF k c /\ exists (a : assgn), evalCnf a c = Some true. 
-
-Definition kCNF_decb_pred (k : nat) := (fun (cl : clause) => Nat.eqb k (|cl|)).
-Definition kCNF_decb (k : nat) (c : cnf) := leb 1 k && forallb (kCNF_decb_pred k) c. 
-
-Lemma kCNF_decb_correct (k : nat) (c : cnf) : kCNF_decb k c = true <-> (k > 0 /\ forall (cl : clause), cl el c -> (k = |cl|)). 
-Proof.
-  unfold kCNF_decb, kCNF_decb_pred. 
-  split.
-  - intros H; simp_bool. rewrite forallb_forall in H1. split.
-    apply leb_complete in H0; lia. intros. rewrite <- Nat.eqb_eq. now apply H1.  
-  - intros [H1 H2]. simp_bool; split. apply Nat.leb_le; lia. 
-    rewrite forallb_forall. intros. rewrite Nat.eqb_eq. now apply H2. 
-Qed. 
-
-Lemma kCNF_decb_iff (k : nat) (c : cnf) : kCNF_decb k c = true <-> kCNF k c.
+Lemma kCNF_app (k : nat) (c1 c2 : cnf) : kCNF k (c1 ++ c2) <-> kCNF k c1 /\ kCNF k c2. 
 Proof. 
-  rewrite kCNF_decb_correct. 
-  split.
-  - induction c.
-    + cbn. intros [H1 H2]. now constructor. 
-    + cbn. intros [H1 H2]. constructor. symmetry; now apply H2. apply IHc; firstorder. 
-  - induction 1.  
-    + firstorder. 
-    + firstorder. symmetry; now rewrite <- H3.
+  induction c1; cbn; split. 
+  - eauto.
+  - tauto.
+  - intros H. inv H. apply IHc1 in H3 as (H3 & H4). split; eauto.
+  - intros [H1 H2]. inv H1. constructor; [easy | ]. now apply IHc1. 
 Qed. 
 
-Definition kCNF_decb_pred_time (cl : clause) := 11 * (|cl|) + 17 * (|cl|) + 23.
-Instance term_kCNF_decb_pred : computableTime' kCNF_decb_pred (fun k _ => (1, fun cl _ => (kCNF_decb_pred_time cl, tt))).  
+Definition kSAT (k : nat) (c : cnf) : Prop := k > 0 /\ kCNF k c /\ SAT c. 
+
+(** boolean decider for kCNF *)
+Definition clause_length_decb (k : nat) := (fun (cl : clause) => Nat.eqb k (|cl|)).
+Definition kCNF_decb (k : nat) (c : cnf) := forallb (clause_length_decb k) c. 
+
+Lemma kCNF_decb_iff (k : nat) (c : cnf) : kCNF_decb k c = true <-> kCNF k c. 
 Proof.
-  extract. 
-  unfold kCNF_decb_pred_time.
-  solverec. 
+  rewrite kCNF_clause_length. unfold kCNF_decb, clause_length_decb. 
+  rewrite forallb_forall. setoid_rewrite Nat.eqb_eq. firstorder.
+Qed. 
+
+(** extraction of decider *)
+From Undecidability.L.Tactics Require Import LTactics GenEncode.
+From Undecidability.L.Complexity Require Import PolyBounds. 
+
+Definition c__clauseLengthDecb :=  c__length + c__nat_eqb2 + 1.
+Definition clause_length_decb_time (k : nat) (cl : clause) := c__length * (|cl|) + nat_eqb_time k (|cl|) + c__clauseLengthDecb.
+Instance term_clause_length_decb : computableTime' clause_length_decb (fun k _ => (1, fun cl _ => (clause_length_decb_time k cl, tt))). 
+Proof. 
+  extract. solverec. unfold clause_length_decb_time, c__clauseLengthDecb. solverec. 
 Defined. 
 
-Definition kCNF_decb_time (c : cnf) := forallb_time (fun cl _ => (kCNF_decb_pred_time cl, tt)) c + 36.
-Instance term_kCNF_decb : computableTime' kCNF_decb (fun k _ => (1, fun c _ => (kCNF_decb_time c, tt))).
-Proof.
-  extract. 
-  unfold kCNF_decb_time, kCNF_decb_pred_time. 
-  solverec. 
-Qed. 
 
-From Undecidability.L.Complexity Require Import PolyBounds.
-Lemma kCNF_decb_pred_time_bound : exists (f : nat -> nat), (forall (cl : clause), kCNF_decb_pred_time cl <= f(size(enc cl))) /\ inOPoly f /\ monotonic f.
+Definition c__kCNFDecb := 3. 
+Definition kCNF_decb_time (k : nat) (c : cnf) := forallb_time (fun cl => clause_length_decb_time k cl) c + c__kCNFDecb.
+Instance term_kCNF_decb : computableTime' kCNF_decb (fun k _ => (1, fun c _ => (kCNF_decb_time k c, tt))). 
 Proof. 
-  evar (f : nat -> nat). exists f. split.
-  - intros cl. unfold kCNF_decb_pred_time.
-    repeat rewrite list_size_length.
-    [f] : intros n. subst f. cbn -[Nat.mul]; generalize (size(enc cl)). intros n. reflexivity. 
-  - split; subst f; smpl_inO. 
-Qed. 
+  extract. solverec. unfold kCNF_decb_time, c__kCNFDecb. solverec. 
+Defined. 
 
-Lemma kCNF_decb_time_bound : exists (f : nat -> nat), (forall (c : cnf), kCNF_decb_time c <= f(size(enc c))) /\ inOPoly f /\ monotonic f.
+Definition c__kCNFDecbBound1 := c__length + c__nat_eqb.
+Definition c__kCNFDecbBound2 := c__clauseLengthDecb + c__forallb + c__kCNFDecb.
+Definition poly__kCNFDecb n := (n + 1) * (c__kCNFDecbBound1 * (n + 1)  + c__kCNFDecbBound2). 
+Lemma kCNF_decb_time_bound k c : kCNF_decb_time k c <= poly__kCNFDecb (size (enc c) + size (enc k)). 
 Proof. 
-  (*a bit of glue due to the other format of the hypothesis of forallb_time *)
-  pose (predT := fun x (_ : unit) => (kCNF_decb_pred_time x, tt)). 
-  assert (exists f, (forall (c : clause), fst(predT c tt) <= f(size(enc c))) /\ inOPoly f /\ monotonic f).
-  {
-    destruct (kCNF_decb_pred_time_bound) as (f' & H1 & H2 & H3). 
-    exists f'. split.
-    - intros c. cbn [fst predT]. apply H1.
-    - now split.
-  }
-  destruct (forallb_time_bound H) as (f' & H1 & H2 & H3). 
-  evar (f : nat -> nat). exists f. split.
-  - intros c. unfold kCNF_decb_time.
-    fold predT. rewrite H1. instantiate (f:= fun n => f' n + 36); subst f. solverec. 
-  - split; subst f; smpl_inO. 
+  unfold kCNF_decb_time. rewrite forallb_time_bound_env.
+  2: { 
+    split. 
+    - intros cl n. unfold clause_length_decb_time. 
+      rewrite nat_eqb_time_bound_r. rewrite list_size_length at 1. rewrite list_size_enc_length. 
+      instantiate (1 := registered_nat_enc).
+      instantiate (1 := fun n => (c__length + c__nat_eqb) * (n + 1) + c__clauseLengthDecb). 
+      cbn -[Nat.add Nat.mul]. solverec. 
+    - smpl_inO. 
+  } 
+  rewrite list_size_length. 
+  unfold poly__kCNFDecb, c__kCNFDecbBound1, c__kCNFDecbBound2. nia. 
+Qed. 
+Lemma kCNF_decb_poly : monotonic poly__kCNFDecb /\ inOPoly poly__kCNFDecb. 
+Proof. 
+  unfold poly__kCNFDecb. split; smpl_inO. 
 Qed. 

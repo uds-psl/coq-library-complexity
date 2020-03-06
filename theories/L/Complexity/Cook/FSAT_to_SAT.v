@@ -1,6 +1,7 @@
 From PslBase Require Import Base. 
 From Undecidability.L.Datatypes Require Import LLists.
-From Undecidability.L.Complexity.Cook Require Import Prelim FSAT SAT kSAT.
+From Undecidability.L.Complexity.Cook Require Import Prelim.
+From Undecidability.L.Complexity.Problems Require Import FSAT SAT kSAT.
 Require Import Lia. 
 
 (** * eliminate ORs *)

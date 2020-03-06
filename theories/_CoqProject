@@ -345,18 +345,16 @@ L/Complexity/Reductions/TMGenNP/LMGenNP.v
 L/Complexity/PolyBounds.v
 L/Complexity/Tactics.v
 L/Complexity/MorePrelim.v
-#L/Complexity/Problems/LGraph.v
-#L/Complexity/Problems/Clique.v
-#L/Complexity/Problems/SAT.v
-#L/Complexity/Problems/kSAT.v
-#L/Complexity/Reductions/L_to_mTM.v
-#L/Complexity/Reductions/TSAT_to_Clique.v
-#L/Complexity/Reductions/kSAT_to_SAT.v
 L/Complexity/Problems/UGraph.v
 L/Complexity/Problems/FlatUGraph.v
-L/Complexity/Problems/newClique.v
+L/Complexity/Problems/Clique.v
 L/Complexity/Problems/FlatClique.v
+L/Complexity/Problems/SharedSAT.v
+L/Complexity/Problems/FSAT.v
+L/Complexity/Problems/SAT.v
+L/Complexity/Problems/kSAT.v
 L/Complexity/Reductions/Pigeonhole.v
+L/Complexity/Reductions/kSAT_to_Clique.v
 
 L/Complexity/Cook/Prelim.v
 L/Complexity/Cook/PR.v
@@ -373,10 +371,7 @@ L/Complexity/Cook/FlatTPR_to_FlatPR.v
 L/Complexity/Cook/BinaryPR.v
 L/Complexity/Cook/PR_homomorphisms.v
 L/Complexity/Cook/FlatPR_to_BinaryPR.v
-L/Complexity/Cook/SharedSAT.v
-L/Complexity/Cook/FSAT.v
-L/Complexity/Cook/SAT.v
-L/Complexity/Cook/kSAT.v
+
 L/Complexity/Cook/FSAT_to_SAT.v
 L/Complexity/Cook/BinaryPR_to_FSAT.v
 L/Complexity/Cook/PR_to_BinaryPR.v

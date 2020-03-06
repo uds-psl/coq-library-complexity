@@ -4,114 +4,7 @@ From Undecidability.L Require Import L.
 From Undecidability.Shared Require Import Prelim.
 From Undecidability.L.Complexity Require Import Tactics.
 
-Section pair_eq.
-  Variable (X Y : Type). 
-  Variable  (eqbX : X -> X -> bool) (eqbY : Y -> Y -> bool). 
-  Variable (eqbX_correct : forall a b, a = b <-> eqbX a b = true).
-  Variable (eqbY_correct : forall a b, a = b <-> eqbY a b = true).
-
-  Definition pair_eqb (a b : (X * Y)%type) : bool :=
-    match a, b with (x1, y1), (x2, y2) => eqbX x1 x2 && eqbY y1 y2 end. 
-
-  Lemma pair_eqb_correct a b : a = b <-> pair_eqb a b = true.
-  Proof.
-    destruct a, b. split. 
-    + intros H. cbn. apply andb_true_intro; split.
-      apply eqbX_correct; congruence. apply eqbY_correct; congruence. 
-    + intros [H1 H2]%andb_prop. apply eqbX_correct in H1. apply eqbY_correct in H2. congruence. Qed. 
-End pair_eq. 
-
 (** *Results regarding lists *)
-
-Section takeN.
-  Variable (X : Type).
-  Fixpoint takeN (l : list X) (n : nat) {struct n} :=
-    match n with 0 => []
-               | S n => match l with [] => []
-                           | (l :: ls) => l :: takeN ls n
-                        end
-    end. 
-
-  Lemma ntherror_sublist (l l' : list X) (k : nat) (x : X) : (nth_error l k = Some x) -> nth_error (l ++ l') k = Some x. 
-  Proof. 
-    revert k. 
-    induction l. 
-    - intros []; cbn; congruence.  
-    - intros k H. destruct k.
-      + cbn in H. destruct l'; now cbn.
-      + cbn. apply IHl. now cbn in H. 
-  Qed. 
-
-  Lemma nth_error_nth (l : list X) (def res: X) (k : nat) : nth_error l k = Some res -> nth k l def = res. 
-  Proof.
-    revert k.
-    induction l.
-    - destruct k; cbn; congruence. 
-    - destruct k; cbn. 
-      + congruence. 
-      + intros. now apply IHl. 
-  Qed. 
-
-  Lemma takeN_sublist (l : list X) (k k' : nat) (t : list X) : takeN l k = t -> k' >= k -> exists t', takeN l k' = t ++ t'. 
-  Proof. 
-    revert k k' t. induction l. 
-    - intros k k' t H1 H2. exists []. destruct k', k; cbn in H1; cbn; rewrite <- H1; firstorder. 
-    - intros k k' t H1 H2. destruct k, k'; cbn in H1; cbn; try rewrite <- H1. firstorder.
-      exists (a :: takeN l k'). firstorder. lia.
-      destruct t; try congruence. 
-      specialize (IHl k k' t). inv H1.  destruct (IHl); try tauto; try lia. exists x0. cbn. now rewrite <- H. 
-  Qed. 
-
-  Lemma takeN_more_length (l : list X) (k : nat) : k >= (|l|) ->  takeN l k = l. 
-  Proof. 
-    revert k. induction l. 
-    - intros k. cbn. destruct k; tauto. 
-    - intros k. cbn. destruct k; cbn. lia. intros H. rewrite IHl. reflexivity. lia. 
-  Qed. 
-
-  Lemma takeN_split (l : list X) (k : nat) : exists t, l = takeN l k ++ t.
-  Proof.
-    enough (exists t, takeN l (|l|) = takeN l k ++ t). 
-    { destruct H. specialize (@takeN_more_length l (|l|)) as H2. exists x. rewrite <- H, H2; [reflexivity | lia]. }
-    destruct (lt_eq_lt_dec k (|l|)) as [[H|H] |H].
-    1-2: apply takeN_sublist with (k:=k); try reflexivity; try lia.  
-    exists []. repeat rewrite takeN_more_length. firstorder. all: lia.
-  Qed. 
-
-  Lemma takeN_length (l :list X) (k : nat) : (|takeN l k|) <= k. 
-  Proof. 
-    induction l in k |-*. 
-    - destruct k; cbn; lia. 
-    - destruct k; cbn; try lia. rewrite IHl. lia. 
-  Qed. 
-
-  Lemma takeN_minlength (l : list X) (n k : nat) : |l| >= k -> n >= k -> |takeN l n| >= k. 
-  Proof. 
-    induction l in n, k |-*. 
-    - destruct n; cbn; lia.
-    - cbn. destruct n, k; cbn. 1-3: lia.
-      intros H1 H2. enough (|takeN l n| >= k) by lia. apply IHl; lia.  
-  Qed. 
-
-  Lemma ntherror_take (l : list X) (k n : nat) (v :X) : k < n -> nth_error l k = Some v -> nth_error (takeN l n) k = Some v. 
-  Proof. 
-    specialize (takeN_split l n) as [t H]. intros H1 H2. 
-    (*Proof by contradiction*)
-    destruct (nth_error (takeN l n) k) eqn:H3. 
-    2: { exfalso. 
-        apply nth_error_None in H3. assert (|l| > k) by (now apply nth_error_Some_lt with (x := v)).
-        (*contradiction by H1, H3, H0 *)
-        destruct (takeN_split l k) as [[] H4].
-        - enough (|l| = k) by lia. rewrite H4. enough (|takeN l k| <= k /\ |takeN l k| >= k).
-          {replace (takeN l k ++ []) with (takeN l k) by firstorder. lia. }
-          split. apply takeN_length. apply takeN_minlength. all: lia. 
-        - assert (|takeN l n| = k). enough (|takeN l n| >= k) by lia. apply takeN_minlength; lia. 
-          assert (|takeN l n| >= S k). apply takeN_minlength; lia. lia. 
-    }
-    rewrite H in H2. specialize(Prelim.nthe_app_l t H3) as H4. now rewrite H4 in H2. 
-  Qed. 
-End takeN.
-
 Section tabulate.
   Variable (A : Type).
   Fixpoint tabulate (f : nat -> A) (n : nat): list A := match n with 0 => []
@@ -149,7 +42,6 @@ Section tabulate.
   Qed. 
 End tabulate. 
 
-
 Section subsequence.
   Variable (X : Type).
   Definition subsequence (A B : list X) := exists C D, B = C ++ A ++ D.
@@ -166,21 +58,6 @@ Section subsequence.
         right. apply IHB; [|assumption]. exists C,D. congruence. 
   Qed.
 End subsequence. 
-
-
-
-Lemma map_el (X Y : Type) (l : list X) (f : X -> Y) (e : Y) : e el (map f l) <-> exists e', e' el l /\ f e' = e. 
-Proof.
-  induction l. 
-  - cbn. split; [intros [] | intros (_ & [] & _)]. 
-  - split.
-    * intros [H1 | H2].
-      + exists a. split; firstorder. 
-      + destruct (proj1 IHl H2) as (e' & F1 & F2). exists e'. split; firstorder. 
-    * intros (e' & H1 & H2). cbn. destruct H1.
-      + rewrite H in *; now left. 
-      + right; apply IHl. now exists e'. 
-Qed. 
 
 Lemma dupfree_nthe (X : Type) (l : list X) : dupfree l <-> forall i j a b, nth_error l i = Some a -> nth_error l j = Some b -> i <> j -> a <> b.
 Proof. 
@@ -203,18 +80,13 @@ Qed.
 Section remove.
   Variable (X : Type).
   Context (eqdec : (forall x y: X, dec (x = y))).
-  Lemma remove_el (l : list X) (a b : X) : a el remove eqdec b l <-> a el l /\ a <> b.
+  Lemma in_remove_iff (l : list X) (a b : X) : a el remove eqdec b l <-> a el l /\ a <> b.
   Proof.
-    revert a.
-    induction l; intros; cbn.
+    revert a. induction l; intros; cbn.
     - tauto. 
     - destruct (eqdec b a).
-      + split.
-        * firstorder. 
-        * intros [[-> | H1] H2]; [congruence|]. now apply IHl. 
-      + split.
-        * firstorder. congruence.  
-        * firstorder. 
+      + split; [firstorder | ]. intros [[-> | H1] H2]; [congruence|]. now apply IHl. 
+      + split; [ firstorder; congruence | firstorder ].
   Qed. 
 
   Lemma remove_length (l : list X) (a : X) : |remove eqdec a l| <= |l|.
@@ -233,4 +105,3 @@ Section remove.
       + cbn. destruct (eqdec a a0); [specialize (remove_length l a); lia | cbn; firstorder ].  
   Qed. 
 End remove.
-

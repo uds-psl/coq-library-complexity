@@ -1,6 +1,6 @@
 From Undecidability.L Require Import L.
 From Undecidability.L.Datatypes Require Import LLists LLNat. 
-From Undecidability.L.Complexity.Cook Require Export SharedSAT.
+From Undecidability.L.Complexity.Problems Require Export SharedSAT.
 Require Import Lia. 
 
 (** *Formula Satisfiability: the satisfiability problem on arbitrary Boolean formulas *)

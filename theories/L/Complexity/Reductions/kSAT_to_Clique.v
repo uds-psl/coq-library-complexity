@@ -2,41 +2,10 @@ From Undecidability.L Require Import L.
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import LLists LLNat LProd.
 From PslBase.FiniteTypes Require Import FinTypes Cardinality VectorFin.
-From Undecidability.L.Complexity.Problems Require Import newClique UGraph.
-From Undecidability.L.Complexity.Cook Require Import SAT kSAT Prelim.
+From Undecidability.L.Complexity Require Import MorePrelim.
+From Undecidability.L.Complexity.Problems Require Import Clique UGraph SAT kSAT.
+From Undecidability.L.Complexity.Cook Require Import Prelim.
 From Undecidability.L.Complexity.Reductions Require Pigeonhole.
-
-(** More preliminaries *)
-Section remove.
-  Variable (X : Type).
-  Context (eqdec : (forall x y: X, dec (x = y))).
-  Lemma in_remove_iff (l : list X) (a b : X) : a el remove eqdec b l <-> a el l /\ a <> b.
-  Proof.
-    revert a. induction l; intros; cbn.
-    - tauto. 
-    - destruct (eqdec b a).
-      + split; [firstorder | ].
-        intros [[-> | H1] H2]; [congruence|]. now apply IHl. 
-      + split; [firstorder; congruence | firstorder].
-  Qed. 
-
-  Lemma remove_length (l : list X) (a : X) : |remove eqdec a l| <= |l|.
-  Proof.
-    induction l; cbn.
-    - lia.
-    - destruct eqdec; cbn; lia. 
-  Qed. 
-
-  Lemma remove_length_el (l : list X) (a : X) : a el l -> |remove eqdec a l| < |l|.
-  Proof.
-    induction l.
-    - intros [].
-    - intros [-> | H1].
-      + cbn. destruct (eqdec a a); [specialize (remove_length l a); lia | congruence].
-      + cbn. destruct (eqdec a a0); [specialize (remove_length l a); lia | cbn; firstorder ].  
-  Qed. 
-End remove.
-
 
 Implicit Types (a : assgn) (N : cnf) (C : clause) (l :literal).
 
@@ -138,7 +107,6 @@ Section fixSAT.
     Proposition Vcnf_inhabitated : |N| > 0 -> exists (v : Vcnf), True.
     Proof. 
       clear H_sat.
-      Print Fin.t.
       unfold Vcnf, Ncl.
       intros H1. destruct k, N; cbn in *; try lia.
       exists (@Fin.F1 (|l0|), @Fin.F1 n). easy.
@@ -239,7 +207,8 @@ Section fixSAT.
     
     (** The proof proceeds in three parts:
         - We show that there exists a vertex of the clique for every clause of the CNF, using the pigeonhole principle.
-        - Thus, there exists a list of literals (one for every clause) which is non-contradictory.
+        - Thus, there exists a list of (clause, literal) indices such that there is contained exactly one position per clause and the referenced literals are non-conflicting.
+        - Resolving this list of indices, there exists a list of literals (one for every clause) which is non-conflicting. Every assignment satisfying this list of literals also satisfies the whole CNF.
         - From this list of literals, a satisfying assignment can be derived. 
       *)
 
@@ -305,4 +274,204 @@ Section fixSAT.
 
 
     (** Step 2 *)
+    (** We map to a list of (clause, literal) positions *)
+    Definition toPos (L : list (V Gcnf)) := map (fun '(ci, li) => (index ci, index li)) L. 
+    
+    Definition satPositions := toPos L.
 
+    Lemma satPositions_dupfree : dupfree satPositions. 
+    Proof. 
+      unfold satPositions, toPos. 
+      apply dupfree_map. 2: apply Hclique.
+      intros (ci1 & li1) (ci2 & li2) _ _ [=]. 
+      apply injective_index in H0. apply injective_index in H1. congruence. 
+    Qed. 
+
+    Lemma satPositions_for_all_clauses : forall i, i < Ncl -> exists li, (i, li) el satPositions. 
+    Proof. 
+      intros i (v & H1 & H2)%clique_vertex_for_all_clauses. 
+      destruct v as (ci & li).
+      exists (index li). unfold toPos. apply in_map_iff.  
+      exists (ci, li). unfold ofClause in H2. rewrite <- H2.  easy.
+    Qed. 
+
+    Fact Card_Fint' n : |elem (finType_CS (Fin.t n))| = n.
+    Proof. specialize (Card_Fint n). now unfold Cardinality. Qed. 
+      
+    Lemma satPositions_non_conflicting ci1 ci2 li1 li2 : 
+      (ci1, li1) el satPositions 
+      -> (ci2, li2) el satPositions 
+      -> (ci1, li1) <> (ci2, li2) 
+      -> exists l1 l2, cnfGetLiteral N ci1 li1 = Some l1 
+          /\ cnfGetLiteral N ci2 li2 = Some l2 /\ not (literalsConflict l1 l2). 
+    Proof. 
+      intros H1 H2 Hneq. unfold satPositions, toPos in *. 
+      apply in_map_iff in H1 as ((Ci1 & Li1) & H1' & H1). inv H1'.
+      apply in_map_iff in H2 as ((Ci2 & Li2) & H2' & H2). inv H2'. 
+      unfold cnfGetLiteral, cnfGetClause, clauseGetLiteral. 
+
+      specialize (index_le Ci1) as H3. rewrite Card_Fint' in H3. 
+      apply (proj2 (nth_error_Some N (index Ci1))) in H3.
+      destruct (nth_error N (index Ci1)) as [ C1 | ] eqn:H3'; [clear H3 | congruence].
+      specialize (nth_error_In _ _ H3') as H5'.
+
+      specialize (index_le Ci2) as H4. rewrite Card_Fint' in H4. 
+      apply (proj2 (nth_error_Some N (index Ci2))) in H4. 
+      destruct (nth_error N (index Ci2)) as [ C2 | ] eqn:H4'; [clear H4 | congruence].
+      specialize (nth_error_In _ _ H4') as H6'.
+
+      cbn -[index]. rewrite kCNF_clause_length in Hkcnf. 
+      apply Hkcnf in H5'. apply Hkcnf in H6'. 
+
+      specialize (index_le Li1) as H5. rewrite Card_Fint', <- H5' in H5. clear H5'.
+      apply (proj2 (nth_error_Some C1 (index Li1))) in H5. 
+      destruct (nth_error C1 (index Li1)) as [l1 | ] eqn:H5'; [clear H5 | congruence].
+
+      specialize (index_le Li2) as H6. rewrite Card_Fint', <- H6' in H6. clear H6'.
+      apply (proj2 (nth_error_Some C2 (index Li2))) in H6. 
+      destruct (nth_error C2 (index Li2)) as [l2 | ] eqn:H6'; [clear H6 | congruence].
+      
+      exists l1, l2; split; [easy | split; [easy | ]]. 
+      unfold isKClique in Hclique. destruct Hclique as (_ & (H & _)). 
+      specialize (H _ _ H1 H2 ltac:(congruence)).
+
+      unfold E in H. cbn -[index] in H. 
+      unfold cnfGetLiteral, cnfGetClause, clauseGetLiteral in H. 
+      rewrite H3', H4' in H. cbn -[index] in H. rewrite H5', H6' in H. 
+      cbn in H. apply H. 
+    Qed. 
+
+    Proposition satPositions_valid ci li : (ci, li) el satPositions -> exists l, cnfGetLiteral N ci li = Some l. 
+    Proof. 
+      unfold satPositions, toPos. intros ((Ci & Li) & H1' & H1)%in_map_iff. inv H1'.
+      unfold cnfGetLiteral, cnfGetClause, clauseGetLiteral. 
+
+      specialize (index_le Ci) as H2. rewrite Card_Fint' in H2. 
+      apply (proj2 (nth_error_Some N (index Ci))) in H2.
+      destruct (nth_error N (index Ci)) as [ C | ] eqn:H2'; [clear H2 | congruence].
+      apply nth_error_In in H2'.
+
+      cbn -[index]. rewrite kCNF_clause_length in Hkcnf. 
+      apply Hkcnf in H2'.
+      specialize (index_le Li) as H3. rewrite Card_Fint', <- H2' in H3. clear H2'.
+      apply (proj2 (nth_error_Some C (index Li))) in H3. 
+      destruct (nth_error C (index Li)) as [l | ]; [clear H3 | congruence].
+      eauto.
+    Qed.
+
+    (** Step 3: map to literals *)
+    Definition toLiterals (L : list (nat * nat)) := filterSome (map (fun '(ci, li) => cnfGetLiteral N ci li) L). 
+
+    Definition satLiterals := toLiterals satPositions. 
+
+    Lemma satLiterals_for_all_clauses : forall C, C el N -> exists l, l el C /\ l el satLiterals.
+    Proof. 
+      intros C Hel. apply In_nth_error in Hel as (i & Hel). 
+      specialize (nth_error_Some_lt Hel) as Hel'.
+      specialize (satPositions_for_all_clauses Hel') as (li & H1). 
+      specialize (satPositions_valid H1) as (l & H2).   
+      exists l. split.
+      - unfold cnfGetLiteral, cnfGetClause, clauseGetLiteral in H2. 
+        rewrite Hel in H2. cbn in H2. now eapply nth_error_In. 
+      - unfold satLiterals, toLiterals. apply in_filterSome_iff, in_map_iff.
+        exists (i, li). easy.
+    Qed. 
+
+    Lemma satLiterals_sat a : (forall l, l el satLiterals -> evalLiteral a l = true) -> evalCnf a N = true. 
+    Proof. 
+      intros H. apply evalCnf_clause_iff. setoid_rewrite evalClause_literal_iff. 
+      intros C (l & Hl & Hsat)%satLiterals_for_all_clauses.  
+      exists l. split; [apply Hl | ]. 
+      now apply H. 
+    Qed. 
+
+    Lemma satLiterals_not_conflicting : forall l1 l2, l1 el satLiterals -> l2 el satLiterals -> not(literalsConflict l1 l2).
+    Proof. 
+      intros l1 l2 Hel1 Hel2. 
+      unfold satLiterals, toLiterals in *. 
+      apply in_filterSome_iff, in_map_iff in Hel1 as ((ci1 & li1) & Hel1' & Hel1). 
+      apply in_filterSome_iff, in_map_iff in Hel2 as ((ci2 & li2) & Hel2' & Hel2). 
+      destruct (eqType_dec (ci1, li1) (ci2, li2)) as [ | Hneq]. 
+      - inv e. rewrite Hel1' in Hel2'. inv Hel2'. unfold literalsConflict. 
+        destruct l2. easy.
+      - specialize (satPositions_non_conflicting Hel1 Hel2 Hneq) as (l1' & l2' & H1 & H2 & H3). 
+        rewrite H1 in Hel1'. inv Hel1'. rewrite H2 in Hel2'. inv Hel2'. 
+        apply H3. 
+    Qed. 
+
+    (** Step 4: map to a satisfying assignment *)
+    Fixpoint toAssignment (L : list literal) := 
+      match L with 
+      | [] => []
+      | (true, v) :: L => v :: toAssignment L
+      | (false, v) :: L => toAssignment L
+      end. 
+
+    Lemma in_toAssignment_iff (v : var) lits : v el toAssignment lits <-> (true, v) el lits. 
+    Proof. 
+      induction lits; cbn; [tauto | ]. 
+      destruct a as (b & v'). destruct b. 
+      - split; [intros [-> | H1]; [now left | right; now apply IHlits] 
+              | intros [[=->] | H1]; [now left | right; now apply IHlits]]. 
+      - rewrite IHlits. split; [intros H; now right | intros [[=] | H]; apply H]. 
+    Qed. 
+
+    Definition satAssgn := toAssignment satLiterals.
+
+    Lemma satAssgn_sat_literals : forall l, l el satLiterals -> evalLiteral satAssgn l = true. 
+    Proof. 
+      intros l Hel. destruct l as (b & v). apply evalLiteral_var_iff. 
+      destruct b. 
+      - apply evalVar_in_iff. apply in_toAssignment_iff, Hel. 
+      - destruct evalVar eqn:H1; [ | easy]. 
+        apply evalVar_in_iff, in_toAssignment_iff in H1. 
+        exfalso; eapply satLiterals_not_conflicting; [apply Hel | apply H1 | ].
+        unfold literalsConflict. split; congruence. 
+    Qed. 
+
+    Lemma satAssgn_sat_cnf : satisfies satAssgn N. 
+    Proof. 
+      unfold satisfies. 
+      apply satLiterals_sat, satAssgn_sat_literals.  
+    Qed. 
+
+    Corollary exists_assignment : exists a, satisfies a N. 
+    Proof. 
+      exists satAssgn; apply satAssgn_sat_cnf. 
+    Qed. 
+
+  End Clique_implies_SAT. 
+
+  Corollary reduction_to_Clique : kSAT k N <-> Clique (Gcnf, Ncl).
+  Proof. 
+    split.
+    - intros (_ & _ & (a & H)). eapply exists_clique, H. 
+    - intros (L & H). split; [ | split]. 
+      + apply Hkgt. 
+      + apply Hkcnf. 
+      + eapply exists_assignment, H.
+  Qed. 
+End fixSAT. 
+
+Lemma trivialNoInstance : {p : UGraph * nat & not (Clique p)}.
+Proof. 
+  exists (@Build_UGraph (finType_CS (Fin.t 0)) (fun _ => False) ltac:(intros; now right) ltac:(intros; tauto), 1). 
+  intros (L & H). cbn in L. destruct H. destruct L as [ | e]; cbn in *; [congruence | ].
+  inv e.
+Qed. 
+
+Definition reduction (k : nat) (N : cnf) := 
+  if kCNF_decb k N && Nat.ltb 0 k then (Gcnf k N, Ncl N) else projT1 trivialNoInstance. 
+
+Theorem kSAT_reduces_to_Clique k: forall N, kSAT k N <-> Clique (reduction k N). 
+Proof. 
+  intros N. unfold reduction. destruct kCNF_decb eqn:H1.
+  - destruct k; cbn. 
+    + unfold kSAT. specialize (projT2 trivialNoInstance) as H2. cbn in H2. split; [lia | tauto].
+    + rewrite reduction_to_Clique; [easy | lia | apply kCNF_decb_iff, H1]. 
+  - cbn. unfold kSAT. 
+    assert (not (kCNF_decb k N = true)) as H1'. { destruct kCNF_decb; firstorder. }
+    rewrite kCNF_decb_iff in H1'.
+    specialize (projT2 trivialNoInstance) as H2. cbn in H2. 
+    split; tauto.
+Qed. 
