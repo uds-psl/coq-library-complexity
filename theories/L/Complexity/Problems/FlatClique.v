@@ -64,9 +64,6 @@ Proof.
   rewrite andb_true_iff, (isfClique_decb_iff _ H),  Nat.eqb_eq. easy.
 Qed. 
 
-Definition list_finReprEl' (f : finType) (l : list nat) (L : list f ) := 
-  (forall v, v el l -> exists v', v' el L /\ v = index v') /\ (forall v, v el L -> index v el l).
-
 (** agreement with the non-flat definition *)
 Section fixGraph. 
   Variable (UG : UGraph).

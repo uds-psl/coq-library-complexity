@@ -3020,18 +3020,6 @@ Section fixTM.
               forall (env : evalEnv X Y Z W) (c : fAlphabet), bound_Alphabet env c <-> exists e, reify env c = Some e. 
 
 
-  (*option monad in order to ease notation *)
-  Definition optReturn := @Some.
-  Definition optBind {X Y : Type} (x : option X) (f : X -> option Y) :=
-    match x with
-    | None => None
-    | Some x => f x
-    end. 
-
-  (*notations from https://pdp7.org/blog/2011/01/the-maybe-monad-in-coq/ *)
-  Notation "A >>= F" := (optBind A F) (at level 40, left associativity).
-  Notation "'do' X <- A ; B" := (optBind A (fun X => B)) (at level 200, X ident, A at level 100, B at level 200).
-
   (*reification to finite types *)
   Definition reifyPolarityFin (env : evalEnvFin) (c : fpolarity) :=
     match c with

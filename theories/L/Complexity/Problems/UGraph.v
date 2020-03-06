@@ -9,5 +9,3 @@ Record UGraph :=
     E_dec : forall v1 v2, {E (v1, v2)} + {~ E (v1, v2)};
     E_symm: forall v1 v2, E (v1, v2) <-> E (v2, v1)
   }.
-
-

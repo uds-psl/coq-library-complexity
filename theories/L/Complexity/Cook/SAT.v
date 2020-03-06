@@ -16,32 +16,32 @@ Notation cnf := (list clause) (only parsing).
 
 (*Assignments as lists of natural numbers: contain the indices of variables that are mapped to true *)
 Notation assgn := (list nat). 
-Implicit Type (a : assgn).
+Implicit Types (a : assgn) (N : cnf) (C : clause) (l :literal).
 
-Definition evalLiteral (a : assgn) (l : literal) : bool := match l with
+Definition evalLiteral a l : bool := match l with
   | (s, v) => Bool.eqb (evalVar a v) s 
 end. 
 
 (*Empty disjunction evaluates to false*)
 Definition evalClause_step a lit acc := orb acc (evalLiteral a lit). 
-Definition evalClause (a : assgn) (l : clause) : bool := fold_right (evalClause_step a) false l. 
+Definition evalClause a C : bool := fold_right (evalClause_step a) false C. 
 
 (*Empty conjunction evaluates to true *)
 Definition evalCnf_step a cl acc := andb acc (evalClause a cl). 
-Definition evalCnf a (l : cnf) : bool := fold_right (evalCnf_step a) true l. 
+Definition evalCnf a N : bool := fold_right (evalCnf_step a) true N. 
 
 (*more helpful properties *)
 (*a characterisation of one processing step of evalClause *)
-Lemma evalClause_step_inv a (cl : clause) (l : literal) b : 
-  evalClause a (l::cl) = b <-> exists b1 b2, evalClause a cl = b1 /\ evalLiteral a l = b2 /\ b = b1 || b2.
+Lemma evalClause_step_inv a C l b : 
+  evalClause a (l::C) = b <-> exists b1 b2, evalClause a C = b1 /\ evalLiteral a l = b2 /\ b = b1 || b2.
 Proof.
   cbn. split; intros. 
   - rewrite <- H. eauto. 
   - destruct H as (b1 & b2 & <- & <- & ->). eauto.
 Qed. 
 
-Lemma evalCnf_step_inv a (cn : cnf) (cl :clause) b : 
-  evalCnf a (cl :: cn) = b <-> exists b1 b2, evalCnf a cn = b1 /\ evalClause a cl = b2 /\ b = b1 && b2. 
+Lemma evalCnf_step_inv a N C b : 
+  evalCnf a (C :: N) = b <-> exists b1 b2, evalCnf a N = b1 /\ evalClause a C = b2 /\ b = b1 && b2. 
 Proof. 
   cbn. split; intros. 
   - rewrite <- H. eauto. 
@@ -54,47 +54,46 @@ Proof.
   unfold evalLiteral. destruct b, evalVar; cbn; firstorder.
 Qed. 
 
-Lemma evalClause_literal_iff a (cl : clause) : 
-  evalClause a cl = true <-> (exists l, l el cl /\ evalLiteral a l = true). 
+Lemma evalClause_literal_iff a C : 
+  evalClause a C = true <-> (exists l, l el C /\ evalLiteral a l = true). 
 Proof.
-  induction cl; cbn. 
+  induction C; cbn. 
   - split; [ congruence | firstorder].
   - split. 
     + intros [H1 | H2]%orb_true_iff.
-      * apply IHcl in H1 as (l & H1 & H2). eauto.
+      * apply IHC in H1 as (l & H1 & H2). eauto.
       * exists a0; eauto.
     + intros (l & [-> | H1] & H2). 
       * unfold evalClause_step. now rewrite H2, orb_true_r. 
-      * fold (evalClause a cl). erewrite (proj2 IHcl); [easy | eauto].
+      * fold (evalClause a C). erewrite (proj2 IHC); [easy | eauto].
 Qed. 
 
-Corollary evalClause_app a cl1 cl2 : 
-  evalClause a (cl1 ++ cl2) = true <-> (evalClause a cl1 = true \/ evalClause a cl2 = true). 
+Corollary evalClause_app a C1 C2 : 
+  evalClause a (C1 ++ C2) = true <-> (evalClause a C1 = true \/ evalClause a C2 = true). 
 Proof. 
   rewrite !evalClause_literal_iff. setoid_rewrite in_app_iff. firstorder.
 Qed.
 
-Lemma evalCnf_clause_iff a (cn : cnf) : 
-  evalCnf a cn = true <-> (forall cl, cl el cn -> evalClause a cl = true). 
+Lemma evalCnf_clause_iff a N : 
+  evalCnf a N = true <-> (forall C, C el N -> evalClause a C = true). 
 Proof. 
-  induction cn; cbn. 
+  induction N; cbn. 
   - firstorder. 
   - split. 
-    + intros (H1 & H2)%andb_true_iff. intros cl [-> | H3]; [easy | ].
-      fold (evalCnf a cn) in H1. eapply (proj1 IHcn) in H1; eauto.
+    + intros (H1 & H2)%andb_true_iff. intros C [-> | H3]; [easy | ].
+      fold (evalCnf a N) in H1. eapply (proj1 IHN) in H1; eauto.
     + intros H. unfold evalCnf_step. rewrite (H a0 (or_introl eq_refl)), andb_true_r. 
-      apply IHcn; eauto.
+      apply IHN; eauto.
 Qed. 
 
-Corollary evalCnf_app_iff a cn1 cn2 : 
-  evalCnf a (cn1 ++ cn2) = true <-> (evalCnf a cn1 = true /\ evalCnf a cn2 = true). 
+Corollary evalCnf_app_iff a N1 N2 : 
+  evalCnf a (N1 ++ N2) = true <-> (evalCnf a N1 = true /\ evalCnf a N2 = true). 
 Proof. 
   rewrite !evalCnf_clause_iff. setoid_rewrite in_app_iff. firstorder.
 Qed.
 
-
-Definition satisfies a c := evalCnf a c = true.
-Definition SAT (c : cnf) : Prop := exists (a : assgn), satisfies a c. 
+Definition satisfies a N := evalCnf a N = true.
+Definition SAT N : Prop := exists (a : assgn), satisfies a N. 
 
 Lemma evalLiteral_assgn_equiv a1 a2 l : a1 === a2 -> evalLiteral a1 l = evalLiteral a2 l. 
 Proof. 
@@ -104,16 +103,16 @@ Proof.
     apply (evalVar_monotonic H2) in Hev2. congruence. 
 Qed.
 
-Lemma evalClause_assgn_equiv a1 a2 c : a1 === a2 -> evalClause a1 c = evalClause a2 c. 
+Lemma evalClause_assgn_equiv a1 a2 C : a1 === a2 -> evalClause a1 C = evalClause a2 C. 
 Proof. 
-  intros H. enough (evalClause a1 c = true <-> evalClause a2 c = true).
+  intros H. enough (evalClause a1 C = true <-> evalClause a2 C = true).
   - destruct evalClause; destruct evalClause; firstorder; easy. 
   - rewrite !evalClause_literal_iff. now setoid_rewrite (evalLiteral_assgn_equiv _ H). 
 Qed.
 
-Lemma evalCnf_assgn_equiv a1 a2 c : a1 === a2 -> evalCnf a1 c = evalCnf a2 c. 
+Lemma evalCnf_assgn_equiv a1 a2 N : a1 === a2 -> evalCnf a1 N = evalCnf a2 N. 
 Proof. 
-  intros H. enough (evalCnf a1 c = true <-> evalCnf a2 c = true). 
+  intros H. enough (evalCnf a1 N = true <-> evalCnf a2 N = true). 
   - destruct evalCnf; destruct evalCnf; firstorder; easy.
   - rewrite !evalCnf_clause_iff. now setoid_rewrite (evalClause_assgn_equiv _ H).
 Qed. 
@@ -121,68 +120,68 @@ Qed.
 (** Bounds on the number of used variables*)
 Inductive varBound_clause (n : nat) : clause -> Prop :=
   | varBound_clauseB : varBound_clause n []
-  | varBound_clauseS : forall b k c, k < n -> varBound_clause n c -> varBound_clause n ((b, k) :: c).  
+  | varBound_clauseS : forall b v C, v < n -> varBound_clause n C -> varBound_clause n ((b, v) :: C).  
 
 Inductive varBound_cnf (n : nat) : cnf -> Prop :=
    | varBound_cnfB : varBound_cnf n [] 
-   | varBound_cnfS : forall cl c, varBound_clause n cl -> varBound_cnf n c -> varBound_cnf n (cl :: c).  
+   | varBound_cnfS : forall C N, varBound_clause n C -> varBound_cnf n N -> varBound_cnf n (C :: N).  
 
 Hint Constructors varBound_clause varBound_cnf. 
 
-Lemma varBound_clause_iff (n : nat) (c : clause) : varBound_clause n c <-> forall (s : bool) (k : nat), (s, k) el c -> k < n.
+Lemma varBound_clause_iff (n : nat) C : varBound_clause n C <-> forall (s : bool) v, (s, v) el C -> v < n.
 Proof.
   split.
   - induction 1.
-    + intros s k []. 
-    + intros s k0 [H1 | H1].
+    + intros s v []. 
+    + intros s v0 [H1 | H1].
       * inv H1. now apply H. 
       * now apply IHvarBound_clause with (s := s). 
-  - induction c.
+  - induction C.
     + intros. constructor. 
     + intros. destruct a. constructor.
       * apply H with (s := b). firstorder.  
-      * apply IHc. firstorder.  
+      * apply IHC. firstorder.  
 Qed. 
 
-Lemma varBound_cnf_iff (n : nat) (c : cnf) : varBound_cnf n c <-> forall (cl : clause), cl el c -> varBound_clause n cl.
+Lemma varBound_cnf_iff (n : nat) N : varBound_cnf n N <-> forall C, C el N -> varBound_clause n C.
 Proof.
   split.
   - induction 1. 
-    + intros cl [].
-    + intros cl' [-> |Hel]. assumption. now apply IHvarBound_cnf. 
-  - intros H. induction c; constructor.
+    + intros C [].
+    + intros C' [-> |Hel]. assumption. now apply IHvarBound_cnf. 
+  - intros H. induction N; constructor.
     + now apply H. 
-    + apply IHc. firstorder.
+    + apply IHN. firstorder.
 Qed. 
 
-Lemma varBound_clause_monotonic (c : clause) (n n' : nat) : n <= n' -> varBound_clause n c -> varBound_clause n' c. 
+Lemma varBound_clause_monotonic C (n n' : nat) : n <= n' -> varBound_clause n C -> varBound_clause n' C. 
 Proof. intros H1 H2. induction H2. constructor. constructor. lia. auto. Qed. 
 
-Lemma varBound_cnf_monotonic (c : cnf) (n n' : nat) : n <= n' -> varBound_cnf n c -> varBound_cnf n' c.
+Lemma varBound_cnf_monotonic N (n n' : nat) : n <= n' -> varBound_cnf n N -> varBound_cnf n' N.
 Proof.
   intros H1 H2. induction H2; constructor.
   now apply varBound_clause_monotonic with (n:= n). assumption. 
 Qed.
 
-Lemma varBound_cnf_app (c1 c2 : cnf) (n : nat) : varBound_cnf n c1 /\ varBound_cnf n c2 <-> varBound_cnf n (c1 ++ c2).
+Lemma varBound_cnf_app N1 N2 (n : nat) : varBound_cnf n N1 /\ varBound_cnf n N2 <-> varBound_cnf n (N1 ++ N2).
 Proof.
-  induction c1; cbn. 
+  induction N1; cbn. 
   - split; [ tauto | intros H; split; eauto  ]. 
   - split. 
-    + intros (H1 & H2). inv H1. constructor; [eauto | now apply IHc1].
-    + intros H. inv H. apply IHc1 in H3 as (H3 & H4). split; eauto. 
+    + intros (H1 & H2). inv H1. constructor; [eauto | now apply IHN1].
+    + intros H. inv H. apply IHN1 in H3 as (H3 & H4). split; eauto. 
 Qed. 
 
 (*size of CNF in terms of number of operators *)
-Definition size_clause (c : clause) := length c. (*we should subtract 1 here, but this would only complicate things *)
-Definition size_cnf (c : cnf) := sumn (map size_clause c) + length c. 
+Definition size_clause C := length C. (*we should subtract 1 here, but this would only complicate things *)
+Definition size_cnf N := sumn (map size_clause N) + length N. 
 
-Lemma size_clause_app c1 c2 : size_clause (c1 ++ c2) = size_clause c1 + size_clause c2. 
+Lemma size_clause_app C1 C2 : size_clause (C1 ++ C2) = size_clause C1 + size_clause C2. 
 Proof. 
   unfold size_clause. now rewrite app_length. 
 Qed.
 
-Lemma size_cnf_app c1 c2 : size_cnf (c1 ++ c2) = size_cnf c1 + size_cnf c2. 
+Lemma size_cnf_app N1 N2 : size_cnf (N1 ++ N2) = size_cnf N1 + size_cnf N2. 
 Proof. 
   unfold size_cnf. rewrite map_app, sumn_app, app_length. lia.
 Qed. 
@@ -194,8 +193,8 @@ Qed.
 
 (*produce a list (possibly containing duplicates) of variables occuring in a CNF *)
 Definition varsOfLiteral (l : literal) := match l with (_, v) => [v] end. 
-Definition varsOfClause (cl : clause) := concat (map varsOfLiteral cl).
-Definition varsOfCnf (cn : cnf) := concat (map varsOfClause cn).
+Definition varsOfClause (C : clause) := concat (map varsOfLiteral C).
+Definition varsOfCnf (N : cnf) := concat (map varsOfClause N).
 
 Lemma varsOfLiteral_correct l v : v el varsOfLiteral l <-> exists b, l = (b, v). 
 Proof. 
@@ -204,47 +203,36 @@ Proof.
   - intros [? H]. inv H. easy.
 Qed. 
 
-Lemma varsOfClause_correct cl v : v el varsOfClause cl <-> exists l, l el cl /\ v el varsOfLiteral l. 
+Lemma varsOfClause_correct C v : v el varsOfClause C <-> exists l, l el C /\ v el varsOfLiteral l. 
 Proof. 
   unfold varsOfClause. now rewrite in_concat_map_iff. 
 Qed. 
 
-Lemma varsOfCnf_correct cn v : v el varsOfCnf cn <-> exists cl, cl el cn /\ v el varsOfClause cl. 
+Lemma varsOfCnf_correct N v : v el varsOfCnf N <-> exists C, C el N /\ v el varsOfClause C. 
 Proof. 
   unfold varsOfCnf. now rewrite in_concat_map_iff. 
 Qed.
 
-Definition assignment_small (cn : cnf) a := a <<= varsOfCnf cn /\ dupfree a.
-
-Lemma list_size_app (X : Type) (l1 l2 : list X) `{registered X} : size (enc (l1 ++ l2)) <= size (enc l1) + size (enc l2). 
-Proof. 
-  rewrite <- list_app_size. lia. 
-Qed. 
-
-Lemma list_size_concat (X : Type) (l : list (list X)) `{registered X} : size (enc (concat l)) <= size (enc l). 
-Proof. 
-  induction l; cbn; [easy | ]. 
-  now rewrite list_size_app, list_size_cons, IHl. 
-Qed. 
+Definition assignment_small N a := a <<= varsOfCnf N /\ dupfree a.
 
 Lemma varsOfLiteral_size (l : literal) : size (enc (varsOfLiteral l)) <= size (enc l) + c__listsizeCons + c__listsizeNil. 
 Proof. 
   unfold varsOfLiteral. destruct l; cbn. rewrite size_list, size_prod. cbn. lia. 
 Qed. 
 
-Lemma varsOfClause_size (cl : clause) : size (enc (varsOfClause cl)) <= size (enc cl) + (|cl|) * (c__listsizeCons + c__listsizeNil). 
+Lemma varsOfClause_size C : size (enc (varsOfClause C)) <= size (enc C) + (|C|) * (c__listsizeCons + c__listsizeNil). 
 Proof. 
   unfold varsOfClause. rewrite list_size_concat. 
-  induction cl; cbn -[Nat.add]; [easy | ].
-  rewrite !list_size_cons, IHcl. 
+  induction C; cbn -[Nat.add]; [easy | ].
+  rewrite !list_size_cons, IHC. 
   rewrite varsOfLiteral_size. lia.
 Qed. 
 
-Lemma varsOfCnf_size (cn : cnf) : size (enc (varsOfCnf cn)) <= size (enc cn) * (1 +( c__listsizeCons + c__listsizeNil)).
+Lemma varsOfCnf_size N: size (enc (varsOfCnf N)) <= size (enc N) * (1 +( c__listsizeCons + c__listsizeNil)).
 Proof. 
   unfold varsOfCnf. rewrite list_size_concat. 
-  induction cn; cbn -[Nat.add]; [rewrite !size_list; cbn -[Nat.add]; nia | ].
-  rewrite !list_size_cons, IHcn. 
+  induction N; cbn -[Nat.add]; [rewrite !size_list; cbn -[Nat.add]; nia | ].
+  rewrite !list_size_cons, IHN. 
   rewrite varsOfClause_size. 
   rewrite list_size_length. nia.
 Qed. 
@@ -300,16 +288,16 @@ Proof.
     split; nia. 
 Qed. 
 
-Lemma assignment_small_size (cn : cnf) a : assignment_small cn a -> size (enc a) <= size (enc cn) * (1 + c__listsizeCons + c__listsizeNil). 
+Lemma assignment_small_size N a : assignment_small N a -> size (enc a) <= size (enc N) * (1 + c__listsizeCons + c__listsizeNil). 
 Proof. 
   intros [H1 H2].
-  enough (size (enc a) <= size (enc (varsOfCnf cn))) as H.
+  enough (size (enc a) <= size (enc (varsOfCnf N))) as H.
   { rewrite H. apply varsOfCnf_size. }
   now eapply list_incl_dupfree_size.
 Qed. 
 
-Definition sat_verifier (cn : cnf) (a : assgn) :=
-  evalCnf a cn = true /\ assignment_small cn a. 
+Definition sat_verifier N (a : assgn) :=
+  evalCnf a N = true /\ assignment_small N a. 
 
 (*we need to show that, given a satisfying assignment for a CNF, we can obtain a small assignment that still satisfies the CNF*)
 Section fixX. 
@@ -361,9 +349,9 @@ Section fixX.
   Qed. 
 End fixX. 
 
-Definition compressAssignment a cn := dedup Nat.eqb (intersect Nat.eqb a (varsOfCnf cn)). 
+Definition compressAssignment a N := dedup Nat.eqb (intersect Nat.eqb a (varsOfCnf N)). 
 
-Lemma compressAssignment_small a cn: assignment_small cn (compressAssignment a cn).
+Lemma compressAssignment_small a N: assignment_small N (compressAssignment a N).
 Proof. 
   unfold assignment_small, compressAssignment. split; [ | apply dupfree_dedup; symmetry; apply Nat.eqb_eq].
   intros x H%in_dedup_iff; [ | symmetry; apply Nat.eqb_eq]. 
@@ -371,7 +359,7 @@ Proof.
   apply H.  
 Qed. 
 
-Lemma compressAssignment_var_eq a cn v : v el varsOfCnf cn -> evalVar a v = evalVar (compressAssignment a cn) v. 
+Lemma compressAssignment_var_eq a N v : v el varsOfCnf N -> evalVar a v = evalVar (compressAssignment a N) v. 
 Proof. 
   intros H. unfold compressAssignment. 
   unfold evalVar. destruct list_in_decb eqn:H1. 
@@ -387,7 +375,7 @@ Proof.
     apply list_in_decb_iff' in H1; [ easy | symmetry; apply Nat.eqb_eq]. 
 Qed. 
 
-Lemma compressAssignment_cnf_equiv a cn : evalCnf a cn = true <-> evalCnf (compressAssignment a cn) cn = true. 
+Lemma compressAssignment_cnf_equiv a N : evalCnf a N = true <-> evalCnf (compressAssignment a N) N = true. 
 Proof. 
   rewrite !evalCnf_clause_iff. repeat setoid_rewrite evalClause_literal_iff. 
   split. 
@@ -408,11 +396,11 @@ Proof.
 Qed. 
 
 (*now that we've got the tools to verify the verifier, let's build a boolean verifier and prove its correctness*)
-Definition assignment_small_decb (cn : cnf) a := list_incl_decb Nat.eqb a (varsOfCnf cn) && dupfreeb Nat.eqb a. 
+Definition assignment_small_decb N a := list_incl_decb Nat.eqb a (varsOfCnf N) && dupfreeb Nat.eqb a. 
 Definition sat_verifierb (input : cnf * assgn) :=
-  let (cn, a) := input in assignment_small_decb cn a && evalCnf a cn.
+  let (N, a) := input in assignment_small_decb N a && evalCnf a N.
 
-Lemma assignment_small_decb_iff cn a : assignment_small_decb cn a = true <-> assignment_small cn a. 
+Lemma assignment_small_decb_iff N a : assignment_small_decb N a = true <-> assignment_small N a. 
 Proof. 
   unfold assignment_small_decb, assignment_small. 
   rewrite andb_true_iff. 
@@ -421,7 +409,7 @@ Proof.
   easy.
 Qed. 
 
-Lemma sat_verifierb_correct (c : cnf) (a : assgn) : sat_verifier c a <-> sat_verifierb (c, a) = true.
+Lemma sat_verifierb_correct N a : sat_verifier N a <-> sat_verifierb (N, a) = true.
 Proof. 
   unfold sat_verifier, sat_verifierb. rewrite and_comm. 
   rewrite andb_true_iff. rewrite assignment_small_decb_iff. 
@@ -429,43 +417,43 @@ Proof.
 Qed. 
 
 (** A computable notion of boundedness *)
-Definition clause_maxVar (c : clause) := fold_right (fun '(_, v) acc => Nat.max acc v) 0 c. 
-Definition cnf_maxVar (c : cnf) := fold_right (fun cl acc => Nat.max acc (clause_maxVar cl)) 0 c.
+Definition clause_maxVar C := fold_right (fun '(_, v) acc => Nat.max acc v) 0 C. 
+Definition cnf_maxVar N := fold_right (fun C acc => Nat.max acc (clause_maxVar C)) 0 N.
 
-Lemma cnf_maxVar_app c1 c2 : cnf_maxVar (c1 ++ c2) = Nat.max (cnf_maxVar c1) (cnf_maxVar c2). 
+Lemma cnf_maxVar_app N1 N2 : cnf_maxVar (N1 ++ N2) = Nat.max (cnf_maxVar N1) (cnf_maxVar N2). 
 Proof. 
-  induction c1. 
+  induction N1. 
   - easy.
-  - cbn. fold (cnf_maxVar (c1 ++ c2)). fold (cnf_maxVar c1). rewrite IHc1. lia. 
+  - cbn. fold (cnf_maxVar (N1 ++ N2)). fold (cnf_maxVar N1). rewrite IHN1. lia. 
 Qed. 
 
-Lemma clause_maxVar_bound (c : clause) : varBound_clause (S (clause_maxVar c)) c.
+Lemma clause_maxVar_bound C : varBound_clause (S (clause_maxVar C)) C.
 Proof.
-  induction c.
+  induction C.
   - cbn. constructor.
   - destruct a. constructor; cbn.
     + lia.   
     + eapply varBound_clause_monotonic.
-      2: apply IHc. unfold clause_maxVar. cbn. lia. 
+      2: apply IHC. unfold clause_maxVar. cbn. lia. 
 Qed.
 
-Lemma cnf_maxVar_bound (c : cnf) : varBound_cnf (S (cnf_maxVar c)) c.
+Lemma cnf_maxVar_bound N : varBound_cnf (S (cnf_maxVar N)) N.
 Proof.
-  induction c.
+  induction N.
   - cbn; constructor.
   - constructor.
     + cbn. eapply varBound_clause_monotonic. 2: apply clause_maxVar_bound. lia. 
-    + eapply varBound_cnf_monotonic. 2: apply IHc. cbn. unfold cnf_maxVar. lia.  
+    + eapply varBound_cnf_monotonic. 2: apply IHN. cbn. unfold cnf_maxVar. lia.  
 Qed. 
 
 (** In principle, we would expect a strict inequality here. The reason for non-strictness is that cnf_maxVar returns 0 in case of an empty CNF. *)
-Lemma clause_maxVar_bound_le (c : clause) n : varBound_clause n c -> clause_maxVar c <= n.
+Lemma clause_maxVar_bound_le C n : varBound_clause n C -> clause_maxVar C <= n.
 Proof. 
   induction 1 as [ | ? ? ? ? ? IH]; cbn; [lia | ].
   rewrite IH. lia. 
 Qed. 
 
-Lemma cnf_maxVar_bound_le (c : cnf) n : varBound_cnf n c -> cnf_maxVar c <= n. 
+Lemma cnf_maxVar_bound_le N n : varBound_cnf n N -> cnf_maxVar N <= n. 
 Proof. 
   induction 1 as [ | ? ? ? ? IH]; cbn; [ lia | ].
   rewrite IH. rewrite clause_maxVar_bound_le by apply H. lia. 

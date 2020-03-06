@@ -2,9 +2,9 @@ From PslBase Require Import Base FiniteTypes.
 From Undecidability.L.Complexity.Cook Require Import Prelim.
 Require Import Lia.
 
-(** *Uniform homomorphisms *)
+(** * Uniform homomorphisms *)
 
-(*We define uniform homomorphisms (of strings): Given strings of the same length, they output strings of the same length.*)
+(** We define uniform homomorphisms (of strings): Given strings of the same length, they output strings of the same length.*)
 Section fixX.
   Variable (X Y : Type). 
 
@@ -30,7 +30,7 @@ Section fixX.
     - cbn. rewrite H. now rewrite IHx. 
   Qed. 
 
-  (*given an arbitrary function mapping elements of X into strings over Y, we can derive a homomorphism in a canonical way*)
+  (** given an arbitrary function mapping elements of X into strings over Y, we can derive a homomorphism in a canonical way*)
   Definition canonicalHom (h' : X -> list Y) := fun (l : list X) => concat (map h' l). 
   Lemma canonicalHom_is_homomorphism h' : homomorphism (canonicalHom h'). 
   Proof. 
@@ -47,8 +47,8 @@ Section fixX.
 
   (** uniform homomorphisms *)
 
-  (*a uniform homomorphism is ε-free and maps all strings of the same length to strings of the same length *)
-  (*(stated differently: |h x| = n * |x| for n > 0)*)
+  (** A uniform homomorphism is ε-free and maps all strings of the same length to strings of the same length,
+    (stated differently: |h x| = n * |x| for n > 0) *)
   Definition uniform_homomorphism (h : list X -> list Y) := 
     homomorphism h 
     /\ (forall x y, |h [x]| = |h [y]|) 

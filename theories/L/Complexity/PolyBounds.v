@@ -53,6 +53,17 @@ Qed.
 Lemma list_size_cons {X : Type} `{registered X} (l : list X) (a : X) : size(enc (a::l)) = size(enc a) + size(enc l) + c__listsizeCons.
 Proof. repeat rewrite size_list. cbn.  lia. Qed. 
 
+Lemma list_size_app (X : Type) (l1 l2 : list X) `{registered X} : size (enc (l1 ++ l2)) <= size (enc l1) + size (enc l2). 
+Proof. 
+  rewrite <- list_app_size. lia. 
+Qed. 
+
+Lemma list_size_concat (X : Type) (l : list (list X)) `{registered X} : size (enc (concat l)) <= size (enc l). 
+Proof. 
+  induction l; cbn; [easy | ]. 
+  now rewrite list_size_app, list_size_cons, IHl. 
+Qed. 
+
 Lemma list_size_length {X : Type} `{registered X} (l : list X) : |l| <= size(enc l). 
 Proof. 
   rewrite size_list. induction l.

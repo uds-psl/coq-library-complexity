@@ -67,7 +67,7 @@ Lemma clause_varsIn_varBound b c : varBound_clause b c <-> clause_varsIn (fun n 
 Proof. 
   split; unfold clause_varsIn, varInClause, varInLiteral. 
   - induction 1 as [ | ? ? ? ? ? IH]; [firstorder | ].
-    intros v (l & [<- | H2] & (b' & H3)). 
+    intros v0 (l & [<- | H2] & (b' & H3)). 
     + inv H3. apply H.
     + apply IH. firstorder.
   - intros H. induction c; [eauto | ].
