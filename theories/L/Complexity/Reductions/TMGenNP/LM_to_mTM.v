@@ -3,9 +3,10 @@ From Undecidability.L.Datatypes Require Import Lists LVector.
 From Undecidability.L.Complexity Require Import NP Synthetic Monotonic.
 From Undecidability.TM Require Import TM.
 
-From Undecidability.L.Complexity  Require GenNP.
-From Undecidability.L.Complexity  Require Import LMGenNP TMGenNP_fixed_mTM GenNP_is_hard.
+From Undecidability.L.Complexity  Require Import GenNP_is_hard LMGenNP TMGenNP_fixed_mTM.
 From Undecidability.L.AbstractMachines Require Import FlatPro.Programs FlatPro.Computable.LPro Computable.Compile Computable.Decompile.
+
+From Undecidability.LAM Require StepTM.
 
 Lemma terms_enum_themself : canEnumTerms Pro.
 Proof.
@@ -44,15 +45,16 @@ Qed.
 
 Section TMcheckEncoding.
 
+  Import LAM.TM.StepTM.
   
 End TMcheckEncoding.
 (* TODO: find: *)
-Axiom (sig:finType) (n:nat) (X:Type).
-Context `{R__sig : registered sig} `{registered X}.
+Axiom (sig:finType) (n:nat).
+Context `{R__sig : registered sig}.
 Axiom  (M : mTM sig (S n)) .
 
 Lemma LMGenNP_to_TMGenNP_mTM :
-  restrictBy (LMHaltsOrDiverges X) (LMGenNP X) ⪯p (restrictBy (HaltsOrDiverges_fixed_mTM M) (TMGenNP_fixed_mTM M)).
+  restrictBy (LMHaltsOrDiverges Pro) (LMGenNP Pro) ⪯p (restrictBy (HaltsOrDiverges_fixed_mTM M) (TMGenNP_fixed_mTM M)).
   
 Abort.
 

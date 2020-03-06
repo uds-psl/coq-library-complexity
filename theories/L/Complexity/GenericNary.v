@@ -1,21 +1,42 @@
 (** Taken from coq-bigO / Armaël Guéneau *)
 Require Import Coq.Lists.List.
 Import List.ListNotations.
+From smpl Require Import Smpl.
 
-Fixpoint Rarrow (domain : list Type) (range : Type) : Type :=
+Local Set Universe Polymorphism. 
+
+Local Inductive UPlist (A : Type) : Type :=
+ | nil : UPlist A
+ | cons : A -> UPlist A -> UPlist A.
+
+Arguments nil {A}.
+Arguments cons {A} a l.
+
+
+Module UnivPolyListNotations.
+Infix "::" := cons (at level 60, right associativity).
+Notation "[ ]" := nil (format "[ ]").
+Notation "[ x ]" := (cons x nil).
+Notation "[ x ; y ; .. ; z ]" :=  (cons x (cons y .. (cons z nil) ..)).
+End UnivPolyListNotations.
+
+Import UnivPolyListNotations.
+
+
+Fixpoint Rarrow (domain : UPlist Type) (range : Type) : Type :=
   match domain with
     | nil => range
     | d :: ds => Rarrow ds (d -> range)
 end.
 
-Fixpoint Rtuple (domain : list Type) : Type :=
+Fixpoint Rtuple (domain : UPlist Type) : Type :=
   match domain with
   | nil => unit
   | d :: nil => d
   | d :: ds => prod (Rtuple ds) d
   end.
 
-Fixpoint Const {A : Type} (domain : list Type) (c : A) : Rarrow domain A :=
+Fixpoint Const {A : Type} (domain : UPlist Type) (c : A) : Rarrow domain A :=
   match domain with
   | nil => c
   | d :: ds => Const ds (fun _ => c)
@@ -33,7 +54,7 @@ Hint Rewrite Const_eqn_1 : Const.
 Hint Rewrite Const_eqn_2 : Const.
 Opaque Const.
 
-Fixpoint Fun' {domain : list Type} {range : Type} {struct domain}
+Fixpoint Fun' {domain : UPlist Type} {range : Type} {struct domain}
          : (Rtuple domain -> range) -> (Rtuple domain) -> range
   :=
   match domain with
@@ -69,7 +90,7 @@ Hint Rewrite Fun'_eqn_2 : Fun'.
 Hint Rewrite Fun'_eqn_3 : Fun'.
 Opaque Fun'.
 
-Fixpoint App {domain : list Type} {range : Type} {struct domain}
+Fixpoint App {domain : UPlist Type} {range : Type} {struct domain}
          : (Rarrow domain range) -> Rtuple domain -> range
   :=
   match domain with
@@ -112,7 +133,16 @@ Proof.
     + destruct t. apply IHdomain.
 Qed.
 
-Hint Rewrite Fun'_simpl : generic.
+
+Tactic Notation "_rewrite_anywhere" uconstr(L):=
+  match goal with
+  | H : _ |- _ => setoid_rewrite L in H
+  | _ => setoid_rewrite L
+  end.
+
+Smpl Create generic.
+Smpl Add 2 _rewrite_anywhere Fun'_simpl : generic.
+
 
 Lemma App_Const_simpl :
   forall domain range c x,
@@ -125,16 +155,16 @@ Proof.
     + destruct x. simpl. rewrite Const_eqn_2.
       rewrite IHdomain. reflexivity.
 Qed.
+Smpl Add 2 _rewrite_anywhere App_Const_simpl : generic.
 
-Hint Rewrite App_Const_simpl : generic.
 
-Definition Const' (domain : list Type) {range : Type}
+Definition Const' (domain : UPlist Type) {range : Type}
            (cst : range) : Rtuple domain -> range :=
   Fun' (App (Const domain cst)).
 
 Hint Unfold Const' : generic.
 
-Definition Uncurry {domain : list Type} {range : Type}
+Definition Uncurry {domain : UPlist Type} {range : Type}
            (f : Rarrow domain range) : Rtuple domain -> range :=
   Fun' (App f).
 
@@ -143,33 +173,10 @@ Hint Unfold Uncurry : generic.
 (******************************************************************************)
 (* Rewriting with [generic] *)
 
-Create HintDb nary_prepare.
+Smpl Create nary_prepare.
 
-(* XXX: workaround because [rewrite_strat] does not support [rewrite_strat ...
-   in *]. (See https://github.com/coq/coq/issues/6107) *)
-Ltac rew_generic :=
-  repeat (
-      autounfold with generic;
-      rewrite_strat (
-          try (hints nary_prepare);
-          bottomup (hints generic)
-        )
-    ).
 
-Ltac rew_generic_in H :=
-  repeat (
-      autounfold with generic in H;
-      rewrite_strat (
-          try (hints nary_prepare);
-          bottomup (hints generic)
-        ) in H
-    ).
-
-Ltac rew_generic_in_all :=
-  match goal with
-  | H : _ |- _ => rew_generic_in H; revert H; rew_generic_in_all
-  | _ => intros; rew_generic
-  end.
+Ltac rew_generic_in_all := autounfold with generic in *;repeat smpl nary_prepare;repeat smpl generic.
 
 (* Try to prove a goal stated using the combinators above from a lemma [L] that
    is equivalent but does not use the combinators. *)
@@ -223,10 +230,10 @@ Tactic Notation "nary" "simple" "apply" uconstr(L) := _nary_apply ltac:(fun t =>
 (******************************************************************************)
 (* Utilities *)
 
-Ltac list_of_tuple ty :=
+Ltac UPlist_of_tuple ty :=
   lazymatch ty with
   | prod ?A ?B =>
-    let l := list_of_tuple A in
+    let l := UPlist_of_tuple A in
     constr:(cons (B:Type) l)
   | _ => constr:(cons (ty:Type) nil)
   end.

@@ -210,7 +210,7 @@ Qed.
 
 
 (** This vernacular command checks wether we have indeed assumed no axioms. *)
-Print Assumptions HaltingProblem.
+(* Print Assumptions HaltingProblem. *)
 (**
 <<
 Closed under the global context

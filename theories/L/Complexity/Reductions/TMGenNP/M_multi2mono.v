@@ -1,25 +1,20 @@
-From Undecidability.L Require Import Tactics.LTactics.
-From Undecidability.L.Datatypes Require Import Lists LVector.
-From Undecidability.L.Complexity Require Import NP Synthetic Monotonic.
-From Undecidability.TM Require Import TM.
+From Undecidability.L.Complexity Require Import NP.
 From Undecidability.TM Require TM ProgrammingTools CaseList.
+From Undecidability.TM Require Import TM SizeBounds.
 
-
-From Undecidability.L.Complexity  Require GenNP.
-From Undecidability.L.Complexity  Require Import LMGenNP TMGenNP_fixed_mTM.
-
-
-From Undecidability.TM.Single Require EncodeTapes StepTM DecodeTapes. (** In emacs: coq-prefer-top-of-conclusion: t; *)
+From Undecidability.L.Complexity  Require Import TMGenNP_fixed_mTM.
+From Undecidability.TM.Single Require EncodeTapes StepTM DecodeTapes.
 
 Unset Printing Coercions.
 From Coq.ssr Require ssrfun.
 Module Option := ssrfun.Option.
 
+From Coq Require Import Lia Ring Arith.
+
 Module MultiToMono.
   Section multiToMono.
-
+    
     (** We can simulate any machine while first testing that we indeed work on a valid n-tape encoding *)
-
     Import EncodeTapes DecodeTapes Single.StepTM ProgrammingTools Combinators Decode.
     Context (sig F:finType) (n:nat) (M__multi : pTM sig F n).
 
@@ -106,93 +101,10 @@ End MultiToMono.
 Arguments MultiToMono.Rel : simpl never.
 Arguments MultiToMono.Ter : simpl never.
 
-Import LTactics GenEncode CodeTM EncodeTapes.
-  
-Run TemplateProgram (tmGenEncode "boundary_enc" boundary).
-Hint Resolve boundary_enc_correct : Lrewrite.
 
-Lemma size_boundary (l:boundary):
-  L.size (enc l) = match l with START => 6 | STOP => 5 | UNKNOWN => 4 end.
-Proof.
-  change (enc l) with (boundary_enc l). 
-  destruct l;easy.
-Qed.
+Section putFirst.
+  (** putting the first element at the end of an vector *)
 
-Section sigList.
-  Context (sig : Type) `{H:registered sig}.
-  Run TemplateProgram (tmGenEncode "sigList_enc" (sigList sig)).
-
-  Global Instance term_sigList_X : computableTime' (@sigList_X sig) (fun _ _ => (1,tt)).
-  Proof. extract constructor. solverec.
-  Qed.
-
-  
-
-  Lemma size_sigList (l:sigList sig):
-    L.size (enc l) = match l with sigList_X x => L.size (enc x) + 7 | sigList_nil => 5 | _ => 4 end.
-  Proof.
-    change (enc l) with (sigList_enc l).
-    destruct l. all:cbn [sigList_enc map sumn size].
-    change ((match _ with
-             | @mk_registered _ enc _ _ => enc
-             end s)) with (enc s).
-    all:cbn;nia. 
-  Qed.
-
-
-End sigList.
-Hint Resolve sigList_enc_correct : Lrewrite.
-
-
-Section sigTape.
-  Context (sig : Type) `{H:registered sig}.
-  Run TemplateProgram (tmGenEncode "sigTape_enc" (sigTape sig)).
-
-  Global Instance term_LeftBlank_X : computableTime' (@LeftBlank sig) (fun _ _ => (1,tt)).
-  Proof. extract constructor. solverec. Qed.
-
-  Global Instance term_RightBlank_X : computableTime' (@RightBlank sig) (fun _ _ => (1,tt)).
-  Proof. extract constructor. solverec. Qed.
-
-  Global Instance term_MarkedSymbol_X : computableTime' (@MarkedSymbol sig) (fun _ _ => (1,tt)).
-  Proof. extract constructor. solverec. Qed.
-
-  Global Instance term_UnmarkedSymbol_X : computableTime' (@UnmarkedSymbol sig) (fun _ _ => (1,tt)).
-  Proof. extract constructor. solverec. Qed.
-
-  
-  Lemma size_sigTape (l:sigTape sig):
-    L.size (enc l) =
-    match l with
-      LeftBlank b => 11+ L.size (enc b)
-    | RightBlank b => 10+ L.size (enc b)
-    | NilBlank => 8
-    | MarkedSymbol x => 8 + L.size (enc x)
-    | UnmarkedSymbol x => 7 + L.size (enc x)
-    end.
-  Proof.
-    change (enc l) with (sigTape_enc l).
-    destruct l. all:cbn [sigTape_enc map sumn size].
-    1-2:unfold enc;cbn.
-    4-5:change ((match _ with
-             | @mk_registered _ enc _ _ => enc
-             end s)) with (enc s).
-    all:cbn;try nia.
-  Qed.
-
-End sigTape.
-Hint Resolve sigTape_enc_correct : Lrewrite.
-
-
-From Undecidability Require Import Datatypes.Lists.
-
-Section LMGenNP_to_TMGenNP_mTM.
-  Import EncodeTapes DecodeTapes Single.StepTM ProgrammingTools Combinators Decode.
-  Import LTactics LSum LProd LVector LNat Lists.
-
-  Context (sig:finType) (n:nat) `{R__sig : registered sig}  (M : mTM sig (S n)).
-
-  
   Definition putFirstAtEnd n: Vector.t (Fin.t (S n)) (S n):=
     tabulate (fun i => match lt_dec (S (proj1_sig (Fin.to_nat i))) (S n) with
                       Specif.left H => Fin.of_nat_lt H
@@ -202,8 +114,8 @@ Section LMGenNP_to_TMGenNP_mTM.
 
   Definition putEndAtFirst n': Vector.t (Fin.t (S n')) (S n'). 
     refine (tabulate (fun i => match Fin.to_nat i with
-                    | exist _ 0 H => Fin.of_nat_lt (Nat.lt_succ_diag_r n')
-                    | exist _ n' H => Fin.of_nat_lt (p:=n'-1) _
+                            | exist _ 0 H => Fin.of_nat_lt (Nat.lt_succ_diag_r n')
+                            | exist _ n' H => Fin.of_nat_lt (p:=n'-1) _
                             end )). abstract nia.
   Defined.
   Arguments putEndAtFirst : simpl never.
@@ -248,6 +160,66 @@ Section LMGenNP_to_TMGenNP_mTM.
     Qed.
     
   End printFin.
+
+
+  Import LiftTapes.
+      
+  Lemma putFirstAtEnd_to_list X n' (x:X) xs:
+    (Vector.to_list (select (putFirstAtEnd n') (x ::: xs))) = Vector.to_list xs ++ [x].
+  Proof.
+    clear. apply list_eq_nth_error. intros i.
+    rewrite !vector_nth_error_nat. destruct lt_dec.
+    { rewrite select_nth. unfold putFirstAtEnd. rewrite nth_tabulate,Fin.to_nat_of_nat;cbn.
+      destruct lt_dec.
+      -erewrite nth_error_app1. 2:now erewrite LVector.to_list_length.
+       cbn. rewrite vector_nth_error_nat. destruct lt_dec. 2:exfalso;nia.
+       erewrite Fin.of_nat_ext. reflexivity.
+      -cbn. rewrite nth_error_app2. all:rewrite LVector.to_list_length. 2:nia. replace (i-n') with 0 by nia. easy.
+    }
+    symmetry. apply nth_error_None. erewrite app_length, LVector.to_list_length. cbn;nia.
+  Qed.
+
+  Lemma putEnd_invL X n' (v : Vector.t X _) :
+    select (putEndAtFirst n') (select (putFirstAtEnd n') v) = v.
+  Proof.
+    apply Vector.eq_nth_iff. intros i ? <-. rewrite !select_nth.
+    f_equal. 
+    unfold putEndAtFirst,putFirstAtEnd. rewrite !nth_tabulate.
+    destruct (fin_destruct_S i) as  [(i'&->) | ->].
+    2:{ cbn. rewrite Fin.to_nat_of_nat. cbn. destruct lt_dec. now exfalso;nia. easy. }
+    eapply Fin.to_nat_inj.
+    remember (Fin.to_nat (Fin.FS i')) as i0 eqn:H. set (tmp:=proj1_sig i0).
+    rewrite (sig_eta i0). subst tmp i0. cbn.
+    destruct (Fin.to_nat i') eqn:H.
+    cbn. rewrite Fin.to_nat_of_nat;cbn. destruct lt_dec;cbn.
+    -rewrite (sig_eta (Fin.to_nat _)). cbn. rewrite Fin.to_nat_of_nat. cbn. nia.
+    -clear H. nia.
+  Qed.
+
+  Lemma putEndAtFirst_to_list X n' v (ts:X) v0:
+    Vector.to_list v ++ [ts] = Vector.to_list v0 ->
+    select (putEndAtFirst n') v0 = ts ::: v.
+  Proof using.
+    intros H. rewrite <- putFirstAtEnd_to_list in H. apply Vectors.vector_to_list_inj in H.
+    subst v0. now setoid_rewrite putEnd_invL.
+  Qed.
+  
+End putFirst.
+
+
+
+
+From Undecidability Require Import L.TM.CompCode Datatypes.Lists LBool.
+
+Section lemmas_for_LMGenNP_to_TMGenNP_mTM.
+  Import EncodeTapes DecodeTapes Single.StepTM ProgrammingTools Combinators Decode.
+  Import LVector.
+  Import TM.
+
+  Context (sig:finType) (n:nat)  (M : mTM sig (S n)).
+
+ 
+  
   
   Definition M__mono : pTM ((sigList (sigTape sig)) ^+) unit 1 :=
     If (Move R ;; Relabel (MultiToMono.M (LiftTapes (M;(fun _ => tt)) (putEndAtFirst n) )) (Option.apply (fun _ => true) false))
@@ -295,123 +267,7 @@ Section LMGenNP_to_TMGenNP_mTM.
     infTer 7. intros t1 _ Ht1. unfold tapes in *. destruct_vector;cbn in *. subst h. apply HT. shelve.
     intros tout b (?&t1&Ht1&[[]| ]&->&Hr). all:cbn. 2:{ apply Hr. cbn in *. rewrite <- Ht1 in *. easy. } reflexivity.
     Unshelve.
-    { rewrite <- Hk. nia. } (*
-    hnf in Hr. destruct Hr as (v0&v'&Hv0&Hv'&Hr). replace v0 with v in * by admit.
-    hnf in Hr. cbnunfold LiftTapes in Hr.  cbn in Hr.
-    (*TODO: move trivial relation in Realisation so we get that M terminated if M__Mono halted. *)
-    destruct r
-    2:now decompose record H.
-    destruct H as (?&(b&Hf&H)&<-).
-    destruct b as [[]| ];inv Hf. 
-    destruct H as (v&v'&Hv&Hv'&HR&_).
-    do 3 eexists. 2:split. all:eassumption. *)
-  Qed.
-  
-  
-
-  (*MOVE*)
-  Lemma sizeOfTape_encodeTape sig' (t : tape sig') :
-  | encode_tape t | = let l := sizeOfTape t in if 0 =? l then 1 else 2 + sizeOfTape t.
-  Proof.
-    destruct t;cbn - [Nat.eqb].
-    all:repeat (autorewrite with list;cbn [length]).
-    1:easy.
-    2,3:rewrite !Nat.add_succ_r. all:cbn [Nat.eqb]. all:nia.
-  Qed.
-
-  
-  Lemma sizeOfTape_encodeTape_le sig' (t : tape sig') :
-  | encode_tape t | <= 2 + sizeOfTape t.
-  Proof.
-    rewrite sizeOfTape_encodeTape. cbn;destruct _;nia.
-  Qed.
-
-  Import EqBool.
-
-  Lemma encode_list_concat sigX X (cX : codable sigX X) l:
-    encode_list cX l = concat (map (fun t => sigList_cons :: map sigList_X (encode t)) l) ++[sigList_nil].
-  Proof.
-    induction l;cbn. reflexivity.
-    rewrite IHl. cbn. now autorewrite with list.
-  Qed.
-
-  Lemma list_eq_nth_error X (xs ys : list X) :
-    (forall n, nth_error xs n = nth_error ys n) -> xs = ys.
-  Proof.
-    induction xs in ys|-*;destruct ys;cbn;intros H. 1:easy. 1-2:now specialize (H 0).
-    generalize (H 0).  intros [= ->]. erewrite IHxs. easy. intros n'. now specialize (H (S n')).
-  Qed.
-
-  Lemma vector_nth_error X n' i (xs : Vector.t X n') :
-    nth_error (Vector.to_list xs) i = match lt_dec i n' with
-                                        Specif.left H => Some (Vector.nth xs (Fin.of_nat_lt H))
-                                      | _ => None
-                                      end.
-  Proof.
-    clear. rewrite <- vector_to_list_correct. induction xs in i|-*. now destruct i.
-    cbn in *. destruct i;cbn. easy. rewrite IHxs. do 2 destruct lt_dec. 4:easy. now symmetry;erewrite Fin.of_nat_ext. all:exfalso;nia. 
-  Qed.
-
-  
-  Lemma nth_error_vector X n' i (xs : Vector.t X n') :
-    nth_error (Vector.to_list xs) (proj1_sig (Fin.to_nat i)) = Some (Vector.nth xs i).
-  Proof.
-    clear. rewrite <- vector_to_list_correct. induction xs in i|-*. now inv  i. cbn;rewrite vector_to_list_correct in *.
-    cbn in *. edestruct (fin_destruct_S) as [ (i'&->)| -> ]. 2:now cbn.
-    unshelve erewrite (_ : Fin.FS = Fin.R 1). reflexivity.
-    setoid_rewrite (Fin.R_sanity 1 i'). cbn. easy.
-  Qed.
-    
-
-  Lemma putFirstAtEnd_to_list X n' (x:X) xs:
-    (Vector.to_list (select (putFirstAtEnd n') (x ::: xs))) = Vector.to_list xs ++ [x].
-  Proof.
-    clear. apply list_eq_nth_error. intros i.
-    rewrite !vector_nth_error. destruct lt_dec.
-    { rewrite select_nth. unfold putFirstAtEnd. rewrite nth_tabulate,Fin.to_nat_of_nat;cbn.
-      destruct lt_dec.
-      -erewrite nth_error_app1. 2:now erewrite to_list_length.
-       cbn. rewrite vector_nth_error. destruct lt_dec. 2:exfalso;nia.
-       erewrite Fin.of_nat_ext. reflexivity.
-      -cbn. rewrite nth_error_app2. all:rewrite to_list_length. 2:nia. replace (i-n') with 0 by nia. easy.
-    }
-    symmetry. apply nth_error_None. erewrite app_length, to_list_length. cbn;nia.
-  Qed.
-
-  Lemma putEnd_invL X n' (v : Vector.t X _) :
-    select (putEndAtFirst n') (select (putFirstAtEnd n') v) = v.
-  Proof.
-    apply Vector.eq_nth_iff. intros i ? <-. rewrite !select_nth.
-    f_equal. 
-    unfold putEndAtFirst,putFirstAtEnd. rewrite !nth_tabulate.
-    destruct (fin_destruct_S i) as  [(i'&->) | ->].
-    2:{ cbn. rewrite Fin.to_nat_of_nat. cbn. destruct lt_dec. now exfalso;nia. easy. }
-    eapply Fin.to_nat_inj.
-    remember (Fin.to_nat (Fin.FS i')) as i0 eqn:H. set (tmp:=proj1_sig i0).
-    rewrite (sig_eta i0). subst tmp i0. cbn.
-    destruct (Fin.to_nat i') eqn:H.
-    cbn. rewrite Fin.to_nat_of_nat;cbn. destruct lt_dec;cbn.
-    -rewrite (sig_eta (Fin.to_nat _)). cbn. rewrite Fin.to_nat_of_nat. cbn. nia.
-    -clear H. nia.
-  Qed.
-
-  
-  Lemma right_sizeOfTape sig' (t:tape sig') :
-    length (right t) <= sizeOfTape t.
-  Proof.
-    destruct t;cbn. all:autorewrite with list;cbn. all:nia.
-  Qed.
-  
-
-
-  From Undecidability Require Import MultiUnivTimeSpaceSimulation.
-  Lemma size_list X sigX (cX: codable sigX X) (l:list X) :
-    size l = sumn (map size l) + length l + 1.
-  Proof.
-    unfold size. cbn. rewrite encode_list_concat.
-    rewrite app_length, length_concat, map_map. cbn.
-    change S with (fun x => 1 + x). rewrite sumn_map_add,sumn_map_c. setoid_rewrite map_length.
-    cbn.  nia.
+    { rewrite <- Hk. nia. }
   Qed.
 
   Lemma concat_eq_inv_borderL X isBorder xs R__L ys b (R__R : list X):
@@ -450,100 +306,14 @@ Section LMGenNP_to_TMGenNP_mTM.
     intros [] ?. easy. cbn. apply IH. nia.
   Qed.
 
-  Lemma vector_app_to_list X k k' (xs : Vector.t X k) (ys : Vector.t X k'):
-    vector_to_list (Vector.append xs ys) = vector_to_list xs ++ vector_to_list ys.
-  Proof.   
-    induction xs. easy. cbn. congruence.
-  Qed.
-
-  Lemma putEndAtFirst_to_list X n' v (ts:X) v0:
-    Vector.to_list v ++ [ts] = Vector.to_list v0 ->
-    select (putEndAtFirst n') v0 = ts ::: v.
-  Proof using.
-    intros H. rewrite <- putFirstAtEnd_to_list in H. apply Vectors.vector_to_list_inj in H.
-    subst v0. now setoid_rewrite putEnd_invL.
-  Qed.
-    
-  From Undecidability Require Import UpToC LTactics.
-
-  Section concat.
-    Context X `{registered X}.
-
-    Fixpoint rev_concat acc (xs : list (list X)) :=
-      match xs with
-        [] => acc
-      | x::xs => rev_concat (rev_append x acc) xs
-      end.
-
-    Lemma rev_concat_rev xs acc:
-      rev (rev_concat acc xs) = rev acc ++ concat xs.
-    Proof.
-      induction xs in acc|-*. all:cbn. 2:rewrite IHxs,rev_append_rev. all:autorewrite with list in *. all:easy.
-    Qed.
-
-    Lemma rev_concat_length xs acc:
-      length (rev_concat acc xs) = length acc + length (concat xs).
-    Proof.
-      specialize (rev_concat_rev xs acc) as H1%(f_equal (@length _)).
-      autorewrite with list in H1. nia.
-    Qed.
-
-    
-    Lemma _term_rev_concat :
-      { time : UpToC (fun l => sumn (map (@length _) l) + length l + 1) &
-               computableTime' (@rev_concat) (fun _ _ => (5,fun l _ => (time l,tt)))}.
-    Proof.      
-      evar (c1 : nat).
-      exists_UpToC (fun l => c1 * (sumn (map (@length _) l) + length l + 1) ).
-      { extract. recRel_prettify2.
-        all:cbn - [plus mult].
-        all:enough (c1>=20) by nia.
-        instantiate (c1:=20). all:subst c1;nia. 
-      }
-      smpl_upToC_solve.
-    Qed.
-    Global Instance term_rev_concat : computableTime' rev_concat _ := projT2 _term_rev_concat.
-
-        
-    Lemma _term_concat :
-      { time : UpToC (fun l => sumn (map (@length _) l) + length l + 1) &
-               computableTime' (@concat X) (fun l _ => (time l,tt))}.
-    Proof.
-      eexists_UpToC time. [time]: intros x.
-      eapply computableTimeExt with (x := fun l => rev (rev_concat [] l)).
-      -intros l;hnf. rewrite rev_concat_rev. easy.
-      -extract. solverec. unfold time. reflexivity.
-      -unfold time. setoid_rewrite rev_concat_length. setoid_rewrite length_concat. smpl_upToC_solve.
-    Qed.
-
-    Global Instance term_concat : computableTime' (@concat X) _ := projT2 _term_concat.
-  End concat.
-
-  Section encTape.
-    Context X `{registered X}.  
-    Definition _term_encode_tape : 
-    { time : UpToC (fun l => sizeOfTape l + 1)
-    &   computableTime' (@encode_tape X) (fun l _ => (time l,tt))}.
-    Proof.
-      evar (c1:nat).
-      exists_UpToC (fun l => c1 * sizeOfTape l + c1).
-      {  extract. recRel_prettify. solverec.
-         all:try rewrite !map_time_const. all:autorewrite with list. all:cbn [length].
-         all: ring_simplify. [c1]:exact 42. all:subst c1;nia. }
-      smpl_upToC_solve.
-    Qed.
-
-    Global Instance term_encode_tape : computableTime' (@encode_tape X) _ := projT2 _term_encode_tape.
-
-  End encTape.
-
   Lemma contains_tapes_inj (sig' : finType) n' t (v v' : tapes sig' n'):
     contains_tapes t v -> contains_tapes t v' -> v = v'.
   Proof.
     unfold contains_tapes. intros -> [= eq]. apply app_inv_tail in eq. apply map_injective in eq. 2:congruence.
     eassert (H':=encode_prefixInjective (t:=[]) (t':=[])). rewrite !app_nil_r in H'. apply H' in eq. easy.
   Qed.
-End LMGenNP_to_TMGenNP_mTM.
+  
+End lemmas_for_LMGenNP_to_TMGenNP_mTM.
 
 Arguments putFirstAtEnd : simpl never.
 Arguments putEndAtFirst : simpl never.

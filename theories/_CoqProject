@@ -304,6 +304,7 @@ L/Functions/Ackermann.v
 
 L/TM/TMEncoding.v
 L/TM/TMflat.v
+L/TM/CompCode.v
 L/TM/TMunflatten.v
 L/TM/TMflatEnc.v
 L/TM/TMflatFun.v
@@ -342,6 +343,7 @@ L/Complexity/Reductions/TMGenNP/L_to_LM.v
 L/Complexity/Reductions/TMGenNP/LM_to_mTM.v
 L/Complexity/Reductions/TMGenNP/mTM_to_singleTapeTM.v
 L/Complexity/Reductions/TMGenNP/M_multi2mono.v
+L/Complexity/Reductions/TMGenNP/M_LM2TM.v
 L/Complexity/Reductions/TMGenNP/IntermediateProblems.v
 L/Complexity/Reductions/TMGenNP/LMGenNP.v
 

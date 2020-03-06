@@ -201,7 +201,7 @@ Qed.
 Lemma sizeOfmTapes_by_size {sig} `{registered sig} n (t:tapes sig n) :
   sizeOfmTapes t <= size (enc t).
 Proof.
-  setoid_rewrite enc_vector_eq. rewrite size_list.
+  setoid_rewrite enc_vector_eq. rewrite Lists.size_list.
   erewrite <- sumn_map_le_pointwise with (f1:=fun _ => _). 2:{ intros. setoid_rewrite <- sizeOfTape_by_size. reflexivity. }
   rewrite sizeOfmTapes_max_list_map. unfold MaxList.max_list_map. rewrite max_list_sumn.
   etransitivity. 2:now apply Nat.le_add_r. rewrite vector_to_list_correct. apply sumn_map_le_pointwise. intros. nia.

@@ -8,10 +8,10 @@ From Undecidability Require Import GenericNary.
 
 
 Lemma leToC_eta X (f g :X -> _) :
-  iffT (leUpToC f g) (leUpToC (fun x => f x) (fun x => g x)).
+  (leUpToC f g) = (leUpToC (fun x => f x) (fun x => g x)).
 Proof. reflexivity. Qed.
 
-Hint Rewrite leToC_eta : nary_prepare.
+Smpl Add 2 rewrite leToC_eta in *: nary_prepare.
 
 
 
@@ -43,7 +43,7 @@ End workaround.
 
 
 
-Lemma upToC_add_nary (domain : list Type) F (f1 f2 : Rarrow domain nat) :
+Lemma upToC_add_nary (domain : UPlist Type) F (f1 f2 : Rarrow domain nat) :
   Uncurry f1 <=c F
   -> Uncurry f2 <=c F
   -> Fun' (fun x => App f1 x + App f2 x) <=c F.
@@ -51,20 +51,20 @@ Proof.
   prove_nary upToC_add.
 Qed.
 
-Lemma upToC_mul_c_l_nary (domain : list Type) c F  (f : Rarrow domain nat):
+Lemma upToC_mul_c_l_nary (domain : UPlist Type) c F  (f : Rarrow domain nat):
   Uncurry f <=c F
   -> Fun' (fun x => c * App f x) <=c F.
 Proof.
   prove_nary upToC_mul_c_l.
 Qed.
 
-Lemma upToC_mul_c_r_nary (domain : list Type)  c F (f : Rarrow domain nat):
+Lemma upToC_mul_c_r_nary (domain : UPlist Type)  c F (f : Rarrow domain nat):
   Uncurry f <=c F -> Fun'(fun x => App f x * c) <=c F.
 Proof.
   prove_nary upToC_mul_c_r.
 Qed.
 
-Lemma upToC_c_nary (domain : list Type) c F:
+Lemma upToC_c_nary (domain : UPlist Type) c F:
   (fun _ => 1) <=c F ->  
   Const' domain c <=c F.
 Proof.
@@ -72,7 +72,7 @@ Proof.
 Qed.
 
 
-Lemma upToC_S_nary (domain : list Type) F (f : Rarrow domain nat) :
+Lemma upToC_S_nary (domain : UPlist Type) F (f : Rarrow domain nat) :
   Const' domain 1 <=c F
   -> Uncurry f <=c F
   -> Fun' (fun x => S (App f x)) <=c F.
@@ -87,7 +87,7 @@ Qed.
 Ltac domain_of_prod S :=
   let S := constr:(S) in   
   let S := eval simpl in S in
-  list_of_tuple S.
+  UPlist_of_tuple S.
 
 
 Ltac leUpToC_domain G :=

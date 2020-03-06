@@ -1,5 +1,6 @@
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L Require Import Datatypes.LNat Functions.EqBool.
+From Undecidability.L Require Import UpToC.
 
 Require Export PslBase.FiniteTypes.FinTypes.
 
@@ -64,4 +65,17 @@ Lemma size_finType_le (X:finType) (x:X):
   size (enc (registered := registered_finType) x) <= length (elem X) * 4.
 Proof.
   rewrite enc_finType_eq,size_nat_enc. specialize (index_le x). lia.
+Qed.
+
+
+Lemma size_finType_any_le (X:finType) `{registered X} (x:X):
+  L.size (enc x) <= maxl (map (fun x => L.size (enc x)) (elem X)).
+Proof.
+  apply maxl_leq. eauto.
+Qed.
+
+Lemma size_finType_any_le_c (X:finType) `{registered X}:
+  (fun x => L.size (enc x)) <=c (fun _ => 1).
+Proof.
+  setoid_rewrite size_finType_any_le. smpl_upToC_solve.
 Qed.

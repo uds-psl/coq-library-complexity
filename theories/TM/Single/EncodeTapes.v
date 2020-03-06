@@ -165,7 +165,24 @@ Proof.
   - omega.
   - destruct n; cbn; f_equal; auto.
 Qed.
-  
+
 
 Compute split_vector [| 1; 2; 3; 4 |] 1.
 Compute let (x,y) := split_vector [| 1; 2; 3; 4 |] 1 in Vector.append x y.
+
+
+Lemma sizeOfTape_encodeTape sig' (t : tape sig') :
+| encode_tape t | = let l := sizeOfTape t in if 0 =? l then 1 else 2 + sizeOfTape t.
+Proof.
+  destruct t;cbn - [Nat.eqb].
+  all:repeat (autorewrite with list;cbn [length]).
+  1:easy.
+  2,3:rewrite !Nat.add_succ_r. all:cbn [Nat.eqb]. all:Lia.nia.
+Qed.
+
+
+Lemma sizeOfTape_encodeTape_le sig' (t : tape sig') :
+| encode_tape t | <= 2 + sizeOfTape t.
+Proof.
+  rewrite sizeOfTape_encodeTape. cbn;destruct _;Lia.nia.
+Qed.

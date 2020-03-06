@@ -1,6 +1,7 @@
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L Require Import Functions.EqBool.
 From Undecidability.L.Datatypes Require Import LBool LNat LOptions LProd.
+From Undecidability.L Require Import UpToC.
 Require Export List PslBase.Lists.Filter Datatypes.
 
 (** ** Encoding of lists *)
@@ -134,6 +135,13 @@ Lemma map_time_const {X} c (xs:list X):
   map_time (fun _ => c) xs = length xs * (c + 12) + 8.
 Proof.
   induction xs;cbn. all:lia.
+Qed.
+
+Lemma mapTime_upTo X (t__f : X -> nat):
+  map_time t__f <=c (fun l => length l + sumn (map t__f l) + 1 ).
+Proof.
+  unfold map_time. exists 12.
+  induction x;cbn - [plus mult]. all: nia.
 Qed.
 
 Instance term_map_noTime (X Y:Type) (Hx : registered X) (Hy:registered Y): computable (@map X Y).
@@ -355,3 +363,57 @@ Instance term_lengthEq A `{registered A} : computableTime' (lengthEq (A:=A)) (fu
 Proof.
   extract. unfold lengthEq_time. solverec.
 Qed.
+
+
+Section concat.
+  Context X `{registered X}.
+
+  Fixpoint rev_concat acc (xs : list (list X)) :=
+    match xs with
+      [] => acc
+    | x::xs => rev_concat (rev_append x acc) xs
+    end.
+
+  Lemma rev_concat_rev xs acc:
+    rev (rev_concat acc xs) = rev acc ++ concat xs.
+  Proof.
+    induction xs in acc|-*. all:cbn. 2:rewrite IHxs,rev_append_rev. all:autorewrite with list in *. all:easy.
+  Qed.
+
+  Lemma rev_concat_length xs acc:
+    length (rev_concat acc xs) = length acc + length (concat xs).
+  Proof.
+    specialize (rev_concat_rev xs acc) as H1%(f_equal (@length _)).
+    autorewrite with list in H1. nia.
+  Qed.
+
+  
+  Lemma _term_rev_concat :
+    { time : UpToC (fun l => sumn (map (@length _) l) + length l + 1) &
+             computableTime' (@rev_concat) (fun _ _ => (5,fun l _ => (time l,tt)))}.
+  Proof.      
+    evar (c1 : nat).
+    exists_UpToC (fun l => c1 * (sumn (map (@length _) l) + length l + 1) ).
+    { extract. recRel_prettify2.
+      all:cbn - [plus mult].
+      all:enough (c1>=20) by nia.
+      instantiate (c1:=20). all:subst c1;nia. 
+    }
+    smpl_upToC_solve.
+  Qed.
+  Global Instance term_rev_concat : computableTime' rev_concat _ := projT2 _term_rev_concat.
+
+  
+  Lemma _term_concat :
+    { time : UpToC (fun l => sumn (map (@length _) l) + length l + 1) &
+             computableTime' (@concat X) (fun l _ => (time l,tt))}.
+  Proof.
+    eexists_UpToC time. [time]: intros x.
+    eapply computableTimeExt with (x := fun l => rev (rev_concat [] l)).
+    -intros l;hnf. rewrite rev_concat_rev. easy.
+    -extract. solverec. unfold time. reflexivity.
+    -unfold time. setoid_rewrite rev_concat_length. setoid_rewrite length_concat. smpl_upToC_solve.
+  Qed.
+
+  Global Instance term_concat : computableTime' (@concat X) _ := projT2 _term_concat.
+End concat.

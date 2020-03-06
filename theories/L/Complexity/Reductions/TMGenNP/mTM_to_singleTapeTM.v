@@ -1,81 +1,37 @@
 From Undecidability.L Require Import Tactics.LTactics.
-From Undecidability.L.Datatypes Require Import Lists LVector.
+From Undecidability.L.Datatypes Require Import Lists LVector LSum LProd LFinType LNat.
 From Undecidability.L.Complexity Require Import NP Synthetic Monotonic.
-From Undecidability.TM Require Import TM.
-From Undecidability.TM Require TM ProgrammingTools CaseList.
+From Undecidability.L.Functions Require Import EqBool.
+From Undecidability.L.TM Require Import TapeFuns CompCode.
 
+From Undecidability.TM Require Import TM CodeTM.
+From Undecidability.TM.Single Require Import EncodeTapes StepTM.
 
-From Undecidability.L.Complexity  Require GenNP.
-From Undecidability.L.Complexity  Require Import LMGenNP TMGenNP_fixed_mTM M_multi2mono.
-
-
-From Undecidability.TM.Single Require EncodeTapes StepTM DecodeTapes. (** In emacs: coq-prefer-top-of-conclusion: t; *)
+From Undecidability.TM Require M2MBounds.
 
 Unset Printing Coercions.
 From Coq.ssr Require ssrfun.
 Module Option := ssrfun.Option.
 
-From Undecidability Require Import TapeFuns.
-Import LTactics GenEncode CodeTM EncodeTapes.
 
-From Undecidability Require Import Datatypes.Lists.
-
-Import EncodeTapes DecodeTapes Single.StepTM ProgrammingTools Combinators Decode.
-Import LTactics LSum LProd LVector LNat Lists.
-
-Import EqBool.
+(*Import EncodeTapes DecodeTapes Single.StepTM ProgrammingTools Combinators Decode.*)
 
 
-From Undecidability Require Import MultiUnivTimeSpaceSimulation.
+(*From Undecidability Require Import MultiUnivTimeSpaceSimulation. *)
 
-From Undecidability Require Import UpToCNary LTactics.
-
-Lemma mapTime_upTo X (t__f : X -> nat):
-  map_time t__f <=c (fun l => length l + sumn (map t__f l) + 1 ).
-Proof.
-  unfold map_time. exists 12.
-  induction x;cbn - [plus mult]. all: nia.
-Qed.
-
-Lemma size_finType_any_le (X:finType) `{registered X} (x:X):
-  L.size (enc x) <= maxl (map (fun x => L.size (enc x)) (elem X)).
-Proof.
-  apply maxl_leq. eauto.
-Qed.
-
-Lemma size_finType_any_le_c (X:finType) `{registered X}:
-  (fun x => L.size (enc x)) <=c (fun _ => 1).
-Proof.
-  setoid_rewrite size_finType_any_le. smpl_upToC_solve.
-Qed.
-
-Lemma  ptc_sizeOfmtapes sig n `{registered sig}:
-  polyTimeComputable (@sizeOfmTapes sig n).
-Proof.
-  
-Admitted.
-
-
-Import M_multi2mono.
+From Undecidability.L.Complexity Require Import TMGenNP_fixed_mTM M_multi2mono.
 
 
 Section LMGenNP_to_TMGenNP_mTM.
 
 
   Context (sig:finType) (n:nat) `{R__sig : registered sig}  (M : mTM sig (S n)).
-
-  Local Arguments Canonical_Rel : simpl never. 
-  
-  
-
   Let M__mono := M__mono M.
   
-  Arguments MultiToMono.Rel : simpl never.
-  Arguments MultiToMono.Ter : simpl never.
-
-  
+  Local Arguments Canonical_Rel : simpl never. 
   Local Arguments loopM : clear implicits.
-  Local Arguments loopM {_ _ } _ _ _. 
+  Local Arguments loopM {_ _ } _ _ _.
+
   Lemma LMGenNP_to_TMGenNP_mTM :
     restrictBy (HaltsOrDiverges_fixed_mTM M) (TMGenNP_fixed_mTM M)
                ⪯p unrestrictedP (TMGenNP_fixed_singleTapeTM (projT1 M__mono)).
@@ -156,7 +112,7 @@ Section LMGenNP_to_TMGenNP_mTM.
          cbn [fst snd] in H'.  apply (f_equal (@vector_to_list _ _ )) in H'. rewrite vector_to_list_cast in H'. clear Hsplit.
          rewrite vector_app_to_list in H'.  
          revert v' vlst H'. replace (Init.Nat.min n (S n)) with n by nia. replace (S n - n) with 1 by nia.
-         intros v' vlst eq. destruct (StepTM.destruct_vector1 vlst) as (ts&->). cbn in eq.
+         intros v' vlst eq. destruct (destruct_vector1 vlst) as (ts&->). cbn in eq.
          rewrite !vector_to_list_correct in eq.
          rewrite <- eq in Hlast,Hinit.
          replace v' with v in *.
@@ -165,7 +121,7 @@ Section LMGenNP_to_TMGenNP_mTM.
              destruct (Fin.to_nat i) eqn:Hi.
              rewrite <- !vector_to_list_correct,map_app,!vector_to_list_map,!vector_to_list_correct in Htmp. 
              rewrite nth_error_app1 in Htmp. 2:now rewrite to_list_length.
-             cbn in Htmp. rewrite !vector_nth_error in Htmp.
+             cbn in Htmp. rewrite !vector_nth_error_nat in Htmp.
              destruct lt_dec. 2:easy. 
              rewrite !nth_map' in Htmp. revert Htmp. intros [= Htmp].
              apply map_injective in Htmp. 2:congruence. apply DecodeTape.tape_encode_injective in Htmp.
