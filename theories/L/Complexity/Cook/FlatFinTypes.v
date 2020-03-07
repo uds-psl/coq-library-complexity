@@ -14,7 +14,6 @@ Definition finRepr (X : finType) (n : nat) := n = |elem X|.
 Definition ofFlatType (k : nat) (e : nat) := e < k.
 
 (*we just enumerate the elements starting at 0 *)
-(*we do not use ofFlatType in the definition in order to reduce necessary unfolds *)
 Definition finReprEl (X : finType) (n : nat) k (x : X) := finRepr X n /\ index x = k.  
 
 (*a weaker version that does not explicitly enforce x to have a flat type *)
@@ -22,6 +21,13 @@ Definition finReprEl' (X : finType) (k : nat) (x : X) := index x = k.
 
 Lemma finReprEl_finReprEl' (X : finType) (n k : nat) (x : X) : finReprEl n k x -> finReprEl' k x.
 Proof. unfold finReprEl, finReprEl'. easy. Qed.
+
+Lemma finReprEl_ofFlatType (X : finType) (n k : nat) (x : X) : finReprEl n k x -> ofFlatType n k. 
+Proof. 
+  intros [H1 H2].
+  unfold finRepr, ofFlatType in *.
+  rewrite H1, <- H2. apply index_le.
+Qed. 
 
 (*for some of the proofs below, the stronger version of finReprEl is much more pleasant (e.g. for sum types)*)
 

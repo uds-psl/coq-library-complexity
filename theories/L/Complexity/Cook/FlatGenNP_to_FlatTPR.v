@@ -5,6 +5,39 @@ From Undecidability.L.Complexity Require Import PolyBounds.
 From Undecidability.L.Datatypes Require Import LProd LOptions LBool LSum LLNat LLists. 
 From Undecidability.L.Complexity.Cook Require Import Prelim GenNP_PR FlatTPR FlatFinTypes FlatFinTypes_extraction. 
 
+
+Fact None_ofFlatType n : ofFlatType (flatOption n) flatNone . 
+Proof. 
+  unfold ofFlatType, flatNone, flatOption. lia.
+Qed. 
+Smpl Add (apply None_ofFlatType) : finRepr. 
+
+Fact Some_ofFlatType n k : ofFlatType n k -> ofFlatType (flatOption n) (flatSome k). 
+Proof. 
+  unfold ofFlatType, flatSome, flatOption. lia.
+Qed.
+Smpl Add (apply Some_ofFlatType) : finRepr.
+
+Fact pair_ofFlatType n1 n2 k1 k2 : ofFlatType n1 k1 -> ofFlatType n2 k2 -> ofFlatType (flatProd n1 n2) (flatPair n1 n2 k1 k2).
+Proof. 
+  intros H1 H2. unfold ofFlatType, flatProd, flatPair in *. nia. 
+Qed. 
+Smpl Add (apply pair_ofFlatType) : finRepr. 
+
+Fact inl_ofFlatType n1 n2 k1 : ofFlatType n1 k1 -> ofFlatType (flatSum n1 n2) (flatInl k1). 
+Proof. 
+  unfold ofFlatType, flatSum, flatInl. nia.
+Qed.
+Smpl Add (apply inl_ofFlatType) : finRepr. 
+
+Fact inr_ofFlatType n1 n2 k2 : ofFlatType n2 k2 -> ofFlatType (flatSum n1 n2) (flatInr n1 k2). 
+Proof. 
+  unfold ofFlatType, flatSum, flatInr. nia. 
+Qed. 
+Smpl Add (apply inr_ofFlatType) : finRepr. 
+
+
+
 (** * extraction of the reduction from FlatGenNP to FlatPR *)
 
 Run TemplateProgram (tmGenEncode "fstateSigma_enc" fstateSigma).
@@ -51,7 +84,63 @@ Proof.
   extract. solverec. unfold c__stateEnv. solverec. 
 Defined. 
 
+(** bounds for alphabet sizes *)
+Proposition flatStateSigma_bound tm : flatStateSigma tm <= sig tm + 1. 
+Proof. 
+  now unfold flatStateSigma, flatOption. 
+Qed.
+
+Definition c__flatPolSigmaS := flatPolarity. 
+Proposition flatPolSigma_bound tm : flatPolSigma tm <= c__flatPolSigmaS * (sig tm + 1). 
+Proof. 
+  unfold flatPolSigma, flatProd, flatPolarity. rewrite flatStateSigma_bound. now unfold c__flatPolSigmaS.  
+Qed. 
+
+Definition c__flatTapeSigmaS := 1 + c__flatPolSigmaS. 
+Proposition flatTapeSigma_bound tm : flatTapeSigma tm <= c__flatTapeSigmaS * (sig tm + 1).
+Proof. 
+  unfold flatTapeSigma. unfold flatSum. rewrite flatPolSigma_bound. unfold c__flatTapeSigmaS, flatDelim. nia. 
+Qed. 
+
+Proposition flatStates_bound tm : flatStates tm <= states tm * (sig tm + 1). 
+Proof. 
+  unfold flatStates. unfold flatProd. rewrite flatStateSigma_bound. nia.
+Qed. 
+
+Definition c__flatGammaS := 1 + c__flatTapeSigmaS.
+Proposition flatGamma_bound tm : flatGamma tm <= c__flatGammaS * (states tm + 1) * (sig tm + 1).
+Proof. 
+  unfold flatGamma. unfold flatSum. 
+  rewrite flatStates_bound, flatTapeSigma_bound. 
+  unfold c__flatGammaS. nia. 
+Qed. 
+
+Definition c__flatPreludeSigPS := 4. 
+Proposition flatPreludeSig'_bound tm : flatPreludeSig' tm <= c__flatPreludeSigPS * (sig tm + 1).
+Proof. 
+  unfold flatPreludeSig'. unfold c__flatPreludeSigPS. lia.
+Qed. 
+
+Definition c__flatAlphabetS := c__flatGammaS + c__flatPreludeSigPS. 
+Proposition flatAlphabet_bound tm : flatAlphabet tm <= c__flatAlphabetS * (states tm + 1) * (sig tm + 1).
+Proof. 
+  unfold flatAlphabet, flatSum. 
+  rewrite flatGamma_bound, flatPreludeSig'_bound. 
+  unfold c__flatAlphabetS. nia.  
+Qed. 
+
 (**extraction of type constructors *)
+Fact states_TM_le tm : states tm <= size (enc tm). 
+Proof. 
+  rewrite size_nat_enc_r with (n := states tm). rewrite size_TM. 
+  destruct tm; cbn. nia. 
+Qed. 
+
+Fact sig_TM_le tm : sig tm <= size (enc tm).
+Proof. 
+  rewrite size_nat_enc_r with (n := sig tm). rewrite size_TM.
+  destruct tm; cbn. nia. 
+Qed. 
 
 Definition c__flatStateSigma := 13.
 Instance term_flatStateSigma : computableTime' flatStateSigma (fun tm _ => (c__flatStateSigma, tt)). 
@@ -67,6 +156,16 @@ Proof.
   extract. solverec. 
   unfold mult_time. unfold flatPolSigma_time, c__flatPolSigma. solverec. 
 Defined. 
+Definition poly__flatPolSigma n := (n + 2) * c__flatPolSigma. 
+Lemma flatPolSigma_time_bound tm : flatPolSigma_time tm <= poly__flatPolSigma (size (enc tm)). 
+Proof. 
+  unfold flatPolSigma_time. rewrite flatStateSigma_bound. 
+  unfold poly__flatPolSigma. rewrite sig_TM_le. nia.
+Qed. 
+Lemma flatPolSigma_poly : monotonic poly__flatPolSigma /\ inOPoly poly__flatPolSigma. 
+Proof. 
+  unfold poly__flatPolSigma; split; smpl_inO. 
+Qed. 
 
 Definition c__flatTapeSigma := c__add1 + 1 + (flatDelim + 1) * c__add.
 Definition flatTapeSigma_time (tm : TM) := flatPolSigma_time tm + c__flatTapeSigma.
@@ -83,6 +182,16 @@ Proof.
   extract. solverec. 
   unfold flatStates_time, c__flatStates. solverec.  
 Defined. 
+Definition poly__flatStates n := (n + 1) * (n + 1) * c__mult + c__flatStates.
+Lemma flatStates_time_bound tm : flatStates_time tm <= poly__flatStates (size (enc tm)). 
+Proof. 
+  unfold flatStates_time. unfold mult_time. rewrite flatStateSigma_bound. 
+  rewrite states_TM_le, sig_TM_le. unfold poly__flatStates. nia.
+Qed. 
+Lemma flatStates_poly : monotonic poly__flatStates /\ inOPoly poly__flatStates. 
+Proof. 
+  unfold poly__flatStates; split; smpl_inO. 
+Qed. 
 
 Definition c__flatGamma := c__add1 + 1.
 Definition flatGamma_time (tm : TM) := flatStates_time tm + flatTapeSigma_time tm + add_time (flatStates tm) + c__flatGamma.
@@ -91,6 +200,20 @@ Proof.
   extract. solverec. 
   unfold flatGamma_time, c__flatGamma; solverec. 
 Defined. 
+Definition poly__flatGamma n := poly__flatStates n + poly__flatPolSigma n + (n * (n + 1) + 1) * c__add + c__flatTapeSigma + c__flatGamma.
+Lemma flatGamma_time_bound tm : flatGamma_time tm <= poly__flatGamma (size (enc tm)). 
+Proof. 
+  unfold flatGamma_time. 
+  rewrite flatStates_time_bound. unfold flatTapeSigma_time.
+  rewrite flatPolSigma_time_bound. 
+  unfold add_time. rewrite flatStates_bound. 
+  rewrite states_TM_le, sig_TM_le. 
+  unfold poly__flatGamma. nia.
+Qed. 
+Lemma flatGamma_poly : monotonic poly__flatGamma /\ inOPoly poly__flatGamma.  
+Proof. 
+  unfold poly__flatGamma; split; smpl_inO; first [apply flatStates_poly | apply flatPolSigma_poly].
+Qed. 
 
 Definition c__flatPreludeSig' :=c__add1 + 5 * c__add + 22.
 Instance term_flatPreludeSig' : computableTime' flatPreludeSig' (fun tm _ => (c__flatPreludeSig', tt)). 
@@ -106,6 +229,18 @@ Proof.
   extract. solverec. 
   unfold flatAlphabet_time, c__flatAlphabet. solverec. 
 Defined. 
+Definition poly__flatAlphabet n := poly__flatGamma n + (c__flatGammaS * (n + 1) * (n + 1) + 1) * c__add + c__flatAlphabet.
+Lemma flatAlphabet_time_bound tm : flatAlphabet_time tm <= poly__flatAlphabet (size (enc tm)). 
+Proof. 
+  unfold flatAlphabet_time. rewrite flatGamma_time_bound. 
+  unfold add_time. rewrite flatGamma_bound. 
+  rewrite sig_TM_le, states_TM_le. 
+  unfold poly__flatAlphabet. nia. 
+Qed. 
+Lemma flatAlphabet_poly : monotonic poly__flatAlphabet /\ inOPoly poly__flatAlphabet. 
+Proof. 
+  unfold poly__flatAlphabet; split; smpl_inO; apply flatGamma_poly. 
+Qed. 
   
 (** flattenPolarity *)
 
@@ -126,6 +261,16 @@ Notation fStates := (prod nat fstateSigma).
 Notation fGamma := (sum fStates ftapeSigma).
 Notation fAlphabet := (sum fGamma fpreludeSig'). 
 
+(** bounds for the evaluation environments *)
+Definition envConst_bound k (env : evalEnvFlat) := 
+  |polarityEnv env| <= k /\ |sigmaEnv env| <= k /\ |stateSigmaEnv env| <= k /\ |stateEnv env| <= k.
+
+Definition envOfFlatTypes (tm : TM) (env : evalEnvFlat) := 
+  list_ofFlatType flatPolarity (polarityEnv env)
+  /\ list_ofFlatType (sig tm) (sigmaEnv env)
+  /\ list_ofFlatType (flatStateSigma tm) (stateSigmaEnv env)
+  /\ list_ofFlatType (states tm) (stateEnv env).
+
 (*reifyPolarityFlat *)
 Definition c__reifyPolarityFlat := c__flattenPolarity + c__polarityEnv + 10.
 Definition reifyPolarityFlat_time (env : evalEnvFlat) (p : fpolarity) := 
@@ -135,6 +280,28 @@ Proof.
   extract. solverec. 
   all: unfold reifyPolarityFlat_time, c__reifyPolarityFlat; solverec. 
 Defined. 
+Definition poly__reifyPolarityFlat n := (n + 1) * c__ntherror + c__reifyPolarityFlat.
+Lemma reifyPolarityFlat_time_bound n env p : envConst_bound n env -> reifyPolarityFlat_time env p<= poly__reifyPolarityFlat n. 
+Proof. 
+  intros (H1 & _). unfold reifyPolarityFlat_time. 
+  unfold poly__reifyPolarityFlat. 
+  destruct p. 
+  - lia. 
+  - unfold nth_error_time. rewrite H1. rewrite Nat.le_min_l. nia.
+Qed. 
+Lemma reifyPolarityFlat_poly : monotonic poly__reifyPolarityFlat /\ inOPoly poly__reifyPolarityFlat. 
+Proof. 
+  unfold poly__reifyPolarityFlat; split; smpl_inO. 
+Qed. 
+
+Lemma reifyPolarityFlat_ofFlatType tm env c n: envOfFlatTypes tm env -> reifyPolarityFlat env c = Some n -> n < flatPolarity. 
+Proof. 
+  intros H. 
+  unfold reifyPolarityFlat. destruct c. 
+  - intros [=<-]. unfold flattenPolarity. unfold flatPolarity. specialize (index_le m). cbn -[index]. lia. 
+  - destruct nth_error eqn:H1; [ | congruence].
+    apply nth_error_In in H1. apply H in H1. intros [=<-]. apply H1. 
+Qed. 
 
 (*option_map *)
 Section fix_option_map.
@@ -170,28 +337,55 @@ Proof.
   2: unfold optionMap_time; destruct nth_error. 
   all: unfold reifyStateSigmaFlat_time, c__reifyStateSigmaFlat; solverec. 
 Defined. 
+Definition poly__reifyStateSigmaFlat n := (n + 1) * c__ntherror + c__reifyStateSigmaFlat.
+Lemma reifyStateSigmaFlat_time_bound n env c : envConst_bound n env -> reifyStateSigmaFlat_time env c <= poly__reifyStateSigmaFlat n. 
+Proof. 
+  intros (_ & H1 & H2 & _). 
+  unfold reifyStateSigmaFlat_time, poly__reifyStateSigmaFlat. destruct c. 
+  - lia. 
+  - unfold nth_error_time. rewrite H1, Nat.le_min_l. nia.
+  - unfold nth_error_time. rewrite H2, Nat.le_min_l. nia. 
+Qed. 
+Lemma reifyStateSigmaFlat_poly : monotonic poly__reifyStateSigmaFlat /\ inOPoly poly__reifyStateSigmaFlat. 
+Proof. 
+  unfold poly__reifyStateSigmaFlat; split; smpl_inO. 
+Qed. 
+  
 
-(*optBind & optReturn*)
-Section fix_optBind.
-  Variable (X Y : Type).
+Lemma reifyStateSigmaFlat_ofFlatType tm n env c : envOfFlatTypes tm env -> reifyStateSigmaFlat env c = Some n -> n < flatStateSigma tm. 
+Proof. 
+  intros H. unfold reifyStateSigmaFlat. destruct c. 
+  - intros [=<-]. finRepr_simpl. 
+  - destruct nth_error eqn:H1; cbn; [ | congruence].
+    intros [=<-]. finRepr_simpl. 
+    apply nth_error_In in H1. apply H in H1. apply H1. 
+  - destruct nth_error eqn:H1; cbn; [ | congruence].
+    intros [=<-]. apply nth_error_In in H1. apply H in H1. apply H1. 
+Qed. 
+
+(*optReturn*)
+Section fix_optReturn.
+  Variable (X : Type).
   Context `{intX : registered X}.
-  Context `{intY : registered Y}.
 
-  (*Definition optBind_time (fT : X -> nat) (a : option X) := 1. *)
-  (*Global Instance term_optBind : computableTime' (@optBind X Y) (fun a _ => (1, fun f fT => (optBind_time (callTime fT) a, tt))). *)
-  (*Proof. *)
-    (*extract. solverec. *)
-    (*match optBind*)
-
-  (*optReturn*)
   Global Instance term_optReturn : computableTime' (@optReturn X) (fun a _ => (1, tt)). 
   Proof. 
     extract. solverec. 
   Defined. 
-End fix_optBind. 
+End fix_optReturn. 
+
+(** why the heck isn't this in the standard library? no one knows... *)
+Instance proper_lt_mul : Proper (lt ==> eq ==> le) Nat.mul. 
+Proof. 
+  intros a b c d e f. nia.
+Qed. 
+
+Instance proper_lt_add : Proper (lt ==> eq ==> le) Nat.add.
+Proof. 
+  intros a b c d e f. nia. 
+Qed. 
 
 (** reifyPolSigmaFlat *)
-
 Definition c__reifyPolSigmaFlat := 32. 
 Definition reifyPolSigmaFlat_time sig (env : evalEnvFlat) (c : fpolSigma) := 
   let (p, s) := c in reifyPolarityFlat_time env p + reifyStateSigmaFlat_time env s + 
@@ -207,6 +401,45 @@ Proof.
   intros [p s] ?. unfold reifyPolSigmaFlat_time. cbn. solverec. 
   all: unfold flatStateSigma, c__reifyPolSigmaFlat; solverec. 
 Defined. 
+
+Definition poly__reifyPolSigmaFlat n := poly__reifyPolarityFlat n + poly__reifyStateSigmaFlat n + (n + 1) * (c__mult + c__add) * flatPolarity + c__mult * (flatPolarity + 1) + c__add + c__flatPair + c__reifyPolSigmaFlat.
+Lemma reifyPolSigmaFlat_time_bound n tm env c : envConst_bound n env -> envOfFlatTypes tm env -> reifyPolSigmaFlat_time (sig tm) env c <= poly__reifyPolSigmaFlat (size (enc tm) + n). 
+Proof. 
+  intros H H0. 
+  unfold reifyPolSigmaFlat_time. destruct c as (p & s). 
+  rewrite reifyPolarityFlat_time_bound by apply H. 
+  rewrite reifyStateSigmaFlat_time_bound by apply H. 
+  poly_mono reifyPolarityFlat_poly. 2: { 
+    replace_le n with (size (enc tm) + n) by lia at 1. reflexivity.  
+  } 
+  poly_mono reifyStateSigmaFlat_poly. 2: { 
+    replace_le n with (size (enc tm) + n) by lia at 1. reflexivity. 
+  }
+  destruct reifyPolarityFlat eqn:H1. 
+  - destruct reifyStateSigmaFlat eqn:H2. 
+    + unfold flatPair_time, mult_time, add_time, flatOption. 
+      apply (reifyPolarityFlat_ofFlatType H0) in H1. 
+      rewrite H1. rewrite sig_TM_le.
+      unfold poly__reifyPolSigmaFlat. nia.
+    + unfold poly__reifyPolSigmaFlat. nia. 
+  - unfold poly__reifyPolSigmaFlat. nia. 
+Qed. 
+Lemma reifyPolSigmaFlat_poly : monotonic poly__reifyPolSigmaFlat /\ inOPoly poly__reifyPolSigmaFlat. 
+Proof. 
+  unfold poly__reifyPolSigmaFlat; split; smpl_inO; first [apply reifyPolarityFlat_poly | apply reifyStateSigmaFlat_poly].
+Qed. 
+      
+Lemma reifyPolSigmaFlat_ofFlatType tm env c n: envOfFlatTypes tm env -> reifyPolSigmaFlat tm env c = Some n -> n < flatPolSigma tm.
+Proof. 
+  intros H. unfold reifyPolSigmaFlat. destruct c as (p & s). 
+  destruct reifyPolarityFlat eqn:H1. 
+  - destruct reifyStateSigmaFlat eqn:H2. 
+    + cbn -[flatPolSigma]. apply (reifyPolarityFlat_ofFlatType H) in H1. 
+      apply (reifyStateSigmaFlat_ofFlatType H) in H2. 
+      intros [=<-]. finRepr_simpl; auto.
+    + cbn. congruence. 
+  - cbn. congruence. 
+Qed. 
 
 (** reifyTapeSigmaFlat *)
 Definition c__reifyTapeSigmaFlat := c__optionMap + 35. 
@@ -225,6 +458,30 @@ Proof.
   - cbn -[c__reifyTapeSigmaFlat]. rewrite optionMap_time_bound_c. split; [unfold c__reifyTapeSigmaFlat; nia| easy]. 
 Defined. 
 
+Definition poly__reifyTapeSigmaFlat n := poly__reifyPolSigmaFlat n + c__reifyTapeSigmaFlat. 
+Lemma reifyTapeSigmaFlat_time_bound n env tm c : envConst_bound n env -> envOfFlatTypes tm env -> reifyTapeSigmaFlat_time (sig tm) env c <= poly__reifyTapeSigmaFlat (size (enc tm) + n). 
+Proof. 
+  intros H H0. unfold reifyTapeSigmaFlat_time. 
+  unfold poly__reifyTapeSigmaFlat. 
+  destruct c.
+  - lia. 
+  - rewrite (reifyPolSigmaFlat_time_bound _ H H0). lia. 
+Qed. 
+Lemma reifyTapeSigmaFlat_poly : monotonic poly__reifyTapeSigmaFlat /\ inOPoly poly__reifyTapeSigmaFlat. 
+Proof. 
+  unfold poly__reifyTapeSigmaFlat; split; smpl_inO; apply reifyPolSigmaFlat_poly. 
+Qed. 
+
+Lemma reifyTapeSigmaFlat_ofFlatType tm env c n : envOfFlatTypes tm env -> reifyTapeSigmaFlat tm env c = Some n -> n < flatTapeSigma tm. 
+Proof. 
+  intros H. unfold reifyTapeSigmaFlat. destruct c. 
+  - destruct d. intros [=<-]. finRepr_simpl. 
+  - destruct reifyPolSigmaFlat eqn:H1; cbn -[flatTapeSigma flatInr flatInl]; [ | congruence].
+    apply (reifyPolSigmaFlat_ofFlatType H) in H1. intros [=<-]. 
+    replace (S n0) with (flatInr flatDelim n0) by easy.
+    apply inr_ofFlatType, H1.  
+Qed. 
+
 (** reifyStatesFlat *)
 Definition c__reifyStatesFlat := 32 + c__stateEnv + c__flatStateSigma.
 Definition reifyStatesFlat_time (sig : nat) (env : evalEnvFlat) (c : fStates) :=   
@@ -240,6 +497,47 @@ Proof.
   - now inv H. 
   - now inv H. 
 Defined. 
+
+Definition poly__reifyStatesFlat n := (n + 1) * c__ntherror + poly__reifyStateSigmaFlat n + (n * (n + 1) * (c__mult + c__add) + c__mult * (n + 1)) + c__add + c__flatPair + c__reifyStatesFlat.
+Lemma reifyStatesFlat_time_bound n tm env c : envConst_bound n env -> envOfFlatTypes tm env -> reifyStatesFlat_time (sig tm) env c <= poly__reifyStatesFlat (size (enc tm) + n).
+Proof. 
+  intros H H0. unfold reifyStatesFlat_time. 
+  destruct c as (s & c). 
+  rewrite (reifyStateSigmaFlat_time_bound _ H). 
+  destruct H as (_ & _ & _ & H). 
+  unfold nth_error_time. rewrite H. rewrite Nat.le_min_l.
+  poly_mono reifyStateSigmaFlat_poly.
+  2: { replace_le n with (size (enc tm) + n) by lia at 1. reflexivity. }
+  destruct nth_error eqn:H1. 
+  - unfold flatPair_time, flatOption, add_time, mult_time. 
+    apply nth_error_In in H1. apply H0 in H1. unfold ofFlatType in H1. rewrite H1. 
+    rewrite states_TM_le, sig_TM_le. 
+    (* help nia a bit *)
+    replace_le n with (size (enc tm) + n) by lia at 1. 
+    replace_le (size (enc tm)) with (size (enc tm) + n) by lia at 3. 
+    replace_le (size (enc tm)) with (size (enc tm) + n) by lia at 4.
+    replace_le (size (enc tm)) with (size (enc tm) + n) by lia at 5.
+    replace_le (size (enc tm)) with (size (enc tm) + n) by lia at 6.
+    replace_le (size (enc tm)) with (size (enc tm) + n) by lia at 7.
+    unfold poly__reifyStatesFlat. generalize (size (enc tm) + n). intros n'. nia.
+  - unfold poly__reifyStatesFlat. nia.
+Qed. 
+Lemma reifyStatesFlat_poly : monotonic poly__reifyStatesFlat /\ inOPoly poly__reifyStatesFlat. 
+Proof. 
+  unfold poly__reifyStatesFlat; split; smpl_inO; apply reifyStateSigmaFlat_poly. 
+Qed. 
+      
+Lemma reifyStatesFlat_ofFlatType env tm n c : envOfFlatTypes tm env -> reifyStatesFlat tm env c = Some n -> n < flatStates tm.  
+Proof. 
+  intros H. unfold reifyStatesFlat. 
+  destruct c as (v & s). destruct nth_error eqn:H1. 
+  - destruct reifyStateSigmaFlat eqn:H2. 
+    + cbn -[flatPair flatStates]. intros [=<-]. finRepr_simpl. 
+      * apply H. apply nth_error_In in H1. apply H1. 
+      * apply (reifyStateSigmaFlat_ofFlatType H) in H2. apply H2. 
+    + cbn; congruence. 
+  - cbn; congruence. 
+Qed. 
  
 (** reifyGammaFlat *)
 Definition c__reifyGammaFlat := 8 + c__add1 + c__optionMap.
