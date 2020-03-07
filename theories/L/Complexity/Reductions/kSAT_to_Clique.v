@@ -35,7 +35,7 @@ Section fixSAT.
     end. 
 
   (* the first component describes the literal, the second one the clause *)
-  Definition Vcnf := (Fin.t Ncl * Fin.t k)%type.
+  Definition Vcnf := finType_CS ((Fin.t Ncl * Fin.t k)%type).
   Implicit Type v : Vcnf. 
 
   Definition Ecnf (p : Vcnf * Vcnf) := 

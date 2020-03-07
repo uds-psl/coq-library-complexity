@@ -25,7 +25,7 @@ Definition fedge_eqb := prod_eqb Nat.eqb Nat.eqb.
 Definition fedges_edge_in_decb E e := list_in_decb fedge_eqb E e. 
 Definition fgraph_edge_in_decb G e := match G with (V, E) => fedges_edge_in_decb E e end. 
 
-Definition isfVertex (V : fvertex) (v : fvertex) := v < V.
+Definition isfVertex (V : fvertex) (v : fvertex) := ofFlatType V v.
 
 (** Boolean deciders for some of the above definitions*)
 Definition fedges_symmetric_decb (E : list fedge) := 
@@ -36,7 +36,7 @@ Definition fedges_wf_decb n E := forallb (fedge_wf_decb n) E.
 
 Definition fgraph_wf_decb G := let (V, E) := G in fedges_symmetric_decb E && fedges_wf_decb V E. 
 
-Definition isfVertex_decb V v := Nat.ltb v V. 
+Definition isfVertex_decb V v := ofFlatType_dec V v. 
 
 Proposition fedge_eqb_spec e1 e2 : reflect (e1 = e2) (fedge_eqb e1 e2).
 Proof. 

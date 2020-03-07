@@ -198,7 +198,6 @@ Proof.
   induction n; cbn; intros; [ easy | now apply isFlatListOf_cons].
 Qed. 
 
- 
 (* lists that only contain elements which belong to the flat representation of a finite type *)
 Definition list_ofFlatType (k : nat) (l : list nat) := forall a, a el l -> ofFlatType k a. 
 
@@ -227,6 +226,14 @@ Qed.
 Definition list_finReprEl' (f : finType) (l : list nat) (L : list f ) := 
   (forall v, v el l -> exists v', v' el L /\ v = index v') /\ (forall v, v el L -> index v el l).
 
+Lemma isFlatListOf_list_finReprEl' (f : finType) (l : list nat) (L : list f): isFlatListOf l L -> list_finReprEl' l L.
+Proof. 
+  unfold isFlatListOf, list_finReprEl'.
+  intros Hmap. split. 
+  - intros v Hel. rewrite Hmap in Hel. apply in_map_iff in Hel as (v' & <- & Hel). eauto.
+  - intros v Hel. rewrite Hmap. apply in_map_iff. eauto.
+Qed. 
+
 (*given a representation of a finite type by natural numbers, we can restore original elements *)
 Lemma finRepr_exists (X : finType) (x : nat) (a : nat) : 
   finRepr X x -> ofFlatType x a -> sigT (fun (a' : X) => finReprEl x a a'). 
@@ -244,14 +251,14 @@ Proof.
   + eapply utils.nth_error_Some_length, H2. 
 Qed.
 
-Lemma finReprEl'_exists (X : finType) n : ofFlatType (Cardinality X) n -> exists (e:X), finReprEl' n e.
+Lemma finReprEl'_exists (X : finType) n : ofFlatType (Cardinality X) n -> { e:X | finReprEl' n e}.
 Proof. 
   intros. unfold ofFlatType,Cardinality in H. apply nth_error_Some in H. destruct (nth_error (elem X) n) eqn:H1; [ | congruence ].
   exists e. unfold finReprEl'. clear H.
   specialize (nth_error_nth H1) as <-. apply getPosition_nth. 
   + apply Cardinality.dupfree_elements. 
   + eapply utils.nth_error_Some_length, H1.
-Qed. 
+Defined. 
 
 Lemma finRepr_exists_list (X : finType) (x : nat) (l : list nat) : 
   finRepr X x -> list_ofFlatType x l -> sigT (fun (L : list X) => isFlatListOf l L). 
@@ -262,7 +269,7 @@ Proof.
     specialize (finRepr_exists H H0) as (a' & (_ &  H2)). 
     exists (a' :: L). unfold isFlatListOf. 
     now rewrite H1, <- H2. 
-Qed. 
+Defined. 
 
 (*deciders for isValidFlattening*)
 Definition ofFlatType_dec (b a : nat) := leb (S a) b.

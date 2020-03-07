@@ -4,12 +4,15 @@ From Undecidability.L.Datatypes Require Import LLists LLNat LProd.
 From PslBase Require Import FinTypes. 
 From Undecidability.L.Complexity.Problems Require Import FlatUGraph Clique UGraph.
 From Undecidability.L.Complexity.Cook Require Import FlatFinTypes.
+From Undecidability.L.Complexity Require Import MorePrelim. 
 
 Definition isfClique (G : fgraph) (l : list fvertex) := 
   let (V, E) := G in
-  (forall v, v el l -> isfVertex V v) /\ dupfree l /\ (forall v1 v2, v1 el l -> v2 el l -> v1 <> v2 -> (v1, v2) el E). 
+  list_ofFlatType V l /\ dupfree l /\ (forall v1 v2, v1 el l -> v2 el l -> v1 <> v2 -> (v1, v2) el E). 
 
 Definition isfKClique (k : nat) (G : fgraph) (l : list fvertex) := isfClique G l /\ |l| = k. 
+
+Definition FlatClique '(G, k) := exists l, isfKClique k G l.
 
 Fixpoint allPairsOfEdges_decb l E := 
   match l with 
@@ -18,7 +21,7 @@ Fixpoint allPairsOfEdges_decb l E :=
   end. 
 
 Definition isfClique_decb (G : fgraph) l := 
-  let (V, E) := G in forallb (isfVertex_decb V) l && dupfreeb Nat.eqb l && allPairsOfEdges_decb l E. 
+  let (V, E) := G in list_ofFlatType_dec V l && dupfreeb Nat.eqb l && allPairsOfEdges_decb l E. 
 
 Lemma allPairsOfEdges_decb_iff V E l: 
   fgraph_wf (V, E) -> (forall v, v el l -> isfVertex V v) -> dupfree l 
@@ -47,8 +50,7 @@ Qed.
 Lemma isfClique_decb_iff G l : fgraph_wf G -> isfClique_decb G l = true <-> isfClique G l. 
 Proof. 
   intros H. destruct G as (V & E). unfold isfClique_decb, isfClique. 
-  rewrite !andb_true_iff, forallb_forall, dupfreeb_iff. 2: symmetry; apply Nat.eqb_eq.  
-  setoid_rewrite isfVertex_decb_iff.
+  rewrite !andb_true_iff, list_ofFlatType_dec_correct, dupfreeb_iff. 2: symmetry; apply Nat.eqb_eq.  
   split. 
   - intros [[H1 H2] H3]. split; [apply H1 | split; [apply H2 | ]].
     eapply allPairsOfEdges_decb_iff; easy.
@@ -61,8 +63,7 @@ Definition isfKClique_decb k G l := isfClique_decb G l && Nat.eqb (length l) k.
 Lemma isfKClique_decb_iff k G l : fgraph_wf G -> isfKClique_decb k G l = true <-> isfKClique k G l.  
 Proof. 
   intros H. unfold isfKClique_decb, isfKClique. 
-  rewrite andb_true_iff, (isfClique_decb_iff _ H),  Nat.eqb_eq. easy.
-Qed. 
+  rewrite andb_true_iff, (isfClique_decb_iff _ H),  Nat.eqb_eq. easy.  Qed. 
 
 (** agreement with the non-flat definition *)
 Section fixGraph. 
@@ -91,5 +92,28 @@ Section fixGraph.
         apply R__edgesComplete. 
         apply F1; easy. 
   Qed. 
+
+  (** Constructively flatten and unflatten a clique. *)
+  Lemma clique_flatten (L : list (V UG)) : isClique L -> {l : list fvertex & isfClique G l /\ |l| = |L| }. 
+  Proof. 
+    intros Hc. exists (map index L). split; [ | now rewrite map_length].
+    eapply clique_flat_agree. 
+    - apply dupfree_map. 2: apply Hc. intros. now apply injective_index. 
+    - apply Hc. 
+    - apply isFlatListOf_list_finReprEl'. reflexivity. 
+    - apply Hc. 
+  Defined. 
+
+  Lemma clique_unflatten (l : list nat) : isfClique G l -> { L : list (V UG) & isClique L /\ |L| = |l| }. 
+  Proof. 
+    intros Hc. destruct G as (Vf & Ef) eqn:Heq. 
+    unfold isfClique in Hc. 
+    edestruct (finRepr_exists_list (proj1 H) (proj1 Hc)) as (L & H1). 
+    exists L. split; [ | rewrite H1; now rewrite map_length ]. 
+    rewrite <- Heq in H. eapply clique_flat_agree. 
+    4: rewrite Heq; apply Hc.  
+    - apply Hc. 
+    - eapply map_dupfree. rewrite <- H1. apply Hc. 
+    - apply isFlatListOf_list_finReprEl', H1. 
+  Defined. 
 End fixGraph.
-        

@@ -105,3 +105,15 @@ Section remove.
       + cbn. destruct (eqdec a a0); [specialize (remove_length l a); lia | cbn; firstorder ].  
   Qed. 
 End remove.
+
+Proposition map_dupfree (X Y : Type) (f : X -> Y) (A : list X) : dupfree (map f A) -> dupfree A.
+Proof. 
+  remember (map f A) as B. intros H1. revert A HeqB. induction H1; intros B HeqB.
+  - destruct B; cbn in HeqB; [constructor | congruence].
+  - destruct B; cbn in HeqB; [congruence | ].
+    inv HeqB. constructor. 
+    + rewrite in_map_iff in H. contradict H. eauto.
+    + now apply IHdupfree. 
+Qed. 
+
+
