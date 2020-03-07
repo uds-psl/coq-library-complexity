@@ -483,42 +483,42 @@ Section fixfilterSome.
   Defined. 
 End fixfilterSome.
 
-(** makeRules'_flat_step *)
-Definition makeRules'_flat_step tm win (env : evalEnvFlat) := reifyWindowFlat tm env win.
+(** makeWindows'_flat_step *)
+Definition makeWindows'_flat_step tm win (env : evalEnvFlat) := reifyWindowFlat tm env win.
 
-Definition c__makeRulesPFlatStep := 3.
-Definition makeRules'_flat_step_time (tm : TM) (win : TPRWin fAlphabet) (env : evalEnvFlat) := reifyWindow_time tm env win + c__makeRulesPFlatStep.
-Instance term_makeRules'_flat_step : computableTime' makeRules'_flat_step (fun tm _ => (1, fun win _ => (1, fun env _ => (makeRules'_flat_step_time tm win env, tt)))). 
+Definition c__makeWindowsPFlatStep := 3.
+Definition makeWindows'_flat_step_time (tm : TM) (win : TPRWin fAlphabet) (env : evalEnvFlat) := reifyWindow_time tm env win + c__makeWindowsPFlatStep.
+Instance term_makeWindows'_flat_step : computableTime' makeWindows'_flat_step (fun tm _ => (1, fun win _ => (1, fun env _ => (makeWindows'_flat_step_time tm win env, tt)))). 
 Proof. 
   extract. solverec. 
-  unfold makeRules'_flat_step_time, c__makeRulesPFlatStep; solverec. 
+  unfold makeWindows'_flat_step_time, c__makeWindowsPFlatStep; solverec. 
 Defined. 
 
-(** makeRules' *)
-Definition makeRules'_flat (tm : TM) := makeRules' (reifyAlphabetFlat tm). 
-Definition c__makeRules' := 4.
-Definition makeRules'_flat_time (tm : TM) (envs : list evalEnvFlat) (win : TPRWin fAlphabet) := map_time (fun env => makeRules'_flat_step_time tm win env) envs + (|envs| + 1) * c__filterSome + c__makeRules'.
-Instance term_makeRules' : computableTime' makeRules'_flat (fun tm _ => (1, fun envs _ => (1, fun win _ => (makeRules'_flat_time tm envs win, tt)))). 
+(** makeWindows' *)
+Definition makeWindows'_flat (tm : TM) := makeWindows' (reifyAlphabetFlat tm). 
+Definition c__makeWindows' := 4.
+Definition makeWindows'_flat_time (tm : TM) (envs : list evalEnvFlat) (win : TPRWin fAlphabet) := map_time (fun env => makeWindows'_flat_step_time tm win env) envs + (|envs| + 1) * c__filterSome + c__makeWindows'.
+Instance term_makeWindows' : computableTime' makeWindows'_flat (fun tm _ => (1, fun envs _ => (1, fun win _ => (makeWindows'_flat_time tm envs win, tt)))). 
 Proof. 
-  unfold makeRules'_flat, makeRules'. 
-  apply computableTimeExt with (x := fun tm l win => filterSome (map (makeRules'_flat_step tm win) l)). 
-  1: { unfold makeRules'_flat_step, reifyWindowFlat. easy. }
+  unfold makeWindows'_flat, makeWindows'. 
+  apply computableTimeExt with (x := fun tm l win => filterSome (map (makeWindows'_flat_step tm win) l)). 
+  1: { unfold makeWindows'_flat_step, reifyWindowFlat. easy. }
   extract. solverec. 
   unfold filterSome_time. rewrite map_length. 
-  unfold makeRules'_flat_time, c__makeRules'.
+  unfold makeWindows'_flat_time, c__makeWindows'.
   nia. 
 Defined. 
 
-(** makeRulesFlat *)
-Definition c__makeRulesFlat := 4.
-Definition makeRulesFlat_time (tm : TM) (envs : list evalEnvFlat) (windows : list (TPRWin fAlphabet)) := map_time (makeRules'_flat_time tm envs) windows + concat_time (map (makeRules'_flat tm envs) windows) + c__makeRulesFlat.
-Instance term_makeRulesFlat : computableTime' makeRulesFlat (fun tm _ => (1, fun envs _ => (1, fun wins _ => (makeRulesFlat_time tm envs wins, tt)))). 
+(** makeWindowsFlat *)
+Definition c__makeWindowsFlat := 4.
+Definition makeWindowsFlat_time (tm : TM) (envs : list evalEnvFlat) (windows : list (TPRWin fAlphabet)) := map_time (makeWindows'_flat_time tm envs) windows + concat_time (map (makeWindows'_flat tm envs) windows) + c__makeWindowsFlat.
+Instance term_makeWindowsFlat : computableTime' makeWindowsFlat (fun tm _ => (1, fun envs _ => (1, fun wins _ => (makeWindowsFlat_time tm envs wins, tt)))). 
 Proof. 
-  unfold makeRulesFlat, makeRules. 
-  apply computableTimeExt with (x := fun tm allEnv rules => concat (map (makeRules'_flat tm allEnv) rules)). 
-  1: { unfold makeRules'_flat. easy. }
+  unfold makeWindowsFlat, makeWindows. 
+  apply computableTimeExt with (x := fun tm allEnv rules => concat (map (makeWindows'_flat tm allEnv) rules)). 
+  1: { unfold makeWindows'_flat. easy. }
   extract. solverec. 
-  unfold makeRulesFlat_time, c__makeRulesFlat. solverec.  
+  unfold makeWindowsFlat_time, c__makeWindowsFlat. solverec.  
 Defined. 
 
 (**envAddState *)
@@ -556,7 +556,7 @@ Defined.
 
 (** tape windows *)
 Definition c__flatMTRWindows := 22.
-Definition flatMTRWindows_time (tm : TM) := makeAllEvalEnvFlat_time tm 1 4 0 0 + makeRulesFlat_time tm (makeAllEvalEnvFlat tm 1 4 0 0) mtrRules + c__flatMTRWindows.
+Definition flatMTRWindows_time (tm : TM) := makeAllEvalEnvFlat_time tm 1 4 0 0 + makeWindowsFlat_time tm (makeAllEvalEnvFlat tm 1 4 0 0) mtrRules + c__flatMTRWindows.
 Instance term_flatMTRWindows : computableTime' flatMTRWindows (fun tm _ => (flatMTRWindows_time tm, tt)). 
 Proof. 
   extract. recRel_prettify2. 
@@ -564,7 +564,7 @@ Proof.
 Defined. 
 
 Definition c__flatMTIWindows := 25. 
-Definition flatMTIWindows_time (tm : TM) := makeAllEvalEnvFlat_time tm 2 0 4 0 + makeRulesFlat_time tm (makeAllEvalEnvFlat tm 2 0 4 0) mtiRules + c__flatMTIWindows.
+Definition flatMTIWindows_time (tm : TM) := makeAllEvalEnvFlat_time tm 2 0 4 0 + makeWindowsFlat_time tm (makeAllEvalEnvFlat tm 2 0 4 0) mtiRules + c__flatMTIWindows.
 Instance term_flatMTIWindows : computableTime' flatMTIWindows (fun tm _ => (flatMTIWindows_time tm, tt)). 
 Proof. 
   extract. recRel_prettify2. 
@@ -572,7 +572,7 @@ Proof.
 Defined. 
 
 Definition c__flatMTLWindows := 22. 
-Definition flatMTLWindows_time (tm : TM) := makeAllEvalEnvFlat_time tm 1 4 0 0 + makeRulesFlat_time tm (makeAllEvalEnvFlat tm 1 4 0 0) mtlRules + c__flatMTLWindows.
+Definition flatMTLWindows_time (tm : TM) := makeAllEvalEnvFlat_time tm 1 4 0 0 + makeWindowsFlat_time tm (makeAllEvalEnvFlat tm 1 4 0 0) mtlRules + c__flatMTLWindows.
 Instance term_flatMTLWindows : computableTime' flatMTLWindows (fun tm _ => (flatMTLWindows_time tm, tt)). 
 Proof. 
   extract. recRel_prettify2.  
@@ -589,11 +589,11 @@ Defined.
   
 (** non-halting state windows *)
 (** makeSome_base *)
-Definition makeSome_base_flat (tm : TM) (windows : list (TPRWin fAlphabet)) (q q' m m' : nat):= @makeSome_base nat nat nat nat nat windows q q' m m' (makeRulesFlat tm).
+Definition makeSome_base_flat (tm : TM) (windows : list (TPRWin fAlphabet)) (q q' m m' : nat):= @makeSome_base nat nat nat nat nat windows q q' m m' (makeWindowsFlat tm).
 
 Definition c__makeSomeBaseFlat1 := c__transEnvAddSM + c__map.
 Definition c__makeSomeBaseFlat2 := c__map + 8.
-Definition makeSome_base_flat_time (tm : TM) (windows : list (TPRWin fAlphabet)) (q q' m m' : nat) (envs : list evalEnvFlat) := (|envs|) * c__makeSomeBaseFlat1+ makeRulesFlat_time tm (map (transEnvAddSM q q' m m') envs) windows + c__makeSomeBaseFlat2.
+Definition makeSome_base_flat_time (tm : TM) (windows : list (TPRWin fAlphabet)) (q q' m m' : nat) (envs : list evalEnvFlat) := (|envs|) * c__makeSomeBaseFlat1+ makeWindowsFlat_time tm (map (transEnvAddSM q q' m m') envs) windows + c__makeSomeBaseFlat2.
 Instance term_makeSome_base_flat : computableTime' makeSome_base_flat (fun tm _ => (1, fun windows _ => (1, fun q _ => (1, fun q' _ => (1, fun m _ => (1, fun m' _ => (1, fun envs _ => (makeSome_base_flat_time tm windows q q' m m' envs, tt)))))))). 
 Proof. 
   unfold makeSome_base_flat, makeSome_base.
@@ -604,7 +604,7 @@ Proof.
 Defined. 
 
 (** makeSomeRight *)
-Definition makeSomeRightFlat tm q q' m m' := makeSomeRight q q' m m' (makeRulesFlat tm). 
+Definition makeSomeRightFlat tm q q' m m' := makeSomeRight q q' m m' (makeWindowsFlat tm). 
 Definition c__makeSomeRightFlat := 7.
 Instance term_makeSomeRightFlat : computableTime' makeSomeRightFlat (fun tm _ => (1, fun q _ => (1, fun q' _ => (1, fun m _ => (1, fun m' _ => (c__makeSomeRightFlat, fun envs _ => (makeSome_base_flat_time tm makeSomeRight_rules q q' m m' envs, tt))))))).
 Proof. 
@@ -616,7 +616,7 @@ Proof.
 Defined. 
   
 (** makeSomeLeft *)
-Definition makeSomeLeftFlat tm q q' m m' := makeSomeLeft q q' m m' (makeRulesFlat tm). 
+Definition makeSomeLeftFlat tm q q' m m' := makeSomeLeft q q' m m' (makeWindowsFlat tm). 
 Definition c__makeSomeLeftFlat := 7.
 Instance term_makeSomeLeftFlat : computableTime' makeSomeLeftFlat (fun tm _ => (1, fun q _ => (1, fun q' _ => (1, fun m _ => (1, fun m' _ => (c__makeSomeLeftFlat, fun envs _ => (makeSome_base_flat_time tm makeSomeLeft_rules q q' m m' envs, tt))))))).
 Proof. 
@@ -628,7 +628,7 @@ Proof.
 Defined. 
 
 (**makeSomeStay *)
-Definition makeSomeStayFlat tm q q' m m' := makeSomeStay q q' m m' (makeRulesFlat tm). 
+Definition makeSomeStayFlat tm q q' m m' := makeSomeStay q q' m m' (makeWindowsFlat tm). 
 Definition c__makeSomeStayFlat := 7.
 Instance term_makeSomeStayFlat : computableTime' makeSomeStayFlat (fun tm _ => (1, fun q _ => (1, fun q' _ => (1, fun m _ => (1, fun m' _ => (c__makeSomeStayFlat, fun envs _ => (makeSome_base_flat_time tm makeSomeStay_rules q q' m m' envs, tt))))))).
 Proof. 
@@ -640,10 +640,10 @@ Proof.
 Defined. 
 
 (** makeNone_base *)
-Definition makeNone_base_flat (tm : TM) (windows : list (TPRWin fAlphabet)) (q q' : nat) := @makeNone_base nat nat nat nat nat windows q q' (makeRulesFlat tm). 
+Definition makeNone_base_flat (tm : TM) (windows : list (TPRWin fAlphabet)) (q q' : nat) := @makeNone_base nat nat nat nat nat windows q q' (makeWindowsFlat tm). 
 Definition c__makeNoneBaseFlat1 := c__transEnvAddS + c__map.
 Definition c__makeNoneBaseFlat2 := c__map + 6.
-Definition makeNone_base_flat_time (tm : TM) (rules :list (TPRWin fAlphabet)) (q q' : nat) (envs : list evalEnvFlat) := (|envs|) * c__makeNoneBaseFlat1 + makeRulesFlat_time tm (map (transEnvAddS q q') envs) rules + c__makeNoneBaseFlat2.
+Definition makeNone_base_flat_time (tm : TM) (rules :list (TPRWin fAlphabet)) (q q' : nat) (envs : list evalEnvFlat) := (|envs|) * c__makeNoneBaseFlat1 + makeWindowsFlat_time tm (map (transEnvAddS q q') envs) rules + c__makeNoneBaseFlat2.
 Instance term_makeNone_base_flat : computableTime' makeNone_base_flat (fun tm _ => (1, fun rules _ => (1, fun q _ => (1, fun q' _ => (1, fun envs _ => (makeNone_base_flat_time tm rules q q' envs, tt)))))). 
 Proof. 
   unfold makeNone_base_flat, makeNone_base. 
@@ -654,7 +654,7 @@ Proof.
 Defined. 
 
 (** makeNoneRight *)
-Definition makeNoneRightFlat tm q q' := makeNoneRight q q' (makeRulesFlat tm). 
+Definition makeNoneRightFlat tm q q' := makeNoneRight q q' (makeWindowsFlat tm). 
 Definition c__makeNoneRightFlat := 5.
 Instance term_makeNoneRightFlat : computableTime' makeNoneRightFlat (fun tm _ => (1, fun q _ => (1, fun q' _ => (c__makeNoneRightFlat, fun envs _ => (makeNone_base_flat_time tm makeNoneRight_rules q q' envs, tt))))). 
 Proof. 
@@ -666,7 +666,7 @@ Proof.
 Defined. 
 
 (** makeNoneLeft *)
-Definition makeNoneLeftFlat tm q q' := makeNoneLeft q q' (makeRulesFlat tm). 
+Definition makeNoneLeftFlat tm q q' := makeNoneLeft q q' (makeWindowsFlat tm). 
 Definition c__makeNoneLeftFlat := 5.
 Instance term_makeNoneLeftFlat : computableTime' makeNoneLeftFlat (fun tm _ => (1, fun q _ => (1, fun q' _ => (c__makeNoneLeftFlat, fun envs _ => (makeNone_base_flat_time tm makeNoneLeft_rules q q' envs, tt))))). 
 Proof. 
@@ -678,7 +678,7 @@ Proof.
 Defined. 
 
 (** makeNoneStay *)
-Definition makeNoneStayFlat tm q q' := makeNoneStay q q' (makeRulesFlat tm). 
+Definition makeNoneStayFlat tm q q' := makeNoneStay q q' (makeWindowsFlat tm). 
 Definition c__makeNoneStayFlat := 5.
 Instance term_makeNoneStayFlat : computableTime' makeNoneStayFlat (fun tm _ => (1, fun q _ => (1, fun q' _ => (c__makeNoneStayFlat, fun envs _ => (makeNone_base_flat_time tm makeNoneStay_rules q q' envs, tt))))). 
 Proof. 
@@ -721,8 +721,8 @@ Proof.
 Defined.
 
 (** opt_generateRulesForFlatNonHalt *)
-Definition c__generateRulesForFlatNonHalt := c__makeNoneLeftFlat + c__makeNoneRightFlat + c__makeNoneStayFlat + c__makeSomeLeftFlat + c__makeSomeRightFlat + c__makeSomeStayFlat + 2 * c__fOpt + 26.
-Definition generateRulesForFlatNonHalt_time (tm : TM) (q : nat) (m : option nat) (dst : nat * (option nat * TM.move)) := 
+Definition c__optGenerateWindowsForFlatNonHalt := c__makeNoneLeftFlat + c__makeNoneRightFlat + c__makeNoneStayFlat + c__makeSomeLeftFlat + c__makeSomeRightFlat + c__makeSomeStayFlat + 2 * c__fOpt + 26.
+Definition opt_generateWindowsForFlatNonHalt_time (tm : TM) (q : nat) (m : option nat) (dst : nat * (option nat * TM.move)) := 
   match m, dst with
   | _, (q', (Some x, TM.L)) => makeSome_base_flat_time tm makeSomeRight_rules q q' (fOpt m) (fOpt $ Some x) (flat_baseEnv tm)
   | _, (q', (Some x, TM.R)) => makeSome_base_flat_time tm makeSomeLeft_rules q q' (fOpt m) (fOpt $ Some x) (flat_baseEnv tm)
@@ -734,8 +734,8 @@ Definition generateRulesForFlatNonHalt_time (tm : TM) (q : nat) (m : option nat)
   | None, (q', (None, TM.R)) => makeNone_base_flat_time tm makeNoneLeft_rules q q' (flat_baseEnvNone tm)
   | None, (q', (None, TM.N)) => makeNone_base_flat_time tm makeNoneStay_rules q q' (flat_baseEnvNone tm)
   end
-  + flat_baseEnv_time tm + flat_baseEnvNone_time tm + c__generateRulesForFlatNonHalt.
-Instance term_generateRulesForFlatNonHalt : computableTime' opt_generateRulesForFlatNonHalt (fun tm _ => (1, fun q _ => (1, fun m _ => (1, fun dst _ => (generateRulesForFlatNonHalt_time tm q m dst, tt))))). 
+  + flat_baseEnv_time tm + flat_baseEnvNone_time tm + c__optGenerateWindowsForFlatNonHalt.
+Instance term_opt_generateWindowsForFlatNonHalt : computableTime' opt_generateWindowsForFlatNonHalt (fun tm _ => (1, fun q _ => (1, fun m _ => (1, fun dst _ => (opt_generateWindowsForFlatNonHalt_time tm q m dst, tt))))). 
 Proof. 
   apply computableTimeExt with (x:= 
     fun tm q m transt => 
@@ -753,7 +753,7 @@ Proof.
   1: { unfold makeSomeLeftFlat, makeSomeStayFlat, makeSomeRightFlat, makeNoneLeftFlat, makeNoneStayFlat, makeNoneRightFlat. easy. }
   extract. 
   recRel_prettify2. 
-  all: unfold generateRulesForFlatNonHalt_time, c__generateRulesForFlatNonHalt. 
+  all: unfold opt_generateWindowsForFlatNonHalt_time, c__optGenerateWindowsForFlatNonHalt. 
   all: unfold optReturn; lia. 
 Defined. 
 

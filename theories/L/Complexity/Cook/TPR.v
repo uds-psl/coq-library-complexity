@@ -12,7 +12,7 @@ This allows us to define the reduction from Turing machines using inductive pred
 The list-based version (with a set of windows given as a list) is obtained as a special case.
 
 To that end, we define two variants of 3-PR in this file:
-- the usual variant (TPR) which is based on lists of rules
+- the usual variant (TPR) which is based on lists of windows
 - the propositional variant PTPR over an abstract rewritesHead predicate 
 *)
 
@@ -161,7 +161,7 @@ Ltac inv_valid := match goal with
                   end.
 
 
-(** *TPR using list-based rules *)
+(** *TPR using list-based windows *)
 
 (*use an explicit representation instead of vectors of size 3 since this will make the problem closer to the flattened extractable problem *)
 Inductive TPRWinP (Sigma : Type) := {
@@ -197,7 +197,7 @@ Implicit Type (C : TPR).
 Definition satFinal (X : Type) final (s : list X) := 
   exists subs, subs el final /\ substring subs s.
 
-(*specific definitions and results for list-based rules*)
+(*specific definitions and results for list-based windows*)
 Section fixInstance.
   Variable (Sigma : Type).
   Variable (init : list Sigma).
@@ -209,48 +209,48 @@ Section fixInstance.
   Notation window := (TPRWin Sigma).
 
   Implicit Type (s a b: string). 
-  Implicit Type (r rule : window).
+  Implicit Type (w win : window).
   Implicit Type (x y : Sigma).
 
-  Definition isRule r := r el windows.
-  Lemma isRule_length r : length (prem r) = 3 /\ length (conc r) = 3.
+  Definition isWindow w := w el windows.
+  Lemma isRule_length w : length (prem w) = 3 /\ length (conc w) = 3.
   Proof. 
-    intros. destruct r. 
+    intros. destruct w. 
     cbn. destruct prem0, conc0. now cbn. 
   Qed. 
 
-  (*we now define a concrete rewrite predicate based on a set of rules *)
-  Definition rewritesHead rule a b :=
-    prefix (prem rule) a /\ prefix (conc rule) b.
+  (*we now define a concrete rewrite predicate based on a set of windows *)
+  Definition rewritesHead win a b :=
+    prefix (prem win) a /\ prefix (conc win) b.
 
-  Lemma rewritesHead_length_inv rule a b : rewritesHead rule a b -> isRule rule -> length a >= 3 /\ length b >= 3. 
+  Lemma rewritesHead_length_inv win a b : rewritesHead win a b -> isWindow win -> length a >= 3 /\ length b >= 3. 
   Proof. 
     intros. unfold rewritesHead, prefix in *. firstorder.
-    - rewrite H. rewrite app_length, (proj1 (isRule_length rule)). lia.  
-    - rewrite H1. rewrite app_length, (proj2 (isRule_length rule)). lia. 
+    - rewrite H. rewrite app_length, (proj1 (isRule_length win)). lia.  
+    - rewrite H1. rewrite app_length, (proj2 (isRule_length win)). lia. 
   Qed. 
 
-  Definition rewritesHeadList ruleset a b := exists rule, rule el ruleset /\ rewritesHead rule a b. 
+  Definition rewritesHeadList windows a b := exists win, win el windows /\ rewritesHead win a b. 
 
-  Lemma rewritesHeadList_subset ruleset1 ruleset2 a b :
-    ruleset1 <<= ruleset2 -> rewritesHeadList ruleset1 a b -> rewritesHeadList ruleset2 a b.
+  Lemma rewritesHeadList_subset windows1 windows2 a b :
+    windows1 <<= windows2 -> rewritesHeadList windows1 a b -> rewritesHeadList windows2 a b.
   Proof. intros H (r & H1 & H2). exists r. split; [ apply H, H1 | apply H2]. Qed. 
 
-  Lemma rewritesHead_rule_inv r a b (σ1 σ2 σ3 σ4 σ5 σ6 : Sigma) : rewritesHead r (σ1 :: σ2 :: σ3 :: a) (σ4 :: σ5 :: σ6 :: b) -> r = {σ1, σ2 , σ3} / {σ4 , σ5, σ6}. 
+  Lemma rewritesHead_win_inv r a b (σ1 σ2 σ3 σ4 σ5 σ6 : Sigma) : rewritesHead r (σ1 :: σ2 :: σ3 :: a) (σ4 :: σ5 :: σ6 :: b) -> r = {σ1, σ2 , σ3} / {σ4 , σ5, σ6}. 
   Proof. 
     unfold rewritesHead. unfold prefix. intros [(b' & H1) (b'' & H2)]. destruct r. destruct prem0, conc0. cbn in H1, H2. congruence. 
   Qed. 
 
-  Lemma rewritesAt_HeadList_add_at_end i ruleset (a b c d : string) : rewritesAt (rewritesHeadList ruleset) i a b -> rewritesAt (rewritesHeadList ruleset) i (a ++ c) (b ++ d). 
+  Lemma rewritesAt_HeadList_add_at_end i (a b c d : string) : rewritesAt (rewritesHeadList windows) i a b -> rewritesAt (rewritesHeadList windows) i (a ++ c) (b ++ d). 
   Proof. 
     intros. unfold rewritesAt, rewritesHeadList in *.
-    destruct H as (rule & H0 & H). exists rule; split; [assumption | ]. 
+    destruct H as (win & H0 & H). exists win; split; [assumption | ]. 
     unfold Prelim.prefix in *. destruct H as ((b1 & H1) & (b2 & H2)). 
     split.
-    - exists (b1 ++ c). rewrite app_assoc. apply skipn_app2 with (c := prem rule ++ b1); [ | assumption]. 
-      destruct rule, prem. now cbn.  
-    - exists (b2 ++ d). rewrite app_assoc. apply skipn_app2 with (c := conc rule ++ b2); [ | assumption]. 
-      destruct rule, conc. now cbn. 
+    - exists (b1 ++ c). rewrite app_assoc. apply skipn_app2 with (c := prem win ++ b1); [ | assumption]. 
+      destruct win, prem. now cbn.  
+    - exists (b2 ++ d). rewrite app_assoc. apply skipn_app2 with (c := conc win ++ b2); [ | assumption]. 
+      destruct win, conc. now cbn. 
    Qed. 
 End fixInstance. 
 
@@ -338,11 +338,11 @@ Hint Constructors rewritesHeadInd.
 Definition PTPRLang (C : PTPR) :=  PTPR_wellformed C /\ exists (sf : list (PSigma C)), relpower (valid (rewritesHeadInd (@Pwindows C))) (Psteps C) (Pinit C) sf /\ satFinal (Pfinal C) sf. 
 
 (** *results for agreement of PTPR and TPR *)
-Definition rules_list_ind_agree {X : Type} (p : X -> X -> X -> X -> X -> X -> Prop) (l : list (TPRWin X)) :=
+Definition windows_list_ind_agree {X : Type} (p : X -> X -> X -> X -> X -> X -> Prop) (l : list (TPRWin X)) :=
   forall x1 x2 x3 x4 x5 x6, p x1 x2 x3 x4 x5 x6 <-> {x1, x2, x3} / {x4, x5, x6} el l. 
 
-Lemma rules_list_ind_rewritesHead_agree {X : Type} (p : X -> X -> X -> X -> X -> X -> Prop) (l : list (TPRWin X)) :
-  rules_list_ind_agree p l -> forall s1 s2, (rewritesHeadInd p s1 s2 <-> rewritesHeadList l s1 s2). 
+Lemma windows_list_ind_rewritesHead_agree {X : Type} (p : X -> X -> X -> X -> X -> X -> Prop) (l : list (TPRWin X)) :
+  windows_list_ind_agree p l -> forall s1 s2, (rewritesHeadInd p s1 s2 <-> rewritesHeadList l s1 s2). 
 Proof. 
   intros; split; intros. 
   + inv H0. exists ({x1, x2, x3} / {x4, x5, x6}). split.
@@ -352,16 +352,16 @@ Proof.
     destruct r as [prem0 conc0], prem0, conc0. cbn. constructor. apply H, H1.  
 Qed.
 
-Lemma tpr_ptpr_agree (X : finType) s final steps indrules (listrules : list (TPRWin X)): 
-  rules_list_ind_agree indrules listrules 
-  -> (TPRLang (Build_TPR s listrules final steps) <-> PTPRLang (Build_PTPR s indrules final steps)).
+Lemma tpr_ptpr_agree (X : finType) s final steps indwindows (listwindows : list (TPRWin X)): 
+  windows_list_ind_agree indwindows listwindows 
+  -> (TPRLang (Build_TPR s listwindows final steps) <-> PTPRLang (Build_PTPR s indwindows final steps)).
 Proof. 
   intros; split; intros (H0 & sf & H1 & H2); cbn in *. 
   - split; [apply H0 | ]. 
     exists sf; cbn. split; [ | apply H2]. 
-    eapply relpower_congruent; [ apply valid_congruent, rules_list_ind_rewritesHead_agree, H | apply H1].  
+    eapply relpower_congruent; [ apply valid_congruent, windows_list_ind_rewritesHead_agree, H | apply H1].  
   - split; [apply H0 | ].  
     exists sf; cbn. split; [ | apply H2]. 
-    eapply relpower_congruent; [ apply valid_congruent; symmetry; apply rules_list_ind_rewritesHead_agree, H | apply H1]. 
+    eapply relpower_congruent; [ apply valid_congruent; symmetry; apply windows_list_ind_rewritesHead_agree, H | apply H1]. 
 Qed. 
 

@@ -65,8 +65,8 @@ Section fixInstance.
     p a 
     -> (forall x y, p (x ++ y) <-> p x /\ p y) 
     -> |a| >= width 
-    -> (forall x y u v rule, rewritesHead rule (u ++ x) (v ++ y) -> rule el windows -> |u| = offset -> |v| = offset -> p v)
-    -> (forall rule, rule el windows -> p (conc rule))
+    -> (forall x y u v win, rewritesHead win (u ++ x) (v ++ y) -> win el windows -> |u| = offset -> |v| = offset -> p v)
+    -> (forall win, win el windows -> p (conc win))
     -> valid offset width windows a b 
     -> p b. 
   Proof. 

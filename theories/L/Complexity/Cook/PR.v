@@ -110,7 +110,7 @@ Section fixX.
 
   (** validity of a rewrite *)
   (*we use an inductive definition; the main motivation behind this definition is to only have a rewritesHead premise in one case as this leads to fewer cases in proofs*)
-  (*the drawback of this definition is that it allows vacuous rewrites (using only the first two rules); but if the two strings have a length of at least width, this is not a problem *)
+  (*the drawback of this definition is that it allows vacuous rewrites (using only the first two constructors); but if the two strings have a length of at least width, this is not a problem *)
   Inductive valid: list X -> list X -> Prop :=
   | validB: valid [] [] 
   | validSA a b u v : valid a b -> length a < width - offset -> length u = offset -> length v = offset -> valid (u++ a) (v++ b)
