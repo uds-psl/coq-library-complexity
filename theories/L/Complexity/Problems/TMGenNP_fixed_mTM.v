@@ -19,7 +19,7 @@ Definition TMGenNP_fixed_mTM (sig : finType) `{registered sig} n (M : mTM sig (S
 Arguments TMGenNP_fixed_mTM : clear implicits.
 Arguments TMGenNP_fixed_mTM {_ _ _}.
 
-Definition initTape_singleTapeTM (sig : finType) (s : list sig) :=
+Definition initTape_singleTapeTM (sig : Type) (s : list sig) :=
   match s with
     | [] => niltape sig
     | x::s => @leftof sig x s

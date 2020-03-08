@@ -6,7 +6,6 @@ Require Import Lia.
 Require Import PslBase.FiniteTypes.BasicDefinitions. 
 Require Import PslBase.FiniteTypes.FinTypes.
 
-(*TODO: consistent usage of the words 'rule' and 'window' *)
 
 (** * Reduction of GenNP to PTPR, TPR and of FlatGenNP to FlatPR *)
 
@@ -2318,11 +2317,11 @@ Section fixTM.
 
   (*initial strings *)
   Definition fullInput (c : list Sigma) := fixedInput ++ c.
-  Definition initialString (c : list Sigma) := stringForConfig start (initialTapeForString (fullInput c)). 
+  Definition initialString (c : list Sigma) := stringForConfig start (initTape_singleTapeTM (fullInput c)). 
 
   Definition isValidInitialString s := exists cert, isValidCert k' cert /\ s = initialString cert. 
 
-  Lemma isValidCert_sizeOfTape cert: isValidCert k' cert -> sizeOfTape (initialTapeForString (fullInput cert)) <= k.
+  Lemma isValidCert_sizeOfTape cert: isValidCert k' cert -> sizeOfTape (initTape_singleTapeTM (fullInput cert)) <= k.
   Proof. 
     intros H. unfold fullInput. unfold isValidCert in H. 
     unfold z, k. 
@@ -2330,7 +2329,7 @@ Section fixTM.
     rewrite app_length. lia.
   Qed.
 
-  Lemma initialString_reprConfig cert : isValidCert k' cert -> (start, initialTapeForString (fullInput cert)) ≃c initialString cert. 
+  Lemma initialString_reprConfig cert : isValidCert k' cert -> (start, initTape_singleTapeTM (fullInput cert)) ≃c initialString cert. 
   Proof. 
     intros. unfold initialString. apply stringForConfig_reprConfig.
     rewrite isValidCert_sizeOfTape by apply H. unfold z; lia.
@@ -2370,11 +2369,11 @@ Section fixTM.
   (*simulation lemma: for valid inputs, the PR instance does rewrite to a final string iff the Turing machine does accept *)
   Lemma simulation : forall cert,
       isValidCert k' cert 
-      -> PTPRLang (Build_PTPR (initialString cert) simRules finalSubstrings  t) <-> exists f, loopM (initc fTM ([|initialTapeForString (fullInput cert)|])) t = Some f.
+      -> PTPRLang (Build_PTPR (initialString cert) simRules finalSubstrings  t) <-> exists f, loopM (initc fTM ([|initTape_singleTapeTM (fullInput cert)|])) t = Some f.
   Proof. 
     intros. split; intros. 
     - destruct H0 as (wf & finalStr & H1 & H2). cbn [Psteps Pinit Pwindows Pfinal ] in H1, H2.
-      specialize (@soundness start (initialTapeForString (fullInput cert)) (initialString cert) finalStr) as H3. 
+      specialize (@soundness start (initTape_singleTapeTM (fullInput cert)) (initialString cert) finalStr) as H3. 
       edestruct H3 as (q' & tape' & F1 & ((l & F2 & F3 & F4) & F)). 
       + apply initialString_reprConfig, H. 
       + apply isValidCert_sizeOfTape, H.  
@@ -2394,7 +2393,7 @@ Section fixTM.
       eapply VectorDef.case0 with (v := t0). 
       intros H0. clear t0. 
       cbn [windows steps init final].
-      edestruct (@completeness start (initialTapeForString (fullInput cert)) q' tape' (initialString cert)) as (s' & F1 & F2 & F3). 
+      edestruct (@completeness start (initTape_singleTapeTM (fullInput cert)) q' tape' (initialString cert)) as (s' & F1 & F2 & F3). 
       + apply isValidCert_sizeOfTape, H.  
       + apply initialString_reprConfig, H. 
       + apply loop_relpower_agree, H0. 
@@ -2407,7 +2406,7 @@ Section fixTM.
   Qed.  
 
   (*from this, we directly get a reduction to existential PR: does there exist an input string satisfying isValidInitialString for which the PR instance is a yes instance? *)
-  Lemma TM_reduction_to_ExPTPR : @ExPTPR (FinType(EqType Gamma)) simRules finalSubstrings t isValidInitialString l <-> (exists cert, isValidCert k' cert /\ exists f, loopM (initc fTM ([|initialTapeForString (fullInput cert)|])) t = Some f). 
+  Lemma TM_reduction_to_ExPTPR : @ExPTPR (FinType(EqType Gamma)) simRules finalSubstrings t isValidInitialString l <-> (exists cert, isValidCert k' cert /\ exists f, loopM (initc fTM ([|initTape_singleTapeTM (fullInput cert)|])) t = Some f). 
   Proof. 
     split; unfold ExPTPR.  
     - intros (x0 & H1 & (cert & H2 & H3) & H4). exists cert. split; [apply H2 | ]. subst; now apply simulation.
@@ -2920,9 +2919,9 @@ Section fixTM.
   Qed. 
 
   (*reduction using the propositional rewrite rules: we put together the prelude and the deterministic simulation *)
-  Lemma GenNP_to_PTPR: 
+  Lemma SingleTMGenNP_to_PTPR: 
     PTPRLang (@Build_PTPR (FinType (EqType preludeSig)) (map inr preludeInitialString) allRules (map (map inl) finalSubstrings) (1 + t))
-    <-> GenNP (existT _ Sigma (fTM, fixedInput, k', t)). 
+    <-> SingleTMGenNP (existT _ Sigma (fTM, fixedInput, k', t)). 
   Proof. 
     rewrite <- prelude_reduction_from_ExPTPR. apply TM_reduction_to_ExPTPR.
   Qed. 
@@ -4352,12 +4351,12 @@ Section fixTM.
   Qed. 
 
   (** the reduction using the list-based windows *)
-  Lemma GenNP_to_TPR : 
+  Lemma SingleTMGenNP_to_TPR : 
     TPRLang (@Build_TPR (FinType (EqType preludeSig)) (map inr preludeInitialString) allFinWindows (map (map inl) finalSubstrings) (1 + t))
-    <-> GenNP (existT _ Sigma (fTM, fixedInput, k', t)). 
+    <-> SingleTMGenNP (existT _ Sigma (fTM, fixedInput, k', t)). 
   Proof. 
     rewrite tpr_ptpr_agree. 
-    * apply GenNP_to_PTPR. 
+    * apply SingleTMGenNP_to_PTPR. 
     * apply fin_agreement. 
   Qed.
 
@@ -4814,9 +4813,9 @@ Section fixTM.
   Qed. 
 
   Lemma reduction_wf_correct : 
-    GenNP (existT _ Sigma (fTM, fixedInput, k', t)) <-> FlatTPRLang reduction_wf.
+    SingleTMGenNP (existT _ Sigma (fTM, fixedInput, k', t)) <-> FlatTPRLang reduction_wf.
   Proof. 
-    rewrite <- GenNP_to_TPR. symmetry. eapply isFlatTPROf_equivalence, reduction_isFlatTPROf.
+    rewrite <- SingleTMGenNP_to_TPR. symmetry. eapply isFlatTPROf_equivalence, reduction_isFlatTPROf.
   Qed. 
 
 End fixTM. 
@@ -4843,7 +4842,7 @@ Proof.
   apply unflattenTM_correct, H. 
 Defined. 
 
-Lemma FlatGenNP_to_FlatTPR (f : TMflat.TM * list nat * nat * nat) : FlatGenNP f <-> FlatTPRLang (reduction f). 
+Lemma FlatSingleTMGenNP_to_FlatTPR (f : TMflat.TM * list nat * nat * nat) : FlatSingleTMGenNP f <-> FlatTPRLang (reduction f). 
 Proof. 
   split; intros. 
   - destruct f as (((tm & flatFixedInput) & k) & t). destruct H as (sig & M' & fixedInput & H1 & H2 & H3).
@@ -4868,14 +4867,14 @@ Proof.
     + destruct (Nat.eqb (TMflat.tapes tm) 1) eqn:H3. 
       * destruct (list_ofFlatType_dec) eqn:H4.
         -- apply Nat.eqb_eq in H3. apply list_ofFlatType_dec_correct in H4. 
-           unfold FlatGenNP.
+           unfold FlatSingleTMGenNP.
             assert (validFlatTM tm) as H1 by easy. clear H2. 
             specialize (unflatten_single H1 H3) as (TM' & H5). 
             exists (finType_CS(Fin.t (TMflat.sig tm))), TM'.
             apply unflattenString in H4 as (fixedInput & H4).
             exists fixedInput. 
             split; [apply H5 | split; [apply H4 | ]]. 
-            eapply GenNP_to_TPR; [apply H5 | apply H4 | ]. 
+            eapply SingleTMGenNP_to_TPR; [apply H5 | apply H4 | ]. 
             eapply isFlatTPROf_equivalence. 1: apply reduction_isFlatTPROf; [apply H5 | apply H4]. 
             cbn in H.  
             apply H. 

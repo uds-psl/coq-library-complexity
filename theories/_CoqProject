@@ -312,6 +312,7 @@ L/TM/TMflatComp.v
 L/TM/TMinL.v
 L/TM/TapeFuns.v
 L/TM/TapeDecode.v
+L/TM/TMflatten.v
 L/Reductions/TM_to_L.v
 
 L/Reductions/SRH_SR_computable.v
@@ -379,6 +380,7 @@ L/Complexity/Cook/FlatTPR_to_FlatPR.v
 L/Complexity/Cook/BinaryPR.v
 L/Complexity/Cook/PR_homomorphisms.v
 L/Complexity/Cook/FlatPR_to_BinaryPR.v
+L/Complexity/Cook/TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP.v
 
 L/Complexity/Cook/FSAT_to_SAT.v
 L/Complexity/Cook/BinaryPR_to_FSAT.v
