@@ -1,10 +1,7 @@
 From Undecidability.TM Require Import TM.
-From Undecidability.L.TM Require Import TMflat TMflatEnc TMflatFun TMEncoding TapeDecode TMunflatten TMflatFun.
-From Undecidability.L.Datatypes Require Import LNat LProd Lists.
-From Undecidability.L.Complexity Require Import NP LinTimeDecodable ONotation.
-From Undecidability.L Require Import Tactics.LTactics Functions.Decoding TMflatFun.
-From Undecidability Require Import L.Functions.EqBool.
-From Undecidability Require Import L.Datatypes.LNat.
+From Undecidability.L.TM Require Import TMEncoding.
+From Undecidability.L.Complexity Require Import NP.
+From Undecidability.L Require Import Tactics.LTactics.
 
 (** For each Machine M (with n+1 tapes), we define this problem:
 Given n tapes and a sizeBound and a step bound, does there exist a (small enough) first tape such that the machine halts on the resulting n+1 tapes in fewer? *)
@@ -22,10 +19,16 @@ Definition TMGenNP_fixed_mTM (sig : finType) `{registered sig} n (M : mTM sig (S
 Arguments TMGenNP_fixed_mTM : clear implicits.
 Arguments TMGenNP_fixed_mTM {_ _ _}.
 
+Definition initTape_singleTapeTM (sig : finType) (s : list sig) :=
+  match s with
+    | [] => niltape sig
+    | x::s => @leftof sig x s
+  end. 
 
 Definition TMGenNP_fixed_singleTapeTM (sig : finType) `{registered sig} (M : mTM sig 1)
   := (fun '(ts, maxSize, steps) =>
-        exists s1 (t1 : list sig), head ts = Some s1 /\ length t1 <= maxSize /\ exists f, loopM (initc M [|leftof s1 (tl ts++t1)|] ) steps = Some f).
+        exists (cert : list sig), length cert <= maxSize
+                             /\ exists res, execTM M [|initTape_singleTapeTM (ts++cert)|] steps = Some res).
 
 Arguments TMGenNP_fixed_singleTapeTM : clear implicits.
 Arguments TMGenNP_fixed_singleTapeTM {_ _}.

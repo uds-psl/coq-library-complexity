@@ -1,4 +1,3 @@
-(* Require Import Combinators.Combinators Multi Basic.Mono TMTac. *)
 From Undecidability Require Import ProgrammingTools.
 From Undecidability Require Import ArithPrelim.
 
@@ -71,12 +70,15 @@ Proof.
   - destruct_vector. cbn in *. inv H. f_equal. auto.
 Qed.
 
+Definition fin_to_nat (n : nat) (i : Fin.t n) : nat := proj1_sig (Fin.to_nat i).
+Module FinCoercion.
+  Coercion fin_to_nat : Fin.t >-> nat. 
+  Export Set Printing Coercions.
+End FinCoercion.
+
+Import FinCoercion.
 
 Section Fin.
-
-  (* MOVE & Not global *)
-  Global Coercion fin_to_nat (n : nat) (i : Fin.t n) : nat := proj1_sig (Fin.to_nat i).
-  Global Set Printing Coercions.
 
   Lemma fin_to_nat_lt (n : nat) (i : Fin.t n) : fin_to_nat i < n.
   Proof. unfold fin_to_nat. destruct (Fin.to_nat i). cbn. auto. Qed.
@@ -148,11 +150,11 @@ Section Fin.
   Qed.
 
   (* Arguments finMax (n) H : clear implicits. *)
-
+(*
   Compute finMax (ltac:(congruence) : 1 <> 0).
   Compute finMax (ltac:(congruence) : 10 <> 0).
   Compute finMax' 99.
-
+*)
   Definition finMin (n : nat) : n <> 0 -> Fin.t n.
   Proof.
     refine (match n as n' return n' <> 0 -> Fin.t n' with
@@ -200,10 +202,10 @@ Section Fin.
 
   Definition finSucc' (n : nat) (i : Fin.t (S n)) (H : i <> finMax' n) : Fin.t (S n).
   Proof. unshelve eapply finSucc with (i := i). apply Nat.neq_succ_0. apply H. Defined.
-
+(*)
   Compute @finSucc 5 Fin0 _ _.
   Compute finSucc' (_ : Fin4 <> finMax' 10).
-
+*)
 
   Fixpoint finSucc_opt (n : nat) (i : Fin.t n) {struct i} : option (Fin.t n).
   Proof.
@@ -218,6 +220,7 @@ Section Fin.
         * apply None.
   Defined.
 
+(*
   Compute eq_refl : @finSucc_opt 1 Fin0 = None.
   Compute eq_refl : @finSucc_opt 2 Fin0 = Some Fin1.
   Compute eq_refl : @finSucc_opt 2 Fin1 = None.
@@ -225,7 +228,7 @@ Section Fin.
   Compute eq_refl : @finSucc_opt 3 Fin0 = Some Fin1.
   Compute eq_refl : @finSucc_opt 8 Fin7 = None.
   Compute eq_refl : @finSucc_opt 9 Fin7 = Some Fin8.
-
+*)
   Lemma finSucc_opt_Some (n : nat) (i : Fin.t n) :
     S (fin_to_nat i) < n ->
     exists i', finSucc_opt i = Some i'.
@@ -1223,7 +1226,7 @@ Section ToSingleTape.
              destruct tps2 as [ | tp' tps2']; cbn in *.
              + TMSimp congruence.
              + destruct HStep_cons as (HStep_cons1&HStep_cons2). destruct (finSucc_opt i) as [ i'' | ] eqn:Ei; inv HStep_cons2; rename i'' into i'.
-               eexists. split. 2: apply Hk. left. exists (tps1 ++ [tp]), (tps2'), tp'. repeat split. Search i'.
+               eexists. split. 2: apply Hk. left. exists (tps1 ++ [tp]), (tps2'), tp'. repeat split.
                * simpl_list. cbn. apply finSucc_opt_Some' in Ei. apply Nat.eqb_eq. apply Nat.eqb_eq in HL1. omega.
                * simpl_list. cbn. apply finSucc_opt_Some' in Ei. apply Nat.eqb_eq. apply Nat.eqb_eq in HL2. omega.
                * apply insertKnownSymbol_correct. now apply Nat.eqb_eq. assumption.
@@ -2362,4 +2365,4 @@ Section ToSingleTape.
 End ToSingleTape.
 
 
-Print Assumptions ToSingleTape_Realise'.
+(* Print Assumptions ToSingleTape_Realise'. *)

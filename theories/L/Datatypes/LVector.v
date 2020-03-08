@@ -119,7 +119,7 @@ Proof.
   induction v in n',v'|-*;cbn;destruct v';cbn;try tauto. rewrite <- IHv. f_equal.
 Qed.
 
-
+(*MOVE*)
 Lemma to_list_length X n0 (l:Vector.t X n0) :length (Vector.to_list l) = n0.
 Proof.
   induction l. reflexivity. rewrite <- IHl at 3. reflexivity.
@@ -146,13 +146,13 @@ Proof.
   setoid_rewrite size_list.
   induction l;intros l'.
   -cbn - [plus mult c max min] in *.
-   enough (10<=c). nia. shelve.
+   enough (10<= c). nia. shelve.
   -destruct l' as [ |? l'].
    all:cbn - [plus mult c max min] in *.
-   1:{ enough (10<=c). nia. shelve. }
+   1:{ enough (10<= c). nia. shelve. }
    specialize (IHl l').
    unfold eqbTime at 1.
-   enough (10+c__eqbComp X<=c ). nia. shelve.
+   enough (10+c__eqbComp X<= c ). nia. shelve.
   [c]:exact (c__eqbComp X + 10).
    Unshelve. all:subst c. all:nia.
 Qed.

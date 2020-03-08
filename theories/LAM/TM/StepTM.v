@@ -825,7 +825,7 @@ Section StepMachine.
 
 
   (* I forgot that [While] takes a machine over [option unit] instead of [bool]. But that's no problem since we have [Relabel]. *)
-  Coercion bool2optunit := fun b : bool => if b then None else Some tt.
+  Local Coercion bool2optunit := fun b : bool => if b then None else Some tt.
 
   Definition Step : pTM sigStep^+ (option unit) 11 :=
     Relabel

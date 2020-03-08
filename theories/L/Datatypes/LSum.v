@@ -27,3 +27,14 @@ Section Fix_XY.
   Defined.
 End Fix_XY.
 Hint Resolve sum_enc_correct : Lrewrite.
+
+Lemma size_sum X Y `{registered X} `{registered Y} (l: X + Y):
+  size (enc l) = match l with inl x => size (enc x) + 5 | inr x => size (enc x) + 4 end.
+Proof.
+  change (enc l) with (sum_enc l).
+  destruct l as [x|x]. all:cbn [sum_enc map sumn size]. 
+  all:change ((match _ with
+           | @mk_registered _ enc _ _ => enc
+           end x)) with (enc x).
+  all:lia. 
+Qed.

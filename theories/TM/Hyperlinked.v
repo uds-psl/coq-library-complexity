@@ -7,7 +7,7 @@ From Undecidability Require Import TM.Code.ProgrammingTools.
 
 From Undecidability.TM Require Import Basic.Mono Basic.Null Compound.Multi.
 Section PrimitiveMachines.
-
+(*
   Check ReadChar_Sem.
   
   Check Write_Sem.
@@ -15,12 +15,12 @@ Section PrimitiveMachines.
   Check Move_Sem.
   
   Check Nop_Sem.
-
+*)
 End PrimitiveMachines.
 
 From Undecidability.TM Require Import Combinators.
 Section MachineCombinators.
-
+(*
   Check Switch_Realise.
 
   Check Switch_TerminatesIn.
@@ -36,13 +36,13 @@ Section MachineCombinators.
   Print Seq.
   
   Print If.
-
+*)
 End MachineCombinators.
 
 
 From Undecidability.TM.Lifting Require Import LiftTapes LiftAlphabet.
 Section MachineLiftings.
-
+(*
   Check LiftTapes_Realise.
 
   Check LiftTapes_Terminates.
@@ -50,12 +50,12 @@ Section MachineLiftings.
   Check LiftAlphabet_Realise.
 
   Check LiftAlphabet_TerminatesIn.
-
+*)
 End MachineLiftings.
 
 
 Section EncodableTypes.
-
+(*
   Check Encode_unit.
 
   Check Encode_bool.
@@ -69,7 +69,7 @@ Section EncodableTypes.
   Check Encode_sum.
 
   Check Encode_pair.
-  
+ *)
 End EncodableTypes.
 
 

@@ -220,6 +220,7 @@ TM/Univ/StepTM.v
 
 # PrettyBounds
 TM/PrettyBounds/PrettyBounds.v
+TM/PrettyBounds/SizeBounds.v
 TM/PrettyBounds/MaxList.v
 TM/PrettyBounds/BaseCode.v
 TM/PrettyBounds/UnivBounds.v
@@ -303,6 +304,7 @@ L/Functions/Ackermann.v
 
 L/TM/TMEncoding.v
 L/TM/TMflat.v
+L/TM/CompCode.v
 L/TM/TMunflatten.v
 L/TM/TMflatEnc.v
 L/TM/TMflatFun.v
@@ -318,6 +320,9 @@ L/Reductions/MPCP_PCP_computable.v
 L/Reductions/PCP_CFG_computable.v
 L/Reductions/H10_to_L.v
 
+L/Complexity/UpToC.v
+L/Complexity/UpToCNary.v
+L/Complexity/GenericNary.v
 L/Complexity/ResourceMeasures.v
 L/Complexity/SpaceBoundsTime.v
 L/Complexity/Synthetic.v
@@ -338,6 +343,8 @@ L/Complexity/Problems/TMGenNP.v
 L/Complexity/Reductions/TMGenNP/L_to_LM.v
 L/Complexity/Reductions/TMGenNP/LM_to_mTM.v
 L/Complexity/Reductions/TMGenNP/mTM_to_singleTapeTM.v
+L/Complexity/Reductions/TMGenNP/M_multi2mono.v
+L/Complexity/Reductions/TMGenNP/M_LM2TM.v
 L/Complexity/Reductions/TMGenNP/IntermediateProblems.v
 L/Complexity/Reductions/TMGenNP/LMGenNP.v
 
