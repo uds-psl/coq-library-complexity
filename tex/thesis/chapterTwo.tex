@@ -10,6 +10,7 @@
 \newcommand{\finType}{\textsf{finType}}
 \newcommand{\eqType}{\textsf{eqType}}
 
+\newcommand{\findex}[1]{\ensuremath{\textsf{index}~#1}}
 
 \chapter{Preliminaries}\label{chap:preliminaries}
 In this section, we present the needed basic definitions, including Turing machines and the call-by-value $\lambda$-calculus L.
@@ -42,9 +43,8 @@ A type $X$ is called \emph{discrete} if equality on it is decidable, that is, th
 
 More generally, we extend the notation $\eqb{a}{b}$ to other decidable binary predicates, for instance to $a~\overset{?}{\le} b$ for deciding the relation $\le$.
 
-We also need \emph{finite types}. Finite types are discrete types with a finite number of elements. Formally, we require a list of all values of the type as a witness that it is finite~\cite{menz2016}.
-For any number $n$, there is a type with exactly $n$ elements, which we call $F_n$. 
-
+We also need \emph{finite types}. Finite types are discrete types with a finite number of elements. Formally, we require a list of all values of the type, in which each element occurs exactly once, as the witness that it is finite~\cite{menz2016}. Given a finite type $F$ and $e : F$, $\findex{e}$ is the position of $e$ in this list.
+For any number $n$, there is a type $F_n$ with exactly $n$ elements.
 
 \section{Relations}
 As is common in type theory, we model relations on a type $X$ using binary predicates of type $X \rightarrow X \rightarrow \Prop$. 
@@ -84,25 +84,36 @@ The following definitions are due to Asperti and Ricciotti~\cite{asperti_ricciot
 
 \subsection{Tapes}
 We define tapes over a finite type $\Sigma$, the tape alphabet. In contrast to usual presentations, $\Sigma$ does not contain a special blank symbol that denotes unused regions of the tape. Instead, the definition only captures the regions of the tape that are currently used. 
+This formalisation of tapes without blanks has the advantage that each possible tape is uniquely represented by exactly one element of $\textsf{tape}~\Sigma$. 
+
 A tape can be in one of four states:
 \begin{align*}
-  \text{tape}~&\Sigma  := \\
+  \textsf{tape}~&\Sigma  := \\
   |&~\textsf{niltape} \\
   |&~\textsf{leftof}~(c : \Sigma)~(rs : \listsof{\Sigma}) \\
   |&~\textsf{rightof}~(c : \Sigma)~(ls : \listsof{\Sigma}) \\
   |&~\textsf{midtape}~(ls : \listsof{\Sigma})~(c : \Sigma)~(rs : \listsof{\Sigma})
 \end{align*}
 A \textsf{niltape} is completely empty. In all other cases, the tape contains at least one symbol $c$. 
-
 In the case of $\textsf{leftof}~c~rs$, the list of symbols $c::rs$ contains exactly the tape contents right of the head, and conversely, in the case of $\textsf{rightof}~c~ls$, the list $c::ls$ contains the tape contents left of the head. For these two cases, the tape does not currently reside on a symbol.
-If the Turing machine wants to move the head one more symbol beyond the used tape region, the tape does not change, that is, it is not possible for the head to be two or more symbols beyond the used tape region.
 
 Finally, $\textsf{midtape}~ls~c~rs$ models the case that the head resides on the symbol $c$ and there are (possibly empty) parts of the tape $ls$ and $rs$ to the left and to the right.
 
-This formalisation of tapes without blanks has the advantage that each possible tape is uniquely represented by exactly one element of $\textsf{tape}~\Sigma$. 
-\todo{remark that the adjacent symbols are always at the head; picture showing reversion of left tape}
-\todo{introduce left, right and current}
-\todo{lemma tm step size}
+The tapes are always interpreted such that the heads of the lists are closest to the Turing machine's head. If one were to imagine a tape as a linear sequence of symbols, $\textsf{midtape}~ls~c~rs$ would have the following shape: 
+\begin{center}
+  \begin{tikzpicture}
+    \draw (0, 0) -- (0, 0.75) -- (7, 0.75) -- (7, 0) -- (0, 0); 
+    \draw (3, 0) -- (3, 0.75);
+    \draw (4, 0) -- (4, 0.75);
+
+    \node at (1.5, 0.375) {$\rev~ls$};
+    \node at (3.5, 0.375) {$c$};
+    \node at (5.5, 0.375) {$rs$};
+    \node at (3.5, 0.91) {$\downarrow$};
+  \end{tikzpicture}
+\end{center}
+
+We use the functions $\textsf{left}, \textsf{right} : \textsf{tape}~\Sigma \rightarrow \listsof{\Sigma}$ and $\textsf{current} : \textsf{tape}~\Sigma \rightarrow \opt{\Sigma}$ to extract the contents of the tape left of the head, right of the head, or under the head. 
 
 \subsection{Turing machines}
 In each computational step, a Turing machine can optionally write a symbol and move the head on each of its tapes individually. These actions are captured by the type $\textsf{Act}_{\Sigma} \defeq{} \opt{\Sigma} \times \textsf{move}$, where $\Sigma$ is the tape alphabet and 
@@ -114,25 +125,112 @@ defines the possible movements.
 \end{definition}
 For the semantics of Turing machines, the values of the transition function for halting states, i.e.\ states $q$ for which $\textsf{halt}~q = \btrue$, are irrelevant. 
 
+A configuration of a Turing machine $M$ is a pair consisting of the current state and its tapes.
 \begin{definition}[Configurations]
   Let $M : \textsf{TM}~\Sigma~n$. The type of configurations over $M$ is given by 
   $\textsf{conf}_{M} \defeq Q_{M} \times {(\textsf{tape}_{\Sigma})}^n$.
 \end{definition}
 
-In the following, we fix the number of tapes to 1, which is sufficient for our needs. 
-We give the full definition of the semantics in Appendix~\ref{app:TM}.
-For our needs, it will suffice to assume a transition relation $\succ$ on configurations such that 
-$(q, tp) \succ (q', tp')$ holds if, and only if, $\textsf{halt}~q = \bfalse$ and $(q', tp')$ is the successor configuration of $(q, tp)$ according to the transition function.
+We give the full definition of the semantics of Turing machines in Appendix~\ref{app:TM} and only define formally here how the Turing machine moves its heads (Figure~\ref{fig:movetape}). The rest of the definition follows what one would intuitively expect.
 
+\newcommand{\tmleftof}{\textsf{leftof}}
+\newcommand{\tmrightof}{\textsf{rightof}}
+\newcommand{\tmniltape}{\textsf{niltape}}
+\newcommand{\tmmidtape}{\textsf{midtape}}
+\newcommand{\tapemove}{\textsf{tape\_move}}
+\begin{figure}
+  \begin{align*}
+    \tapemove~\movel~(\tmleftof~r~rs) &\defeq \tmleftof~r~rs \\
+    \tapemove~\mover~(\tmleftof~r~rs) &\defeq \tmmidtape~\nil~r~rs \\
+    \tapemove~\movel~(\tmmidtape~\nil~c~rs) &\defeq \tmleftof~c~rs \\
+    \tapemove~\mover~(\tmmidtape~ls~c~\nil) &\defeq \tmrightof~c~ls \\
+    \tapemove~\movel~(\tmmidtape~(l::ls)~c~rs) &\defeq \tmmidtape~ls~l~(c ::rs) \\
+    \tapemove~\mover~(\tmmidtape~ls~c~(r::rs)) &\defeq \tmmidtape~(c::ls)~r~rs \\
+    \tapemove~\movel~(\tmrightof~l~ls) &\defeq \tmmidtape~ls~l~\nil \\
+    \tapemove~\mover~(\tmrightof~l~ls) &\defeq \tmrightof~l~ls \\
+    \tapemove~~\_~~\tmniltape &\defeq \tmniltape \\
+    \tapemove~\moven~tp &\defeq tp
+  \end{align*}
+  \caption{Turing machine tape movements. Note how the tape does not change if the Turing machine wants to move the head one more symbol beyond the used tape region if the head currently is not on a symbol. This means that it is not possible for the head to reside two or more symbols beyond the used the tape region.}\label{fig:movetape}
+\end{figure}
+
+In the presentation on paper, it will suffice to assume a transition relation $\succ$ on configurations such that 
+$(q, tp) \succ (q', tp')$ holds if, and only if, $\textsf{halt}~q = \bfalse$ and $(q', tp')$ is the successor configuration of $(q, tp)$ according to the transition function. 
 \begin{definition}[Termination Relation]
   \[ (q, tp) \rhd^{k} (q', tp') := (q, tp) \succ^k (q', tp') \land \textsf{halt}~q' = \btrue\]
   \[ (q, tp) \rhd^{\le k} (q', tp') := \exists l \le k, (q, tp) \rhd^l (q', tp') \]
 \end{definition}
 
-\section{The $\lambda$ Calculus L}
-In this section, we introduce L as the computational model we are using. For more details, the interested reader is referred to~\cite{ForsterSmolka:2017:L-Computability}, where L is introduced in detail in the context of computability theory.
+We only need single-tape Turing machines throughout this thesis and therefore we restrict this notation to single-tape machines.
+The following result states that with each computational step, a Turing machine can take up at mose one additional tape cell. 
+\begin{lemma}[``Time Bounds Space'']
+  Assume a Turing machine $M : \textsf{TM}~\Sigma~1$ and $(q, tp) \succ (q', tp')$. Then $\textsf{sizeOfTape}~tp' \le \natS{\textsf{sizeOfTape}~tp}$, 
+  where $\textsf{sizeOfTape} : \textsf{tape}~\Sigma \rightarrow \nat$ describes the number of symbols contained on a tape.
+\end{lemma}
 
-definitions
+\newcommand{\Lterm}{\textsf{term}}
+\section{The $\lambda$ Calculus L}
+L is an untyped $\lambda$ calculus with weak call-by-value reduction and is the underlying computational model we are using throughout this thesis. 
+This section intends to give a brief overview of the most foundational aspects of L in order to justify using L as a computational model. The rest of this thesis can, however, be read without delving into the details of L. 
+For a more thorough treatment, the interested reader is referred to~\cite{ForsterSmolka:2017:L-Computability}, where L is introduced in detail in the context of computability theory.
+
+L is defined over terms $s, t, u: \Lterm \defeq n \bnfmid \lambda s \bnfmid s~t$, where $n : \nat$. Terms are defined using the De Bruijn binder convention, where a variable is represented by a number $n$ giving the number of $\lambda$s one has to skip to reach the binding $\lambda$. On paper, however, we use named binders to increase readability. For instance, the term $\lambda~x. \lambda~y. x$ can be translated to $\lambda\lambda 1$ using the De Bruijn convention, as the $\lambda$ binding $y$ has to be skipped. 
+
+\subsection{Semantics of L}
+For the semantics, we start by defining substitution of terms. $s^k_t$ is the term obtained by replacing every free occurrence of the variable $k$ in $s$ by the term $t$. 
+\begin{align*}
+  k^k_t &\defeq t \\
+  n^k_t &\defeq n \text{ for } n \neq k \\
+  (s~u)^k_t &\defeq s^k_t ~ u^k_t \\
+  (\lambda s)^k_t &\defeq \lambda (s^{\natS{k}}_t) 
+\end{align*}
+Regarding the semantics, L features a weak call-by-value reduction. This means that reduction is not possible below binders (i.e. $\lambda$s) and arguments need to be fully reduced to a value (i.e.\ a $\lambda$ expresssion) before $\beta$-reduction is possible.
+\begin{align*}
+  \infer{s~t \succ s'~t}{s \succ s'} \quad \infer{s~t \succ s~t'}{t \succ t'} \quad \infer{(\lambda s)(\lambda t) \succ s^0_{\lambda t}}{} 
+\end{align*}
+The last rule is the interesting one: only if both sides of an application have been fully evaluated to an abstraction can we do a $\beta$-reduction. 
+
+Note that the reduction relation is not deterministic: we have not specified an evaluation order. This does not pose a problem, however, as L can be shown to be uniformly confluent: 
+\begin{fact}[Fact 7 in~\cite{ForsterSmolka:2017:L-Computability}]
+  If $s \succ t_1$ and $s \succ t_2$, then either $t_1 = t_2$ or $t_1 \succ u$ and $t_2 \succ u$ for some $u$.
+\end{fact}
+We say that a term $t$ is normal if it cannot be reduced further according to $\succ$. $t$ is a normal form of $s$ if $s \succ^* t$ and $t$ is normal. 
+Uniform confluence implies that every term $s$ which has a normal form $t$ always normalises to $t$ in the same number of steps: 
+\begin{corollary}[Uniform Normalisation, Fact 29 in~\cite{smolka:semantics_ars}]
+  Assume that $s \succ^m t$ and $s \succ^n u$ and let $t$ be normal. Then $n \le m$ and $u \succ^{m - n} t$.
+\end{corollary}
+
+\subsection{Encoding of Inductive Datatypes and Recursive Functions}
+While L is very simple in nature and does not have built-in suppport for Booleans or natural numbers, for instance, one can easily encode inductive datatypes using procedures.\footnote{Procedures are closed abstractions.} One way to do this is to use Scott encodings. 
+The Scott encodings of elements of an inductive datatype are procedures with one argument for each of the datatype's constructors. 
+As an example, we look at the encoding of natural numbers. Natural numbers $\nat$ can be defined inductively using the two constructors $O : \nat$ and $S : \nat \rightarrow \nat$, where $S$ takes a number to its successor. 
+Their Scott encoding looks as follows: 
+\begin{align*}
+  \widehat{O} \defeq \lambda a. \lambda b. a 
+  && \widehat{S~n} \defeq \lambda a. \lambda b. b~\widehat{n}
+\end{align*}
+The basic idea is that the encoding allows to easily match on an element of the datatype by passing it suitable arguments which will be used for the different cases. 
+For instance, we have that for procedures $s, t$: 
+\begin{align*}
+  \widehat{O}~s~t \succ^* s && \widehat{S~n}~s~t \succ^* t~\widehat{n} 
+\end{align*}
+One can also define encodings of the constructors $O$ and $S$. 
+
+This encoding can be derived systematically for arbitrary datatypes such as lists. 
+Of course, having inductive datatypes is not of much use if one cannot define recursive functions on them. 
+Luckily, one can derive a function with which recursive terms can be defined: 
+\begin{fact}[Fact 6 from~\cite{ForsterSmolka:2017:L-Computability}]
+  There is a function $\rho : \Lterm \rightarrow \Lterm$ such that $\rho~s$ is a procedure if $s$ is closed and $(\rho~u)v \succ^3 u(p~u)v$ for all procedures $u, v$.
+\end{fact}
+The procedure $u$ can be seen as a step function taking the function to call for recursion as the first argument. 
+With the help of the recursion operator $\rho$, one can define recursive functions on Scott encodings by directly translating the recursive equations one would use in a functional programming language.
+
+This systematic encoding has been exploited by Forster and Kunze~\cite{ForsterKunze:2019:Certifying-extraction} to develop a certifying extraction mechanism which can automatically generate Scott encodings for inductive datatypes defined in Coq as well as encodings for recursive and non-recursive functions on these datatypes. The correctness of these encodings, in the sense that the encoded terms behave similarly to the original terms, is derived fully automatically.
+The mechanism thus allows one to program functions for L without having to directly work with L.
+
+\subsection{Time and Space Measures for L}
+
+
 
 Scott encoding of inductive datatypes
 
@@ -142,7 +240,7 @@ size explosion problem
 
 argument why one should not expect an easy direct reduction from L to a natural problem (due to size explosion)
 
-\section{Basic Notions of Complexity Theory}
+\section{Basic Notions of Complexity Theory}\label{sec:np_basics}
 complexity, i.e. basic definitions done by Fabian
 
 (maybe consider a separate chapter for the complexity part, but on the other hand, things for which I didn't do anything shouldn't take up too much space)
