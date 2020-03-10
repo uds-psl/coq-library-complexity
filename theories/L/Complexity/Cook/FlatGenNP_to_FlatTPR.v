@@ -593,6 +593,18 @@ Proof.
   extract. solverec. 
   all: unfold reifyPreludeSig'Flat_time, c__reifyPreludeSigPFlat; solverec. 
 Defined. 
+
+Definition poly__reifyPreludeSigPFlat n := (n + 1) * c__ntherror + c__reifyPreludeSigPFlat. 
+Lemma reifyPreludeSig'Flat_time_bound (env : evalEnvFlat) (c : fpreludeSig') n : envConst_bound n env -> reifyPreludeSig'Flat_time env c <= poly__reifyPreludeSigPFlat n. 
+Proof. 
+  intros H. unfold reifyPreludeSig'Flat_time. unfold poly__reifyPreludeSigPFlat. destruct c.
+  5: { unfold nth_error_time. destruct H as (_ & H1 & _). rewrite H1, Nat.le_min_l. lia. }
+  all: lia. 
+Qed. 
+Lemma reifyPreludeSig'Flat_poly : monotonic poly__reifyPreludeSigPFlat /\ inOPoly poly__reifyPreludeSigPFlat. 
+Proof. 
+  unfold poly__reifyPreludeSigPFlat; split; smpl_inO. 
+Qed. 
   
 (** reifyAlphabetFlat *) 
 Definition c__reifyAlphabetFlat := c__add1 + 7 + c__optionMap.
@@ -612,6 +624,23 @@ Proof.
     unfold reifyAlphabetFlat_time, c__reifyAlphabetFlat. solverec. 
 Defined. 
 
+Definition poly__reifyAlphabetFlat n := poly__reifyGammaFlat n + poly__reifyPreludeSigPFlat n + poly__flatGamma n + (c__flatGammaS * (n + 1) * (n + 1) + 1) * c__add + c__reifyAlphabetFlat. 
+Lemma reifyAlphabetFlat_time_bound tm env c n : envConst_bound n env -> envOfFlatTypes tm env -> reifyAlphabetFlat_time tm env c <= poly__reifyAlphabetFlat (size (enc tm) + n). 
+Proof. 
+  intros H H0. unfold reifyAlphabetFlat_time. unfold poly__reifyAlphabetFlat. destruct c.
+  - rewrite reifyGammaFlat_time_bound by easy. lia. 
+  - rewrite reifyPreludeSig'Flat_time_bound by easy. 
+    poly_mono reifyPreludeSig'Flat_poly. 2: { replace_le n with (size (enc tm) + n) by lia at 1. reflexivity. } 
+    rewrite flatGamma_time_bound. 
+    poly_mono flatGamma_poly. 2: { replace_le (size (enc tm)) with (size (enc tm) + n) by lia at 1. reflexivity. }
+    unfold add_time. rewrite flatGamma_bound. 
+    rewrite sig_TM_le, states_TM_le. 
+    leq_crossout.  
+Qed. 
+Lemma reifyAlphabetFlat_poly : monotonic poly__reifyAlphabetFlat /\ inOPoly poly__reifyAlphabetFlat. 
+Proof. 
+  unfold poly__reifyAlphabetFlat; split; smpl_inO; first [apply reifyGammaFlat_poly | apply flatGamma_poly | apply reifyPreludeSig'Flat_poly]. 
+Qed. 
 
 (** reifyWindowFlat *)
 Definition reifyWindowFlat (tm : TM) := reifyWindow (reifyAlphabetFlat tm). 
@@ -628,25 +657,45 @@ Proof.
   all: unfold c__reifyWindow; solverec. 
 Defined. 
 
+Definition poly__reifyWindow n := poly__reifyAlphabetFlat n * 6 + c__reifyWindow. 
+Lemma reifyWindow_time_bound tm env win n : envConst_bound n env -> envOfFlatTypes tm env -> reifyWindow_time tm env win <= poly__reifyWindow (size (enc tm) + n). 
+Proof. 
+  intros H H0. unfold reifyWindow_time. destruct win as ([w1 w2 w3] & [w4 w5 w6]). 
+  rewrite !reifyAlphabetFlat_time_bound by eauto.
+  unfold poly__reifyWindow; lia. 
+Qed. 
+Lemma reifyWindow_poly : monotonic poly__reifyWindow /\ inOPoly poly__reifyWindow. 
+Proof. 
+  split; unfold poly__reifyWindow; smpl_inO; apply reifyAlphabetFlat_poly. 
+Qed. 
+
 (** listProd *)
 Section fixListProd. 
   Variable (X : Type).
   Context `{intX : registered X}.
 
-  Definition c__listProd1 := 17 + c__map. 
+  Definition c__listProd1 := 22 + c__map. 
   Definition c__listProd2 := 18. 
-  Fixpoint list_prod_time (l1 : list X) (l2 : list (list X)) := 
-    match l1 with 
-    | [] => 0
-    | (a :: l1) => (|l2| + 1) * c__listProd1 + list_prod_time l1 l2
-    end + c__listProd2. 
+  Definition list_prod_time (l1 : list X) (l2 : list (list X)) := (|l1|) * (|l2| + 1) * c__listProd1 + c__listProd2.
+  
   Global Instance term_listProd : computableTime' (@list_prod X) (fun l1 _ => (5, fun l2 _ => (list_prod_time l1 l2, tt))). 
   Proof. 
     extract. 
     solverec. 
+    all: unfold list_prod_time. 
     2: rewrite map_time_const, map_length.
     all: unfold c__listProd1, c__listProd2; solverec. 
   Defined. 
+
+  Definition poly__listProd n := n * (n + 1) * c__listProd1 + c__listProd2. 
+  Lemma list_prod_time_bound l1 l2: list_prod_time l1 l2 <= poly__listProd (size (enc l1) + size (enc l2)). 
+  Proof. 
+    unfold list_prod_time, poly__listProd. rewrite !list_size_length. leq_crossout. 
+  Qed. 
+  Lemma list_prod_poly : monotonic poly__listProd /\ inOPoly poly__listProd. 
+  Proof. 
+    unfold poly__listProd; split; smpl_inO. 
+  Qed. 
 
   Lemma list_prod_length (l1 : list X) l2 : |list_prod l1 l2| = |l1| * |l2|.
   Proof. 
@@ -704,6 +753,38 @@ Proof.
   nia. 
 Qed.
 
+Tactic Notation "replace_le" constr(s) "with" constr(r) :=
+  let H := fresh in assert (s <= r) as H; [ | rewrite !H; clear H]. 
+
+Instance proper_le_pow : Proper (le ==> eq ==> le) Nat.pow.
+Proof. 
+  intros a b H1 d e ->. apply Nat.pow_le_mono_l, H1. 
+Qed. 
+
+(** we show that for every fixed n giving the number of variables to bind, mkVarEnv has a polynomial running time*)
+Definition c__mkVarEnvB1 := (2 * (c__listProd1 + 1) * (c__mkVarEnvStep + 1)). 
+Definition c__mkVarEnvB2 := (c__listProd2 + c__mkVarEnv + c__it + c__mkVarEnvStep).
+Definition poly__mkVarEnv num n := num * c__mkVarEnvB1 * (n)^num + c__it + c__mkVarEnv + num * (n + c__mkVarEnvB2 + n * c__listProd1).
+Lemma mkVarEnv_time_bound num l : mkVarEnv_time l num <= poly__mkVarEnv num (|l| + 1). 
+Proof. 
+  unfold mkVarEnv_time. induction num; cbn -[Nat.add Nat.mul]. 
+  - unfold poly__mkVarEnv. lia. 
+  - match goal with [ |- ?a + ?b + ?c + ?d <= _] => replace (a + b + c + d) with (a + (b + d) + c) by lia end. 
+    rewrite IHnum. 
+    unfold mkVarEnv_step_time, list_prod_time. unfold mkVarEnv_step. specialize mkVarEnv_length as H1. unfold mkVarEnv in H1. 
+    rewrite H1. 
+    replace_le ((|l|) * (((|l|) + 1)^num + 1)) with ((|l| + 1)^(S num) + (|l|)) by cbn; nia. 
+    replace_le ((|l|) * (((|l|) + 1)^num * c__mkVarEnvStep)) with (((|l|) + 1)^(S num) * c__mkVarEnvStep) by cbn; nia. 
+    (*rewrite list_size_length. *)
+    unfold poly__mkVarEnv.  
+    replace_le ((|l| + 1) ^ num) with ((|l| + 1)^(S num)) by cbn; nia. 
+    unfold c__mkVarEnvB1, c__mkVarEnvB2. leq_crossout. 
+Qed. 
+Lemma mkVarEnv_poly n : monotonic (poly__mkVarEnv n) /\ inOPoly (poly__mkVarEnv n). 
+Proof. 
+  unfold poly__mkVarEnv. split; smpl_inO. 
+Qed. 
+
 (** tupToEvalEnv *)
 Definition c__tupToEvalEnv := 17.
 Instance term_tupToEvalEnv : computableTime' (@tupToEvalEnv nat nat nat nat) (fun p _ => (c__tupToEvalEnv, tt)). 
@@ -727,12 +808,8 @@ Section fixprodLists.
   Context `{Xint : registered X} `{Yint : registered Y}.
 
   Definition c__prodLists1 := 22 + c__map. 
-  Definition c__prodLists2 := 1 + c__map + 16.
-  Fixpoint prodLists_time (l1 : list X) (l2 : list Y) := 
-    match l1 with 
-    | [] => 0 
-    | _ :: l1 => (|l2|) * c__prodLists2 + prodLists_time l1 l2 
-    end + c__prodLists1. 
+  Definition c__prodLists2 := 2 * c__map + 39.
+  Definition prodLists_time (l1 : list X) (l2 : list Y) := (|l1|) * (|l2| + 1) * c__prodLists2 + c__prodLists1. 
   Global Instance term_prodLists : computableTime' (@prodLists X Y) (fun l1 _ => (5, fun l2 _ => (prodLists_time l1 l2, tt))). 
   Proof. 
     apply computableTimeExt with (x := fix rec (A : list X) (B : list Y) : list (X * Y) := 
@@ -742,9 +819,20 @@ Section fixprodLists.
       end). 
     1: { unfold prodLists. change (fun x => ?h x) with h. intros l1 l2. induction l1; easy. }
     extract. solverec. 
-    all: unfold c__prodLists1, c__prodLists2; solverec. 
+    all: unfold prodLists_time, c__prodLists1, c__prodLists2; solverec. 
     rewrite map_length, map_time_const. solverec. 
   Defined. 
+
+  Definition poly__prodLists n := n * (n + 1) * c__prodLists2 + c__prodLists1.
+  Lemma prodLists_time_bound l1 l2 : prodLists_time l1 l2 <= poly__prodLists (size (enc l1) + size (enc l2)). 
+  Proof. 
+    unfold prodLists_time. rewrite !list_size_length. 
+    unfold poly__prodLists. solverec. 
+  Qed. 
+  Lemma prodList_poly : monotonic poly__prodLists /\ inOPoly poly__prodLists. 
+  Proof. 
+    unfold poly__prodLists; split; smpl_inO. 
+  Qed. 
 End fixprodLists. 
 
 (** makeAllEvalEnvFlat *)
@@ -778,6 +866,20 @@ Proof.
   replace (1 + (sig x + 1)) with (1 + sig x + 1) by lia. 
   leq_crossout.
 Defined. 
+
+(**we prove that the running time is polynomial for fixed n1, n2, n3, n4 *)
+Definition poly__makeAllEvalEnvFlat (n1 n2 n3 n4 : nat) n := n + 1. 
+Lemma makeAllEvalEnvFlat_time_bound n1 n2 n3 n4 tm : makeAllEvalEnvFlat_time tm n1 n2 n3 n4 <= poly__makeAllEvalEnvFlat n1 n2 n3 n4 (size (enc tm)). 
+Proof. 
+  unfold makeAllEvalEnvFlat_time. unfold seq_time. 
+  rewrite flatStateSigma_bound at 1. rewrite sig_TM_le, states_TM_le at 1. rewrite sig_TM_le at 1. 
+  match goal with [ |- context [?a + mkVarEnv_time (seq 0 flatPolarity) ?b] ] => replace_le a with ((flatPolarity + 3 * size (enc tm) + 5) * c__seq) by nia end. 
+  rewrite !mkVarEnv_time_bound. rewrite !seq_length. 
+  unfold prodLists_time. rewrite !prodLists_length, !mkVarEnv_length, !seq_length. 
+
+  
+  
+
 
 (** filterSome *)
 Section fixfilterSome.
