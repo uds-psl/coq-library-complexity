@@ -178,3 +178,21 @@ Proof.
    all:repeat let eq := fresh in destruct _ eqn:eq. all:try congruence.
    all:intros ? [= <-]. all:easy.
 Defined.
+
+From Undecidability.L Require Import Datatypes.LUnit. 
+
+Definition unit_decode (s : term) : option unit := 
+  match s with
+  | lam 0 => Some tt
+  | _ => None
+  end. 
+
+Instance decode_unit : decodable unit. 
+Proof. 
+  exists unit_decode. 
+  - intros []. cbn. easy.
+  - destruct t eqn:Heq; cbn. 
+    all:repeat let eq := fresh in destruct _ eqn:eq. all:try congruence.
+    intros ? [= <-]. easy.
+Defined. 
+

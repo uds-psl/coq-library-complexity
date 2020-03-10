@@ -2,7 +2,7 @@ From Undecidability.L.Complexity Require Export Synthetic RegisteredP LinTimeDec
 From Undecidability.L.Tactics Require Import LTactics.
 
 
-From Undecidability.L.Datatypes Require Import LProd LOptions LTerm.
+From Undecidability.L.Datatypes Require Import LProd LOptions LTerm LUnit.
 From Undecidability.L Require Export Functions.Decoding.
 
 (** inspired by Papadimitriou *)
@@ -137,6 +137,34 @@ Proof.
     -unfold t__f'. smpl_inO.
   }
 Qed.
+
+(** P *)
+Definition inP (X : Type) `{_: registered X} (vX : X -> Prop) (P : restrictedP vX) := inTimePoly P. 
+
+(** P <<= NP *)
+
+Lemma P_NP_incl (X : Type) `{registered X} (vX : X -> Prop) (P : restrictedP vX) : 
+  inP P -> inNP P. 
+Proof. 
+  intros H1. unfold inP in H1. 
+  eapply (inNP_intro (Y:= unit)) with (R := fun x _ => P x). 
+  - apply linDec_polyTimeComputable.
+  - destruct H1 as (f & H1 & H2 & H3). evar (f' : nat -> nat). exists f'. 
+    split. 
+    { destruct H1 as [H1]. destruct H1. 
+      constructor. exists (fun (p : X * unit) => let (x , _) := p in f__decInTime x).
+      + extract. solverec. unfold monotonic in H3. 
+        rewrite H3 with (x' := size (enc (a, tt))). 2: { rewrite size_prod; cbn; lia. }  
+        [f']: intros n. subst f'. cbn. 
+        generalize (size (enc (a, tt))). intros; reflexivity.
+      + intros [x ?] Hx. cbn. apply correct__decInTime. 
+    } 
+    split; subst f'; smpl_inO. 
+  - exists (fun n => size (enc tt)). 
+    3, 4: smpl_inO. 
+    + intros [x Hx] _. easy.
+    + intros [x Hx] H2. exists tt. easy. 
+Qed. 
 
 (** ** Poly Time Reduction s*)
 
