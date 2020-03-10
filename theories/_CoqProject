@@ -364,6 +364,7 @@ L/Complexity/Problems/kSAT.v
 L/Complexity/Reductions/Pigeonhole.v
 L/Complexity/Reductions/kSAT_to_Clique.v
 L/Complexity/Reductions/kSAT_to_FlatClique.v
+L/Complexity/Reductions/kSAT_to_SAT.v
 
 L/Complexity/Cook/Prelim.v
 L/Complexity/Cook/PR.v

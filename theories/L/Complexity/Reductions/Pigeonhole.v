@@ -243,4 +243,9 @@ Section rep.
     specialize (card_length l2) as H2. 
     lia. 
   Qed. 
+
+  Lemma pigeonhole' (l1 l2 : list X) : l1 <<= l2 -> |l2| < |l1| -> not (dupfree l1). 
+  Proof. 
+    intros H1 H2. eapply not_dupfree_rep, pigeonhole; eauto.
+  Qed. 
 End rep.

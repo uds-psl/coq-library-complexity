@@ -558,6 +558,24 @@ Proof.
     unfold reifyGammaFlat_time, c__reifyGammaFlat. nia. 
 Defined. 
 
+Definition poly__reifyGammaFlat n := poly__flatStates n + poly__reifyTapeSigmaFlat n + poly__reifyStatesFlat n + (n * (n + 1) + 1) * c__add + c__reifyGammaFlat. 
+Lemma reifyGammaFlat_time_bound n env tm c: envConst_bound n env -> envOfFlatTypes tm env -> reifyGammaFlat_time tm env c <= poly__reifyGammaFlat (size (enc tm) + n). 
+Proof. 
+  intros H H0. 
+  unfold reifyGammaFlat_time. destruct c. 
+  - rewrite reifyStatesFlat_time_bound by easy. unfold poly__reifyGammaFlat. nia. 
+  - rewrite flatStates_time_bound, reifyTapeSigmaFlat_time_bound by easy.
+    unfold add_time. rewrite flatStates_bound. 
+    rewrite sig_TM_le, states_TM_le. 
+    poly_mono flatStates_poly. 
+    2: { replace_le (size (enc tm)) with (size (enc tm) + n) by lia at 1. reflexivity. }
+    unfold poly__reifyGammaFlat. leq_crossout.
+Qed. 
+Lemma reifyGammaFlat_poly : monotonic poly__reifyGammaFlat /\ inOPoly poly__reifyGammaFlat. 
+Proof. 
+  unfold poly__reifyGammaFlat; split; smpl_inO; first [apply flatStates_poly | apply reifyTapeSigmaFlat_poly | apply reifyStatesFlat_poly ]. 
+Qed. 
+
 (** flatNsig *)
 Definition c__flatNsig := c__add1 + 5 * c__add + 13.
 Instance term_flatNsig : computableTime' flatNsig (fun n _ => (c__flatNsig, tt)). 

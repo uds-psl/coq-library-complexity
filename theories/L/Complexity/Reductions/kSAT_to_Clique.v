@@ -101,9 +101,6 @@ Section fixSAT.
 
     Definition verticesClauseGe (L : list (V Gcnf)) (i : nat) := forall ci li, (ci, li) el L -> index ci >= i.
 
-    Definition literalInClause l C := l el C.
-    Definition literalInCnf l N := exists C, C el N /\ literalInClause l C. 
-
     Proposition Vcnf_inhabitated : |N| > 0 -> exists (v : Vcnf), True.
     Proof. 
       clear H_sat.
@@ -122,14 +119,13 @@ Section fixSAT.
   
     (*we fix the index of the clause: the same clause might appear twice, but for the proof, we really need to work on a particular clause given by an index *)
     Lemma literalInClause_exists_vertex l C i: 
-      literalInClause l C -> cnfGetClause N i = Some C -> exists (v : V Gcnf), 
+      l el C -> cnfGetClause N i = Some C -> exists (v : V Gcnf), 
       let (ci, li) := v in index ci = i /\ clauseGetLiteral C (index li) = Some l.
     Proof.
       clear H_sat.
       intros H1 H2. 
       destruct Vcnf_inhabitated as ((cdef & ldef) & _).
       1: { unfold cnfGetClause in H2. apply nth_error_In in H2. destruct N; cbn in *; [destruct H2 | lia]. }
-      unfold literalInClause in H1. 
       specialize (In_nth_error _ _ H1) as (j & H1').
       unfold Gcnf, Vcnf. cbn [V]. 
       exists (nth i (elem (finType_CS (Fin.t Ncl))) cdef, nth j (elem (finType_CS (Fin.t k))) ldef).
@@ -173,7 +169,7 @@ Section fixSAT.
         symmetry in H3; apply andb_true_iff in H3 as [-> ->].
         apply evalClause_literal_iff in H2 as (l & Hel & H2). 
         edestruct (@literalInClause_exists_vertex l C (|N''|)) as (v & Hv). 
-        + unfold literalInClause. apply Hel.
+        + apply Hel.
         + rewrite H. unfold cnfGetClause. rewrite nth_error_app2; [ | lia]. 
           rewrite Nat.sub_diag. cbn. easy. 
         + exists (v :: L). destruct v as (ci & li). destruct Hv as [Hv1 Hv2].
@@ -205,7 +201,7 @@ Section fixSAT.
     Variable (L : list (V Gcnf)). 
     Context (Hclique : isKClique Ncl L). 
     
-    (** The proof proceeds in three parts:
+    (** The proof proceeds in four steps:
         - We show that there exists a vertex of the clique for every clause of the CNF, using the pigeonhole principle.
         - Thus, there exists a list of (clause, literal) indices such that there is contained exactly one position per clause and the referenced literals are non-conflicting.
         - Resolving this list of indices, there exists a list of literals (one for every clause) which is non-conflicting. Every assignment satisfying this list of literals also satisfies the whole CNF.
@@ -253,11 +249,9 @@ Section fixSAT.
       intros H. assert (forall v, v el L -> not (ofClause v i)) as H0.
       { intros v Hel Hc. apply H; eauto. } 
       clear H. 
-      enough (Pigeonhole.rep (clausesOf L)) as H. 
-      { apply Pigeonhole.not_dupfree_rep in H; [ | easy]. 
-        destruct Hclique as (_ & H1). now apply isClique_clausesOf_dupfree in H1. 
-      }
-      eapply Pigeonhole.pigeonhole; [easy | | ].
+      enough (not (dupfree (clausesOf L))) as H. 
+      { destruct Hclique as (_ & H1). now apply isClique_clausesOf_dupfree in H1. }
+      eapply Pigeonhole.pigeonhole'; [easy | | ].
       - instantiate (1 := remove (@eqType_dec (EqType (Fin.t Ncl))) (nth i (elem (finType_CS (Fin.t Ncl))) (Fin.of_nat_lt Hi)) (elem (finType_CS (Fin.t Ncl)))). 
         intros ci Hel. apply in_remove_iff.
         split; [apply elem_spec | ].

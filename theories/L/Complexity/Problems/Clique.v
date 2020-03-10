@@ -10,12 +10,12 @@ Section fixGraph.
   Definition isClique (l : list V) := (forall v1 v2, v1 el l -> v2 el l -> v1 <> v2 -> E (v1, v2)) /\ dupfree l. 
   Definition isKClique k (l : list V) := |l| = k /\ isClique l. 
 
+  (** an alternative inductive characterisation *)
   Inductive indKClique : nat -> list V -> Prop := 
     | indKCliqueNil : indKClique 0 []
     | indKCliqueS L v k : indKClique k L -> not (v el L) -> (forall v', v' el L -> E (v, v')) -> indKClique (S k) (v :: L). 
   Hint Constructors indKClique.
 
-  (** an alternative inductive characterisation *)
   Lemma indKClique_iff k L: isKClique k L <-> indKClique k L. 
   Proof. 
     split.

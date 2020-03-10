@@ -2,13 +2,13 @@ From Undecidability.TM Require Import TM.
 From Undecidability.L.Complexity.Cook Require Import Prelim. 
 Require Import Lia. 
 
-(*We introduce easier definitions for single-tape Turing machines where the single tape is not wrapped in a singleton vector.*)
-(*We also define a relpower-based computation relation (instead of using loopM). 
-  (This is motivated by the fact that it is easier to reason inductively about a relpower-based relation.)
+(** We introduce easier definitions for single-tape Turing machines where the single tape is not wrapped in a singleton vector.
+    We also define a relpower-based computation relation (instead of using loopM). 
+    (This is motivated by the fact that it is easier to reason inductively about a relpower-based relation.)
 *)
 
 Section TM_single. 
-  (*We use a variant of the Turing machine definitions fixed to a single tape *)
+  (** We use a variant of the Turing machine definitions fixed to a single tape *)
 
   Variable (Sigma : finType).
   Variable (TM : mTM Sigma 1). 
@@ -34,7 +34,7 @@ Section TM_single.
     intros. revert t. apply Vector.case0. easy.
   Qed. 
 
-  (*agreement for single computation steps *)
+  (** agreement for single computation steps *)
   Lemma sstep_agree1 c : sconfig_for_mconfig (@step Sigma 1 TM (mconfig_for_sconfig c)) = sstep strans c.
   Proof. 
     destruct c. cbn.
@@ -64,11 +64,11 @@ Section TM_single.
   Notation "s '≻' s'" := (halt (configState s) = false /\ sstep strans s = s') (at level 50).
   Notation "s '≻(' k ')' s'" := (relpower sstepRel k s s') (at level 40). 
 
-  (*this is similar to what loopM does*)
+  (** this is similar to what loopM does*)
   Notation "s '▷(' k ')' s'" := (s ≻(k) s' /\ halt (configState s') = true) (at level 40).
   Notation "s '▷(≤' k ')' s'" := (exists l, l <= k /\ s ▷(l) s') (at level 40).
 
-  (*agreement of loop and relpower *)
+  (** Agreement of loop and relpower *)
   Lemma relpower_loop_agree l q tape q' tape':
     relpower sstepRel l (q, tape) (q', tape')
     -> halt (configState (q', tape')) = true
@@ -116,7 +116,7 @@ Section TM_single.
       * eapply IHn, H. 
   Qed.
 
-  (*A Turing machine can only use one additional cell per computation step. *)
+  (** A Turing machine can only use one additional cell per computational step. *)
   Lemma tm_step_size q tp q' tp' l: (q, tp) ≻ (q', tp') -> sizeOfTape tp = l -> sizeOfTape tp' <= S l. 
   Proof. 
     intros. 
