@@ -1,8 +1,6 @@
 \newcommand{\varBound}{\textsf{varBound}}
 \newcommand{\maxVar}{\textsf{maxVar}}
 
-\newcommand{\reducesP}{\ensuremath{\succ_p}}
-
 \chapter{Reducing $k$-SAT to Clique}\label{chap:ksat_clique}
 In this chapter, we give a first formalisation of a polynomial-time reduction from the $k$-\SAT{} problem to the \Clique{} problem on undirected graphs. The main purpose of this chapter is to introduce the style of proofs we use. In particular, we comment on some of the more technical aspects of doing the running time analysis in Coq so that we can focus on the less technical aspects in the later chapters. 
 
@@ -153,7 +151,7 @@ Note that $k$ acts as a parameter to the problem and is not part of a valid inst
 
 As $\kCNF{k}~N$ can easily be decided in polynomial-time, we obtain a reduction from $k$-\SAT{} to \SAT{}. For the case that $k = 0$ or that $N$ is not a \kCNF{k}, we map to a trivial no-instance such as $x_0 \land \lnot x_0$. 
 \begin{lemma}[$k$-\SAT{} reduces to \SAT{}]
-  \[\text{$k$-\SAT{}} \reducesP{} \SAT{} \]
+  \[\text{$k$-\SAT{}} \redP{} \SAT{} \]
 \end{lemma}
 \begin{proof}
   As explained in Section~\ref{sec:np_basics}, we need to verify that 
@@ -167,7 +165,7 @@ As $\kCNF{k}~N$ can easily be decided in polynomial-time, we obtain a reduction 
 
 \newcommand{\UGraph}{\textsf{UGraph}}
 \newcommand{\Edec}{\ensuremath{E_\textsf{dec}}}
-\section{Cliques in Undirected Graphs}
+\section{Cliques in Undirected Graphs}\label{sec:clique}
 The second problem involved in our first reduction is the \Clique{} problem on undirected graphs. We start by presenting our formalisation of undirected graphs.
 
 \begin{definition}[Undirected Graphs]
@@ -258,8 +256,8 @@ Note that the way in which we handle the case that $N[\findex{i}, \findex{j}] = 
 It remains to show that the edge relation is symmetric and decidable.
 \begin{proposition}[Properties of $E_G$]
   \begin{enumerate}
-    \item $E_G$ is decidable: $\forall v_1~v_2, (\{v_1, v_2\} \in E_G) + (\{v_1, v_2 \} \notin E_G)$
     \item $E_G$ is symmetric: $\forall v_1~v_2, E~v_1~v_2 \rightarrow E~v_2~v_1$
+    \item $E_G$ is decidable: $\forall v_1~v_2, (\{v_1, v_2\} \in E_G) + (\{v_1, v_2 \} \notin E_G)$
   \end{enumerate}
 \end{proposition}
 
