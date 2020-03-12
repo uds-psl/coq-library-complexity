@@ -868,7 +868,18 @@ Proof.
 Defined. 
 
 (**we prove that the running time is polynomial for fixed n1, n2, n3, n4 *)
-Definition poly__makeAllEvalEnvFlat (n1 n2 n3 n4 : nat) n := n + 1. 
+Definition poly__makeAllEvalEnvFlat (n1 n2 n3 n4 : nat) n := 
+  (flatPolarity + 3 * n + 5) * c__seq +
+  poly__mkVarEnv n2 (n + 1) +
+  poly__mkVarEnv n3 (n + 2) +
+  poly__mkVarEnv n4 (n + 1) +
+  poly__mkVarEnv n1 (flatPolarity + 1) + 
+  3 * c__prodLists1 + 
+  ((flatPolarity + 1) ^ n1 * ((n + 1) ^ n2 + 1) * c__prodLists2) +
+  ((flatPolarity + 1) ^ n1 * (n + 1) ^ n2 *((n + 2) ^ n3 + 1) * c__prodLists2) +
+  ((flatPolarity + 1) ^ n1 * (n + 1) ^ n2 * (n + 2) ^ n3 * ((n + 1) ^ n4 + 1) * c__prodLists2) +
+  4 ^ n1 * (n + 1) ^ n2 * (n + 2) ^ n3 * (n + 1) ^ n4 * c__makeAllEvalEnvFlat2 + c__makeAllEvalEnvFlat1.
+
 Lemma makeAllEvalEnvFlat_time_bound n1 n2 n3 n4 tm : makeAllEvalEnvFlat_time tm n1 n2 n3 n4 <= poly__makeAllEvalEnvFlat n1 n2 n3 n4 (size (enc tm)). 
 Proof. 
   unfold makeAllEvalEnvFlat_time. unfold seq_time. 
@@ -876,10 +887,56 @@ Proof.
   match goal with [ |- context [?a + mkVarEnv_time (seq 0 flatPolarity) ?b] ] => replace_le a with ((flatPolarity + 3 * size (enc tm) + 5) * c__seq) by nia end. 
   rewrite !mkVarEnv_time_bound. rewrite !seq_length. 
   unfold prodLists_time. rewrite !prodLists_length, !mkVarEnv_length, !seq_length. 
+  poly_mono (mkVarEnv_poly n2). 2: { rewrite sig_TM_le. reflexivity. }
+  poly_mono (mkVarEnv_poly n3). 2: { rewrite flatStateSigma_bound, sig_TM_le. reflexivity. }
+  poly_mono (mkVarEnv_poly n4). 2: { rewrite states_TM_le. reflexivity. }
+  rewrite flatStateSigma_bound. 
+  rewrite !sig_TM_le, !states_TM_le. 
+  repeat match goal with [ |- context[?a + 1 + 1]] => replace (a + 1 + 1) with (a + 2) by lia end. 
+  unfold poly__makeAllEvalEnvFlat. leq_crossout. 
+Qed. 
+Lemma makeAllEvalEnvFlat_poly n1 n2 n3 n4 : monotonic (poly__makeAllEvalEnvFlat n1 n2 n3 n4) /\ inOPoly (poly__makeAllEvalEnvFlat n1 n2 n3 n4). 
+Proof. 
+  unfold poly__makeAllEvalEnvFlat; split; smpl_inO; try apply inOPoly_comp; smpl_inO. 
+  all: apply mkVarEnv_poly. 
+Qed. 
 
-  
-  
+Lemma makeAllEvalEnvFlat_envOfFlatTypes tm n1 n2 n3 n4 : forall e, e el makeAllEvalEnvFlat tm n1 n2 n3 n4 -> envOfFlatTypes tm e. 
+Proof. 
+  intros e. intros H. unfold makeAllEvalEnvFlat, makeAllEvalEnv in H. 
+  apply in_map_iff in H  as ((((l1 & l2) & l3) & l4) & <- & H). 
+  rewrite !in_prodLists_iff in H. destruct H as (((H1 & H2) & H3) & H4).
+  rewrite in_mkVarEnv_iff in *.
+  cbn. unfold envOfFlatTypes; repeat split; cbn; unfold list_ofFlatType, ofFlatType. 
+  - intros a H%H1. apply in_seq in H. lia. 
+  - intros a H%H2. apply in_seq in H. lia. 
+  - intros a H%H3. apply in_seq in H. lia. 
+  - intros a H%H4. apply in_seq in H. lia. 
+Qed. 
 
+Definition envBounded tm n env := envOfFlatTypes tm env /\ envConst_bound n env.
+Lemma makeAllEvalEnvFlat_envBounded tm n1 n2 n3 n4 : forall e, e el makeAllEvalEnvFlat tm n1 n2 n3 n4 -> envBounded tm (max (max n1 n2) (max n3 n4)) e. 
+Proof. 
+  intros e H. split. 
+  - eapply makeAllEvalEnvFlat_envOfFlatTypes, H. 
+  - unfold makeAllEvalEnvFlat in H. destruct e. apply in_makeAllEvalEnv_iff in H. repeat split; cbn; lia. 
+Qed.
+
+(** we also need to bound the number of environments *)
+Definition poly__makeAllEvalEnvFlatLength (n1 n2 n3 n4 : nat) n := (flatPolarity + 1)^n1 * (n + 1)^n2 * (n + 2) ^ n3 * (n + 1)^n4.
+Lemma makeAllEvalEnvFlat_length_bound tm n1 n2 n3 n4: |makeAllEvalEnvFlat tm n1 n2 n3 n4| <= poly__makeAllEvalEnvFlatLength n1 n2 n3 n4 (size (enc tm)).
+Proof. 
+  unfold makeAllEvalEnvFlat, makeAllEvalEnv. 
+  rewrite map_length, !prodLists_length.
+  rewrite !mkVarEnv_length, !seq_length. 
+  rewrite flatStateSigma_bound. rewrite sig_TM_le, states_TM_le.  
+  unfold poly__makeAllEvalEnvFlatLength. replace (size (enc tm) + 1 + 1) with (size (enc tm) + 2) by lia. 
+  nia. 
+Qed.
+Lemma makeAllEvalEnvFlat_length_poly n1 n2 n3 n4 : monotonic (poly__makeAllEvalEnvFlatLength n1 n2 n3 n4) /\ inOPoly (poly__makeAllEvalEnvFlatLength n1 n2 n3 n4). 
+Proof. 
+  unfold poly__makeAllEvalEnvFlatLength; split; smpl_inO. 
+Qed.
 
 (** filterSome *)
 Section fixfilterSome.
@@ -899,6 +956,16 @@ Section fixfilterSome.
     extract. solverec. 
     all: unfold filterSome_time, c__filterSome; solverec. 
   Defined. 
+
+  Definition poly__filterSome n := (n + 1) * c__filterSome. 
+  Lemma filterSome_time_bound l : filterSome_time l <= poly__filterSome (size (enc l)). 
+  Proof. 
+    unfold filterSome_time, poly__filterSome. rewrite list_size_length. lia. 
+  Qed. 
+  Lemma filterSome_poly : monotonic poly__filterSome /\ inOPoly poly__filterSome. 
+  Proof. 
+    unfold poly__filterSome; split; smpl_inO. 
+  Qed. 
 End fixfilterSome.
 
 (** makeWindows'_flat_step *)
@@ -927,6 +994,38 @@ Proof.
   nia. 
 Defined. 
 
+Lemma map_time_mono (X : Type) (f1 f2 : X -> nat) (l : list X): (forall x : X, x el l -> f1 x <= f2 x) -> map_time f1 l <= map_time f2 l. 
+Proof. 
+  intros H. induction l; cbn; [lia | ].
+  rewrite IHl, H by easy. lia. 
+Qed.
+
+
+Definition poly__makeWindows' n := n * (poly__reifyWindow n + c__makeWindowsPFlatStep + c__map) + c__map + (n + 1) * c__filterSome + c__makeWindows'.
+Lemma makeWindows'_time_bound tm envs n win : (forall e, e el envs -> envBounded tm n e) -> makeWindows'_flat_time tm envs win <= poly__makeWindows' (size (enc tm) + n + |envs|). 
+Proof. 
+  intros H. unfold makeWindows'_flat_time. 
+  unfold makeWindows'_flat_step_time. rewrite map_time_mono with (f2 := fun _ => poly__reifyWindow(size (enc tm) + n) + c__makeWindowsPFlatStep). 
+  2: { intros e [H1 H2]%H. rewrite (reifyWindow_time_bound _ H2 H1). lia. }
+  rewrite map_time_const. 
+  poly_mono reifyWindow_poly. 2: { instantiate (1 := size (enc tm) + n + (|envs|)). lia. }
+  unfold poly__makeWindows'. nia.  
+Qed. 
+Lemma makeWindows'_poly : monotonic poly__makeWindows' /\ inOPoly poly__makeWindows'. 
+Proof. 
+  unfold poly__makeWindows'; split; smpl_inO; apply reifyWindow_poly. 
+Qed. 
+
+Lemma filterSome_length (X : Type) (l : list (option X)) : |filterSome l| <= |l|. 
+Proof. 
+  induction l; cbn; [lia | destruct a; cbn; lia].
+Qed.
+
+Lemma makeWindows'_length tm envs win: |makeWindows'_flat tm envs win| <= |envs|.
+Proof. 
+  unfold makeWindows'_flat, makeWindows'. rewrite filterSome_length, map_length. lia. 
+Qed.
+
 (** makeWindowsFlat *)
 Definition c__makeWindowsFlat := 4.
 Definition makeWindowsFlat_time (tm : TM) (envs : list evalEnvFlat) (windows : list (TPRWin fAlphabet)) := map_time (makeWindows'_flat_time tm envs) windows + concat_time (map (makeWindows'_flat tm envs) windows) + c__makeWindowsFlat.
@@ -939,6 +1038,51 @@ Proof.
   unfold makeWindowsFlat_time, c__makeWindowsFlat. solverec.  
 Defined. 
 
+Lemma concat_time_exp (X : Type) (l : list (list X)): concat_time l = sumn (map (fun l' => c__concat * length l') l) + (|l| + 1) * c__concat. 
+Proof. 
+  induction l; cbn -[Nat.add Nat.mul]. 
+  - lia.
+  - unfold concat_time in IHl. rewrite IHl. lia. 
+Qed. 
+
+Lemma sumn_map_mono (X : Type) (f1 f2 : X -> nat) l : (forall x, x el l -> f1 x <= f2 x) -> sumn (map f1 l) <= sumn (map f2 l).
+Proof. 
+  intros H. induction l; cbn; [lia | ]. 
+  rewrite IHl, H by easy. lia. 
+Qed.
+
+Lemma sumn_map_const (X : Type) c (l : list X) : sumn (map (fun _ => c) l) = |l| * c. 
+Proof. 
+  induction l; cbn; [lia | ]. 
+  rewrite IHl. lia. 
+Qed.
+
+Definition poly__makeWindowsFlat n := n * (poly__makeWindows' n + c__map) + c__map + n * (c__concat * n) + (n + 1) * c__concat + c__makeWindowsFlat.
+Lemma makeWindowsFlat_time_bound tm envs windows n : (forall e, e el envs -> envBounded tm n e) -> makeWindowsFlat_time tm envs windows <= poly__makeWindowsFlat (size (enc tm) + n + (|envs|) + (|windows|)). 
+Proof. 
+  intros H. unfold makeWindowsFlat_time. 
+  rewrite map_time_mono with (f2 := fun _ => poly__makeWindows' (size (enc tm) + n + |envs|)). 
+  2: {intros win _. rewrite makeWindows'_time_bound by easy. lia. }
+  rewrite map_time_const. 
+  rewrite concat_time_exp. rewrite map_map, map_length.  
+  rewrite sumn_map_mono with (f2 := fun _ => c__concat * |envs|). 2: { intros win _. rewrite makeWindows'_length. unfold evalEnvFlat. lia. }
+  rewrite sumn_map_const. 
+  poly_mono makeWindows'_poly. 2: { instantiate (1 := size (enc tm) + n + (|envs|) + (|windows|)). lia. }
+  unfold poly__makeWindowsFlat. nia.
+Qed. 
+Lemma makeWindowsFlat_poly : monotonic poly__makeWindowsFlat /\ inOPoly poly__makeWindowsFlat. 
+Proof. 
+  unfold poly__makeWindowsFlat; split; smpl_inO; apply makeWindows'_poly. 
+Qed.
+
+Lemma makeWindowsFlat_length_bound tm envs windows : |makeWindowsFlat tm envs windows| <= |envs| * |windows|.  
+Proof. 
+  unfold makeWindowsFlat, makeWindows. rewrite length_concat. 
+  rewrite map_map. unfold makeWindows'. rewrite sumn_map_mono. 
+  2: { intros win _. instantiate (1 := fun _ => |envs|). rewrite filterSome_length, map_length. lia. }
+  rewrite sumn_map_const. nia. 
+Qed.
+
 (**envAddState *)
 Definition c__envAddState := c__polarityEnv + c__sigmaEnv + c__stateSigmaEnv + c__stateEnv + 7.
 Instance term_envAddState : computableTime' (@envAddState nat nat nat nat) (fun q _ => (1, fun env _ => (c__envAddState, tt))). 
@@ -946,6 +1090,16 @@ Proof.
   extract. solverec. 
   unfold c__envAddState. lia. 
 Defined. 
+
+Fact envAddState_envBounded tm env q n: ofFlatType (states tm) q -> envBounded tm n env -> envBounded tm (S n) (envAddState q env).
+Proof. 
+  intros H [H1 H2]. 
+  split. 
+  - unfold envAddState. destruct env; cbn; repeat split; cbn; try apply H1. 
+    apply list_ofFlatType_cons; split;[apply H | apply H1]. 
+  - unfold envConst_bound in H2. destruct env; unfold envAddState; cbn in *. 
+    repeat split; cbn; lia.
+Qed.
 
 (** envAddSSigma *)
 Definition c__envAddSSigma := c__polarityEnv + c__sigmaEnv + c__stateSigmaEnv + c__stateEnv + 7.
@@ -955,6 +1109,16 @@ Proof.
   unfold c__envAddSSigma. lia. 
 Defined. 
 
+Fact envAddSSigma_envBounded tm env m n : ofFlatType (flatStateSigma tm) m -> envBounded tm n env -> envBounded tm (S n) (envAddSSigma m env). 
+Proof. 
+  intros H [H1 H2].
+  split. 
+  - unfold envAddSSigma. destruct env; cbn; repeat split; cbn; try apply H1. 
+    apply list_ofFlatType_cons; split; [apply H | apply H1].  
+  - unfold envConst_bound in H2. destruct env; unfold envAddSSigma; cbn in *. 
+    repeat split; cbn; lia. 
+Qed.
+
 (** transEnvAddS *)
 Definition c__transEnvAddS := 2* c__envAddState + 3.
 Instance term_transEnvAddS : computableTime' (@transEnvAddS nat nat nat nat) (fun q _ => (1, fun q' _ => (1, fun env _ => (c__transEnvAddS, tt)))). 
@@ -962,6 +1126,11 @@ Proof.
   extract. solverec. 
   unfold c__transEnvAddS. lia. 
 Defined. 
+
+Fact transEnvAddS_envBounded tm env q q' n : ofFlatType (states tm) q -> ofFlatType (states tm) q' -> envBounded tm n env -> envBounded tm (S (S n)) (transEnvAddS q q' env).
+Proof. 
+  intros H1 H2 H. do 2(apply envAddState_envBounded; [easy | ]). apply H. 
+Qed.
 
 (** transEnvAddSM *)
 Definition c__transEnvAddSM := c__transEnvAddS + 2 * c__envAddSSigma + 5.
@@ -971,6 +1140,16 @@ Proof.
   unfold c__transEnvAddSM; lia. 
 Defined. 
 
+Fact transEnvAddSM_envBounded tm env q q' m m' n : ofFlatType (states tm) q -> ofFlatType (states tm) q' -> ofFlatType (flatStateSigma tm) m -> ofFlatType (flatStateSigma tm) m' -> envBounded tm n env -> envBounded tm (S (S n)) (transEnvAddSM q q' m m' env). 
+Proof. 
+  intros H1 H2 H3 H4 H. split. 
+  - unfold transEnvAddSM. 
+    destruct env; cbn; repeat split; cbn; try apply H.
+    all: do 2 (apply list_ofFlatType_cons; split; [easy | ]); apply H.
+  - unfold transEnvAddSM. destruct H as [_ H]. unfold envConst_bound in H. 
+    destruct env; cbn in *; unfold envAddSSigma, transEnvAddS; cbn.
+    repeat split; cbn; lia.
+Qed.
 
 (** tape windows *)
 Definition c__flatMTRWindows := 22.
@@ -981,6 +1160,23 @@ Proof.
   unfold flatMTRWindows_time, c__flatMTRWindows. unfold flatSome. lia. 
 Defined. 
 
+Definition poly__flatMTRWindows n := poly__makeAllEvalEnvFlat 1 4 0 0 n + poly__makeWindowsFlat (n + 4 + poly__makeAllEvalEnvFlatLength 1 4 0 0 n + |mtrRules|) + c__flatMTRWindows.
+Lemma flatMTRWindows_time_bound tm : flatMTRWindows_time tm <= poly__flatMTRWindows (size (enc tm)). 
+Proof. 
+  unfold flatMTRWindows_time. 
+  rewrite makeAllEvalEnvFlat_time_bound. 
+  rewrite makeWindowsFlat_time_bound. 2: apply makeAllEvalEnvFlat_envBounded. 
+  cbn [max].
+  poly_mono makeWindowsFlat_poly. 
+  2: { rewrite makeAllEvalEnvFlat_length_bound. reflexivity. }
+  unfold poly__flatMTRWindows. nia.  
+Qed.
+Lemma flatMTRWindows_poly : monotonic poly__flatMTRWindows /\ inOPoly poly__flatMTRWindows. 
+Proof. 
+  unfold poly__flatMTRWindows; split; smpl_inO; try apply inOPoly_comp; smpl_inO.
+  all: first [apply makeAllEvalEnvFlat_poly | apply makeWindowsFlat_poly | apply makeAllEvalEnvFlat_length_poly].
+Qed.
+
 Definition c__flatMTIWindows := 25. 
 Definition flatMTIWindows_time (tm : TM) := makeAllEvalEnvFlat_time tm 2 0 4 0 + makeWindowsFlat_time tm (makeAllEvalEnvFlat tm 2 0 4 0) mtiRules + c__flatMTIWindows.
 Instance term_flatMTIWindows : computableTime' flatMTIWindows (fun tm _ => (flatMTIWindows_time tm, tt)). 
@@ -988,6 +1184,23 @@ Proof.
   extract. recRel_prettify2. 
   unfold flatMTIWindows_time, c__flatMTIWindows. unfold flatSome. lia. 
 Defined. 
+
+Definition poly__flatMTIWindows n := poly__makeAllEvalEnvFlat 2 0 4 0 n + poly__makeWindowsFlat (n + 4 + poly__makeAllEvalEnvFlatLength 2 0 4 0 n + |mtiRules|) + c__flatMTIWindows.
+Lemma flatMTIWindows_time_bound tm : flatMTIWindows_time tm <= poly__flatMTIWindows (size (enc tm)). 
+Proof. 
+  unfold flatMTIWindows_time. 
+  rewrite makeAllEvalEnvFlat_time_bound. 
+  rewrite makeWindowsFlat_time_bound. 2: apply makeAllEvalEnvFlat_envBounded. 
+  cbn [max].
+  poly_mono makeWindowsFlat_poly. 
+  2: { rewrite makeAllEvalEnvFlat_length_bound. reflexivity. }
+  unfold poly__flatMTIWindows. nia.  
+Qed.
+Lemma flatMTIWindows_poly : monotonic poly__flatMTIWindows /\ inOPoly poly__flatMTIWindows. 
+Proof. 
+  unfold poly__flatMTIWindows; split; smpl_inO; try apply inOPoly_comp; smpl_inO.
+  all: first [apply makeAllEvalEnvFlat_poly | apply makeWindowsFlat_poly | apply makeAllEvalEnvFlat_length_poly].
+Qed.
 
 Definition c__flatMTLWindows := 22. 
 Definition flatMTLWindows_time (tm : TM) := makeAllEvalEnvFlat_time tm 1 4 0 0 + makeWindowsFlat_time tm (makeAllEvalEnvFlat tm 1 4 0 0) mtlRules + c__flatMTLWindows.
@@ -997,6 +1210,23 @@ Proof.
   unfold flatMTLWindows_time, c__flatMTLWindows. unfold flatSome. lia. 
 Defined. 
 
+Definition poly__flatMTLWindows n := poly__makeAllEvalEnvFlat 1 4 0 0 n + poly__makeWindowsFlat (n + 4 + poly__makeAllEvalEnvFlatLength 1 4 0 0 n + |mtlRules|) + c__flatMTLWindows.
+Lemma flatMTLWindows_time_bound tm : flatMTLWindows_time tm <= poly__flatMTLWindows (size (enc tm)). 
+Proof. 
+  unfold flatMTLWindows_time. 
+  rewrite makeAllEvalEnvFlat_time_bound. 
+  rewrite makeWindowsFlat_time_bound. 2: apply makeAllEvalEnvFlat_envBounded. 
+  cbn [max].
+  poly_mono makeWindowsFlat_poly. 
+  2: { rewrite makeAllEvalEnvFlat_length_bound. reflexivity. }
+  unfold poly__flatMTLWindows. nia.  
+Qed.
+Lemma flatMTLWindows_poly : monotonic poly__flatMTLWindows /\ inOPoly poly__flatMTLWindows. 
+Proof. 
+  unfold poly__flatMTLWindows; split; smpl_inO; try apply inOPoly_comp; smpl_inO.
+  all: first [apply makeAllEvalEnvFlat_poly | apply makeWindowsFlat_poly | apply makeAllEvalEnvFlat_length_poly].
+Qed.
+
 Definition c__flatTapeWindows := 19. 
 Definition flatTapeWindows_time (tm : TM) := flatMTRWindows_time tm + flatMTIWindows_time tm + flatMTLWindows_time tm + (|flatMTIWindows tm| + |flatMTRWindows tm| + 1) * c__flatTapeWindows.
 Instance term_flatTapeWindows : computableTime' flatTapeWindows (fun tm _ => (flatTapeWindows_time tm, tt)). 
@@ -1004,6 +1234,22 @@ Proof.
   extract. recRel_prettify2. 
   unfold flatTapeWindows_time, c__flatTapeWindows. nia.
 Defined. 
+
+Definition poly__flatTapeWindows n := 
+  poly__flatMTRWindows n + poly__flatMTIWindows n + poly__flatMTLWindows n 
+  + (poly__makeAllEvalEnvFlatLength 2 0 4 0 n * (|mtiRules|) + poly__makeAllEvalEnvFlatLength 1 4 0 0 n * (|mtrRules|) +1) * c__flatTapeWindows.
+Lemma flatTapeWindows_time_bound tm : flatTapeWindows_time tm <= poly__flatTapeWindows (size (enc tm)). 
+Proof. 
+  unfold flatTapeWindows_time. rewrite flatMTRWindows_time_bound, flatMTLWindows_time_bound, flatMTIWindows_time_bound. 
+  unfold flatMTIWindows, flatMTRWindows. rewrite !makeWindowsFlat_length_bound.
+  rewrite !makeAllEvalEnvFlat_length_bound. 
+  unfold poly__flatTapeWindows; nia. 
+Qed.
+Lemma flatTapeWindows_poly : monotonic poly__flatTapeWindows /\ inOPoly poly__flatTapeWindows. 
+Proof.
+  unfold poly__flatTapeWindows; split; smpl_inO. 
+  all: first [apply flatMTRWindows_poly | apply flatMTLWindows_poly | apply flatMTIWindows_poly | apply makeAllEvalEnvFlat_length_poly]. 
+Qed.
   
 (** non-halting state windows *)
 (** makeSome_base *)
@@ -1020,6 +1266,26 @@ Proof.
   unfold makeSome_base_flat_time, c__makeSomeBaseFlat1, c__makeSomeBaseFlat2. 
   Set Printing All. unfold evalEnvFlat. nia.
 Defined. 
+
+Definition poly__makeSomeBaseFlat n := n * c__makeSomeBaseFlat1 + poly__makeWindowsFlat (n + 2) + c__makeSomeBaseFlat2. 
+Lemma makeSome_base_flat_time_bound tm windows envs n q q' m m': 
+  (forall e, e el envs -> envBounded tm n e) 
+  -> ofFlatType (states tm) q -> ofFlatType (states tm) q' -> ofFlatType (flatStateSigma tm) m -> ofFlatType (flatStateSigma tm) m' 
+  -> makeSome_base_flat_time tm windows q q' m m' envs <= poly__makeSomeBaseFlat (size (enc tm) + (|windows|) + (|envs|) + n).
+Proof. 
+  intros H F1 F2 F3 F4. unfold makeSome_base_flat_time. 
+  rewrite makeWindowsFlat_time_bound. 
+  2: { intros e (e' & <- & H1)%in_map_iff. apply transEnvAddSM_envBounded; eauto. }
+  rewrite map_length. 
+  replace (size (enc tm) + S (S n) + (|envs|) + (|windows|)) with (size (enc tm) + (|windows|) + (|envs|) + n + 2) by lia. 
+  unfold poly__makeSomeBaseFlat. nia.  
+Qed.
+Lemma makeSome_base_flat_poly : monotonic poly__makeSomeBaseFlat /\ inOPoly poly__makeSomeBaseFlat. 
+Proof. 
+  unfold poly__makeSomeBaseFlat; split; smpl_inO. 
+  - apply makeWindowsFlat_poly. 
+  - apply inOPoly_comp; smpl_inO; apply makeWindowsFlat_poly. 
+Qed. 
 
 (** makeSomeRight *)
 Definition makeSomeRightFlat tm q q' m m' := makeSomeRight q q' m m' (makeWindowsFlat tm). 
@@ -1071,6 +1337,26 @@ Proof.
   Set Printing All. unfold evalEnvFlat. nia. 
 Defined. 
 
+Definition poly__makeNoneBaseFlat n := n * c__makeNoneBaseFlat1 + poly__makeWindowsFlat (n + 2) + c__makeNoneBaseFlat2.
+Lemma makeNone_base_flat_time_bound tm rules envs n q q': 
+  (forall e, e el envs -> envBounded tm n e) 
+  -> ofFlatType (states tm) q -> ofFlatType (states tm) q'
+  -> makeNone_base_flat_time tm rules q q' envs <= poly__makeNoneBaseFlat (size (enc tm) + (|rules|) + (|envs|) + n).
+Proof. 
+  intros H F1 F2. unfold makeNone_base_flat_time. 
+  rewrite makeWindowsFlat_time_bound. 
+  2: { intros e (e' & <- & H1)%in_map_iff. apply transEnvAddS_envBounded; eauto. }
+  rewrite map_length. 
+  replace (size (enc tm) + S (S n) + (|envs|) + (|rules|)) with (size (enc tm) + (|rules|) + (|envs|) + n + 2) by lia. 
+  unfold poly__makeNoneBaseFlat. nia.  
+Qed.
+Lemma makeNone_base_flat_poly : monotonic poly__makeNoneBaseFlat /\ inOPoly poly__makeNoneBaseFlat. 
+Proof. 
+  unfold poly__makeNoneBaseFlat; split; smpl_inO. 
+  - apply makeWindowsFlat_poly. 
+  - apply inOPoly_comp; smpl_inO; apply makeWindowsFlat_poly. 
+Qed. 
+
 (** makeNoneRight *)
 Definition makeNoneRightFlat tm q q' := makeNoneRight q q' (makeWindowsFlat tm). 
 Definition c__makeNoneRightFlat := 5.
@@ -1108,19 +1394,19 @@ Proof.
 Defined. 
 
 (** flat_baseEnv *)
-Definition flat_baseEnv_time (tm : TM) := makeAllEvalEnvFlat_time tm 1 0 3 0 + 17.
-Instance term_flat_baseEnv : computableTime' flat_baseEnv (fun tm _ => (flat_baseEnv_time tm, tt)). 
+Definition c__flatBaseEnv := 17.
+Instance term_flat_baseEnv : computableTime' flat_baseEnv (fun tm _ => (makeAllEvalEnvFlat_time tm 1 0 3 0 + c__flatBaseEnv, tt)). 
 Proof. 
   extract. solverec. 
-  now unfold flat_baseEnv_time. 
+  now unfold c__flatBaseEnv. 
 Defined.
 
 (** flat_baseEnvNone *)
-Definition flat_baseEnvNone_time (tm : TM) := makeAllEvalEnvFlat_time tm 2 2 2 0 + 23.
-Instance term_flat_baseEnvNone : computableTime' flat_baseEnvNone (fun tm _ => (flat_baseEnvNone_time tm, tt)). 
+Definition c__flatBaseEnvNone := 23. 
+Instance term_flat_baseEnvNone : computableTime' flat_baseEnvNone (fun tm _ => (makeAllEvalEnvFlat_time tm 2 2 2 0 + c__flatBaseEnvNone, tt)). 
 Proof. 
   extract. solverec. 
-  now unfold flat_baseEnvNone_time. 
+  now unfold c__flatBaseEnvNone. 
 Defined.
 
 (** flat_baseEnvHalt *)
@@ -1152,7 +1438,7 @@ Definition opt_generateWindowsForFlatNonHalt_time (tm : TM) (q : nat) (m : optio
   | None, (q', (None, TM.R)) => makeNone_base_flat_time tm makeNoneLeft_rules q q' (flat_baseEnvNone tm)
   | None, (q', (None, TM.N)) => makeNone_base_flat_time tm makeNoneStay_rules q q' (flat_baseEnvNone tm)
   end
-  + flat_baseEnv_time tm + flat_baseEnvNone_time tm + c__optGenerateWindowsForFlatNonHalt.
+  + makeAllEvalEnvFlat_time tm 1 0 3 0 + makeAllEvalEnvFlat_time tm 2 2 2 0 + c__flatBaseEnv + c__flatBaseEnvNone + c__optGenerateWindowsForFlatNonHalt.
 Instance term_opt_generateWindowsForFlatNonHalt : computableTime' opt_generateWindowsForFlatNonHalt (fun tm _ => (1, fun q _ => (1, fun m _ => (1, fun dst _ => (opt_generateWindowsForFlatNonHalt_time tm q m dst, tt))))). 
 Proof. 
   apply computableTimeExt with (x:= 
@@ -1175,6 +1461,53 @@ Proof.
   all: unfold optReturn; lia. 
 Defined. 
 
+Definition isValidFlatAct tm (a : nat * (option nat * TM.move)) := 
+  let '(q, (m, mo)) := a in match m with 
+      | None => ofFlatType (states tm) q
+      | Some σ => ofFlatType (sig tm) σ /\ ofFlatType (states tm) q
+      end.
+Definition isValidFlatStateSig tm (m : option nat) := 
+  match m with 
+  | None => True
+  | Some σ => ofFlatType (sig tm) σ
+  end. 
+
+Definition c__genNone := max (|makeNoneRight_rules|) (max (|makeNoneLeft_rules|) (|makeNoneStay_rules|)).
+Definition c__genSome := max (|makeSomeRight_rules|) (max (|makeSomeLeft_rules|) (|makeSomeStay_rules|)). 
+Definition poly__optGenerateWindowsForFlatNonHalt n := 
+  poly__makeSomeBaseFlat (n + c__genSome + poly__makeAllEvalEnvFlatLength 1 0 3 0 n + 3) 
+  + poly__makeNoneBaseFlat (n + c__genNone + poly__makeAllEvalEnvFlatLength 2 2 2 0 n + 2)
+  + poly__makeAllEvalEnvFlat 1 0 3 0 n + poly__makeAllEvalEnvFlat 2 2 2 0 n 
+  + c__flatBaseEnv + c__flatBaseEnvNone + c__optGenerateWindowsForFlatNonHalt.
+
+Lemma opt_generateWindowsForFlatNonHalt_time_bound tm q m act: 
+  ofFlatType (states tm) q -> isValidFlatStateSig tm m -> isValidFlatAct tm act
+  -> opt_generateWindowsForFlatNonHalt_time tm q m act <= poly__optGenerateWindowsForFlatNonHalt (size (enc tm)). 
+Proof. 
+  intros H1 H2 H3. unfold isValidFlatStateSig, isValidFlatAct in *.
+  unfold opt_generateWindowsForFlatNonHalt_time. 
+  destruct m as [m | ], act as (q' & [m' | ] & []). 
+  10-12:
+    rewrite makeNone_base_flat_time_bound; [ | unfold flat_baseEnvNone; apply makeAllEvalEnvFlat_envBounded | easy | easy]; 
+    cbn [max]; unfold flat_baseEnvNone; 
+    poly_mono makeNone_base_flat_poly; 
+    [ | rewrite makeAllEvalEnvFlat_length_bound; instantiate (1 := size (enc tm) + c__genNone + poly__makeAllEvalEnvFlatLength 2 2 2 0 (size (enc tm)) + 2); unfold c__genNone; lia];
+    rewrite !makeAllEvalEnvFlat_time_bound; 
+    unfold poly__optGenerateWindowsForFlatNonHalt; lia. 
+  1-9: 
+    rewrite makeSome_base_flat_time_bound; [ | unfold flat_baseEnv; apply makeAllEvalEnvFlat_envBounded | easy | easy | now finRepr_simpl| now finRepr_simpl ];
+    cbn [max]; unfold flat_baseEnv;
+    poly_mono makeSome_base_flat_poly; 
+    [ | rewrite makeAllEvalEnvFlat_length_bound; instantiate (1 := (size (enc tm) + c__genSome + poly__makeAllEvalEnvFlatLength 1 0 3 0 (size (enc tm)) + 3)); unfold c__genSome; lia];
+    rewrite !makeAllEvalEnvFlat_time_bound; 
+    unfold poly__optGenerateWindowsForFlatNonHalt; lia.
+Qed.
+Lemma opt_generateWindowsForFlatNonHalt_poly : monotonic poly__optGenerateWindowsForFlatNonHalt /\ inOPoly poly__optGenerateWindowsForFlatNonHalt. 
+Proof. 
+  unfold poly__optGenerateWindowsForFlatNonHalt; split; smpl_inO; try apply inOPoly_comp; smpl_inO; 
+  first [apply makeSome_base_flat_poly | apply makeNone_base_flat_poly | apply makeAllEvalEnvFlat_length_poly | apply makeAllEvalEnvFlat_poly].
+Qed.
+
 (** inp_eqb *)
 Instance eqbComp_inp : EqBool.eqbCompT (nat * list (option nat)).
 Proof. 
@@ -1188,25 +1521,312 @@ Defined.
  
 (** generateWindowsForFlatNonHalt *)
 From Undecidability.L.Functions Require Import FinTypeLookup EqBool.
+From Undecidability.L.TM Require Import TMunflatten. 
 
-(*Print TM.*)
-(*Global Instance term_lookup :*)
-    (*computableTime' (@lookup (nat * list (option nat)) (nat * list (option nat * TM.move)) _ _) (fun x _ => (5, fun l _ => (1, fun d _ => (lookupTime (size (enc x)) l,tt)))).*)
-  (*unfold lookup. unfold eqb.*)
-  (*extract. unfold lookupTime. solverec.*)
-  (*Qed.*)
-
-Definition generateWindowsForFlatNonHalt_time (tm : TM) (q : nat) (m : option nat) := 1. 
-Instance term_generateWindowsForFlatNonHalt : computableTime' generateWindowsForFlatNonHalt (fun tm _ => (1, fun q _ => (1, fun m _ => (generateWindowsForFlatNonHalt_time tm q m, tt)))).
+Lemma tm_trans_isValidFlatAct tm : validFlatTM tm
+  -> forall q m q' a, ((q, [m]), (q', [a])) el trans tm -> isValidFlatAct tm (q', a). 
 Proof. 
-  unfold generateWindowsForFlatNonHalt. 
-  extract. (*TODO: extraction failing at lookup, possibly because of failing typeclass inference?*)
+  intros H q m q' a. destruct H as [[_ H] _]. 
+  intros Hel. apply (H q q' [m] [a]) in Hel as (_ & _ & _ &H1 & _& H2).
+  unfold isValidFlatAct. destruct a as [[σ | ] m']. 
+  2: apply H1. 
+  split; [ | apply H1]. now apply (H2 σ m').
+Qed.
+
+Definition c__generateWindowsForFlatNonHalt := 43. 
+Definition generateWindowsForFlatNonHalt_time (tm : TM) (q : nat) (m : option nat) := 
+  let (q', l) := lookup (q, [m]) (trans tm) (q, [(None, TM.N)]) in match l with 
+  | [] => 0
+  | [succ] => opt_generateWindowsForFlatNonHalt_time tm q m (q', succ)
+  | _ :: _ :: _ => 0
+  end + lookupTime (size (enc (q, [m]))) (trans tm) + c__generateWindowsForFlatNonHalt. 
+Instance term_generateWindowsForFlatNonHalt: 
+  computableTime' generateWindowsForFlatNonHalt (fun tm _ => (1, fun q _ => (1, fun m _ => (generateWindowsForFlatNonHalt_time tm q m, tt)))).
+Proof. 
+  apply computableTimeExt with (x := 
+  fun (flatTM : TM) (q : nat) (m : option nat) =>
+   let (q', l) := lookup (q, [m]) (trans flatTM) (q, [(None, TM.N)]) in
+   match l with
+   | [] => []
+   | [succ] => opt_generateWindowsForFlatNonHalt flatTM q m (q', succ)
+   | succ :: _ :: _ => []
+   end). 
+  { easy. }
+  extract. solverec. 
+  all: unfold generateWindowsForFlatNonHalt_time, c__generateWindowsForFlatNonHalt; rewrite H; solverec. 
+Qed.
+
+Lemma nat_size_lt a b: a < b -> size (enc a) < size (enc b). 
+Proof. 
+  intros H. rewrite !size_nat_enc. unfold c__natsizeS; nia. 
+Qed.
+
+Definition poly__generateWindowsForFlatNonHalt n :=       
+  poly__optGenerateWindowsForFlatNonHalt n + n * ((2 * n + 5 + c__listsizeCons + c__listsizeNil + 4) * c__eqbComp (nat * list (option nat)) + 24) + 4 + c__generateWindowsForFlatNonHalt.
+Lemma generateWindowsForFlatNonHalt_time_bound tm q m : 
+  validFlatTM tm -> ofFlatType (states tm) q -> isValidFlatStateSig tm m
+  -> generateWindowsForFlatNonHalt_time tm q m <= poly__generateWindowsForFlatNonHalt (size (enc tm)). 
+Proof. 
+  intros H H0 H1. 
+  unfold generateWindowsForFlatNonHalt_time. destruct lookup eqn:H2. 
+  rewrite lookupTime_leq. rewrite list_size_length. 
+  replace_le (size (enc (trans tm))) with (size (enc tm)) by (rewrite size_TM; destruct tm; cbn; lia). 
+  rewrite size_prod, (size_list [m]); cbn. 
+  rewrite size_option.
+  unfold ofFlatType in H0. rewrite (nat_size_lt H0). 
+  replace_le (size (enc (states tm))) with (size (enc tm)) by (rewrite size_TM; destruct tm; cbn; lia).
+  replace_le (match m with Some x => size (enc x) + 5 | None => 3 end) with (size (enc tm) + 5).  
+  { destruct m; [ | lia]. 
+    cbn in H1. unfold ofFlatType in H1. rewrite (nat_size_lt H1). 
+    replace_le (size (enc (sig tm))) with (size (enc tm)) by (rewrite size_TM; destruct tm; cbn; lia).
+    lia. 
+  } 
+  destruct l as [ | succ [ | succ' l]]. 
+  2: { 
+    rewrite opt_generateWindowsForFlatNonHalt_time_bound. 
+    2,3: easy.
+    2: {
+      destruct (lookup_complete (trans tm) (q, [m]) (q, [(None, TM.N)])) as[Hl | Hl]. 
+      - rewrite H2 in Hl. apply (tm_trans_isValidFlatAct H) in Hl. apply Hl. 
+      - destruct Hl as (_ & Hl). rewrite Hl in H2. inv H2. 
+        unfold isValidFlatAct. apply H0.
+    } 
+    unfold poly__generateWindowsForFlatNonHalt. nia.  
+  } 
+  all: unfold poly__generateWindowsForFlatNonHalt; nia. 
+Qed.
+Lemma generateWindowsForFlatNonHalt_poly : monotonic poly__generateWindowsForFlatNonHalt /\ inOPoly poly__generateWindowsForFlatNonHalt.
+Proof. 
+  unfold poly__generateWindowsForFlatNonHalt; split; smpl_inO; apply opt_generateWindowsForFlatNonHalt_poly. 
+Qed.
+
+Lemma flat_baseEnv_length tm : |flat_baseEnv tm| <= poly__makeAllEvalEnvFlatLength 1 0 3 0 (size (enc tm)).
+Proof. 
+  unfold flat_baseEnv. rewrite makeAllEvalEnvFlat_length_bound. lia.
+Qed.
+Lemma flat_baseEnvNone_length tm : |flat_baseEnvNone tm| <= poly__makeAllEvalEnvFlatLength 2 2 2 0 (size (enc tm)). 
+Proof. 
+  unfold flat_baseEnvNone. rewrite makeAllEvalEnvFlat_length_bound. lia. 
+Qed.
+Lemma flat_baseEnvHalt_length tm : |flat_baseEnvHalt tm| <= poly__makeAllEvalEnvFlatLength 1 0 3 0 (size (enc tm)). 
+Proof. 
+  unfold flat_baseEnvHalt. rewrite makeAllEvalEnvFlat_length_bound. easy.
+Qed.
+
+Definition poly__generateWindowsForFlatNonHaltLength n := poly__makeAllEvalEnvFlatLength 1 0 3 0 n * c__genSome + poly__makeAllEvalEnvFlatLength 2 2 2 0 n * c__genNone.
+Lemma generateWindowsForFlatNonHalt_length q m tm : |generateWindowsForFlatNonHalt tm q m| <= poly__generateWindowsForFlatNonHaltLength (size (enc tm)).  
+Proof. 
+  unfold generateWindowsForFlatNonHalt. destruct lookup as [q' l]. destruct l as [ | a l]; [ | destruct l].
+  1, 3: now cbn. 
+  unfold opt_generateWindowsForFlatNonHalt. destruct m as [σ | ]; destruct a as [[σ' | ] []].  
+  1-9: unfold makeSomeRight, makeSomeLeft, makeSomeStay, makeSome_base; rewrite makeWindowsFlat_length_bound, map_length, flat_baseEnv_length; 
+    unfold poly__generateWindowsForFlatNonHaltLength, c__genSome; nia.  
+  1-3: unfold makeNoneRight, makeNoneStay, makeNoneLeft, makeNone_base; rewrite makeWindowsFlat_length_bound, map_length, flat_baseEnvNone_length;  
+    unfold poly__generateWindowsForFlatNonHaltLength, c__genNone; nia. 
+Qed. 
+Lemma generateWindowsForFlatNonHalt_length_poly : monotonic poly__generateWindowsForFlatNonHaltLength /\ inOPoly poly__generateWindowsForFlatNonHaltLength. 
+Proof. 
+  unfold poly__generateWindowsForFlatNonHaltLength; split; smpl_inO. 
+  all: apply makeAllEvalEnvFlat_length_poly.
+Qed.
 
 (** halting state windows*)
 
 (**makeHalt *)
+Definition makeHaltFlat tm q := makeHalt q (makeWindowsFlat tm). 
+Definition c__makeHaltFlat := 5. 
+Definition makeHaltFlat_time (tm : TM) (q : nat) (envs : list evalEnvFlat) := (|envs|) * (c__envAddState + c__map) + c__map + makeWindowsFlat_time tm (map (envAddState q) envs) makeHalt_rules + c__makeHaltFlat. 
+Instance term_makeHaltFlat : computableTime' makeHaltFlat (fun tm _ => (1, fun q _ => (1, fun envs _ => (makeHaltFlat_time tm q envs, tt)))). 
+Proof.
+  unfold makeHaltFlat, makeHalt. extract. 
+  solverec. rewrite map_time_const. 
+  unfold makeHaltFlat_time, c__makeHaltFlat. Set Printing All. unfold evalEnvFlat. lia.
+Qed.
+
+Definition poly__makeHaltFlat n := n * (c__envAddState + c__map) + c__map + poly__makeWindowsFlat (n + ((|makeHalt_rules|) + 1)) + c__makeHaltFlat.
+Lemma makeHaltFlat_time_bound tm q envs n : 
+  (forall e, e el envs -> envBounded tm n e) -> ofFlatType (states tm) q
+  -> makeHaltFlat_time tm q envs <= poly__makeHaltFlat (size (enc tm) + n + (|envs|)). 
+Proof. 
+  intros H H1. unfold makeHaltFlat_time. 
+  rewrite makeWindowsFlat_time_bound. 
+  2: { intros e (e' & <- & H2)%in_map_iff. apply envAddState_envBounded; eauto. }
+  rewrite map_length. 
+  poly_mono makeWindowsFlat_poly.
+  2: { replace_le (size (enc tm) + S n + (|envs|) + (|makeHalt_rules|)) with (size (enc tm) + n + (|envs|) + ((|makeHalt_rules|) + 1)) by lia. reflexivity. }
+  unfold poly__makeHaltFlat. leq_crossout.
+Qed.
+Lemma makeHaltFlat_poly : monotonic poly__makeHaltFlat /\ inOPoly poly__makeHaltFlat.  
+Proof. 
+  unfold poly__makeHaltFlat; split; smpl_inO. 
+  - apply makeWindowsFlat_poly. 
+  - apply inOPoly_comp; smpl_inO; apply makeWindowsFlat_poly. 
+Qed.
   
 (** generateWindowsForFlatHalt *)
-Instance term_generateWindowsForFlatHalt : computableTime' generateWindowsForFlatHalt (fun tm _ => (1, fun q _ => (1, tt))). 
+Definition generateWindowsForFlatHalt_time tm q := makeAllEvalEnvFlat_time tm 1 0 3 0 + c__flatBaseEnv + makeHaltFlat_time tm q (flat_baseEnv tm) + 3.
+Instance term_generateWindowsForFlatHalt : computableTime' generateWindowsForFlatHalt (fun tm _ => (1, fun q _ => (generateWindowsForFlatHalt_time tm q, tt))). 
 Proof. 
-  apply computableTimeExt with (x := fun tm q => makeHalt
+  apply computableTimeExt with (x := fun tm q => makeHaltFlat tm q (flat_baseEnvHalt tm)). 
+  { unfold generateWindowsForFlatHalt, makeHaltFlat. easy. }
+  extract. recRel_prettify2. 
+  - reflexivity. 
+  - unfold generateWindowsForFlatHalt_time. lia. 
+Qed. 
+
+Definition poly__generateWindowsForFlatHalt n := poly__makeAllEvalEnvFlat 1 0 3 0 n + c__flatBaseEnv + poly__makeHaltFlat (n + 3 + poly__makeAllEvalEnvFlatLength 1 0 3 0 n) + 3.
+Lemma generateWindowsForFlatHalt_time_bound tm q : ofFlatType (states tm) q -> generateWindowsForFlatHalt_time tm q <= poly__generateWindowsForFlatHalt (size (enc tm)). 
+Proof. 
+  intros H.
+  unfold generateWindowsForFlatHalt_time. 
+  rewrite makeAllEvalEnvFlat_time_bound. rewrite makeHaltFlat_time_bound. 
+  3: apply H.  
+  2: { unfold flat_baseEnv. apply makeAllEvalEnvFlat_envBounded. }
+  cbn [max].
+  poly_mono makeHaltFlat_poly.
+  2: { unfold flat_baseEnv. rewrite makeAllEvalEnvFlat_length_bound. reflexivity. }
+  unfold poly__generateWindowsForFlatHalt. nia.  
+Qed.
+Lemma generateWindowsForFlatHalt_poly : monotonic poly__generateWindowsForFlatHalt /\ inOPoly poly__generateWindowsForFlatHalt. 
+Proof. 
+  unfold poly__generateWindowsForFlatHalt; split; smpl_inO; try apply inOPoly_comp; smpl_inO. 
+  all: first [apply makeAllEvalEnvFlat_poly | apply makeHaltFlat_poly | apply makeAllEvalEnvFlat_length_poly]. 
+Qed.
+
+Lemma generateWindowsForFlatHalt_length tm q: |generateWindowsForFlatHalt tm q| <= poly__makeAllEvalEnvFlatLength 1 0 3 0 (size (enc tm)) * (| makeHalt_rules |). 
+Proof. 
+  unfold generateWindowsForFlatHalt, makeHalt. rewrite makeWindowsFlat_length_bound, map_length.
+  rewrite flat_baseEnvHalt_length. easy.
+Qed.
+
+(** combined state windows *)
+
+(** first extract a step function that is used inside map*)
+Definition generateWindowsForFlat_step tm q m := generateWindowsForFlatNonHalt tm q (Some m). 
+Definition c__generateWindowsForFlatStep := 4. 
+Instance term_generateWindowsForFlat_step : computableTime' generateWindowsForFlat_step (fun tm _ => (1, fun q _ => (1, fun m _ => (generateWindowsForFlatNonHalt_time tm q (Some m) + c__generateWindowsForFlatStep, tt)))). 
+Proof. 
+  extract. solverec. unfold c__generateWindowsForFlatStep, optReturn. lia. 
+Qed.
+
+(** generateWindowsForFlat *)
+
+Definition c__generateWindowsForFlat1 := 20. 
+Definition c__generateWindowsForFlat2 := 56. 
+Definition generateWindowsForFlat_time (tm : TM) (q : nat) := 
+  c__generateWindowsForFlat1 * q  
+  + generateWindowsForFlatHalt_time tm q 
+  + generateWindowsForFlatNonHalt_time tm q None 
+  + seq_time (sig tm) 
+  + map_time (fun σ => generateWindowsForFlatNonHalt_time tm q (Some σ) + c__generateWindowsForFlatStep) (seq 0 (sig tm)) 
+  + concat_time (map (generateWindowsForFlat_step tm q) (seq 0 (sig tm))) +
+    c__generateWindowsForFlat1 * (|generateWindowsForFlatNonHalt tm q None|) + c__generateWindowsForFlat2.
+Instance term_generateWindowsForFlat : computableTime' generateWindowsForFlat (fun tm _ => (1, fun q _ => (generateWindowsForFlat_time tm q, tt))). 
+Proof. 
+  apply computableTimeExt with (x :=  
+    fun (flatTM : TM) (q : nat) =>
+      if nth q (halt flatTM) false
+      then generateWindowsForFlatHalt flatTM q
+      else
+       generateWindowsForFlatNonHalt flatTM q None ++
+       concat (map (generateWindowsForFlat_step flatTM q) (seq 0 (sig flatTM)))). 
+  { unfold generateWindowsForFlat, generateWindowsForFlat_step. easy. }
+  extract. solverec. 
+  all: unfold generateWindowsForFlat_time, c__generateWindowsForFlat1, c__generateWindowsForFlat2; solverec. 
+Qed.
+
+Instance mult_lt_le : Proper (eq ==> lt ==> le) mult. 
+Proof. 
+  intros a b -> d e H. nia. 
+Qed.
+
+Definition poly__generateWindowsForFlat n :=
+  c__generateWindowsForFlat1 * n 
+  + poly__generateWindowsForFlatHalt n 
+  + poly__generateWindowsForFlatNonHalt n 
+  + (n + 1) * c__seq + n * (poly__generateWindowsForFlatNonHalt n 
+  + c__generateWindowsForFlatStep + c__map) 
+  + c__map + n * (c__concat * poly__generateWindowsForFlatNonHaltLength n) 
+  + (n + 1) * c__concat 
+  + c__generateWindowsForFlat1 * poly__generateWindowsForFlatNonHaltLength n 
+  + c__generateWindowsForFlat2.
+Lemma generateWindowsForFlat_time_bound tm q :
+  validFlatTM tm -> ofFlatType (states tm) q -> generateWindowsForFlat_time tm q <= poly__generateWindowsForFlat (size (enc tm)). 
+Proof. 
+  intros H0 H. unfold generateWindowsForFlat_time. 
+  rewrite generateWindowsForFlatHalt_time_bound by apply H. 
+  rewrite generateWindowsForFlatNonHalt_time_bound by easy.
+  unfold seq_time. rewrite sig_TM_le at 1.
+  rewrite map_time_mono. 
+  2: { intros σ H1%in_seq. instantiate (1 := fun σ => _). rewrite generateWindowsForFlatNonHalt_time_bound by easy. reflexivity. }
+  rewrite map_time_const. rewrite seq_length. rewrite sig_TM_le at 1. 
+  rewrite concat_time_exp. rewrite map_map. 
+  rewrite sumn_map_mono. 
+  2: { intros σ H1%in_seq. unfold generateWindowsForFlat_step. instantiate (1 := fun σ => _). rewrite generateWindowsForFlatNonHalt_length. reflexivity. }
+  rewrite sumn_map_const. 
+  rewrite map_length, !seq_length.
+  rewrite generateWindowsForFlatNonHalt_length. 
+  rewrite sig_TM_le. 
+  unfold ofFlatType in H. rewrite H, states_TM_le.  
+  unfold poly__generateWindowsForFlat. nia. 
+Qed.
+Lemma generateWindowsForFlat_poly : inOPoly poly__generateWindowsForFlat /\ monotonic poly__generateWindowsForFlat. 
+Proof. 
+  unfold poly__generateWindowsForFlat; split; smpl_inO. 
+  all: first [apply generateWindowsForFlatHalt_poly | apply generateWindowsForFlatNonHalt_poly | apply generateWindowsForFlatNonHalt_length_poly ]. 
+Qed. 
+
+Definition poly__generateWindowsForFlatLength n := poly__makeAllEvalEnvFlatLength 1 0 3 0 n * (|makeHalt_rules|) 
+  + poly__generateWindowsForFlatNonHaltLength n * (n + 1).
+Lemma generateWindowsForFlat_length tm q : |generateWindowsForFlat tm q| <= poly__generateWindowsForFlatLength (size (enc tm)). 
+Proof. 
+  unfold generateWindowsForFlat. destruct nth. 
+  - rewrite generateWindowsForFlatHalt_length. unfold poly__generateWindowsForFlatLength; nia.
+  - rewrite app_length, length_concat. 
+    rewrite map_map, sumn_map_mono. 
+    2: { intros s H%in_seq. instantiate (1 := fun _ => _). rewrite generateWindowsForFlatNonHalt_length. reflexivity. }
+    rewrite sumn_map_const. rewrite seq_length, generateWindowsForFlatNonHalt_length.
+    rewrite sig_TM_le. 
+    unfold poly__generateWindowsForFlatLength; nia.  
+Qed.
+Lemma generateWindowsForFlat_length_poly : monotonic poly__generateWindowsForFlatLength /\ inOPoly poly__generateWindowsForFlatLength.
+Proof.
+  unfold poly__generateWindowsForFlatLength; split; smpl_inO. 
+  all: first [apply makeAllEvalEnvFlat_length_poly | apply generateWindowsForFlatNonHalt_length_poly ]. 
+Qed. 
+
+(**flatStateWindows *)
+Definition c__flatStateWindows := 17. 
+Definition flatStateWindows_time (tm : TM) :=   seq_time (states tm) + map_time (fun q => generateWindowsForFlat_time tm q) (seq 0 (states tm)) + concat_time (map (generateWindowsForFlat tm) (seq 0 (states tm))) + c__flatStateWindows.
+Instance term_flatStateWindows : computableTime' flatStateWindows (fun tm _ => (flatStateWindows_time tm, tt)). 
+Proof. 
+  extract. solverec. 
+  unfold flatStateWindows_time, c__flatStateWindows. solverec. 
+Qed.
+
+Definition poly__flatStateWindows n := (n + 1) * c__seq + n * (poly__generateWindowsForFlat n + c__map) + c__map + n * c__concat * poly__generateWindowsForFlatLength n + (n + 1) * c__concat + c__flatStateWindows.
+Lemma flatStateWindows_time_bound tm : validFlatTM tm -> flatStateWindows_time tm <= poly__flatStateWindows (size (enc tm)). 
+Proof. 
+  intros H.
+  unfold flatStateWindows_time. unfold seq_time. rewrite states_TM_le at 1.
+  rewrite map_time_mono.
+  2: { intros q H1%in_seq. instantiate (1 := fun q => poly__generateWindowsForFlat (size (enc tm))). rewrite generateWindowsForFlat_time_bound by easy. reflexivity. }
+  rewrite map_time_const, seq_length. rewrite states_TM_le at 1. 
+  rewrite concat_time_exp. rewrite map_map, sumn_map_mono. 
+  2: { intros q H1%in_seq. instantiate (1 := fun q => _). rewrite generateWindowsForFlat_length. reflexivity. }
+  rewrite sumn_map_const. rewrite seq_length, states_TM_le at 1. 
+  rewrite map_length, seq_length, states_TM_le. 
+  unfold poly__flatStateWindows. nia. 
+Qed. 
+Lemma flatStateWindows_poly : inOPoly poly__flatStateWindows /\ monotonic poly__flatStateWindows. 
+Proof. 
+  unfold poly__flatStateWindows; split; smpl_inO. 
+  all: first [apply generateWindowsForFlat_poly | apply generateWindowsForFlat_length_poly]. 
+Qed.
+
+(** TODO: prelude windows, final substrings*)
+
+  
+
+ 
+  
