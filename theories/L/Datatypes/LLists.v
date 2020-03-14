@@ -26,10 +26,11 @@ Section Fix_X.
    Qed. 
   
 
-  Global Instance termT_append : computableTime' (@List.app X) (fun A _ => (5,fun B _ => (length A * 16 +4,tt))).
+   Definition c__app := 16.
+  Global Instance termT_append : computableTime' (@List.app X) (fun A _ => (5,fun B _ => (length A * c__app + c__app,tt))).
   Proof using intX.
     extract.
-    solverec.
+    solverec. all: now unfold c__app. 
   Qed.
 
   Global Instance term_filter: computableTime' (@filter X) (fun p pT => (1,fun l _ => (fold_right (fun x res => 16 + res + fst (pT x tt)) 8 l ,tt))).
@@ -161,10 +162,11 @@ recRel_prettify.
 solverec.
 Qed.
 
-Instance termT_rev X `{registered X}: computableTime' (@rev X) (fun l _ => (length l*13+10,tt)).
+Definition c__rev := 13. 
+Instance termT_rev X `{registered X}: computableTime' (@rev X) (fun l _ => ((length l + 1) *c__rev,tt)).
 eapply computableTimeExt with (x:= fun l => rev_append l []).
 {intro. rewrite rev_alt. reflexivity. }
-extract. solverec.
+extract. solverec. unfold c__rev; solverec. 
 Qed.
 
 (* Instance not neccessary as alias for nth_error *)
@@ -462,7 +464,7 @@ Section concat_fixX.
   Context {X : Type}.
   Context `{registered X}.
   
-  Definition c__concat := 19.
+  Definition c__concat := c__app + 15.
   Definition concat_time (l : list (list X)) := fold_right (fun l acc => c__concat * (|l|) + acc + c__concat) c__concat l.
   Global Instance term_concat : computableTime' (@concat X) (fun l _ => (concat_time l, tt)). 
   Proof. 

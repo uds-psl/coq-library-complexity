@@ -23,12 +23,18 @@ Definition evalLiteral a l : bool := match l with
 end. 
 
 (*Empty disjunction evaluates to false*)
-Definition evalClause_step a lit acc := orb acc (evalLiteral a lit). 
-Definition evalClause a C : bool := fold_right (evalClause_step a) false C. 
+Fixpoint evalClause a C := 
+  match C with 
+  | [] => false
+  | (l :: C) => evalClause a C || evalLiteral a l
+  end. 
 
 (*Empty conjunction evaluates to true *)
-Definition evalCnf_step a cl acc := andb acc (evalClause a cl). 
-Definition evalCnf a N : bool := fold_right (evalCnf_step a) true N. 
+Fixpoint evalCnf a N := 
+  match N with 
+  | [] => true
+  | (C :: N) => evalCnf a N && evalClause a C
+  end. 
 
 (*more helpful properties *)
 (*a characterisation of one processing step of evalClause *)
@@ -64,7 +70,7 @@ Proof.
       * apply IHC in H1 as (l & H1 & H2). eauto.
       * exists a0; eauto.
     + intros (l & [-> | H1] & H2). 
-      * unfold evalClause_step. now rewrite H2, orb_true_r. 
+      * now rewrite H2, orb_true_r. 
       * fold (evalClause a C). erewrite (proj2 IHC); [easy | eauto].
 Qed. 
 
@@ -82,7 +88,7 @@ Proof.
   - split. 
     + intros (H1 & H2)%andb_true_iff. intros C [-> | H3]; [easy | ].
       fold (evalCnf a N) in H1. eapply (proj1 IHN) in H1; eauto.
-    + intros H. unfold evalCnf_step. rewrite (H a0 (or_introl eq_refl)), andb_true_r. 
+    + intros H. rewrite (H a0 (or_introl eq_refl)), andb_true_r. 
       apply IHN; eauto.
 Qed. 
 
@@ -597,106 +603,65 @@ Qed.
 
 
 (*evalClause *)
-Definition c__evalClause_step := c__evalLiteral + 7.
-Definition evalClause_step_time a (l : literal) (acc : bool) := match l with (_, v) => evalVar_time a v + c__evalClause_step end. 
-Instance term_evalClause_step : computableTime' evalClause_step (fun a _ => (1, fun l _ => (1, fun acc _ => (evalClause_step_time a l acc, tt)))).
+
+Definition c__evalClause := 17.
+Fixpoint evalClause_time a (C : clause) :=
+  match C with 
+  | [] => 0
+  | (l :: C) => evalLiteral_time a l + evalClause_time a C
+  end + c__evalClause.
+Instance term_evalClause : computableTime' evalClause (fun a _ => (5, fun C _ => (evalClause_time a C, tt))). 
 Proof. 
-  extract. solverec. unfold c__evalClause_step. solverec. 
+  extract. solverec. 
+  all: unfold c__evalClause; solverec. 
 Defined.
 
-Definition c__evalClause := c__fold_right + 4.
-Definition evalClause_time a (c : clause) := fold_right_time (evalClause_step a) (fun l acc => 1 + evalClause_step_time a l acc) c false + c__evalClause.
-Instance term_evalClause : computableTime' evalClause (fun a _ => (1, fun c _ => (evalClause_time a c, tt))). 
+Definition poly__evalClause n := n * poly__evalLiteral n + (n + 1) * c__evalClause.
+Lemma evalClause_time_bound a C : evalClause_time a C <= poly__evalClause (size (enc a) + size (enc C)). 
 Proof. 
-  extract. solverec. unfold evalClause_time, c__evalClause. solverec. 
-Defined. 
-
-Definition c__evalClauseBound := c__evalClause_step + c__fold_right. 
-Definition poly__evalClause n := (n + 1) * (1 + poly__evalVar ((n+1) * c__sizeBool + n) + c__evalClauseBound) + c__evalClause. 
-Lemma evalClause_time_bound a c : evalClause_time a c <= poly__evalClause (size (enc a) + size (enc c)). 
-Proof. 
-  unfold evalClause_time. 
-  change (fun l acc => 1 + evalClause_step_time a l acc) with ((fun a l acc => 1 + evalClause_step_time a l acc) a). 
-  rewrite fold_right_time_bound_env. 
-  3: { 
-    split; [intros| ]. 
-    - rewrite size_bool. instantiate (1 := fun n => c__sizeBool). nia.
-    - smpl_inO. 
-  }
-  2: { 
-    split; [intros | ]. 
-    - unfold evalClause_step_time. destruct ele. rewrite evalVar_time_bound.  
-      instantiate (1 := fun n => 1 + poly__evalVar n + c__evalClause_step). cbn - [Nat.add]. 
-      poly_mono evalVar_poly. 
-      2: { replace_le (size (enc env) + size (enc n)) with (size (enc acc) + size (enc (b, n)) + size (enc env)) by (rewrite size_prod; cbn; lia). reflexivity. }
-      lia. 
-    - smpl_inO. apply evalVar_poly. 
-  } 
-  cbn -[Nat.add]. poly_mono evalVar_poly. 
-  2: { rewrite list_size_length. rewrite size_bool. reflexivity. }
-  rewrite list_size_length.
-  unfold poly__evalClause, c__evalClauseBound. 
-  poly_mono evalVar_poly. 
-  2: { instantiate (1 := (size (enc a) + size (enc c) + 1) * c__sizeBool + (size (enc a) + size (enc c))). nia. }
-  nia.
-Qed. 
+  unfold evalClause_time. induction C. 
+  - unfold poly__evalClause. nia. 
+  - rewrite evalLiteral_time_bound. rewrite IHC. 
+    poly_mono evalLiteral_poly. 
+    2: { instantiate (1 := size (enc a) + size (enc (a0 :: C))). rewrite list_size_cons. nia. }
+    unfold poly__evalClause. poly_mono evalLiteral_poly at 2. 
+    2: { instantiate (1 := size (enc a) + size (enc (a0 :: C))). rewrite list_size_cons. nia. }
+    rewrite list_size_cons. unfold c__listsizeCons. leq_crossout. 
+Qed.
 Lemma evalClause_poly : monotonic poly__evalClause /\ inOPoly poly__evalClause. 
 Proof. 
-  split; unfold poly__evalClause; smpl_inO. 
-  - apply evalVar_poly. 
-  - apply inOPoly_comp; [apply evalVar_poly | apply evalVar_poly | smpl_inO]. 
-Qed. 
-
+  split; unfold poly__evalClause; smpl_inO; apply evalLiteral_poly. 
+Qed.
 
 (*evalCnf *)
-Definition c__evalCnf_step := 7.
-Definition evalCnf_step_time a (c : clause) := evalClause_time a c + c__evalCnf_step.
-Instance term_evalCnf_step : computableTime' evalCnf_step (fun a _ => (1, fun c _ => (1, fun acc _ => (evalCnf_step_time a c, tt)))). 
+Definition c__evalCnf := 21.
+Fixpoint evalCnf_time a (N : cnf) :=
+  match N with 
+  | [] => 0
+  | (C :: N) => evalClause_time a C + evalCnf_time a N
+  end + c__evalCnf.
+Instance term_evalCnf : computableTime' evalCnf (fun a _ => (5, fun c _ => (evalCnf_time a c, tt))). 
 Proof. 
-  extract. solverec. unfold evalCnf_step_time, c__evalCnf_step. solverec. 
-Defined. 
+  extract. solverec. 
+  all: unfold c__evalCnf; solverec. 
+Defined.
 
-Definition c__evalCnf := c__fold_right + 4.
-Definition evalCnf_time a (cn : cnf) := fold_right_time (evalCnf_step a) (fun cl _ => 1 + evalCnf_step_time a cl) cn true + c__evalCnf.
-Instance term_evalCnf : computableTime' evalCnf (fun a _ => (1, fun c _ => (evalCnf_time a c, tt))). 
+Definition poly__evalCnf n := n * poly__evalClause n + (n + 1) * c__evalCnf.
+Lemma evalCnf_time_bound a N : evalCnf_time a N <= poly__evalCnf (size (enc a) + size (enc N)). 
 Proof. 
-  extract. solverec. unfold evalCnf_time, c__evalCnf. solverec. 
-Defined. 
-
-Definition c__evalCnfBound := c__evalCnf_step + c__fold_right. 
-Definition poly__evalCnf n := (n + 1) * (1 + poly__evalClause ((n+1) * c__sizeBool + n) + c__evalCnfBound) + c__evalCnf. 
-Lemma evalCnf_time_bound a c : evalCnf_time a c <= poly__evalCnf (size (enc a) + size (enc c)). 
-Proof. 
-  unfold evalCnf_time. 
-  change (fun cl _ => 1 + evalCnf_step_time a cl) with ((fun a cl (_ : bool) => 1 + evalCnf_step_time a cl ) a). 
-  rewrite fold_right_time_bound_env. 
-  3: { 
-    split; [intros| ]. 
-    - rewrite size_bool. instantiate (1 := fun n => c__sizeBool). nia.
-    - smpl_inO. 
-  }
-  2: { 
-    split; [intros | ]. 
-    - unfold evalCnf_step_time. rewrite evalClause_time_bound.  
-      instantiate (1 := fun n => 1 + poly__evalClause n + c__evalCnf_step). cbn - [Nat.add]. 
-      poly_mono evalClause_poly. 
-      2: { replace_le (size (enc env) + size (enc ele)) with (size (enc acc) + size (enc ele) + size (enc env)) by (lia). reflexivity. }
-      lia. 
-    - smpl_inO. apply evalClause_poly. 
-  } 
-  cbn -[Nat.add]. poly_mono evalClause_poly. 
-  2: { rewrite list_size_length. rewrite size_bool. reflexivity. }
-  rewrite list_size_length.
-  unfold poly__evalCnf, c__evalCnfBound. 
-  poly_mono evalClause_poly. 
-  2: { instantiate (1 := (size (enc a) + size (enc c) + 1) * c__sizeBool + (size (enc a) + size (enc c))). nia. }
-  nia.
-Qed. 
+  unfold evalCnf_time. induction N. 
+  - unfold poly__evalCnf. nia. 
+  - rewrite evalClause_time_bound. rewrite IHN. 
+    poly_mono evalClause_poly. 
+    2: { instantiate (1 := size (enc a) + size (enc (a0:: N))). rewrite list_size_cons. nia. } 
+    unfold poly__evalCnf. 
+    poly_mono evalClause_poly at 2. 
+    2: { instantiate (1 := size (enc a) + size (enc (a0 :: N))). rewrite list_size_cons. nia. }
+    rewrite list_size_cons. unfold c__listsizeCons. leq_crossout.
+Qed.
 Lemma evalCnf_poly : monotonic poly__evalCnf /\ inOPoly poly__evalCnf. 
 Proof. 
-  split; unfold poly__evalCnf; smpl_inO. 
-  - apply evalClause_poly. 
-  - apply inOPoly_comp; [apply evalClause_poly | apply evalClause_poly | smpl_inO]. 
+  split; unfold poly__evalCnf; smpl_inO; apply evalClause_poly. 
 Qed. 
 
 (*varsOfLiteral *)
@@ -850,7 +815,6 @@ Lemma assignment_small_decb_poly2 : monotonic poly__assignmentSmallDecb2 /\ inOP
 Proof. 
   unfold poly__assignmentSmallDecb2; split; smpl_inO.
 Qed.
- 
 
 Definition c__assignmentSmallDecbBound3 := c__nat_eqb2 + c__dupfreeBound.
   
@@ -881,7 +845,7 @@ Proof.
 Qed. 
 
 (*sat_verifierb *)
-Definition c__satVerifierb := 12. 
+Definition c__satVerifierb := 16. 
 Definition sat_verifierb_time (p : cnf * assgn) := match p with (cn, a) => assignment_small_decb_time cn a + evalCnf_time a cn + c__satVerifierb end.
 Instance term_sat_verifierb : computableTime' sat_verifierb (fun p _ => (sat_verifierb_time p, tt)). 
 Proof. 

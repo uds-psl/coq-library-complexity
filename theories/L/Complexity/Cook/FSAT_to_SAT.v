@@ -878,8 +878,8 @@ Proof.
 Defined. 
 
 (** tseytin' *)
-Definition c__tseytinP1 := 16 * c__tseytinSize. 
-Definition c__tseytinP2 := 60.
+Definition c__tseytinP1 := c__app * c__tseytinSize. 
+Definition c__tseytinP2 := 60 + 2 * c__app.
 
 Fixpoint tseytin'_time (f : formula) := match f with 
 | Ftrue => c__tseytinTrue 

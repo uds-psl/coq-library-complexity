@@ -15,7 +15,7 @@ Proof.
       + exists (fun n => size (enc [[(true, 0)]; [(false, 0)]])); [solverec | smpl_inO | smpl_inO].
     - intros N ?. cbn. exists Logic.I. unfold kSAT. 
       split; [lia | ]. intros [a H]. 
-      unfold satisfies, evalCnf, evalCnf_step in H; cbn in H. 
+      unfold satisfies, evalCnf in H; cbn in H. 
       destruct evalVar; cbn in H; congruence. 
   } 
 
@@ -39,7 +39,7 @@ Proof.
       apply kCNF_decb_iff in H2. rewrite H2. apply H3.  
     + destruct kCNF_decb eqn:H1. 
       * apply kCNF_decb_iff in H1. intros H2. split; [lia | split; easy]. 
-      * intros [a H]. unfold satisfies, evalCnf, evalCnf_step in H; cbn in H. 
+      * intros [a H]. unfold satisfies, evalCnf in H; cbn in H. 
       destruct evalVar; cbn in H; congruence. 
 Qed. 
 

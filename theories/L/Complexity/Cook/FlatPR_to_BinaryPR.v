@@ -190,7 +190,7 @@ Proof.
 Qed.
 
 (*hNat *)
-Definition c__hNat := 2 * (c__leb2 + 2 * c__repEl2 + 42 + 2 * c__sub + 2 * c__sub1).
+Definition c__hNat := 2 * (c__leb2 + 2 * c__repEl2 + 18 + 2* c__app + 2 * c__sub + 2 * c__sub1).
 Definition hNat_time sig n := (leb_time (S n) sig + repEl_time sig + sig + 1) * c__hNat. 
 Instance term_hNat : computableTime' hNat (fun sig _ => (1, fun n _ => (hNat_time sig n, tt))). 
 Proof. 
@@ -198,8 +198,9 @@ Proof.
   extract. solverec. 
   - setoid_rewrite sub_time_bound_r at 2. rewrite repEl_length. 
     apply leb_iff in H. rewrite H1 with (x' := x) by lia. setoid_rewrite H1 with (x' := x) at 2. 2: lia. 
+    replace_le x0 with x by lia at 3. 
     rewrite sub_time_bound_l.
-    unfold hNat_time, c__hNat. cbn[Nat.add]. unfold c__sub1, c__sub. nia. 
+    unfold hNat_time, c__hNat. cbn[Nat.add]. unfold c__sub1, c__sub. nia.
   - cbn[Nat.add]. unfold hNat_time, c__hNat. apply Nat.leb_gt in H. 
     unfold repEl_time. nia. 
 Qed. 
@@ -241,8 +242,7 @@ Proof.
   rewrite map_length. lia. 
 Qed. 
 
-Definition c__hflatBound := (c__hNatSize + 5) * (c__concat + 1) + c__hflat + 1 + (c__map + 1). 
-Definition poly__hflat n := ((n + 1) * (poly__hNat n + 1) + ((n+1) * (n+1) + n + 1) + 1) * c__hflatBound.
+Definition poly__hflat n := (n + 1) * (poly__hNat n + 1) * (c__map + 1) + (n * (n + 1) * c__hNatSize + c__listsizeCons * n + c__listsizeNil + 1) * c__concat + c__hflat.
 Lemma hflat_time_bound fpr l : hflat_time fpr l <= poly__hflat (size (enc fpr) + size (enc l)).
 Proof. 
   unfold hflat_time. rewrite map_time_bound_env. 
@@ -262,7 +262,12 @@ Proof.
   } 
   unfold poly__concat. 
   rewrite list_size_length.
-  unfold poly__hflat, c__hflatBound. unfold c__hNatSize, c__concat, c__hflat, c__map, c__listsizeCons, c__listsizeNil, c__sizeBool. nia. 
+  replace_le (size (enc l)) with (size (enc fpr) + size (enc l)) by lia at 1. 
+  replace_le (size (enc l)) with (size (enc fpr) + size (enc l)) by lia at 3.
+  replace_le (size (enc fpr)) with (size (enc fpr) + size (enc l)) by lia at 4.
+  replace_le (size (enc l)) with (size (enc fpr) + size (enc l)) by lia at 5.   
+  generalize (size (enc fpr) + size (enc l)). intros n. 
+  unfold poly__hflat. nia. 
 Qed. 
 Lemma hflat_poly : monotonic poly__hflat /\ inOPoly poly__hflat.    
 Proof. 
