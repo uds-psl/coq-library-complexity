@@ -2524,28 +2524,6 @@ Section fixTM.
                                                       (inr nblank) ++ [inr ndelimC]) (map inl (E neutral (S (S n)))). 
   Proof.  induction n; cbn; eauto 10.  Qed. 
 
-  (*the same result for the left half *)
-  Lemma prelude_blank_tape_rewrites_left n : 
-    valid (rewritesHeadInd (liftPrelude preludeRules)) (inr ndelimC :: rev (repEl (S (S n)) (inr nblank))) 
-                                                       (rev (map inl (E neutral (S (S n))))). 
-  Proof. 
-    (*reversion again - here we use the explicit characterisation *)
-    apply valid_iff. split. 
-    - cbn; rewrite !app_length, !rev_length, map_length, repEl_length, E_length. now cbn. 
-    - cbn [length]. rewrite rev_length, repEl_length. cbn [Nat.sub]. 
-      intros; induction n. 
-      + destruct i; [ | lia]. constructor. cbn; eauto 10. 
-      + destruct (nat_eq_dec i (S n)). 
-        * subst; clear H IHn. unfold rewritesAt. cbn. 
-          rewrite <- !app_assoc. rewrite !skipn_app. 
-          -- cbn; eauto 10. 
-          -- rewrite rev_length, map_length, E_length; cbn; lia. 
-          -- rewrite rev_length, repEl_length; cbn; lia. 
-        * assert (0 <= i < S n) as H0 by lia.  apply IHn in H0. 
-          cbn. apply rewritesAt_rewritesHeadInd_add_at_end with (h1 := [inr nblank]) (h2 := [inl (inr (inr (neutral, |_|)))]) in H0.
-          apply H0. 
-  Qed. 
-
   (*in fact, nblanks do *only* rewrite to blanks *)
   Lemma prelude_blank_tape_rewrites_right_unique n s: 
     valid (rewritesHeadInd (liftPrelude preludeRules)) (map inr (repEl (S (S n)) nblank ++ [ndelimC])) s 
@@ -2557,52 +2535,6 @@ Section fixTM.
       + cbn in H4; lia.  
       + apply IHn in H2 as ->. clear IHn. 
         prelude_inv_valid_constant. eauto. 
-  Qed. 
-
-  (*again for the left half *)
-  Lemma prelude_blank_tape_rewrites_left_unique j s : 
-    valid (rewritesHeadInd (liftPrelude preludeRules)) (inr ndelimC :: rev (map inr (repEl (S (S j)) nblank))) s 
-    -> s = rev (map inl (E neutral (S (S j)))).  
-  Proof. 
-    intros (H1 & H2)%valid_iff. cbn in H2. rewrite !app_length, rev_length, map_length, repEl_length in H2. 
-    cbn in H2. replace (j + 1 + 1 - 1) with (S j) in H2 by lia. 
-    revert s H1 H2. 
-    induction j; intros. 
-    - cbn in H1. assert (0 <= 0 < 1) as H3 by lia. specialize (H2 0 H3). 
-      cbn in H2. inv H2. prelude_inv_valid_constant. cbn in H0; subst.  
-      destruct s2; [ | now cbn in H1]. eauto. 
-    - assert (0 <= S j < S (S j)) as H3 by lia; specialize (H2 (S j) H3) as H4; clear H3. 
-      cbn in H4. rewrite <- !app_assoc in H4. cbn in H4. unfold rewritesAt in H4. 
-      cbn in H1. rewrite !app_length, rev_length in H1. cbn in H1. 
-      assert (3 <= |s|) as H5 by lia.
-      destruct (list_length_split2 H5) as (s1 & s2 & _ & F2 & ->). 
-      list_length_inv. clear H5. 
-      assert (forall i, 0 <= i < S j -> rewritesAt (rewritesHeadInd (liftPrelude preludeRules)) i (inr ndelimC
-          :: (rev (map inr (repEl j nblank)) ++ [inr nblank]) ++ [inr nblank]) (s1 ++ [s; s0])) as H. 
-      { 
-        intros. assert (0 <= i < S (S j)) as H5 by lia. 
-        specialize (H2 i H5). clear H5. 
-        replace ([s; s0; s2]) with ([s; s0] ++ [s2]) in H2 by now cbn. 
-        rewrite app_assoc in H2. rewrite app_fold in H2. 
-        specialize (rewritesAt_rewritesHeadInd_rem_at_end H2) as H2'. 
-        apply H2'. 
-        + cbn. rewrite !app_length, rev_length, map_length, repEl_length. cbn. lia. 
-        + cbn. rewrite app_length; cbn. rewrite !app_length, map_length, repEl_length in H1. cbn in H1. lia. 
-      }
-      assert (|inr ndelimC :: rev (map inr (repEl (S (S j)) nblank)) : list preludeSig| = |s1 ++ [s; s0]|) as H'. 
-      { 
-        cbn. rewrite !app_length, rev_length. cbn. rewrite app_length in H1. cbn in H1. lia. 
-      }
-      specialize (IHj (s1 ++ [s; s0]) H' H). cbn in IHj. 
-      clear H H' H1 H2. 
-      rewrite <- app_assoc in IHj. cbn in IHj. 
-      eapply app_eq_length in IHj as (-> & H1). 
-      + inv H1. cbn in H4. rewrite !skipn_app in H4. 
-        * prelude_inv_valid_constant. cbn. rewrite <- !app_assoc. eauto. 
-        * rewrite rev_length, map_length, E_length; lia. 
-        * rewrite rev_length, map_length, repEl_length; lia. 
-      + match type of IHj with ?a = ?b => assert (|a| = |b|) by congruence end. 
-        rewrite !app_length in H. cbn in H. lia. 
   Qed. 
 
   (*a string consisting of nstars followed by nblanks can be rewritten to the empty tape *)
@@ -2729,166 +2661,134 @@ Section fixTM.
       + prelude_inv_valid_constant. exists s'. easy.
   Qed. 
 
+  Lemma prelude_right_half_rewrites_input_unique' s : 
+    valid (rewritesHeadInd (liftPrelude preludeRules)) (map inr (map nsig fixedInput ++ repEl k' nstar ++ repEl (wo + t) nblank ++ [ndelimC])) s -> exists s', |s'| <= k' /\ s = map inl (stringForTapeHalf (fixedInput ++ s')).
+  Proof. 
+    intros H%prelude_right_half_rewrites_input_unique. 
+    destruct H as (s' & H1 & H2). exists s'; split; [apply H1 | ]. 
+    rewrite <- stringForTapeHalf'_eq. 
+    rewrite H2. unfold z'. rewrite app_length. unfold z, k. 
+    enough (wo + (t + ((|fixedInput|) + k')) - ((|fixedInput|) + (|s'|)) = wo + t + k' - (|s'|)) by easy.
+    lia. 
+  Qed.
+
+  (** add the center state symbol *)
+  Lemma prelude_center_rewrites_state finp s n : 
+    valid (rewritesHeadInd (liftPrelude preludeRules)) ((inr ninit) :: map (fun σ => inr (nsig σ)) finp ++ repEl (|s| + n) (inr nstar) ++ repEl (wo+ t) (inr nblank) ++ [inr ndelimC]) (inl (inl (start, |_|)) :: map inl (stringForTapeHalf' (wo+ n + t) (finp ++ s))). 
+  Proof. 
+    econstructor 3. 
+    - apply prelude_right_half_rewrites_input. 
+    - destruct finp; cbn. 
+      + destruct s; [ destruct n; [ | destruct n] | destruct s; [destruct n | ]]; cbn; eauto. 
+      + destruct finp; [ cbn; destruct s; [ destruct n | ]; cbn; eauto | cbn;eauto ].
+  Qed. 
+
+  Lemma prelude_center_rewrites_state_unique finp j i s: 
+    valid (rewritesHeadInd (liftPrelude preludeRules)) (map inr (ninit :: map nsig finp ++ repEl j nstar ++ repEl (wo + i) nblank ++ [ndelimC])) s -> exists s', |s'| <= j /\ s = map inl (inl (start, |_|) :: stringForTapeHalf' (wo + i + j - (|s'|)) (finp ++ s')).
+  Proof. 
+    intros H. inv_valid. 
+    1: { destruct finp; [destruct j; [ | destruct j] | destruct finp; [destruct j | ]]; cbn in H4; try lia. }
+    apply prelude_right_half_rewrites_input_unique in H2 as (s' & F1 & F2). exists s'; split; [apply F1 | ]. 
+    rewrite -> F2. inv_prelude; easy. 
+  Qed.
+
+  (** add the blanks of the left tape half *)
+  Lemma prelude_left_rewrites_blank finp s n u: 
+    valid (rewritesHeadInd (liftPrelude preludeRules)) (repEl u (inr nblank) ++ (inr ninit) :: map (fun σ => inr (nsig σ)) finp ++ repEl (|s| + n) (inr nstar) ++ repEl (wo+ t) (inr nblank) ++ [inr ndelimC]) (repEl u (inl (inr (inr (neutral, |_|)))) ++ inl (inl (start, |_|)) :: map inl (stringForTapeHalf' (wo+ n + t) (finp ++ s))). 
+  Proof. 
+    induction u; [cbn; apply prelude_center_rewrites_state | ]. 
+    constructor 3. 
+    - apply IHu. 
+    - destruct u; cbn; [ | destruct u; cbn; [eauto | eauto]].
+      destruct finp; [destruct s; [destruct n | ] | ]; cbn; eauto.
+  Qed.
+
+  Lemma prelude_left_rewrites_blank_unique finp j i u s: 
+    valid (rewritesHeadInd (liftPrelude preludeRules)) (map inr (repEl u nblank ++ ninit :: map nsig finp ++ repEl j nstar ++ repEl (wo + i) nblank ++ [ndelimC])) s -> exists s', |s'| <= j /\ s = map inl (repEl u (inr (inr (neutral, |_|))) ++ inl (start, |_|) :: stringForTapeHalf' (wo + i + j - (|s'|)) (finp ++ s')).
+  Proof. 
+    revert s. 
+    induction u; cbn [repEl app]; intros s.
+    - apply prelude_center_rewrites_state_unique. 
+    - intros H. inv_valid. 
+      1: { destruct u; cbn in H4; [ destruct finp; [destruct j | ]; cbn in H4; lia | destruct u; cbn in H4; lia]. }
+      apply IHu in H2. clear IHu. destruct H2 as (s' & H2 & H3). exists s'; split; [apply H2 | ]. 
+      rewrite H3. inv_prelude; easy.
+  Qed.
+
+  (** the left delimiter symbol *)
+  Fact rev_E n p : rev (E p n) = inr (inl delimC) :: repEl n (inr (inr (p, |_|))). 
+  Proof. 
+    induction n; cbn; [easy | ]. 
+    rewrite IHn. cbn. replace (inr (inr (p, |_|)) :: repEl n (inr (inr (p, |_|)))) with (repEl (n + 1) (inr (inr (p, |_|)) : Gamma)). 
+    2: { rewrite Nat.add_comm. cbn. easy. }
+    rewrite repEl_add. cbn. easy.
+  Qed.
+
+  Lemma prelude_whole_string_rewrites finp s n u : 
+    valid (rewritesHeadInd (liftPrelude preludeRules)) ((inr ndelimC) :: repEl (wo + u) (inr nblank) ++ (inr ninit) :: map (fun σ => inr (nsig σ)) finp ++ repEl (|s| + n) (inr nstar) ++ repEl (wo+ t) (inr nblank) ++ [inr ndelimC]) (rev (map inl (stringForTapeHalf' (wo + u) [])) ++ inl (inl (start, |_|)) :: map inl (stringForTapeHalf' (wo+ n + t) (finp ++ s))). 
+  Proof. 
+    unfold stringForTapeHalf'. cbn -[wo].  
+    rewrite <- map_rev. rewrite rev_E. cbn [map].
+    rewrite map_repEl. 
+    constructor 3. 
+    - apply prelude_left_rewrites_blank. 
+    - cbn. eauto.
+  Qed.
+
+  Lemma prelude_whole_string_rewrites_unique finp j i u s: 
+    valid (rewritesHeadInd (liftPrelude preludeRules)) (map inr (ndelimC :: repEl (wo + u) nblank ++ ninit :: map nsig finp ++ repEl j nstar ++ repEl (wo + i) nblank ++ [ndelimC])) s -> exists s', |s'| <= j /\ s = map inl (rev (stringForTapeHalf' (wo + u) []) ++ inl (start, |_|) :: stringForTapeHalf' (wo + i + j - (|s'|)) (finp ++ s')).
+  Proof. 
+    intros H.
+    inv_valid. 
+    apply (prelude_left_rewrites_blank_unique (u := S (S u))) in H2 as (s' & H2 & H3). 
+    exists s'; split; [apply H2 | ]. rewrite H3. 
+    inv_prelude. 
+    unfold stringForTapeHalf'. cbn [mapPolarity map app]. rewrite rev_E. easy.
+  Qed.
+
   (** we now put the above results together to obtain soundness and completeness. *)
-  (*the proofs are not very interesting (as they just put together the above results), but very technical because of the needed case analyses at the center of the string in order to apply the individual results for the left and right tape halves *)
-
-  (** completeness: the prelude can generate any valid input string *)
-  Local Ltac prelude_complete_prepare:=
-    unfold preludeInitialString, initialString, fullInput; subst; cbn -[app]; 
-    unfold z', z, k; try subst; try rewrite Nat.add_0_r; cbn [length]; try rewrite !Nat.sub_0_r;
-    cbn; rewrite <- !app_assoc; cbn; 
-    match goal with 
-        [ |- context[?a :: ?b :: ninit :: ?c :: ?d :: ?r]] => replace (a :: b :: ninit :: c :: d :: r) with ([a; b; ninit; c; d] ++ r) by (now cbn) 
-    end; 
-    match goal with 
-        [ |- context[?a :: ?b :: inl ?c :: ?d :: ?e :: ?r]] => replace (a :: b :: inl c :: d :: e :: r) with ([a; b; inl c; d; e] ++ r) by (now cbn)
-    end; 
-    try rewrite !rev_fold; try rewrite !map_app, !map_rev; cbn [map]; try rewrite !map_app; cbn[map]; rewrite !map_repEl; 
-    try rewrite app_fold; 
-    apply valid_rewritesHeadInd_center;  repeat split; [ | | eauto | eauto | eauto]; 
-    unfold z, k; try subst; cbn; try rewrite !Nat.add_0_r; 
-    try match goal with [ |- context[t + ?a]] => rewrite Nat.add_comm with (n := t) (m := a) end.
-
+  Fact rev_repEl (X : Type) (x : X) n : rev(repEl n x) = repEl n x. 
+  Proof. 
+    induction n; cbn; [easy | ]. 
+    rewrite IHn. 
+    clear IHn. induction n; cbn; [easy | ]. now rewrite IHn. 
+  Qed.
+  
   Lemma prelude_complete s : isValidInitialString s /\ |s| = l -> valid (rewritesHeadInd (liftPrelude preludeRules)) (map inr preludeInitialString) (map inl s). 
-  Proof with (cbn; try rewrite <- !app_assoc; auto). 
-    intros (H1 & H2). 
-    destruct H1 as (s' & H1 & ->). 
-    unfold isValidCert in H1. 
-    destruct fixedInput as [ | ? fixedInput'] eqn:eqfi; [  | destruct fixedInput']. 
-    - rewrite initialString_eq. destruct k' as [ | k''] eqn:eqk; [ | destruct k'']. 
-      + destruct s'; [ clear H1 | cbn in H1; lia]. 
-        prelude_complete_prepare.
-        * specialize (prelude_blank_tape_rewrites_left t)...
-        * specialize (prelude_blank_tape_rewrites_right t)...
-      + destruct s'; [clear H1 | destruct s'; [clear H1 | cbn in H1; lia]]; prelude_complete_prepare.
-        * specialize (prelude_blank_tape_rewrites_left (1+t))...
-        * specialize (prelude_right_half_rewrites_cert [] 1)...
-        * specialize (prelude_blank_tape_rewrites_left (1 + t))... 
-        * specialize (prelude_right_half_rewrites_cert [e] 0)... 
-      + destruct s' as [ | ? s']; [ | destruct s' ]; cbn; prelude_complete_prepare.
-        * specialize (prelude_blank_tape_rewrites_left (wo + k'' + t))... 
-        * specialize (prelude_right_half_rewrites_cert [] (wo + k''))... 
-        * specialize (prelude_blank_tape_rewrites_left (wo + k'' + t))...
-        * specialize (prelude_right_half_rewrites_cert [e] (S k''))...
-        * specialize (prelude_blank_tape_rewrites_left (wo + k'' + t))...
-        * specialize (prelude_right_half_rewrites_cert' (e::e0 ::s') (k'' - (|s'|)) t).
-          cbn in H1. replace (S (S (k'' - (|s'|) + t))) with (S (S k'') + t - (|s'|)) by lia.
-          cbn [length]. replace (S (S (|s'|)) + (k'' - (|s'|))) with (S (S k'')) by lia.
-          cbn. now rewrite map_app.
-    - rewrite initialString_eq. destruct k' as [ | k''] eqn:eqk.
-      + destruct s'; [clear H1 | cbn in H1; lia]. 
-        prelude_complete_prepare.
-        * specialize (prelude_blank_tape_rewrites_left (1+t))...
-        * specialize (prelude_right_half_rewrites_input 0 [e] [])...
-      + destruct s'; [clear H1 | ]; prelude_complete_prepare.
-        * specialize (prelude_blank_tape_rewrites_left (wo + k'' + t))... 
-        * specialize (prelude_right_half_rewrites_input (1+ k'') [e] [])...
-        * specialize (prelude_blank_tape_rewrites_left (wo + k'' + t))...
-        * specialize (prelude_right_half_rewrites_input (k'' - (|s'|)) [e] (e0 :: s')). 
-          cbn in H1. 
-          replace (S (S k'') + t - (|s'|)) with (wo + (k'' - (|s'|)) + t) by (unfold wo; lia).
-          cbn. replace ((|s'|) + (k'' - (|s'|))) with k'' by lia.
-          rewrite map_app; auto.
-    - rewrite initialString_eq. prelude_complete_prepare. 
-      + specialize (prelude_blank_tape_rewrites_left (wo + |fixedInput'| + k' +t))... 
-      + specialize (prelude_right_half_rewrites_input (k' - (|s'|)) (e :: e0 :: fixedInput') s'). 
-        replace (S (S ((|fixedInput'|) + k')) + t - (|fixedInput' ++ s'|)) with (wo + (k' - (|s'|) + t)).
-        2:{ rewrite app_length. unfold wo. lia. } 
-        cbn. rewrite !map_app. cbn. 
-        replace ((|s'|) + (k' - (|s'|))) with k' by lia. setoid_rewrite map_map at 3.
-        auto.
+  Proof.
+    intros [H1 H2]. unfold isValidInitialString in H1. 
+    destruct H1 as (s' & H1 & ->). unfold isValidCert in H1. 
+    rewrite initialString_eq. 
+    unfold preludeInitialString.
+    unfold initTape_singleTapeTM, fullInput.
+    rewrite <- !stringForTapeHalf'_eq. cbn [length]; rewrite Nat.sub_0_r.
+    unfold z'. 
+    specialize (prelude_whole_string_rewrites fixedInput s' (k' - |s'|) z) as H3. 
+    unfold z, k in *. rewrite app_length.
+    replace (wo + (t + ((|fixedInput|) + k')) - ((|fixedInput|) + (|s'|))) with (wo + (k' - (|s'|)) + t)  by lia. 
+    rewrite !map_app. cbn -[stringForTapeHalf' repEl wo]. 
+    rewrite !map_rev, !map_repEl. rewrite map_map. 
+    replace ((|s'|) + (k' - (|s'|))) with k' in H3 by lia. 
+    rewrite rev_repEl. apply H3. 
   Qed. 
 
   (** now the proof of soundness: the prelude can only generate valid initial strings *)
-  (*using the prelude, we always get a string of the original alphabet *)
-  Lemma prelude_rewrites_to_origString s s' : |s| >= 3 -> valid (rewritesHeadInd (liftPrelude preludeRules)) s s' -> isOrigString s'. 
-  Proof. 
-    intros H0 H. induction H; unfold isOrigString. 
-    - exists []; eauto. 
-    - cbn in H0. lia. 
-    - cbn in H0. inv H1. inv H3. destruct s1. 
-      + apply valid_length_inv in H. destruct s2; [ | cbn in H; lia ]. inv H1; 
-        match goal with 
-          [ |- context[ [inl ?a; inl ?b; inl ?c]]] => exists [a; b; c]; eauto 
-        end. 
-      + cbn in IHvalid. edestruct IHvalid as (? & ->); [ lia | ]. 
-        inv H1; eauto; 
-        match goal with 
-          [ |- context[ inl ?a :: map inl ?b]] => exists (a ::b); eauto
-        end. 
-  Qed. 
-  
-  Hint Unfold isValidInput.
-
-  (*the proof of this lemma is very technical & boring *)
-  (*we just put together the previous lemmas, but need some case distinctions because we need rewrite windows of size 3 *)
+ 
   Lemma prelude_sound s: valid (rewritesHeadInd (liftPrelude preludeRules)) (map inr preludeInitialString) s -> exists s', s = map inl s' /\ isValidInitialString s'. 
   Proof. 
-    intros. 
-    assert ((|map (inr (A := Gamma)) preludeInitialString|) >= 3) as H0. 
-    { 
-      rewrite map_length. unfold preludeInitialString. rewrite !app_length. cbn. lia. 
-    } 
-    specialize (prelude_rewrites_to_origString H0 H) as (s' & ->). clear H0. 
-    exists s'; split; [reflexivity | ]. 
-    unfold preludeInitialString in H. 
-    unfold isValidInitialString.  
-    unfold z', z,k  in H.
-
-    assert (|map nsig fixedInput ++ repEl k' nstar ++ repEl (wo + t) nblank| >= 2) as H0. 
-    { rewrite !app_length, !repEl_length; unfold wo; lia. }
-    remember (map nsig fixedInput ++ repEl k' nstar ++ repEl (wo + t) nblank) as rs. 
-    replace (([ndelimC] ++ rev (repEl (wo + (t + ((|fixedInput|) + k'))) nblank) ++ [ninit] ++ map nsig fixedInput ++ repEl k' nstar ++ repEl (wo + t) nblank ++ [ndelimC])) with (([ndelimC] ++ rev (repEl (wo + (t + ((|fixedInput|) + k'))) nblank) ++ [ninit] ++ rs ++ [ndelimC])) in H. 
-    2: { rewrite Heqrs. rewrite <- !app_assoc. firstorder. }
-    destruct rs as [ | r0 rs]; [ | destruct rs as [ | r1 rs]]; cbn in H0; try lia; clear H0.
-    unfold wo in H; cbn in H.  
-    do 2 rewrite <- app_assoc in H. cbn in H. 
-    rewrite !map_app in H. cbn in H. rewrite app_fold in H. 
-    match type of H with 
-      context[?a :: ?b :: inr ninit :: ?c :: ?d :: ?r] => replace (a :: b :: inr ninit :: c :: d :: r) with ([a; b; inr ninit; c; d] ++ r) in H by (now cbn) 
-    end.
-    specialize (valid_conc_inv H) as (A' & B' & ? & ? & ? & ? & ? & F1 & F2 & F3). 
-    apply map_eq_app in F1 as (ls1 & ls2 & -> & -> & F1). symmetry in F1. 
-    apply map_eq_app in F1 as (ls3 & ls4 & -> & F1 & ->). 
-    inv_eqn_map. 
-    do 2 setoid_rewrite map_app in H at 2. cbn [map] in H. 
-    specialize (proj1 (valid_rewritesHeadInd_center _ _ _ _ _ _ _ _ _ _ _ _ _ _ _) (conj H (conj F2 F3))) as (G1 & G2 & G3 & G4 & G5).
-    replace ((inr ndelimC :: map inr (rev (repEl (t + ((|fixedInput|) + k')) nblank))) ++ [inr nblank; inr nblank] : list preludeSig) with ((inr ndelimC :: map inr (rev (repEl (S (S t) + |fixedInput| + k') nblank)) : list preludeSig)) in G1. 
-    2: { cbn. rewrite <- !app_assoc, map_app. cbn. easy. }
-    rewrite map_rev in G1. 
-    apply prelude_blank_tape_rewrites_left_unique in G1. fold Nat.add in G1. 
-    
-    rewrite <- map_rev in G1. cbn in G1. rewrite <- app_assoc in G1. cbn in G1. 
-    rewrite map_app in G1. cbn in G1. 
-    apply app_eq_length in G1 as (G1 & G1'). 
-    2: { clear F3 G1. rewrite <- F2. cbn. rewrite !map_length, !rev_length. 
-        rewrite repEl_length, E_length. cbn. lia. }
-    apply Prelim.map_inj in G1 as ->;[  | unfold injective; congruence ]. 
-    inv G1'. 
-    replace (inr r0 :: inr r1 :: map inr (rs ++ [ndelimC])) with (map inr ((r0 ::r1 ::rs) ++ [ndelimC]) : list preludeSig) in G2 by easy.
-    rewrite Heqrs, <- !app_assoc in G2.
-    apply prelude_right_half_rewrites_input_unique in G2 as (s' & G2' & G2). 
-    replace (inl s2 :: inl s3 :: map inl ls4) with (map inl (s2 :: s3 :: ls4) : list preludeSig) in G2 by easy.
-    apply Prelim.map_inj in G2; [ | easy].
-
-    exists s'. 
-    split. 
-    - apply G2'.
-    - cbn. rewrite G2. clear G4 G5. inv_prelude.
-      do 2 rewrite rev_fold. 
-      unfold initialString. unfold stringForConfig, stringForTapeHalf', z, k, fullInput. 
-      destruct fixedInput as [ | ? l0] eqn:H1; [ destruct s' | ]; cbn[length]; try subst.
-      + cbn; unfold z, k; try subst. easy.
-      + destruct s'; cbn; unfold z, k; try subst; easy.
-      + assert (z = (|fixedInput| + k' + t)) as H0 by (unfold z, k; lia). 
-        cbn -[Nat.sub].
-        rewrite H0. 
-        rewrite app_length. subst; cbn [length].
-        rewrite Nat.sub_0_r. 
-        replace (S (S (S (|l0|) + k' + t)) - S ((|l0|) + (|s'|))) with (wo + t + k' - (|s'|)) by (unfold wo; lia). 
-        replace (t + S ((|l0|) + k')) with (S (|l0|) + k' + t) by lia.
-        easy.
-  Qed. 
+    intros H. unfold preludeInitialString in H. cbn -[map rev repEl wo] in H. 
+    rewrite rev_repEl in H. 
+    apply (@prelude_whole_string_rewrites_unique fixedInput k' t z s) in H.
+    destruct H as (s' & H1 & H2). 
+    match type of H2 with s = map inl ?s1 => exists s1 end. split; [easy | ]. 
+    unfold isValidInitialString. exists s'.
+    split; [apply H1 | ]. rewrite initialString_eq. rewrite <- !stringForTapeHalf'_eq. 
+    cbn [length]; rewrite Nat.sub_0_r. unfold z', z, k. 
+    unfold fullInput. rewrite app_length. 
+    enough (wo + (t + ((|fixedInput|) + k')) - ((|fixedInput|) + (|s'|)) = (wo + t + k' - (|s'|))).
+    { rewrite H. easy. }
+    lia. 
+  Qed.
 
   Definition allRules := combP simRules preludeRules. 
 

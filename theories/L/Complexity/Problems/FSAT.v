@@ -54,18 +54,16 @@ Definition satisfies a f := evalFormula a f = true.
 Definition FSAT f := exists a, satisfies a f. 
 
 (** bounds on the number of used variables *)
-Inductive varBound_formula (n : nat) : formula -> Prop :=
-  | varBound_forVar v : n > v -> varBound_formula n v 
-  | varBound_forTrue : varBound_formula n Ftrue
-  | varBound_forAnd n1 n2 f1 f2 : varBound_formula n1 f1 -> varBound_formula n2 f2 -> n >= n1 -> n >= n2 -> varBound_formula n (f1 ∧ f2)
-  | varBound_forOr n1 n2 f1 f2 : varBound_formula n1 f1 -> varBound_formula n2 f2 -> n >= n1 -> n >= n2 -> varBound_formula n (f1 ∨ f2)
-  | varBound_forNeg f : varBound_formula n f -> varBound_formula n (¬ f). 
-Hint Constructors varBound_formula. 
+Inductive varInFormula (v : var) : formula -> Prop := 
+  | varInFormulaV : varInFormula v v
+  | varInFormuAndL f1 f2: varInFormula v f1 -> varInFormula v (f1 ∧ f2)
+  | varInFormulaAndR f1 f2 : varInFormula v f2 -> varInFormula v (f1 ∧ f2)
+  | varInFormulaOrL f1 f2 : varInFormula v f1 -> varInFormula v (f1 ∨ f2)
+  | varInFormulaOrR f1 f2 : varInFormula v f2 -> varInFormula v (f1 ∨ f2)
+  | varInFormulaNot f : varInFormula v f -> varInFormula v (¬ f).
+Hint Constructors varInFormula.
 
-Lemma varBound_formula_monotonic (f : formula) (n n' : nat) : n <= n' -> varBound_formula n f -> varBound_formula n' f. 
-Proof. 
-  intros H0 H. induction H; econstructor; eauto; lia.
-Qed. 
+Definition formula_varsIn (p : nat -> Prop) f := forall v, varInFormula v f -> p v. 
 
 (*A computable notion of boundedness *)
 Fixpoint formula_maxVar (f : formula) := match f with
@@ -76,19 +74,29 @@ Fixpoint formula_maxVar (f : formula) := match f with
   | Fneg f => formula_maxVar f
 end. 
 
-Lemma formula_bound_varBound f: varBound_formula (S (formula_maxVar f)) f. 
+Lemma formula_maxVar_varsIn f : formula_varsIn (fun n => n < S (formula_maxVar f)) f. 
 Proof. 
-  induction f; cbn.
-  - eauto.
-  - eauto. 
-  - econstructor; eauto; lia. 
-  - econstructor; eauto; lia. 
-  - eauto.
-Qed. 
+  unfold formula_varsIn. 
+  induction f. 
+  - intros v H. inv H. 
+  - intros v H. inv H. now cbn. 
+  - intros v H. inv H. 
+    + apply IHf1 in H1. cbn. lia. 
+    + apply IHf2 in H1. cbn. lia. 
+  - intros v H. inv H. 
+    + apply IHf1 in H1. cbn. lia. 
+    + apply IHf2 in H1. cbn. lia. 
+  - intros v H. inv H. apply IHf in H1. cbn. lia. 
+Qed.
 
-Lemma formula_varBound_bound f n : varBound_formula n f -> formula_maxVar f <= n. 
+Lemma formula_varsIn_bound f c : formula_varsIn (fun n => n <= c) f -> formula_maxVar f <= c. 
 Proof. 
-  induction 1; cbn; lia.
+  unfold formula_varsIn. intros H. induction f; cbn. 
+  - lia. 
+  - now apply H. 
+  - apply Nat.max_lub; [apply IHf1 | apply IHf2]; eauto.
+  - apply Nat.max_lub; [apply IHf1 | apply IHf2]; eauto. 
+  - apply IHf; eauto.
 Qed. 
 
 (** size of formulas *)

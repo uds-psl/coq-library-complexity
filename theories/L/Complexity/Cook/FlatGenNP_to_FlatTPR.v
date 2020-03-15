@@ -2319,6 +2319,7 @@ Qed.
 Definition c__isBoundTransTable := 1. 
 Definition isBoundTransTable_time (sig n states : nat) (l : list (nat * list (option nat) * (nat * list (option nat * TM.move)))) := 1.
 
+Print computes. 
 
 (** isValidFlatTrans
 
