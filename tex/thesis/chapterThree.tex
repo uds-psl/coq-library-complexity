@@ -4,7 +4,7 @@
 \chapter{Reducing $k$-SAT to Clique}\label{chap:ksat_clique}
 In this chapter, we give a first formalisation of a polynomial-time reduction from the $k$-\SAT{} problem to the \Clique{} problem on undirected graphs. The main purpose of this chapter is to introduce the style of proofs we use. In particular, we comment on some of the more technical aspects of doing the running time analysis in Coq so that we can focus on the less technical aspects in the later chapters. 
 
-The satisfiablity problem on CNFs is well-known: given a Boolean formula in conjunctive normal form, we determine whether there exists a satisfying assignment to the variables. 
+The satisfiablity problem \SAT{} on CNFs is well-known: given a Boolean formula in conjunctive normal form, we determine whether there exists a satisfying assignment to the variables. 
 \Clique{} is a graph-based problem. Given an undirected graph $G = (V, E)$, a $k$-clique is a set of vertices $C \subseteq V$ such that $\length{C} = k$ and all possible edges between nodes of $C$ are present in $E$. For a graph $G$ and a number $k$, the \Clique{} problem asks whether there exists a $k$-clique in the graph $G$. 
 
 The reduction from $k$-\SAT{} to \Clique{} is an example of a relatively simple reduction: in~\cite{Bläser:TISkript}, it is one of the first examples of a polynomial-time reduction in an undergraduate course on theoretical computer science. There, the full proof on paper does not even span half a page. 
@@ -29,12 +29,12 @@ A literal is either a Boolean variable or its negation. The disjunction of a num
 \end{align*}
 Here, the Boolean $b$ of a literal $(b, v)$ denotes the literal's \emph{sign}. If the sign is negative (i.e.\ $b = \bfalse$), the literal represents $v$'s negation, otherwise it represents $v$.
 
-An assignment to a CNF assigns a Boolean value to each of its variables. We choose to model an assignment as the list of variables which are assigned the value $\btrue$. All other variables are implicitly assigned the value $\bfalse$.
-\[a : \assgn \defeq \listsof{\bvar}\mnote{\assgn} \]
+An assignment to a CNF assigns a Boolean value to each of its variables. We choose to model an assignment as the list of variables which are assigned the value $\btrue$. All other variables are implicitly assigned the value $\bfalse$:
+$a : \assgn \defeq \listsof{\bvar}\mnote{\assgn}$.
 
 One can define evaluation functions \mnotec{$\eval$} for variables, literals, clauses, and CNFs in a straightforward way. 
-We will mainly use the function $\eval : \assgn \rightarrow \cnf \rightarrow \bool$ for CNFs, but refer to the other functions using the same name. 
-Which function we mean will always be clear from the context. 
+We will mainly use the function $\eval : \assgn \rightarrow \cnf \rightarrow \bool$ for CNFs, but refer to the other functions using the same identifier. 
+Which function we mean will always be clear from the context and the used metavariables. 
 
 We have the following characterisations of evaluation:
 \begin{lemma}[Evaluation Equivalences]\label{lem:cnf_eval_equiv}\leavevmode
@@ -51,7 +51,7 @@ A similar notation is used for the satisfaction of clauses, literals and variabl
 
 Now, we are able to define the problem \SAT{}:
 \begin{definition}[Satisfiability of CNFs]
-  \[\SAT{}~N \defeq \exists a, a \models N \]
+  $\SAT{}~N \defeq \exists a, a \models N$
 \end{definition}
 
 In the sequel, we show that \SAT{} is in \NP{}, which we prove by giving a verifier for \SAT{}. A sensible choice for a certificate of a CNF $N$ being in \SAT{} is a satisfying assignment. Thus a verifier is easy to define: given a CNF $N$ and an assignment $a$, it checks whether $a$ satisfies $N$.
@@ -85,7 +85,7 @@ Therefore, we introduce the notion of \emph{small} assignments.
 \newcommand{\dedup}{\textsf{dedup}}
 \newcommand{\intersect}{\textsf{intersect}}
 
-Given an arbitrary assignment $a$ for a CNF $N$, we can compute another assignment $a'$ which is equivalent to $a$ and is small with respect to $N$ by removing duplicates and variables not occuring in the CNF.
+Given an arbitrary assignment $a$ for a CNF $N$, we can compute another assignment $a'$ which is small with respect to $N$ by removing duplicates and variables not occuring in the CNF.
 \mnote{\dedup}
 To that end, we assume functions $\dedup : \forall (X : \eqType), \listsof{X} \rightarrow \listsof{X}$ and $\intersect : \forall (X : \eqType), \listsof{X} \rightarrow \listsof{X} \rightarrow \listsof{X}$ where \dedup{} removes duplicates from a list and \mnotec{\intersect} yields a list that does exactly contain those elements that occur in both of its input lists.
   %\dedup &: \assgn \rightarrow \assgn\mnote{\dedup} \\
@@ -120,7 +120,7 @@ Semantically, \compressA{} changes the assignment: after removing assignments to
 \end{lemma}
 
 \begin{lemma}[\SAT{} is in \NP{}]\label{lem:sat_in_np}
-  \[\SAT{} \in \NP{} \]
+  $\SAT{} \in \NP{}$
 \end{lemma}
 
 In order to prove Lemma~\ref{lem:sat_in_np}, we need to show that there are valid certificates of polynomial size exactly for those CNFs $N$ for which $\SAT{}~N$ holds. 
@@ -134,7 +134,7 @@ As these proofs are quite technical, we usually omit them on paper. However, as 
   \begin{align*}
     \eval_N &: \assgn \rightarrow \cnf \rightarrow \bool \\
     \eval_N~a~\nil &\defeq \btrue \\
-    \eval_N~a~(C::N) &\defeq \eval_C~a~C \&\& \eval_N~a~N
+    \eval_N~a~(C::N) &\defeq \eval_C~a~C~\&\&~\eval_N~a~N
   \end{align*}
   Here, we have annotated the evaluation function with a subscript to make clearer which one we mean: $\eval_N$ is the evaluation function for CNFs, while $\eval_C$ is the function for clauses.
 
@@ -152,11 +152,17 @@ As these proofs are quite technical, we usually omit them on paper. However, as 
   Next, we aim to bound the function $T(\eval_N)$ by a monotonic polynomial $p_{\eval_N} : \nat \rightarrow \nat$ in the encoding size of the arguments such that 
   \[\forall a~N, T(\eval_N)~a~N \le p_{\eval_N}(\encsize{\overline{a}} + \encsize{\overline{N}}) \]
   holds. In principle, we could also use a multivariate polynomial having one variable for each of the arguments, but this would only complicate things. 
-  In the case of $\eval_N$, the polynomial $p_{\eval_N}~n \defeq n \cdot p_{\eval_C}~n + (n +1) \cdot c_{\eval_N}$ works, where $p_{\eval_C}$ is the polynomial bounding $T(\eval_C)$ and $c_{\eval_N}$ is a constant. The bounding equation is then proved by induction on the CNF $N$. 
+  In the case of $\eval_N$, the polynomial $p_{\eval_N}~n \defeq n \cdot p_{\eval_C}~n + c_{\eval_N} \cdot (n +1)$ works, where $p_{\eval_C}$ is the polynomial bounding $T(\eval_C)$ and $c_{\eval_N}$ is a constant. The bounding equation is then proved by induction on the CNF $N$. 
 
   Higher-order functions can be treated in a similar way, but there the running time bounds are conditional on bounds for the argument functions. In many cases, however, it seems to be easier to define a function via direct recursion instead of using a higher-order functions whose bounding is more complicated.
 
-  Recall that, regarding the size, we only need to bound the size of the result. The procedure of deriving a polynomial is similar in that case.
+  Recall that, regarding the size, we only need to bound the size of the result. The procedure of deriving a polynomial is similar in that case, although the extraction mechanism does not derive space bounds currently; instead, we derive bounds semantically.
+
+  \begin{remark}[Binary versus Unary Numbers]
+    In complexity theory, the question of the specific encoding of a problem is an important one. Especially for numbers, this is a delicate subject: a unary encoding of numbers is exponentially larger than the binary encoding. Therefore, one usually uses a binary encoding of numbers. Some number-theoretic problems, for instance, are not \NP{}-hard anymore if a unary encoding instead of a binary encoding is used.
+    In this thesis, however, we exclusively use a unary encoding, mainly because it is much easier to work with unary numbers in Coq, although a binary encoding would be possible. 
+    For all of the problems we study, using unary numbers is actually sound. Intuitively, this is the case since the numbers do not play a central part in the definition: in \SAT{}, numbers are only used to represent variables. If $n$ variables are used by a CNF, only the numbers up to $n$ need to be used by the encoding.
+  \end{remark}
 
 \newcommand{\kCNF}[1]{\text{$#1$-\textsf{CNF}}}
 \subsection{k-\SAT{}}
@@ -169,14 +175,16 @@ We inductively define a predicate stating this property.
 
 The $k$-\SAT{} problem additionally requires that $k > 0$. This is an arbitrary choice as the problem is trivially polynomial-time decidable if no clause contains a literal.\footnote{In this case, $N$ is a yes-instance iff $N = \nil$.}
 \begin{definition}[$k$-\SAT{}]
-  \[\text{$k$-\SAT{}}~N \defeq \kCNF{k}~N \land k > 0 \land \SAT{}~N \]
+  $\text{$k$-\SAT{}}~N \defeq \kCNF{k}~N \land k > 0 \land \SAT{}~N \mnote{$k$-\SAT{}}$
 \end{definition}
 
-Note that $k$ acts as a parameter to the problem and is not part of a valid instance. More precisely, we might say that $k$-\SAT{} is a \emph{class} of problems, where we get the problem $k$-\SAT{} for every $k : \nat$. 
+\begin{remark}
+Note that $k$ acts as a parameter to the problem and is not part of an instance. More precisely, we might say that $k$-\SAT{} is a \emph{class} of problems, where we get the problem $k$-\SAT{} for every $k : \nat$. 
+\end{remark}
 
 As $\kCNF{k}~N$ can easily be decided in polynomial-time, we obtain a reduction from $k$-\SAT{} to \SAT{}. For the case that $k = 0$ or that $N$ is not a \kCNF{k}, we map to a trivial no-instance such as $x_0 \land \lnot x_0$. 
 \begin{lemma}[$k$-\SAT{} reduces to \SAT{}]
-  \[\text{$k$-\SAT{}} \redP{} \SAT{} \]
+  $\text{$k$-\SAT{}} \redP{} \SAT{}$
 \end{lemma}
 \begin{proof}
   As explained in Section~\ref{sec:np_basics}, we need to verify that 
@@ -222,28 +230,68 @@ Based on this definition of graphs, we can formalise cliques.
     \clique{} &: \listsof{V_G} \rightarrow \Prop\mnote{\clique{}} \\
     \clique{}~L &\defeq \dupfree~L \land \forall v_1~v_2 \in L, \{v_1, v_2\} \in E_G 
   \end{align*}
-  A $k$-clique is a clique of exactly $k$ elements. 
-  \[\kclique{k}~L \defeq \length{L} = k \land \clique{}~L\mnote{\kclique{k}} \]
+  A $k$-clique is a clique of exactly $k$ elements: 
+  $\kclique{k}~L \defeq \length{L} = k \land \clique{}~L\mnote{\kclique{k}}$.
 \end{definition}
 
 Alternatively, we can define $k$-cliques inductively, obtaining a definition which is more suitable for inductive proofs. 
 \begin{align*}
-  \infer{\kcliqueind{0}~\nil}{} \qquad \infer{\kcliqueind{(\natS{k})}~(v :: L)}{v \notin L \quad (\forall v' \in L, \{v, v'\} \in E_G) \quad \kcliqueind{k}{L}}\mnote{\kcliqueind{k}}
+  \infer{\kcliqueind{0}~\nil}{} \qquad \infer{\kcliqueind{(\natS{k})}~(v :: L)}{v \notin L \quad (\forall v' \in L, \{v, v'\} \in E_G) \quad \kcliqueind{k}~L}\mnote{\kcliqueind{k}}
 \end{align*}
 
 The \Clique{} problem asks whether there exists a $k$-clique in a graph $G$: 
 \begin{definition}[\Clique{}]
-  \[\Clique{}~(G, k) \defeq \exists L : \listsof{V_G}, \kclique{k}~L\mnote{\Clique{}} \]
+  $\Clique{}~(G, k) \defeq \exists L : \listsof{V_G}, \kclique{k}~L\mnote{\Clique{}}$
 \end{definition}
 Note that the number $k$ is part of the instance, in contrast to the parameter $k$ of the class $k$-\SAT{}.\footnote{One can show that for every fixed $k$, the \Clique{} problem is decidable in polynomial time.}
 
-\todo{inNP proof}
+\newcommand{\FlatClique}{\textbf{FlatClique}}
+\newcommand{\FlatUGraph}{\textsf{FlatUGraph}}
+\subsection{First-order Encoding of Graphs}\label{sec:flat_clique}
+We now present a variant of graphs and the Clique problem which is extractable to L. This representation eliminates the components which cause trouble in the above definition: the finite type and the propositional edge relation. 
+The finite type we replace by a natural number $v$ giving the number of vertices. Valid vertices are natural numbers which are $< v$. The edge relation is replaced by a list of pairs of vertices: $\FlatUGraph \defeq \nat \times \listsof{\nat \times \nat}$.
 
-\newcommand{\FlatClique}{\textsf{FlatClique}}
-\subsection{First-order Encoding of Graphs}
-\todo{see notes}
+This type does allow instances which do not make any sense syntactically. Therefore, we enforce syntactic constraints externally:
+\[\textsf{FlatUGraph\_wf}~(v, e) \defeq (\forall (v_1, v_2) \in e, (v_2, v_1) \in e) \land (\forall (v_1, v_2) \in e, v_1 < v \land v_2 < v) \]
+One can easily build a Boolean decider for these constraints. 
 
-\section{The Reduction}
+Of course, we want to define a relation connecting graphs of type \UGraph{} and flat graphs of type \FlatUGraph{}. We first define some relations for the representation of finite types by natural numbers. 
+
+\begin{definition}[Representation of Finite Types]
+  Let $T : \finType$, $t : T$, and $k, n : \nat$. 
+  \begin{gather*}
+    n \approx T \defeq n = \length{T} \mnote{$n \approx T$}\\
+    k \approx' t \defeq k = \findex~t \mnote{$k \approx' t$}\\
+    k \approx_{T, n} t \defeq k = \findex~t \land n \approx T \mnote{$k \approx_{T, n} t$}
+  \end{gather*}
+\end{definition}
+
+Using this definition, it is easy to encode type constructors like $\opt{\cdot}$, $\cdot \times \cdot$, and $\cdot + \cdot$, as well as value constructors like $\OSome{\cdot}$, $( \cdot, \cdot)$, and $\textsf{inl}~\cdot$. More generally, we obtain the same closure properties for the flat representation of finite types as for finite types.
+
+\begin{example}[Encoding of Option Types]
+  We define $\textsf{flatOpt}~t \defeq \natS{t}$, $\textsf{flatSome}~k \defeq \natS{k}$ and $\textsf{flatNone} \defeq 0$. 
+  Assuming that $n \approx T$ and $k \approx_{T, n} t$, we have:
+  \begin{align*}
+  \textsf{flatOpt}~n \approx \opt{T} \quad \textsf{flatNone} \approx_{\opt{T}, \textsf{flatOpt}~n} \ONone \quad \textsf{flatSome}~k \approx_{\opt{T}, \textsf{flatOpt}~n}~\OSome{t} \end{align*}
+\end{example}
+
+Thus, we can define a representation relation for graphs as follows: 
+\begin{definition}[Representation of Graphs]
+  Let a graph $G = (V, E) : \UGraph$ and a flat graph $g = (v, e) : \FlatUGraph$ be given. 
+  $g$ represents $G$, written \mnotec{$g \approx G$}, if: 
+  \begin{itemize}
+    \item $v \approx V$, 
+    \item $\forall (v_1, v_2) \in e, v_1 < v \land v_2 < v \land \exists V_1~V_2, \{V_1, V_2\} \in E \land v_1 \approx' V_1 \land v_2 \approx' V2$
+    \item $\forall V_1~V_2 : V, \{V_1, V_2\} \in E \rightarrow (\findex~V_1, \findex~V_2) \in e$
+  \end{itemize}
+\end{definition}
+
+Cliques can be defined in the expected way for the flat graphs. The corresponding problem is called \mnotec{\FlatClique{}}. A proof that \FlatClique{} is contained in \NP{} is straightforward. 
+
+We can then derive an agreement statement statement for the two definitions: if $(v, e) \approx (V, E)$ and if $l : \listsof{\nat}$ and $L : \listsof{V}$, then $l$ is a clique in $(v, e)$ if, and only if, $L$ is a clique in $(V, E)$. Moreover, from a clique for one representation we can compute a clique for the other representation.
+This agreement allows us to reason using the propositional version, but analyse the running time on the flat version. 
+
+\section{Reduction from $k$-\SAT{} to \Clique{}}
 Now that we have defined the involved problems, we present the reduction of $k$-\SAT{} to \Clique{}. 
 Assume that the CNF is given as 
 \[(l_{0, 0} \lor \ldots \lor l_{0, k-1}) \land \ldots \land (l_{n-1, 0} \lor \ldots \lor l_{m-1, k-1}), \]
@@ -256,21 +304,22 @@ We start with the reduction to the non-flat version \Clique{} using graphs of ty
 For the rest of this section, let us fix a number $k$ with $k > 0$ and a CNF $N$ with $\kCNF{k}~N$.\footnote{We will later handle $k = 0$ and instances not satisfying $\kCNF{k}~N$ as special cases.}
 
 In order to define the graph, we need to be able to index into a CNF to obtain the clauses and literals at particular positions. 
-For that purpose, we use the operations $N[i] : \opt{\clause}$ to obtain the clause at index $i$ and $C[j] : \opt{\literal}$ to obtain the $j$-th literal of a clause $C$. From this, we derive $N[i, j]$ as a way to get the $j$-th literal of the $i$-th clause of the CNF $N$. The operations return option values in order to handle the case that the indices are invalid. 
+We use the operations $N[i] : \opt{\clause}$\mnote{$N[i]$} to obtain the clause at index $i$ and $C[j] : \opt{\literal}$ to obtain the $j$-th literal of a clause $C$.\mnote{$C[j]$}
+From this, we derive $N[i, j]$ as a way to get the $j$-th literal of the $i$-th clause of the CNF $N$. The operations return option values in order to handle the case that the indices are invalid.\mnote{$N[i, j]$}
 
 \newcommand{\literalsConflict}{\textsf{conflict}}
 Now, we can define the graph $G : \UGraph$ in the following way: 
 \begin{align*} 
-  V_G &\defeq F_{\length{N}} \times F_{k} \\
-  \literalsConflict~(s_1, v_1)~(s_2, v_2) &\defeq v_1 = v_2 \land s_1 \neq s_2 \\
-  E_G ((i_1, j_1), (i_2, j_2)) &\defeq i_1 \neq i_2 \land 
+  V_G &\defeq F_{\length{N}} \times F_{k}\mnote{$V_G$} \\
+  \literalsConflict~(s_1, v_1)~(s_2, v_2) &\defeq v_1 = v_2 \land s_1 \neq s_2\mnote{\literalsConflict}\\
+  E_G ((i_1, j_1), (i_2, j_2)) &\defeq i_1 \neq i_2 \land \mnote{$E_G$}
   \begin{aligned}[t]
     \forall l_1~l_2, &(N[\findex{i_1}, \findex{j_1}] = \OSome{l_1} \\
                      &\land N[\findex{i_2}, \findex{j_2}] = \OSome{l_2}) \\
                      &\rightarrow~\lnot \literalsConflict~l_1~l_2 
   \end{aligned}
 \end{align*}
-Here, the type $F_n$ is the finite type consisting of $n$ elements. Two literals $l_1, l_2$ are conflicting if they refer to the same variable but have different signs. 
+Here, the type $F_n$ is a finite type consisting of $n$ elements. Two literals $l_1, l_2$ are conflicting if they refer to the same variable but have different signs. 
 The definition of the edge relation then captures exactly the intuition described above: two vertices are connected if their corresponding literals are not conflicting and belong to different clauses. 
 Note that the way in which we handle the case that $N[\findex{i}, \findex{j}] = \ONone$ does not matter: by construction, there will always exist a literal at these positions since we assumed that $N$ is in $k$-CNF.
 
@@ -309,12 +358,13 @@ We prove the existence of a clique by an induction over the number of clauses. I
   \end{enumerate}
 \end{lemma}
 \begin{proof}
-  By induction on $N'$. In the base case, we choose $L = \nil$ and are done. 
-  In the successor case, we have $N = N'' \concat (C :: N'$ for a clause $C$. By the inductive hypothesis with $N''$ instantiated with $N'' \concat [C]$, we get a $\length{N'}$-clique $L$ such that the corresponding literals are satisfied by $a_\textsf{sat}$ (3.) and the clause indices are at least $\natS{\length{N''}}$ (2.). 
-  By Lemma~\ref{lem:cnf_eval_equiv} and $a_{\textsf{sat}} \models (C :: N)$, there exists $l \in C$ with $\evalA{a_{\textsf{sat}}}{l} = \btrue$. 
-  We apply Fact~\ref{fact:litInClause_exists_vertex} for $i \defeq \length{N''}$ to $l$ and $C$ to obtain a new vertex $v$ for the clause $C$. 
-  The list $v :: L$ is the clique we seek. By the choice of $v$, it is clear that the literal corresponding to $v$ is satisfied and thus 3.\ holds. Similarly 2.\ is preserved by this choice. 
-  It remains to show that $v :: L$ is indeed a clique. For that pupose, we switch to the inductive characterisation $\kcliqueind{(\natS{\length{N'}})}~(v :: L)$, which can be proved using the inductive hypothesis and Fact~\ref{fact:literal_conflict}.
+  By induction on $N'$ using Facts~\ref{fact:litInClause_exists_vertex} and~\ref{fact:literal_conflict} in the cons case.
+  %By induction on $N'$. In the base case, we choose $L = \nil$ and are done. 
+  %In the successor case, we have $N = N'' \concat (C :: N'$ for a clause $C$. By the inductive hypothesis with $N''$ instantiated with $N'' \concat [C]$, we get a $\length{N'}$-clique $L$ such that the corresponding literals are satisfied by $a_\textsf{sat}$ (3.) and the clause indices are at least $\natS{\length{N''}}$ (2.). 
+  %By Lemma~\ref{lem:cnf_eval_equiv} and $a_{\textsf{sat}} \models (C :: N)$, there exists $l \in C$ with $\evalA{a_{\textsf{sat}}}{l} = \btrue$. 
+  %We apply Fact~\ref{fact:litInClause_exists_vertex} for $i \defeq \length{N''}$ to $l$ and $C$ to obtain a new vertex $v$ for the clause $C$. 
+  %The list $v :: L$ is the clique we seek. By the choice of $v$, it is clear that the literal corresponding to $v$ is satisfied and thus 3.\ holds. Similarly 2.\ is preserved by this choice. 
+  %It remains to show that $v :: L$ is indeed a clique. For that pupose, we switch to the inductive characterisation $\kcliqueind{(\natS{\length{N'}})}~(v :: L)$, which can be proved using the inductive hypothesis and Fact~\ref{fact:literal_conflict}.
 \end{proof}
 
 \begin{corollary}
@@ -322,7 +372,7 @@ We prove the existence of a clique by an induction over the number of clauses. I
 \end{corollary}
 
 \subsection{From Cliques to Assignments}
-Conversely, we have to show that, given a $\length{N}$-clique $L$ in $G$, there exists a satisfing assignment for $N$. The proof proceeds in four steps:
+Conversely, we have to show that, given a $\length{N}$-clique $L$ in $G$, there exists a satisfying assignment for $N$. The proof proceeds in four steps:
 \begin{enumerate}
   \item For every clause of $N$, there exists one corresponding node in $L$.
   \item Therefore, there exists a list of (clause, literal)-indices $(i, j)$ where every clause is mentioned exactly once and the referenced literals are non-conflicting. 
@@ -330,7 +380,8 @@ Conversely, we have to show that, given a $\length{N}$-clique $L$ in $G$, there 
   \item Finally, this list of literals can be turned into a satisfying assignment.
 \end{enumerate}
 
-For the first step, we use an instance of the pigeonhole principle: 
+Only the proof of the first step is interesting, the other steps are straightforward.
+We use an instance of the pigeonhole principle: 
 \begin{lemma}[16.8.7 in~\cite{iclnotes}]\label{lem:pigeonhole}
   Let $A \subseteq B$ with $\length{B} < \length{A}$. Then $\lnot \dupfree~A$. 
 \end{lemma}
@@ -341,46 +392,53 @@ For the first step, we use an instance of the pigeonhole principle:
 \end{lemma}
 \begin{proof}
   As for every $i$ and $L$ the goal is decidable, we can constructively do a proof by contradiction. Thus, assume that $\forall (ci, li) \in L, \findex{ci} \neq i$. It suffices to show that the list of clause indices of $L$ contains duplicates, i.e. $\lnot (\dupfree \withl ci \withm (ci, li) \in L \withr)$, as there is only an edge between two vertices $(ci_1, li_1)$ and $(ci_2, li_2)$ if $ci_1 \neq ci_2$ by definition of $E_G$. 
-  We apply Lemma~\ref{lem:pigeonhole} for $B \defeq [f_0, \ldots, f_{\length{N} -1}] \setminus f_i$, where $f_k$ is the $k$-the element of the finite type $F_{\length{N}}$, as $i$ is not contained in the list of clause indices by assumption. 
+  We apply Lemma~\ref{lem:pigeonhole} for $B \defeq [f_0, \ldots, f_{\length{N} -1}] \setminus f_i$, where $f_k$ is the $k$-th element of the finite type $F_{\length{N}}$, as $i$ is not contained in the list of clause indices by assumption. 
 \end{proof}
 
-\newcommand{\satPositions}{\textsf{satPositions}}
-Continuing with the second step, we define the list of (clause, literal)-positions as 
-\[\satPositions \defeq \withl(\findex{ci}, \findex{li}) \withm (ci, li) \in L \withr. \]
+%\newcommand{\satPositions}{\textsf{satPositions}}
+%Continuing with the second step, we define the list of (clause, literal)-positions as 
+%\[\satPositions \defeq \withl(\findex{ci}, \findex{li}) \withm (ci, li) \in L \withr. \]
 
-Formalising the above intuitions, we get the following results:
-\begin{lemma}[Properties of \satPositions]\leavevmode
-  \begin{enumerate}
-    \item $\dupfree~\satPositions$
-    \item $\forall i < \length{N}, \exists j, (i, j) \in \satPositions$
-    \item $(i, j) \in \satPositions \rightarrow \exists l, N[i, j] = \OSome{l}$
-    \item Assume $(i_1, j_1), (i_2, j_2) \in \satPositions$ with $(i_1, j_1) \neq (i_2, j_2)$. Then there are $l_1, l_2$ with $N[i_1, j_1] = \OSome{l_1} \land N[i_2, j_2] = \OSome{l_2} \land \lnot (\literalsConflict~l_1~l_2)$. 
-  \end{enumerate}
-\end{lemma}
+%Formalising the above intuitions, we get the following results:
+%\begin{lemma}[Properties of \satPositions]\leavevmode
+  %\begin{enumerate}
+    %\item $\dupfree~\satPositions$
+    %\item $\forall i < \length{N}, \exists j, (i, j) \in \satPositions$
+    %\item $(i, j) \in \satPositions \rightarrow \exists l, N[i, j] = \OSome{l}$
+    %\item Assume $(i_1, j_1), (i_2, j_2) \in \satPositions$ with $(i_1, j_1) \neq (i_2, j_2)$. Then there are $l_1, l_2$ with $N[i_1, j_1] = \OSome{l_1} \land N[i_2, j_2] = \OSome{l_2} \land \lnot (\literalsConflict~l_1~l_2)$. 
+  %\end{enumerate}
+%\end{lemma}
 
-\newcommand{\satLiterals}{\textsf{satLiterals}}
-By part 3 of the previous lemma, we can safely map the positions to syntactic literals.
-\[\satLiterals \defeq \withl l \withm (i, j) \in \satPositions \land N[i, j] = \OSome{l} \withr \]
-The list of literals contains at least one literal per clause and is non-conflicting. 
+%\newcommand{\satLiterals}{\textsf{satLiterals}}
+%By part 3 of the previous lemma, we can safely map the positions to syntactic literals.
+%\[\satLiterals \defeq \withl l \withm (i, j) \in \satPositions \land N[i, j] = \OSome{l} \withr \]
+%The list of literals contains at least one literal per clause and is non-conflicting. 
 
-\begin{lemma}[Properties of \satLiterals]\leavevmode
-  \begin{enumerate}
-    \item $\forall C \in N, \exists l \in C, l \in \satLiterals$
-    \item Assume an assignment $a$ with $\forall l \in \satLiterals, \evalA{a}{l} = \btrue$. Then $a \models N$. 
-    \item $\forall l_1~l_2 \in \satLiterals, \lnot (\literalsConflict~l_1~l_2)$
-  \end{enumerate}
-\end{lemma}
+%\begin{lemma}[Properties of \satLiterals]\label{lem:satLiterals}\leavevmode
+  %\begin{enumerate}
+    %\item $\forall C \in N, \exists l \in C, l \in \satLiterals$
+    %\item Assume an assignment $a$ with $\forall l \in \satLiterals, \evalA{a}{l} = \btrue$. Then $a \models N$. 
+    %\item $\forall l_1~l_2 \in \satLiterals, \lnot (\literalsConflict~l_1~l_2)$
+  %\end{enumerate}
+%\end{lemma}
 
-Finally, we can construct an assignment from the list of literals by mapping the positive literals to $\btrue$ and the negative literals to $\bfalse$. Let $a_\textsf{sat}$ be such an assignment satisfying $v \in a_{\textsf{sat}} \leftrightarrow (\btrue, v) \in \satLiterals$. It follows that $\forall l \in \satLiterals, \evalA{a_\textsf{sat}}{l} = \btrue$.
+%Finally, we can construct an assignment from the list of literals by mapping the positive literals to $\btrue$ and the negative literals to $\bfalse$. Let $a_\textsf{sat}$ be such an assignment satisfying $v \in a_{\textsf{sat}} \leftrightarrow (\btrue, v) \in \satLiterals$. It follows that $\forall l \in \satLiterals, \evalA{a_\textsf{sat}}{l} = \btrue$. By part 2 of Lemma~\ref{lem:satLiterals}, $a_\textsf{sat}$ satisfies $N$.
+We omit the other steps in this presentation. In the end, we obtain a satisfying assignment $a_{\textsf{sat}}$ for $N$. 
 
-\begin{lemma}[Existence of a Satisfying Assignment]
-  $a_\textsf{sat} \models N$
-\end{lemma}
-
-If we map CNFs which do not satisfy $\kCNF{k}{N}$ to a trivial no-instance, we get a reduction $f : \cnf \rightarrow \UGraph \times \nat$. 
+Combining both directions, we get a reduction $f : \cnf \rightarrow \UGraph \times \nat$ if we map CNFs which are not in $k$-CNF to a trivial no-instance.
 \begin{theorem}[Correctness of the Reduction]
-  \[\text{$k$-\SAT{}}~N \leftrightarrow \Clique{}~(f~N)\]
+  $\text{$k$-\SAT{}}~N \leftrightarrow \Clique{}~(f~N)$
 \end{theorem}
 
 However, this reduction cannot be extracted to $L$ as we are using the unextractable type of graphs \UGraph. 
-\todo{continue with that} 
+Therefore, we derive a reduction to the flat version \FlatClique{}. The construction of the graph mirrors the definition of $E_G$, where we use the flat constructors for pairs to construct the vertices, see Section~\ref{sec:flat_clique}. 
+We obtain the following polynomial-time reduction:
+\begin{theorem}
+  $\textsf{$k$-\SAT{}} \redP{} \FlatClique{}$
+\end{theorem}
+
+\begin{remark}
+  A first version of this reduction~\cite{memo_clique} did not use a separate non-extractable version of graphs but instead directly proved correctness on the flat version. 
+  The mechanisation was much more tedious because, among other things, we always had to work with the possibility that a vertex is invalid, i.e.\ not actually part of the graph. 
+  The new proof halved the lines of code of the Coq mechanisation and is also much more understandable. Therefore, we believe that defining a separate extractable problem is the right way.
+\end{remark}

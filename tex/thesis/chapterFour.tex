@@ -39,12 +39,12 @@ We give an outline of our proof of the Cook-Levin-Threorem, which is loosely bas
 
 We formally state the main part of the Cook-Levin-Theorem:
 \begin{theorem}[Cook-Levin]
-  \SAT{} is \NP{}-hard\footnote{From this, we directly get \NP{}-completeness, as was shown by Lemma~\ref{TODO}.}.
+  \SAT{} is \NP{}-hard\footnote{From this, we directly get \NP{}-completeness, as was shown by Lemma~\ref{lem:sat_in_np}.}.
 \end{theorem}
 
 \section{A Generic Problem for Turing Machines}
 Recall that, in order to show a problem $P$ to be \NP{}-hard, we have to show that any problem $Q$ contained in \NP{} can be reduced to it. In our setting of complexity theory in L, we thus have to reduce the computation of L to \SAT{}.
-In Section~\ref{TODO}, we argued why it is hard to directly reduce from L to any natural problem. 
+In Remark~\ref{rem:cook_L}, we argued why it is hard to directly reduce from L to any natural problem. 
 Therefore, we believe that the most practical path of reducing from L to \SAT{} is to use Turing machines as an intermediate problem. 
 
 We start from a generic problem for Turing machines. A definition of such a problem the reader might be familiar with is the following:
@@ -54,15 +54,15 @@ We start from a generic problem for Turing machines. A definition of such a prob
 This definition explicitly employs nondeterminism, making it hard to reason formally. Therefore, we use a characterisation that relates to this one in a similar way the verifier characterisation of \NP{} relates to the one using nondeterminism: the nondeterminism is moved into the input.
 \begin{center}
   \gennp{}:
-  Given a deterministic Turing machine $M$, an input $in$, a maximal certificate length $k'$ and a number of steps $t$, does there exists a certificate $cert$ with $\length{cert} \le k'$ such that $M$ accepts $in \concat cert$ in at most $t$ steps?
+  Given a deterministic Turing machine $M$, an input $in$, a maximal certificate length $k'$ and a number of steps $t$, does there exist a certificate $cert$ with $\length{cert} \le k'$ such that $M$ accepts $in \concat cert$ in at most $t$ steps?
 \end{center}
 
 In a theory with Turing machines as the computational model, \gennp{} would be almost trivially \NP{}-hard, although it would not be a natural problem as it depends on the model of computation.
-Using L, however, the hardness is not trivial anymore. In this setting, we just see \gennp{} the same as any other problem.\todo{more on that?}
+Using L, however, the hardness is not trivial anymore. In this setting, we just see \gennp{} the same as any other problem.
 
 \section{Deterministic Simulation: Tableau of Configurations}
 We first consider how the computation of a deterministic Turing machine can be encoded for an arbitrary input of which we only know that its size is at most $k$. 
-It will be covered in the next section how we can come up with such an input in the first place, i.e.\ we we can ``guess'' a certificate.
+It will be covered in the next section how we can come up with such an input in the first place, i.e.\ how we can ``guess'' a certificate.
 
 At a first glance, it might seem unintuitive that one can encode the computation of a Turing machine using a fixed-size formula as it is not known a priori how much time or space the Turing machine needs on a particular input.
 The key is that \gennp{} just asks us to simulate a Turing machine $M$ for a bounded number of steps $t$ on inputs of a bounded size $\le k \defeq \length{in} + k'$. 
@@ -149,7 +149,7 @@ In the end, each cell of the tableau will be represented by a number of Boolean 
 
 As noted above, the state symbol also contains the current symbol under the head. This choice is clear as it makes the transition taken by the Turing machine only depend on one cell.
 However, there are multiple ways of dealing with head movements. 
-The most straightforward way might be to move the position of the state symbol, resembling the movement of the head (moving-head semantics).
+The most straightforward way might be to move the position of the state symbol, resembling the movement of the head (\emph{moving-head semantics}).
 \begin{example}[Moving Head]\label{ex:movinghead}
   Consider the Turing machine $M$ over alphabet $\Sigma = \{a, b, c\}$ with $Q = \{q_0, q_1\}$, $\textsf{halt}~q_0 = \bfalse$ and $\delta(q_0, \OSome{a}) = (q_1, (\OSome{b}, \movel))$. 
   The successor of the tableau line
@@ -217,12 +217,12 @@ The most straightforward way might be to move the position of the state symbol, 
       \node at (4.875, 0.375) {$b$};
       \node at (4.125, 0.375) {$q_1^c$};
       \node at (3.375, 0.375) {\blank};
-    \end{tikzpicture}
+    \end{tikzpicture}.
   \end{center}
 \end{example}
 
 While this behaviour does work, it makes formal reasoning hard: 
-Depending on \emph{how} the Turing machine moves its head in order to write down a string, the configuration string will look differently, although it logically represents the same configuration.\todo{make that clearer, maybe with an example?}
+Depending on \emph{how} the Turing machine moves its head in order to write down a string, the configuration string will look differently, although it logically represents the same configuration.
 Thus, for any given configuration $(q, tp)$ of the machine, there are multiple ways of encoding it as a configuration string:
 \begin{center}
   \begin{tikzpicture}
@@ -291,8 +291,8 @@ Thus, for any given configuration $(q, tp)$ of the machine, there are multiple w
   \end{tikzpicture}
 \end{center}
 
-Usually one wants to avoid such issues of non-uniqueness.\todo{comment on that in chapter 5 when we do the proofs}
-Therefore, we instead use a moving-tape semantics where the position of the head (and thus the state symbol) is fixed at the center of the string. Instead of moving the head, the whole tape is shifted around the head.
+Usually one wants to avoid such issues of non-uniqueness.
+Therefore, we instead use a \emph{moving-tape semantics} where the position of the head (and thus the state symbol) is fixed at the center of the string. Instead of moving the head, the whole tape is shifted around the head.
 
 \begin{example}[Moving Tape]\label{ex:movingtape}
   Adapting example~\ref{ex:movinghead}, the same transition looks like this when using moving-tape semantics:
@@ -404,8 +404,9 @@ These rewrite windows are used to justify that one line of the tableau \emph{val
 The key behind this construction is that the windows have to overlap. In this way, a global constraint (that the whole configuration string consistently follows from the previous one) is enforced using small local constraints given by the rewrite windows.
 
 We create a set of rewrite windows that encode the valid transitions. 
+Intuitively, these rewrite windows make the behaviours the Turing machine can have explicit, compared with the symbolic representation of the transition function.
 %In the end, these rewrite windows and the validity constraint are encoded using Boolean formulas. 
-Of course, a great number of rewrite windows is needed for that. We mainly have three types of windows: for shifts of the tape, for the transition function involving the center state symbol, and for replicating the final configuration if the Turing machine halts early in less than $t$ steps.
+Of course, a great number of rewrite windows is needed. We mainly have three types of windows: for shifts of the tape, for the transition function involving the center state symbol, and for replicating the final configuration if the Turing machine halts early in less than $t$ steps.
 
 Most of the windows need to exist for every possible combination of tape symbols. For instance, shifting the tape should be possible independently of its contents. Therefore, we introduce \emph{rewrite rules} which are parameterised over variables ranging over, for instance, the tape alphabet.
 \begin{example}[Rewrite Rules for Tape Shifts]
@@ -420,8 +421,7 @@ Most of the windows need to exist for every possible combination of tape symbols
   where $\sigma_i : \Sigma$. 
 \end{example}
 Note that we distinguish between blanks $\blank$ and elements of $\Sigma$ as $\blank$ is only a part of the representation of configurations as strings.
-
-Seeing this generaliation, one might now realise a problem regarding the tape shifts: the rewrite windows are not provided enough information for the overlapping constraints to enforce a consistent tape shift.
+Seeing this generalisation, one might now realise a problem regarding the tape shifts: the rewrite windows are not provided enough information for the overlapping constraints to enforce a consistent tape shift.
 \begin{example}[Inconsistent Tape Shifts]
   We need not only be able to shift the tape to the right, but also leave its position unchanged. For instance, we need the following rewrite rule:
   \begin{center}
@@ -509,7 +509,7 @@ Notationally, we write $\polpos{\sigma}, \polneg{\sigma}, \polneut{\sigma}$ for 
     \rewwin{\sigma_1 & \sigma_2 & \blank{}}{\polpos{\sigma_3} & \polpos{\sigma_1} & \polpos{\sigma_2}} 
     \rewwin{\sigma_1 & \sigma_2 & \blank{}}{\polneut{\sigma_1} & \polneut{\sigma_2} & \polneut{\blank{}}}
   \end{center}
-  The inconsistent rewrite is not possible anymore as the windows overlapping from the left force a positive polarity.
+  The inconsistent rewrite is not possible anymore as the windows overlapping from the left force a positive polarity:
   \begin{center}
     \begin{tikzpicture}
       \draw (-0.75, 0.75) -- (10.5, 0.75);
@@ -583,13 +583,13 @@ Note that we omit the polarities in the premises of rules as they are irrelevant
 Formally, for each of the rewrite rules depicted in Example~\ref{ex:polarities}, we do an instantiation not only for all possible combinations of variable valuations, but also for the three possible polarities in the premise (we only require that the polarities are consistent).
 
 \begin{remark}[Blanks and Polarities]
-  Formally, it is not necessary for blanks to be annotated with polarities. However, adding polarities to blanks allows us to handle symbols of the tape alphabet and blanks in a more uniform way, simplifying the formal proofs. 
+  Formally, it is not necessary for blanks to be annotated with polarities. However, adding polarities to blanks allows us to handle symbols of the tape alphabet and blanks in a more uniform way, simplifying the proofs. 
 \end{remark}
 
 Finally, we need to enforce that the final configuration is a halting configuration. This can be encoded by requiring that an element of $[q^m~|~\textsf{halt}~q = \btrue, m : \Sigma + \{\blank\}]$ is contained in the last line of the tableau.\todo{fix notation for type}
 
 \section{Nondeterministic Input}\label{sec:informal_nondet}
-The construction presented in the previous section can simulate a deterministic Turing machine given an initial configuration. In the definition of \gennp{}, however, one part of the input, the certificate, is existentially quantified. 
+The construction presented in the previous section can simulate a deterministic Turing machine given an initial configuration. In the definition of \gennp{}, however, a part of the input, the certificate, is existentially quantified. 
 This nondeterminism of the input can be encoded by prepending a new line to the tableau:
 \begin{center}
   \begin{tikzpicture}[scale=1.2]
@@ -660,29 +660,30 @@ This nondeterminism of the input can be encoded by prepending a new line to the 
     \node at (9.75, -0.25) {\blank};
     \node at (10.25, -0.25) {\#};
 
-    \path[<->] (5.5, 1) edge node[fill=white, anchor=center, pos= 0.5] {\small $k$} (8, 1);
-    \path[<->] (0.5, 1) edge node [fill = white, anchor=center, pos=0.5] {\small $\hat{z}$} (5, 1);
-    \path[<->] (8, 1) edge node [fill = white, anchor =center, pos=0.5] {\small $\hat{z}-k$} (10, 1);
+    \path[<->] (5.5, 0.75) edge node[fill=white, anchor=center, pos= 0.5] {\small $k$} (8, 0.75);
+    \path[<->] (0.5, 0.75) edge node [fill = white, anchor=center, pos=0.5] {\small $\hat{z}$} (5, 0.75);
+    \path[<->] (8, 0.75) edge node [fill = white, anchor =center, pos=0.5] {\small $\hat{z}-k$} (10, 0.75);
   \end{tikzpicture}
 \end{center}
 
-The idea is to add rewrite rules which can replace the $\underline{*}$ (wildcard) symbols by arbitrary elements of the tape alphabet. If one wildcard is replaced by a blank, all the other wildcards right of it also need to be replaced by blanks in order to ensure that the used tape region is contiguous. 
+The idea is to add rewrite rules which can replace the $\underline{*}$ (wildcard) symbols by arbitrary elements of the tape alphabet. 
+If one wildcard is replaced by a blank, all the other wildcards to the right of it also need to be replaced by blanks in order to ensure that the used tape region is contiguous. 
 
 \section{Intermediate Problems}
 In the presentation by Sipser~\cite{Sipser:TheoryofComputation}, the tableau is directly encoded as a CNF. Doing this formally seems to be hard as one needs to handle the invariants of simulating the Turing machine, the representation of symbols of an arbitrary finite alphabet and the encoding as a CNF all at once. 
 Instead, we factorise the proof into smaller parts by introducing three intermediate problems that deal with these concerns one-by-one. 
 Figure~\ref{fig:redoverview} gives an overview over the reductions.
-
-The reduction of \gennp{} to Parallel Rewriting (\PR{}), a string-based problem which will be introduced in Section~\ref{sec:pr}, handles the main part of the Turing machine simulation. After that, we do not have to reason about Turing machines anymore. 
+The reduction of \gennp{} to Parallel Rewriting (\PR{}), a string-based problem which will be introduced in Section~\ref{sec:pr}, handles the main part of the Turing machine simulation. 
+It creates an explicit representation of the Turing machine by enumerating all rewrite windows. After that, we do not have to reason about Turing machines anymore. 
 Parallel Rewriting can be seen as a model between Turing machines and circuits.
-%The remaining three reductions subsequently deal with the encoding of the alphabet, the encoding as a Boolean formula and the conversion to a CNF.
+The remaining three reductions subsequently deal with the encoding of the alphabet, the encoding as a Boolean formula and the conversion to a CNF.
 
 \begin{figure}
   \begin{center}
-    \begin{tikzpicture}[scale=0.9, every node/.style={scale=0.9}]
+    \begin{tikzpicture}[scale=0.65, every node/.style={scale=0.65}, node distance=0.5cm]
       \node[rectangle, draw=black, minimum width=13cm] (gennp) {Generic Problem on Turing Machines (\gennp{})}; 
       \node[rectangle, draw=black, minimum width = 13cm, below = of gennp] (strrew1) {Parallel Rewriting (\PR{}) on arbitrary $\Sigma$};
-      \node[rectangle, draw=black, below = of strrew1, minimum width = 13cm] (strrew2) {Binary Parallel Rewriting};
+      \node[rectangle, draw=black, below = of strrew1, minimum width = 13cm] (strrew2) {Binary Parallel Rewriting on $\{0, 1\}$};
       \node[rectangle, draw=black, below = of strrew2, minimum width = 13cm] (csat) {Propositional SAT (\fsat{})};
       \node[rectangle, draw=black, below = of csat, minimum width = 13cm] (sat) {SAT on CNFs (\sat{})};
       \draw[->] 

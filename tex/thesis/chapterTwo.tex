@@ -22,7 +22,7 @@
 In this chapter, we present the needed basic definitions, including notations, Turing machines and the call-by-value $\lambda$-calculus L.
 
 \section{Type Theory}
-We formalise the results in the constructive type theory of Coq, featuring inductive types and an impredicative universe of propositions $\Prop$. In this section we introduce the notations and concepts common in type theory. Readers not familiar with type theory may informally regard types as sets.
+We formalise the results in the constructive type theory of Coq~\cite{coqweb}, featuring inductive types and an impredicative universe of propositions $\Prop$. In this section we introduce the notations and concepts common in type theory. Readers not familiar with type theory may informally regard types as sets.
 
 $\bool$ is the type of Booleans with the two elements $\btrue$ and $\bfalse$.
 Natural numbers are accomodated by the inductively defined type $\nat$ featuring the two constructors $O : \nat$ and $S : \nat \rightarrow \nat$ giving the successor of a number. We use the common operations on natural numbers.
@@ -39,6 +39,7 @@ By $a^n$, we denote the list consisting of the $n$-fold repetition of the elemen
 Often, we need to apply a function $f : X \rightarrow Y$ to every element of a list $A : \listsof{X}$. We write $\withl f~x \withm x \in A \withr$ for this list. Note that, in contrast to the use of this notation in set theory, the order of the list's elements is preserved. 
 Similarly, we use $\withl x \withm x \in A \land p~x \withr$, where $p : X \rightarrow \bool$, for the list $A$ filtered to contain only the elements for which the predicate $p$ holds.
 Given two lists $A, B : \listsof{X}$, $A \subseteq B$ denotes that all elements of $A$ are also contained in $B$ (possibly with duplicates or in a diffferent order), i.e.\ $A \subseteq B \defeq \forall x, x \in A \rightarrow x \in B$. 
+We use the synonym $A^*$ to refer to $\listsof{A}$ in the context of strings.
 
 The type of vectors of length $n$ over $X$ is written $X^n$. For length and subscripting, we use the same notations as for lists.
 
@@ -54,20 +55,21 @@ More generally, we extend the notation $\eqb{a}{b}$ to other decidable binary pr
 
 We also need \emph{finite types}. Finite types are discrete types with a finite number of elements. Formally, we require a list of all values of the type, in which each element occurs exactly once, as the witness that it is finite~\cite{menz2016}. Given a finite type $F$ and $e : F$, $\findex{e}$ is the position of $e$ in this list.
 For any number $n$, there is a type $F_n$ with exactly $n$ elements $f_0, \ldots, f_{n-1}$.
+Finite types are closed under the type constructors $\opt{\cdot}$, $\cdot + \cdot$ and $\cdot \times \cdot$. For instance, if $A$ and $B$ are finite types, then also $A \times B$ is a finite type.
 
-\section{Relations}
+\paragraph{Relations}
 As is common in type theory, we model relations on a type $X$ using binary predicates of type $X \rightarrow X \rightarrow \Prop$. 
 For a relation $R$, we write $(a, b) \in R$ or $a~R~b$ for $R~a~b$. 
 
 The $n$-th power $R^n$ of a relation $R$ is defined inductively:
 \begin{align*}
-  \infer{R^0~x~x}{}
+  \infer{R^0~x~x}{}\mnote{$R^n$}
   \qquad
   \infer{R^{\natS{n}}~x~z}{R~x~y\quad R^n~y~z}
 \end{align*}
 For some proofs, it will be convenient to have an alternative definition where the successor case appends a new transition instead of prepending it:
 \begin{align*}
-  \infer{\prescript{0}{}R~x~x}{}
+  \infer{\prescript{0}{}R~x~x}{}\mnote{$\prescript{n}{}R$}
   \qquad
   \infer{\prescript{\natS{n}}{}R~x~z}{\prescript{n}{}R~x~y\quad R~y~z}
 \end{align*}
@@ -83,7 +85,7 @@ For some proofs, it will be convenient to have an alternative definition where t
   \end{enumerate}
 \end{proposition}
 
-\section{Turing Machines}
+\section{Turing Machines}\label{sec:tm}
 In this section, we present the formalisation of deterministic Turing machines used throughout the thesis. 
 
 Turing machines can be regarded as finite automata with access to a fixed number of infinite tapes. Each tape has a head which can be moved sequentially. 
@@ -91,13 +93,13 @@ For each computational step, the Turing machine reads the content of the cells c
 
 The following definitions are due to Asperti and Ricciotti~\cite{asperti_ricciotti}; the Coq formalisation we are using has been developed by Wuttke~\cite{wuttke2017}.
 
-\subsection{Tapes}
-We define tapes over a finite type $\Sigma$, the tape alphabet. In contrast to usual presentations, $\Sigma$ does not contain a special blank symbol that denotes unused regions of the tape. Instead, the definition only captures the regions of the tape that are currently used. 
-This formalisation of tapes without blanks has the advantage that each possible tape is uniquely represented by exactly one element of $\textsf{tape}~\Sigma$. 
+\paragraph{Tapes}
+We define two-sided infinite tapes over a finite type $\Sigma$, the tape alphabet. In contrast to usual presentations, $\Sigma$ does not contain a special blank symbol that denotes unused regions of the tape. Instead, the definition only captures the regions of the tape that are currently used. 
+This formalisation of tapes without blanks has the advantage that each possible tape is uniquely represented by exactly one element of $\textsf{tape}_\Sigma$. 
 
 A tape can be in one of four states:
 \begin{align*}
-  \textsf{tape}~&\Sigma  := \\
+  \textsf{tape}_\Sigma &  \defeq \mnote{$\textsf{tape}~\Sigma$}\\
   |&~\textsf{niltape} \\
   |&~\textsf{leftof}~(c : \Sigma)~(rs : \listsof{\Sigma}) \\
   |&~\textsf{rightof}~(c : \Sigma)~(ls : \listsof{\Sigma}) \\
@@ -122,25 +124,25 @@ The tapes are always interpreted such that the heads of the lists are closest to
   \end{tikzpicture}
 \end{center}
 
-We use the functions $\textsf{left}, \textsf{right} : \textsf{tape}~\Sigma \rightarrow \listsof{\Sigma}$ and $\textsf{current} : \textsf{tape}~\Sigma \rightarrow \opt{\Sigma}$ to extract the contents of the tape left of the head, right of the head, or under the head. 
+We use the functions $\textsf{left}, \textsf{right} : \textsf{tape}_\Sigma \rightarrow \listsof{\Sigma}$ and $\textsf{current} : \textsf{tape}_\Sigma \rightarrow \opt{\Sigma}$ to extract the contents of the tape left of the head, right of the head, or under the head. 
 
-\subsection{Turing machines}
-In each computational step, a Turing machine can optionally write a symbol and move the head on each of its tapes individually. These actions are captured by the type $\textsf{Act}_{\Sigma} \defeq{} \opt{\Sigma} \times \textsf{move}$, where $\Sigma$ is the tape alphabet and 
-\[\textsf{move} := \movel \bnfmid \mover \bnfmid \moven \] 
+\paragraph{Turing machines}
+In each computational step, a Turing machine can optionally write a symbol and\mnote{$\textsf{Act}_{\Sigma}$} move the head on each of its tapes individually. These actions are captured by the type  $\textsf{Act}_{\Sigma} \defeq{} \opt{\Sigma} \times \textsf{move}$, where $\Sigma$ is the tape alphabet and 
+$\textsf{move} := \movel \bnfmid \mover \bnfmid \moven$\mnote{\textsf{move}}
 defines the possible movements. 
 
 \begin{definition}[Turing machines]
-  Given a finite type $\Sigma$ and a number of tapes $n$, Turing machines of type $\textsf{TM}~\Sigma~n$ are tuples $(Q, \delta, q_0, \textsf{halt})$, where $Q$ is the finite type of states, $\delta : Q \times {(\opt{\Sigma})}^n \rightarrow Q \times {\textsf{Act}_\Sigma}^n$ is the transition function, $q_0$ is the initial state and $\textsf{halt} : Q \rightarrow \bool$ defines the halting states.
+  Given a finite type $\Sigma$ and a number of tapes $n$, Turing machines of type \mnotec{$\textsf{TM}~\Sigma~n$} are tuples $(Q, \delta, \textsf{start}, \textsf{halt})$, where $Q$ is the finite type of states, $\delta : Q \times {(\opt{\Sigma})}^n \rightarrow Q \times {\textsf{Act}_\Sigma}^n$ is the transition function, $\textsf{start}$ is the initial state and $\textsf{halt} : Q \rightarrow \bool$ defines the halting states.
 \end{definition}
 For the semantics of Turing machines, the values of the transition function for halting states, i.e.\ states $q$ for which $\textsf{halt}~q = \btrue$, are irrelevant. 
 
 A configuration of a Turing machine $M$ is a pair consisting of the current state and its tapes.
 \begin{definition}[Configurations]
   Let $M : \textsf{TM}~\Sigma~n$. The type of configurations over $M$ is given by 
-  $\textsf{conf}_{M} \defeq Q_{M} \times {(\textsf{tape}_{\Sigma})}^n$.
+  $\textsf{conf}_{M} \defeq Q_{M} \times {(\textsf{tape}_{\Sigma})}^n$.\mnote{$\textsf{conf}_M$}
 \end{definition}
 
-We give the full definition of the semantics of Turing machines in Appendix~\ref{app:TM} and only define formally here how the Turing machine moves its heads (Figure~\ref{fig:movetape}). The rest of the definition follows what one would intuitively expect.
+We give the full definition of the semantics of Turing machines in Appendix~\ref{app:TM} and only define formally here how the Turing machine moves its heads (Figure~\ref{fig:movetape}). The rest of the definitions follows what one would intuitively expect.
 
 \newcommand{\tmleftof}{\textsf{leftof}}
 \newcommand{\tmrightof}{\textsf{rightof}}
@@ -164,31 +166,32 @@ We give the full definition of the semantics of Turing machines in Appendix~\ref
 \end{figure}
 
 In the presentation on paper, it will suffice to assume a transition relation $\succ$ on configurations such that 
-$(q, tp) \succ (q', tp')$ holds if, and only if, $\textsf{halt}~q = \bfalse$ and $(q', tp')$ is the successor configuration of $(q, tp)$ according to the transition function. 
+\mnote{$c \succ c'$}$(q, tp) \succ (q', tp')$ holds if, and only if, $\textsf{halt}~q = \bfalse$ and $(q', tp')$ is the successor configuration of $(q, tp)$ according to the transition function. 
 \begin{definition}[Termination Relation]
-  \[ (q, tp) \rhd^{k} (q', tp') := (q, tp) \succ^k (q', tp') \land \textsf{halt}~q' = \btrue\]
-  \[ (q, tp) \rhd^{\le k} (q', tp') := \exists l \le k, (q, tp) \rhd^l (q', tp') \]
+  \begin{align*}
+    (q, tp) \rhd^{k} (q', tp') &\defeq (q, tp) \succ^k (q', tp') \land \textsf{halt}~q' = \btrue \mnote{$c \rhd^k c'$}\\
+    (q, tp) \rhd^{\le k} (q', tp') &\defeq \exists l \le k, (q, tp) \rhd^l (q', tp')\mnote{$c \rhd^{\le{} k} c'$}
+  \end{align*}
 \end{definition}
 
 We only need single-tape Turing machines throughout this thesis and therefore we restrict this notation to single-tape machines.
 The following result states that with each computational step, a Turing machine can take up at most one additional tape cell. 
 \begin{lemma}[``Time Bounds Space'']\label{lem:time_bounds_space}~\\
   Assume a Turing machine $M : \textsf{TM}~\Sigma~1$ and $(q, tp) \succ (q', tp')$. Then $\textsf{sizeOfTape}~tp' \le \natS{\textsf{sizeOfTape}~tp}$, 
-  where $\textsf{sizeOfTape} : \textsf{tape}~\Sigma \rightarrow \nat$ describes the number of symbols contained on a tape.
+  where $\textsf{sizeOfTape} : \textsf{tape}_\Sigma \rightarrow \nat$ describes the number of symbols contained on a tape.
 \end{lemma}
 
 \newcommand{\Lterm}{\textsf{term}}
 \section{The $\lambda$ Calculus L}
-L is an untyped $\lambda$ calculus with weak call-by-value reduction and is the underlying computational model we are using throughout this thesis. 
+L is an untyped $\lambda$-calculus with weak call-by-value reduction and is the underlying computational model we are using throughout this thesis. 
 This section intends to give a brief overview of the most foundational aspects of L in order to justify using L as a computational model. The rest of this thesis can, however, be read without delving into the details of L. 
 For a more thorough treatment, the interested reader is referred to~\cite{ForsterSmolka:2017:L-Computability}, where L is introduced in detail in the context of computability theory.
 
-L is defined over terms $s, t, u: \Lterm \defeq x \bnfmid \lambda x. s \bnfmid s~t$\footnote{Formally, De Bruijn indices are used instead of named binders.}, i.e.\ only lambda abstractions and applications are part of the core language. $\lambda$ expressions are called abstractions. A term $s$ is closed if all its variables are bound. A closed abstraction is a procedure.
+L is defined over terms $s, t, u: \Lterm \defeq x \bnfmid \lambda x. s \bnfmid s~t$\footnote{Formally, De Bruijn indices are used instead of named binders.}, i.e.\ only $\lambda$-abstractions and applications are part of the core language. $\lambda$-expressions are called abstractions. A term $s$ is closed if all its variables are bound. A closed abstraction is a procedure.
 
 \subsection{Semantics of L}
-For the semantics, we start by defining substitution of terms. Let $s^x_t$ be the term that is obtained by replacing every free occurrence of the variable $x$ in $s$ by the term $t$. 
-
-L features a weak call-by-value reduction. This means that reduction is not possible below binders (i.e. $\lambda$s) and arguments need to be fully reduced to a value (a $\lambda$ abstraction) before $\beta$-reduction is possible.
+For the semantics, we start by defining the reduction relation. Let $s^x_t$ be the term that is obtained by replacing every free occurrence of the variable $x$ in $s$ by the term $t$. 
+L features a weak call-by-value reduction. This means that reduction is not possible below binders (i.e. $\lambda$s) and arguments need to be fully reduced to a value (a $\lambda$-abstraction) before $\beta$-reduction is possible.
 \begin{align*}
   \infer{s~t \succ s'~t}{s \succ s'} \quad \infer{s~t \succ s~t'}{t \succ t'} \quad \infer{(\lambda x.s)(\lambda y.t) \succ s^x_{\lambda y. t}}{} 
 \end{align*}
@@ -208,7 +211,7 @@ Thus, the result of evaluation is deterministic, only the way to get there is no
 \subsection{Encoding of Inductive Datatypes and Recursive Functions}
 While L is very simple in nature and does not have built-in suppport for Booleans or natural numbers, for instance, one can easily encode inductive datatypes using procedures. One way to do this is to use Scott encodings. 
 The Scott encodings of elements of an inductive datatype are procedures with one argument for each of the datatype's constructors. 
-As an example, we look at the encoding of natural numbers, which have to constructors $O : \nat$ and $S : \nat \rightarrow \nat$.
+As an example, we look at the encoding of natural numbers, which have two constructors $O : \nat$ and $S : \nat \rightarrow \nat$.
 Their Scott encoding looks as follows: 
 \begin{align*}
   \widehat{O} \defeq \lambda a. \lambda b. a 
@@ -244,11 +247,11 @@ It is crucial that the induced cost models are reasonable with respect to the in
 
 While reasonable measures for Turing machines are quite intuitive, taking the number of steps as the time measure and the maximum number of cells used on a tape as the space measure, the picture is not as clear for the $\lambda$-calculus. Historically, a number of different measures have been explored for the variety of possible evaluation strategies~\cite{Accattoli:cost_models}.
 
-The seemingly natural resource measures for the lambda calculus are the number of $\beta$-reduction steps for time and the maximum size of terms encountered during a reduction to a normal form for space, where we write \mnotec{$\encsize{s}$} for the size of a term $s$. 
+The seemingly natural resource measures for the $\lambda$-calculus are the number of $\beta$-reduction steps for time and the maximum size of terms encountered during a reduction to a normal form for space, where we write \mnotec{$\encsize{s}$} for the size of a term $s$. 
 However, these measures are a bit unintuitive: there exist terms that exhibit linear time but exponential space usage~\cite{ForsterKunzeRoth:2019:wcbv-Reasonable}. The reason is that, when doing substitution, terms get duplicated if an argument variable occurs multiple times. This problem is known as \emph{size explosion}. A Turing machine implementing a substituion strategy will thus have an exponential time usage (by Lemma~\ref{lem:time_bounds_space}). 
-Size explosion can be mitigated if one does not perform a naive substiution-based evaluation strategy, but instead uses environments that store the values of variables on a heap, thus avoiding duplication. Sadly, due to the needed pointers into the heap, this strategy does have a linear-factor space overhead on some terms, a problem known as \emph{pointer explosion}.
+Size explosion can be mitigated if one does not perform a naive substitution-based evaluation strategy, but instead uses environments that store the values of variables on a heap, thus avoiding duplication. Sadly, due to the needed pointers into the heap, this strategy does have a linear-factor space overhead on some terms, a problem known as \emph{pointer explosion}.
 
-Nevertheless, these resource measures have been shown reasonable for L in~\cite{ForsterKunzeRoth:2019:wcbv-Reasonable}, a non-trivial result. While simulating Turing machines in the $\lambda$ calculus within the desired overhead is relatively easy, the efficient simulation of L using Turing machines is difficult due to size explosion and pointer explosion. The authors solve this by interleaving substitution- and heap-based strategies.
+Nevertheless, these resource measures have been shown reasonable for L by Forster et al.\ in~\cite{ForsterKunzeRoth:2019:wcbv-Reasonable}, a non-trivial result. While simulating Turing machines in the $\lambda$-calculus within the desired overhead is relatively easy, the efficient simulation of L using Turing machines is difficult due to size explosion and pointer explosion. The authors solve this by interleaving substitution- and heap-based strategies.
 Their result is, however, limited to decision problems:
 \begin{theorem}[Theorem 2 of~\cite{ForsterKunzeRoth:2019:wcbv-Reasonable}]
   Let $\Sigma$ be a finite alphabet with $\{\btrue, \bfalse\} \subseteq \Sigma$ and let $f : \Sigma^* \rightarrow \{\btrue, \bfalse\}$ be a function. Let $t, s \in \Omega(n)$. 
@@ -277,13 +280,12 @@ We start by formally defining basics like the $\mathcal{O}$ notation and what it
   Let $f, g : \nat \rightarrow \nat$. $f \in \bigO{g}$ if there are $c, n_0$ such that for all $n \ge n_0$, it holds that $f~n \le c \cdot g~n$.
 \end{definition}
 This is the usual definition and the expected properties for addition and multiplication can be proved. 
-
 We say that a function $f : \nat \rightarrow \nat$ is polynomially bounded if there exists $n : \nat$ such that $f \in \bigO{\lambda x. x^n}$. Moreover, $f$ is monotonic if $\forall x~y, x \le y \rightarrow f~x \le f~y$.
 
-Given a type $X : \Type$ which is L-encodable (i.e.\ there exists a Scott encoding for $X$) and $x : X$, we write $\overline{x}$ for the encoding of $x$ as an L-term. Thus, $\encsize{\overline{x}}$ is the size of $x$'s encoding. 
+Given a type $X : \Type$ which is L-encodable (i.e.\ there exists a Scott encoding for $X$\footnote{In some cases, one can also derive an encoding for types without a direct Scott encoding.}) and $x : X$, we write $\overline{x}$ for the encoding of $x$ as an L-term. Thus, $\encsize{\overline{x}}$ is the size of $x$'s encoding. 
 
 \begin{definition}[Polynomial-time Computable Functions]
-  Assume types $X, Y$ which are L-encodable.\footnote{This does, for instance, include all inductive datatypes for which there exists a Scott encoding.}
+  Assume types $X, Y$ which are L-encodable.
   Let $f : X \rightarrow Y$ be an L-computable function.  
   $f$ is computable in polynomial time if there exists a function $f_t : \nat \rightarrow \nat$ such that
   \begin{itemize}
@@ -297,63 +299,64 @@ Monotonicity would not strictly be required for the bounding functions, but is q
 
 \paragraph{\textsf{P} and \textsf{NP}}
 We continue with the definition of the important classes \textsf{P} and \textsf{NP}. 
-
-A problem is a predicate $p : X \rightarrow \Prop$ for an L-encodable type $X$.
+A problem is a predicate $P : X \rightarrow \Prop$ for an L-encodable type $X$.
 \begin{definition}[Decidable Problems]
-  Let $p : X \rightarrow \Prop$ for an L-encodable type $X$. $p$ is L-decidable if there exists a function $f : X \rightarrow \bool$ such that 
-  $\forall x, p~x \leftrightarrow f~x = \btrue$. 
-  Moreover, $p$ is decidable in time $f_t : \nat \rightarrow \nat$ if additionally the number of reduction steps of $f$'s encoding on the encoding of $x$ is bounded by $f_t(\encsize{\overline{x}})$.
+  Let $P : X \rightarrow \Prop$ for an L-encodable type $X$. $P$ is L-decidable if there exists a L-computable function $f : X \rightarrow \bool$ such that 
+  $\forall x, P~x \leftrightarrow f~x = \btrue$. 
+  Moreover, $P$ is decidable in time $f_t : \nat \rightarrow \nat$ if additionally the number of reduction steps of $f$'s encoding on the encoding of $x$ is bounded by $f_t(\encsize{\overline{x}})$.
 \end{definition}
 
 \begin{definition}[Polynomial-time Decidable Problems]
-  Let $p : X \rightarrow \Prop$ for an L-encodable type $X$. $p$ is polynomial-time decidable if there exists a monotonic and polynomially bounded function $f_p : \nat \rightarrow \nat$ such that $p$ is decidable in time $f_p$. 
+  Let $P : X \rightarrow \Prop$ for an L-encodable type $X$. $P$ is polynomial-time decidable if there exists a monotonic and polynomially bounded function $f_P : \nat \rightarrow \nat$ such that $P$ is decidable in time $f_P$. 
 \end{definition}
 
 \textsf{P} is the class of problems for which there exists a polynomial-time decider. 
 \begin{definition}[\textsf{P}]
-  $p \in \textsf{P} \defeq p \text{ is polynomial-time decidable} $
+  $P \in \normalfont{\textsf{P}} \defeq P \text{ is polynomial-time decidable} $
 \end{definition}
 
-For \NP{}, we do not use the usual definition via nondeterminism. While nondeterministic additions to the $\lambda$ calculus have been explored in the literature, for instance via the addition of a new combinator allowing to nondeterministically guess a single bit\cite{kutzner:nondet_lambda}, using nondeterminism would make formal reasoning much harder.\todo{citations}
+For \NP{}, we do not use the usual definition via nondeterminism. While nondeterministic additions to the $\lambda$-calculus have been explored in the literature, for instance via the addition of a new combinator allowing to nondeterministically guess a single bit~\cite{kutzner:nondet_lambda}, using nondeterminism would make formal reasoning much harder.\todo{citations}
 Instead, we adapt the well-known alternative verifier characterisation of \NP{}, where there must exist a verifier which decides whether a certificate of polynomial size correctly proves that an instance is a yes-instance. Intuitively, the verifier characterisation moves the nondeterminism into the input.
 \begin{definition}[\NP{}]
-  Let $p : X \rightarrow \Prop$ be an $L$-encodable type. $p \in \NP{}$ if there exists a verifier $R : X \rightarrow \Lterm \rightarrow \Prop$ such that: 
+  Let $P : X \rightarrow \Prop$ and $X$ be an $L$-encodable type. $P \in \normalfont{\NP{}}$ if there exists a verifier $R : X \rightarrow \Lterm \rightarrow \Prop$ such that: 
   \begin{itemize}
     \item $\lambda (x, y). R~x~y$ is polynomial-time decidable, 
-    \item and there exists a monotonic and polynomially-bounded function $f_p : \nat \rightarrow \nat$ bounding the size of certificates, such that
+    \item and there exists a monotonic and polynomially-bounded function $f_P : \nat \rightarrow \nat$ bounding the size of certificates, such that
       \begin{itemize}
-        \item if $R~x~y$, then $p~x$, 
-        \item and for all $x$ with $p~x$, there exists $y$ such that $R~x~y$ and $\encsize{\overline{y}} \le f_p(\encsize{\overline{x}})$.
+        \item if $R~x~y$, then $P~x$, 
+        \item and for all $x$ with $P~x$, there exists $y$ such that $R~x~y$ and $\encsize{\overline{y}} \le f_P(\encsize{\overline{x}})$.
       \end{itemize}
   \end{itemize}
 \end{definition}
 
-Note that we require that the type of certificates is $\Lterm$. This does not pose a restriction in practice as we can still use any $L$-encodable type (since these types as a $\Lterm$) whose encoding can be decoded in polynomial time, i.e.\ for which there exists a function $f : \Lterm \rightarrow \opt{X}$ running in polynomial time. It turns out that the Scott encoding of any inductive datatype can in practice be decoded in linear time.
+Note that we require that the type of certificates is $\Lterm$. This does not pose a restriction in practice as we can still use any $L$-encodable type (since these types have an encoding as a $\Lterm$) whose encoding can be decoded in polynomial time, i.e.\ for which there exists a function $f : \Lterm \rightarrow \opt{X}$ running in polynomial time. It turns out that the Scott encoding of any inductive datatype can in practice be decoded in linear time.
 
 \begin{fact}[\NP{} subsumes \textsf{P}]
-  If $p \in \textsf{P}$ then $p \in \NP{}$. 
+  If $P \in \normalfont{\textsf{P}}$ then $P \in \NP{}$. 
 \end{fact}
 
-\subsection{Polynomial-time Reductions}
+\paragraph{Polynomial-time Reductions}
 Next, we consider polynomial-time reductions. The definition mostly corresponds to the usual one on Turing machines. 
 
 \begin{definition}[Polynomial-time Reductions]
-  Assume problems $p : X \rightarrow \Prop$ and $q : Y \rightarrow \Prop$ for L-encodable types $X, Y$. $p$ reduces to $q$ in polynomial-time, written $p \redP{} q$, if there exists a polynomial-time computable function $f : X \rightarrow Y$ satisfying the property $\forall x, p~x \leftrightarrow q(f~x)$. 
+  Assume problems $P : X \rightarrow \Prop$ and $Q : Y \rightarrow \Prop$ for L-encodable types $X, Y$. $P$ reduces to $Q$ in polynomial-time, written $P \redP{} Q$, if there exists a polynomial-time computable function $f : X \rightarrow Y$ satisfying the property $\forall x, P~x \leftrightarrow Q(f~x)$. 
 \end{definition}
 Note that, since we require $f$ to be polynomial-time computable, its output size also needs to be polynomial in its input size. This is the only condition which changes compared to Turing machines.
 
-$\redP$ is transitive and inclusion in \NP{} transfers backwards along reductions, i.e.\ if $p \redP{} q$ and $q \in \NP{}$, then $p \in \NP{}$.
+$\redP$ is transitive and inclusion in \NP{} transfers backwards along reductions, i.e.\ if $P \redP{} Q$ and $Q \in \normalfont\NP{}$, then $P \in \NP{}$.
 
 \begin{definition}[\NP{} hardness and \NP{} completeness]
-  A problem $q : X \rightarrow \Prop$ is \NP{} hard if any problem $p : Y \rightarrow \Prop$ can be reduced to it in polynomial time, i.e.\ $p \redP{} q$. It is \NP{} complete if, in addition, $q \in \NP{}$.
+  A problem $Q : X \rightarrow \Prop$ is \NP{}-hard if any problem $P : Y \rightarrow \Prop$ can be reduced to it in polynomial time, i.e.\ $P \redP{} Q$. It is \NP{}-complete if, in addition, $Q \in \normalfont\NP{}$.
 \end{definition}
 
 \NP{} hardness transfers along polynomial-time reductions: if $p \redP{} q$ and $p$ is \NP{}-hard, then $q$ is \NP{}-hard.
 
+\begin{remark}\label{rem:cook_L}
 We close this chapter by giving an intuitive explanation why one should not expect there to be an easy proof of the existence of a natural (i.e.\ machine-independent) and intuitive \NP{}-complete problem in our setting of complexity theory in L.
 Assume that $p$ is a natural \NP{}-complete problem. We conjecture that, if there is a simple verifier for $p$ using L, $p$ also has a simple Turing machine verifier. This is supported by the fact that Karp's 21 \NP{}-complete problems~\cite{Karp1972} all have relatively simple verifiers using Turing machines.\todo{check that this really is the case}
 Thus we obtain a direct reduction from $p$ to the computation of Turing machines. 
-Since $p$ is \NP{}-hard, we can reduce the computation of L terms to $p$. By transititivity of reduction, we get a polynomial-time overhead simulation of L using Turing machines. The two combined reductions thus solve L's size explosion problem. 
+Since $p$ is \NP{}-hard, we can reduce the computation of L terms to $p$. By transititivity of reduction, we get a polynomial-time-overhead simulation of L using Turing machines. The two combined reductions thus solve L's size explosion problem. 
 For a direct polynomial overhead simulation, one however needs a heap-based simulation of L.
 This indicates that the \NP{}-hardness proof of $p$ is at least as advanced as the heap-based simulation of L, which is arguably not very simple.
 Motivated by this reasoning, we propose to use Turing machines as an intermediate problem for proving a natural problem to be \NP{}-hard: Turing machines are much more expressive than most natural problems, thus they seem to be a good reduction target candidate for solving the size explosion problem.
+\end{remark}

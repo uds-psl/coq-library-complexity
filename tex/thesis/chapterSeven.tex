@@ -11,7 +11,7 @@ We start by introducing a generalised variant of \SAT{} that does not require th
 
 Formulas are defined inductively: 
 \mnote{$\formula$}
-\[f : \formula \defeq \btrue \bnfmid v \bnfmid f_1 \lor f_2 \bnfmid f_1 \land f_2 \bnfmid \lnot f \qquad v : \bvar \]
+\[f : \formula \defeq \btrue \bnfmid v \bnfmid f_1 \lor f_2 \bnfmid f_1 \land f_2 \bnfmid \lnot f \qquad (v : \bvar) \]
 
 One can directly derive the operators $\land$ and $\lor$ for more than two operands, which we will denote by $\bigwedge_{f \in l} f$ and $\bigvee_{f \in l} f$ for $ l : \listsof{\formula}$. 
 
@@ -20,7 +20,7 @@ An evaluation function $\eval : \assgn \rightarrow \formula \rightarrow \bool$ c
 
 \begin{definition}[Formula Satisfiability]
   \mnote{\fsat{}}
-  \[\fsat{}~f \defeq \exists a, a \models f \]
+  $\fsat{}~f \defeq \exists a, a \models f$
 \end{definition}
 
 We could prove that \fsat{} is in \NP{} using the same notion of small assignments as for CNF satisfiability. This will, however, already follow from the reduction of \fsat{} to \SAT{} in Chapter~\ref{chap:fsat_sat}. 
@@ -28,7 +28,7 @@ We could prove that \fsat{} is in \NP{} using the same notion of small assignmen
 \subsection{Explicit Assignments}
 The assignments we use, where we just store a list of variables to which the value $\btrue$ is assigned and to all other variables the value $\bfalse$ is assigned implicitly, are quite indirect and unstructured. 
 For the rest of this chapter a more explicit characterisation bearing resemblance to the Boolean strings over which \BPR{} is defined will be quite convenient.
-One possible characterisation is a list of Booleans $e : \listsof{\bool}$, where the value $e[i]$ at position $i$ of this list is the value assigned to variable $i$. To variables $i \ge \length{e}$, the value $\bfalse$ is assigned.
+One possible characterisation is a list of Booleans $e : \listsof{\bool}$ together with a start index $s$, where the value $e[i]$ at position $i$ of this list is the value assigned to variable $s + i$. To variables outside the range $[s, s+\length{e})$, the value $\bfalse$ is assigned.
 
 As we will be working with ranges of variables $[\textsf{start}, \textsf{start} + \textsf{len})$ a lot throughout this chapter, we introduce the notation \mnotec{$[s .. +l)$} instead of $[s .. s+l)$, which makes the notation less redundant. In the following, we use the letter $I$ to denote variable ranges of this form.
 
@@ -83,7 +83,7 @@ A more elaborate definition allowing a more fine-grained control would be possib
 
 To stay in line with the variable range notation, we also write $\encodesPred~I~f~p$ for a range of variables $I$.
 
-A rather trivial but important fact is that \encodesPred{} is congruent with respect to the encoded predicate. This will be quite convenient for proving correctness of encodings by switching to an equivalent characterisation of the predicate we want to encode.
+A rather trivial but important fact is that \encodesPred{} is extensional with respect to the encoded predicate. This will be quite convenient for proving correctness of encodings by switching to an equivalent characterisation of the predicate we want to encode.
 \begin{fact}\label{fact:enc_congruent}
   Let $\forall e, \length{e} = l \rightarrow p_1~e \leftrightarrow p_2~e$. Then
   \[\encodesPred~s~l~f~p_1 \leftrightarrow \encodesPred~s~l~f~p_2. \]
@@ -231,7 +231,7 @@ The correctness statement of course also needs to range over all the variables b
 \end{proposition}
 
 \newcommand{\encodeWindows}{\textsf{encodeWindows}}
-Of course, this can be lifted to express that one of the windows of $R$ holds by computing a disjunction over the list of windows. We assume a function $\encodeWindows : \nat \rightarrow \nat \rightarrow \formula$ taking the two start indices for that purpose, without going into more detail.\mnote{\encodeWindows}
+This can be lifted to express that one of the windows of $R$ holds by computing a disjunction over the list of windows. We assume a function $\encodeWindows : \nat \rightarrow \nat \rightarrow \formula$ taking the two start indices for that purpose, without going into more detail.\mnote{\encodeWindows}
 \begin{proposition}[Correctness of \encodeWindows]
   Let $s, l : \nat$.
   \begin{align*}
@@ -329,7 +329,11 @@ We again comment on some aspects of the mechanisation.
 As in the previous chapter, we have to treat non-wellformed instances separately by first deciding wellformedness and mapping violating instances to a trivial no-instance. 
 
 A major inconvenience is that many of the representation proofs are somewhat repetitive and mainly rely on inductively forming conjunctions and disjunctions of formulas. 
-The authors of~\cite{Larchey-WendlingForster:2019:H10_in_Coq} face a similar problem in encoding certain predicates using Diophantine equations. They come up with Coq tactics that can largely automate the process of finding an encoding and proving its correctness if the predicate has a shape that is already known, using the Coq unification mechanism. If the predicate is not in a known shape, congruence can be used to bring it into an equivalent shape, similar to our Fact~\ref{fact:enc_congruent}.
+The authors of~\cite{Larchey-WendlingForster:2019:H10_in_Coq} face a similar problem in encoding certain predicates using Diophantine equations. They come up with Coq tactics that can largely automate the process of finding an encoding and proving its correctness if the predicate has a shape that is already known, using the Coq unification mechanism. If the predicate is not in a known shape, extensionality can be used to bring it into an equivalent shape, similar to our Fact~\ref{fact:enc_congruent}.
 The key idea of their approach is to use Sigma types that informatively bundle the encoding and its proof of correctness. 
 Sadly, a similar trick can not be applied in our setting: Sigma types (or even their computational part) currently are not extractable to L. Thus, it seems unavoidable to explicitly define the formula encoding a particular predicate.
 
+As both \BPR{} and \fsat{} are directly extractable, we need not define separate flat versions. Thus, we obtain the following polynomial-time reduction:
+\begin{theorem}
+  $\BPR{} \redP{} \fsat{}$
+\end{theorem}

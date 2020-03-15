@@ -2,10 +2,13 @@
 \newcommand{\FlatPR}{\textbf{FlatPR}}
 
 \chapter{Reducing PR to Binary PR}\label{chap:pr_bpr}
-In this chapter, we reduce \PR{} instances over an arbitrary finite alphabet $\Sigma : \finType$ to a binary alphabet over type $\bool$. The idea of this reduction is to replace every symbol $\sigma : \Sigma$ with a bitstring of length $\length{\Sigma}$. This operation is incorporated using special string homomorphisms which we call uniform.
-For the reduction, we need to modify the offset $o$ of the \PR{} instance by multiplying it with $\length{\Sigma}$. This is motivated by the fact that, semantically, a bitstring of length $\length{\Sigma}$ represents a single symbol of the original alphabet.
+In this chapter, we reduce \PR{} instances over an arbitrary finite alphabet $\Sigma : \finType$ to a binary alphabet over type $\bool$. The idea of this reduction is to replace every symbol $\sigma : \Sigma$ with a unique bitstring of length $\length{\Sigma}$. 
+Thus, initial strings, rewrite windows, and final substrings need to be adapted.
+This operation is incorporated using special string homomorphisms which we call uniform.
 
-This variant of \PR{}, in which the alphabet is fixed to $\bool$, is called \BPR{}. All definitions of Section~\ref{sec:pr} carry over.
+For the reduction, we need to modify the offset $o$ of the \PR{} instance by multiplying it with $\length{\Sigma}$\footnote{In fact, this reduction is the motivation for having the offset in the first place.}. This is motivated by the fact that, semantically, a bitstring of length $\length{\Sigma}$ represents a single symbol of the original alphabet.
+
+The variant of \PR{} in which the alphabet is fixed to $\bool$ is called \BPR{}. All definitions of Section~\ref{sec:pr} carry over.
 
 \section{Uniform Homomorphisms}
 We introduce string homomorphisms and a special subclass of them, uniform homomorphisms.
@@ -25,12 +28,8 @@ While one usually uses string homomorphisms over a finite alphabet, we do not re
   \end{enumerate}
 \end{fact}
 
-Given a function $f : \Sigma_1 \rightarrow \str{\Sigma_2}$, we can define a canonical homomorphism lifting $f$ to lists.
 \newcommand{\canonicalHom}{\textsf{canonicalHom}}
-\begin{definition}[Canonical Homomorphism]
-  \mnote{\canonicalHom}
-  \[\canonicalHom~f \defeq \lambda~l. \rconcat~\withl f~x \withm x \in l \withr\]
-\end{definition}
+Given a function $f : \Sigma_1 \rightarrow \str{\Sigma_2}$, we can define a canonical homomorphism \[\canonicalHom~f \defeq \lambda~l. \rconcat~\withl f~x \withm x \in l \withr \mnote{\canonicalHom}\]  lifting $f$ to lists.
 
 \begin{proposition}
   Let $f : \Sigma_1 \rightarrow \str{\Sigma_2}$. 
@@ -69,7 +68,7 @@ Conversely, we can formalise the above intuition that the length of a string is 
 \end{lemma}
 \begin{proof}
   As $\Sigma$ is a finite type, inhabitation is decidable. If $\length{\Sigma} = 0$, then we pick 42. 
-  Otherwise, let $\sigma : \Sigma$ and pick $\length{h}~[\sigma]$. 
+  Otherwise, let $\sigma : \Sigma$ and pick $\length{h~[\sigma]}$. 
   For arbitrary $x : \str{\Sigma}$, the statement follows by induction on $x$ and using the defining properties of a uniform homomorphism.
 \end{proof}
 
@@ -112,7 +111,7 @@ The transformed \PR{} instance is defined as
 \begin{align*}
   \mnote{$R_h$}
   R_h &\defeq \withl h_\text{window}~w \withm w \in R \withr \\
-  S' &\defeq (\Sigma_2, k \cdot o, k \cdot \omega, h~x_0, \textsf{hwindows}, \withl h~l \withm l \in \Rfinal \withr, t).
+  S' &\defeq (\Sigma_2, k \cdot o, k \cdot \omega, h~x_0, R_h, \withl h~l \withm l \in \Rfinal \withr, t).
   \mnote{$S'$}
 \end{align*}
 Note that the offset and the width both need to be multiplied by the multiplicative factor $k$ of $h$.
@@ -136,12 +135,12 @@ For the proof of equivalence of $S$ and $S'$, we need a stronger statement: if w
 This can be lifted to $\strent{}$. For the proof, yet another characterisation of validity will be quite convenient:
 \begin{gather*}
   \infer{a \strentD{R} b}{\length{a} = \length{b} \quad \length{a} = \omega \quad w \in R}
-  \\
+  \mnote{$\strentD{R}$}\\
   \infer{(u \concat a) \strentD{R} (v \concat b)}{a \strentD{R} b \quad \length{u} = o \quad \length{v} = o \quad w \in R \quad \rewHead{w}{(u \concat a)}{(v \concat b)}}
 \end{gather*}
 To some extent, this is the most intuitive characterisation of validity: it does not allow vacuous rewrites (i.e.\ allows only rewrites of length $\ge \omega$). Accordingly, it is not fully equivalent to $\strent{}$:
 \begin{lemma}[Agreement of $\strent{}$ and $\strentD{}$]
-  \[a \strent{R} b \land \length{a} \ge \omega \leftrightarrow a \strentD{R} b \]
+  $a \strent{R} b \land \length{a} \ge \omega \leftrightarrow a \strentD{R} b$
 \end{lemma}
 
 The restriction to strings of length at least $\omega$ does not pose a problem as Definition~\ref{def:pr} imposes that as a syntactic constraint.
@@ -170,17 +169,17 @@ The equivalence trivially transfers to $\strent{}^n$:
 \end{enumerate}
 \end{proposition}
 
-Finally, it needs to be shown that the final constraints agree:
-\begin{lemma}[Agreement of the Final Constraints]
-  Let $x_t$ with $\length{x_t} = \length{x_0}$ be given. Then 
-  \[x_t \models \Rfinal \leftrightarrow h~x_t \models \withl h~l \withm l \in \Rfinal \withr. \]
-\end{lemma}
+%Finally, it needs to be shown that the final constraints agree:
+%\begin{lemma}[Agreement of the Final Constraints]
+  %Let $x_t$ with $\length{x_t} = \length{x_0}$ be given. Then 
+  %\[x_t \models \Rfinal \leftrightarrow h~x_t \models \withl h~l \withm l \in \Rfinal \withr. \]
+%\end{lemma}
 
-We can now obtain the main agreement result.
+After having show that the final constraints agree in the expected way, we can obtain the main agreement result.
 \begin{theorem}\label{thm:hom_pr_equiv}
   $\PR{}~S \leftrightarrow \PR{}~S'$
 \end{theorem}
-Thus, the transformed \PR{} instance is equivalent to the original instance.
+%Thus, the transformed \PR{} instance is equivalent to the original instance.
 
 \section{Reduction to \BPR{}}
 The previous section's results can be applied to an injective uniform homomorphism into $\bool$ to directly obtain the reduction of \PR{} to \BPR{}. 
@@ -188,46 +187,46 @@ We use a homomorphism which just computes a unary encoding of the alphabet's ele
 
 Formally, let us fix a $\PR{}$-instance $S = (\Sigma, o, \omega, x_0, R, \Rfinal, t)$. In order to apply the results of the previous section, we rely on $\length{\Sigma} > 0$. We handle the case $\length{\Sigma} = 0$ separately in the end.
 
-The following definition is almost the homomorphism we need. 
+The following function defines the homomorphism for single elements. 
 \begin{definition}\label{def:hnat_hsig}
   \begin{align*}
     \mnote{$h_{\nat}$}
     h_{\nat}~sig~n&\defeq \ITE{n~\overset{?}{<}~sig}{\bfalse^n \concat [\btrue] \concat \bfalse^{sig -n -1}}{\bfalse^{sig}} \\
-    h_{\Sigma}~\sigma : \listsof{\bool} &\defeq h_{\nat}~(\length{\Sigma})~(\textsf{index}~\sigma)
+    h_{\Sigma}~\sigma : \listsof{\bool} &\defeq h_{\nat}~(\length{\Sigma})~(\textsf{index}~\sigma)\mnote{$h_\Sigma$}
   \end{align*}
 \end{definition}
 The corresponding homomorphism can be obtained by using $\canonicalHom$. However, the technique of Section~\ref{sec:unif_hom_pr} justs asks us to provide a function operating on single symbols.
 
 Properties $(A_1)$ and $(A_2)$ are straightforward to verify.
 
-\begin{lemma}[Uniformity]\leavevmode
+\begin{fact}[Uniformity]\leavevmode
   \begin{enumerate}
     \item $\length{h_{\nat}}~sig~n = sig$
     \item $\length{h_{\Sigma}~\sigma} = \length{\Sigma}$
   \end{enumerate}
-\end{lemma}
+\end{fact}
 
-\begin{lemma}[Injectivity]\leavevmode
+\begin{fact}[Injectivity]\leavevmode
   \begin{enumerate}
     \item $h_{\nat}~sig~m = \bfalse^n \concat [\btrue] \concat \bfalse^{sig - n - 1} \rightarrow m = n$
     \item $\textsf{injective}~h_{\Sigma}$
   \end{enumerate}
-\end{lemma}
+\end{fact}
 
 The reduction now directly follows by Theorem~\ref{thm:hom_pr_equiv}.
 In the special case of $\length{\Sigma} = 0$, the reduction maps to a trivial no-instance of \BPR{}. 
 
 \begin{lemma}[\PR{} Reduces to \BPR{}]
-  \[\PR{}~S \leftrightarrow \BPR{}~S', \]
+  $\PR{}~S \leftrightarrow \BPR{}~S'$,
   where $S'$ is defined as in Section~\ref{sec:unif_hom_pr}.
 \end{lemma}
 
 \section{Mechanisation}
 We briefly comment on the differences of the Coq mechanisation and the proof on paper as well as on the proof of computability. 
 
-First of all, \BPR{} is defined as a syntactically different problem in the Coq mechanisation. The only change is that the alphabet is fixed to $\bool$. Nevertheless, nearly all definitions (for instance the definition of $\strent{}$) can be re-used and do not need to be stated explicitly again.
+First of all, \BPR{} is defined to be a syntactically different problem from \PR{} in the Coq mechanisation. The only change is that the alphabet is fixed to $\bool$. Nearly all definitions (for instance the definition of $\strent{}$) can be re-used and do not need to be stated explicitly again.
 
-Remember that we enforce the syntactic constraints on valid \PR{} instances (cf.\ Definition~\ref{def:pr}) externally. Therefore, we explicitly need to assume well-formedness of the \PR{} instance for the results of Section~\ref{sec:unif_hom_pr}. As wellformedness can be decided, the reduction maps non-wellformed instances to a trivial no-instance.
+Remember that we enforce the syntactic constraints on valid \PR{} instances (cf.\ Definition~\ref{def:pr}) externally. Therefore, we explicitly need to assume wellformedness of the \PR{} instance for the results of Section~\ref{sec:unif_hom_pr}. As wellformedness can be decided, the reduction maps non-wellformed instances to a trivial no-instance.
 
 \BPR{} has the nice property of being directly extractable as we do not work over a general finite type anymore. Thus, it is not required to define a flat version of the problem again. However, as \PR{} still needs a separate flat version, our reduction structure looks as follows:
 \begin{center}
@@ -242,4 +241,7 @@ Remember that we enforce the syntactic constraints on valid \PR{} instances (cf.
 \end{center}
 
 The main verification is done for the reduction of \PR{} to \BPR{}, as described in this chapter. As this reduction cannot be extracted, we define a separate reduction of \FlatPR{} to \BPR{}. This reduction basically uses the $h_{\nat}$ function of Definition~\ref{def:hnat_hsig} to transform the finite subset of $\nat$ to $\bool$. 
-For the verification of this reduction, we show that for instances of \FlatPR{} and \PR{} that are the same up to representation of finite types $\approx$, the output of the respective reductions to \BPR{} is the same up to reordering of elements in lists. Logically, the reduction thus consists of two parts: a reduction from \FlatPR{} to \PR{}, converting the finite subset $\{0, \ldots, n-1\}$ of $\nat$ into the finite type $F_n$, and the reduction from \PR{} to \BPR{}. Computationally, however, this is shortcut to a single direct reduction.
+For the verification of this reduction, we show that for instances of \FlatPR{} and \PR{} that are the same up to representation of finite types $\approx$, the output of the respective reductions to \BPR{} is the same up to reordering of elements in lists. Logically, the reduction thus consists of two parts: a reduction from \FlatPR{} to \PR{}, converting the finite subset $\{0, \ldots, n-1\}$ of $\nat$ into the finite type $F_n$, and the reduction from \PR{} to \BPR{}. Computationally, however, this is shortcut to a single direct reduction which runs in polynomial time.
+\begin{theorem}
+  $\textbf{FlatPR} \redP{} \textbf \BPR{}$ 
+\end{theorem}
