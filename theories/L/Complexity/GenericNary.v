@@ -12,15 +12,21 @@ Local Inductive UPlist (A : Type) : Type :=
 Arguments nil {A}.
 Arguments cons {A} a l.
 
+Definition toUPList := fun X l => List.fold_left (fun xs x => @cons X x xs) l nil.
+Global Coercion toUPList : list >-> UPlist.
 
 Module UnivPolyListNotations.
-Infix "::" := cons (at level 60, right associativity).
-Notation "[ ]" := nil (format "[ ]").
-Notation "[ x ]" := (cons x nil).
-Notation "[ x ; y ; .. ; z ]" :=  (cons x (cons y .. (cons z nil) ..)).
+  Infix "::" := cons (at level 60, right associativity) : uplist_scope.
+  Notation "[ ]" := nil (format "[ ]") : uplist_scope.
+  Notation "[ x ]" := (cons x nil) : uplist_scope.
+  Notation "[ x ; y ; .. ; z ]" :=  (cons x (cons y .. (cons z nil) ..)): uplist_scope.
+
+  Delimit Scope uplist_scope with uplist.
+  Bind Scope uplist_scope with UPlist. 
 End UnivPolyListNotations.
 
 Import UnivPolyListNotations.
+Open Scope uplist_scope.
 
 
 Fixpoint Rarrow (domain : UPlist Type) (range : Type) : Type :=
@@ -180,7 +186,7 @@ Ltac rew_generic_in_all := autounfold with generic in *;repeat smpl nary_prepare
 
 (* Try to prove a goal stated using the combinators above from a lemma [L] that
    is equivalent but does not use the combinators. *)
-Tactic Notation "prove_nary" constr(L) :=
+Tactic Notation "prove_nary" uconstr(L) :=
   intros; rew_generic_in_all; eapply L; eauto.
 
 (******************************************************************************)

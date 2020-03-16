@@ -21,3 +21,16 @@ Proof.
   destruct t;cbn. 2-4:now cbv.
   unfold enc;cbn. now rewrite <- LNat.size_nat_enc_r.
 Qed.
+
+
+Lemma size_Tok_enc t: size (enc t) =
+                        match t with
+                        | varT n => 4*n+13
+                        | appT => 7
+                        | lamT => 6
+                        | retT => 5
+                        end.
+Proof.
+  change (enc t) with (token_enc t).
+  destruct t;cbn. rewrite size_nat_enc. all:ring_simplify. all:easy.
+Qed.

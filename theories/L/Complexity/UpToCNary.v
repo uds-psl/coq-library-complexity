@@ -4,7 +4,10 @@ Require Import smpl.Smpl.
 From Coq Require Import Setoid.
 From Coq Require Import CRelationClasses CMorphisms.
 From Undecidability Require Export UpToC.
-From Undecidability Require Import GenericNary.
+From Undecidability Require Export GenericNary.
+From PslBase Require FinTypes.
+
+Local Set Universe Polymorphism. 
 
 
 Lemma leToC_eta X (f g :X -> _) :
@@ -50,6 +53,24 @@ Lemma upToC_add_nary (domain : UPlist Type) F (f1 f2 : Rarrow domain nat) :
 Proof.
   prove_nary upToC_add.
 Qed.
+
+
+Lemma upToC_max_nary (domain : UPlist Type) F (f1 f2 : Rarrow domain nat) :
+  Uncurry f1 <=c F
+  -> Uncurry f2 <=c F
+  -> Fun' (fun x => max (App f1 x) (App f2 x)) <=c F.
+Proof.
+  prove_nary upToC_max.
+Qed.
+
+Lemma upToC_min_nary (domain : UPlist Type) F (f1 f2 : Rarrow domain nat) :
+  Uncurry f1 <=c F
+  -> Uncurry f2 <=c F
+  -> Fun' (fun x => min (App f1 x) (App f2 x)) <=c F.
+Proof.
+  prove_nary upToC_min.
+Qed.
+
 
 Lemma upToC_mul_c_l_nary (domain : UPlist Type) c F  (f : Rarrow domain nat):
   Uncurry f <=c F
@@ -105,8 +126,9 @@ Hint Extern 0 Domain_of_goal => (mk_domain_getter leUpToC_domain) : domain_of_go
 
 
 
-Smpl Add 6 first [nary simple apply upToC_add_nary | nary simple apply upToC_mul_c_l_nary | nary simple apply upToC_mul_c_r_nary |
-                  progress (nary simple apply upToC_c_nary) | _applyIfNotConst_nat (nary simple apply upToC_S_nary)] : upToC.
+Smpl Add 6 first [nary simple apply upToC_add_nary | nary simple apply upToC_mul_c_l_nary | nary simple apply upToC_mul_c_r_nary
+                  | nary simple apply upToC_max_nary| nary simple apply upToC_min_nary
+                  | progress (nary simple apply upToC_c_nary) | _applyIfNotConst_nat (nary simple apply upToC_S_nary)] : upToC.
 
 
 Ltac destruct_pair_rec p :=
@@ -142,3 +164,14 @@ Goal (fun '(x,y) => 3) <=c (fun '(x,y) => x+y+1).
 Proof.
   smpl upToC. smpl upToC_solve.
 Qed.
+
+Section bla.
+  Import FinTypes.
+  Lemma leUpToC_finCases_nary domain (Y:FinTypes.finType) Z__case (cases : forall (y:Y), Z__case y -> Rtuple domain) (f : Rarrow domain nat) (F : Rtuple domain -> nat) :
+    (forall x, exists y (z : Z__case y), cases y z = x)
+    -> (forall y, (fun z => App f (cases y z)) <=c (fun z => F (cases y z)))
+    -> Fun' (fun x => App f x) <=c F.
+  Proof.
+    prove_nary leUpToC_finCases.
+  Qed.
+End bla.

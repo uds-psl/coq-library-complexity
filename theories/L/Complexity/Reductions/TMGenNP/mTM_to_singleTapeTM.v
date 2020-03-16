@@ -10,9 +10,6 @@ From Undecidability.TM.Single Require Import EncodeTapes StepTM.
 From Undecidability.TM Require M2MBounds.
 
 Unset Printing Coercions.
-From Coq.ssr Require ssrfun.
-Module Option := ssrfun.Option.
-
 
 (*Import EncodeTapes DecodeTapes Single.StepTM ProgrammingTools Combinators Decode.*)
 

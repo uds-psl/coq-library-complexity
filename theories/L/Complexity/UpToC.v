@@ -6,6 +6,7 @@ Require Export Lia Arith Ring.
 From Coq Require Import Setoid.
 From Coq Require Import CRelationClasses CMorphisms.
 Import CMorphisms.ProperNotations. 
+From PslBase Require FinTypes.
 
 Record leUpToC {X} (f g : X -> nat) : Type :=
   { c__leUpToC : nat;
@@ -15,7 +16,6 @@ Record leUpToC {X} (f g : X -> nat) : Type :=
 Arguments c__leUpToC {_ _ _ H} : rename.
 
 Notation "f <=c g" := (@leUpToC _ f g) (at level 70, g at next level).
-
 
 Instance leUpToC_preorder X: PreOrder (@leUpToC X).
 Proof.
@@ -47,6 +47,9 @@ Record UpToC {X} (F : X -> nat) : Type :=
     correct__UpToC :> f__UpToC <=c F
   }.
 
+Add Printing Coercion f__UpToC.
+Arguments f__UpToC : clear implicits.
+Arguments f__UpToC {_} _ {_}.
 
 Lemma UpToC_le X F (f : @UpToC X F) :
   (forall x, f x <= (c__leUpToC (H:=f))*F x).
@@ -62,7 +65,23 @@ Proof.
   exists (c+c'). intro. rewrite H,H'. all:nia.
 Qed.
 
+Lemma upToC_max X (F f1 f2 :X->nat) :
+  f1 <=c F
+  -> f2 <=c F
+  -> (fun x => max (f1 x) (f2 x)) <=c F.
+Proof.
+  intros [c H] [c' H'].
+  exists (c+c'). intro. rewrite H,H'. all:nia.
+Qed.
 
+Lemma upToC_min X (F f1 f2 :X->nat) :
+  f1 <=c F
+  -> f2 <=c F
+  -> (fun x => min (f1 x) (f2 x)) <=c F.
+Proof.
+  intros [c H] [c' H'].
+  exists (c+c'). intro. rewrite H,H'. all:nia.
+Qed.
 
 Lemma upToC_mul_c_l X c (f F : X -> nat):
   f <=c F -> (fun x => c * f x) <=c F.
@@ -108,15 +127,17 @@ Qed.
 
 Lemma upToC_f__UpToC X (F G: X -> nat) (H : UpToC G):
   G <=c F  
-  -> f__UpToC H <=c F.
+  -> H <=c F.
 Proof.
-  now rewrite correct__UpToC.
+  now rewrite correct__UpToC. 
 Qed.
 
 Smpl Create upToC.
 
 Smpl Add 2 assumption : upToC.
-Smpl Add 5 first [simple apply upToC_add | simple apply upToC_mul_c_l | simple apply upToC_mul_c_r | progress (simple apply upToC_c)
+Smpl Add 5 first [simple apply upToC_add | simple apply upToC_mul_c_l | simple apply upToC_mul_c_r
+                  | simple apply upToC_max | simple apply upToC_min
+                  | progress (simple apply upToC_c)
                  | _applyIfNotConst_nat (simple apply upToC_S)] : upToC.
 Smpl Add 4 simple eapply upToC_f__UpToC : upToC.
 
@@ -155,8 +176,24 @@ Proof.
   - unfold f. smpl_upToC_solve.
 Qed.
 
-
+From Coq Require Strings.String.
 
 (* Labelled Todo-notes, useful for deriving objects during proofs.*)
 Definition TODO {X Y} (x:X) : Y.
 Admitted.
+Arguments TODO _ _ _%string_scope.
+
+Section bla.
+  Import FinTypes.
+  Lemma leUpToC_finCases X (Y:finType) Z__case (cases : forall (y:Y), Z__case y -> X) (f F : X -> nat) :
+  (forall x, exists y (z : Z__case y), cases y z = x)
+  -> (forall y, (fun z => f (cases y z)) <=c (fun z => F (cases y z)))
+  -> f <=c F.
+Proof.
+  intros Hinj Hcase. exists (maxl (map (fun y => c__leUpToC (H:=Hcase y)) (elem Y))).
+  intros x. specialize (Hinj x) as (y&z&<-).
+  specialize @correct__leUpToC with (l:=Hcase y) as H'.
+  erewrite <- maxl_leq. now apply H'.
+  rewrite in_map_iff. do 2 eexists. easy. apply elem_spec.
+Qed.
+End bla.

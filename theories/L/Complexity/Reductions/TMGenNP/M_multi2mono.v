@@ -6,8 +6,6 @@ From Undecidability.L.Complexity  Require Import TMGenNP_fixed_mTM.
 From Undecidability.TM.Single Require EncodeTapes StepTM DecodeTapes.
 
 Unset Printing Coercions.
-From Coq.ssr Require ssrfun.
-Module Option := ssrfun.Option.
 
 From Coq Require Import Lia Ring Arith.
 
@@ -38,7 +36,7 @@ Module MultiToMono.
       intros H__multi.
       eapply Realise_monotone.
       {unfold M. TM_Correct.
-       -apply CheckTapeContains.Realises. now apply CheckEncodesTapes.Realises. exact _.
+       -apply CheckTapeContains.Realises. now apply CheckEncodesTapes.Realises. now apply tapes_encode_prefixInjective.
        -eapply ToSingleTape_Realise', Canonical_Realise.
       }  
       intros t (y,t'). cbn in *.
@@ -67,13 +65,13 @@ Module MultiToMono.
                                    StepTM.contains_tapes t[@Fin0] v
                                    -> T__multi v k__sim
                                      /\ Loop_steps (start (projT1 M__multi)) v k__sim <= k')
-                               /\ ((| right t[@Fin0] |)*4*(n+1) + n*16 + 27 + k') <= k .
+                               /\ (S (| right t[@Fin0] |)*4*(n+1) + n*16 + 27 + k') <= k .
     Lemma Terminates  : projT1 M__multi ↓ T__multi -> projT1 M ↓ Ter.
     Proof.
       intros H__multi.
       eapply TerminatesIn_monotone.
       {unfold M. TM_Correct.
-       -apply CheckTapeContains.Realises. now apply CheckEncodesTapes.Realises. exact _.
+       -apply CheckTapeContains.Realises. now apply CheckEncodesTapes.Realises. now apply tapes_encode_prefixInjective.
        -eapply CheckTapeContains.Terminates. now apply CheckEncodesTapes.Realises. apply CheckEncodesTapes.Terminates.
        -eapply ToSingleTape_Terminates'. eassumption.
       }  
@@ -93,7 +91,7 @@ Module MultiToMono.
       split. eassumption. eassumption.
       Unshelve. cbn - [plus mult]. rewrite CheckEncodesTapes.length_right_tape_move_right. cbn - [plus mult].
       ring_simplify.
-      transitivity ((| right t[@Fin0] |)*4*(n+1) + n*16 + 27 + k'). cbn - [plus mult].
+      transitivity (S (| right t[@Fin0] |)*4*(n+1) + n*16 + 27 + k'). cbn - [plus mult].
       abstract nia. exact Hk. 
     Qed.
   End multiToMono.
@@ -310,7 +308,7 @@ Section lemmas_for_LMGenNP_to_TMGenNP_mTM.
     contains_tapes t v -> contains_tapes t v' -> v = v'.
   Proof.
     unfold contains_tapes. intros -> [= eq]. apply app_inv_tail in eq. apply map_injective in eq. 2:congruence.
-    eassert (H':=encode_prefixInjective (t:=[]) (t':=[])). rewrite !app_nil_r in H'. apply H' in eq. easy.
+    eassert (H':=tapes_encode_prefixInjective (t:=[]) (t':=[])). rewrite !app_nil_r in H'. apply H' in eq. easy.
   Qed.
   
 End lemmas_for_LMGenNP_to_TMGenNP_mTM.

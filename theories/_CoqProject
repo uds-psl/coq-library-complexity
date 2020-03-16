@@ -181,18 +181,22 @@ TM/Code/ChangeAlphabet.v
 TM/Code/Copy.v
 TM/Code/CompareValue.v
 TM/Code/ProgrammingTools.v
+TM/Code/DecodeList.v
+TM/Code/DecodeBool.v
 
 # Cases and constructors
 TM/Code/CaseNat.v
 TM/Code/CaseSum.v
 TM/Code/CaseList.v
 TM/Code/CaseFin.v
+TM/Code/CaseBool.v
 TM/Code/CasePair.v
 
 # Programming case studies
 #TM/Code/SumTM.v
 TM/Code/NatTM.v
 TM/Code/ListTM.v
+TM/Code/ListTM_concat_repeat.v
 
 # Binary Numbers
 TM/Code/BinNumbers/EncodeBinNumbers.v
@@ -334,11 +338,13 @@ L/Complexity/ONotationIsAppropriate.v
 L/Complexity/RegisteredP.v
 L/Complexity/LinTimeDecodable.v
 L/Complexity/NP.v
-L/Complexity/Problems/GenNPBool.v
-L/Complexity/Problems/GenNP.v
-L/Complexity/Problems/GenNP_is_hard.v
-L/Complexity/Problems/TMGenNP_fixed_mTM.v
-L/Complexity/Problems/TMGenNP.v
+L/Complexity/Problems/GenNP/CanEnumTerm_def.v
+L/Complexity/Problems/GenNP/CanEnumTerm.v
+L/Complexity/Problems/GenNP/GenNPBool.v
+L/Complexity/Problems/GenNP/GenNP.v
+L/Complexity/Problems/GenNP/GenNP_is_hard.v
+L/Complexity/Problems/GenNP/TMGenNP_fixed_mTM.v
+L/Complexity/Problems/GenNP/TMGenNP.v
 L/Complexity/Reductions/TMGenNP/L_to_LM.v
 L/Complexity/Reductions/TMGenNP/LM_to_mTM.v
 L/Complexity/Reductions/TMGenNP/mTM_to_singleTapeTM.v

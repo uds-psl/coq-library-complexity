@@ -73,8 +73,10 @@ Tactic Notation "introsSwitch" ne_simple_intropattern_list(P):=
   end.
 
 Tactic Notation "destructBoth" constr(g) "as" simple_intropattern(P) :=
-  match goal with
-    |- (?REL _ ?R) =>
+  lazymatch goal with
+    |- (RealiseIn _ ?R _) =>
+    tacInEvar R (destruct g as P);destruct g as P;cbn zeta iota beta
+  | |- (?REL _ ?R) =>
     tacInEvar R (destruct g as P);destruct g as P;cbn zeta iota beta
   end.
 
@@ -100,3 +102,6 @@ Ltac length_not_eq :=
 
 Notation "pM @ ts" := (LiftTapes pM ts) (at level 41, only parsing).
 Notation "pM ⇑ R" := (ChangeAlphabet pM R) (at level 40, only parsing).
+
+From Coq.ssr Require ssrfun.
+Module Option := ssrfun.Option.
