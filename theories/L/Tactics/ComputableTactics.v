@@ -79,9 +79,9 @@ Ltac destructRefine :=
       let t := type of x in
       refine (_:R _ ((fun y:t => ltac:(destruct y)) x));
       (* refine index if applicable*)
-      lazymatch R with
-        (?R' ?i) => tryif is_evar i then
-          refine (_:R' ((fun (y:t) (*(_ : x=y)*) => ltac:(destruct y)) x )_ _)
+      lazymatch goal with
+        |- (?R' ?i ?s1 ?s2) => tryif is_evar i then
+          refine (_:R' ((fun (y:t) (*(_ : x=y)*) => ltac:(destruct y)) x ) s1 s2)
         else idtac
       | _ => idtac
       end;
