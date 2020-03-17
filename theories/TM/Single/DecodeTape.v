@@ -4,8 +4,6 @@ From Undecidability.TM Require Single.EncodeTapes Single.EncodeTapesInvariants .
 Require Import FunInd Lia Ring Arith Program.Wf.
 Import EncodeTapes EncodeTapesInvariants.
 
-From Coq.ssr Require ssrfun.
-Module Option := ssrfun.Option.
 
 Lemma tape_encode_injective sig (t t' : tape sig): encode_tape t = encode_tape t' -> t = t'.
 Proof.
@@ -23,9 +21,8 @@ Proof.
    +intros [= ->  Heq]. cbn. apply IHt in Heq as [= <- <- <-]. easy.
 Qed.
 
-Instance tape_encode_prefixInjective sig: Encode_prefixInjective (Encode_tape sig).
+Lemma tape_encode_prefixInjective sig: prefixInjective (Encode_tape sig).
 Proof.
-  econstructor.
   unfold encode;cbn.
   enough (H:(forall x x' : tape sig,
             | encode_tape x | <= | encode_tape x' | ->
@@ -368,7 +365,7 @@ Module CheckEncodesTape.
       f t = (b,t')
       -> Rel [|t|] (b,[|t'|]).
     Proof.
-      unfold f,Rel;cbn. destruct Option.bind eqn:Hcur.
+      unfold f,Rel;cbn. rewrite ContainsEncoding.legacy_iff. 2:now intros []. destruct Option.bind eqn:Hcur.
       2:{ intros [= <- <-];cbn;split. 2:now exists 0. intros ? ? ?. destruct x;cbn;eexists _,_;(split;[reflexivity| ]). all:intros ->;cbn in Hcur. all:now rewrite retract_g_adjoint in Hcur. }
       destruct t as [ | | | t__L s' t__R];cbn in *. 1-3:now inversion Hcur.
       apply retract_g_inv in Hcur as ->.

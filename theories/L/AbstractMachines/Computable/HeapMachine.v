@@ -70,10 +70,6 @@ Instance term_heapStep : computableTime' heapStep (fun '(T,V,H) _ => (heapStep_t
 Proof.
   Arguments put : simpl never.
   extract.
-
-  Unshelve.
-  5:{inv eq6. now Intern.extractCorrectCrush_new. }
-  {inv eq6. Intern.cstep. }
   {unfold heapStep_time. recRel_prettify2.
    all:cbn [length].
    all:try Lia.nia.

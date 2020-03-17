@@ -129,8 +129,16 @@ Ltac destruct_shelve e :=
 Ltac smpl_match_case_solve_RealiseIn :=
   eapply RealiseIn_monotone'; [ | shelve].
 
+(** This disables the automatic exploration of all possible branvhes in a switch machine. 
+It is useful if some branches do perform the same work to nos split the proof unless required.
+See [CaseBool] for an example. Usage with the tactical [destructBoth] allows to refine the relation when performing caseSplits *)
+Definition TM_Correct_noSwitchAuto := unit.
+Opaque TM_Correct_noSwitchAuto.
+Ltac TM_Correct_noSwitchAuto := let f := fresh "flag" in assert (f := (tt:TM_Correct_noSwitchAuto)).
+
 Ltac smpl_match_RealiseIn :=
   lazymatch goal with
+  | H : TM_Correct_noSwitchAuto |- _ => eapply Switch_RealiseIn with (R2:= fun x => _ );[TM_Correct| ]
   | [ |- Switch ?M1 ?M2 ⊨c(?k1) ?R] =>
     is_evar R;
     let tM2 := type of M2 in
@@ -150,6 +158,7 @@ Ltac smpl_match_RealiseIn :=
 
 Ltac smpl_match_Realise :=
   lazymatch goal with
+  | H : TM_Correct_noSwitchAuto |- _ => eapply Switch_Realise with (R2:= fun x => _ );[TM_Correct| ]
   | [ |- Switch ?M1 ?M2 ⊨ ?R] =>
     is_evar R;
     let tM2 := type of M2 in
@@ -168,6 +177,7 @@ Ltac smpl_match_Realise :=
 
 Ltac smpl_match_Terminates :=
   lazymatch goal with
+  | H : TM_Correct_noSwitchAuto |- _ => eapply Switch_TerminatesIn with (T2:= fun x => _ );[TM_Correct|TM_Correct | ]
   | [ |- projT1 (Switch ?M1 ?M2) ↓ ?R] =>
     is_evar R;
     let tM2 := type of M2 in

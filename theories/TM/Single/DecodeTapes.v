@@ -4,19 +4,17 @@ Require Import Lia Ring Arith Program.Wf.
 Import While Mono Multi Switch If Combinators EncodeTapes.
 
 Unset Printing Coercions.
-From Coq.ssr Require ssrfun.
-Module Option := ssrfun.Option.
 
-Instance tapes_encode_prefixInjective sig n: Encode_prefixInjective (Encode_tapes sig n).
+Lemma tapes_encode_prefixInjective sig n: prefixInjective (Encode_tapes sig n).
 Proof.
-  constructor. unfold Encode_tapes;cbn.
+  unfold Encode_tapes;cbn.
   induction n.
   {cbn. intros x x'. rewrite (destruct_vector_nil x),(destruct_vector_nil x'). reflexivity. }
   intros v v'. destruct (destruct_vector_cons v) as (x&xs&->). destruct (destruct_vector_cons v') as (x'&xs'&->). cbn.
   intros t t' [= Heq].
   unshelve erewrite ( _ : (fun x : sigTape sig => sigList_X x) = Retr_f) in Heq. 1:reflexivity.
   rewrite <- !app_assoc in Heq. 
-  specialize (map_retract_prefix_inj Heq) as (tmp&tmp'&Htmp). eapply (encode_prefixInjective (cX:=Encode_tape sig)) in Htmp as ->.
+  specialize (map_retract_prefix_inj Heq) as (tmp&tmp'&Htmp). eapply tape_encode_prefixInjective in Htmp as ->.
   eapply app_inv_head in Heq. now apply IHn in Heq as ->.
 Qed.
 
@@ -41,7 +39,7 @@ Module CheckEncodesTapes.
         match n with
           0   => inhabited (reflect (Option.bind Retr_g (current t) = Some sigList_nil) b) /\ t = t'
         | S n => (Option.bind Retr_g (current t) = Some sigList_cons
-                 /\ exists t1 b1, ContainsEncoding.Rel (Encode_tape sig) Retr_f [|tape_move_right t|] (b1,t1)
+                 /\ exists t1 b1, ContainsEncoding.Rel_legacy (Encode_tape sig) Retr_f [|tape_move_right t|] (b1,t1)
                             /\ if b1 then R_syntactic n (tape_move_right t1[@Fin0]) b t'
                               else t1[@Fin0]=t' /\ b = false)
                 \/ (Option.bind Retr_g (current t) <> Some sigList_cons /\ b = false /\ t=t')
@@ -64,7 +62,9 @@ Module CheckEncodesTapes.
        {rewrite H in Hf. subst b. now constructor. }
        destruct (Option.bind Retr_g (current t'[@Fin0])) as [ [] | ]. all:subst b;constructor. all:easy.
       -cbn. eapply Realise_monotone.
-       { TM_Correct. now apply CheckEncodesTape.Realises. eassumption. }
+       { TM_Correct. eapply Realise_monotone. now apply CheckEncodesTape.Realises.
+         intros ? ? H. setoid_rewrite ContainsEncoding.legacy_iff in H. exact H. intros x';now destruct x'.
+         eassumption. }
        hnf;cbn. intros t (b,t') [H|H]. 
        2:{ destruct H as (?&(?&Hb&->&->)&->&_&<-). right. split. 2:easy. intros H. rewrite H in Hb. easy. }
        destruct H as (?&(?&Hb&->&->)&_&tmp&Htmp&H). unfold tapes in tmp. destruct_vector. cbn in Htmp. subst h.
@@ -117,9 +117,10 @@ Module CheckEncodesTapes.
       R_syntactic n t b t'
       -> Rel n [|t|] (b,[|t'|]).
     Proof.
-      unfold Rel,ContainsEncoding.Rel. unfold encode,Encode_tapes,encode_tapes. cbn.
+      subst Rel. rewrite ContainsEncoding.legacy_iff. 2:now intros []. unfold ContainsEncoding.Rel_legacy .
+      unfold encode,Encode_tapes,encode_tapes. cbn.
       induction n in t |-*;cbn [R_syntactic].
-      {unfold Rel, ContainsEncoding.Rel. intros [[Hb] <-]. split. 2:now eexists 0. destruct Hb.
+      {unfold ContainsEncoding.Rel. intros [[Hb] <-]. split. 2:now eexists 0. destruct Hb.
        -destruct t;inv e. apply retract_g_inv in H0 as ->.
         eexists [||],_,_. cbn. split. now eexists _,[]. now eexists [],_.
        -intros ? v ?. rewrite (destruct_vector_nil v);cbn.
@@ -155,7 +156,7 @@ Module CheckEncodesTapes.
        intros H. assert (H':=H). change (fun x : sigTape sig => Retr_f  (sigList_X x)) with (Retr_f) in H'.
        eapply (f_equal (map _)) in H'. rewrite !map_app,!(surject_inject' _ NilBlank) in H'. 
        change (@encode_tape sig) with (encode (X:=tape sig)) in H'.
-       apply (encode_prefixInjective (X:=tape sig)) in H'. subst t0'.
+       apply (tape_encode_prefixInjective) in H'. subst t0'.
        apply app_inv_head in H as ->. 
        edestruct IHn as (?&?&?&Hneq). apply Hneq. cbn. rewrite H. cbn.
        f_equal.
