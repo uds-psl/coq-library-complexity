@@ -1,5 +1,5 @@
 From PslBase Require Import Base FinTypes. 
-From Undecidability Require Import L.Complexity.Cook.Prelim.
+From Undecidability Require Import L.Complexity.Cook.Prelim L.Functions.EqBool.
 From Undecidability.L.Complexity.Cook Require Export PR FlatFinTypes. 
 Require Import Lia.
 
@@ -474,8 +474,6 @@ Proof.
   cbn. unfold finRepr. specialize (Card_Fint (Sigma f)). easy.  
 Qed.
 
-
-
 (** *extraction *)
 
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
@@ -576,30 +574,30 @@ Section PRWin_of_size.
   Variable ( X : Type). 
   Context `{X_registered : registered X}.
 
-  Definition c__prwinOfSizeDec := 2 * (cnst_prem + 2 * c__nat_eqb2 + cnst_conc + 6 + c__length).
-  Definition PRWin_of_size_dec_time width (win : PRWin X) := c__prwinOfSizeDec * (1 + |prem win| + |conc win|) + nat_eqb_time (|prem win|) width + nat_eqb_time (|conc win|) width.
+  Definition c__prwinOfSizeDec := 2 * (cnst_prem + 2 * 5 + cnst_conc + 6 + c__length).
+  Definition PRWin_of_size_dec_time (width : nat) (win : PRWin X) := c__prwinOfSizeDec * (1 + |prem win| + |conc win|) + eqbTime (X := nat) (size (enc (|prem win|))) (size (enc width)) + eqbTime (X := nat) (size (enc (|conc win|))) (size (enc width)).
   Global Instance term_PRWin_of_size_dec : computableTime' (@PRWin_of_size_dec X) (fun width _ => (1, fun win _ => (PRWin_of_size_dec_time width win, tt))). 
   Proof. 
     extract. solverec. unfold PRWin_of_size_dec_time, c__prwinOfSizeDec. nia.  
   Defined. 
 
-  Definition c__prwinOfSizeDecBound := c__prwinOfSizeDec + c__nat_eqb. 
+  Definition c__prwinOfSizeDecBound := c__prwinOfSizeDec + c__eqbComp nat. 
   Lemma PRWin_of_size_dec_time_bound width (win : PRWin X) : PRWin_of_size_dec_time width win <= (size(enc win) + 1) * c__prwinOfSizeDecBound. 
   Proof. 
-    unfold PRWin_of_size_dec_time, nat_eqb_time. rewrite !Nat.le_min_l. rewrite !list_size_length.
+    unfold PRWin_of_size_dec_time. rewrite !eqbTime_le_l. rewrite !list_size_enc_length, !list_size_length. 
     rewrite PRWin_enc_size. unfold c__prwinOfSizeDecBound, c__sizePRWin. nia.
   Qed. 
 End PRWin_of_size. 
 
 (*extraction of FlatPR_wf_dec *)
-Definition c__FlatPRWfDec := 3 * c__leb2 + 4 * c__width + 3 * c__offset + 2 * c__nat_eqb2 + 2 * c__init + 2 * c__length + c__windows + 32 + 4 * c__leb + 2 * c__nat_eqb.
+Definition c__FlatPRWfDec := 3 * c__leb2 + 4 * c__width + 3 * c__offset + 2 * 5 + 2 * c__init + 2 * c__length + c__windows + 32 + 4 * c__leb + 2 * c__eqbComp nat * size (enc 0).
 Definition FlatPR_wf_dec_time x := 2 * c__length * (|init x|) + leb_time (width x) (|init x|) + forallb_time (@PRWin_of_size_dec_time nat (width x)) (windows x) + modulo_time (|init x|) (offset x) + modulo_time (width x) (offset x) + c__FlatPRWfDec.  
 
 Instance term_FlatPR_wf_dec : computableTime' FlatPR_wf_dec (fun fpr _ => (FlatPR_wf_dec_time fpr, tt)).
 Proof. 
-  extract. solverec. unfold FlatPR_wf_dec_time, c__FlatPRWfDec, nat_eqb_time, leb_time. 
+  extract. solverec. unfold FlatPR_wf_dec_time, c__FlatPRWfDec, leb_time. rewrite !eqbTime_le_r. 
   (*ring_simplify.*)
-  rewrite Nat.le_min_l. rewrite Nat.le_min_l. rewrite Nat.le_min_r. setoid_rewrite Nat.le_min_r at 2. 
+  rewrite Nat.le_min_l. rewrite Nat.le_min_l. 
   (*nia. *)
   leq_crossout.
 Defined.

@@ -3,7 +3,14 @@ From Undecidability.L.TM Require Import TMflatEnc TMflat TMEncoding.
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Complexity Require Import PolyBounds. 
 From Undecidability.L.Datatypes Require Import LProd LOptions LBool LSum LLNat LLists. 
+From Undecidability.L.Functions Require Import EqBool.
 From Undecidability.L.Complexity.Cook Require Import Prelim GenNP_PR FlatTPR FlatFinTypes FlatFinTypes_extraction. 
+
+Definition test := fun fg : bool => let a := eqb (X := nat) 5 5 in if a then true else false. 
+Instance term_test : computableTime' test (fun p _ => (1, tt)).
+Proof. 
+  unfold test. 
+  extract. 
 
 
 Fact None_ofFlatType n : ofFlatType (flatOption n) flatNone . 
@@ -1524,10 +1531,11 @@ Proof.
   easy.
 Defined. 
 
-Instance term_inp_eqb : computableTime' inp_eqb (fun a _ => (5, fun b _ => (@EqBool.eqbTime _ _ _ _ eqbComp_inp (size (enc a)) (size (enc b)), tt))). 
-Proof. 
-  extract. solverec. 
-Defined. 
+(*Instance term_inp_eqb : computableTime' inp_eqb (fun a _ => (5, fun b _ => (@EqBool.eqbTime _ _ _ _ eqbComp_inp (size (enc a)) (size (enc b)), tt))). *)
+(*Proof. *)
+  (*extract. solverec. *)
+  (*Set Printing All. unfold eqb. solverec.  *)
+(*Defined. *)
  
 (** generateWindowsForFlatNonHalt *)
 From Undecidability.L.Functions Require Import FinTypeLookup EqBool.
@@ -2259,76 +2267,337 @@ Proof.
   extract. unfold c__implb.  solverec. 
 Qed.
 
-(** allSameEntry *)
-Definition allSameEntry_step (x y : nat) (p : nat * nat) := let (x', y') := p in implb (eqb x x') (eqb y y'). 
-
-Definition c__allSameEntryStep := 2 * c__nat_eqb2 + c__implb + 6.
-Definition allSameEntry_step_time (x y : nat) (p : nat * nat) := let (x', y') := p in nat_eqb_time x x' + nat_eqb_time y y' + c__allSameEntryStep.
-Instance term_allSameEntry_step : computableTime' allSameEntry_step (fun x _ => (1, fun y _ => (1, fun p _ => (allSameEntry_step_time x y p, tt)))). 
-Proof. 
-  extract. solverec. 
-  unfold c__allSameEntryStep; lia. 
-Qed.
-
-Definition c__allSameEntry := 4.
-Definition allSameEntry_time (a b : nat) (l :  list (nat * nat)) := forallb_time (allSameEntry_step_time a b) l + c__allSameEntry.
-Instance term_allSameEntry : computableTime' (@allSameEntry nat nat _ _ _ _) (fun a _ => (1, fun b _ => (1, fun l _ => (allSameEntry_time a b l, tt)))). 
-Proof. 
-  apply computableTimeExt with (x := fun (x y : nat) (l : list (nat * nat)) => forallb (allSameEntry_step x y) l). 
-  { easy. }
-  extract. solverec. 
-  unfold allSameEntry_time, c__allSameEntry. lia.  
-Qed.
-
 Lemma forallb_time_exp (X : Type) (f : X -> nat) l: forallb_time f l = sumn (map (fun x => f x + c__forallb) l) + c__forallb. 
 Proof. 
   unfold forallb_time; induction l; cbn; [lia | ].
   rewrite IHl. easy.
 Qed. 
 
-Definition poly__allSameEntry n := c__nat_eqb * n + n * (c__allSameEntryStep + c__forallb + c__allSameEntry).
-Lemma allSameEntry_time_bound a b l: allSameEntry_time a b l <= poly__allSameEntry (size (enc l)). 
-Proof. 
-  unfold allSameEntry_time. rewrite forallb_time_exp. unfold allSameEntry_step_time. 
-  induction l; cbn -[poly__allSameEntry Nat.mul Nat.add]. 
-  - unfold poly__allSameEntry. rewrite size_list; cbn -[Nat.add Nat.mul]. unfold c__listsizeNil. leq_crossout. 
-  - destruct a0 as (a' & b'). rewrite !nat_eqb_time_bound_r. 
-    match goal with [ |- ?a + sumn ?b + ?c + ?d <= _] => replace (a + sumn b + c + d) with (a + (sumn b + c + d)) by lia end. 
-    rewrite IHl. 
-    unfold poly__allSameEntry.  
-    rewrite list_size_cons, size_prod; cbn -[Nat.add Nat.mul]. leq_crossout.  
-Qed. 
-Lemma allSameEntry_poly : monotonic poly__allSameEntry /\ inOPoly poly__allSameEntry. 
-Proof. 
-  unfold poly__allSameEntry; split; smpl_inO. 
-Qed.
+Section fixEqBoolT. 
+  Variable (X Y : Type). 
+  Context `{registered X}. 
+  Variable (eqbX : X -> X -> bool). 
+  Context {Hx :eqbClass eqbX}.
+  Context `{eqbCompT X}. 
 
-(** isInjFinfuncTable *)
-Definition c__isInjFinfuncTable := 21. 
-Fixpoint isInjFinfuncTable_time (l : list (nat * nat)) := 
-  match l with 
-  | [] => 0
-  | ((x, y) :: l) => allSameEntry_time x y l + isInjFinfuncTable_time l
-  end + c__isInjFinfuncTable. 
-Instance term_isInjFinfuncTable : computableTime' (@isInjFinfuncTable nat nat _ _ _ _) (fun l _ => (isInjFinfuncTable_time l, tt)). 
-Proof. 
-  extract. solverec. all: unfold c__isInjFinfuncTable; solverec. 
-Qed.
+  Lemma eqb_time_bound_r a b : eqbTime (X := X) a b <= b * c__eqbComp X. 
+  Proof. 
+    unfold eqbTime. rewrite Nat.le_min_r. lia. 
+  Qed.
+End fixEqBoolT. 
+
+Section fixIsInjFinfuncTable. 
+  Variable (X Y : Type). 
+  Context `{registered X}. 
+  Context `{registered Y}. 
+  Variable (eqbX : X -> X -> bool). 
+  Variable (eqbY : Y -> Y -> bool). 
+  Context {Hx :eqbClass eqbX}.
+  Context {Hy: eqbClass eqbY}. 
+  Context `{eqbCompT X}. 
+  Context `{eqbCompT Y}. 
+
+  (** allSameEntry *)
+  Definition allSameEntry_step (x : X) (y : Y) (p : X * Y) := let (x', y') := p in implb (eqb x x') (eqb y y'). 
+
+  Definition c__allSameEntryStep := c__implb + 16.
+  Definition allSameEntry_step_time (x : X) (y : Y) (p : X * Y) := let (x', y') := p in eqbTime (X := X) (size (enc x)) (size (enc x')) + eqbTime (X := Y) (size (enc y)) (size (enc y')) + c__allSameEntryStep.
+  Global Instance term_allSameEntry_step : computableTime' allSameEntry_step (fun x _ => (1, fun y _ => (1, fun p _ => (allSameEntry_step_time x y p, tt)))). 
+  Proof. 
+    extract. solverec. 
+    unfold c__allSameEntryStep. Set Printing All. unfold eqb. nia. 
+  Qed.
+
+  Definition c__allSameEntry := 4.
+  Definition allSameEntry_time (a : X) (b : Y) (l :  list (X * Y)) := forallb_time (allSameEntry_step_time a b) l + c__allSameEntry.
+  Global Instance term_allSameEntry : computableTime' (@allSameEntry X Y _ _ _ _) (fun a _ => (1, fun b _ => (1, fun l _ => (allSameEntry_time a b l, tt)))). 
+  Proof. 
+    apply computableTimeExt with (x := fun (x : X) (y : Y) (l : list (X * Y)) => forallb (allSameEntry_step x y) l). 
+    { easy. }
+    extract. solverec. 
+    unfold allSameEntry_time, c__allSameEntry. lia.  
+  Qed.
+
+  Definition poly__allSameEntry n := (c__eqbComp X + c__eqbComp Y) * n + n * (c__allSameEntryStep + c__forallb + c__allSameEntry).
+  Lemma allSameEntry_time_bound a b l: allSameEntry_time a b l <= poly__allSameEntry (size (enc l)). 
+  Proof. 
+    unfold allSameEntry_time. rewrite forallb_time_exp. unfold allSameEntry_step_time. 
+    induction l; cbn -[poly__allSameEntry Nat.mul Nat.add]. 
+    - unfold poly__allSameEntry. rewrite size_list; cbn -[Nat.add Nat.mul]. unfold c__listsizeNil. leq_crossout. 
+    - destruct a0 as (a' & b'). rewrite !eqb_time_bound_r. 
+      match goal with [ |- ?a + sumn ?b + ?c + ?d <= _] => replace (a + sumn b + c + d) with (a + (sumn b + c + d)) by lia end. 
+      rewrite IHl. 
+      unfold poly__allSameEntry.  
+      rewrite list_size_cons, size_prod; cbn -[Nat.add Nat.mul]. nia.  
+  Qed. 
+  Lemma allSameEntry_poly : monotonic poly__allSameEntry /\ inOPoly poly__allSameEntry. 
+  Proof. 
+    unfold poly__allSameEntry; split; smpl_inO. 
+  Qed.
+
+  (** isInjFinfuncTable *)
+  Definition c__isInjFinfuncTable := 21. 
+  Fixpoint isInjFinfuncTable_time (l : list (X * Y)) := 
+    match l with 
+    | [] => 0
+    | ((x, y) :: l) => allSameEntry_time x y l + isInjFinfuncTable_time l
+    end + c__isInjFinfuncTable. 
+  Global Instance term_isInjFinfuncTable : computableTime' (@isInjFinfuncTable X Y _ _ _ _) (fun l _ => (isInjFinfuncTable_time l, tt)). 
+  Proof. 
+    extract. solverec. all: unfold c__isInjFinfuncTable; solverec. 
+  Qed.
+
+  Definition poly__isInjFinfuncTable n := n * (poly__allSameEntry n + c__isInjFinfuncTable).
+  Lemma isInjFinfuncTable_time_bound l : isInjFinfuncTable_time l <= poly__isInjFinfuncTable (size (enc l)). 
+  Proof. 
+    unfold isInjFinfuncTable_time. induction l. 
+    - unfold poly__isInjFinfuncTable. rewrite size_list; cbn -[Nat.add]. unfold c__listsizeNil; nia.
+    - destruct a. rewrite IHl. 
+      rewrite allSameEntry_time_bound. 
+      unfold poly__isInjFinfuncTable. 
+      poly_mono allSameEntry_poly. 2: { instantiate (1 := size (enc ((x, y) :: l))). rewrite list_size_cons. nia. }
+      rewrite list_size_cons. unfold c__listsizeCons. leq_crossout.       
+  Qed.
+  Lemma isInjFinfuncTable_poly : monotonic poly__isInjFinfuncTable /\ inOPoly poly__isInjFinfuncTable. 
+  Proof. 
+    unfold poly__isInjFinfuncTable; split; smpl_inO; apply allSameEntry_poly. 
+  Qed.
+End fixIsInjFinfuncTable.
 
 (** isBoundTransTable *)
-Definition c__isBoundTransTable := 1. 
-Definition isBoundTransTable_time (sig n states : nat) (l : list (nat * list (option nat) * (nat * list (option nat * TM.move)))) := 1.
+(* we first factorise isBoundTransTable into smaller extractable parts *)
+Definition optBound (n : nat) (k : option nat) := 
+  match k with 
+  | Some k => k <? n 
+  | None => true 
+  end. 
 
-Print computes. 
+Definition fst_optBound (n : nat) (k : option nat * TM.move) := optBound n (fst k). 
 
-(** isValidFlatTrans
+Definition isBoundTrans (sig n states : nat) (t : nat * list (option nat) * (nat * list (option nat * TM.move))) := 
+  let '(s, v, (s', v')) := t in 
+    (s <? states) && (| v | =? n) &&
+    forallb (optBound sig) v && (s' <? states) && (| v' | =? n) &&
+    forallb (fst_optBound sig) v'.
+
+Definition isBoundTransTable' (sig n states : nat) (l : list (nat * list (option nat) * (nat * list (option nat * TM.move)))) := forallb (isBoundTrans sig n states) l.
+
+Definition c__ltb := c__leb2 + 4.
+Definition ltb_time (a b : nat) := leb_time (S a) b + c__ltb. 
+Instance term_ltb : computableTime' Nat.ltb (fun a _ => (1, fun b _ => (ltb_time a b, tt))). 
+Proof. 
+  extract. recRel_prettify2. 
+  - lia. 
+  - unfold ltb_time, c__ltb, flatSome. solverec. 
+Qed.
+
+Definition c__optBound := 6.
+Definition optBound_time (n : nat) (k : option nat) := 
+  match k with 
+  | Some k => ltb_time k n 
+  | None => 0 
+  end + c__optBound.
+Instance term_optBound : computableTime' optBound (fun n _ => (1, fun k _ => (optBound_time n k, tt))). 
+Proof. 
+  extract. solverec. 
+  all: unfold optBound_time, c__optBound; solverec. 
+Qed.
+
+Definition poly__optBound n := c__leb * (1 + n) + c__ltb + c__optBound.
+Lemma optBound_time_bound k n: optBound_time k n <= poly__optBound (size (enc k)). 
+Proof. 
+  unfold optBound_time. destruct n. 
+  - unfold ltb_time, leb_time. rewrite Nat.le_min_r. 
+    rewrite size_nat_enc_r with (n := k) at 1. unfold poly__optBound. nia. 
+  - unfold poly__optBound. nia. 
+Qed.
+Lemma optBound_poly : monotonic poly__optBound /\ inOPoly poly__optBound.
+Proof. 
+  unfold poly__optBound; split; smpl_inO. 
+Qed.
+
+Definition c__fstOptBound := 7. 
+Definition fst_optBound_time (n : nat) (k : option nat * TM.move) := optBound_time n (fst k) + c__fstOptBound.
+Instance term_fst_optBound : computableTime' fst_optBound (fun n _ => (1, fun k _ => (fst_optBound_time n k, tt))). 
+Proof. 
+  extract. solverec. 
+  unfold fst_optBound_time, c__fstOptBound; solverec. 
+Qed.
+
+Definition c__isBoundTrans := 2* c__length + 2 * c__nat_eqb2 + 44. 
+Definition isBoundTrans_time (sig n states : nat) (t : nat * list (option nat) * (nat * list (option nat * TM.move))) :=
+  let '(s, v, (s', v')) := t in 
+  ltb_time s states + c__length * (|v|) + c__length * (|v'|) + nat_eqb_time (|v|) n + forallb_time (optBound_time sig) v + ltb_time s' states + nat_eqb_time (|v'|) n + forallb_time (fst_optBound_time sig) v' + c__isBoundTrans. 
+Instance term_isBoundTrans : computableTime' isBoundTrans (fun sig _ => (1, fun n _ => (1, fun states _ => (1, fun t _ => (isBoundTrans_time sig n states t, tt))))). 
+Proof. 
+  extract. solverec. 
+  unfold c__isBoundTrans. nia. 
+Qed.
+
+Lemma ltb_time_bound_l a b : ltb_time a b <= size (enc a) * c__leb + c__ltb. 
+Proof. 
+  unfold ltb_time, leb_time. rewrite Nat.le_min_l. 
+  rewrite size_nat_enc. unfold c__natsizeO, c__leb, c__natsizeS. nia. 
+Qed.
+
+Definition poly__isBoundTrans n := 
+  n * (2 * c__leb + 2 * c__length + 2 * c__nat_eqb + 2 * c__forallb + c__fstOptBound) + 2 * c__forallb + 2 * c__ltb + 2 * c__nat_eqb + 2 * n * poly__optBound n + c__isBoundTrans.
+Lemma isBoundTrans_time_bound sig n states t : isBoundTrans_time sig n states t <= poly__isBoundTrans (size (enc t) + size (enc sig)). 
+Proof. 
+  unfold isBoundTrans_time. destruct t as ((s & v) & (s' & v')). 
+  rewrite !nat_eqb_time_bound_l. rewrite !ltb_time_bound_l. 
+  rewrite !list_size_enc_length. rewrite !list_size_length. 
+  rewrite forallb_time_exp.
+  rewrite sumn_map_mono. 2: {instantiate (1 := fun _ => _).  intros x _. cbn. rewrite optBound_time_bound. reflexivity. }
+  rewrite sumn_map_const. 
+  
+  rewrite forallb_time_exp.
+  rewrite sumn_map_mono. 2: {instantiate (1 := fun _ => _).  intros x _. cbn. unfold fst_optBound_time. rewrite optBound_time_bound. reflexivity. }
+  rewrite sumn_map_const. 
+  rewrite !list_size_length. 
+  poly_mono optBound_poly. 
+  2: { instantiate (1 := size (enc (s, v, (s', v'))) + size (enc sig)). lia. }
+   
+  replace_le (size (enc s)) with (size (enc (s, v, (s', v')))) by (rewrite !size_prod; cbn; lia ).
+  replace_le (size (enc v)) with (size (enc (s, v, (s', v')))) by (rewrite !size_prod; cbn; lia ). 
+  replace_le (size (enc v')) with (size (enc (s, v, (s', v')))) by (rewrite !size_prod; cbn; lia). 
+  replace_le (size (enc s')) with (size (enc (s, v, (s', v')))) by (rewrite !size_prod; cbn; lia). 
+  generalize (size (enc (s, v, (s', v')))). intros n'. 
+  unfold poly__isBoundTrans. nia. 
+Qed.
+Lemma isBoundTrans_poly : monotonic poly__isBoundTrans /\ inOPoly poly__isBoundTrans. 
+Proof. 
+  unfold poly__isBoundTrans; split; smpl_inO; apply optBound_poly.  
+Qed.
+
+Definition c__isBoundTransTable := 5. 
+Definition isBoundTransTable_time (sig n states : nat) (l : list (nat * list (option nat) * (nat * list (option nat * TM.move)))) :=
+  forallb_time (isBoundTrans_time sig n states) l + c__isBoundTransTable. 
+Instance term_isBoundTransTable : computableTime' isBoundTransTable (fun sig _ => (1, fun n _ => (1, fun states _ => (1, fun l _ => (isBoundTransTable_time sig n states l, tt))))). 
+Proof. 
+  eapply computableTimeExt with (x := isBoundTransTable').  
+  { easy. }
+  extract. solverec. unfold isBoundTransTable_time, c__isBoundTransTable; solverec. 
+Qed.
+  
+Definition poly__isBoundTransTable n := n * poly__isBoundTrans n + (c__forallb + c__isBoundTransTable) * n.
+Lemma isBoundTransTable_time_bound sig n states l : isBoundTransTable_time sig n states l <= poly__isBoundTransTable (size (enc l) + size (enc sig)). 
+Proof. 
+  unfold isBoundTransTable_time. 
+  rewrite forallb_time_exp. induction l.  
+  - cbn -[Nat.add Nat.mul]. unfold poly__isBoundTransTable. rewrite size_list. cbn- [Nat.add Nat.mul]. unfold c__listsizeNil. nia. 
+  - cbn -[Nat.add Nat.mul]. 
+    match goal with [ |- ?a + ?b + ?c + ?d + ?e <= _] => replace (a + b + c + d + e) with (a + b + (c + d + e)) by lia end. rewrite IHl. 
+    rewrite isBoundTrans_time_bound. 
+    unfold poly__isBoundTransTable.   
+    poly_mono isBoundTrans_poly. 2: { instantiate (1 := size (enc (a :: l)) + size (enc sig)). rewrite list_size_cons. lia. } 
+    poly_mono isBoundTrans_poly at 2. 2: { instantiate (1 := size (enc (a :: l)) + size (enc sig)). rewrite list_size_cons. lia. }
+    rewrite list_size_cons at 3 5. 
+    unfold c__listsizeCons. 
+    leq_crossout. 
+Qed.
+Lemma isBoundTransTable_poly : monotonic poly__isBoundTransTable /\ inOPoly poly__isBoundTransTable. 
+Proof. 
+  unfold poly__isBoundTransTable; split; smpl_inO; apply isBoundTrans_poly. 
+Qed.
+
+(** isValidFlatTrans *)
+Definition c__isValidFlatTrans := 9. 
+Definition isValidFlatTrans_time (sig n states : nat) (l : list (nat * list (option nat) * (nat * list (option nat * TM.move)))) := isInjFinfuncTable_time l + isBoundTransTable_time sig n states l + c__isValidFlatTrans.  
+Instance term_isValidFlatTrans : computableTime' isValidFlatTrans (fun sig _ => (1, fun n _ => (1, fun states _ => (1, fun l _ => (isValidFlatTrans_time sig n states l, tt))))). 
+Proof. 
+  unfold isValidFlatTrans. 
+  apply computableTimeExt with (x := (fun (sig n states : nat) (f : list
+            (nat * list (option nat) * (nat * list (option nat * TM.move))))
+   => isInjFinfuncTable f && isBoundTransTable sig n states f)). 
+  1: easy.
+  extract. solverec. unfold isValidFlatTrans_time, c__isValidFlatTrans. solverec. 
+Qed.
+
+Definition poly__isValidFlatTrans n := poly__isInjFinfuncTable (X := nat * list (option nat)) (Y := nat * list (option nat * TM.move)) n + poly__isBoundTransTable n + c__isValidFlatTrans. 
+Lemma isValidFlatTrans_time_bound sig n states l : isValidFlatTrans_time sig n states l <= poly__isValidFlatTrans (size (enc l) + size (enc sig)). 
+Proof. 
+  unfold isValidFlatTrans_time. 
+  rewrite isInjFinfuncTable_time_bound. 
+  rewrite isBoundTransTable_time_bound. 
+  poly_mono (isInjFinfuncTable_poly (X := nat * list (option nat)) (Y := nat * list (option nat * TM.move))). 
+  2: { instantiate (1 := size (enc l) + size (enc sig)). lia. }
+  unfold poly__isValidFlatTrans. lia. 
+Qed.
+Lemma isValidFlatTrans_poly : monotonic poly__isValidFlatTrans /\ inOPoly poly__isValidFlatTrans. 
+Proof. 
+  unfold poly__isValidFlatTrans; split; smpl_inO. 
+  all: first [apply isInjFinfuncTable_poly | apply isBoundTransTable_poly ]. 
+Qed.
 
 (** isValidFlatTM *)
-Definition isValidFlatTM_time (tm : TM) := 1. 
+Definition c__isValidFlatTM := 64. 
+Definition isValidFlatTM_time (tm : TM) := isValidFlatTrans_time (sig tm) (tapes tm) (states tm) (trans tm) + ltb_time (start tm) (states tm) + c__isValidFlatTM.
 Instance term_isValidFlatTM : computableTime' isValidFlatTM (fun tm _ => (isValidFlatTM_time tm, tt)). 
+Proof. 
+  extract. solverec. 
+  unfold isValidFlatTM_time, c__isValidFlatTM. solverec. 
+Qed.
+
+Definition poly__isValidFlatTM n := poly__isValidFlatTrans n + n * c__leb + c__ltb + c__isValidFlatTM.
+Lemma isValidFlatTM_time_bound tm : isValidFlatTM_time tm <= poly__isValidFlatTM (size (enc tm)). 
+Proof. 
+  unfold isValidFlatTM_time. rewrite isValidFlatTrans_time_bound. 
+  rewrite ltb_time_bound_l. 
+  poly_mono isValidFlatTrans_poly. 
+  2: { instantiate (1 := size (enc tm)). rewrite size_TM. destruct tm. cbn. lia. }
+  replace_le (size (enc (start tm))) with (size (enc tm)) by (rewrite size_TM; destruct tm; cbn ;lia). 
+  unfold poly__isValidFlatTM. lia.  
+Qed.
+Lemma isValidFlatTM_poly : monotonic poly__isValidFlatTM /\ inOPoly poly__isValidFlatTM. 
+Proof. 
+  unfold poly__isValidFlatTM; split; smpl_inO; apply isValidFlatTrans_poly. 
+Qed.
+
+(** list_ofFlatType_dec *)
+Definition c__listOfFlatTypeDec := 3.
+Definition list_ofFlatType_dec_time (n : nat) (l : list nat) := forallb_time (FlatPR.ofFlatType_dec_time n) l + c__listOfFlatTypeDec.
+Instance term_list_ofFlatType_dec : computableTime' list_ofFlatType_dec (fun n _ => (1, fun l _ => (list_ofFlatType_dec_time n l, tt))). 
+Proof. 
+  extract. solverec. 
+  unfold list_ofFlatType_dec_time, c__listOfFlatTypeDec. solverec. 
+Qed.
+
+Definition poly__listOfFlatTypeDec n := n * (FlatPR.poly__ofFlatTypeDec n + c__forallb) + c__forallb + c__listOfFlatTypeDec.
+Lemma list_ofFlatType_dec_time_bound n l : list_ofFlatType_dec_time n l <= poly__listOfFlatTypeDec (size (enc n) + size (enc l)). 
+Proof. 
+  unfold list_ofFlatType_dec_time. rewrite forallb_time_exp. 
+  rewrite sumn_map_mono. 
+  2: { intros k _. instantiate (1 := fun _ => _). cbn -[Nat.add Nat.mul]. 
+       rewrite FlatPR.ofFlatType_dec_time_bound. reflexivity. 
+  } 
+  rewrite sumn_map_const. 
+  rewrite list_size_length. 
+  poly_mono FlatPR.ofFlatType_dec_poly. 
+  2: { instantiate (1 := size (enc n) + size (enc l)). lia. }
+  unfold poly__listOfFlatTypeDec. nia. 
+Qed.
+Lemma list_ofFlatType_dec_poly : monotonic poly__listOfFlatTypeDec /\ inOPoly poly__listOfFlatTypeDec. 
+Proof. 
+  unfold poly__listOfFlatTypeDec; split; smpl_inO; apply FlatPR.ofFlatType_dec_poly. 
+Qed.
 
 (** reduction *)
+
+Definition test := fun fg : bool => let a := Bool.eqb true false in if a then true else false. 
+Instance term_test : computableTime' test (fun p _ => (1, tt)).
+Proof. 
+  extract. 
+Definition test := fun fg : TM * list nat * nat * nat => let a := Bool.eqb true false in if a then true else false. 
+Instance term_test : computableTime' test (fun p _ => (1, tt)).
+Proof. 
+  extract. 
+
 Definition reduction_time (t k' : nat) (tm : TM) (fixed : list nat) := 1. 
 Instance term_reduction : computableTime' reduction (fun p _ => (let '(tm, fixed, t, k') := p in reduction_time t k' tm fixed, tt)). 
 Proof. 
   extract. 
+  trivial_no  
+  term_isValidFlatTM  
+solverec. 
+

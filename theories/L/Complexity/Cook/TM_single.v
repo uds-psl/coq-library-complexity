@@ -61,7 +61,7 @@ Section TM_single.
   Definition configState c := match c with (q, _) => q end. 
   Definition sstepRel s s' := halt (configState s) = false /\ sstep strans s = s'.
 
-  Notation "s '≻' s'" := (halt (configState s) = false /\ sstep strans s = s') (at level 50).
+  Notation "s '≻' s'" := (sstepRel s s') (at level 50).
   Notation "s '≻(' k ')' s'" := (relpower sstepRel k s s') (at level 40). 
 
   (** this is similar to what loopM does*)

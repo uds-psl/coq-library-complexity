@@ -3,6 +3,7 @@ From Undecidability.L.Complexity Require Export NP ONotation.
 From Undecidability.L.Tactics Require Import LTactics.
 From Undecidability.L.Complexity Require Import MorePrelim.
 From Undecidability.L Require Export Datatypes.LLists Datatypes.LLNat.
+From Undecidability.L.Functions Require Import EqBool. 
 
 Lemma list_el_size_bound {X : Type} `{registered X} (l : list X) (a : X) :
   a el l -> size(enc a) <= size(enc l). 
@@ -121,16 +122,6 @@ Qed.
 Lemma leb_time_bound_r a b : leb_time a b <= (size(enc b) + 1) * c__leb. 
 Proof. 
   unfold leb_time. rewrite Nat.le_min_r. rewrite size_nat_enc_r with (n:= b) at 1. lia. 
-Qed. 
-
-Lemma nat_eqb_time_bound_l a b : nat_eqb_time a b <= (size (enc a) + 1) * c__nat_eqb. 
-Proof. 
-  unfold nat_eqb_time. rewrite Nat.le_min_l. rewrite size_nat_enc_r with (n := a) at 1. lia. 
-Qed. 
-
-Lemma nat_eqb_time_bound_r a b : nat_eqb_time a b <= (size (enc b) + 1) * c__nat_eqb. 
-Proof. 
-  unfold nat_eqb_time. rewrite Nat.le_min_r. rewrite size_nat_enc_r with (n := b) at 1. lia. 
 Qed. 
 
 Section fixX.
@@ -277,6 +268,3 @@ Section fixXY.
       nia.
   Qed. 
 End fixXY.
-
-
-

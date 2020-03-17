@@ -5,6 +5,7 @@ From Undecidability.L.Datatypes Require Import LLists.
 
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import  LProd LOptions LBool LLNat LLists LUnit.
+From Undecidability.L.Functions Require Import EqBool. 
 From Undecidability.L.Complexity Require Import PolyBounds. 
 
 (*Conjunctive normal forms (need not be canonical)*)
@@ -12,7 +13,6 @@ Notation var := (nat) (only parsing).
 Notation literal := ((bool * var)%type) (only parsing).
 Notation clause := (list literal) (only parsing). 
 Notation cnf := (list clause) (only parsing).
-
 
 (*Assignments as lists of natural numbers: contain the indices of variables that are mapped to true *)
 Notation assgn := (list nat). 
@@ -518,33 +518,32 @@ Qed.
 
 (** extraction of evalVar *)
 Definition c__evalVar := 7. 
-Definition evalVar_time a (v : var) := list_in_decb_time (fun x y => c__nat_eqb2 + nat_eqb_time x y) a v + c__evalVar.
+Definition evalVar_time a (v : var) := list_in_decb_time (fun x y => 5 + eqbTime (X := nat) (size (enc x)) (size (enc y))) a v + c__evalVar.
 Instance term_evalVar : computableTime' evalVar (fun a _ => (1, fun v _ => (evalVar_time a v, tt))). 
 Proof. 
   extract. solverec. unfold evalVar_time, c__evalVar; solverec. 
 Defined. 
 
-Definition c__evalVarBound := c__nat_eqb2 + c__list_in_decb. 
-Definition poly__evalVar n := (n + 1) * (c__evalVarBound + (n + size(enc tt)+ 1) * c__nat_eqb) + c__evalVar.
+Definition poly__evalVar n := (n + 1) * (c__list_in_decb + 5 + (n + size(enc tt)+ 1) * c__eqbComp nat) + c__evalVar.
 Lemma evalVar_time_bound a v : evalVar_time a v <= poly__evalVar (size (enc a) + size (enc v)). 
 Proof. 
   unfold evalVar_time. 
-  change (fun x y => c__nat_eqb2 + nat_eqb_time x y) with ((fun z x y => c__nat_eqb2 + nat_eqb_time x y) tt). 
+  change (fun x y => 5 + eqbTime (X := nat) (size (enc x)) (size (enc y))) with ((fun z (x y : nat) => 5 + eqbTime (X := nat) (size (enc x)) (size (enc y))) tt). 
   rewrite list_in_decb_time_bound_env. 
   2: { 
     split. 
-    - intros. rewrite nat_eqb_time_bound_l. replace_le (size (enc a0)) with (size (enc a0) + size (enc b) + size (enc y)) by nia at 1. instantiate (2 := fun n => c__nat_eqb2 + (n + 1) * c__nat_eqb).
+    - intros. rewrite eqbTime_le_l. replace_le (size (enc a0)) with (size (enc a0) + size (enc b) + size (enc y)) by nia at 1. 
+      instantiate (2 := fun n => 5 + (n + 1) * c__eqbComp nat).
       cbn -[Nat.add]. instantiate (1 := registered_unit_enc). nia. 
     - smpl_inO. 
   } 
-  rewrite list_size_length. unfold poly__evalVar, c__evalVarBound. nia. 
+  rewrite list_size_length. unfold poly__evalVar. nia. 
 Qed. 
 
 Lemma evalVar_poly : monotonic poly__evalVar /\ inOPoly poly__evalVar. 
 Proof. 
   split; unfold poly__evalVar; smpl_inO. 
 Qed. 
-
 
 Definition c__eqbBool := 7.
 Instance term_bool_eqb : computableTime' Bool.eqb (fun _ _ => (1, fun _ _ => (c__eqbBool, tt))). 
@@ -733,7 +732,7 @@ Qed.
 
 (*assignment_small_decb *)
 Definition c__assignmentSmallDecb := 17.
-Definition assignment_small_decb_time (cn : cnf) a := varsOfCnf_time cn + list_incl_decb_time (fun x y => c__nat_eqb2 + nat_eqb_time x y) a (varsOfCnf cn) + dupfreeb_time (fun x y => c__nat_eqb2 + nat_eqb_time x y) a + c__assignmentSmallDecb.
+Definition assignment_small_decb_time (cn : cnf) a := varsOfCnf_time cn + list_incl_decb_time (fun (x y : nat) => 5 + eqbTime (X := nat) (size (enc x)) (size (enc y))) a (varsOfCnf cn) + dupfreeb_time (fun x y => 5 + eqbTime (X := nat) (size (enc x)) (size (enc y)) ) a + c__assignmentSmallDecb.
 Instance term_assignment_small_decb : computableTime' assignment_small_decb (fun cn _ => (1, fun a _ => (assignment_small_decb_time cn a, tt))). 
 Proof. 
   extract. solverec. unfold assignment_small_decb_time, c__assignmentSmallDecb. solverec. 
@@ -741,17 +740,17 @@ Defined.
 
 (*we first bound the components separately *)
 Definition c__assignmentSmallDecbBound1 := (1 + c__listsizeCons + c__listsizeNil).
-Definition c__assignmentSmallDecbBound2 := c__nat_eqb2 + c__list_in_decb.
-Definition poly__assignmentSmallDecb1 n := (n + 1) * (n * c__assignmentSmallDecbBound1 + 1) * (c__assignmentSmallDecbBound2 + (n * c__assignmentSmallDecbBound1 + n + size (enc tt) + 1) * c__nat_eqb) + (n + 1) * c__list_incl_decb.
-Lemma assignment_small_decb_time_bound1 a cn: list_incl_decb_time (fun x y => c__nat_eqb2 + nat_eqb_time x y)a (varsOfCnf cn) <= poly__assignmentSmallDecb1 (size (enc cn) + size (enc a)).
+Definition c__assignmentSmallDecbBound2 := 5 + c__list_in_decb.
+Definition poly__assignmentSmallDecb1 n := (n + 1) * (n * c__assignmentSmallDecbBound1 + 1) * (c__assignmentSmallDecbBound2 + (n * c__assignmentSmallDecbBound1 + n + size (enc tt) + 1) * c__eqbComp nat) + (n + 1) * c__list_incl_decb.
+Lemma assignment_small_decb_time_bound1 a cn: list_incl_decb_time (fun x y => 5 + eqbTime (X := nat) (size (enc x)) (size (enc y)) )a (varsOfCnf cn) <= poly__assignmentSmallDecb1 (size (enc cn) + size (enc a)).
 Proof. 
-  change (fun x y => c__nat_eqb2 + nat_eqb_time x y) with ((fun env x y => c__nat_eqb2 + nat_eqb_time x y) tt). 
+  change (fun x y => 5 + eqbTime (size (enc x)) (size (enc y))) with ((fun env (x y : nat) => 5 + eqbTime (X := nat) (size (enc x)) (size (enc y))) tt). 
   rewrite list_incl_decb_time_bound_env. 
   2: { 
     split. 
-    - intros x y env. rewrite nat_eqb_time_bound_l. 
+    - intros x y env. rewrite eqbTime_le_l. 
       instantiate (1 := registered_unit_enc).
-      instantiate (1 := fun n => c__nat_eqb2 + (n + 1) * c__nat_eqb). nia. 
+      instantiate (1 := fun n => 5 + (n + 1) * c__eqbComp nat). nia. 
     - smpl_inO. 
   }
   rewrite !list_size_length. rewrite varsOfCnf_size.
@@ -770,16 +769,16 @@ Proof.
   unfold poly__assignmentSmallDecb1; split; smpl_inO.
 Qed. 
 
-Definition poly__assignmentSmallDecb2 n := (n + 1) * (n + 1) * (c__nat_eqb2 + (2 * n + size (enc tt) + 1) * c__nat_eqb + c__dupfreeBound).
-Lemma assignment_small_decb_time_bound2 a : dupfreeb_time (fun x y => c__nat_eqb2 + nat_eqb_time x y) a <= poly__assignmentSmallDecb2 (size (enc a)). 
+Definition poly__assignmentSmallDecb2 n := (n + 1) * (n + 1) * (5 + (2 * n + size (enc tt) + 1) * c__eqbComp nat + c__dupfreeBound).
+Lemma assignment_small_decb_time_bound2 a : dupfreeb_time (fun x y => 5 + eqbTime (X := nat) (size (enc x)) (size (enc y))) a <= poly__assignmentSmallDecb2 (size (enc a)). 
 Proof. 
-  change (fun x y => c__nat_eqb2 + nat_eqb_time x y) with ((fun env x y => c__nat_eqb2 + nat_eqb_time x y) tt).
+  change (fun (x y :nat) => 5 + eqbTime (X := nat) (size (enc x)) (size (enc y))) with ((fun env (x y : nat) => 5 + eqbTime (X := nat) (size (enc x)) (size (enc y))) tt).
   rewrite dupfreeb_time_bound_env. 
   2: { 
     split.
-    - intros x y env. rewrite nat_eqb_time_bound_l. 
+    - intros x y env. rewrite eqbTime_le_l. 
       instantiate (1 := registered_unit_enc).
-      instantiate (1 := fun n => c__nat_eqb2 + (n + 1) * c__nat_eqb). nia. 
+      instantiate (1 := fun n => 5 + (n + 1) * c__eqbComp nat). nia. 
     - smpl_inO. 
   } 
   rewrite list_size_length. 
@@ -790,7 +789,7 @@ Proof.
   unfold poly__assignmentSmallDecb2; split; smpl_inO.
 Qed.
 
-Definition c__assignmentSmallDecbBound3 := c__nat_eqb2 + c__dupfreeBound.
+Definition c__assignmentSmallDecbBound3 := 5 + c__dupfreeBound.
   
 Definition poly__assignmentSmallDecb n := 
   poly__varsOfCnf n 

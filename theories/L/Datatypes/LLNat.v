@@ -1,8 +1,9 @@
 From Undecidability.L.Tactics Require Export LTactics GenEncode.
 Require Import PslBase.Numbers.
 
-Require Import Nat Undecidability.L.Datatypes.LBool Undecidability.L.Datatypes.LProd.
+Require Import Nat Undecidability.L.Datatypes.LBool Undecidability.L.Functions.EqBool Undecidability.L.Datatypes.LProd.
 Require Undecidability.L.Datatypes.LNat. 
+
 (** ** Encoding of natural numbers *)
 
 (*Run TemplateProgram (tmGenEncode "nat_enc" nat).*)
@@ -57,14 +58,6 @@ Proof.
   solverec. all: unfold leb_time, c__leb, c__leb2; solverec. 
 Defined.
 
-Definition c__nat_eqb := 17. 
-Definition c__nat_eqb2 := 5. 
-Definition nat_eqb_time (x y : nat) := c__nat_eqb * (1 + min x y). 
-Instance termT_nat_eqb: computableTime' Nat.eqb (fun x xT => (c__nat_eqb2,(fun y yT => (nat_eqb_time x y,tt)))).
-Proof.
-  extract.
-  solverec. all: unfold nat_eqb_time, c__nat_eqb, c__nat_eqb2; solverec. 
-Defined.
 
 Definition c__min1 := 5.
 Definition c__min2 := 15. 

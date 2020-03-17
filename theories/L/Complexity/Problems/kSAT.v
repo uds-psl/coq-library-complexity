@@ -1,5 +1,6 @@
 From Undecidability.L.Complexity.Problems Require Export SAT.
 From Undecidability.L.Datatypes Require Import LProd LTerm LLNat LLists LOptions.
+From Undecidability.L.Functions Require Import EqBool.
 
 (** * k-SAT  *)
 (** A CNF is a k-CNF if each of its clauses has exactly k literals. k-SAT is SAT restricted to k-CNFs. *)
@@ -45,8 +46,8 @@ Qed.
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Complexity Require Import PolyBounds. 
 
-Definition c__clauseLengthDecb :=  c__length + c__nat_eqb2 + 1.
-Definition clause_length_decb_time (k : nat) (C : clause) := c__length * (|C|) + nat_eqb_time k (|C|) + c__clauseLengthDecb.
+Definition c__clauseLengthDecb :=  c__length + 5 + 1.
+Definition clause_length_decb_time (k : nat) (C : clause) := c__length * (|C|) + eqbTime (X := nat) (size (enc k)) (size (enc (|C|))) + c__clauseLengthDecb.
 Instance term_clause_length_decb : computableTime' clause_length_decb (fun k _ => (1, fun C _ => (clause_length_decb_time k C, tt))). 
 Proof. 
   extract. solverec. unfold clause_length_decb_time, c__clauseLengthDecb. solverec. 
@@ -59,7 +60,7 @@ Proof.
   extract. solverec. unfold kCNF_decb_time, c__kCNFDecb. solverec. 
 Defined. 
 
-Definition c__kCNFDecbBound1 := c__length + c__nat_eqb.
+Definition c__kCNFDecbBound1 := c__length + c__eqbComp nat.
 Definition c__kCNFDecbBound2 := c__clauseLengthDecb + c__forallb + c__kCNFDecb.
 Definition poly__kCNFDecb n := (n + 1) * (c__kCNFDecbBound1 * (n + 1)  + c__kCNFDecbBound2). 
 Lemma kCNF_decb_time_bound k N : kCNF_decb_time k N <= poly__kCNFDecb (size (enc N) + size (enc k)). 
@@ -68,9 +69,9 @@ Proof.
   2: { 
     split. 
     - intros C n. unfold clause_length_decb_time. 
-      rewrite nat_eqb_time_bound_r. rewrite list_size_length at 1. rewrite list_size_enc_length. 
+      rewrite eqbTime_le_r. rewrite list_size_length at 1. rewrite list_size_enc_length. 
       instantiate (1 := registered_nat_enc).
-      instantiate (1 := fun n => (c__length + c__nat_eqb) * (n + 1) + c__clauseLengthDecb). 
+      instantiate (1 := fun n => (c__length + c__eqbComp nat) * (n + 1) + c__clauseLengthDecb). 
       cbn -[Nat.add Nat.mul]. solverec. 
     - smpl_inO. 
   } 
