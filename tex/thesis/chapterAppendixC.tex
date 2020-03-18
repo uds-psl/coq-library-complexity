@@ -36,7 +36,7 @@ Recall the function $\tapemove{} : \textsf{tape}_\Sigma \rightarrow \textsf{move
 The function $\textsf{doAct} : \textsf{tape}_\Sigma \rightarrow \textsf{Act}_\Sigma \rightarrow \textsf{tape}_\Sigma$ performs an action on a tape by first writing a symbol and then moving the tape.
 \[\textsf{doAct}~t~(s, m) \defeq \textsf{tape\_move}~(\textsf{tape\_write}~t~s)~m \]
 
-In order to perform a computational step, we first gather the symbols under the heads, lookup the value of the transition function, and perform the actions given the transition function on all tapes. 
+In order to perform a computational step, we start by gathering the symbols under the heads and then lookup the value of the transition function to perform the actions given by the transition function on all tapes. 
 \begin{align*}
   \textsf{step} &: \textsf{conf}_M \rightarrow \textsf{conf}_M \\
   \textsf{step}~(q, ts) &\defeq \llet (q', as) \defeq \delta (q, \withl \tmcurrent~t \withm t \in ts \withr) \lin (q', \withl \textsf{doAct}~t~a \withm t \in ts, a \in as \withr) 
@@ -46,7 +46,7 @@ The execution is defined computationally. We first define an abstract loop funct
 \begin{align*}
   \textsf{loop}~f~p~a~k \defeq \ITE{p~a}{\OSome{a}}{\match~k~\withl 0 \Rightarrow \ONone \withm S~k' \Rightarrow \textsf{loop}~f~p~(f~a)~k' \withr}
 \end{align*}
-Before we define the loop functions for Turing machines, we first fix initial configurations and halting configurations.
+Before we define the loop functions for Turing machines, we fix initial configurations and halting configurations.
 \begin{align*}
   \textsf{initConf}~t \defeq (\textsf{start}, t) \\
   \textsf{haltingConf}~(q, t) \defeq \textsf{halt}~q 

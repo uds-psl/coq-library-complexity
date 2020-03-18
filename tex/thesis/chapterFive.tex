@@ -1062,7 +1062,7 @@ In this section, we apply the technique presented in Section~\ref{sec:preludes} 
 
 The alphabet \mnotec{$\Delta$} of the prelude has $4 + \length{\Sigma}$ elements, where $q_0 \defeq \textsf{start}$ is the initial state.
 \[\Delta \defeq \nblank \bnfmid \nstar \bnfmid \ninit \bnfmid \ndelim \bnfmid \nsig{\sigma} \qquad \sigma : \Sigma\]
-The symbols $\nblank$ and $\ndelim$ just mirror the corresponding symbols of $\Gamma$. $\ninit$ is the fixed initial state symbol, $\nstar$s are wildcards that will be replaced by the certificate and $\nsig{\sigma}$ are used for the fixed input. 
+The symbols $\nblank$ and $\ndelim$ just mirror the corresponding symbols of $\Gamma$. $\ninit$ is the fixed initial state symbol, $\nstar$s are wildcards that will be replaced by the certificate and the $\nsig{\sigma}$ are used for the fixed input. 
 As in the previous section, we implicitly lift $\Delta$ and $\Gamma$ to the combined alphabet $\mathcal{A}\defeq \Gamma + \Delta$. This requires some additional work for the formal proofs which we omit on paper.\mnote{$\mathcal{A}$}
 
 As in Section~\ref{sec:informal_nondet}, the initial string has the following form, where $\underline{in} = \withl \underline{\sigma} \withm \sigma \in in \withr$:

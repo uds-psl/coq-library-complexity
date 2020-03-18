@@ -58,6 +58,14 @@ Proof.
   solverec. all: unfold leb_time, c__leb, c__leb2; solverec. 
 Defined.
 
+Definition c__ltb := c__leb2 + 4.
+Definition ltb_time (a b : nat) := leb_time (S a) b + c__ltb. 
+Instance term_ltb : computableTime' Nat.ltb (fun a _ => (1, fun b _ => (ltb_time a b, tt))). 
+Proof. 
+  extract. recRel_prettify2. 
+  - lia. 
+  - unfold ltb_time, c__ltb. solverec. 
+Qed.
 
 Definition c__min1 := 5.
 Definition c__min2 := 15. 

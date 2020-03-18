@@ -1,6 +1,6 @@
 From PslBase Require Import Base. 
 From Undecidability.L.Complexity Require Import Tactics. 
-From Undecidability.L.Datatypes Require Import LLists. 
+From Undecidability.L.Datatypes Require Import LLists LLNat LBool LProd LOptions. 
 From Undecidability.L.Complexity.Cook Require Import Prelim BinaryPR.
 From Undecidability.L.Complexity.Problems Require Import FSAT.
 Require Import Lia. 
@@ -903,3 +903,142 @@ Proof.
     + apply BinaryPR_wf_dec_correct in H1. apply reduction_wf in H; easy. 
     + now apply trivialNoInstance_isNoInstance in H. 
 Qed. 
+
+(** * extraction *)
+From Undecidability.L.Tactics Require Import LTactics GenEncode.
+From Undecidability.L.Complexity Require Import PolyBounds. 
+From Undecidability.L.Datatypes Require Import LProd LOptions LBool LSum LLNat LLists. 
+From Undecidability.L.Functions Require Import EqBool.
+
+(** listAnd *)
+Definition c__listAnd := 12. 
+Definition listAnd_time (l : list formula) := (|l| + 1) * c__listAnd.
+Instance term_listAnd : computableTime' listAnd (fun l _ => (listAnd_time l, tt)). 
+Proof. 
+  extract. solverec. all: unfold listAnd_time, c__listAnd; solverec. 
+Qed.
+
+(** listOr *)
+Definition c__listOr := 12.
+Definition listOr_time (l : list formula) := (|l| + 1) * c__listOr.
+Instance term_listOr : computableTime' listOr (fun l _ => (listOr_time l, tt)). 
+Proof. 
+  extract. solverec. all: unfold listOr_time, c__listOr; solverec. 
+Qed.
+
+(** tabulate_step *)
+Definition c__tabulateStep := 13 + c__add1.
+Definition tabulate_step_time (step n : nat) := n * (add_time step + c__tabulateStep) + c__tabulateStep.
+Instance term_tabulate_step : computableTime' tabulate_step (fun step _ => (5, fun s _ => (1, fun n _ => (tabulate_step_time step n, tt)))). 
+Proof. 
+  extract. solverec. 
+  all: unfold tabulate_step_time, c__tabulateStep; solverec. 
+Qed.
+
+Definition poly__tabulateStep n := n * ((n + 1) * c__add + c__tabulateStep) + c__tabulateStep.
+Lemma tabulate_step_time_bound step n : tabulate_step_time step n <= poly__tabulateStep (size (enc step) + size (enc n)). 
+Proof. 
+  unfold tabulate_step_time. rewrite size_nat_enc_r with (n := n) at 1. 
+  unfold add_time. rewrite size_nat_enc_r with (n := step) at 1. 
+  unfold poly__tabulateStep; solverec.  
+Qed.
+Lemma tabulate_step_poly : monotonic poly__tabulateStep /\ inOPoly poly__tabulateStep.
+Proof. 
+  unfold poly__tabulateStep; split; smpl_inO. 
+Qed.
+
+(** tabulate_formula *)
+Definition c__tabulateFormula := 8. 
+Definition tabulate_formula_time (s step n : nat) (tf : nat -> nat) := tabulate_step_time step n + map_time tf (tabulate_step step s n) + c__tabulateFormula.
+Instance term_tabulate_formula : computableTime' tabulate_formula (fun s _ => (1, fun step _ => (1, fun n _ => (1, fun t tf => (tabulate_formula_time s step n (callTime tf), tt))))). 
+Proof. 
+  extract. solverec. 
+  unfold tabulate_formula_time, c__tabulateFormula; solverec. 
+Qed.  
+
+(** encodeLiteral *)
+Definition c__encodeLiteral := 6. 
+Instance term_encodeLiteral : computableTime' encodeLiteral (fun n _ => (1, fun b _ => (c__encodeLiteral, tt))). 
+Proof. 
+  extract. solverec. all: unfold c__encodeLiteral; solverec. 
+Qed.
+
+(** encodeListAt *)
+Definition c__encodeListAt := c__encodeLiteral + c__add1 + add_time 1 + 15.
+Definition encodeListAt_time (l : list bool) := (|l| + 1) * c__encodeListAt. 
+Instance term_encodeListAt : computableTime' encodeListAt (fun s _ => (5, fun l _ => (encodeListAt_time l, tt))). 
+Proof. 
+  extract. solverec. 
+  all: unfold encodeListAt_time, c__encodeListAt; solverec.  
+Qed.
+
+Definition poly__encodeListAt n := (n + 1) * c__encodeListAt.
+Lemma encodeListAt_time_bound l : encodeListAt_time l <= poly__encodeListAt (size (enc l)). 
+Proof. 
+  unfold encodeListAt_time. rewrite list_size_length. 
+  unfold poly__encodeListAt; solverec. 
+Qed. 
+Lemma encodeListAt_poly : monotonic poly__encodeListAt /\ inOPoly poly__encodeListAt. 
+Proof. 
+  unfold poly__encodeListAt; split; smpl_inO. 
+Qed.
+  
+(** encodeWindowAt *)
+Definition c__encodeWindowAt := FlatPR.cnst_prem + FlatPR.cnst_conc + 13.
+Definition encodeWindowAt_time (win : PRWin bool) := encodeListAt_time (prem win) + encodeListAt_time (conc win) + c__encodeWindowAt.
+Instance term_encodeWindowAt : computableTime' encodeWindowAt (fun s1 _ => (1, fun s2 _ => (1, fun win _ => (encodeWindowAt_time win, tt)))). 
+Proof. 
+  extract. solverec. 
+  unfold encodeWindowAt_time, c__encodeWindowAt; solverec. 
+Qed.
+
+Definition poly__encodeWindowAt k := (k + 1) * c__encodeListAt * 2 + c__encodeWindowAt.
+Lemma encodeWindowAt_time_bound win k: PRWin_of_size win k -> encodeWindowAt_time win <= poly__encodeWindowAt k. 
+Proof. 
+  unfold PRWin_of_size. intros [H1 H2]. 
+  unfold encodeWindowAt_time. unfold encodeListAt_time. rewrite H1, H2. 
+  unfold poly__encodeWindowAt; solverec.
+Qed. 
+Lemma encodeWindowAt_poly : monotonic poly__encodeWindowAt /\ inOPoly poly__encodeWindowAt. 
+Proof. 
+  unfold poly__encodeWindowAt; split; smpl_inO. 
+Qed. 
+
+(** encodeWindowsAt *)
+Definition c__encodeWindowsAt := 4 + c__windows.
+Definition encodeWindowsAt_time (bpr : BinaryPR) (s1 s2 : nat) := map_time encodeWindowAt_time (windows bpr) + listOr_time (map (encodeWindowAt s1 s2) (windows bpr)) + c__encodeWindowsAt.
+Instance term_encodeWindowsAt : computableTime' encodeWindowsAt (fun bpr _ => (1, fun s1 _ => (1, fun s2 _ => (encodeWindowsAt_time bpr s1 s2, tt)))). 
+Proof. 
+  extract. solverec. 
+  unfold encodeWindowsAt_time, c__encodeWindowsAt; solverec. 
+Qed.
+  
+Definition poly__encodeWindowsAt n := n * (poly__encodeWindowAt n + c__map) + c__map + (n + 1) * c__listOr + c__encodeWindowsAt.
+Lemma encodeWindowsAt_time_bound bpr s1 s2: 
+  BinaryPR_wellformed bpr 
+  -> encodeWindowsAt_time bpr s1 s2 <= poly__encodeWindowsAt (size (enc bpr)). 
+Proof. 
+  intros H. unfold encodeWindowsAt_time. 
+  rewrite map_time_mono. 2: { intros win H1. apply H in H1. instantiate (1 := fun _ => _). cbn. 
+    rewrite encodeWindowAt_time_bound by apply H1. reflexivity. 
+  } 
+  rewrite map_time_const.
+  unfold listOr_time. rewrite map_length. 
+  poly_mono encodeWindowAt_poly. 2: { rewrite size_nat_enc_r. instantiate (1 := size (enc bpr)). rewrite BinaryPR_enc_size. lia. }
+  rewrite list_size_length. replace_le (size (enc (windows bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
+  unfold poly__encodeWindowsAt. solverec.   
+Qed.
+Lemma encodeWindowsAt_poly : monotonic poly__encodeWindowsAt /\ inOPoly poly__encodeWindowsAt. 
+Proof. 
+  unfold poly__encodeWindowsAt; split; smpl_inO; apply encodeWindowAt_poly. 
+Qed.
+
+(** encodeWindowsInLine' *)
+Print encodeWindowsInLine'. 
+Definition encodeWindowsInLine'_time (bpr : BinaryPR) (stepindex l startA startB : nat) := 1. 
+Instance term_encodeWindowsInLine': computableTime' encodeWindowsInLine' (fun bpr _ => (1, fun stepi _ => (1, fun l _ => (1, fun s1 _ => (1, fun s2 _ => (encodeWindowsInLine'_time bpr stepi l s1 s2, tt)))))). 
+Proof. 
+  extract. 
+  solverec. 
+  6: { unfold ltb_time, leb_time. rewrite Nat.le_min_r. 
+       unfold sub_time. rewrite Nat.le_min_r. 

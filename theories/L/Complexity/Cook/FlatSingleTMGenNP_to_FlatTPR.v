@@ -1040,12 +1040,6 @@ Proof.
   nia. 
 Defined. 
 
-Lemma map_time_mono (X : Type) (f1 f2 : X -> nat) (l : list X): (forall x : X, x el l -> f1 x <= f2 x) -> map_time f1 l <= map_time f2 l. 
-Proof. 
-  intros H. induction l; cbn; [lia | ].
-  rewrite IHl, H by easy. lia. 
-Qed.
-
 Definition poly__makeWindows' n := n * (poly__reifyWindow n + c__makeWindowsPFlatStep + c__map) + c__map + (n + 1) * c__filterSome + c__makeWindows'.
 Lemma makeWindows'_time_bound tm envs n win : (forall e, e el envs -> envBounded tm n e) -> makeWindows'_flat_time tm envs win <= poly__makeWindows' (size (enc tm) + n + |envs|). 
 Proof. 
@@ -1082,25 +1076,6 @@ Proof.
   extract. solverec. 
   unfold makeWindowsFlat_time, c__makeWindowsFlat. solverec.  
 Defined. 
-
-Lemma concat_time_exp (X : Type) (l : list (list X)): concat_time l = sumn (map (fun l' => c__concat * length l') l) + (|l| + 1) * c__concat. 
-Proof. 
-  induction l; cbn -[Nat.add Nat.mul]. 
-  - lia.
-  - unfold concat_time in IHl. rewrite IHl. lia. 
-Qed. 
-
-Lemma sumn_map_mono (X : Type) (f1 f2 : X -> nat) l : (forall x, x el l -> f1 x <= f2 x) -> sumn (map f1 l) <= sumn (map f2 l).
-Proof. 
-  intros H. induction l; cbn; [lia | ]. 
-  rewrite IHl, H by easy. lia. 
-Qed.
-
-Lemma sumn_map_const (X : Type) c (l : list X) : sumn (map (fun _ => c) l) = |l| * c. 
-Proof. 
-  induction l; cbn; [lia | ]. 
-  rewrite IHl. lia. 
-Qed.
 
 Definition poly__makeWindowsFlat n := n * (poly__makeWindows' n + c__map) + c__map + n * (c__concat * n) + (n + 1) * c__concat + c__makeWindowsFlat.
 Lemma makeWindowsFlat_time_bound tm envs windows n : (forall e, e el envs -> envBounded tm n e) -> makeWindowsFlat_time tm envs windows <= poly__makeWindowsFlat (size (enc tm) + n + (|envs|) + (|windows|)). 

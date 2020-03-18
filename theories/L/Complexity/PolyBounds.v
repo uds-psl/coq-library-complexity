@@ -85,6 +85,31 @@ Proof.
     solverec. 
 Qed. 
 
+Lemma map_time_mono (X : Type) (f1 f2 : X -> nat) (l : list X): (forall x : X, x el l -> f1 x <= f2 x) -> map_time f1 l <= map_time f2 l. 
+Proof. 
+  intros H. induction l; cbn; [lia | ].
+  rewrite IHl, H by easy. lia. 
+Qed.
+
+Lemma concat_time_exp (X : Type) (l : list (list X)): concat_time l = sumn (map (fun l' => c__concat * length l') l) + (|l| + 1) * c__concat. 
+Proof. 
+  induction l; cbn -[Nat.add Nat.mul]. 
+  - lia.
+  - unfold concat_time in IHl. rewrite IHl. lia. 
+Qed. 
+
+Lemma sumn_map_mono (X : Type) (f1 f2 : X -> nat) l : (forall x, x el l -> f1 x <= f2 x) -> sumn (map f1 l) <= sumn (map f2 l).
+Proof. 
+  intros H. induction l; cbn; [lia | ]. 
+  rewrite IHl, H by easy. lia. 
+Qed.
+
+Lemma sumn_map_const (X : Type) c (l : list X) : sumn (map (fun _ => c) l) = |l| * c. 
+Proof. 
+  induction l; cbn; [lia | ]. 
+  rewrite IHl. lia. 
+Qed.
+
 Tactic Notation "replace_le" constr(s) "with" constr(r) "by" tactic(tac) :=
   let H := fresh in assert (s <= r) as H by tac; rewrite !H; clear H. 
 Tactic Notation "replace_le" constr(s) "with" constr(r) "by" tactic(tac) "at" integer(occ) := 
