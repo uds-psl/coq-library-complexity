@@ -1,0 +1,19 @@
+In this thesis, we formally verify a proof of the Cook-Levin Theorem in the proof assistant Coq.
+The Cook-Levin Theorem states that the satisfiability problem SAT of conjunctive normal forms is NP-complete. 
+This means that any language which is polynomial-time verifiable is reducible to SAT in polynomial time. 
+
+The theorem was proved in 1971 by Stephen A. Cook~\cite{cook_theorem} and was independently discovered by Leonid Levin in 1973~\cite{levin_theorem}.
+Since the subsequent discovery of more NP-complete problems by Richard Karp in 1972~\cite{Karp1972}, it has become one of the most important results of modern computational complexity theory.
+Despite its importance, most proofs do not even attempt to verify the construction's correctness.
+%Despite its importance, a fully formal correctness proof including a running time verification has never been given.
+
+For the proof, one has to encode computations of a chosen reasonable computational model using Boolean formulas. 
+We use the call-by-value $\lambda$-calculus L as the computational model, which has been shown to be polynomial-time and linear-space equivalent to Turing machines~\cite{ForsterKunzeRoth:2019:wcbv-Reasonable}. It is much easier to write and verify L programs than to program Turing machines.
+Thus, we need to reduce the computation of L formulas to SAT.
+However, Turing machines are structurally simpler than the $\lambda$-calculus and we therefore propose to use Turing machines as an intermediate problem in the reduction of L to SAT.
+
+\todo{It does not become clear here why we use the lambda calculus in the first place. Mention that this is part of an effort to formalise basics of complexity theory, and that L is used because it is much easier to program in it.}
+
+In this work, we introduce the basics of formalising polynomial-time reductions in Coq. We present a polynomial-time reduction from Turing machines to SAT which is based on the original tableau construction by Cook and formally verify its correctness. The original construction is adapted and factorised in order to make a formal proof feasible. We see this as a significant first step towards showing SAT to be NP-complete in L.
+
+\todo{Should it become clear here that we do not see this as a full proof of the theorem?}

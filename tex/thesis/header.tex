@@ -1,0 +1,196 @@
+\makeatletter
+
+% Packages needed
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage[small,compact]{titlesec}
+\usepackage[final]{listings}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{tipa}
+\usepackage[english]{babel}
+\usepackage{lstautogobble}
+\usepackage{proof}
+\usepackage{bussproofs}
+\usepackage{xparse}
+\usepackage{needspace}
+\usepackage{xspace}
+\usepackage{mathpartir}
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+\usetikzlibrary{fit}
+\usetikzlibrary{positioning}
+\usepackage[amsmath,hyperref,thmmarks]{ntheorem}
+\usepackage{parskip}
+\usepackage{scrextend}
+\usepackage{wrapfig}
+\usepackage[nottoc]{tocbibind}
+\usepackage{caption}
+\usepackage{coqtheorem}
+\usepackage[en-US]{datetime2}
+\usepackage[shortlabels]{enumitem}
+
+%the ordinal should be raised in date strings provided by datetime2
+\DTMlangsetup[en-US]{ord=raise}
+
+% For the font
+\usepackage[T1]{fontenc}
+\usepackage{tgpagella}
+\usepackage[euler-digits,small]{eulervm}
+\linespread{1.025}              % Palatino leads a little more leading
+
+\usepackage{fancyhdr}
+\usepackage[obeyDraft]{todonotes}
+\setlength{\marginparwidth}{3cm}
+
+\usepackage[toc]{glossaries}
+%\usepackage{natbib}
+%\bibpunct{[}{]}{,}{n}{,}{;}
+
+%\usepackage[breaklinks, draft=false, pdfusetitle]{hyperref}
+
+\input{Macros.tex}
+
+\input{Environments.tex}
+
+%% Geometrie
+\newdimen\lines
+\setbox\@tempboxa\hbox{(Programmierung)}
+\lines=\ht\@tempboxa
+\advance\lines by\dp\@tempboxa
+
+\newlength{\exb}
+\settowidth{\exb}{\normalfont x}
+\geometry{%
+  a4paper,%
+  includehead,% (=> head is part of total body)
+  ignorefoot,% (=> foot is not part of total body)
+  top=3cm,% (top of paper |---| top of total body)
+  totalwidth=70\exb,% (width of total body)
+  totalheight=215mm,% (height of total body)
+  headheight=1\lines,%
+  headsep=2.5\lines,%
+  foot=4\lines,% (bottom of text body |---| _bottom_ of foot)
+  hcentering,%
+  marginparsep=3mm%
+}%
+
+\newcommand{\setauthor}[1]{\author{#1}\def\theauthor{#1}}
+\newcommand{\settitle}[1]{\title{#1}\def\thetitle{#1}}
+
+\newcommand{\advisor}[1]{\def\theadvisor{#1}}
+\newcommand{\supervisor}[1]{\def\thesupervisor{#1}}
+\newcommand{\reviewerOne}[1]{\def\thereviewerOne{#1}}
+\newcommand{\reviewerTwo}[1]{\def\thereviewerTwo{#1}}
+\newcommand{\university}[1]{\def\theuniversity{#1}}
+\newcommand{\faculty}[1]{\def\thefaculty{#1}}
+\newcommand{\thesistype}[1]{\def\thethesistype{#1}}
+\newcommand{\city}[1]{\def\thecity{#1}}
+
+\newcommand{\thesubdatestr}{\DTMusedate{subdate}}
+
+\newcommand{\maketitlepage}{
+  \begin{titlepage}
+    \begin{center}
+      \newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+      \begin{minipage}{0.2\textwidth}
+        \includegraphics[draft=false,width=0.9\textwidth]{logo.eps}
+      \end{minipage}
+      \begin{minipage}{0.7\textwidth}
+        \centering \textsc{{\Huge \theuniversity}}
+
+        \centering \textsc{\footnotesize \thefaculty}
+      \end{minipage}
+      \vspace{1cm}
+
+      \textsc{\thethesistype Thesis}\\[0.3cm]
+      % Title
+      \HRule \\[0.4cm]
+      { \Huge \scshape \thetitle \\[0.4cm] }
+
+      \HRule \\[1.5cm]
+
+      % Author and supervisor
+      \noindent
+      \begin{minipage}{0.3\textwidth}
+        \begin{flushleft} \Large
+          \emph{Author}\\
+          \theauthor
+        \end{flushleft}
+      \end{minipage}%
+      \begin{minipage}{0.3\textwidth}
+        \begin{center} \Large
+        \emph{Supervisor}\\
+        \thesupervisor
+      \end{center}
+      \end{minipage}
+      \begin{minipage}{0.3\textwidth}
+        \begin{flushright} \Large
+          \emph{Advisor} \\
+          \theadvisor
+
+        \end{flushright}
+      \end{minipage}
+
+      \noindent
+      \begin{minipage}{1\textwidth}
+        \vspace{6cm}
+        \begin{center} \large
+          \emph{Reviewers} \\
+          \thereviewerOne\\
+          \thereviewerTwo
+        \end{center}
+      \end{minipage}
+
+      \vfill
+
+      {\large Submitted: \thesubdatestr{}}
+    \end{center}
+  \end{titlepage}
+}
+
+\newcommand{\statementpage}{
+~ \vspace*{2cm} ~
+
+\textbf{Eidesstattliche Erkl\"arung}
+
+Ich erkl\"are hiermit an Eides statt, dass ich die vorliegende Arbeit
+selbstst\"andig verfasst und keine anderen als die angegebenen Quellen und
+Hilfsmittel verwendet habe.
+
+\textbf{Statement in Lieu of an Oath}
+
+I hereby confirm that I have written this thesis on my own and that I
+have not used any other media or materials than the ones referred to in
+this thesis.
+
+
+~ \vspace{3cm} ~
+
+\textbf{Einverst\"andniserkl\"arung}
+
+Ich bin damit einverstanden, dass meine (bestandene) Arbeit in beiden
+Versionen in die Bibliothek der Informatik aufgenommen und damit
+ver\"offentlicht wird.
+% \begin{center}
+% \Large
+
+\textbf{Declaration of Consent}
+
+I agree to make both versions of my thesis (with a passing grade)
+accessible to the public by having them added to the library of the
+Computer Science Department.
+
+\vspace*{3cm}
+
+\thecity, \thesubdatestr{}
+
+\newpage
+}
+
+\makeatother
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "thesis"
+%%% End:

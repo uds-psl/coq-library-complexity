@@ -42,6 +42,9 @@ Proof.
   solverec.
 Qed.
 
+Definition c__sizeBool := 4.
+Lemma size_bool (b : bool) : size(enc b) <= c__sizeBool. 
+Proof.  destruct b; cbv; lia. Qed. 
 
 Definition OmegaLift := lam Omega.
 

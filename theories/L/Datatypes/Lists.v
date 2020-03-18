@@ -149,8 +149,8 @@ Proof.
   extract.
 Defined.
 
-
-Instance termT_nth_error (X:Type) (Hx : registered X): computableTime' (@nth_error X) (fun A _ => (5,fun n _ => (min n (length A)*15 + 10,tt))).
+Definition nth_error_time (X : Type) := fun (A : list X) (_ : unit) => (5, fun (n : nat) (_ : unit) => (min n (length A) * 15 + 10, tt)).
+Instance termT_nth_error (X:Type) (Hx : registered X): computableTime' (@nth_error X) (@nth_error_time X).
 Proof.
   extract. solverec.
 Qed.
@@ -343,7 +343,6 @@ Instance term_repeat A `{registered A}: computableTime' (@repeat A) (fun _ _ => 
 Proof.
   extract. solverec.
 Qed.
-
 
 (*MOVE*)
 Definition lengthEq A :=

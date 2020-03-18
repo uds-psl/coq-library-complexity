@@ -1,5 +1,5 @@
 From Undecidability.L.Tactics Require Import LTactics.
-From Undecidability.L.Datatypes Require Import LNat Lists LTerm LOptions.
+From Undecidability.L.Datatypes Require Import LNat Lists LTerm LOptions LUnit.
 
 From Undecidability.L Require Import Functions.Decoding.
 
@@ -16,6 +16,13 @@ Arguments c__linDec : clear implicits.
 Arguments c__linDec _ {_ _ _}.
 
 Existing Instance comp_enc_lin.
+
+Instance linDec_unit : linTimeDecodable unit.
+Proof. 
+  evar (c : nat). exists c. 
+  unfold decode, decode_unit. cbn. extract. 
+  solverec. [c]: exact 5. all: unfold c; lia. 
+Qed. 
 
 Instance linDec_nat : linTimeDecodable nat.
 Proof.
@@ -44,4 +51,11 @@ Proof.
   [c]:exact (max (c__linDec X) 12).
   all:unfold c;try nia.
 Qed.
+
+Instance linDec_bool : linTimeDecodable bool.
+Proof.
+  evar (c : nat). exists c. unfold decode, decode_bool. extract. 
+  solverec. [c]: exact 5. all: subst c; lia.
+Qed. 
+
 

@@ -1,0 +1,93 @@
+\chapter{Introduction}\label{chap:introduction}
+\newcommand{\SAT}{\textbf{SAT}}
+\newcommand{\Clique}{\textbf{Clique}}
+\newcommand{\NP}{\textsf{NP}}
+\newcommand{\PC}{\textsf{P}}
+
+\newcommand{\PR}{\textbf{PR}}
+
+Since the advent of modern computational complexity theory in the 1960s and -70s, it has become one of the cornerstones of theoretical computer science. 
+Important early results include the hierarchy theorems by Hartmanis and Stearns~\cite{hartmanis_stearns}, essentially stating that one can compute more given more time or space. 
+The next landmark result was the Cook-Levin-Theorem, first proved by Stephen A. Cook in 1971~\cite{cook_theorem} and independently discovered by Leonid Levin in 1973~\cite{levin_theorem}. 
+This result founded the important class of \NP{}-complete problems. \NP{} is the class of all problems which are polynomial-time verifiable, i.e.\ for which it is efficiently decidable if a given certificate correctly proves that an element is a yes-instance of the problem. For two problems \textbf{P} and \textbf{Q}, \textbf{P} is polynomial-time reducible to \textbf{Q} if there is a function $f$ transforming instances of \textbf{P} into instances of \textbf{Q} in polynomial time such that for any instance $p$ of \textbf{P}, $p \in \textbf{P}$ does hold if, and only if, $f(p) \in \textbf{Q}$. 
+If $\textbf{Q}$ is contained in \NP{}, then $\textbf{P}$ is also in \NP{}.
+A problem \textbf{P} is \NP{}-hard if any problem contained in \NP{} can be reduced to it in polynomial time. An \NP{}-complete problem is \NP{}-hard and itself contained in \NP{}.  
+
+The Cook-Levin-Theorem makes a statement about the satisfiability problem of conjunctive normal forms \SAT{}: 
+Given a formula $C$ in conjunctive normal form, does there exist an assignment $a$ to its variables such that the formula evaluates to \textsf{true}, i.e.\ $a \models C$?
+According to the Cook-Levin-Theorem, \SAT{} is \NP{}-complete. 
+
+The importance of this result was underlined by the subsequent discovery of 21 more \NP{}-complete problems by Richard Karp in 1972~\cite{Karp1972}, the \NP{}-hardness of which was established by reductions from \textbf{SAT}. This showed that there are in fact many more problems which are interesting in practice and \NP{}-complete. 
+Thus, the important contribution of the Cook-Levin-Theorem is not that specifically \SAT{} is \NP{}-complete, but that there exists a natural\footnote{We call a problem natural if it is independent of a model of computation and relevant in practice. This is not a precise definition, but captures the intuition.}\NP{}-complete problem. If one has a natural problem such as \SAT{} which has been shown to be \NP{}-complete, it is relatively easy to show other important problems to be \NP{}-complete.
+
+Nowadays, the question whether \PC{} = \NP{}, i.e.\ whether every problem which is verifiable in polynomial time is also decidable in polynomial time, is one of the biggest open questions of computer science~\cite{claymath}. 
+If one were to find a polynomial-time decider for an \NP{}-hard problem such as \SAT{}, one could directly answer ``\PC{}= \NP{}!''.
+
+\paragraph{Formal Complexity Theory}
+All of the results mentioned above are usually taught in undergraduate courses on theoretical computer science, but the proofs are very handwavy and omit many interesting details. From a mathematical perspective, this is not satisfying.
+Despite the huge importance of these results, no completely formal proof of any of them has been published\footnote{An unpublished formalisation of the Time Hierarchy Theorem using the same $\lambda$ calculus in Coq we are using is known to the author.}. 
+There have been first steps towards formalising complexity-theoretic results by Asperti~\cite{asperti:reverse_complexity, asperti:borodin}, but they have been without reference to a concrete computational model. We will comment on this subject in Chapter~\ref{chap:conclusion}.
+
+While there is a mechanised proof verifying the translation of Turing machines to SAT formulas in the theorem prover ACL2 available~\cite{gamboa:cook}, it does not include a running time analysis with respect to a computational model which has been shown to be reasonable\footnote{In the sense that the induced complexity classes agree with the ones for Turing machines.}. Therefore, this proof does not show the NP-hardness of SAT, but only a part (although a significant one) of that.
+
+One of the reasons no full formalisation is available is that some of the details are very tedious. The prevalent computational model in complexity theory are Turing machines, which have a pleasant time and space usage behaviour as they can only modify a constant amount of data in a single computational step, but are otherwise very low-level and non-compositional~\cite{ForsterEtAl:2019:VerifiedTMs}.
+Doing formal complexity theory using Turing machines thus seems to be a daunting task: as stated by Forster et al.~\cite{ForsterEtAl:2019:VerifiedTMs}, ``Turing machines as model of computation are inherently infeasible for the formalisation of any computability- or complexity-theoretic result''. 
+
+In contrast, results from computability theory have been successfully formalised in the proof assistant Coq~\cite{coqweb}. 
+Coq employs a constructive type theory based on the calculus of inductive constructions~\cite{iclnotes}. The key behind this success is that Coq only allows to define computable functions. 
+It is thus unnecessary to employ an external model of computation when formalising computability theory in Coq, an approach known as \textit{synthetic computability theory}~\cite{ForsterEtAl:2018:On-Synthetic-Undecidability}. 
+Nowadays, a large library of undecidability results is available~\cite{coq_undec}. 
+
+When formalising complexity-theoretic results, one cannot make use of this trick: In contrast to computability theory, not only the computability of functions is relevant, but also their time and space complexity. For doing basic complexity theory, one at least needs to be able to state that a function runs in polynomial time.
+Especially for metaresults like the hierarchy theorems and the Cook-Levin-Theorem, a concrete computational model seems to be unavoidable.
+However, instead of Turing machines, we use the call-by-value $\lambda$-calculus L~\cite{ForsterSmolka:2017:L-Computability}, as proposed by Forster et al. in~\cite{ForsterEtAl:2019:VerifiedTMs}. L is still low-level, but much closer to real functional programming languages than Turing machines are. For instance, inductive datatypes like the natural numbers or lists can be systematically encoded in L.
+Using L in Coq is additionally significantly eased by a certifying extraction mechanism~\cite{ForsterKunze:2019:Certifying-extraction} which allows one to define functions and datatypes using the usual mechanisms of Coq and semi-automatically derive equivalent L-terms together with certificates of their correctness. This mechanism can also be used to derive time bounds: During the extraction, recurrences are generated auomatically which then have to be solved by the user. 
+
+The theoretical foundation of using L for the formalisation of complexity theory has been laid by Forster et al.\ in~\cite{ForsterKunzeRoth:2019:wcbv-Reasonable}. There it is shown that Turing machines and L can simulate each other with a polynomial overhead in time and a constant-factor overhead in space for decision problems\footnote{However, the result does not cover sublinear space or time.}, if one chooses the right resource measures for L.
+This result is crucial as it proves that many basic complexity classes like \NP{} or \PC{} do correspond for Turing machines and L;\ in particular, \NP{}-completeness for L and \NP{}-completeness for Turing machines are equivalent.\todo{this is somewhat imprecise as it really depends on the definition of NP-hardness}
+
+\paragraph{Outline of the Cook-Levin-Theorem}
+In the following, we are concerned with the Cook-Levin-Theorem.
+In order to prove it, one has to show that \emph{any} problem contained in NP is polynomial-time reducible to a natural problem such as \SAT{}. 
+As we have no information about the concrete problem we are reducing from, we have to resort to a proof using properties of the chosen model of computation. 
+Specifically, arbitrary computations have to be encoded using Boolean formulas.
+As we are using L as our computational model, it is necessary to encode arbitrary reduction chains of L. The advantage of the greater abstraction provided by L compared to Turing machines now has its cost: It does not seem easy to directly encode L using Boolean formulas. In fact, there is evidence that, even when reducing to another natural problem than \SAT{}, a direct reduction would still be difficult. We will elaborate on this in Remark~\ref{rem:cook_L}.
+Thus, we propose to use Turing machines as an intermediate step for deriving a natural NP-complete problem for L: one first reduces the computation of L to Turing machines and then reduces Turing machines to \SAT{}. 
+
+\paragraph{Outline of this Thesis}
+In this thesis, we formalise the reduction from Turing machines to \SAT{}. We base the formalisation on a textbook proof by Sipser\cite{Sipser:TheoryofComputation}, which in turn is very similar to the original construction by Cook~\cite{cook_theorem}. Our construction proceeds by encoding a bounded number of computational steps of a Turing machine in a tableau of a bounded size. 
+Each row of the tableau represents one of the Turing machine's configurations with each element of the row corresponding to one symbol of a Turing machine tape. The tableau can be encoded using a number of Boolean variables and the conjunctive normal form then forces that the individual rows of the tableau form valid configuration changes.
+
+In order to make the formalisation feasible, we factorise the proof into several intermediate problems and reductions. The key idea is to first reduce to a string-based problem \PR{} that shares characteristics of both Turing machines and circuits. 
+The reduction essentially generates an explicit representation of a Turing machine from a symbolic one.
+We then incrementally deal with encoding \PR{} as a conjunctive normal form. First, we reduce to a binary alphabet using a substituting string homomorphism. 
+\PR{} over a binary alphabet can be easily encoded using a Boolean formula. In order to bring this formula into conjunctive normal form, we employ the Tseytin transformation~\cite{Tseitin1983}.
+
+In contrast to the existing ACL2 mechanisation~\cite{gamboa:cook}, we include running time analyses in L, which is a reasonable computational model.
+
+In Chapter~\ref{chap:preliminaries}, we introduce the needed preliminaries, among them the definition of Turing machines, L and the basic definitions one needs for complexity theory. We also elaborate on the specific changes one has to make to the well-known definitions of complexity on Turing machines.
+The basic techniques for doing polynomial-time reductions are explored in Chapter~\ref{chap:ksat_clique} on a simpler reduction from $k$-\SAT{} to \Clique{}. This is also the only the chapter where we go into the details of the running time analyses.
+We give an informal outline of the chain of reductions from Turing machines to \SAT{} in Chapter~\ref{chap:informaloverview}. 
+Chapters~\ref{chap:gennp_pr} to~\ref{chap:fsat_sat} then give the details of the individual reductions.
+
+\paragraph{Mechanisation}
+All results presented from Chapter 3 onwards have been mechanised in the proof assistant Coq~\cite{coqweb}. The definitions, lemmas and theorems are hyperlinked to a version of the development viewable in a webbrowser.
+The mechanisation of some of the reductions differs in small but notable ways to the presentation on paper, mainly for technical reasons. 
+Therefore, the chapters on reductions usually contain a section outlining the differences and the motivation behind them. 
+Readers not familiar with Coq may want to skip these sections.
+While the running times of the reductions have been verified in Coq, we do not go into these details on paper, with Chapter~\ref{chap:ksat_clique} being an exception.
+We give an overview on the full structure of the mechanisation in Appendix~\ref{app:mecha}.
+
+\paragraph{Contributions}
+The proof of the Cook-Levin-Theorem as presented by Sipser~\cite{Sipser:TheoryofComputation} is adapted in order to make a formalisation feasible. To that end the construction is changed and a new string-based intermediate problem is introduced. 
+The whole construction including the polynomial running time is formalised in Coq.
+
+
+%\setCoqFilename{filename}
+
+%\begin{theorem}[Test][theoremname]
+  %This is a great theorem.
+%\end{theorem}
+
+%We refer to Theorem \ref{coq:theoremname}.
+

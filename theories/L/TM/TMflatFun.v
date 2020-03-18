@@ -251,5 +251,3 @@ Proof.
    inv H''. inv H. do 2 f_equal. 
    inv Ht0. inv Ht. easy.
 Qed.
-
-
