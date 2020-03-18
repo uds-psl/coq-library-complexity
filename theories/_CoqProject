@@ -343,17 +343,17 @@ L/Complexity/Problems/GenNP/CanEnumTerm_def.v
 L/Complexity/Problems/GenNP/CanEnumTerm.v
 L/Complexity/Problems/GenNP/GenNPBool.v
 L/Complexity/Problems/GenNP/GenNP.v
-L/Complexity/Problems/GenNP/GenNP_is_hard.v
+#L/Complexity/Problems/GenNP/GenNP_is_hard.v
 L/Complexity/Problems/GenNP/TMGenNP_fixed_mTM.v
 L/Complexity/Problems/GenNP/TMGenNP.v
-L/Complexity/Reductions/TMGenNP/L_to_LM.v
-L/Complexity/Reductions/TMGenNP/LM_to_mTM.v
-L/Complexity/Reductions/TMGenNP/mTM_to_singleTapeTM.v
-L/Complexity/Reductions/TMGenNP/M_multi2mono.v
-L/Complexity/Reductions/TMGenNP/M_Boollist_to_Enc.v
-L/Complexity/Reductions/TMGenNP/M_LM2TM.v
-L/Complexity/Reductions/TMGenNP/IntermediateProblems.v
-L/Complexity/Reductions/TMGenNP/LMGenNP.v
+#L/Complexity/Reductions/TMGenNP/L_to_LM.v
+#L/Complexity/Reductions/TMGenNP/LM_to_mTM.v
+#L/Complexity/Reductions/TMGenNP/mTM_to_singleTapeTM.v
+#L/Complexity/Reductions/TMGenNP/M_multi2mono.v
+#L/Complexity/Reductions/TMGenNP/M_Boollist_to_Enc.v
+#L/Complexity/Reductions/TMGenNP/M_LM2TM.v
+#L/Complexity/Reductions/TMGenNP/IntermediateProblems.v
+#L/Complexity/Reductions/TMGenNP/LMGenNP.v
 
 
 L/Complexity/PolyBounds.v
@@ -377,7 +377,7 @@ L/Complexity/Cook/PR.v
 L/Complexity/Cook/GenNP.v
 L/Complexity/Cook/TPR.v
 L/Complexity/Cook/PTPR_Preludes.v
-L/Complexity/Cook/GenNP_PR.v
+L/Complexity/Cook/SingleTMGenNP_to_TPR.v
 L/Complexity/Cook/FlatFinTypes.v
 L/Complexity/Cook/TM_single.v
 L/Complexity/Cook/TPR_to_PR.v
@@ -388,6 +388,7 @@ L/Complexity/Cook/BinaryPR.v
 L/Complexity/Cook/PR_homomorphisms.v
 L/Complexity/Cook/FlatPR_to_BinaryPR.v
 L/Complexity/Cook/TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP.v
+L/Complexity/Cook/FlatSingleTMGenNP_to_FlatTPR.v
 
 L/Complexity/Cook/FSAT_to_SAT.v
 L/Complexity/Cook/BinaryPR_to_FSAT.v

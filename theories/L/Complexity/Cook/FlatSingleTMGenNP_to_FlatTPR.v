@@ -4,14 +4,7 @@ From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Complexity Require Import PolyBounds. 
 From Undecidability.L.Datatypes Require Import LProd LOptions LBool LSum LLNat LLists. 
 From Undecidability.L.Functions Require Import EqBool.
-From Undecidability.L.Complexity.Cook Require Import Prelim GenNP_PR FlatTPR FlatFinTypes FlatFinTypes_extraction. 
-
-Definition test := fun fg : bool => let a := eqb (X := nat) 5 5 in if a then true else false. 
-Instance term_test : computableTime' test (fun p _ => (1, tt)).
-Proof. 
-  unfold test. 
-  extract. 
-
+From Undecidability.L.Complexity.Cook Require Import Prelim SingleTMGenNP_to_TPR FlatTPR FlatFinTypes FlatFinTypes_extraction. 
 
 Fact None_ofFlatType n : ofFlatType (flatOption n) flatNone . 
 Proof. 
@@ -42,7 +35,6 @@ Proof.
   unfold ofFlatType, flatSum, flatInr. nia. 
 Qed. 
 Smpl Add (apply inr_ofFlatType) : finRepr. 
-
 
 
 (** * extraction of the reduction from FlatGenNP to FlatPR *)
@@ -555,6 +547,7 @@ Definition reifyGammaFlat_time (tm : TM) (env : evalEnvFlat) (c : fGamma) :=
   end + c__reifyGammaFlat.
 Instance term_reifyGammaFlat : computableTime' reifyGammaFlat (fun tm _ => (1, fun env _ => (1, fun c _ => (reifyGammaFlat_time tm env c, tt)))). 
 Proof. 
+  unfold reifyGammaFlat, flatInl. fold (@id nat). 
   extract. 
   intros tm _. split; [solverec | ]. 
   intros env ?. split; [solverec | ]. 
@@ -582,6 +575,16 @@ Lemma reifyGammaFlat_poly : monotonic poly__reifyGammaFlat /\ inOPoly poly__reif
 Proof. 
   unfold poly__reifyGammaFlat; split; smpl_inO; first [apply flatStates_poly | apply reifyTapeSigmaFlat_poly | apply reifyStatesFlat_poly ]. 
 Qed. 
+
+Lemma reifyGammaFlat_ofFlatType tm env f n: envOfFlatTypes tm env -> reifyGammaFlat tm env f = Some n -> ofFlatType (flatGamma tm) n. 
+Proof. 
+  intros H0 H. unfold reifyGammaFlat in H. destruct f as [s | c]. 
+  - destruct reifyStatesFlat eqn:H1; cbn in H; [ inv H| congruence].
+    apply reifyStatesFlat_ofFlatType in H1; [ | apply H0]. finRepr_simpl; apply H1.  
+  - destruct reifyTapeSigmaFlat eqn:H1; cbn in H; [inv H | congruence]. 
+    apply reifyTapeSigmaFlat_ofFlatType in H1; [ | apply H0]. 
+    apply inr_ofFlatType. apply H1. 
+Qed.
 
 (** flatNsig *)
 Definition c__flatNsig := c__add1 + 5 * c__add + 13.
@@ -612,6 +615,18 @@ Lemma reifyPreludeSig'Flat_poly : monotonic poly__reifyPreludeSigPFlat /\ inOPol
 Proof. 
   unfold poly__reifyPreludeSigPFlat; split; smpl_inO. 
 Qed. 
+
+Lemma reifyPreludeSig'_ofFlatType tm env f n : envOfFlatTypes tm env -> reifyPreludeSig'Flat env f = Some n -> ofFlatType (flatPreludeSig' tm) n. 
+Proof. 
+  intros H H0. unfold reifyPreludeSig'Flat in H0. destruct f; inv H0. 
+  - unfold ofFlatType, flatPreludeSig', flatNblank; lia. 
+  - unfold ofFlatType, flatPreludeSig', flatNstar; lia. 
+  - unfold ofFlatType, flatPreludeSig', flatNdelimC; lia. 
+  - unfold ofFlatType, flatPreludeSig', flatNinit; lia. 
+  - destruct nth_error eqn:H1; cbn -[flatNsig] in H2; [ | congruence]. 
+    apply nth_error_In in H1. apply H in H1. inv H2. 
+    unfold flatNsig, flatPreludeSig', ofFlatType in *. lia.  
+Qed.
   
 (** reifyAlphabetFlat *) 
 Definition c__reifyAlphabetFlat := c__add1 + 7 + c__optionMap.
@@ -622,6 +637,7 @@ Definition reifyAlphabetFlat_time (tm : TM) (env : evalEnvFlat) (c : fAlphabet) 
   end + c__reifyAlphabetFlat.
 Instance term_reifyAlphabetFlat : computableTime' reifyAlphabetFlat (fun tm _ => (1, fun env _ => (1, fun c _ => (reifyAlphabetFlat_time tm env c, tt)))).
 Proof. 
+  unfold reifyAlphabetFlat, flatInl. fold (@id nat). 
   extract. 
   intros tm _; split;[solverec | ]. 
   intros env ?; split; [solverec | ]. 
@@ -647,6 +663,18 @@ Qed.
 Lemma reifyAlphabetFlat_poly : monotonic poly__reifyAlphabetFlat /\ inOPoly poly__reifyAlphabetFlat. 
 Proof. 
   unfold poly__reifyAlphabetFlat; split; smpl_inO; first [apply reifyGammaFlat_poly | apply flatGamma_poly | apply reifyPreludeSig'Flat_poly]. 
+Qed. 
+
+Lemma reifyAlphabetFlat_ofFlatType tm env f n: envOfFlatTypes tm env -> reifyAlphabetFlat tm env f = Some n -> ofFlatType (flatAlphabet tm) n. 
+Proof. 
+  intros H H1. 
+  unfold reifyAlphabetFlat in H1. destruct f as [s | s]. 
+  - destruct reifyGammaFlat eqn:H2; cbn in H1; [ | congruence]. 
+    inv H1. apply reifyGammaFlat_ofFlatType in H2; [ | apply H]. 
+    apply inl_ofFlatType, H2.  
+  - destruct reifyPreludeSig'Flat eqn:H2; cbn in H1; [ | congruence]. 
+    inv H1. eapply reifyPreludeSig'_ofFlatType in H2; [ | apply H]. 
+    apply inr_ofFlatType, H2. 
 Qed. 
 
 (** reifyWindowFlat *)
@@ -675,6 +703,17 @@ Lemma reifyWindow_poly : monotonic poly__reifyWindow /\ inOPoly poly__reifyWindo
 Proof. 
   split; unfold poly__reifyWindow; smpl_inO; apply reifyAlphabetFlat_poly. 
 Qed. 
+
+Lemma reifyWindowFlat_ofFlatType tm env rule win: envOfFlatTypes tm env -> reifyWindowFlat tm env rule = Some win -> TPRWin_ofFlatType win (flatAlphabet tm).
+Proof. 
+  intros H H1. 
+  unfold TPRWin_ofFlatType, TPRWinP_ofFlatType. destruct win, prem, conc; cbn.
+  unfold reifyWindowFlat, reifyWindow in H1. 
+  destruct rule, prem, conc; cbn in H1. 
+  do 6 match type of H1 with context[reifyAlphabetFlat ?a ?b ?c] => let H' := fresh "H" in destruct (reifyAlphabetFlat a b c) eqn:H'; cbn in H1; [ apply reifyAlphabetFlat_ofFlatType in H'; [ | apply H] | congruence] end. 
+  inv H1. 
+  repeat split; easy.
+Qed.
 
 (** listProd *)
 Section fixListProd. 
@@ -1007,7 +1046,6 @@ Proof.
   rewrite IHl, H by easy. lia. 
 Qed.
 
-
 Definition poly__makeWindows' n := n * (poly__reifyWindow n + c__makeWindowsPFlatStep + c__map) + c__map + (n + 1) * c__filterSome + c__makeWindows'.
 Lemma makeWindows'_time_bound tm envs n win : (forall e, e el envs -> envBounded tm n e) -> makeWindows'_flat_time tm envs win <= poly__makeWindows' (size (enc tm) + n + |envs|). 
 Proof. 
@@ -1088,6 +1126,14 @@ Proof.
   rewrite map_map. unfold makeWindows'. rewrite sumn_map_mono. 
   2: { intros win _. instantiate (1 := fun _ => |envs|). rewrite filterSome_length, map_length. lia. }
   rewrite sumn_map_const. nia. 
+Qed.
+
+Lemma makeWindowsFlat_ofFlatType tm envs rules : (forall e, e el envs -> envOfFlatTypes tm e) -> isValidFlatWindows (makeWindowsFlat tm envs rules) (flatAlphabet tm). 
+Proof. 
+  intros H. intros win. 
+  unfold makeWindowsFlat, makeWindows. rewrite in_concat_map_iff. intros (rule & H1 & Hel). 
+  unfold makeWindows' in Hel. apply in_filterSome_iff in Hel. apply in_map_iff in Hel as (env & H2 & Hel).
+  apply H in Hel. apply reifyWindowFlat_ofFlatType in H2; easy. 
 Qed.
 
 (**envAddState *)
@@ -1276,9 +1322,33 @@ Proof.
   all: apply makeAllEvalEnvFlat_length_poly. 
 Qed.
 
+Lemma isValidFlatWindows_app l1 l2 k: isValidFlatWindows (l1 ++ l2) k <-> isValidFlatWindows l1 k /\ isValidFlatWindows l2 k. 
+Proof. 
+  unfold isValidFlatWindows. setoid_rewrite in_app_iff. firstorder. 
+Qed.
+
+Lemma flatTapeWindows_ofFlatType tm : isValidFlatWindows (flatTapeWindows tm) (flatAlphabet tm). 
+Proof. 
+  unfold flatTapeWindows, flatMTRWindows, flatMTIWindows, flatMTLWindows. 
+  rewrite !isValidFlatWindows_app; split; [ | split]; eapply makeWindowsFlat_ofFlatType. 
+  all: apply makeAllEvalEnvFlat_envOfFlatTypes.
+Qed.
+
 (** non-halting state windows *)
 (** makeSome_base *)
 Definition makeSome_base_flat (tm : TM) (windows : list (TPRWin fAlphabet)) (q q' m m' : nat):= @makeSome_base nat nat nat nat nat windows q q' m m' (makeWindowsFlat tm).
+
+Lemma makeSome_base_flat_ofFlatType tm rules q q' m m' envs : 
+  (forall e, e el envs -> envOfFlatTypes tm e) 
+  -> ofFlatType (states tm) q -> ofFlatType (states tm) q' -> ofFlatType (flatStateSigma tm) m -> ofFlatType (flatStateSigma tm) m'
+  -> isValidFlatWindows (makeSome_base_flat tm rules q q' m m' envs) (flatAlphabet tm). 
+Proof. 
+  intros H H1 H2 H3 H4. unfold makeSome_base_flat, makeSome_base. apply makeWindowsFlat_ofFlatType. 
+  intros e (e' & <- & Hel)%in_map_iff. apply H in Hel. 
+  unfold transEnvAddSM, envAddSSigma, transEnvAddS, envAddState; cbn. 
+  repeat split; cbn; [apply Hel | apply Hel | | ]. 
+  all: rewrite !list_ofFlatType_cons; repeat split; [easy | easy | apply Hel]. 
+Qed.
 
 Definition c__makeSomeBaseFlat1 := c__transEnvAddSM + c__map.
 Definition c__makeSomeBaseFlat2 := c__map + 8.
@@ -1350,6 +1420,19 @@ Defined.
 
 (** makeNone_base *)
 Definition makeNone_base_flat (tm : TM) (windows : list (TPRWin fAlphabet)) (q q' : nat) := @makeNone_base nat nat nat nat nat windows q q' (makeWindowsFlat tm). 
+
+Lemma makeNone_base_flat_ofFlatType tm rules q q' envs : 
+  (forall e, e el envs -> envOfFlatTypes tm e) 
+  -> ofFlatType (states tm) q -> ofFlatType (states tm) q'
+  -> isValidFlatWindows (makeNone_base_flat tm rules q q' envs) (flatAlphabet tm). 
+Proof. 
+  intros H H1 H2. unfold makeNone_base_flat, makeNone_base. apply makeWindowsFlat_ofFlatType. 
+  intros e (e' & <- & Hel)%in_map_iff. apply H in Hel. 
+  unfold transEnvAddS, envAddState; cbn. 
+  repeat split; cbn; [apply Hel | apply Hel | apply Hel | ]. 
+  rewrite !list_ofFlatType_cons; repeat split; [easy | easy | apply Hel]. 
+Qed.
+
 Definition c__makeNoneBaseFlat1 := c__transEnvAddS + c__map.
 Definition c__makeNoneBaseFlat2 := c__map + 6.
 Definition makeNone_base_flat_time (tm : TM) (rules :list (TPRWin fAlphabet)) (q q' : nat) (envs : list evalEnvFlat) := (|envs|) * c__makeNoneBaseFlat1 + makeWindowsFlat_time tm (map (transEnvAddS q q') envs) rules + c__makeNoneBaseFlat2.
@@ -1525,17 +1608,25 @@ Proof.
   first [apply makeSome_base_flat_poly | apply makeNone_base_flat_poly | apply makeAllEvalEnvFlat_length_poly | apply makeAllEvalEnvFlat_poly].
 Qed.
 
+Lemma opt_generateWindowsForFlatNonHalt_ofFlatType tm q m act: 
+  ofFlatType (states tm) q -> isValidFlatStateSig tm m -> isValidFlatAct tm act
+  -> isValidFlatWindows (opt_generateWindowsForFlatNonHalt tm q m act) (flatAlphabet tm).
+Proof. 
+  intros H1 H2 H3. unfold opt_generateWindowsForFlatNonHalt. 
+  destruct m as [m | ]; destruct act as (q' & ([m' | ] & [])). 
+  all: unfold isValidFlatStateSig, isValidFlatAct in *.
+  all: unfold makeSomeRight, makeSomeLeft, makeSomeStay, makeNoneLeft, makeNoneStay, makeNoneRight.  
+  all: unfold flat_baseEnv, flat_baseEnvNone.
+  1-9: apply makeSome_base_flat_ofFlatType; [apply makeAllEvalEnvFlat_envOfFlatTypes | easy | easy| finRepr_simpl; easy| finRepr_simpl; easy]. 
+  all: apply makeNone_base_flat_ofFlatType; [apply makeAllEvalEnvFlat_envOfFlatTypes | easy | easy ]. 
+Qed.
+
 (** inp_eqb *)
 Instance eqbComp_inp : EqBool.eqbCompT (nat * list (option nat)).
 Proof. 
   easy.
 Defined. 
 
-(*Instance term_inp_eqb : computableTime' inp_eqb (fun a _ => (5, fun b _ => (@EqBool.eqbTime _ _ _ _ eqbComp_inp (size (enc a)) (size (enc b)), tt))). *)
-(*Proof. *)
-  (*extract. solverec. *)
-  (*Set Printing All. unfold eqb. solverec.  *)
-(*Defined. *)
  
 (** generateWindowsForFlatNonHalt *)
 From Undecidability.L.Functions Require Import FinTypeLookup EqBool.
@@ -1648,6 +1739,27 @@ Proof.
   all: apply makeAllEvalEnvFlat_length_poly.
 Qed.
 
+Lemma generateWindowsForFlatNonHalt_ofFlatType tm q m: 
+  validFlatTM tm -> ofFlatType (states tm) q -> isValidFlatStateSig tm m
+  -> isValidFlatWindows (generateWindowsForFlatNonHalt tm q m) (flatAlphabet tm).
+Proof. 
+  intros H1 H2 H3. unfold generateWindowsForFlatNonHalt. 
+  destruct lookup eqn:H4. destruct l as [ | succ []]; [ easy | | easy]. 
+  destruct H1 as (H1 & _). destruct H1. 
+  destruct (lookup_complete (trans tm)(q, [m]) (q, [(None, TM.N)])) as [H0 | H0]. 
+  - (* work around typeclass inference problems with rewriting *) 
+    assert ((q, [m], (n, [succ])) el trans tm) as H'.  
+    { rewrite <- H4. apply H0. } 
+    apply flatTrans_bound in H'. apply opt_generateWindowsForFlatNonHalt_ofFlatType; try easy.  
+    unfold isValidFlatAct. destruct succ as ([ m' | ] & mo); [ split; [ | easy]| easy] .
+    destruct H' as (_ & _ & _ & _ & _ & H'). eapply H'. eauto.
+  - destruct H0 as [ _ H0]. 
+    assert ((n, [succ]) = (q, [(None, TM.N)])) as H'. 
+    { rewrite <- H4. apply H0. }
+    inv H'. 
+    apply opt_generateWindowsForFlatNonHalt_ofFlatType; easy.
+Qed.
+
 (** halting state windows*)
 
 (**makeHalt *)
@@ -1715,6 +1827,15 @@ Lemma generateWindowsForFlatHalt_length tm q: |generateWindowsForFlatHalt tm q| 
 Proof. 
   unfold generateWindowsForFlatHalt, makeHalt. rewrite makeWindowsFlat_length_bound, map_length.
   rewrite flat_baseEnvHalt_length. easy.
+Qed.
+
+Lemma generateWindowsForFlatHalt_ofFlatType q tm: ofFlatType (states tm) q -> isValidFlatWindows (generateWindowsForFlatHalt tm q) (flatAlphabet tm). 
+Proof. 
+  intros H. unfold generateWindowsForFlatHalt, makeHalt. apply makeWindowsFlat_ofFlatType. 
+  intros e (e' & <- & H1)%in_map_iff. unfold envAddState, envOfFlatTypes; cbn. 
+  unfold flat_baseEnvHalt in H1. apply makeAllEvalEnvFlat_envOfFlatTypes in H1. 
+  repeat split; [apply H1 | apply H1 | apply H1 | ]. 
+  apply list_ofFlatType_cons; split; [apply H | apply H1]. 
 Qed.
 
 (** combined state windows *)
@@ -1842,7 +1963,27 @@ Proof.
   all: first [apply generateWindowsForFlat_poly | apply generateWindowsForFlat_length_poly]. 
 Qed.
 
-(** TODO: prelude windows, final substrings*)
+Lemma flatStateWindows_length tm : |flatStateWindows tm| <= states tm * poly__generateWindowsForFlatLength (size (enc tm)).
+Proof. 
+  unfold flatStateWindows. rewrite length_concat, map_map. 
+  rewrite sumn_map_mono. 
+  2: { intros x _. instantiate (1 := fun _ => _). cbn. rewrite generateWindowsForFlat_length. reflexivity. }
+  rewrite sumn_map_const, seq_length. 
+  lia. 
+Qed. 
+
+Lemma flatStateWindows_ofFlatType tm : validFlatTM tm -> isValidFlatWindows (flatStateWindows tm) (flatAlphabet tm). 
+Proof. 
+  intros H0. unfold flatStateWindows. unfold isValidFlatWindows. intros w H. 
+  apply in_concat_map_iff in H as (q & (_ & H1)%in_seq & H2). 
+  unfold generateWindowsForFlat in H2. destruct nth. 
+  - apply generateWindowsForFlatHalt_ofFlatType in H2; easy.
+  - apply in_app_iff in H2 as [H2 | H2]. 
+    + apply generateWindowsForFlatNonHalt_ofFlatType in H2; easy. 
+    + apply in_concat_map_iff in H2 as (σ & (_&H4)%in_seq & H3). 
+      apply generateWindowsForFlatNonHalt_ofFlatType in H3; easy.
+Qed.
+
 (** makePreludeWindows *)
 Definition makePreludeWindows_flat tm q := makePreludeWindows q (makeWindowsFlat tm) . 
 Definition c__makePreludeWindowsFlat := 5 + c__map. 
@@ -1921,6 +2062,17 @@ Proof.
   nia.  
 Qed.
 
+Lemma flatPreludeWindows_ofFlatType tm : validFlatTM tm -> isValidFlatWindows (flatPreludeWindows tm) (flatAlphabet tm). 
+Proof. 
+  intros H0.  unfold flatPreludeWindows, makePreludeWindows. 
+  apply makeWindowsFlat_ofFlatType. 
+  intros e (e' & <- & H1)%in_map_iff. unfold flat_baseEnvPrelude in H1. 
+  apply makeAllEvalEnvFlat_envOfFlatTypes in H1. 
+  unfold envAddState, envOfFlatTypes. cbn; repeat split; [apply H1 | apply H1 | apply H1 | ]. 
+  apply list_ofFlatType_cons; split; [ | apply H1]. 
+  destruct H0 as (_ & H0). apply H0.  
+Qed.
+
 (** allFlatWindows *)
 Definition allFlatWindows_time (tm : TM) := flatPreludeWindows_time tm + flatTapeWindows_time tm + flatStateWindows_time tm + (|flatTapeWindows tm|) * c__app + c__app * (|flatPreludeWindows tm|) + 2 * c__app + 11.
 Instance term_allFlatWindows : computableTime' allFlatWindows (fun tm _ => (allFlatWindows_time tm, tt)). 
@@ -1945,6 +2097,58 @@ Lemma allFlatWindows_poly : monotonic poly__allFlatWindows /\ inOPoly poly__allF
 Proof. 
   unfold poly__allFlatWindows; split; smpl_inO. 
   all: first [apply flatPreludeWindows_poly | apply flatTapeWindows_poly | apply flatStateWindows_poly | apply flatTapeWindows_length_poly | apply makeAllEvalEnvFlat_length_poly ]. 
+Qed.
+
+Definition poly__allFlatWindowsLength n := poly__makeAllEvalEnvFlatLength 0 3 1 0 n * (|listPreludeRules|) + poly__flatTapeWindowsLength n + n * poly__generateWindowsForFlatLength n.
+Lemma allFlatWindows_length tm : |allFlatWindows tm| <= poly__allFlatWindowsLength (size (enc tm)). 
+Proof. 
+  unfold allFlatWindows. rewrite app_length.
+  rewrite flatPreludeWindows_length. 
+  unfold allFlatSimWindows. rewrite app_length. 
+  rewrite flatTapeWindows_length, flatStateWindows_length. 
+  rewrite states_TM_le. 
+  unfold poly__allFlatWindowsLength. nia.   
+Qed.
+Lemma allFlatWindows_length_poly : monotonic poly__allFlatWindowsLength /\ inOPoly poly__allFlatWindowsLength. 
+Proof. 
+  unfold poly__allFlatWindowsLength; split; smpl_inO. 
+  all: first [apply makeAllEvalEnvFlat_length_poly | apply flatTapeWindows_length_poly | apply generateWindowsForFlat_length_poly]. 
+Qed.
+
+Lemma allFlatWindows_ofFlatType tm : validFlatTM tm -> isValidFlatWindows (allFlatWindows tm) (flatAlphabet tm).
+Proof. 
+  intros H0. unfold allFlatWindows, allFlatSimWindows. rewrite !isValidFlatWindows_app. 
+  split; [ | split].
+  - apply flatPreludeWindows_ofFlatType, H0. 
+  - apply flatTapeWindows_ofFlatType. 
+  - apply flatStateWindows_ofFlatType, H0. 
+Qed.
+
+Instance add_lt_lt : Proper (eq ==> lt ==> lt) Nat.add. 
+Proof. 
+  intros a b -> c d H. lia.
+Qed.
+
+Definition poly__allFlatWindowsSize n :=
+  (6 * (c__flatAlphabetS * (n + 1) * (n + 1) * c__natsizeS +
+    c__natsizeO) + c__sizeTPRWinP * 2 + FlatPR.c__sizePRWin) *
+  poly__allFlatWindowsLength n + c__listsizeCons * poly__allFlatWindowsLength n + c__listsizeNil.
+Lemma allFlatWindows_size_bound tm : validFlatTM tm -> size (enc (allFlatWindows tm)) <= poly__allFlatWindowsSize (size (enc tm)). 
+Proof. 
+  intros H. rewrite list_size_of_el. 
+  2: { intros a H1. apply allFlatWindows_ofFlatType in H1; [ | apply H]. 
+       rewrite TPRWin_enc_size, !TPRWinP_enc_size. 
+       repeat match goal with [ |- context[size(enc(?x (?y a)))]] => rewrite nat_size_lt with (a := x (y a)); [ | apply H1] end. 
+       instantiate (1 := 6 * size (enc (flatAlphabet tm)) + c__sizeTPRWinP * 2 + FlatPR.c__sizePRWin). 
+      lia.
+  } 
+  rewrite allFlatWindows_length. 
+  rewrite size_nat_enc with (n := flatAlphabet tm). rewrite flatAlphabet_bound, sig_TM_le, states_TM_le. 
+  unfold poly__allFlatWindowsSize; reflexivity.
+Qed.
+Lemma allFlatWindows_size_poly : monotonic poly__allFlatWindowsSize /\ inOPoly poly__allFlatWindowsSize. 
+Proof. 
+  unfold poly__allFlatWindowsSize; split; smpl_inO; apply allFlatWindows_length_poly.
 Qed.
 
 (** repEl *)
@@ -2102,6 +2306,85 @@ Proof.
   unfold poly__flatInitialString; split; smpl_inO; first [apply flatGamma_poly | apply z'flat_poly]. 
 Qed. 
 
+Lemma flat_initial_string_length t k' tm fixed: |flat_initial_string t k' tm fixed| = 2 * (z'flat t k' fixed + 1) + 1. 
+Proof. 
+  unfold flat_initial_string. rewrite !app_length, !rev_length, !repEl_length, !map_length.
+  cbn. unfold zflat, kflat. nia.
+Qed.
+
+Lemma in_repEl_iff (X : Type) (a b : X) n : a el repEl n b -> a = b. 
+Proof. 
+  induction n; cbn; [easy | ]. intros [-> | <-%IHn]; reflexivity. 
+Qed.
+
+Lemma list_ofFlatType_rev k l : list_ofFlatType k l -> list_ofFlatType k (rev l). 
+Proof. 
+  unfold list_ofFlatType. setoid_rewrite in_rev at 1. easy.
+Qed.
+Lemma list_ofFlatType_map k k' l f : (forall x, ofFlatType k x -> ofFlatType k' (f x)) -> list_ofFlatType k l -> list_ofFlatType k' (map f l). 
+Proof. 
+  unfold list_ofFlatType. intros H. setoid_rewrite in_map_iff. 
+  intros H1 a (a' & <- & H2%H1). easy.
+Qed.
+Lemma list_ofFlatType_repEl k n m : ofFlatType k m -> list_ofFlatType k (repEl n m). 
+Proof. 
+  unfold list_ofFlatType. intros H a H1%in_repEl_iff. easy.
+Qed.
+
+Lemma flat_initial_string_ofFlatType t k' tm fixed : list_ofFlatType (sig tm) fixed -> list_ofFlatType (flatAlphabet tm) (flat_initial_string t k' tm fixed). 
+Proof. 
+  intros H0.  unfold flat_initial_string. rewrite !list_ofFlatType_app; repeat split.
+  - intros a [<- | []]. apply inr_ofFlatType. unfold ofFlatType, flatPreludeSig', flatNdelimC; lia. 
+  - apply list_ofFlatType_rev. apply list_ofFlatType_repEl. apply inr_ofFlatType. unfold ofFlatType, flatPreludeSig', flatNblank; lia. 
+  - intros a [<- | []]. apply inr_ofFlatType. unfold ofFlatType, flatPreludeSig', flatNinit; lia. 
+  - eapply list_ofFlatType_map; [ | apply H0]. intros x H. apply inr_ofFlatType. 
+    unfold ofFlatType, flatPreludeSig', flatNsig in *. lia. 
+  - apply list_ofFlatType_repEl, inr_ofFlatType. unfold ofFlatType, flatPreludeSig', flatNstar. lia. 
+  - apply list_ofFlatType_repEl, inr_ofFlatType. unfold ofFlatType, flatPreludeSig', flatNblank. lia. 
+  - intros a [<- | []]. apply inr_ofFlatType. unfold ofFlatType, flatPreludeSig', flatNdelimC; lia. 
+Qed.
+
+Instance le_lt_impl : Proper (le --> eq ==> Basics.impl) lt. 
+Proof. 
+  intros a b H d e ->. unfold Basics.flip in H. unfold Basics.impl. lia. 
+Qed.
+
+Instance lt_le_impl : Proper (lt --> eq ==> Basics.impl) le. 
+Proof. 
+  intros a b H d e ->. unfold Basics.flip in H. unfold Basics.impl. lia.  
+Qed.
+
+Lemma nat_size_le a b: a <= b -> size (enc a) <= size (enc b). 
+Proof. 
+  intros H. rewrite !size_nat_enc. unfold c__natsizeS; nia. 
+Qed.
+
+Definition poly__flatInitialStringSize n :=   (c__flatAlphabetS * c__natsizeS * (n + 1) * (n + 1) + c__natsizeO) * (2 * (wo + n +1) + 1) + c__listsizeCons * (2 * (wo + n +1) + 1) + c__listsizeNil. 
+Lemma flat_initial_string_size_bound t k' tm fixed: list_ofFlatType (sig tm) fixed -> size (enc (flat_initial_string t k' tm fixed)) <= poly__flatInitialStringSize (size (enc t) + size (enc k') + size (enc tm) +  size (enc fixed)). 
+Proof. 
+  intros H. rewrite list_size_of_el. 
+  2: { intros a H1%flat_initial_string_ofFlatType. 2: apply H. rewrite nat_size_lt by apply H1. 
+       rewrite nat_size_le. 
+       2: { rewrite flatAlphabet_bound. reflexivity. }
+       reflexivity. 
+  } 
+  rewrite size_nat_enc. 
+  rewrite flat_initial_string_length. unfold z'flat, zflat, kflat. 
+  rewrite list_size_length. rewrite size_nat_enc_r with (n := t) at 1 2. rewrite size_nat_enc_r with (n := k') at 1 2. 
+  rewrite states_TM_le, sig_TM_le.  
+
+  pose (g := size (enc t) + size (enc k') + size (enc tm) + size (enc fixed)). 
+  replace_le (size (enc tm)) with g by (subst g; lia) at 1. replace_le (size (enc tm)) with g by (subst g; lia) at 1.
+  replace_le (size (enc t) + (size (enc k') + size (enc fixed))) with g by (subst g; lia) at 1. 
+  replace_le (size (enc t) + (size (enc k') + size (enc fixed))) with g by (subst g; lia) at 1.
+  fold g. unfold poly__flatInitialStringSize. 
+  nia. 
+Qed.
+Lemma flat_initial_string_size_poly : monotonic poly__flatInitialStringSize /\ inOPoly poly__flatInitialStringSize. 
+Proof. 
+  unfold poly__flatInitialStringSize; split; smpl_inO. 
+Qed.
+
 Section fixX. 
   Variable (X : Type). 
   Context `{registered X}. 
@@ -2184,6 +2467,7 @@ Definition c__flatFinalSubstringsStep := c__flatStateSigma + 21.
 Definition flat_finalSubstrings_step_time (tm : TM) (p : nat * nat) := let (s, m) := p in flatPair_time s (flatStateSigma tm) + c__flatFinalSubstringsStep.
 Instance term_flat_finalSubstrings_step : computableTime' flat_finalSubstrings_step (fun tm _ => (1, fun p _ => (flat_finalSubstrings_step_time tm p, tt))). 
 Proof. 
+  unfold flat_finalSubstrings_step, flatInl. 
   extract. solverec.  unfold c__flatFinalSubstringsStep; solverec. 
 Qed.
 
@@ -2231,6 +2515,46 @@ Proof.
   unfold poly__finalSubstrings; split; smpl_inO; first [apply flat_haltingStates_poly | apply flat_finalSubstrings_step_poly]. 
 Qed. 
 
+Proposition flat_finalSubstrings_length (tm : TM) : |flat_finalSubstrings tm| <= states tm * (S (sig tm)). 
+Proof. 
+  unfold flat_finalSubstrings. rewrite map_length, prodLists_length.
+  rewrite flat_haltingStates_length, seq_length. unfold flatStateSigma, flatOption. 
+  lia. 
+Qed.
+
+Lemma flat_finalSubstrings_el_bound tm n: [n] el flat_finalSubstrings tm -> ofFlatType (flatAlphabet tm) n. 
+Proof. 
+  intros H. unfold flat_finalSubstrings in H. apply in_map_iff in H as ((a & b) & H1 & H). 
+  inv H1. apply in_prodLists_iff in H as (H1 & H2). 
+  finRepr_simpl. 
+  - apply flat_haltingStates_ofFlatType, H1. 
+  - apply in_seq in H2 as (_ & H2). apply H2. 
+Qed.
+
+
+Definition poly__flatFinalSubstringsSize n := 
+  (c__flatAlphabetS * (n + 1) * (n + 1) * c__natsizeS +
+  c__natsizeO + c__listsizeCons + c__listsizeNil) * (n * (1+ n)) 
+  + c__listsizeCons * (n * (1 + n)) + c__listsizeNil.
+Lemma flat_finalSubstrings_size_bound tm : size (enc (flat_finalSubstrings tm)) <= poly__flatFinalSubstringsSize (size (enc tm)). 
+Proof. 
+  unfold flat_finalSubstrings. rewrite list_size_of_el. 
+  2: { intros a H%in_map_iff. destruct H as ((x & y) & H1 & H). 
+       rewrite <- H1. rewrite size_list. cbn. rewrite nat_size_lt. 
+       2: apply flat_finalSubstrings_el_bound; apply in_map_iff; exists (x, y); eauto.  
+       reflexivity. 
+  } 
+  fold (flat_finalSubstrings tm). rewrite flat_finalSubstrings_length. 
+  rewrite nat_size_le. 2: { rewrite flatAlphabet_bound. reflexivity. }
+  rewrite states_TM_le, sig_TM_le at 2 3. 
+  unfold enc at 1. cbn -[Nat.add Nat.mul]. rewrite size_nat_enc, sig_TM_le, states_TM_le. 
+  unfold poly__flatFinalSubstringsSize. nia.
+Qed.
+Lemma flat_finalSubstrings_size_poly : monotonic poly__flatFinalSubstringsSize /\ inOPoly poly__flatFinalSubstringsSize. 
+Proof. 
+  unfold poly__flatFinalSubstringsSize; split; smpl_inO. 
+Qed. 
+
 (** reduction_wf *)
 Definition c__reductionWf := 12. 
 Definition reduction_wf_time (t k' :nat) (tm : TM) (fixed : list nat) := flatAlphabet_time tm + flat_initial_string_time t k' tm fixed + allFlatWindows_time tm + flat_finalSubstrings_time tm + c__reductionWf. 
@@ -2241,7 +2565,7 @@ Proof.
 Qed.
 
 Definition poly__reductionWf n := poly__flatAlphabet n + poly__flatInitialString n + poly__allFlatWindows n + poly__finalSubstrings n + c__reductionWf.
-Lemma reductionWf_time_bound t k' tm fixed: validFlatTM tm -> reduction_wf_time t k' tm fixed <= poly__reductionWf (size (enc t) + size (enc k') + size (enc tm) + size (enc fixed)). 
+Lemma reduction_wf_time_bound t k' tm fixed: validFlatTM tm -> reduction_wf_time t k' tm fixed <= poly__reductionWf (size (enc t) + size (enc k') + size (enc tm) + size (enc fixed)). 
 Proof. 
   intros H. unfold reduction_wf_time. 
   rewrite flatAlphabet_time_bound, flat_initial_string_time_bound. 
@@ -2260,6 +2584,36 @@ Proof.
   all: first [apply flatAlphabet_poly | apply flat_initial_string_poly | apply allFlatWindows_poly | apply flat_finalSubstrings_poly]. 
 Qed.
 
+Definition poly__reductionWfSize n := 
+  c__flatAlphabetS * (n + 1) * (n + 1) * c__natsizeS + c__natsizeO
+  + poly__flatInitialStringSize n + poly__allFlatWindowsSize n + poly__flatFinalSubstringsSize n  
+  + c__natsizeS + n + c__sizeFlatTPR.
+Lemma reduction_wf_size_bound t k' tm fixed : 
+  validFlatTM tm -> list_ofFlatType (sig tm) fixed
+  -> size (enc (reduction_wf t k' tm fixed)) <= poly__reductionWfSize (size (enc t) + size (enc k') + size (enc tm) + size (enc fixed)). 
+Proof. 
+  intros H H0. unfold reduction_wf. 
+  rewrite FlatTPR_enc_size. cbn -[allFlatWindows flat_initial_string poly__reductionWfSize].
+  rewrite flat_initial_string_size_bound by easy.
+  rewrite allFlatWindows_size_bound by easy.
+  rewrite flat_finalSubstrings_size_bound by easy.
+  pose (g := size (enc t) + size (enc k') + size (enc tm) + size (enc fixed)).
+  poly_mono allFlatWindows_size_poly. 2: { instantiate (1 := g); subst g; lia. }
+  poly_mono flat_finalSubstrings_size_poly. 2: { instantiate (1 := g); subst g; lia. }
+  rewrite size_nat_enc at 1; rewrite flatAlphabet_bound, states_TM_le, sig_TM_le at 1.
+  replace (size (enc (S t))) with (c__natsizeS + size (enc t)). 
+  2: { rewrite !size_nat_enc. nia. } 
+  replace_le (size (enc tm)) with g by (subst g; lia) at 1. 
+  replace_le (size (enc tm)) with g by (subst g; lia) at 1.
+  replace_le (size (enc t)) with g by (subst g; lia) at 2.
+  fold g. unfold poly__reductionWfSize; leq_crossout. 
+Qed.
+Lemma reduction_wf_size_poly : monotonic poly__reductionWfSize /\ inOPoly poly__reductionWfSize.
+Proof. 
+  unfold poly__reductionWfSize; split; smpl_inO. 
+  all: first [apply flat_initial_string_size_poly | apply allFlatWindows_size_poly | apply flat_finalSubstrings_size_poly]. 
+Qed.
+  
 (** implb *)
 Definition c__implb := 4.
 Instance term_implb : computableTime' implb (fun a _ => (1, fun b _ => (c__implb, tt))). 
@@ -2424,10 +2778,10 @@ Proof.
   unfold fst_optBound_time, c__fstOptBound; solverec. 
 Qed.
 
-Definition c__isBoundTrans := 2* c__length + 2 * c__nat_eqb2 + 44. 
+Definition c__isBoundTrans := 2* c__length + 54. 
 Definition isBoundTrans_time (sig n states : nat) (t : nat * list (option nat) * (nat * list (option nat * TM.move))) :=
   let '(s, v, (s', v')) := t in 
-  ltb_time s states + c__length * (|v|) + c__length * (|v'|) + nat_eqb_time (|v|) n + forallb_time (optBound_time sig) v + ltb_time s' states + nat_eqb_time (|v'|) n + forallb_time (fst_optBound_time sig) v' + c__isBoundTrans. 
+  ltb_time s states + c__length * (|v|) + c__length * (|v'|) + eqbTime (X := nat) (size (enc (|v|))) (size (enc n)) + forallb_time (optBound_time sig) v + ltb_time s' states + eqbTime (X:= nat) (size (enc (|v'|))) (size (enc n)) + forallb_time (fst_optBound_time sig) v' + c__isBoundTrans. 
 Instance term_isBoundTrans : computableTime' isBoundTrans (fun sig _ => (1, fun n _ => (1, fun states _ => (1, fun t _ => (isBoundTrans_time sig n states t, tt))))). 
 Proof. 
   extract. solverec. 
@@ -2441,11 +2795,11 @@ Proof.
 Qed.
 
 Definition poly__isBoundTrans n := 
-  n * (2 * c__leb + 2 * c__length + 2 * c__nat_eqb + 2 * c__forallb + c__fstOptBound) + 2 * c__forallb + 2 * c__ltb + 2 * c__nat_eqb + 2 * n * poly__optBound n + c__isBoundTrans.
+  n * (2 * c__leb + 2 * c__length + 2 * c__eqbComp nat + 2 * c__forallb + c__fstOptBound) + 2 * c__forallb + 2 * c__ltb + 2 * c__eqbComp nat + 2 * n * poly__optBound n + c__isBoundTrans.
 Lemma isBoundTrans_time_bound sig n states t : isBoundTrans_time sig n states t <= poly__isBoundTrans (size (enc t) + size (enc sig)). 
 Proof. 
   unfold isBoundTrans_time. destruct t as ((s & v) & (s' & v')). 
-  rewrite !nat_eqb_time_bound_l. rewrite !ltb_time_bound_l. 
+  rewrite !eqbTime_le_l. rewrite !ltb_time_bound_l. 
   rewrite !list_size_enc_length. rewrite !list_size_length. 
   rewrite forallb_time_exp.
   rewrite sumn_map_mono. 2: {instantiate (1 := fun _ => _).  intros x _. cbn. rewrite optBound_time_bound. reflexivity. }
@@ -2583,21 +2937,65 @@ Proof.
 Qed.
 
 (** reduction *)
-
-Definition test := fun fg : bool => let a := Bool.eqb true false in if a then true else false. 
-Instance term_test : computableTime' test (fun p _ => (1, tt)).
-Proof. 
-  extract. 
-Definition test := fun fg : TM * list nat * nat * nat => let a := Bool.eqb true false in if a then true else false. 
-Instance term_test : computableTime' test (fun p _ => (1, tt)).
-Proof. 
-  extract. 
-
-Definition reduction_time (t k' : nat) (tm : TM) (fixed : list nat) := 1. 
+Definition c__reduction := size (enc 1) * c__eqbComp nat + 54.
+Definition reduction_time (t k' : nat) (tm : TM) (fixed : list nat) := 
+  isValidFlatTM_time tm + list_ofFlatType_dec_time (sig tm) fixed + 
+  (if isValidFlatTM tm then reduction_wf_time k' t tm fixed else 0) + c__reduction.
 Instance term_reduction : computableTime' reduction (fun p _ => (let '(tm, fixed, t, k') := p in reduction_time t k' tm fixed, tt)). 
 Proof. 
-  extract. 
-  trivial_no  
-  term_isValidFlatTM  
-solverec. 
+  extract. unfold reduction_time, c__reduction. recRel_prettify. 
+  intros (((tm & fixed) & t) & k') _. split; [ | destruct _; easy]. 
+  rewrite eqbTime_le_r.
+  destruct isValidFlatTM, Nat.eqb, list_ofFlatType_dec; cbn. 
+  all: lia. 
+Qed.
 
+Definition poly__reduction n := poly__isValidFlatTM n + poly__listOfFlatTypeDec n + poly__reductionWf n + c__reduction.
+Lemma reduction_time_bound t k' tm fixed : reduction_time t k' tm fixed <= poly__reduction (size (enc k') + size (enc t) + size (enc tm) + size (enc fixed)). 
+Proof. 
+  unfold reduction_time. 
+  rewrite isValidFlatTM_time_bound. rewrite list_ofFlatType_dec_time_bound. 
+  pose (m := size (enc k') + size (enc t) + size (enc tm) + size (enc fixed)). 
+  poly_mono isValidFlatTM_poly. 2: { instantiate (1 := m). subst m; lia. } 
+  poly_mono list_ofFlatType_dec_poly. 2 : { instantiate (1 := m). subst m. rewrite size_TM; destruct tm; cbn. lia. }
+  destruct isValidFlatTM eqn:H1.
+  - rewrite reduction_wf_time_bound. 2: { rewrite reflect_iff; [apply H1 | apply isValidFlatTM_spec]. }
+    subst m. unfold poly__reduction. nia. 
+  - subst m. unfold poly__reduction. nia. 
+Qed.
+Lemma reduction_poly : monotonic poly__reduction /\ inOPoly poly__reduction. 
+Proof. 
+  unfold poly__reduction; split; smpl_inO. 
+  all: first [apply isValidFlatTM_poly | apply list_ofFlatType_dec_poly | apply reduction_wf_poly]. 
+Qed.
+
+Definition poly__reductionSize n := poly__reductionWfSize n + size (enc trivial_no_instance).
+Lemma reduction_size_bound p : size (enc (reduction p)) <= poly__reductionSize (size (enc p)). 
+Proof. 
+  unfold reduction. destruct p as (((tm & fixed) & k') & t). 
+  destruct isValidFlatTM eqn:H1; [ |  cbn -[poly__reductionSize]; unfold poly__reductionSize; lia].
+  destruct Nat.eqb eqn:H2; [ | cbn -[poly__reductionSize]; unfold poly__reductionSize; lia]. 
+  destruct list_ofFlatType_dec eqn:H3; cbn -[poly__reductionSize]; [ |  unfold poly__reductionSize; lia].
+  rewrite <- reflect_iff in H1; [ | apply isValidFlatTM_spec ]. 
+  apply list_ofFlatType_dec_correct in H3. rewrite reduction_wf_size_bound by easy.
+  poly_mono reduction_wf_size_poly. 
+  2: { instantiate (1 := size (enc (tm, fixed, k', t))). rewrite !size_prod. cbn. lia. }
+  unfold poly__reductionSize. lia.  
+Qed.
+
+(** full reduction statement *)
+From Undecidability.L.Complexity.Cook Require Import GenNP. 
+Theorem FlatSingleTMGenNP_to_FlatTPRLang_poly : reducesPolyMO (unrestrictedP FlatSingleTMGenNP) (unrestrictedP FlatTPRLang). 
+Proof. 
+  apply reducesPolyMO_intro with (f := reduction). 
+  - exists poly__reduction.
+    + exists (extT reduction). eapply computesTime_timeLeq. 2: apply term_reduction.
+      cbn. intros p _. split; [ | easy]. destruct p as (((tm & fixed) & t) & k').
+      rewrite reduction_time_bound. poly_mono reduction_poly; [reflexivity | rewrite !size_prod; cbn;lia].
+    + apply reduction_poly. 
+    + apply reduction_poly. 
+    + evar (f :nat -> nat). exists f. 
+      1: { intros p. rewrite reduction_size_bound. [f]: intros n. subst f; reflexivity. }
+      all: subst f; smpl_inO; unfold poly__reductionSize; smpl_inO; apply reduction_wf_size_poly. 
+  - cbn. intros p _. exists Logic.I. apply FlatSingleTMGenNP_to_FlatTPR.
+Qed.

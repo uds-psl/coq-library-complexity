@@ -6,7 +6,7 @@ From Undecidability.L.Complexity.Problems Require Import FSAT.
 Require Import Lia. 
 
 (** *Reduction of BinaryPR to FSAT *)
-(*High-level overview:
+(** High-level overview:
 We lay out the BinaryPR computation in a tableau which has (steps + 1) lines, where steps is the number of steps of the BPR instance, 
 and each line has a length which is equal to the length of the BPR strings.
 Each cell of the tableau corresponds to one symbol of a BPR string and is encoded using a single Boolean variable in the FSAT instance.
@@ -89,7 +89,7 @@ Section fixInstance.
   Notation llength := (length init). 
   Implicit Types (a : assgn) (v : var). 
 
-  (*convenience functions for creating formulas *)
+  (** convenience functions for creating formulas *)
   Notation Ffalse := (¬Ftrue). 
   Fixpoint listOr (l : list formula) := match l with
     | [] => Ffalse 
@@ -101,7 +101,25 @@ Section fixInstance.
     | a :: l => a ∧ listAnd l
     end.  
 
-  (*generate the list of values assigned to the variables by a in range [lower, lower + len) *)
+  Lemma listOr_sat_iff l a : satisfies a (listOr l) <-> exists f, f el l /\ satisfies a f. 
+  Proof. 
+    induction l; cbn. 
+    - unfold satisfies. cbn. split; [congruence | intros (f & [] & _)]. 
+    - unfold satisfies. rewrite evalFormula_or_iff, IHl. split.
+      + intros [ H | (f & H1 & H2)]; [exists a0; eauto | exists f; eauto].  
+      + intros (f & [-> | H1] & H2); [now left | right; exists f; eauto]. 
+  Qed.
+
+  Lemma listAnd_sat_iff l a : satisfies a (listAnd l) <-> forall f, f el l -> satisfies a f. 
+  Proof. 
+    induction l; cbn. 
+    - unfold satisfies. cbn. split; [intros _ f [] | intros _; easy]. 
+    - unfold satisfies. rewrite evalFormula_and_iff, IHl. split.
+      + intros (H1 & H2) f [-> | H3%H2]; eauto.
+      + intros H; split; [ apply H | intros f H1; apply H]; eauto.
+  Qed.
+
+  (** generate the list of values assigned to the variables by a in range [lower, lower + len) *)
   Fixpoint explicitAssignment a lower len := 
     match len with
       | 0 => [] 
@@ -286,6 +304,103 @@ Section fixInstance.
       destruct H as [H | H]; [left; apply G1, H | right; apply G2, H].
   Qed. 
 
+  (** next, we do the same for lists of formulas where the individual formulas are placed in a regular pattern starting at an index s with an offset step *)
+  Fixpoint tabulate_step (step s n : nat) := 
+    match n with 
+      | 0 => [] 
+      | S n => s :: tabulate_step step (step + s) n
+    end. 
+  Definition tabulate_formula s step n (t : nat -> formula) := map t (tabulate_step step s n). 
+
+  Lemma in_tabulate_step_iff step s n x : x el tabulate_step step s n <-> exists i, i < n /\ x = s + step * i. 
+  Proof. 
+    revert s. induction n; cbn; intros.
+    - split; [easy | intros (i & H & _); lia ].
+    - split. 
+      + intros [-> | H%IHn]; [exists 0; lia | ].
+        destruct H as (i & H1 & ->). exists (S i). lia. 
+      + intros (i & H1 & H2). 
+        destruct i. 
+        * now left. 
+        * right. apply IHn. exists i. lia. 
+  Qed.
+
+  Lemma in_tabulate_formula_iff s step n t f: 
+    f el tabulate_formula s step n t <-> exists i, i < n /\ f = t (s + step * i). 
+  Proof. 
+    unfold tabulate_formula. rewrite in_map_iff. setoid_rewrite in_tabulate_step_iff. 
+    split. 
+    - intros (x & <- & (i & H1 & ->)). exists i. eauto.
+    - intros (i & H1 & ->). exists (s + step * i). eauto.
+  Qed.
+
+  Fact projVars_mul_offset a s step i l n: i < n -> explicitAssignment a (s + step * i) l = projVars (step * i) l (explicitAssignment a s (step * n + (l - step))). 
+  Proof. 
+    intros H. apply list_eq_nth_error. 
+    split. 
+    - rewrite projVars_length; rewrite !explicitAssignment_length; [lia | ]. nia.
+    - rewrite explicitAssignment_length. intros k H1. 
+      unfold projVars. rewrite nth_error_firstn by apply H1. 
+      rewrite nth_error_skipn. rewrite !explicitAssignment_nth. 
+      + easy.
+      + nia. 
+      + apply H1. 
+  Qed.
+
+  (* t : length -> start -> formula *)
+  Lemma encodesPredicate_listOr_tabulate l (t : nat -> formula) p : 
+    (forall s, encodesPredicateAt s l (t s) p)
+    -> forall s step n, encodesPredicateAt s (step * n + (l - step)) (listOr (tabulate_formula s step n t)) (fun m => exists i, i < n /\ p (projVars (step * i) l m)). 
+  Proof. 
+    (* we have to add l - step for the case that l > step; this is the case when creating the rewrite windows, for instance *)
+    intros H s step n. unfold encodesPredicateAt. intros a. 
+    rewrite listOr_sat_iff. setoid_rewrite in_tabulate_formula_iff. 
+    split.
+    - intros (f & (i & H1 & ->) & H2). exists i. split; [easy | ]. 
+      specialize (H (s + step * i)). apply H in H2. 
+      rewrite <- projVars_mul_offset by apply H1. apply H2. 
+    - intros (i & H1 & H2). exists (t (s + step * i)). split. 
+      + exists i. eauto.
+      + apply H. erewrite projVars_mul_offset by apply H1. apply H2. 
+  Qed.
+
+  Lemma encodesPredicate_listAnd_tabulate l (t : nat -> formula) p : 
+    (forall s, encodesPredicateAt s l (t s) p)
+    -> forall s step n, encodesPredicateAt s (step * n + (l - step)) (listAnd (tabulate_formula s step n t)) (fun m => forall i, i < n -> p (projVars (step * i) l m)). 
+  Proof. 
+    intros H s step n. unfold encodesPredicateAt. intros a. 
+    rewrite listAnd_sat_iff. setoid_rewrite in_tabulate_formula_iff. 
+    split.
+    - intros H1 i H2. rewrite <- projVars_mul_offset by apply H2. 
+      apply H, H1. exists i; eauto. 
+    - intros H1 f (i & H2 & ->). apply H. 
+      erewrite projVars_mul_offset by apply H2. now apply H1. 
+  Qed.
+
+  (** similarly, we can combine multiple formulas at the same position *)
+  Lemma encodesPredicate_listOr_map (X : Type) s l (es : list X) (p : X -> predicate) (f : X -> formula) : 
+    (forall e, e el es -> encodesPredicateAt s l (f e) (p e))
+    -> encodesPredicateAt s l (listOr (map f es)) (fun m => exists e, e el es /\ p e m). 
+  Proof. 
+    intros H. unfold encodesPredicateAt. intros a. 
+    rewrite listOr_sat_iff. setoid_rewrite in_map_iff. 
+    split. 
+    - intros (fo & (x & <- & Hel) & H1). apply (H _ Hel) in H1. eauto.
+    - intros (x & Hel & H1). apply (H _ Hel) in H1. exists (f x). 
+      split; eauto.
+  Qed.
+
+  Lemma encodesPredicate_listAnd_map (X : Type) s l (es : list X) (p : X -> predicate) (f : X -> formula) : 
+    (forall e, e el es -> encodesPredicateAt s l (f e) (p e))
+    -> encodesPredicateAt s l (listAnd (map f es)) (fun m => forall e, e el es -> p e m). 
+  Proof. 
+    intros H. unfold encodesPredicateAt. intros a. 
+    rewrite listAnd_sat_iff. setoid_rewrite in_map_iff. 
+    split. 
+    - intros H1 e Hel. apply (H _ Hel). apply H1. eauto. 
+    - intros H1 fo (x & <- & Hel). apply (H _ Hel). now apply H1. 
+  Qed.
+
   (*encoding of single literals *)
   Definition encodeLiteral v (sign : bool) : formula := if sign then v else ¬ v. 
 
@@ -343,8 +458,8 @@ Section fixInstance.
       + intros (H2 & H3). inv H2. f_equal. apply Nat.succ_inj in H0. now apply firstn_all_inv. 
   Qed. 
 
-  (*encoding of windows *)
-  (*startA is the position at which the premise is placed, startB the position at which the conclusion is placed *)
+  (** encoding of windows *)
+  (** startA is the position at which the premise is placed, startB the position at which the conclusion is placed *)
   Definition encodeWindowAt (startA startB : nat) (win : PRWin bool) := encodeListAt startA (prem win) ∧ encodeListAt startB (conc win). 
 
   Lemma encodeWindowAt_encodesPredicate start len win : 
@@ -361,32 +476,14 @@ Section fixInstance.
     tauto.
   Qed.
 
-  (*encoding of the disjunction of all windows of the BinaryPR instance  *)
+  (** encoding of the disjunction of all windows of the BinaryPR instance  *)
   Definition encodeWindowsAt (startA startB : nat) := listOr (map (encodeWindowAt startA startB) windows). 
 
   Lemma encodeWindowsAt_encodesPredicate len start : len >= width -> encodesPredicateAt start (len + width) (encodeWindowsAt start (start + len)) (fun m => exists win, win el windows /\ projVars 0 width m = prem win /\ projVars len width m = conc win). 
   Proof. 
-    intros F0.
-    specialize (encodeWindowAt_encodesPredicate) as H1. 
-    unfold encodeWindowsAt. 
-    induction windows. 
-    - cbn. split. 
-      + unfold satisfies. cbn. congruence. 
-      + intros (win & [] & _). 
-    - cbn. match type of IHl with ?a -> _ => assert a as H by (intros; apply H1; eauto); apply IHl in H; clear IHl end. 
-      specialize (H1 start len a (or_introl eq_refl)). 
-      specialize (encodesPredicate_or H1 H) as H2. clear H1 H. 
-      cbn in H2. 
-      destruct A as (_ & _ & (k & A1 & A2) & _).
-      encodesPredicateAt_comp_simp H2. 
-      replace (start + (len + width) - start) with (len + width) in H2 by lia.
-      eapply encodesPredicateAt_extensional; [ | apply H2]. 
-      intros; cbn. 
-      rewrite !projVars_comp. cbn. rewrite !Nat.min_l by lia. rewrite Nat.add_0_r. 
-      split; intros. 
-      + destruct H0 as (win & [<- | H0] & F1 & F2); [now left | right; eauto].
-      + destruct H0 as [(F1 & F2) | (win & H0 & F1 & F2)]; eauto 7. 
-  Qed. 
+    intros F0. apply encodesPredicate_listOr_map. 
+    intros win Hel. apply encodeWindowAt_encodesPredicate, Hel. 
+  Qed.
 
   (*encoding of all windows of one line of the tableau *)
   (*we only need to place a window every offset fields, but subtracting offset isn't structurally recursive *)
@@ -507,7 +604,7 @@ Section fixInstance.
       * intros _; easy. 
   Qed.
 
-  (*the above construction specialized to the setting we need: the conclusion starts exactly one line after the premise *)
+  (** the above construction specialized to the setting we need: the conclusion starts exactly one line after the premise *)
   Definition encodeWindowsInLine start := encodeWindowsInLine' llength llength start (start + llength). 
   Lemma encodeWindowsInLine_encodesPredicate start : encodesPredicateAt start (llength + llength) (encodeWindowsInLine start) (fun m => valid offset width windows (projVars 0 llength m) (projVars llength llength m)). 
   Proof. 
@@ -516,51 +613,22 @@ Section fixInstance.
   Qed. 
 
   (*encoding of windows in all lines of the tableau *)
-  Fixpoint encodeWindowsInAllLines' (start : nat) (t : nat)  := 
-    match t with 
-    | 0 => Ftrue
-    | S t => encodeWindowsInLine start ∧ encodeWindowsInAllLines' (start + llength) t
-    end. 
-
-  Definition encodeWindowsInAllLines := encodeWindowsInAllLines' 0 steps. 
-
-  Lemma encodeWindowsInAllLines'_encodesPredicate start : encodesPredicateAt start ((S steps) * llength) (encodeWindowsInAllLines' start steps) 
+  Definition encodeWindowsInAllLines := listAnd (tabulate_formula 0 llength steps encodeWindowsInLine). 
+  Lemma encodeWindowsInAllLines_encodesPredicate : encodesPredicateAt 0 ((S steps) * llength) encodeWindowsInAllLines 
     (fun m => (forall i, 0 <= i < steps -> valid offset width windows (projVars (i * llength) llength m) (projVars (S i * llength) llength m))). 
   Proof. 
-    revert start. induction steps; cbn; intros. 
-    - rewrite !Nat.add_0_r. 
-      intros a; unfold satisfies; cbn; split; [ intros _; intros; lia | easy]. 
-    - specialize (encodeWindowsInLine_encodesPredicate start) as H1. 
-      specialize (IHn (start + llength)). 
-      specialize (encodesPredicate_and H1 IHn) as H. clear IHn H1. 
-
-      encodesPredicateAt_comp_simp H. 
-      replace (start + llength + S n * llength - start) with (llength + (llength + n * llength)) in H by lia. 
-      replace (start + llength - start) with llength in H by lia. 
-
-      eapply encodesPredicateAt_extensional; [ | apply H].
-      clear H. intros m. cbn -[projVars]. 
-      rewrite !projVars_comp. setoid_rewrite projVars_comp. cbn. rewrite !Nat.min_l by lia. 
-      rewrite Nat.add_0_r. split. 
-      + intros H1. split.
-        * specialize (H1 0). cbn in H1. rewrite Nat.add_0_r in H1. apply H1; lia.
-        * intros i H2. 
-          specialize (H1 (S i)). cbn in H1. rewrite Nat.add_comm. rewrite <- Nat.add_assoc. 
-          rewrite !Nat.min_l by nia.  setoid_rewrite Nat.add_comm at 3.
-          apply H1. lia.
-      + intros (H1 & H2). intros i H3. destruct i. 
-        * cbn. rewrite Nat.add_0_r. apply H1.
-        * specialize (H2 i). 
-          rewrite !Nat.min_l in H2 by nia.
-          cbn. rewrite Nat.add_comm. rewrite Nat.add_assoc. now apply H2. 
+    eapply encodesPredicateAt_extensional. 
+    2: { unfold encodeWindowsInAllLines. 
+         replace (S steps * llength) with (llength * steps + ((llength + llength) -llength)) by lia. 
+         apply encodesPredicate_listAnd_tabulate. intros s. apply encodeWindowsInLine_encodesPredicate. 
+    } 
+    intros m Hlen. split. 
+    - intros H i H1. specialize (H i ltac:(lia)). 
+      rewrite !projVars_comp. rewrite !Nat.min_l by lia. cbn. rewrite Nat.mul_comm at 1. 
+      replace (llength + llength * i) with (S i * llength) by lia. apply H. 
+    - intros H i (_ & H1). specialize (H i H1). rewrite !projVars_comp in H. rewrite !Nat.min_l in H by lia. 
+      cbn in H. cbn. rewrite Nat.mul_comm. apply H. 
   Qed.
-
-  (*again a version specialised to our needs *)
-  Corollary encodeWindowsInAllLines_encodesPredicate : encodesPredicateAt 0 ((S steps) * llength) encodeWindowsInAllLines 
-    (fun m => (forall i, 0 <= i < steps -> valid offset width windows (projVars (i * llength) llength m) (projVars (S i * llength) llength m))). 
-  Proof. 
-    unfold encodeWindowsInAllLines. apply encodeWindowsInAllLines'_encodesPredicate. 
-  Qed. 
 
   (*encode the substring constraint for a single string s *)
   (*should only be called for s satisfying |s| > 0; for s = nil, the breaking condition does not work as intended*)
@@ -670,35 +738,13 @@ Section fixInstance.
     - apply encodeSubstringInLine'_encodesPredicate; cbn; easy.
   Qed. 
 
-  (*the final constraint now is a disjunction over all given substrings *)
+  (** the final constraint now is a disjunction over all given substrings *)
   Definition encodeFinalConstraint (start : nat) := listOr (map (fun s => encodeSubstringInLine s start llength) final). 
-
-  Lemma encodesPredicate_listOr (X : Type) (l : list X) (encode : X -> nat -> nat -> formula) (p : X -> list bool -> Prop) start len : 
-    (forall x, x el l -> encodesPredicateAt start len (encode x start len) (p x)) 
-   -> encodesPredicateAt start len (listOr (map (fun x => encode x start len) l)) (fun m => (exists x, x el l /\ p x m)). 
-  Proof. 
-    intros H. induction l. 
-    - cbn. intros a. unfold satisfies; cbn. split; [ congruence | intros (_ & [] & _)].
-    - specialize (IHl (fun x Hel => H x (or_intror Hel))). cbn. 
-      specialize (H a (or_introl eq_refl)). 
-      specialize (encodesPredicate_or H IHl) as H1. clear IHl H. 
-      encodesPredicateAt_comp_simp H1. 
-      replace (start + len - start) with len in H1 by lia. 
-
-      eapply encodesPredicateAt_extensional; [ clear H1| apply H1].
-      intros m H2; split.
-      + intros (x & [-> | H] & H1). 
-        * left; now rewrite projVars_all.
-        * right. rewrite projVars_all; easy. 
-      + intros [H | (x & H & H')].
-        * exists a. now rewrite projVars_all in H.
-        * exists x. rewrite projVars_all in H'; easy.
-  Qed. 
 
   Lemma encodeFinalConstraint_encodesPredicate start : encodesPredicateAt start llength (encodeFinalConstraint start) (fun m => satFinal offset llength final m).
   Proof. 
     unfold encodeFinalConstraint. 
-    eapply encodesPredicateAt_extensional; [ | apply encodesPredicate_listOr]. 
+    eapply encodesPredicateAt_extensional; [ | apply encodesPredicate_listOr_map].
     2: { intros. apply encodeSubstringInLine_encodesPredicate; [easy | apply A]. }
     intros m H4. split. 
     - intros (subs & k & H1 & H2 & H3).

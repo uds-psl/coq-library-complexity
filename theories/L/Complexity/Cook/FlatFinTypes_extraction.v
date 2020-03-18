@@ -3,11 +3,13 @@ From Undecidability.L.Complexity.Cook Require Import Prelim.
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import LProd LOptions LBool LLNat LLists LSum.
 From Undecidability.L.Complexity Require Import PolyBounds. 
+From Undecidability.L.Functions Require Import EqBool.
 
-Instance term_flatOption : computableTime' flatOption (fun n _ => (2, tt)). 
-Proof. 
-  extract. solverec. 
-Defined.
+
+(*Instance term_flatOption : computableTime' flatOption (fun n _ => (2, tt)). *)
+(*Proof. *)
+  (*extract. solverec. *)
+(*Defined.*)
 
 (*Definition flatProd_time (a b : nat) := c__mult1 + mult_time a b + 1.*)
 (*Instance term_flatProd : computableTime' flatProd (fun a _ => (1, fun b _ => (flatProd_time a b, tt))). *)
@@ -21,15 +23,22 @@ Defined.
   (*extract. solverec. unfold flatSum_time. solverec. *)
 (*Defined. *)
 
-Instance term_flatSome : computableTime' flatSome (fun a _ => (3, tt)). 
-Proof. 
-  extract. solverec. 
-Defined. 
+(*Instance term_flatSome : computableTime' flatSome (fun a _ => (3, tt)). *)
+(*Proof. *)
+  (*extract. solverec. *)
+(*Defined. *)
 
-Instance term_flatInl : computableTime' flatInl (fun a _ => (1, tt)).
+
+
+(*Instance term_flatInl : computableTime' flatInl (fun a _ => (1, tt)).*)
+(*Proof. *)
+  (*extract. solverec. *)
+(*Defined. *)
+
+Instance term_id (X : Type) `{registered X}: computableTime' (@id X) (fun a _ => (1, tt)). 
 Proof. 
   extract. solverec. 
-Defined. 
+Qed.
 
 (*Definition c__flatInr := 13. *)
 (*Definition flatInr_time a := c__add1 + add_time a + 3. *)
