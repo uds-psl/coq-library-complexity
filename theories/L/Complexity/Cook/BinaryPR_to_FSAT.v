@@ -1034,11 +1034,114 @@ Proof.
 Qed.
 
 (** encodeWindowsInLine' *)
-Print encodeWindowsInLine'. 
-Definition encodeWindowsInLine'_time (bpr : BinaryPR) (stepindex l startA startB : nat) := 1. 
-Instance term_encodeWindowsInLine': computableTime' encodeWindowsInLine' (fun bpr _ => (1, fun stepi _ => (1, fun l _ => (1, fun s1 _ => (1, fun s2 _ => (encodeWindowsInLine'_time bpr stepi l s1 s2, tt)))))). 
+Definition c__encodeWindowsInLineP := c__width + c__sub1 + 3 * c__offset + 2 * c__add1 + 24.
+Fixpoint encodeWindowsInLine'_time (bpr : BinaryPR) (stepindex l startA startB : nat) := 
+  match stepindex with 
+  | 0 => 0 
+  | S stepi => encodeWindowsAt_time bpr startA startB + sub_time l (offset bpr) + add_time startA + add_time startB + encodeWindowsInLine'_time bpr stepi (l - offset bpr) (startA + offset bpr) (startB + offset bpr)
+  end + ltb_time l (width bpr) + c__encodeWindowsInLineP.
+Instance term_encodeWindowsInLine': computableTime' encodeWindowsInLine' (fun bpr _ => (1, fun stepi _ => (5, fun l _ => (1, fun s1 _ => (5, fun s2 _ => (encodeWindowsInLine'_time bpr stepi l s1 s2, tt)))))). 
 Proof. 
   extract. 
-  solverec. 
-  6: { unfold ltb_time, leb_time. rewrite Nat.le_min_r. 
-       unfold sub_time. rewrite Nat.le_min_r. 
+  solverec. all: unfold c__encodeWindowsInLineP; solverec. 
+Qed.
+
+(** we first bound the components that can be accounted for by the pr instance and bound the start indices inductively; 
+    we have the invariant that start' <= start + stepindex * offset for every start' obtained by recursion*)
+Definition poly__encodeWindowsInLineP1 n := poly__encodeWindowsAt n + (n + 1) * c__sub + (c__leb * (1 + n) + c__ltb) + c__encodeWindowsInLineP.
+Lemma encodeWindowsInLine'_time_bound1 bpr stepindex l startA startB : 
+  BinaryPR_wellformed bpr 
+  -> encodeWindowsInLine'_time bpr stepindex l startA startB <= (stepindex + 1) * poly__encodeWindowsInLineP1 (size (enc bpr)) 
+    + stepindex * (stepindex * (offset bpr) + startA + stepindex * (offset bpr) + startB + 2) * c__add. 
+Proof. 
+  intros H.
+  revert l startA startB. unfold encodeWindowsInLine'_time. induction stepindex; intros.
+  - unfold ltb_time, leb_time. rewrite Nat.le_min_r. 
+    rewrite size_nat_enc_r with (n := width bpr) at 1. 
+    replace_le (size (enc (width bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; cbn; lia). 
+    unfold poly__encodeWindowsInLineP1. leq_crossout. 
+  - rewrite IHstepindex. clear IHstepindex. 
+    rewrite encodeWindowsAt_time_bound by apply H. 
+    unfold sub_time. rewrite Nat.le_min_r. 
+    unfold ltb_time, leb_time. rewrite Nat.le_min_r. 
+    rewrite size_nat_enc_r with (n := offset bpr) at 1. 
+    replace_le (size (enc (offset bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; cbn; lia). 
+    rewrite size_nat_enc_r with (n := width bpr) at 1. 
+    replace_le (size (enc (width bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; cbn; lia). 
+    unfold poly__encodeWindowsInLineP1. unfold add_time. nia.  
+Qed.
+Lemma encodeWindowsInLineP1_poly : monotonic poly__encodeWindowsInLineP1 /\ inOPoly poly__encodeWindowsInLineP1. 
+Proof. 
+  unfold poly__encodeWindowsInLineP1; split; smpl_inO; apply encodeWindowsAt_poly. 
+Qed.
+
+(** in a second step, we also bound the numbers by their encoding size *)
+Definition poly__encodeWindowsInLine' n := (n + 1) * poly__encodeWindowsInLineP1 n + n * (n * n + n + 1) * c__add * 2.
+Lemma encodeWindowsInLine'_time_bound bpr stepindex l startA startB : 
+  BinaryPR_wellformed bpr -> encodeWindowsInLine'_time bpr stepindex l startA startB <= poly__encodeWindowsInLine' (size (enc bpr) + size (enc stepindex) + size (enc startA) + size (enc startB)). 
+Proof. 
+  intros H. rewrite encodeWindowsInLine'_time_bound1 by easy.
+  rewrite size_nat_enc_r with (n := stepindex) at 1 2 3 4. 
+  rewrite size_nat_enc_r with (n := offset bpr) at 1 2. 
+  replace_le (size (enc (offset bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
+  rewrite size_nat_enc_r with (n := startA) at 1. 
+  rewrite size_nat_enc_r with (n := startB) at 1. 
+  pose (g := size (enc bpr) + size (enc stepindex) + size (enc startA) + size (enc startB)). 
+  poly_mono encodeWindowsInLineP1_poly. 2: { instantiate (1 := g). subst g; lia. }
+  replace_le (size (enc stepindex)) with g by (subst g; lia) at 1 2 3 4. 
+  replace_le (size (enc bpr)) with g by (subst g; lia) at 1 2. 
+  replace_le (size (enc startA)) with g by (subst g; lia) at 1. replace_le (size (enc startB)) with g by (subst g; lia) at 1. 
+  fold g. 
+  unfold poly__encodeWindowsInLine'. nia. 
+Qed.
+Lemma encodeWindowsInLine'_poly : monotonic poly__encodeWindowsInLine' /\ inOPoly poly__encodeWindowsInLine'. 
+Proof. 
+  unfold poly__encodeWindowsInLine'; split; smpl_inO; apply encodeWindowsInLineP1_poly. 
+Qed. 
+
+
+(** encodeWindowsInLine *)
+Definition c__encodeWindowsInLine := 3 * c__init + 3 * c__length + c__add1 + 13.
+Definition encodeWindowsInLine_time (bpr : BinaryPR) (s : nat) := 
+  3 * c__length * (| init bpr |) + add_time s +
+  encodeWindowsInLine'_time bpr (| init bpr |) (| init bpr |) s (s + (| init bpr |)) + c__encodeWindowsInLine.
+Instance term_encodeWindowsInLine :computableTime' encodeWindowsInLine (fun bpr _ => (1, fun s _ => (encodeWindowsInLine_time bpr s, tt))). 
+Proof. 
+  extract. solverec. 
+  unfold encodeWindowsInLine_time, c__encodeWindowsInLine. solverec. 
+Qed.
+
+Definition poly__encodeWindowsInLine n := 3 * c__length * n + (n + 1) * c__add + poly__encodeWindowsInLine' (n * (c__natsizeS + 2) + c__natsizeO) + c__encodeWindowsInLine. 
+Lemma encodeWindowsInLine_time_bound bpr s : 
+  BinaryPR_wellformed bpr
+  -> encodeWindowsInLine_time bpr s <= poly__encodeWindowsInLine (size (enc bpr) + size (enc s)). 
+Proof. 
+  intros H. unfold encodeWindowsInLine_time. 
+  rewrite encodeWindowsInLine'_time_bound by easy.
+  poly_mono encodeWindowsInLine'_poly. 
+  2: { setoid_rewrite size_nat_enc at 3. rewrite list_size_enc_length, list_size_length. 
+       rewrite size_nat_enc_r with (n := s) at 2. 
+       replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
+       instantiate (1 := (size (enc bpr) + size (enc s)) * ( c__natsizeS + 2) + c__natsizeO). lia. 
+  } 
+  rewrite list_size_length. replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
+  unfold add_time. rewrite size_nat_enc_r with (n := s) at 1. 
+  unfold poly__encodeWindowsInLine; solverec.  
+Qed.
+Lemma encodeWindowsInLine_poly : monotonic poly__encodeWindowsInLine /\ inOPoly poly__encodeWindowsInLine. 
+Proof. 
+  unfold poly__encodeWindowsInLine; split; smpl_inO.
+  - apply encodeWindowsInLine'_poly.
+  - apply inOPoly_comp; smpl_inO; apply encodeWindowsInLine'_poly. 
+Qed. 
+  
+(** encodeWindowsInAllLines *)
+Definition c__encodeWindowsInAllLines := c__init + c__length + c__steps + 5.
+Definition encodeWindowsInAllLines_time (bpr : BinaryPR) := c__length * (|init bpr|) + tabulate_formula_time 0 (|init bpr|) (steps bpr) (encodeWindowsInLine_time bpr) + listAnd_time (tabulate_formula 0 (|init bpr|) (steps bpr) (encodeWindowsInLine bpr)) + c__encodeWindowsInAllLines.
+Instance term_encodeWindowsInAllLines : computableTime' encodeWindowsInAllLines (fun bpr _ => (encodeWindowsInAllLines_time bpr, tt)). 
+Proof. 
+  extract. solverec. 
+  unfold encodeWindowsInAllLines_time, c__encodeWindowsInAllLines. nia.  
+Qed.
+  
+
