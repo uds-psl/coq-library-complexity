@@ -3,7 +3,7 @@
 	url = https://github.com/sigurdschneider/smpl.git
 [submodule "external/metacoq"]
 	path = external/template-coq
-	url = git@github.com:fakusb/template-coq.git
+	url = https://github.com/fakusb/template-coq.git
 [submodule "external/base-library"]
 	path = external/uds-psl-base
-	url = git@github.com:lgaeher/base-library.git
+	url = https://github.com/lgaeher/base-library.git
