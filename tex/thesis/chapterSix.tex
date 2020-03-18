@@ -72,7 +72,7 @@ Conversely, we can formalise the above intuition that the length of a string is 
   For arbitrary $x : \str{\Sigma}$, the statement follows by induction on $x$ and using the defining properties of a uniform homomorphism.
 \end{proof}
 
-\section{Applying Uniform Homomorphisms to PR}\label{sec:unif_hom_pr}
+\section{Applying Uniform Homomorphisms to \PR{}}\label{sec:unif_hom_pr}
 We can show that \PR{} is invariant under injective uniform homomorphisms. That is, given a uniform homomorphism $h$ and a \PR{} instance $S$, we can define another \PR{} instance $S'$ where we have applied $h$ to all strings of $S$. $S'$ is a yes-instance if, and only if, $S$ is a yes-instance. 
 
 Fix a \PR{} instance $S = (\Sigma_1, o, \omega, x_0, R, \Rfinal, t)$. 
@@ -214,7 +214,7 @@ Properties $(A_1)$ and $(A_2)$ are straightforward to verify.
 \end{fact}
 
 The reduction now directly follows by Theorem~\ref{thm:hom_pr_equiv}.
-In the special case of $\length{\Sigma} = 0$, the reduction maps to a trivial no-instance of \BPR{}. 
+In the special case of $\length{\Sigma} = 0$, it maps to a trivial no-instance of \BPR{}. 
 
 \begin{lemma}[\PR{} Reduces to \BPR{}]
   $\PR{}~S \leftrightarrow \BPR{}~S'$,
@@ -226,7 +226,7 @@ We briefly comment on the differences of the Coq mechanisation and the proof on 
 
 First of all, \BPR{} is defined to be a syntactically different problem from \PR{} in the Coq mechanisation. The only change is that the alphabet is fixed to $\bool$. Nearly all definitions (for instance the definition of $\strent{}$) can be re-used and do not need to be stated explicitly again.
 
-Remember that we enforce the syntactic constraints on valid \PR{} instances (cf.\ Definition~\ref{def:pr}) externally. Therefore, we explicitly need to assume wellformedness of the \PR{} instance for the results of Section~\ref{sec:unif_hom_pr}. As wellformedness can be decided, the reduction maps non-wellformed instances to a trivial no-instance.
+Remember that we enforce the syntactic constraints on valid \PR{} instances (see Definition~\ref{def:pr}) externally. Therefore, we explicitly need to assume wellformedness of the \PR{} instance for the results of Section~\ref{sec:unif_hom_pr}. As wellformedness can be decided, the reduction maps non-wellformed instances to a trivial no-instance.
 
 \BPR{} has the nice property of being directly extractable as we do not work over a general finite type anymore. Thus, it is not required to define a flat version of the problem again. However, as \PR{} still needs a separate flat version, our reduction structure looks as follows:
 \begin{center}

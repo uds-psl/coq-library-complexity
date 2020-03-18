@@ -25,7 +25,7 @@ An evaluation function $\eval : \assgn \rightarrow \formula \rightarrow \bool$ c
 
 We could prove that \fsat{} is in \NP{} using the same notion of small assignments as for CNF satisfiability. This will, however, already follow from the reduction of \fsat{} to \SAT{} in Chapter~\ref{chap:fsat_sat}. 
 
-\subsection{Explicit Assignments}
+\paragraph{Explicit Assignments}
 The assignments we use, where we just store a list of variables to which the value $\btrue$ is assigned and to all other variables the value $\bfalse$ is assigned implicitly, are quite indirect and unstructured. 
 For the rest of this chapter a more explicit characterisation bearing resemblance to the Boolean strings over which \BPR{} is defined will be quite convenient.
 One possible characterisation is a list of Booleans $e : \listsof{\bool}$ together with a start index $s$, where the value $e[i]$ at position $i$ of this list is the value assigned to variable $s + i$. To variables outside the range $[s, s+\length{e})$, the value $\bfalse$ is assigned.
@@ -86,7 +86,7 @@ To stay in line with the variable range notation, we also write $\encodesPred~I~
 A rather trivial but important fact is that \encodesPred{} is extensional with respect to the encoded predicate. This will be quite convenient for proving correctness of encodings by switching to an equivalent characterisation of the predicate we want to encode.
 \begin{fact}\label{fact:enc_congruent}
   Let $\forall e, \length{e} = l \rightarrow p_1~e \leftrightarrow p_2~e$. Then
-  \[\encodesPred~s~l~f~p_1 \leftrightarrow \encodesPred~s~l~f~p_2. \]
+  \[\encodesPred~s~l~f~p_1 \leftrightarrow \encodesPred~s~l~f~p_2.\]
 \end{fact}
 
 \newcommand{\encodeLiteral}{\textsf{encodeLiteral}}
@@ -94,11 +94,11 @@ As a first example, we define the encoding of a literal:
 \[\encodeLiteral~v~\textsf{sign} : \formula \defeq \ITE{\textsf{sign}}{v}{\lnot v} \mnote{\encodeLiteral}\]
 As one would expect, the formula $\encodeLiteral~v~s$ forces variable $v$ to take the value s: 
 \begin{proposition}[Correctness of \encodeLiteral]
-  \[\encodesPred~v~1~(\encodeLiteral~v~s) (\lambda l. l = [s]) \]
+  \[\encodesPred~v~1~(\encodeLiteral~v~s) (\lambda l. l = [s])\]
 \end{proposition}
 
 Next, we show that conjunction and disjunction of formulas correspond to conjunction and disjunction of represented predicates. One problem with this is that the two predicates may talk about different or overlapping variable ranges $I_1$ and $I_2$. 
-Our simple representation model does not allow to accurately depict this, hence the new predicate will talk about the smallest range of variables $I$ that contains $I_1$ and $I_2$. We write this relation as $I = I_1 \sqcup I_2$.
+Our simple representation model does not allow to accurately depict this, hence the new predicate will talk about the smallest range of variables $I$ that contains $I_1$ and $I_2$. We write this as $I = I_1 \sqcup I_2$.
 
 \newcommand{\cStart}{\textsf{combStart}}
 \newcommand{\cLength}{\textsf{combLength}}

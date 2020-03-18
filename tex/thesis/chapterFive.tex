@@ -74,8 +74,7 @@ First of all, we make the informal description of \gennp{} given in the previous
 Syntactically, it is important that the numbers $t$ and $k'$ are given in a unary encoding instead of a binary encoding: with a binary encoding, a verifier for \gennp{} could not even take time linear in the number of steps. 
 
 \section{Parallel Rewriting}\label{sec:pr}
-Parallel Rewriting works over a finite alphabet $\Sigma$. Given an initial string $x_0$, a set of rewrite windows $R$, a number of steps $t$, and a final constraint $\Rfinal$, we are tasked with determining whether there exists a sequence of valid rewrites $x_0 \strent{} \ldots \strent{} x_t$ such that $x_t$ satisfies a substring constraint $\Rfinal$, written $x_t \models \Rfinal$.
-\todo{more intuition}
+Parallel Rewriting works over a finite alphabet $\Sigma$. Given an initial string $x_0$, a set of rewrite windows $R$, a number of steps $t$, and a final constraint $\Rfinal$, we are tasked with determining whether there exists a sequence of valid rewrites $x_0 \strent{R} \ldots \strent{R} x_t$ using the rewrite windows $R$ such that $x_t$ contains an element of a set of strings $\Rfinal$ as a substring, written $x_t \models \Rfinal$. The rewrite windows we consider here correspond to the rewrite windows of Chapter~\ref{chap:informaloverview}.
 
 \begin{definition}[Parallel Rewriting instances]\label{def:pr}
   \mnote{\PR{} instances}
@@ -92,7 +91,7 @@ Parallel Rewriting works over a finite alphabet $\Sigma$. Given an initial strin
   Here, $\winw{\omega}{\Sigma} := {\Sigma}^\omega \times {\Sigma}^\omega$\mnote{$\winw{\omega}{\Sigma}$} denotes the type of windows of width $w$ over $\Sigma$ and $ n \divides{} m$ means that $n$ divides $m$.
 \end{definition}
 If the width is clear from the context, we write $\win{\Sigma}$ instead of $\winw{\omega}{\Sigma}$.
-Instead of directly using the projections $\pi_1$ and $\pi_2$ on a window $w$, we usually write $\prem{w}$ and $\conc{w}$\mnote{$\prem, \conc$}. 
+Instead of directly using the projections $\pi_1$ and $\pi_2$ on a window $w$, we usually write $\prem{w}$ and $\conc{w}$\mnote{$\prem, \conc$}. In the previous chapter, we considered rewrite windows of width 3.
 
 Pictorially, $o$ symbols are always grouped together to form one abstract symbol, explaining the divisibility constraints. Throughout this chapter, we always work with an offset of 1 and the more general case will only become relevant in Chapter~\ref{chap:pr_bpr}.
 
@@ -362,23 +361,29 @@ In this section, we introduce the rewrite rules for shifting tape halves and pro
 Recall that we need rules for shifting the tape to the left, to the right, or leaving its position unchanged.
 The rules are annotated with the tape halves they can be used on. These annotations have no formal meaning but help with the intuition.
 
+\newcommand{\centerTheFuckingText}[1]{
+  \begin{tikzpicture}
+    \draw[color=white,thick] (0, 0) -- (2.25, 0);
+    \draw[color=white] (0.75, -0.75) -- (0.75, 0.75);
+    \draw[color=white] (1.5, -0.75) -- (1.5, 0.75);
+    \node at (2.25, 0) {#1};
+  \end{tikzpicture}
+}
 \paragraph{Right Shifts}
 \begin{center}
-\begin{tabular}{cc}
-\trewwin{\sigma_1}{\sigma_2}{\sigma_3}{\polpos{\sigma_4}}{\polpos{\sigma_1}}{\polpos{\sigma_2}} 
+  \trewwin{\sigma_1}{\sigma_2}{\sigma_3}{\polpos{\sigma_4}}{\polpos{\sigma_1}}{\polpos{\sigma_2}} 
   \quad \trewwin{\blank}{\blank}{\blank}{\polpos{\blank}}{\polpos{\blank}}{\polpos{\blank}}
-  & (both halves) \\
+  \centerTheFuckingText{(both halves)}
+  \\
 \trewwin{\blank}{\blank}{\blank}{\polpos{\sigma_1}}{\polpos{\blank}}{\polpos{\blank}} 
   \quad \trewwin{\sigma_1}{\blank}{\blank}{\polpos{\sigma_2}}{\polpos{\sigma_1}} {\polpos{\blank}}
 \quad \trewwin{\sigma_1}{\sigma_2}{\blank}{\polpos{\sigma_3}}{\polpos{\sigma_1}}{ \polpos{\sigma_2}}
-  & (right half) \\
+\centerTheFuckingText{(right half)} \\
 \trewwin{\blank}{\blank}{\sigma_1}{\polpos{\blank}}{\polpos{\blank}}{\polpos{\blank}}
   \quad \trewwin{\blank}{\sigma_1}{\sigma_2} {\polpos{\blank}}{\polpos{\blank}}{ \polpos{\sigma_1}} 
 \quad \trewwin{\sigma_1}{\sigma_2}{\sigma_3}{\polpos{\blank}}{\polpos{\sigma_1}}{ \polpos{\sigma_2}}
-  & (left half)
-\end{tabular}
+\centerTheFuckingText{(left half)}
 \end{center}
-\todo{fix formatting}
 
 The rules implicitly encode the invariant that all symbols used by the Turing machine are placed contiguously with no blanks inbetween. For instance, we do not need the following two rules:
 \begin{center}
@@ -461,6 +466,7 @@ The results are each proven for the right tape half and then derived for the lef
 
 We start with a statement about empty tape halfs which will later be the base case of more general results.
 %lemma 16
+\pagebreak
 \begin{lemma}[Empty Tape Half: Blank Rewriting]\label{lem:nilstr_blank}\leavevmode
   \begin{enumerate}
     \item $\nilstr{p}{\hat{n}} \strent{\Rtape} \nilstr{p'}{\hat{n}}$ and $\nilstr{p}{\hat{n}} \strent{\Rtape} (p', \blank) :: s \rightarrow s = \nilstr{p'}{(\natS{n})}$

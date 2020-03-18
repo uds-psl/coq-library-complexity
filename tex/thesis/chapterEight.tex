@@ -17,14 +17,14 @@ Introducing new variables is fine since we only require the resulting CNF $N$ to
 In the Tseytin transformation, each subformula $f'$ of the formula $f$ is represented by a variable $v'$ together with a CNF $N'$, such that $\fsat{}~f' \leftrightarrow \SAT{}~(v' \land N')$. Intuitively, the CNF $N'$ forces variable $v'$ to be equivalent to $f'$ for any assignment.
 \begin{example}
   As an example, we consider the transformation for the disjunctive formula $f = \phi_1 \lor \phi_2$. First of all, we recursively apply the transformation to $\phi_1$ and $\phi_2$ in order to obtain variables $v_1$ and $v_2$ and CNFs $N_1$ and $N_2$ that represent the respective formulas. Of course, we have to take care that the new variables introduced for the transformation of $\phi_1$ and $\phi_2$ do not overlap.
-  We now introduce a fresh variable $v$ for the subformula $\phi_1 \lor \phi_2$ and build a CNF $N$ such that $v \land N$ is equisatisfiable to $\phi_1 \lor \phi_2$. $N$ should enforce that $v \leftrightarrow (v_1 \lor v_2)$ and that $v_1$ and $v_2$ represent $\phi_1$ and $\phi_2$, respectively.
+  We now add a fresh variable $v$ for the subformula $\phi_1 \lor \phi_2$ and build a CNF $N$ such that $v \land N$ is equisatisfiable to $\phi_1 \lor \phi_2$. $N$ should enforce that $v \leftrightarrow (v_1 \lor v_2)$ and that $v_1$ and $v_2$ represent $\phi_1$ and $\phi_2$, respectively.
   Therefore, set $N = N_1 \land N_2 \land N'$, where $N'$ is the CNF 
   \[ N' \defeq (\lnot v \lor v_1 \lor v_2) \land (\lnot v_1  \lor v) \land (\lnot v_2 \lor v), \]
   which is equivalent to $v \leftrightarrow (v_1 \lor v_2)$.
 \end{example}
 
 \section{Preliminaries: Composing Partial Assignments}\label{sec:tseytin_prelim}
-As mentioned in the introduction, the Tseytin transformation introduces new variables. In order to prove the transformation correct, we need some tools to be able to introduce fresh variables and compose assignments to different ranges of variables.
+As mentioned in the introduction, the Tseytin transformation adds new variables. In order to prove the transformation correct, we need some tools to be able to introduce fresh variables and compose assignments to different ranges of variables.
 
 First of all, we define functions computing the maximum variable used in a CNF or formula, or zero if no variable is used. We refer to both of these functions by \mnotec{\maxVar{}}; it will be clear from the context whether we mean CNFs or formulas. 
 
@@ -119,7 +119,7 @@ Now, we define the transformation function. The main challenge is to keep track 
 To that end, we define an auxiliary function $\tseytin' : \var \rightarrow \formula \rightarrow \var \times \cnf \times \var$ (Figure~\ref{lst:tseytin}). 
 Its first argument is the next unused variable $nf$ (short for ``next free''), followed by the formula $f$ we would like to transform. It returns a triple $(rv, N, nf')$, where $rv$ is the variable representing the formula, $N$ is the accompanying CNF, and $nf'$ is the next free variable after transforming $f$. 
 The function's different cases make use of primitive functions introducing the CNF constraints. They can be found in Figure~\ref{fig:prim_cnfs}. 
-Note that we introduce a fresh variable for the variable base case, too, and force this variable to be equivalent to the original one. This is a design choice we make to simplify the invariant for the proof of correctness a bit. Alternatively, this case could read $\tseytin'~nf~v \defeq (v, \nil, nf)$, returning just the original variable with an empty CNF.
+Note that we add a fresh variable for the variable base case, too, and force this variable to be equivalent to the original one. This is a design choice we make to simplify the invariant for the proof of correctness a bit. Alternatively, this case could read $\tseytin'~nf~v \defeq (v, \nil, nf)$, returning just the original variable with an empty CNF.
 The transformation function \tseytin{} (Figure~\ref{lst:tseytin}) can be derived by first computing the maximum variable used by the formula and then using $\tseytin'$.
 
 \begin{figure}
@@ -240,7 +240,7 @@ Assuming that the formula does not contain $\lor$'s, we can now prove the desire
   By induction on $f$.
   \begin{description}
     \item[$f = \btrue$:] The conditions of the representation relation are straightforward to verify, using monotonicity (Proposition~\ref{prop:var_contain}). For the third condition, we pick the assignment $[nf]$, setting the newly introduced variable to $\btrue$.
-    \item[$f = v$:] Again an easy proof. For the third condition, given an assignment $a \subseteq [0, b)$ to the original variables, for the assignment to the newly introduced variable $nf$ we pick the same value that $a$ assigns to $v$ (as $v$ should be equivalent to the new variable $nf$). 
+    \item[$f = v$:] Again an easy proof. For the third condition, given an assignment $a \subseteq [0, b)$ to the original variables, for the assignment to the newly added variable $nf$ we pick the same value that $a$ assigns to $v$ (as $v$ should be equivalent to the new variable $nf$). 
     \item[$f = f_1 \land f_2$:] By Lemma~\ref{lem:compat_and}.
     \item[$f = f_1 \lor f_2$:] Contradictory.
     \item[$f = \lnot f'$:] By Lemma~\ref{lem:compat_not}.
