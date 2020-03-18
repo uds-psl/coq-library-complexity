@@ -303,17 +303,25 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
   \end{overlayarea}
 \end{frame}
 
-\begin{frame}[label=challenges]{Challenges}
-  \begin{itemize}
-    \item \sat{} formula has a fixed size, but: 
-      \begin{itemize} 
-        \item TM may have different space usage depending on input
-        \item TM may take a different number of steps until it halts
-      \end{itemize}
-    \item nondeterministically ``guess'' input
-    \item encode arbitrary alphabet using Boolean variables
-  \end{itemize}
-  %tackle these problems with a sequence of intermediate languages
+%\begin{frame}[label=challenges]{Challenges}
+  %\begin{itemize}
+    %\item \sat{} formula has a fixed size, but: 
+      %\begin{itemize} 
+        %\item TM may have different space usage depending on input
+        %\item TM may take a different number of steps until it halts
+      %\end{itemize}
+    %\item nondeterministically ``guess'' input
+    %\item encode arbitrary alphabet using Boolean variables
+  %\end{itemize}
+  % %tackle these problems with a sequence of intermediate languages
+%\end{frame}
+
+\begin{frame}{Boundedness}
+  \sat{} formula has a fixed size, but: 
+    \begin{itemize} 
+      \item TM may have different space usage depending on input
+      \item TM may take a different number of steps until it halts
+    \end{itemize}
 \end{frame}
 
 \begin{frame}<1>[label=tableau]{Tableau\footnote{based on\cite{Sipser:TheoryofComputation}, similar to \cite{Cook:1971:CTP:800157.805047}}}
@@ -729,11 +737,9 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 
 \end{frame}
 
-\begin{frame}[t]{Tape Shifts}
+\begin{frame}[t]{Rewrite Rules}
   Add one symbol to the right half of the tape:
-  \begin{overlayarea}{\textwidth}{0.15\textwidth}
     \vspace{-0.5ex}
-    \begin{minipage}{0.58\textwidth}
       \begin{center}
         \begin{tikzpicture}
           \draw (5.25, 0.75) -- (9.75, 0.75);
@@ -783,6 +789,239 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
             \node at (7.125, -0.375) {$\sigma_2$};
           }
         \end{tikzpicture}
+        \end{center}
+      \onslide<2->{
+        \begin{center}
+          $\sigma_i \in \Sigma_{\text{TM}}$
+        \end{center}
+      }
+
+      \begin{center}
+        \trewwin{\only<1>{b}\only<2->{\sigma_1}}{\only<1>{b}\only<2->{\sigma_2}}{\blank}{\only<1>{b}\only<2->{\sigma_3}}{\only<1>{b}\only<2->{\sigma_1}}{\only<1>{b}\only<2->{\sigma_2}}
+        \onslide<3->{
+          \trewwin{\sigma_2}{\blank}{\blank}{\sigma_1}{\sigma_2}{\blank}
+          \trewwin{\blank}{\blank}{\blank}{\sigma_2}{\blank}{\blank}
+          \vfill{}$\cdots$\vfill{}
+        }
+      \end{center}
+\end{frame}
+
+\againframe<2>{tableau}
+
+\begin{frame}<1>[label=prdef]{Parallel Rewriting (\PR{})}
+  Given: 
+  \begin{itemize}
+    \item an alphabet $\Sigma$ and a string length $l$
+    \item an initial string $x_0 \in \Sigma^l$ and a step count $t$
+    \item a width $w$  of rewrite windows 
+      {\only<2>{\colorHTwo{}and a rewriting offset $o$}}
+    \item a set of rewrite windows $R$
+    \item a set of final substring constraints $R_{\mathit{final}}$
+  \end{itemize}
+  Determine: $\exists$ $x_1, \ldots, x_{t-1} \in \Sigma^l$ s.t.\ 
+  \begin{itemize}
+    \item $x_i \rightsquigarrow x_{i+1}$: ``for all offsets, there exists a rewrite window''
+    \item there exists an element $x \in R_{\mathit{final}}$ which is a substring of $x_{t-1}$
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Nondeterminism}
+  \begin{itemize}
+    \item ``Guess'' input string of length $\le k$ with a single rewrite step
+    \item Add symbols $\{\underline{\#}, \underline{\blank}, \underline{*}, \underline{q^{\blank}}\}$ for initial state $q$
+  \end{itemize}
+
+  \vspace{2ex}
+  Initial string: 
+  \begin{center}
+    \begin{tikzpicture}
+      \draw (0, 0.5) -- (10.5, 0.5);
+      \draw[thick] (0, 0) -- (10.5, 0);
+      \draw (0, 0) -- (0, 0.5);
+      \draw (10.5, 0) -- (10.5, 0.5);
+
+      \draw (0.5, 0.5) -- (0.5, 0);
+      \draw (1, 0.5) -- (1, 0);
+      \draw (10, 0.5) -- (10, 0);
+      \draw (9.5, 0.5) -- (9.5, 0);
+      \draw (5, 0.5) -- (5, 0);
+      \draw (5.5, 0.5) -- (5.5, 0);
+      \draw (4.5, 0.5) -- (4.5, 0);
+      \draw (6, 0.5) -- (6, 0);
+      \draw (7.5, 0.5) -- (7.5, 0);
+      \draw (8, 0.5) -- (8, 0);
+      \draw (8.5, 0.5) -- (8.5, 0);
+
+      \node at (9, 0.25) {$\cdots$};
+      \node at (6.75, 0.25) {$\cdots$};
+      \node at (2.75, 0.25) {$\cdots$};
+
+      \node at (0.25, 0.25) {\underline{\#}};
+      \node at (0.75, 0.24) {$\underline{\blank}$};
+      \node at (4.75, 0.25) {$\underline{\blank}$};
+      \node at (5.25, 0.25) {$\underline{q^{\blank}}$};
+      \node at (5.75, 0.25) {$\underline{*}$};
+      \node at (7.75, 0.25) {$\underline{*}$};
+      \node at (8.25, 0.25) {$\underline{\blank}$};
+      \node at (9.75, 0.25) {$\underline{\blank}$};
+      \node at (10.25, 0.25) {\underline{\#}};
+
+      \draw (0, -0.5) -- (10.5, -0.5);
+      \draw (0, 0) -- (0, -0.5);
+      \draw (10.5, 0) -- (10.5, -0.5);
+
+      \draw (0.5, -0.5) -- (0.5, 0);
+      \draw (1, -0.5) -- (1, 0);
+      \draw (10, -0.5) -- (10, 0);
+      \draw (9.5, -0.5) -- (9.5, 0);
+      \draw (5, -0.5) -- (5, 0);
+      \draw (5.5, -0.5) -- (5.5, 0);
+      \draw (4.5, -0.5) -- (4.5, 0);
+      \draw (6, -0.5) -- (6, 0);
+      \draw (6.5, -0.5) -- (6.5, 0);
+      \draw (7, -0.5) -- (7, 0);
+      %\draw (7.5, -0.5) -- (7.5, 0);
+      %\draw (8, -0.5) -- (8, 0);
+      %\draw (8.5, -0.5) -- (8.5, 0);
+
+      \node at (2.75, -0.25) {$\cdots$};
+      \node at (0.25, -0.25) {\#};
+      \node at (0.75, -0.25) {\blank};
+      \node at (4.75, -0.25) {\blank};
+      \node at (5.25, -0.25) {$q^{\blank}$};
+      \node at (5.75, -0.25) {$\sigma_1$};
+      \node at (6.25, -0.25) {$\sigma_2$};
+      \node at (6.75, -0.25) {\blank};
+      \node at (8.25, -0.25) {$\cdots$};
+      \node at (9.75, -0.25) {\blank};
+      \node at (10.25, -0.25) {\#};
+
+      \path[<->] (5.5, 1) edge node[fill=white, anchor=center, pos= 0.5] {\small $k$} (8, 1);
+      \path[<->] (0, 1) edge node [fill = white, anchor=center, pos=0.5] {\small $z$} (5, 1);
+      \path[<->] (8, 1) edge node [fill = white, anchor =center, pos=0.5] {\small $z-k$} (10.5, 1);
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+%\section{Formalisation}
+
+\section{Context}
+\begin{frame}{Mechanisation: Challenges}
+  \begin{itemize}
+    \item massive number of cases (100): proof \emph{heavily} relies on automation
+
+      $\rightarrow$ rewrite rules formalised as inductive predicates
+    \item proofs that rewrites are unique require \emph{a lot} of inversions
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[label=contextslide]{Reduction of \gennp{} to \sat{}}
+  \begin{center}
+    \begin{tikzpicture}[scale=0.9, every node/.style={scale=0.9}]
+      \node[rectangle, draw=black, minimum width=10cm] (gennp) {Generic Problem on Turing Machines (\gennp{})}; 
+      \node[rectangle, draw=black, minimum width = 10cm, below = of gennp] (strrew1) {Parallel Rewriting (\PR{}) on arbitrary $\Sigma$};
+      \node[rectangle, draw=black, below = of strrew1, minimum width = 10cm] (strrew2) {Binary Parallel Rewriting};
+      \node[rectangle, draw=black, below = of strrew2, minimum width = 10cm] (csat) {Propositional SAT (\fsat{})};
+      \node[rectangle, draw=black, below = of csat, minimum width = 10cm] (sat) {SAT on CNFs (\sat{})};
+      \draw[->] 
+        (gennp) edge (strrew1)
+        (strrew1) edge node[right] {homomorphism} (strrew2)
+        (strrew2) edge node[right] {encode bits using boolean variables} (csat)
+        (csat) edge node[right] {Tseytin transformation} (sat);
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+%\againframe{challenges}
+
+
+%\againframe[noframenumbering]{contextslide}
+
+\begin{frame}{Conclusion}
+  Contributions: 
+  \begin{itemize}
+    \item factorisation of proof\footnote{\cite{Sipser:TheoryofComputation}} into tractable parts
+    \item changes to the original construction\ldots
+      \begin{itemize}
+        \item \ldots to fit our notion of Turing machines
+        \item \ldots to make inductive proofs work nicely
+      \end{itemize}
+    \item Coq: verified reduction of \gennp{} to \PR{}
+  \end{itemize}
+
+  \vspace{3ex}
+
+  Roadmap:
+  \begin{itemize}
+    \item reduction of \PR{} to binary \PR{}
+    \item reduction of binary \PR{} to formula satisfiablity
+    \item (reduction of formula satisfiability to CNF satisfiability)
+    \item extraction to L
+  \end{itemize}
+\end{frame}
+
+\miniframesoff
+\section{}
+
+\begin{frame}{LOC}
+  \begin{center}
+  \begin{tabular}{cccc}
+    Component & Spec & Proof \\
+    \midrule
+    preliminaries & 86 & 196 \\
+    definition of PR & 136 & 232 \\
+    single-tape TMs & 35 & 78 \\
+    nondeterminism: Preludes & 47 & 169 \\
+    reduction of TM to PR & 930 & 1501 \\
+    encoding of finite types & 9 & 70 \\
+    list-based rules (wip) & 581 & 672 \\
+    \midrule
+    total & 1824 & 2918 
+  \end{tabular}
+  \end{center}
+\end{frame}
+
+\begin{frame}[t]{Tape Shifts}
+  Add one symbol to the right half of the tape:
+  \begin{overlayarea}{\textwidth}{0.15\textwidth}
+    \vspace{-0.5ex}
+    \begin{minipage}{0.58\textwidth}
+      \begin{center}
+        \begin{tikzpicture}
+          \draw (5.25, 0.75) -- (9.75, 0.75);
+          \draw[thick] (5.25, 0) -- (9.75, 0);
+          \draw (5.25, 0) -- (5.25, 0.75);
+          \draw (9.75, 0) -- (9.75, 0.75);
+
+          \draw (5.25, 0) -- (5.25, 0.75);
+          \draw (6, 0) -- (6, 0.75);
+          \draw (6.75, 0) -- (6.75, 0.75);
+          \draw (7.5, 0) -- (7.5, 0.75);
+          \draw (8.25, 0) -- (8.25, 0.75);
+
+          \node at (9.125, 0.375) {$\cdots$};
+          \node at (7.125, 0.375) {\blank};
+          \node at (7.875, 0.375) {\blank};
+
+          \node at (5.6125, 0.375) {$\sigma_1$};
+          \node at (6.375, 0.375) {$\sigma_2$};
+
+          \draw (5.25, -0.75) -- (9.75, -0.75);
+          \draw (5.25, -0.75) -- (5.25, 0);
+          \draw (9.75, -0.75) -- (9.75, 0);
+
+          \draw (5.25, 0) -- (5.25, -0.75);
+          \draw (6, 0) -- (6, -0.75);
+          \draw (6.75, 0) -- (6.75, -0.75);
+          \draw (7.5, 0) -- (7.5, -0.75);
+          \draw (8.25, 0) -- (8.25, -0.75);
+
+          \node at (9.125, -0.375) {$\cdots$};
+          \node at (7.875, -0.375) {\blank};
+          \node at (5.6125, -0.375) {$\sigma_3$};
+          \node at (6.375, -0.375) {$\sigma_1$};
+          \node at (7.125, -0.375) {$\sigma_2$};
+        \end{tikzpicture}
         \only<2->{
           \begin{tikzpicture}[overlay, remember picture]
             \node at (4.5, 0.8) {$\sigma_i \in \Sigma_{\text{TM}}$ };
@@ -791,7 +1030,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
       \end{center}
     \end{minipage}
     \begin{minipage}{0.38\textwidth}
-      \trewwin{\only<1>{b}\only<2->{\sigma_1}}{\only<1>{b}\only<2->{\sigma_2}}{\blank}{\only<1>{b}\only<2->{\sigma_3}}{\only<1>{b}\only<2->{\sigma_1}}{\only<1>{b}\only<2->{\sigma_2}}
+      \trewwin{\sigma_1}{\sigma_2}{\blank}{\sigma_3}{\sigma_1}{\sigma_2}
     \end{minipage}
   \end{overlayarea}
 
@@ -1092,178 +1331,43 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
   \end{center}
 \end{frame}
 
-\againframe<2>{tableau}
+\begin{frame}{Transition Rules -- Example}
+  \onslide<2>{In Coq mechanisation:}
+  \begin{tikzpicture}[overlay, remember picture]
+    \node at (5, 1.17) {$m \in \Sigma_{\text{TM}} \cup \{\blank\}, \sigma \in \Sigma_{\text{TM}}$};
+  \end{tikzpicture}
 
-\begin{frame}<1>[label=prdef]{Parallel Rewriting (\PR{})}
-  Given: 
-  \begin{itemize}
-    \item an alphabet $\Sigma$ and a string length $l$
-    \item an initial string $x_0 \in \Sigma^l$ and a step count $t$
-    \item a width $w$  of rewrite windows 
-      {\only<2>{\colorHTwo{}and a rewriting offset $o$}}
-    \item a set of rewrite windows $R$
-    \item a set of final substring constraints $R_{\mathit{final}}$
-  \end{itemize}
-  Determine: $\exists$ $x_1, \ldots, x_t \in \Sigma^l$ s.t.\ 
-  \begin{itemize}
-    \item $x_i \rightsquigarrow x_{i+1}$: ``for all offsets, there exists a rewrite window''
-    \item there exists an element $x \in R_{\mathit{final}}$ which is a substring of $x_t$
-  \end{itemize}
-\end{frame}
+  $\delta(q, a) = (p, \Some{b}, L)$: 
+  \begin{overlayarea}{\textwidth}{0.7\textheight}
+    \only<1>{
+      \begin{center}
+        \trewwin{\blank}{q^{a}}{m_1}{\blank}{p^{\blank}}{\polpos{b}}
+        \trewwin{\sigma_1}{q^a}{m_1}{\polpos{m_2}}{p^{\sigma_1}}{\polpos{b}}\\
+        \trewwin{\blank}{\blank}{q^a}{\blank}{\blank}{p^{\blank}}
+        \trewwin{\blank}{\sigma_1}{q^a}{\blank}{\blank}{p^{\sigma_1}}
+        \trewwin{\sigma_1}{\sigma_2}{q^a}{\polpos{m_1}}{\polpos{\sigma_1}}{p^{\sigma_2}} \\
+        \trewwin{q^a}{\blank}{\blank}{p^{m_1}}{\polpos{b}}{\blank}
+        \trewwin{q^a}{\sigma_1}{m_1}{p^{m_2}}{\polpos{b}}{\polpos{\sigma_1}}
+      \end{center}
+    }
+    \only<2->{
+      \begin{center}
+        \trewwin{m_1}{q^a}{m_2}{\polpos{m_3}}{p^{m_1}}{\polpos{b}}
+        \trewwin{m_1}{m_2}{q^a}{\polpos{m_3}}{\polpos{m_1}}{p^{m_2}}
+        \trewwin{q^a}{m_1}{m_2}{p^{m_3}}{\polpos{b}}{\polpos{m_1}}
+      \end{center}
 
-\begin{frame}{Nondeterminism}
-  \begin{itemize}
-    \item ``Guess'' input string of length $\le k$ with a single rewrite step
-    \item Add symbols $\{\underline{\#}, \underline{\blank}, \underline{*}, \underline{q^{\blank}}\}$ for initial state $q$
-  \end{itemize}
-
-  \vspace{2ex}
-  Initial string: 
-  \begin{center}
-    \begin{tikzpicture}
-      \draw (0, 0.5) -- (10.5, 0.5);
-      \draw[thick] (0, 0) -- (10.5, 0);
-      \draw (0, 0) -- (0, 0.5);
-      \draw (10.5, 0) -- (10.5, 0.5);
-
-      \draw (0.5, 0.5) -- (0.5, 0);
-      \draw (1, 0.5) -- (1, 0);
-      \draw (10, 0.5) -- (10, 0);
-      \draw (9.5, 0.5) -- (9.5, 0);
-      \draw (5, 0.5) -- (5, 0);
-      \draw (5.5, 0.5) -- (5.5, 0);
-      \draw (4.5, 0.5) -- (4.5, 0);
-      \draw (6, 0.5) -- (6, 0);
-      \draw (7.5, 0.5) -- (7.5, 0);
-      \draw (8, 0.5) -- (8, 0);
-      \draw (8.5, 0.5) -- (8.5, 0);
-
-      \node at (9, 0.25) {$\cdots$};
-      \node at (6.75, 0.25) {$\cdots$};
-      \node at (2.75, 0.25) {$\cdots$};
-
-      \node at (0.25, 0.25) {\underline{\#}};
-      \node at (0.75, 0.24) {$\underline{\blank}$};
-      \node at (4.75, 0.25) {$\underline{\blank}$};
-      \node at (5.25, 0.25) {$\underline{q^{\blank}}$};
-      \node at (5.75, 0.25) {$\underline{*}$};
-      \node at (7.75, 0.25) {$\underline{*}$};
-      \node at (8.25, 0.25) {$\underline{\blank}$};
-      \node at (9.75, 0.25) {$\underline{\blank}$};
-      \node at (10.25, 0.25) {\underline{\#}};
-
-      \draw (0, -0.5) -- (10.5, -0.5);
-      \draw (0, 0) -- (0, -0.5);
-      \draw (10.5, 0) -- (10.5, -0.5);
-
-      \draw (0.5, -0.5) -- (0.5, 0);
-      \draw (1, -0.5) -- (1, 0);
-      \draw (10, -0.5) -- (10, 0);
-      \draw (9.5, -0.5) -- (9.5, 0);
-      \draw (5, -0.5) -- (5, 0);
-      \draw (5.5, -0.5) -- (5.5, 0);
-      \draw (4.5, -0.5) -- (4.5, 0);
-      \draw (6, -0.5) -- (6, 0);
-      \draw (6.5, -0.5) -- (6.5, 0);
-      \draw (7, -0.5) -- (7, 0);
-      %\draw (7.5, -0.5) -- (7.5, 0);
-      %\draw (8, -0.5) -- (8, 0);
-      %\draw (8.5, -0.5) -- (8.5, 0);
-
-      \node at (2.75, -0.25) {$\cdots$};
-      \node at (0.25, -0.25) {\#};
-      \node at (0.75, -0.25) {\blank};
-      \node at (4.75, -0.25) {\blank};
-      \node at (5.25, -0.25) {$q^{\blank}$};
-      \node at (5.75, -0.25) {$\sigma_1$};
-      \node at (6.25, -0.25) {$\sigma_2$};
-      \node at (6.75, -0.25) {\blank};
-      \node at (8.25, -0.25) {$\cdots$};
-      \node at (9.75, -0.25) {\blank};
-      \node at (10.25, -0.25) {\#};
-
-      \path[<->] (5.5, 1) edge node[fill=white, anchor=center, pos= 0.5] {\small $k$} (8, 1);
-      \path[<->] (0, 1) edge node [fill = white, anchor=center, pos=0.5] {\small $z$} (5, 1);
-      \path[<->] (8, 1) edge node [fill = white, anchor =center, pos=0.5] {\small $z-k$} (10.5, 1);
-    \end{tikzpicture}
-  \end{center}
-\end{frame}
-
-%\section{Formalisation}
-
-\section{Context}
-\begin{frame}{Mechanisation: Challenges}
-  \begin{itemize}
-    \item massive number of cases (100): proof \emph{heavily} relies on automation
-
-      $\rightarrow$ rewrite rules formalised as inductive predicates
-    \item proofs that rewrites are unique require \emph{a lot} of inversions
-  \end{itemize}
+      Contains garbage, i.e. 
+      \begin{center}
+        \trewwin{\blank}{q^a}{\blank}{\polpos{\sigma}}{p^{\blank}}{\polpos{b}}
+      \end{center}
+    }
+  \end{overlayarea}
 \end{frame}
 
 
-\begin{frame}[label=contextslide]{Reduction of \gennp{} to \sat{}}
-  \begin{center}
-    \begin{tikzpicture}[scale=0.9, every node/.style={scale=0.9}]
-      \node[rectangle, draw=black, minimum width=10cm] (gennp) {Generic Problem on Turing Machines (\gennp{})}; 
-      \node[rectangle, draw=black, minimum width = 10cm, below = of gennp] (strrew1) {Parallel Rewriting (\PR{}) on arbitrary $\Sigma$};
-      \node[rectangle, draw=black, below = of strrew1, minimum width = 10cm] (strrew2) {Binary Parallel Rewriting};
-      \node[rectangle, draw=black, below = of strrew2, minimum width = 10cm] (csat) {Propositional SAT (\fsat{})};
-      \node[rectangle, draw=black, below = of csat, minimum width = 10cm] (sat) {SAT on CNFs (\sat{})};
-      \draw[->] 
-        (gennp) edge (strrew1)
-        (strrew1) edge node[right] {homomorphism} (strrew2)
-        (strrew2) edge node[right] {encode bits using boolean variables} (csat)
-        (csat) edge node[right] {Tseytin transformation} (sat);
-    \end{tikzpicture}
-  \end{center}
-\end{frame}
-%\againframe{challenges}
 
 
-%\againframe[noframenumbering]{contextslide}
-
-\begin{frame}{Conclusion}
-  Contributions: 
-  \begin{itemize}
-    \item factorisation of proof\footnote{\cite{Sipser:TheoryofComputation}} into tractable parts
-    \item changes to the original construction\ldots
-      \begin{itemize}
-        \item \ldots to fit our notion of Turing machines
-        \item \ldots to make inductive proofs work formally
-      \end{itemize}
-    \item Coq: verified correctness of Turing machine simulation in \PR{}
-  \end{itemize}
-
-  \vspace{3ex}
-
-  Roadmap:
-  \begin{itemize}
-    \item reduction of \PR{} to binary \PR{}
-    \item reduction of binary \PR{} to formula satisfiablity
-    \item (reduction of formula satisfiability to CNF satisfiability)
-    \item extraction to L
-  \end{itemize}
-\end{frame}
-
-\miniframesoff
-\section{}
-
-\begin{frame}{LOC}
-  \begin{center}
-  \begin{tabular}{cccc}
-    Component & Spec & Proof \\
-    \midrule
-    preliminaries & 73 & 160 \\
-    definition of PR & 136 & 232 \\
-    reduction of TM to PR & ? & ? \\
-    encoding of finite types & 9 & 70 \\
-    nondeterminism: Preludes & 47 & 169 \\
-    \midrule
-    total & ? & ?
-  \end{tabular}
-  \end{center}
-\end{frame}
 
 \begin{frame}{Representation Relations}
   Representation of tape halves: 
@@ -1497,39 +1601,6 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 \end{frame}
 
 \againframe<2>[noframenumbering]{prdef}
-
-\begin{frame}{Transition Rules -- Example}
-  \onslide<2>{In Coq mechanisation:}
-
-  \vspace{1ex}
-  $\delta(q, a) = (p, \Some{b}, L)$: 
-  \begin{overlayarea}{\textwidth}{0.7\textheight}
-    \only<1>{
-      \begin{center}
-        \trewwin{\blank}{q^{a}}{m_1}{\blank}{p^{\blank}}{\polpos{b}}
-        \trewwin{\sigma_1}{q^a}{m_1}{\polpos{m_2}}{p^{\sigma_1}}{\polpos{b}}\\
-        \trewwin{\blank}{\blank}{q^a}{\blank}{\blank}{p^{\blank}}
-        \trewwin{\blank}{\sigma_1}{q^a}{\blank}{\blank}{p^{\sigma_1}}
-        \trewwin{\sigma_1}{\sigma_2}{q^a}{\polpos{m_1}}{\polpos{\sigma_1}}{p^{\sigma_2}} \\
-        \trewwin{q^a}{\blank}{\blank}{p^{m_1}}{\polpos{b}}{\blank}
-        \trewwin{q^a}{\sigma_1}{m_1}{p^{m_2}}{\polpos{b}}{\polpos{\sigma_1}}
-      \end{center}
-    }
-    \only<2->{
-      \begin{center}
-        \trewwin{m_1}{q^a}{m_2}{\polpos{m_3}}{p^{m_1}}{\polpos{b}}
-        \trewwin{m_1}{m_2}{q^a}{\polpos{m_3}}{\polpos{m_1}}{p^{m_2}}
-        \trewwin{q^a}{m_1}{m_2}{p^{m_3}}{\polpos{b}}{\polpos{m_1}}
-      \end{center}
-
-      Contains garbage, i.e. 
-      \begin{center}
-        \trewwin{\blank}{q^a}{\blank}{\polpos{\sigma}}{p^{\blank}}{\polpos{b}}
-      \end{center}
-    }
-  \end{overlayarea}
-\end{frame}
-
 
 \begin{frame}{String Rewriting (SR) (and why it does not work for us)}
   \begin{itemize}

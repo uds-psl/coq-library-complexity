@@ -1050,13 +1050,13 @@ First of all, we define compatibility and disjointness of rules.
   \begin{itemize}
     \item the rules in $R'$ have width $w$
     \item $\length{s_0} = l$
+    \item $\Sigma \subseteq \Sigma'$
   \end{itemize}
 \end{definition}
 \begin{definition}[Disjointness]
   Let an alphabet $\Sigma'$, a set of rules $R'$ and an initial string $s_0 \in \listsofb{\Sigma'}$ be given. 
   The triple $(\Sigma', R, s_0)$ is disjoint from $S$ if 
   \begin{itemize}
-    \item $\Sigma \cap \Sigma' = \emptyset$
     \item the rules $a \constrent{} b \in  R'$ all have premises which are strings over $\Sigma'$, i.e.\ $a \in \listsofb{\Sigma'}$
     \item $s_0 \in \listsofb{\Sigma'}$
   \end{itemize}
