@@ -373,17 +373,6 @@ Section fix_optReturn.
   Defined. 
 End fix_optReturn. 
 
-(** why the heck isn't this in the standard library? no one knows... *)
-Instance proper_lt_mul : Proper (lt ==> eq ==> le) Nat.mul. 
-Proof. 
-  intros a b c d e f. nia.
-Qed. 
-
-Instance proper_lt_add : Proper (lt ==> eq ==> le) Nat.add.
-Proof. 
-  intros a b c d e f. nia. 
-Qed. 
-
 (** reifyPolSigmaFlat *)
 Definition c__reifyPolSigmaFlat := 32. 
 Definition reifyPolSigmaFlat_time sig (env : evalEnvFlat) (c : fpolSigma) := 
@@ -798,14 +787,6 @@ Proof.
   rewrite app_length, list_prod_length. rewrite IHn. 
   nia. 
 Qed.
-
-Tactic Notation "replace_le" constr(s) "with" constr(r) :=
-  let H := fresh in assert (s <= r) as H; [ | rewrite !H; clear H]. 
-
-Instance proper_le_pow : Proper (le ==> eq ==> le) Nat.pow.
-Proof. 
-  intros a b H1 d e ->. apply Nat.pow_le_mono_l, H1. 
-Qed. 
 
 (** we show that for every fixed n giving the number of variables to bind, mkVarEnv has a polynomial running time*)
 Definition c__mkVarEnvB1 := (2 * (c__listProd1 + 1) * (c__mkVarEnvStep + 1)). 
@@ -1640,11 +1621,6 @@ Proof.
   all: unfold generateWindowsForFlatNonHalt_time, c__generateWindowsForFlatNonHalt; rewrite H; solverec. 
 Qed.
 
-Lemma nat_size_lt a b: a < b -> size (enc a) < size (enc b). 
-Proof. 
-  intros H. rewrite !size_nat_enc. unfold c__natsizeS; nia. 
-Qed.
-
 Definition poly__generateWindowsForFlatNonHalt n :=       
   poly__optGenerateWindowsForFlatNonHalt n + n * ((2 * n + 5 + c__listsizeCons + c__listsizeNil + 4) * c__eqbComp (nat * list (option nat)) + 24) + 4 + c__generateWindowsForFlatNonHalt.
 Lemma generateWindowsForFlatNonHalt_time_bound tm q m : 
@@ -1847,11 +1823,6 @@ Proof.
   { unfold generateWindowsForFlat, generateWindowsForFlat_step. easy. }
   extract. solverec. 
   all: unfold generateWindowsForFlat_time, c__generateWindowsForFlat1, c__generateWindowsForFlat2; solverec. 
-Qed.
-
-Instance mult_lt_le : Proper (eq ==> lt ==> le) mult. 
-Proof. 
-  intros a b -> d e H. nia. 
 Qed.
 
 Definition poly__generateWindowsForFlat n :=
@@ -2099,11 +2070,6 @@ Proof.
   - apply flatStateWindows_ofFlatType, H0. 
 Qed.
 
-Instance add_lt_lt : Proper (eq ==> lt ==> lt) Nat.add. 
-Proof. 
-  intros a b -> c d H. lia.
-Qed.
-
 Definition poly__allFlatWindowsSize n :=
   (6 * (c__flatAlphabetS * (n + 1) * (n + 1) * c__natsizeS +
     c__natsizeO) + c__sizeTPRWinP * 2 + FlatPR.c__sizePRWin) *
@@ -2317,21 +2283,6 @@ Proof.
   - apply list_ofFlatType_repEl, inr_ofFlatType. unfold ofFlatType, flatPreludeSig', flatNstar. lia. 
   - apply list_ofFlatType_repEl, inr_ofFlatType. unfold ofFlatType, flatPreludeSig', flatNblank. lia. 
   - intros a [<- | []]. apply inr_ofFlatType. unfold ofFlatType, flatPreludeSig', flatNdelimC; lia. 
-Qed.
-
-Instance le_lt_impl : Proper (le --> eq ==> Basics.impl) lt. 
-Proof. 
-  intros a b H d e ->. unfold Basics.flip in H. unfold Basics.impl. lia. 
-Qed.
-
-Instance lt_le_impl : Proper (lt --> eq ==> Basics.impl) le. 
-Proof. 
-  intros a b H d e ->. unfold Basics.flip in H. unfold Basics.impl. lia.  
-Qed.
-
-Lemma nat_size_le a b: a <= b -> size (enc a) <= size (enc b). 
-Proof. 
-  intros H. rewrite !size_nat_enc. unfold c__natsizeS; nia. 
 Qed.
 
 Definition poly__flatInitialStringSize n :=   (c__flatAlphabetS * c__natsizeS * (n + 1) * (n + 1) + c__natsizeO) * (2 * (wo + n +1) + 1) + c__listsizeCons * (2 * (wo + n +1) + 1) + c__listsizeNil. 

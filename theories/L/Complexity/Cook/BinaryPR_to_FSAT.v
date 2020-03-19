@@ -918,6 +918,18 @@ Proof.
   extract. solverec. all: unfold listAnd_time, c__listAnd; solverec. 
 Qed.
 
+Lemma listAnd_varsIn p l: (forall f, f el l -> formula_varsIn p f) -> formula_varsIn p (listAnd l). 
+Proof. 
+  unfold formula_varsIn. intros H; induction l; cbn.
+  - intros v H1. inv H1.  
+  - intros v H1. inv H1; [eapply H; eauto | eapply IHl; eauto]. 
+Qed. 
+
+Lemma listAnd_size l : formula_size (listAnd l) <= sumn (map formula_size l) + |l| + 1. 
+Proof. 
+  induction l; cbn; [lia | rewrite IHl; lia].
+Qed. 
+
 (** listOr *)
 Definition c__listOr := 12.
 Definition listOr_time (l : list formula) := (|l| + 1) * c__listOr.
@@ -925,6 +937,18 @@ Instance term_listOr : computableTime' listOr (fun l _ => (listOr_time l, tt)).
 Proof. 
   extract. solverec. all: unfold listOr_time, c__listOr; solverec. 
 Qed.
+
+Lemma listOr_varsIn p l: (forall f, f el l -> formula_varsIn p f) -> formula_varsIn p (listOr l). 
+Proof. 
+  unfold formula_varsIn. intros H; induction l; cbn.
+  - intros v H1. inv H1. inv H2.  
+  - intros v H1. inv H1; [eapply H; eauto | eapply IHl; eauto]. 
+Qed. 
+
+Lemma listOr_size l : formula_size (listOr l) <= sumn (map formula_size l) + |l| + 2. 
+Proof. 
+  induction l; cbn; [lia | rewrite IHl; lia].
+Qed. 
 
 (** tabulate_step *)
 Definition c__tabulateStep := 13 + c__add1.
@@ -947,6 +971,11 @@ Proof.
   unfold poly__tabulateStep; split; smpl_inO. 
 Qed.
 
+Lemma tabulate_step_length step s n: |tabulate_step step s n| = n.
+Proof. 
+  revert step s. induction n; cbn; intros; [lia | rewrite IHn; lia]. 
+Qed. 
+
 (** tabulate_formula *)
 Definition c__tabulateFormula := 8. 
 Definition tabulate_formula_time (s step n : nat) (tf : nat -> nat) := tabulate_step_time step n + map_time tf (tabulate_step step s n) + c__tabulateFormula.
@@ -956,12 +985,51 @@ Proof.
   unfold tabulate_formula_time, c__tabulateFormula; solverec. 
 Qed.  
 
+Lemma formula_varsIn_monotonic (p1 p2 : nat -> Prop) : (forall n, p1 n -> p2 n) -> forall f, formula_varsIn p1 f -> formula_varsIn p2 f. 
+Proof. 
+  intros H f. unfold formula_varsIn. eauto.
+Qed. 
+
+Lemma tabulate_formula_varsIn s step n t (g : nat -> nat): 
+  (forall start, formula_varsIn (fun n => n < g start) (t start))
+  -> monotonic g
+  -> forall f, f el tabulate_formula s step n t -> formula_varsIn (fun v => v < g (s + step * (n -1))) f. 
+Proof. 
+  intros H H0 f Hel. unfold tabulate_formula in Hel. apply in_map_iff in Hel as (i & <- & Hel). 
+  apply in_tabulate_step_iff in Hel as (i' & H1 & ->). 
+  eapply formula_varsIn_monotonic. 
+  2: apply H. 
+  cbn. intros n' Hn'. unfold monotonic in H0. specialize (H0 (s + step * i') (s + step * (n -1)) ltac:(nia)). nia. 
+Qed. 
+
+Lemma tabulate_formula_length s step n t : |tabulate_formula s step n t| = n. 
+Proof. 
+  revert s step. induction n; cbn; intros; [lia | ]. 
+  unfold tabulate_formula in IHn. now rewrite IHn. 
+Qed. 
+
 (** encodeLiteral *)
 Definition c__encodeLiteral := 6. 
 Instance term_encodeLiteral : computableTime' encodeLiteral (fun n _ => (1, fun b _ => (c__encodeLiteral, tt))). 
 Proof. 
   extract. solverec. all: unfold c__encodeLiteral; solverec. 
 Qed.
+
+Lemma encodeLiteral_size v b : formula_size (encodeLiteral v b) <= 2. 
+Proof. 
+  unfold encodeLiteral. destruct b; cbn; lia. 
+Qed. 
+
+Ltac varsIn_inv := 
+  repeat match goal with 
+    | [ H: formula_varsIn ?f |- _] => inv H
+    | [ H: varInFormula ?v ?f|- _]=> inv H
+  end. 
+
+Lemma encodeLiteral_varsIn v b : formula_varsIn (fun n => n = v) (encodeLiteral v b).  
+Proof. 
+  unfold encodeLiteral. destruct b; cbn; intros v' H; varsIn_inv; lia. 
+Qed. 
 
 (** encodeListAt *)
 Definition c__encodeListAt := c__encodeLiteral + c__add1 + add_time 1 + 15.
@@ -982,6 +1050,20 @@ Lemma encodeListAt_poly : monotonic poly__encodeListAt /\ inOPoly poly__encodeLi
 Proof. 
   unfold poly__encodeListAt; split; smpl_inO. 
 Qed.
+
+Lemma encodeListAt_varsIn start l: formula_varsIn (fun n => n >= start /\ n < start + |l|) (encodeListAt start l). 
+Proof. 
+  revert start; induction l; cbn; intros. 
+  - intros v H; varsIn_inv.  
+  - intros v H. inv H. 
+    + apply encodeLiteral_varsIn in H1. lia. 
+    + apply IHl in H1. lia. 
+Qed. 
+
+Lemma encodeListAt_size start l : formula_size (encodeListAt start l) <= 3 * (|l|) + 1. 
+Proof. 
+  revert start; induction l; cbn -[Nat.mul]; intros; [lia | rewrite IHl]. rewrite encodeLiteral_size. lia. 
+Qed. 
   
 (** encodeWindowAt *)
 Definition c__encodeWindowAt := FlatPR.cnst_prem + FlatPR.cnst_conc + 13.
@@ -1002,6 +1084,18 @@ Qed.
 Lemma encodeWindowAt_poly : monotonic poly__encodeWindowAt /\ inOPoly poly__encodeWindowAt. 
 Proof. 
   unfold poly__encodeWindowAt; split; smpl_inO. 
+Qed. 
+
+Lemma encodeWindowAt_varsIn s1 s2 k win : PRWin_of_size win k -> formula_varsIn (fun n => (n >= s1 /\ n < s1 + k) \/ (n >= s2 /\ n < s2 + k)) (encodeWindowAt s1 s2 win). 
+Proof. 
+  intros [H1 H2]. unfold encodeWindowAt. intros v H. inv H.  
+  - apply encodeListAt_varsIn in H3. lia. 
+  - apply encodeListAt_varsIn in H3. lia. 
+Qed. 
+
+Lemma encodeWindowAt_size s1 s2 k win : PRWin_of_size win k -> formula_size (encodeWindowAt s1 s2 win) <= 6 * k + 3. 
+Proof. 
+  intros [H1 H2]. unfold encodeWindowAt. cbn -[Nat.mul]. rewrite !encodeListAt_size. rewrite H1, H2. nia. 
 Qed. 
 
 (** encodeWindowsAt *)
@@ -1032,6 +1126,27 @@ Lemma encodeWindowsAt_poly : monotonic poly__encodeWindowsAt /\ inOPoly poly__en
 Proof. 
   unfold poly__encodeWindowsAt; split; smpl_inO; apply encodeWindowAt_poly. 
 Qed.
+
+Lemma encodeWindowsAt_varsIn s1 s2 bpr : 
+  BinaryPR_wellformed bpr
+  -> formula_varsIn (fun n => (n >= s1 /\ n < s1 + width bpr) \/ (n >= s2 /\ n < s2 + width bpr)) (encodeWindowsAt bpr s1 s2). 
+Proof. 
+  intros (_ & _ & _ & _ & H1 & _). 
+  unfold encodeWindowsAt. apply listOr_varsIn. 
+  intros f (win & <- & Hel)%in_map_iff. apply encodeWindowAt_varsIn, H1, Hel. 
+Qed. 
+
+Lemma encodeWindowsAt_size s1 s2 bpr : 
+  BinaryPR_wellformed bpr
+  -> formula_size (encodeWindowsAt bpr s1 s2) <= |windows bpr| * (6 * width bpr + 4) + 2. 
+Proof. 
+  intros (_ &_  & _ & _ & H1 & _). 
+  unfold encodeWindowsAt. rewrite listOr_size. 
+  rewrite sumn_map_mono. 2: { intros f (win & <- & Hel)%in_map_iff. instantiate (1 := fun _ => _); cbn -[formula_size].
+    rewrite encodeWindowAt_size by apply H1, Hel. reflexivity. 
+  } 
+  rewrite sumn_map_const, !map_length. nia. 
+Qed. 
 
 (** encodeWindowsInLine' *)
 Definition c__encodeWindowsInLineP := c__width + c__sub1 + 3 * c__offset + 2 * c__add1 + 24.
@@ -1099,6 +1214,32 @@ Proof.
   unfold poly__encodeWindowsInLine'; split; smpl_inO; apply encodeWindowsInLineP1_poly. 
 Qed. 
 
+Lemma encodeWindowsInLine'_varsIn bpr stepi l startA startB : 
+  BinaryPR_wellformed bpr
+  -> formula_varsIn (fun n => (n >= startA /\ n < startA + l) \/ (n >= startB /\ n < startB + l)) (encodeWindowsInLine' bpr stepi l startA startB). 
+Proof. 
+  intros H0. revert startA startB l. induction stepi; cbn; intros. 
+  - destruct width; [ | destruct Nat.leb]; cbn; intros a H1; inv H1. 
+  - destruct width eqn:H1; [destruct H0; lia | ]. 
+    destruct leb eqn:H2. 
+    + apply Nat.leb_le in H2. intros a H. inv H. 
+    + apply leb_complete_conv in H2. intros a H. inv H. 
+      * apply encodeWindowsAt_varsIn in H4; [ | apply H0]. rewrite !H1 in H4. nia. 
+      * apply IHstepi in H4. nia.  
+Qed. 
+
+(* a more precise bound could be obtained by replacing stepi with div l (offset bpr) *)
+Lemma encodeWindowsInLine'_size bpr stepi l startA startB : 
+  BinaryPR_wellformed bpr -> formula_size (encodeWindowsInLine' bpr stepi l startA startB) <= stepi * (|windows bpr| * (6 * width bpr + 4) + 3) + 1.
+Proof. 
+  intros H0. revert l startA startB. induction stepi; cbn -[Nat.mul Nat.add]; intros. 
+  - destruct width; [ | destruct leb]; cbn; lia. 
+  - destruct width eqn:H1; [ destruct H0; lia | ]. 
+    destruct leb eqn:H2. 
+    + cbn. nia. 
+    + apply leb_complete_conv in H2. cbn [formula_size]. rewrite IHstepi. clear IHstepi. 
+      rewrite encodeWindowsAt_size by apply H0. nia. 
+Qed. 
 
 (** encodeWindowsInLine *)
 Definition c__encodeWindowsInLine := 3 * c__init + 3 * c__length + c__add1 + 13.
@@ -1134,6 +1275,20 @@ Proof.
   - apply encodeWindowsInLine'_poly.
   - apply inOPoly_comp; smpl_inO; apply encodeWindowsInLine'_poly. 
 Qed. 
+
+Lemma encodeWindowsInLine_varsIn bpr s : 
+  BinaryPR_wellformed bpr
+  -> formula_varsIn (fun n => (n >= s /\ n < s + 2 * (|init bpr|))) (encodeWindowsInLine bpr s). 
+Proof. 
+  intros H. eapply formula_varsIn_monotonic. 
+  2: { unfold encodeWindowsInLine. apply encodeWindowsInLine'_varsIn, H. }
+  cbn. intros n. lia. 
+Qed. 
+
+Lemma encodeWindowsInLine_size bpr s: 
+  BinaryPR_wellformed bpr
+  -> formula_size (encodeWindowsInLine bpr s) <= (|init bpr|) * (|windows bpr| * (6 * width bpr + 4) + 3) +1. 
+Proof.  apply encodeWindowsInLine'_size.  Qed. 
   
 (** encodeWindowsInAllLines *)
 Definition c__encodeWindowsInAllLines := c__init + c__length + c__steps + 5.
@@ -1143,5 +1298,393 @@ Proof.
   extract. solverec. 
   unfold encodeWindowsInAllLines_time, c__encodeWindowsInAllLines. nia.  
 Qed.
-  
 
+Fact nat_size_mul a b: size (enc (a * b)) <= size (enc a) * size (enc b). 
+Proof. 
+  rewrite !size_nat_enc. unfold c__natsizeS. nia. 
+Qed.
+
+Definition poly__encodeWindowsInAllLines n := 
+  c__length * n + (poly__tabulateStep n + (n * (poly__encodeWindowsInLine (n + n * n) + c__map) + c__map)) + c__tabulateFormula + (n + 1) * c__listAnd + c__encodeWindowsInAllLines. 
+Lemma encodeWindowsInAllLines_time_bound bpr : BinaryPR_wellformed bpr -> encodeWindowsInAllLines_time bpr <= poly__encodeWindowsInAllLines (size (enc bpr)). 
+Proof. 
+  intros H. unfold encodeWindowsInAllLines_time. 
+  rewrite list_size_length at 1. replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
+  unfold tabulate_formula_time. rewrite tabulate_step_time_bound. 
+  poly_mono tabulate_step_poly. 2: { rewrite list_size_enc_length. instantiate (1 := size (enc bpr)). rewrite BinaryPR_enc_size; lia. }
+  rewrite map_time_mono. 
+  2: { intros start Hel. instantiate (1 := fun _ => _). cbn -[Nat.add Nat.mul]. 
+       rewrite encodeWindowsInLine_time_bound by apply H. 
+       apply in_tabulate_step_iff in Hel as (i & H1 & ->). 
+       poly_mono encodeWindowsInLine_poly. 
+       2: { rewrite nat_size_le with (a := 0 + (|init bpr|) * i). 2: { instantiate (1 := (|init bpr|) * steps bpr). nia. }
+            rewrite nat_size_mul. rewrite list_size_enc_length. 
+            replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
+            replace_le (size (enc (steps bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
+            reflexivity. 
+       } 
+       reflexivity. 
+  } 
+  rewrite map_time_const. 
+  rewrite tabulate_step_length. 
+  unfold listAnd_time, tabulate_formula. rewrite map_length, tabulate_step_length. 
+  rewrite size_nat_enc_r with (n := steps bpr) at 1 2. replace_le (size (enc (steps bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia).
+  unfold poly__encodeWindowsInAllLines. nia.
+Qed. 
+Lemma encodeWindowsInAllLines_poly : monotonic poly__encodeWindowsInAllLines /\ inOPoly poly__encodeWindowsInAllLines. 
+Proof. 
+  unfold poly__encodeWindowsInAllLines; split; smpl_inO; try apply inOPoly_comp; smpl_inO; first [apply tabulate_step_poly | apply encodeWindowsInLine_poly]. 
+Qed. 
+
+Lemma encodeWindowsInAllLines_varsIn bpr :
+  BinaryPR_wellformed bpr 
+  -> formula_varsIn (fun n => n < (1 + steps bpr) * (|init bpr|)) (encodeWindowsInAllLines bpr). 
+Proof. 
+  intros H. unfold encodeWindowsInAllLines. apply listAnd_varsIn. 
+  intros f H1. destruct steps; [now cbn in H1 | ]. 
+  eapply tabulate_formula_varsIn in H1. 
+  2: { intros s. eapply formula_varsIn_monotonic. 2: apply encodeWindowsInLine_varsIn, H. 
+       intros n'. cbn. lia. 
+  } 
+  2: smpl_inO. 
+  cbn in H1. eapply formula_varsIn_monotonic. 2 : apply H1. intros n'. cbn. 
+  nia. 
+Qed. 
+
+Lemma encodeWindowsInAllLines_size bpr : 
+  BinaryPR_wellformed bpr
+  -> formula_size (encodeWindowsInAllLines bpr) <= ((steps bpr) * ((|init bpr|) * (|windows bpr| * (6 * width bpr + 4) + 3) +2)) + 1.
+Proof. 
+  intros H. unfold encodeWindowsInAllLines. rewrite listAnd_size. 
+  rewrite tabulate_formula_length. 
+  rewrite sumn_map_mono. 2: { intros f H1. unfold tabulate_formula in H1. apply in_map_iff in H1 as (i & <- & H1). 
+    instantiate (1 := fun _ => _). cbn. rewrite encodeWindowsInLine_size by apply H. reflexivity. 
+  } 
+  rewrite sumn_map_const, tabulate_formula_length. nia. 
+Qed. 
+
+(** encodeSubstringInLine' *)
+Definition c__encodeSubstringInLine' := c__length +  23 + c__sub1 + 2 * c__offset.
+Fixpoint encodeSubstringInLine'_time (bpr : BinaryPR) (s : list bool) (stepindex l start : nat) := 
+ match stepindex with 
+  | 0 => 0 
+  | S stepi => encodeListAt_time s +  sub_time l (offset bpr) + c__add1 + add_time start + encodeSubstringInLine'_time bpr s stepi (l - offset bpr) (start + offset bpr)
+ end + c__length * (|s|) + ltb_time l (|s|) + c__encodeSubstringInLine'. 
+Instance term_encodeSubstringInLine' : computableTime' encodeSubstringInLine' (fun bpr _ => (1, fun s _ => (5, fun stepi _ => (1, fun l _ => (1, fun start _ => (encodeSubstringInLine'_time bpr s stepi l start, tt)))))). 
+Proof. 
+  extract. solverec. 
+  all: unfold encodeSubstringInLine'_time, c__encodeSubstringInLine'. all: solverec. 
+Qed.
+
+Definition poly__encodeSubstringInLineP1 n := poly__encodeListAt n + (n + 1) * c__sub + c__add1 + c__length * n + (c__leb * (1 + n) + c__ltb) + c__encodeSubstringInLine'.
+Lemma encodeSubstringInLine'_time_bound1 bpr s stepindex l start : 
+  BinaryPR_wellformed bpr 
+  -> encodeSubstringInLine'_time bpr s stepindex l start <= (stepindex + 1) * poly__encodeSubstringInLineP1 (size (enc bpr) + size (enc s)) + stepindex * (stepindex * (offset bpr) + start + 1) * c__add.
+Proof. 
+  intros H.
+  revert l start. unfold encodeSubstringInLine'_time. induction stepindex; intros.
+  - unfold ltb_time, leb_time. rewrite Nat.le_min_r. 
+    rewrite list_size_length. 
+    unfold poly__encodeSubstringInLineP1. nia. 
+  - rewrite IHstepindex. clear IHstepindex. 
+    rewrite encodeListAt_time_bound. 
+    unfold sub_time. rewrite Nat.le_min_r. 
+    unfold ltb_time, leb_time. rewrite Nat.le_min_r. 
+    rewrite list_size_length. 
+    rewrite size_nat_enc_r with (n := offset bpr) at 1. 
+    replace_le (size (enc (offset bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; cbn; lia). 
+    poly_mono encodeListAt_poly. 2: { instantiate (1 := size (enc bpr) + size (enc s)). lia. }
+    unfold poly__encodeSubstringInLineP1. unfold add_time. nia.  
+Qed.
+Lemma encodeSubstringInLine'_poly1 : monotonic poly__encodeSubstringInLineP1 /\ inOPoly poly__encodeSubstringInLineP1. 
+Proof. 
+  unfold poly__encodeSubstringInLineP1; split; smpl_inO; apply encodeListAt_poly. 
+Qed.
+
+Definition poly__encodeSubstringInLine' n := (n + 1) * poly__encodeSubstringInLineP1 n + n * (n * n + n + 1) * c__add. 
+Lemma encodeSubstringInLine'_time_bound bpr s stepindex l start : 
+  BinaryPR_wellformed bpr -> encodeSubstringInLine'_time bpr s stepindex l start <= poly__encodeSubstringInLine' (size (enc bpr) + size (enc s) + size (enc stepindex) + size (enc start)). 
+Proof. 
+  intros H. rewrite encodeSubstringInLine'_time_bound1 by apply H. 
+  pose (g := size (enc bpr) + size (enc s) + size (enc stepindex) + size (enc start)).
+  poly_mono encodeSubstringInLine'_poly1. 2 : { instantiate (1 := g). subst g; lia. }
+  rewrite size_nat_enc_r with (n := stepindex) at 1 2 3. 
+  rewrite size_nat_enc_r with (n := offset bpr). replace_le (size (enc (offset bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
+  rewrite size_nat_enc_r with (n := start) at 1. 
+  replace_le (size (enc stepindex)) with g by (unfold g; lia) at 1 2 3.  
+  replace_le (size (enc bpr)) with g by (unfold g; lia) at 1. 
+  replace_le (size (enc start)) with g by (unfold g; lia) at 1. 
+  fold g.  unfold poly__encodeSubstringInLine'.  nia.  
+Qed.
+Lemma encodeSubstringInLine'_poly : monotonic poly__encodeSubstringInLine' /\ inOPoly poly__encodeSubstringInLine'. 
+Proof. 
+  unfold poly__encodeSubstringInLine'; split; smpl_inO; apply encodeSubstringInLine'_poly1. 
+Qed.
+
+Lemma encodeSubstringInLine'_varsIn bpr s stepindex l start: formula_varsIn (fun n => n >= start /\ n < start + l) (encodeSubstringInLine' bpr s stepindex l start). 
+Proof. 
+  revert l start. induction stepindex; cbn; intros. 
+  - destruct s; cbn.
+    + intros a H. inv H. 
+    + destruct leb; intros a H; varsIn_inv. 
+  - destruct s; cbn. 
+    + intros a H1. inv H1; [varsIn_inv | ]. 
+      apply IHstepindex in H0. lia. 
+    + destruct leb eqn:H2; [intros a H; varsIn_inv | ]. 
+      apply leb_complete_conv in H2. 
+      intros a H. inv H. 
+      * apply (@encodeListAt_varsIn start (b :: s)) in H1. cbn in H1. nia. 
+      * apply IHstepindex in H1. nia. 
+Qed. 
+
+Lemma encodeSubstringInLine'_size bpr s stepindex l start : formula_size (encodeSubstringInLine' bpr s stepindex l start) <= stepindex * (3 * |s| + 1) + 2. 
+Proof. 
+  revert l start. induction stepindex; cbn; intros. 
+  - destruct s; cbn; [lia | ]. destruct leb; cbn; lia. 
+  - destruct s; cbn. 
+    + rewrite IHstepindex. cbn. nia. 
+    + destruct leb eqn:H1; cbn -[Nat.add Nat.mul]; [lia | ]. rewrite IHstepindex. 
+      rewrite encodeListAt_size, encodeLiteral_size. cbn. nia. 
+Qed. 
+
+(** encodeSubstringInLine *)
+Definition c__encodeSubstringInLine := 14. 
+Definition encodeSubstringInLine_time (bpr : BinaryPR) (s : list bool) (start l : nat) := encodeSubstringInLine'_time bpr s l l start + c__encodeSubstringInLine. 
+Instance term_encodeSubstringInLine : computableTime' encodeSubstringInLine (fun bpr _ => (1, fun s _ => (1, fun start _ => (1, fun l _ => (encodeSubstringInLine_time bpr s start l, tt))))). 
+Proof. 
+  extract. solverec. all: unfold encodeSubstringInLine_time, c__encodeSubstringInLine; solverec. 
+Qed.
+
+Lemma encodeSubstringInLine_varsIn bpr s start l: formula_varsIn (fun n => n >= start /\ n < start + l) (encodeSubstringInLine bpr s start l).
+Proof. 
+  unfold encodeSubstringInLine. destruct s. 
+  - intros a H. inv H. 
+  - apply encodeSubstringInLine'_varsIn. 
+Qed. 
+
+Lemma encodeSubstringInLine_size bpr s start l : formula_size (encodeSubstringInLine bpr s start l) <= l * (3 * |s| + 1) + 2.
+Proof. 
+  unfold encodeSubstringInLine. destruct s. 
+  - cbn. lia. 
+  - apply encodeSubstringInLine'_size. 
+Qed. 
+
+(** encodeFinalConstraint *)
+Definition encodeFinalConstraint_step (bpr : BinaryPR) (start : nat) (s : list bool) := encodeSubstringInLine bpr s start (|init bpr|). 
+
+Definition c__encodeFinalConstraintStep := c__init + c__length + 4.
+Definition encodeFinalConstraint_step_time (bpr : BinaryPR) (start : nat) (s : list bool) := c__length * (|init bpr|) + encodeSubstringInLine_time bpr s start (|init bpr|) + c__encodeFinalConstraintStep.
+Instance term_encodeFinalConstraint_step : computableTime' encodeFinalConstraint_step (fun bpr _ => (1, fun start _ => (1, fun s _ => (encodeFinalConstraint_step_time bpr start s, tt)))). 
+Proof. 
+  extract. solverec. 
+  unfold encodeFinalConstraint_step_time, c__encodeFinalConstraintStep; solverec.   
+Qed. 
+
+Definition c__encodeFinalConstraint := c__final + 4. 
+Definition encodeFinalConstraint_time (bpr : BinaryPR) (start : nat) :=  map_time (encodeFinalConstraint_step_time bpr start) (final bpr) + listOr_time (map (encodeFinalConstraint_step bpr start) (final bpr)) + c__encodeFinalConstraint.
+Instance term_encodeFinalConstraint : computableTime' encodeFinalConstraint (fun bpr _ => (1, fun start _ => (encodeFinalConstraint_time bpr start, tt))). 
+Proof. 
+  apply computableTimeExt with (x := fun bpr start => listOr (map (encodeFinalConstraint_step bpr start) (final bpr))). 
+  1: easy.
+  extract. solverec. 
+  unfold encodeFinalConstraint_time, c__encodeFinalConstraint; solverec. 
+Qed.
+
+Definition poly__encodeFinalConstraint n := n * (c__length * n + poly__encodeSubstringInLine' (2 * n) + c__encodeSubstringInLine + c__encodeFinalConstraintStep + c__map) + c__map + (n + 1) * c__listOr + c__encodeFinalConstraint. 
+Lemma encodeFinalConstraint_time_bound bpr start : 
+  BinaryPR_wellformed bpr 
+  -> encodeFinalConstraint_time bpr start <= poly__encodeFinalConstraint (size (enc bpr) + size (enc start)). 
+Proof. 
+  intros H. unfold encodeFinalConstraint_time. 
+  rewrite map_time_mono. 
+  2: { intros l Hel. unfold encodeFinalConstraint_step_time, encodeSubstringInLine_time.  
+       instantiate (1 := fun _ => _). cbn -[Nat.mul Nat.add]. 
+       rewrite encodeSubstringInLine'_time_bound by apply H.
+       rewrite list_size_length at 1. replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
+       poly_mono encodeSubstringInLine'_poly. 
+       2: { instantiate (1 := 2 * (size (enc bpr) + size (enc start))). 
+            rewrite (list_el_size_bound Hel), list_size_enc_length. 
+            cbn. rewrite BinaryPR_enc_size at 2. lia. 
+       } 
+       reflexivity. 
+  }
+  rewrite map_time_const, list_size_length. unfold listOr_time. rewrite map_length, list_size_length. 
+  replace_le (size (enc (final bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia).
+  unfold poly__encodeFinalConstraint; nia.  
+Qed. 
+Lemma encodeFinalConstraint_poly : monotonic poly__encodeFinalConstraint /\ inOPoly poly__encodeFinalConstraint. 
+Proof. 
+  unfold poly__encodeFinalConstraint; split; smpl_inO. 
+  - apply encodeSubstringInLine'_poly. 
+  - apply inOPoly_comp; smpl_inO; apply encodeSubstringInLine'_poly. 
+Qed. 
+
+Lemma encodeFinalConstraint_varsIn bpr start : formula_varsIn (fun n => n >= start /\ n < start + (|init bpr|)) (encodeFinalConstraint bpr start).
+Proof. 
+  unfold encodeFinalConstraint. apply listOr_varsIn. 
+  intros f (s & <- & Hel)%in_map_iff. apply encodeSubstringInLine_varsIn. 
+Qed. 
+
+Lemma encodeFinalConstraint_size bpr start : 
+  formula_size (encodeFinalConstraint bpr start)<= sumn (map (fun s => ((|init bpr|) * (3 * |s| + 1) + 2)) (final bpr)) + (|final bpr|) + 2.
+Proof. 
+  unfold encodeFinalConstraint. rewrite listOr_size. 
+  rewrite map_map, sumn_map_mono. 
+  2: { intros x _. instantiate (1 := fun x => _ ). cbn. rewrite encodeSubstringInLine_size. reflexivity. }
+  rewrite map_length. lia. 
+Qed. 
+
+(**encodeTableau *)
+Definition c__encodeTableau := 2 * c__init + c__steps + c__mult1 + c__length + 11.
+Definition encodeTableau_time (bpr : BinaryPR) := encodeListAt_time (init bpr) + encodeWindowsInAllLines_time bpr + c__length * (|init bpr|) + mult_time (steps bpr) (|init bpr|) + encodeFinalConstraint_time bpr (steps bpr * (|init bpr|)) + c__encodeTableau. 
+Instance term_encodeTableau : computableTime' encodeTableau (fun bpr _ => (encodeTableau_time bpr, tt)). 
+Proof. 
+  unfold encodeTableau, encodeFinalConstraint'. extract. solverec. 
+  unfold encodeTableau_time, c__encodeTableau. solverec. 
+Qed. 
+
+Definition poly__encodeTableau n := poly__encodeListAt n + poly__encodeWindowsInAllLines n + c__length * n + (n * n * c__mult + c__mult * (n + 1)) + poly__encodeFinalConstraint (n + n * n) + c__encodeTableau.
+Lemma encodeTableau_time_bound bpr : BinaryPR_wellformed bpr -> encodeTableau_time bpr <= poly__encodeTableau (size (enc bpr)). 
+Proof. 
+  intros H. unfold encodeTableau_time. 
+  rewrite encodeListAt_time_bound. poly_mono encodeListAt_poly. 2: { instantiate (1:= size (enc bpr)). rewrite BinaryPR_enc_size; lia. }
+  rewrite encodeWindowsInAllLines_time_bound by apply H.     
+  rewrite encodeFinalConstraint_time_bound by apply H. 
+  poly_mono encodeFinalConstraint_poly. 
+  2: { rewrite nat_size_mul. rewrite list_size_enc_length. 
+       replace_le (size (enc (steps bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
+       replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
+       reflexivity. 
+  } 
+  unfold mult_time. rewrite list_size_length at 1 2. rewrite size_nat_enc_r with (n := steps bpr). 
+  replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia) at 1 2. 
+  replace_le (size (enc (steps bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia) at 1 2.
+  unfold poly__encodeTableau; nia. 
+Qed.
+Lemma encodeTableau_poly : monotonic poly__encodeTableau /\ inOPoly poly__encodeTableau. 
+Proof. 
+  unfold poly__encodeTableau; split; smpl_inO; try apply inOPoly_comp; smpl_inO; first [apply encodeListAt_poly | apply encodeWindowsInAllLines_poly | apply encodeFinalConstraint_poly]. 
+Qed. 
+
+Check encodeWindowsInAllLines_varsIn. 
+Lemma encodeTableau_varsIn bpr: BinaryPR_wellformed bpr -> formula_varsIn (fun n => n < (1 + steps bpr) * (|init bpr|)) (encodeTableau bpr). 
+Proof. 
+  intros H. 
+  unfold encodeWindowsInAllLines. intros a H1. inv H1. 
+  - inv H2. 
+    + apply encodeListAt_varsIn in H1. nia. 
+    + apply encodeWindowsInAllLines_varsIn in H1; [ | apply H]. nia. 
+  - unfold encodeFinalConstraint' in H2. apply encodeFinalConstraint_varsIn in H2. nia. 
+Qed. 
+
+Lemma encodeTableau_size : {f : nat -> nat & (forall bpr, BinaryPR_wellformed bpr -> formula_size (encodeTableau bpr) <= f (size (enc bpr))) /\ monotonic f /\ inOPoly f}. 
+Proof. 
+  eexists. split; [ | split]. 
+  - intros bpr H. unfold encodeTableau. cbn. 
+    rewrite encodeListAt_size. rewrite encodeWindowsInAllLines_size by apply H. 
+    unfold encodeFinalConstraint'. rewrite encodeFinalConstraint_size. 
+    rewrite !list_size_length. rewrite sumn_map_mono. 
+    2: { intros s Hel. instantiate (1 := fun _ => _). cbn -[Nat.mul Nat.add]. 
+         rewrite list_size_length with (l := s). rewrite list_size_length. 
+         replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
+         erewrite list_el_size_bound with (a := s) by apply Hel.
+         replace_le (size (enc (final bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
+         reflexivity. 
+    } 
+    rewrite sumn_map_const. rewrite list_size_length. 
+    replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
+    replace_le (size (enc (final bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia).
+    replace_le (size (enc (windows bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia).
+    rewrite size_nat_enc_r with (n := width bpr). 
+    replace_le (size (enc (width bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia).
+    rewrite size_nat_enc_r with (n := steps bpr). 
+    replace_le (size (enc (steps bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia).
+    instantiate (1 := fun n => _). cbn -[Nat.add Nat.mul]. generalize (size (enc bpr)). reflexivity. 
+  - smpl_inO. 
+  - smpl_inO. 
+Defined. 
+
+Lemma encodeTableau_enc_size : {f : nat -> nat & (forall bpr, BinaryPR_wellformed bpr -> size (enc (encodeTableau bpr)) <= f (size (enc bpr))) /\ inOPoly f /\ monotonic f}.
+Proof. 
+  destruct encodeTableau_size as (f' & H1 & H2 & H3). 
+  eexists. split; [ | split]. 
+  - intros bpr H. rewrite formula_enc_size_bound. 
+        rewrite H1 by apply H. erewrite formula_varsIn_bound. 
+    2: { eapply formula_varsIn_monotonic. 2: apply encodeTableau_varsIn, H. intros n. cbn. apply Nat.lt_le_incl. }
+    instantiate (1 := fun n => _). cbn -[Nat.add Nat.mul]. 
+    rewrite list_size_length. replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
+    rewrite size_nat_enc_r with (n := steps bpr). replace_le (size (enc (steps bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia).
+    generalize (size (enc bpr)). reflexivity. 
+  - smpl_inO. 
+  - smpl_inO. 
+Qed. 
+
+(** BinaryPR_wf_dec *)
+
+Definition c__BinaryPRWfDec := 3 * c__leb2 + 4 * c__width + 3 * c__offset + 2 * 5 + 2 * c__init + 2 * c__length + c__windows + 32 + 4 * c__leb + 2 * c__eqbComp nat * size (enc 0).
+Definition BinaryPR_wf_dec_time x := 2 * c__length * (|init x|) + leb_time (width x) (|init x|) + forallb_time (@FlatPR.PRWin_of_size_dec_time bool (width x)) (windows x) + modulo_time (|init x|) (offset x) + modulo_time (width x) (offset x) + c__BinaryPRWfDec.  
+Instance term_BinaryPR_wf_dec : computableTime' BinaryPR_wf_dec (fun bpr _ => (BinaryPR_wf_dec_time bpr, tt)). 
+Proof. 
+  extract. solverec. 
+  unfold BinaryPR_wf_dec_time, c__BinaryPRWfDec, leb_time. rewrite !eqbTime_le_r. 
+  do 2 rewrite Nat.le_min_l. leq_crossout. 
+Qed. 
+
+Definition c__BinaryPRWfDecBound := 2*(2 * c__length + c__leb + FlatPR.c__prwinOfSizeDecBound + c__forallb + 2 * c__moduloBound + c__BinaryPRWfDec).
+Definition poly__BinaryPRWfDec n := (n*n + 2* n + 1) * c__BinaryPRWfDecBound.
+Lemma BinaryPR_wf_dec_time_bound fpr : 
+  BinaryPR_wf_dec_time fpr <= poly__BinaryPRWfDec (size (enc fpr)). 
+Proof. 
+  unfold BinaryPR_wf_dec_time. rewrite leb_time_bound_l. 
+  rewrite !modulo_time_bound. rewrite list_size_enc_length.
+  rewrite list_size_length.
+  erewrite forallb_time_bound_env.
+  2: {
+    split; [intros | ].
+    - specialize (FlatPR.PRWin_of_size_dec_time_bound (X := bool) y a) as H1.
+      instantiate (2:= fun n => (n + 1) * FlatPR.c__prwinOfSizeDecBound). nia. 
+    - smpl_inO. 
+  }
+  rewrite list_size_length. 
+  replace_le (size(enc (windows fpr))) with (size (enc fpr)) by (rewrite BinaryPR_enc_size; lia). 
+  replace_le (size(enc (init fpr))) with (size (enc fpr)) by (rewrite BinaryPR_enc_size; lia). 
+  replace_le (size(enc (width fpr))) with (size (enc fpr)) by (rewrite BinaryPR_enc_size; lia). 
+  replace_le (size(enc(offset fpr))) with (size (enc fpr)) by (rewrite BinaryPR_enc_size; lia). 
+  unfold poly__BinaryPRWfDec, c__BinaryPRWfDecBound. nia.
+Qed. 
+Lemma BinaryPR_wf_dec_poly : monotonic poly__BinaryPRWfDec /\ inOPoly poly__BinaryPRWfDec.
+Proof. 
+  unfold poly__BinaryPRWfDec; split; smpl_inO. 
+Qed. 
+
+(** reduction *)
+Definition c__reduction := 4. 
+Definition reduction_time (bpr : BinaryPR) := (if BinaryPR_wf_dec bpr then  encodeTableau_time bpr else 0) +BinaryPR_wf_dec_time bpr + c__reduction. 
+Instance term_reduction : computableTime' reduction (fun bpr _ => (reduction_time bpr, tt)). 
+Proof. 
+  extract. unfold reduction_time, c__reduction; solverec. 
+Qed. 
+
+(** full reduction statement *)
+Theorem BinaryPR_to_FSAT_poly : reducesPolyMO (unrestrictedP BinaryPRLang) (unrestrictedP FSAT). 
+Proof. 
+  eapply reducesPolyMO_intro with (f := reduction). 
+  - exists (fun n => poly__encodeTableau n + poly__BinaryPRWfDec n + c__reduction). 
+    + eexists. 
+      eapply computesTime_timeLeq. 2: { apply term_reduction. }
+      intros bpr _. cbn -[Nat.add Nat.mul]. split; [ | easy]. 
+      unfold reduction_time. destruct BinaryPR_wf_dec eqn:H1. 
+      * apply BinaryPR_wf_dec_correct in H1. rewrite encodeTableau_time_bound, BinaryPR_wf_dec_time_bound by easy. 
+        generalize (size (enc bpr)). reflexivity. 
+      * rewrite BinaryPR_wf_dec_time_bound. lia. 
+    + smpl_inO; first [apply encodeTableau_poly | apply BinaryPR_wf_dec_poly]. 
+    + smpl_inO; first [apply encodeTableau_poly | apply BinaryPR_wf_dec_poly]. 
+    + destruct encodeTableau_enc_size as (f & H1 & H2 & H3). 
+      exists (fun n => f n + size (enc trivialNoInstance)). 
+      * intros bpr. unfold reduction. destruct BinaryPR_wf_dec eqn:H4. 
+        -- apply BinaryPR_wf_dec_correct in H4. rewrite H1 by apply H4. lia. 
+        -- lia. 
+      * smpl_inO. 
+      * smpl_inO. 
+  - intros bpr ?. exists Hx. cbn. apply BinaryPR_to_FSAT. 
+Qed. 

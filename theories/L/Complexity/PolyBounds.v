@@ -5,6 +5,42 @@ From Undecidability.L.Complexity Require Import MorePrelim.
 From Undecidability.L Require Export Datatypes.LLists Datatypes.LLNat.
 From Undecidability.L.Functions Require Import EqBool. 
 
+(** why the heck isn't this in the standard library? no one knows... *)
+Instance proper_lt_mul : Proper (lt ==> eq ==> le) Nat.mul. 
+Proof. 
+  intros a b c d e f. nia.
+Qed. 
+
+Instance proper_lt_add : Proper (lt ==> eq ==> le) Nat.add.
+Proof. 
+  intros a b c d e f. nia. 
+Qed. 
+
+Instance proper_le_pow : Proper (le ==> eq ==> le) Nat.pow.
+Proof. 
+  intros a b H1 d e ->. apply Nat.pow_le_mono_l, H1. 
+Qed. 
+
+Instance mult_lt_le : Proper (eq ==> lt ==> le) mult. 
+Proof. 
+  intros a b -> d e H. nia. 
+Qed.
+
+Instance add_lt_lt : Proper (eq ==> lt ==> lt) Nat.add. 
+Proof. 
+  intros a b -> c d H. lia.
+Qed.
+
+Instance le_lt_impl : Proper (le --> eq ==> Basics.impl) lt. 
+Proof. 
+  intros a b H d e ->. unfold Basics.flip in H. unfold Basics.impl. lia. 
+Qed.
+
+Instance lt_le_impl : Proper (lt --> eq ==> Basics.impl) le. 
+Proof. 
+  intros a b H d e ->. unfold Basics.flip in H. unfold Basics.impl. lia.  
+Qed.
+
 Lemma list_el_size_bound {X : Type} `{registered X} (l : list X) (a : X) :
   a el l -> size(enc a) <= size(enc l). 
 Proof. 
@@ -110,11 +146,22 @@ Proof.
   rewrite IHl. lia. 
 Qed.
 
+Lemma nat_size_lt a b: a < b -> size (enc a) < size (enc b). 
+Proof. 
+  intros H. rewrite !size_nat_enc. unfold c__natsizeS; nia. 
+Qed.
+
+Lemma nat_size_le a b: a <= b -> size (enc a) <= size (enc b). 
+Proof. 
+  intros H. rewrite !size_nat_enc. unfold c__natsizeS; nia. 
+Qed.
+
 Tactic Notation "replace_le" constr(s) "with" constr(r) "by" tactic(tac) :=
   let H := fresh in assert (s <= r) as H by tac; rewrite !H; clear H. 
-Tactic Notation "replace_le" constr(s) "with" constr(r) "by" tactic(tac) "at" integer(occ) := 
+Tactic Notation "replace_le" constr(s) "with" constr(r) "by" tactic(tac) "at" ne_integer_list(occ) := 
   let H := fresh in assert (s <= r) as H by tac; rewrite H at occ; clear H. 
-
+Tactic Notation "replace_le" constr(s) "with" constr(r) :=
+  let H := fresh in assert (s <= r) as H; [ | rewrite !H; clear H]. 
 
 Tactic Notation "poly_mono" constr(H) "at" integer(occ) :=
   let He := fresh in specialize H as He; match type of He with
