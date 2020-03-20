@@ -19,6 +19,7 @@
 \newcommand{\redP}{\ensuremath{\prec_p}}
 
 \chapter{Preliminaries}\label{chap:preliminaries}
+\setCoqFilename{Undecidability.L.Complexity.Cook.Prelim}
 In this chapter, we present the needed basic definitions, including notations, Turing machines and the call-by-value $\lambda$-calculus L.
 
 \section{Type Theory}
@@ -63,13 +64,13 @@ For a relation $R$, we write $(a, b) \in R$ or $a~R~b$ for $R~a~b$.
 
 The $n$-th power $R^n$ of a relation $R$ is defined inductively:
 \begin{align*}
-  \infer{R^0~x~x}{}\mnote{$R^n$}
+  \infer{R^0~x~x}{}\mnote[relpower]{$R^n$}
   \qquad
   \infer{R^{\natS{n}}~x~z}{R~x~y\quad R^n~y~z}
 \end{align*}
 For some proofs, it will be convenient to have an alternative definition where the successor case appends a new transition instead of prepending it:
 \begin{align*}
-  \infer{\prescript{0}{}R~x~x}{}\mnote{$\prescript{n}{}R$}
+  \infer{\prescript{0}{}R~x~x}{}\mnote[relpowerRev]{$\prescript{n}{}R$}
   \qquad
   \infer{\prescript{\natS{n}}{}R~x~z}{\prescript{n}{}R~x~y\quad R~y~z}
 \end{align*}
@@ -77,15 +78,16 @@ For some proofs, it will be convenient to have an alternative definition where t
 \begin{proposition}\label{prop:relpower}
   We have the following basic facts:
   \begin{enumerate}
-    \item Transitivity: $R^n~x~y \rightarrow R^m~y~z \rightarrow R^{n+m}~x~z$ and $\prescript{n}{}R~x~y \rightarrow \prescript{m}{}R~y~z \rightarrow \prescript{n+m}{}R~x~z$
-    \item Monotonicity: $R \subseteq S \rightarrow R^n~x~y \rightarrow S^n~x~y$
-    \item Congruence: $R \equiv S \rightarrow R^n~x~y \leftrightarrow S^n~x~y$
-    \item Agreement: $R^n~x~y \leftrightarrow \prescript{n}{}R~x~y$
-    \item Additivity: $R^{n+m}~x~z \leftrightarrow \exists y, R^n~x~y \land R^m~y~z$
+    \coqitem[relpower_trans] Transitivity: $R^n~x~y \rightarrow R^m~y~z \rightarrow R^{n+m}~x~z$ and $\prescript{n}{}R~x~y \rightarrow \prescript{m}{}R~y~z \rightarrow \prescript{n+m}{}R~x~z$
+    \coqitem[relpower_monotonous] Monotonicity: $R \subseteq S \rightarrow R^n~x~y \rightarrow S^n~x~y$
+    \coqitem[relpower_congruent] Congruence: $R \equiv S \rightarrow R^n~x~y \leftrightarrow S^n~x~y$
+    \coqitem[relpower_relpowerRev] Agreement: $R^n~x~y \leftrightarrow \prescript{n}{}R~x~y$
+    \coqitem[relpower_add_split] Additivity: $R^{n+m}~x~z \leftrightarrow \exists y, R^n~x~y \land R^m~y~z$
   \end{enumerate}
 \end{proposition}
 
 \section{Turing Machines}\label{sec:tm}
+\setCoqFilename{Undecidability.TM.TM}
 In this section, we present the formalisation of deterministic Turing machines used throughout the thesis. 
 
 Turing machines can be regarded as finite automata with access to a fixed number of infinite tapes. Each tape has a head which can be moved sequentially. 
@@ -99,7 +101,7 @@ This formalisation of tapes without blanks has the advantage that each possible 
 
 A tape can be in one of four states:
 \begin{align*}
-  \textsf{tape}_\Sigma &  \defeq \mnote{$\textsf{tape}~\Sigma$}\\
+  \textsf{tape}_\Sigma &  \defeq \mnote[tape]{$\textsf{tape}_\Sigma$}\\
   |&~\textsf{niltape} \\
   |&~\textsf{leftof}~(c : \Sigma)~(rs : \listsof{\Sigma}) \\
   |&~\textsf{rightof}~(c : \Sigma)~(ls : \listsof{\Sigma}) \\
@@ -128,18 +130,18 @@ We use the functions $\textsf{left}, \textsf{right} : \textsf{tape}_\Sigma \righ
 
 \paragraph{Turing machines}
 In each computational step, a Turing machine can optionally write a symbol and\mnote{$\textsf{Act}_{\Sigma}$} move the head on each of its tapes individually. These actions are captured by the type  $\textsf{Act}_{\Sigma} \defeq{} \opt{\Sigma} \times \textsf{move}$, where $\Sigma$ is the tape alphabet and 
-$\textsf{move} := \movel \bnfmid \mover \bnfmid \moven$\mnote{\textsf{move}}
+$\textsf{move} := \movel \bnfmid \mover \bnfmid \moven$\mnote[move]{\textsf{move}}
 defines the possible movements. 
 
 \begin{definition}[Turing machines]
-  Given a finite type $\Sigma$ and a number of tapes $n$, Turing machines of type \mnotec{$\textsf{TM}~\Sigma~n$} are tuples $(Q, \delta, \textsf{start}, \textsf{halt})$, where $Q$ is the finite type of states, $\delta : Q \times {(\opt{\Sigma})}^n \rightarrow Q \times {\textsf{Act}_\Sigma}^n$ is the transition function, $\textsf{start}$ is the initial state and $\textsf{halt} : Q \rightarrow \bool$ defines the halting states.
+  Given a finite type $\Sigma$ and a number of tapes $n$, Turing machines of type \mnotec[mTM]{$\textsf{TM}~\Sigma~n$} are tuples $(Q, \delta, \textsf{start}, \textsf{halt})$, where $Q$ is the finite type of states, $\delta : Q \times {(\opt{\Sigma})}^n \rightarrow Q \times {\textsf{Act}_\Sigma}^n$ is the transition function, $\textsf{start}$ is the initial state and $\textsf{halt} : Q \rightarrow \bool$ defines the halting states.
 \end{definition}
 For the semantics of Turing machines, the values of the transition function for halting states, i.e.\ states $q$ for which $\textsf{halt}~q = \btrue$, are irrelevant. 
 
 A configuration of a Turing machine $M$ is a pair consisting of the current state and its tapes.
 \begin{definition}[Configurations]
   Let $M : \textsf{TM}~\Sigma~n$. The type of configurations over $M$ is given by 
-  $\textsf{conf}_{M} \defeq Q_{M} \times {(\textsf{tape}_{\Sigma})}^n$.\mnote{$\textsf{conf}_M$}
+  $\textsf{conf}_{M} \defeq Q_{M} \times {(\textsf{tape}_{\Sigma})}^n$.\mnote[mconfig]{$\textsf{conf}_M$}
 \end{definition}
 
 We give the full definition of the semantics of Turing machines in Appendix~\ref{app:TM} and only define formally here how the Turing machine moves its heads (Figure~\ref{fig:movetape}). The rest of the definitions follows what one would intuitively expect.
@@ -165,8 +167,9 @@ We give the full definition of the semantics of Turing machines in Appendix~\ref
   \caption{Turing machine tape movements. Note how the tape does not change if the Turing machine wants to move the head one more symbol beyond the used tape region if the head currently is not on a symbol. This means that it is not possible for the head to reside two or more symbols beyond the used the tape region.}\label{fig:movetape}
 \end{figure}
 
+\setCoqFilename{Undecidability.L.Complexity.Cook.TM_single}
 In the presentation on paper, it will suffice to assume a transition relation $\succ$ on configurations such that 
-\mnote{$c \succ c'$}$(q, tp) \succ (q', tp')$ holds if, and only if, $\textsf{halt}~q = \bfalse$ and $(q', tp')$ is the successor configuration of $(q, tp)$ according to the transition function. 
+\mnote[sstep]{$c \succ c'$}$(q, tp) \succ (q', tp')$ holds if, and only if, $\textsf{halt}~q = \bfalse$ and $(q', tp')$ is the successor configuration of $(q, tp)$ according to the transition function. 
 \begin{definition}[Termination Relation]
   \begin{align*}
     (q, tp) \rhd^{k} (q', tp') &\defeq (q, tp) \succ^k (q', tp') \land \textsf{halt}~q' = \btrue \mnote{$c \rhd^k c'$}\\
@@ -176,7 +179,7 @@ In the presentation on paper, it will suffice to assume a transition relation $\
 
 We only need single-tape Turing machines throughout this thesis and therefore we restrict this notation to single-tape machines.
 The following result states that with each computational step, a Turing machine can take up at most one additional tape cell. 
-\begin{lemma}[``Time Bounds Space'']\label{lem:time_bounds_space}~\\
+\begin{lemma}[``Time Bounds Space''][tm_step_size]\label{lem:time_bounds_space}~\\
   Assume a Turing machine $M : \textsf{TM}~\Sigma~1$ and $(q, tp) \succ (q', tp')$. Then $\textsf{sizeOfTape}~tp' \le \natS{\textsf{sizeOfTape}~tp}$, 
   where $\textsf{sizeOfTape} : \textsf{tape}_\Sigma \rightarrow \nat$ describes the number of symbols contained on a tape.
 \end{lemma}
@@ -275,23 +278,23 @@ Now that we can use L for basic complexity theory, we define the usual notions l
 
 \paragraph{Space and Time Complexities}
 We start by formally defining basics like the $\mathcal{O}$ notation and what it means for a function to be in some complexity class.
-
-\begin{definition}[$\mathcal{O}$]
+\setCoqFilename{Undecidability.L.Complexity.ONotation}
+\begin{definition}[$\mathcal{O}$][inO]
   Let $f, g : \nat \rightarrow \nat$. $f \in \bigO{g}$ if there are $c, n_0$ such that for all $n \ge n_0$, it holds that $f~n \le c \cdot g~n$.
 \end{definition}
 This is the usual definition and the expected properties for addition and multiplication can be proved. 
-We say that a function $f : \nat \rightarrow \nat$ is polynomially bounded if there exists $n : \nat$ such that $f \in \bigO{\lambda x. x^n}$. Moreover, $f$ is monotonic if $\forall x~y, x \le y \rightarrow f~x \le f~y$.
+We say that a function $f : \nat \rightarrow \nat$ is \coqlink[inOPoly]{polynomially bounded} if there exists $n : \nat$ such that $f \in \bigO{\lambda x. x^n}$. Moreover, $f$ is \coqlink[monotonic]{monotonic} if $\forall x~y, x \le y \rightarrow f~x \le f~y$.
 
 Given a type $X : \Type$ which is L-encodable (i.e.\ there exists a Scott encoding for $X$\footnote{In some cases, one can also derive an encoding for types without a direct Scott encoding.}) and $x : X$, we write $\overline{x}$ for the encoding of $x$ as an L-term. Thus, $\encsize{\overline{x}}$ is the size of $x$'s encoding. 
-
-\begin{definition}[Polynomial-time Computable Functions]
+\setCoqFilename{Undecidability.L.Complexity.Synthetic}
+\begin{definition}[Polynomial-time Computable Functions][polyTimeComputable]
   Assume types $X, Y$ which are L-encodable.
   Let $f : X \rightarrow Y$ be an L-computable function.  
   $f$ is computable in polynomial time if there exists a function $f_t : \nat \rightarrow \nat$ such that
   \begin{itemize}
     \item for all $x : X$, the number of reduction steps of $f$'s encoding on the encoding of $x$ is bounded by $f_t(\encsize{\overline{x}})$, 
     \item $f_t$ is monotonic and polynomially bounded, 
-    \item and the output size of $f$ is polynomially bounded, i.e.\ there exists a function $f_s : \nat \rightarrow \nat$ which is monotonic and polynomially bounded such that $\forall x, \encsize{\overline{f~x}} \le f_s (\encsize{\overline{x}})$. 
+    \item and the output size of $f$ is \coqlink[resSizePoly]{polynomially bounded}, i.e.\ there exists a function $f_s : \nat \rightarrow \nat$ which is monotonic and polynomially bounded such that $\forall x, \encsize{\overline{f~x}} \le f_s (\encsize{\overline{x}})$. 
   \end{itemize}
 \end{definition}
 
@@ -300,24 +303,25 @@ Monotonicity would not strictly be required for the bounding functions, but is q
 \paragraph{\textsf{P} and \textsf{NP}}
 We continue with the definition of the important classes \textsf{P} and \textsf{NP}. 
 A problem is a predicate $P : X \rightarrow \Prop$ for an L-encodable type $X$.
-\begin{definition}[Decidable Problems]
+\begin{definition}[Decidable Problems][decInTime]
   Let $P : X \rightarrow \Prop$ for an L-encodable type $X$. $P$ is L-decidable if there exists a L-computable function $f : X \rightarrow \bool$ such that 
   $\forall x, P~x \leftrightarrow f~x = \btrue$. 
   Moreover, $P$ is decidable in time $f_t : \nat \rightarrow \nat$ if additionally the number of reduction steps of $f$'s encoding on the encoding of $x$ is bounded by $f_t(\encsize{\overline{x}})$.
 \end{definition}
 
-\begin{definition}[Polynomial-time Decidable Problems]
+\setCoqFilename{Undecidability.L.Complexity.NP}
+\begin{definition}[Polynomial-time Decidable Problems][inTimePoly]
   Let $P : X \rightarrow \Prop$ for an L-encodable type $X$. $P$ is polynomial-time decidable if there exists a monotonic and polynomially bounded function $f_P : \nat \rightarrow \nat$ such that $P$ is decidable in time $f_P$. 
 \end{definition}
 
 \textsf{P} is the class of problems for which there exists a polynomial-time decider. 
-\begin{definition}[\textsf{P}]
+\begin{definition}[\textsf{P}][inP]
   $P \in \normalfont{\textsf{P}} \defeq P \text{ is polynomial-time decidable} $
 \end{definition}
 
 For \NP{}, we do not use the usual definition via nondeterminism. While nondeterministic additions to the $\lambda$-calculus have been explored in the literature, for instance via the addition of a new combinator allowing to nondeterministically guess a single bit~\cite{kutzner:nondet_lambda}, using nondeterminism would make formal reasoning much harder.\todo{citations}
 Instead, we adapt the well-known alternative verifier characterisation of \NP{}, where there must exist a verifier which decides whether a certificate of polynomial size correctly proves that an instance is a yes-instance. Intuitively, the verifier characterisation moves the nondeterminism into the input.
-\begin{definition}[\NP{}]
+\begin{definition}[\NP{}][inNP]
   Let $P : X \rightarrow \Prop$ and $X$ be an $L$-encodable type. $P \in \normalfont{\NP{}}$ if there exists a verifier $R : X \rightarrow \Lterm \rightarrow \Prop$ such that: 
   \begin{itemize}
     \item $\lambda (x, y). R~x~y$ is polynomial-time decidable, 
@@ -329,27 +333,27 @@ Instead, we adapt the well-known alternative verifier characterisation of \NP{},
   \end{itemize}
 \end{definition}
 
-Note that we require that the type of certificates is $\Lterm$. This does not pose a restriction in practice as we can still use any $L$-encodable type (since these types have an encoding as a $\Lterm$) whose encoding can be decoded in polynomial time, i.e.\ for which there exists a function $f : \Lterm \rightarrow \opt{X}$ running in polynomial time. It turns out that the Scott encoding of any inductive datatype can in practice be decoded in linear time.
+Note that we require that the type of certificates is $\Lterm$. This \coqlink[inNP_intro]{does not pose a restriction} in practice as we can still use any $L$-encodable type (since these types have an encoding as a $\Lterm$) whose encoding can be decoded in polynomial time, i.e.\ for which there exists a function $f : \Lterm \rightarrow \opt{X}$ running in polynomial time. It turns out that the Scott encoding of any inductive datatype can in practice be decoded in linear time.
 
-\begin{fact}[\NP{} subsumes \textsf{P}]
+\begin{fact}[\NP{} subsumes \textsf{P}][P_NP_incl]
   If $P \in \normalfont{\textsf{P}}$ then $P \in \NP{}$. 
 \end{fact}
 
 \paragraph{Polynomial-time Reductions}
 Next, we consider polynomial-time reductions. The definition mostly corresponds to the usual one on Turing machines. 
 
-\begin{definition}[Polynomial-time Reductions]
+\begin{definition}[Polynomial-time Reductions][reducesPolyMO]
   Assume problems $P : X \rightarrow \Prop$ and $Q : Y \rightarrow \Prop$ for L-encodable types $X, Y$. $P$ reduces to $Q$ in polynomial-time, written $P \redP{} Q$, if there exists a polynomial-time computable function $f : X \rightarrow Y$ satisfying the property $\forall x, P~x \leftrightarrow Q(f~x)$. 
 \end{definition}
 Note that, since we require $f$ to be polynomial-time computable, its output size also needs to be polynomial in its input size. This is the only condition which changes compared to Turing machines.
 
-$\redP$ is transitive and inclusion in \NP{} transfers backwards along reductions, i.e.\ if $P \redP{} Q$ and $Q \in \normalfont\NP{}$, then $P \in \NP{}$.
+$\redP$ is \coqlink[reducesPolyMO_transitive]{transitive} and inclusion in \NP{} \coqlink[red_inNP]{transfers backwards} along reductions, i.e.\ if $P \redP{} Q$ and $Q \in \normalfont\NP{}$, then $P \in \NP{}$.
 
 \begin{definition}[\NP{} hardness and \NP{} completeness]
-  A problem $Q : X \rightarrow \Prop$ is \NP{}-hard if any problem $P : Y \rightarrow \Prop$ can be reduced to it in polynomial time, i.e.\ $P \redP{} Q$. It is \NP{}-complete if, in addition, $Q \in \normalfont\NP{}$.
+  A problem $Q : X \rightarrow \Prop$ is \coqlink[NPhard]{\NP{}-hard} if any problem $P : Y \rightarrow \Prop$ can be reduced to it in polynomial time, i.e.\ $P \redP{} Q$. It is \coqlink[NPcomplete]{\NP{}-complete} if, in addition, $Q \in \normalfont\NP{}$.
 \end{definition}
 
-\NP{} hardness transfers along polynomial-time reductions: if $p \redP{} q$ and $p$ is \NP{}-hard, then $q$ is \NP{}-hard.
+\NP{} hardness \coqlink[red_NPhard]{transfers along} polynomial-time reductions: if $p \redP{} q$ and $p$ is \NP{}-hard, then $q$ is \NP{}-hard.
 
 \begin{remark}\label{rem:cook_L}
 We close this chapter by giving an intuitive explanation why one should not expect there to be an easy proof of the existence of a natural (i.e.\ machine-independent) and intuitive \NP{}-complete problem in our setting of complexity theory in L.

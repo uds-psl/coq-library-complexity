@@ -6,20 +6,21 @@ As we are working over a binary alphabet, each character of the involved strings
 The formula $\phi$ we generate is a conjunction of three gadgets: a formula $\phi_{\textsf{init}}$ enforcing that the first line of the tableau matches the initial string, a formula $\phi_{\textsf{trans}}$ encoding that the individual lines follow from each other according to the rewrite windows, and a formula $\phi_{\textsf{final}}$ which makes the final substring constraint hold. 
 
 \newcommand{\formula}{\mathcal{F}}
+\setCoqFilename{Undecidability.L.Complexity.Problems.FSAT}
 \section{Formula Satisfiability (FSAT)}
 We start by introducing a generalised variant of \SAT{} that does not require the formula to be in CNF.
 
 Formulas are defined inductively: 
-\mnote{$\formula$}
+\mnote[formula]{$\formula$}
 \[f : \formula \defeq \btrue \bnfmid v \bnfmid f_1 \lor f_2 \bnfmid f_1 \land f_2 \bnfmid \lnot f \qquad (v : \bvar) \]
 
 One can directly derive the operators $\land$ and $\lor$ for more than two operands, which we will denote by $\bigwedge_{f \in l} f$ and $\bigvee_{f \in l} f$ for $ l : \listsof{\formula}$. 
 
 Assignments $a : \assgn$ are defined in the same way as for CNFs, see Section~\ref{sec:sat}.
-An evaluation function $\eval : \assgn \rightarrow \formula \rightarrow \bool$ can be derived in the canonical way. We say that an assignment $a$ satisfies $f$, written $a \models f$, if $\evalA{a}{f} = \btrue$.
+An \coqlink[evalFormula]{evaluation function} $\eval : \assgn \rightarrow \formula \rightarrow \bool$ can be derived in the canonical way. We say that an assignment $a$ \coqlink[satisfies]{satisfies} $f$, written $a \models f$, if $\evalA{a}{f} = \btrue$.
 
-\begin{definition}[Formula Satisfiability]
-  \mnote{\fsat{}}
+\begin{definition}[Formula Satisfiability][FSAT]
+  \mnote[FSAT]{\fsat{}}
   $\fsat{}~f \defeq \exists a, a \models f$
 \end{definition}
 
@@ -30,15 +31,15 @@ The assignments we use, where we just store a list of variables to which the val
 For the rest of this chapter a more explicit characterisation bearing resemblance to the Boolean strings over which \BPR{} is defined will be quite convenient.
 One possible characterisation is a list of Booleans $e : \listsof{\bool}$ together with a start index $s$, where the value $e[i]$ at position $i$ of this list is the value assigned to variable $s + i$. To variables outside the range $[s, s+\length{e})$, the value $\bfalse$ is assigned.
 
-As we will be working with ranges of variables $[\textsf{start}, \textsf{start} + \textsf{len})$ a lot throughout this chapter, we introduce the notation \mnotec{$[s .. +l)$} instead of $[s .. s+l)$, which makes the notation less redundant. In the following, we use the letter $I$ to denote variable ranges of this form.
+As we will be working with ranges of variables $[\textsf{start}, \textsf{start} + \textsf{len})$ a lot throughout this chapter, we introduce the notation \mnotec{$[s .. +l)$} instead of $[s, s+l)$, which makes the notation less redundant. In the following, we use the letter $I$ to denote variable ranges of this form.
 
 We can naturally convert back and forth between such explicit assignments and assignments $a : \assgn$.
 First, we present a function that generates an explicit assignments for the variables in range $[\text{start}, \text{start} + \text{len})$. 
 
+\setCoqFilename{Undecidability.L.Complexity.Cook.BinaryPR_to_FSAT}
 \newcommand{\explicitA}{\textsf{explicitAssgn}}
 \begin{align*}
-  \mnote{\explicitA}
-  \explicitA &: \assgn \rightarrow \nat \rightarrow \nat \rightarrow \listsof{\nat} \\
+  \mnote[explicitAssignment]{explicitA}\explicitA &: \assgn \rightarrow \nat \rightarrow \nat \rightarrow \listsof{\nat} \\
   \explicitA~a~\textsf{start}~0 &\defeq \nil \\
   \explicitA~a~\textsf{start}~(\natS{\textsf{len}}) &\defeq \explicitA~a~\textsf{start}~\textsf{len} \concat [(\textsf{start} + \textsf{len}) \overset{?}{\in} a]
 \end{align*}
@@ -47,33 +48,33 @@ We use the notation $a[s ..+l) \defeq \explicitA~a~s~l$ and may also write \mnot
 
 \begin{lemma}[Properties of \explicitA]\leavevmode
   \begin{enumerate}
-    \item $\length{\explicitA~a~\textsf{start}~\textsf{len}} = \textsf{len}$
-    \item $k < \textsf{len} \rightarrow (\explicitA~a~\textsf{start}~\textsf{len})[k] = \OSome{(\evalA{a}{(\textsf{start} + k)})}$
-    \item $\explicitA~a~s~(l_1 + l_2) = \explicitA~a~s~l_1 \concat \explicitA~a~(s + l_1)~l_2$ 
+    \coqitem[explicitAssignment_length] $\length{\explicitA~a~\textsf{start}~\textsf{len}} = \textsf{len}$
+    \coqitem[explicitAssignment_nth] $k < \textsf{len} \rightarrow (\explicitA~a~\textsf{start}~\textsf{len})[k] = \OSome{(\evalA{a}{(\textsf{start} + k)})}$
+    \coqitem[explicitAssignment_app] $\explicitA~a~s~(l_1 + l_2) = \explicitA~a~s~l_1 \concat \explicitA~a~(s + l_1)~l_2$ 
   \end{enumerate}
 \end{lemma}
 
-\newcommand{\expandA}{\textsf{expandAssgn}}
-Of course, we can go back to a full assignment: 
-\begin{proposition} 
-  Let $e : \listsof{\bool}$ and a start variable index $s$ be given. Then:
-  \[\sigtype{a}. \forall x, x \in a \leftrightarrow x \ge s \land e[x-s] = \OSome{\btrue} \]
-  Moreover, if $a$ satisfies $\forall x, x \in a \leftrightarrow x \ge s \land e[x-s] = \OSome{\btrue}$, then:
-  \[\explicitA~a~s~(\length{e}) = e \]
-\end{proposition}
+%\newcommand{\expandA}{\textsf{expandAssgn}}
+%Of course, we can go back to a full assignment: 
+%\begin{proposition}[][expAssgn_to_assgn] 
+  %Let $e : \listsof{\bool}$ and a start variable index $s$ be given. Then:
+  %\[\sigtype{a}. \forall x, x \in a \leftrightarrow x \ge s \land e[x-s] = \OSome{\btrue} \]
+  %\coqlink[expAssgn_to_assgn_inv]{Moreover}, if $a$ satisfies $\forall x, x \in a \leftrightarrow x \ge s \land e[x-s] = \OSome{\btrue}$, then:
+  %\[\explicitA~a~s~(\length{e}) = e \]
+%\end{proposition}
 
 \newcommand{\projVars}{\textsf{projVars}}
 Given an explicit assignment $e$, we can project out the assignment to a particular range of variables $I = [\textsf{start}.. +\textsf{len})$:
+\mnote[projVars]{$e[I]$}
 \[e[I] = e[\textsf{start}..+\textsf{len}) \defeq (e[\textsf{len} ..])[.. \textsf{start}).\] 
-\mnote{$e[I]$} %link to projVars
 The subscripting notation thus is overloaded for full assignments and for explicit assignments, but this will not pose a problem as it will always be clear from the context what we mean.
 
 \section{Encoding Properties using Boolean Formulas}
 Based on explicit assignments, we now present ways to encode predicates using formulas $f : \formula$ and show that this representation is closed under conjunction and disjunction, the main composition operations we need for the reduction.
 
 \newcommand{\encodesPred}{\textsf{encodesPredAt}}
-\begin{definition}[Encoding of Predicates]
-  \mnote{\encodesPred}
+\begin{definition}[Encoding of Predicates][encodesPredicateAt]
+  \mnote[encodesPredicateAt]{\encodesPred}
   A formula $f$ encodes a predicate $p$ on a range of variables $I = [\textsf{start}.. \textsf{start} + \textsf{len})$ if, for every assignment $a$, $a \models f$ is equivalent to satisfaction of $p$ under the partial assignment given by $I$:
   \[\encodesPred~\textsf{start}~l~f~p \defeq \forall a, a \models f \leftrightarrow p~(a[\textsf{start}.. + l]) \]
 \end{definition}
@@ -84,16 +85,16 @@ A more elaborate definition allowing a more fine-grained control would be possib
 To stay in line with the variable range notation, we also write $\encodesPred~I~f~p$ for a range of variables $I$.
 
 A rather trivial but important fact is that \encodesPred{} is extensional with respect to the encoded predicate. This will be quite convenient for proving correctness of encodings by switching to an equivalent characterisation of the predicate we want to encode.
-\begin{fact}\label{fact:enc_congruent}
+\begin{fact}[Extensionality][encodesPredicateAt_extensional]\label{fact:enc_congruent}
   Let $\forall e, \length{e} = l \rightarrow p_1~e \leftrightarrow p_2~e$. Then
   \[\encodesPred~s~l~f~p_1 \leftrightarrow \encodesPred~s~l~f~p_2.\]
 \end{fact}
 
 \newcommand{\encodeLiteral}{\textsf{encodeLiteral}}
 As a first example, we define the encoding of a literal: 
-\[\encodeLiteral~v~\textsf{sign} : \formula \defeq \ITE{\textsf{sign}}{v}{\lnot v} \mnote{\encodeLiteral}\]
+\[\encodeLiteral~v~\textsf{sign} : \formula \defeq \ITE{\textsf{sign}}{v}{\lnot v} \mnote[encodeLiteral]{\encodeLiteral}\]
 As one would expect, the formula $\encodeLiteral~v~s$ forces variable $v$ to take the value s: 
-\begin{proposition}[Correctness of \encodeLiteral]
+\begin{proposition}[Correctness of \encodeLiteral][encodeLiteral_correct]
   \[\encodesPred~v~1~(\encodeLiteral~v~s) (\lambda l. l = [s])\]
 \end{proposition}
 
@@ -103,8 +104,8 @@ Our simple representation model does not allow to accurately depict this, hence 
 \newcommand{\cStart}{\textsf{combStart}}
 \newcommand{\cLength}{\textsf{combLength}}
 \begin{align*}
-  \cStart~s_1~s_2 &\defeq \min~s_1~s_2 \mnote{\cStart}\\
-  \cLength~s_1~s_2~l_1~l_2 &\defeq \max~(s_1 + l_1) (s_2 + l_2) - \min~s_1~s_2 \mnote{\cLength}\\
+  \cStart~s_1~s_2 &\defeq \min~s_1~s_2 \mnote[combinedStart]{\cStart}\\
+  \cLength~s_1~s_2~l_1~l_2 &\defeq \max~(s_1 + l_1) (s_2 + l_2) - \min~s_1~s_2 \mnote[combinedLength]{\cLength}\\
   [s_1, s_1 + l_1) \sqcup [s_2, s_2 + l_2) &\defeq [\cStart~s_1~s_2.. +\cLength~s_1~s_2~l_1~l_2) \mnote{$I_1 \sqcup I_2$}
 \end{align*}
 
@@ -112,8 +113,8 @@ Using $e[s..+l]$, we can restore the assignments to $I_1$ and $I_2$ given an ass
 \begin{proposition}\label{prop:comb_proj}
   Let $I_1 = [s_1 ..+ l_1)$ and $I_2 = [s_2 ..+l_2)$. 
   \begin{enumerate}
-    \item $a[I_1] = (a[I_1 \sqcup I_2])[s_1 - \cStart~s_1~s_2 .. + l_1]$
-    \item $a[I_2] = (a[I_1 \sqcup I_2])[s_2 - \cStart~s_1~s_2 .. + l_2]$
+    \coqitem[projVars_combined1] $a[I_1] = (a[I_1 \sqcup I_2])[s_1 - \cStart~s_1~s_2 .. + l_1]$
+    \coqitem[projVars_combined2] $a[I_2] = (a[I_1 \sqcup I_2])[s_2 - \cStart~s_1~s_2 .. + l_2]$
   \end{enumerate}
 \end{proposition}
 
@@ -122,12 +123,12 @@ Now, we have all the tools necessary to combine the encoding of two predicates:
   Let $I_1 = [s_1 .. + l_2)$ and $I_2 = [s_2 .. + l_2)$.
   Assume that $\encodesPred~s_1~l_1~f_1~p_1$ and $\encodesPred~s_2~l_2~f_2~p_2$. 
   \begin{enumerate}
-    \item 
+    \coqitem[encodesPredicate_and]
       $\begin{aligned}[t]
         &\encodesPred ~(I_1 \sqcup I_2) (f_1 \land f_2) \\ 
         &\quad (\lambda e. p_1 (e[s_1 - \cStart~s_1~s_2 .. +l_1]) \land p_2 (e[s_2 - \cStart~s_1~s_2 .. + l_2]))
       \end{aligned}$
-    \item 
+   \coqitem[encodesPredicate_or]
       $\begin{aligned}[t]
         &\encodesPred ~(I_1 \sqcup I_2) (f_1 \lor f_2) \\ 
         &\quad (\lambda e. p_1 (e[s_1 - \cStart~s_1~s_2 .. +l_1]) \lor p_2 (e[s_2 - \cStart~s_1~s_2 .. + l_2]))
@@ -142,12 +143,12 @@ By conjoining formulas encoding single literals, a list $L : \listsof{\bool}$ ca
 
 \newcommand{\encodeList}{\textsf{encodeList}}
 \begin{align*}
-  \mnote{\encodeList}
+  \mnote[encodeListAt]{\encodeList}
   \encodeList~s~\nil &\defeq \btrue \\
   \encodeList~s~(l :: L) &\defeq \encodeLiteral~s~l \land \encodeList~(\natS{s})~L
 \end{align*}
 
-\begin{proposition}[Correctness of \encodeList]
+\begin{proposition}[Correctness of \encodeList][encodeListAt_encodesPredicate]
   \[\encodesPred~s~(\length{L})~(\encodeList~s~L)~(\lambda e. L = e) \]
 \end{proposition}
 
@@ -158,7 +159,7 @@ In this section, we show how to encode the three subformulas $\phi_{\textsf{init
 As most of the encodings are straightforward to see from the definition of \PR{}, we only give an informal description for some of them. 
 
 From now on, fix a \BPR{} instance $(o, \omega, x_0, R, \Rfinal, t)$ that satisfies the syntactic constraints of Definition~\ref{def:pr}.
-For our convenience, we define $m \defeq \length{x_0}$ to be the length of each of the tableau's lines. \mnote{$m$}
+For our convenience, we define $m \defeq \length{x_0}$ to be the length of each of the tableau's lines. \mnote[llength]{$m$}
 
 The variable layout of the formula we produce is demonstrated by Figure~\ref{fig:varlayout}
 \begin{figure}
@@ -220,9 +221,9 @@ The variable layout of the formula we produce is demonstrated by Figure~\ref{fig
 We start with the encoding of $\phi_{\textsf{trans}}$.
 First of all, we need to be able to encode a single rewrite window. As a rewrite windows just encodes two lists, this is straightforward to derive. Since the premise of the window needs to match in one line of the tableau while the conclusion needs to hold for the next line, the encoding is parameterised over two indices $s_1$ and $s_2$ giving the respective start of the encoding. 
 \newcommand{\encodeWindow}{\textsf{encodeWindow}}
-\[ \encodeWindow~s_1~s_2~w \defeq \encodeList~s_1~(\prem~w) \land \encodeList~s_2~(\conc~w)\mnote{\encodeWindow} \]
+\[ \encodeWindow~s_1~s_2~w \defeq \encodeList~s_1~(\prem~w) \land \encodeList~s_2~(\conc~w)\mnote[encodeWindowAt]{\encodeWindow} \]
 The correctness statement of course also needs to range over all the variables between the two starting indices.
-\begin{proposition}[Correctness of \encodeWindow]
+\begin{proposition}[Correctness of \encodeWindow][encodeWindowAt_encodesPredicate]
   Let $s, l : \nat$ and $win : \win{\bool}$.
   \begin{align*}
     \encodesPred~s~(l + \omega)~&(\encodeWindow~s~(s + l)~win)\\
@@ -231,8 +232,9 @@ The correctness statement of course also needs to range over all the variables b
 \end{proposition}
 
 \newcommand{\encodeWindows}{\textsf{encodeWindows}}
-This can be lifted to express that one of the windows of $R$ holds by computing a disjunction over the list of windows. We assume a function $\encodeWindows : \nat \rightarrow \nat \rightarrow \formula$ taking the two start indices for that purpose, without going into more detail.\mnote{\encodeWindows}
-\begin{proposition}[Correctness of \encodeWindows]
+This can be lifted to express that one of the windows of $R$ holds by computing a disjunction over the list of windows. 
+We assume a function $\encodeWindows : \nat \rightarrow \nat \rightarrow \formula$ \mnote[encodeWindowsAt]{\encodeWindows} taking the two start indices for that purpose, without going into more detail.
+\begin{proposition}[Correctness of \encodeWindows][encodeWindowsAt_encodesPredicate]
   Let $s, l : \nat$.
   \begin{align*}
     \encodesPred~s~(l + \omega)~&(\encodeWindows~s~(s + l)) \\
@@ -244,7 +246,7 @@ A bit more interesting is the function needed to encode all windows at every off
 Instead, we employ a step index which is initialised to the length $m = \length{x_0}$ of the lines of the tableau to make the function structurally recursive.
 \newcommand{\encodeWindowsLine}{\textsf{encodeWindowsLine}}
 \begin{align*}
-  &\encodeWindowsLine'~\textsf{step}~l~s_1~s_2 \defeq \textbf{if}~{l \overset{?}{<} \omega}~\textbf{then}~{\btrue} \\
+  &\encodeWindowsLine'~\textsf{step}~l~s_1~s_2 \defeq \textbf{if}~{l \overset{?}{<} \omega}~\textbf{then}~{\btrue} \mnote[encodeWindowsLine]{\encodeWindowsLine}\\
   &\quad\textbf{else}~\match \textsf{step} \withl 
     0 \Rightarrow \btrue \withm \natS{\textsf{step}}  
     \begin{aligned}[t]
@@ -252,18 +254,17 @@ Instead, we employ a step index which is initialised to the length $m = \length{
       \land &~\encodeWindowsLine'~\textsf{step}~(l - o)~(s_1 + o)~(s_2 + o)\withr
     \end{aligned} \\[0.7em]
             &\encodeWindowsLine~\textsf{step}~s \defeq \encodeWindowsLine'~m~m~s~(s + m) 
-            %\mnote{\encodeWindowsLine}
 \end{align*}
 Intuitively, the parameter $s_1$ of $\encodeWindowsLine'$ determines the first index starting at which the premises of the windows are placed, while $s_2$ is the starting index of the conclusions.
 
 \todo{find solution for encodeWindowsLine box}
-\begin{proposition}[Correctness of $\encodeWindowsLine'$]
+\begin{proposition}[Correctness of $\encodeWindowsLine'$][encodeWindowsInLine'_encodesPredicate]
   Let $l \le m$. 
   \begin{align*}
     \encodesPred~s~(l + m)~&(\encodeWindowsLine'~l~l~s~(s + m)) \\
                                       &(\lambda e. (e[0 ..+l)) \strent{R} (e[m .. +l))
   \end{align*} 
-  Moreover, we have
+  \coqlink[encodeWindowsInLine_encodesPredicate]{Moreover}, we have
   \[\encodesPred~s~(2 \cdot m) (\encodeWindowsLine~s) (\lambda e. (e[0 ..+m)) \strent{R} (e[m ..+m)) \]
 \end{proposition}
 \begin{proof}
@@ -271,8 +272,8 @@ Intuitively, the parameter $s_1$ of $\encodeWindowsLine'$ determines the first i
   For the first statement, we use strong induction on $l$.
 \end{proof}
 
-Now we can obtain the formula \mnotec{$\phi_{\textsf{trans}}$} by forming a conjunction over all lines of the tableau.
-\begin{lemma}[Correctness of $\phi_{\textsf{trans}}$]
+Now we can obtain the formula \mnotec[encodeWindowsInAllLines]{$\phi_{\textsf{trans}}$} by forming a conjunction over all lines of the tableau.
+\begin{lemma}[Correctness of $\phi_{\textsf{trans}}$][encodeWindowsInAllLines_encodesPredicate]
   \begin{align*}
     \encodesPred~&0~((\natS{t}) \cdot m)~\phi_{\textsf{trans}} \\
                                                    &(\lambda e. \forall 0 \le i < t, ((e[i \cdot m..+m)) \strent{R} (e[(\natS{i}) \cdot m ..+m)))
@@ -283,16 +284,16 @@ Now we can obtain the formula \mnotec{$\phi_{\textsf{trans}}$} by forming a conj
 
 The final constraint can be encoded similarly: we have a nested disjunction over the strings in $\Rfinal$ and the possible positions at which they can match. For the latter, remember that the final substrings need to match at positions which are multiples of the offset $o$. Therefore, we employ a step-indexing technique similar to the one for \encodeWindowsLine. 
 
-\begin{lemma}[Correctness of $\phi_{\textsf{final}}$]
-  \mnote{$\phi_{\textsf{final}}$}
+\begin{lemma}[Correctness of $\phi_{\textsf{final}}$][encodeFinalConstraint_encodesPredicate]
+  \mnote[encodeFinalConstraint]{$\phi_{\textsf{final}}$}
   \[\encodesPred~(t \cdot m)~m~\phi_{\textsf{final}}~(\lambda e. e \models \Rfinal) \]
 \end{lemma}
 
 Finally, the initial constraint is simply an instance of \encodeList: the first $\length{x_0}$ variables have to match $x_0$. 
 Therefore, in the end the whole formula is
-\[ \phi \defeq \encodeList~0~x_0 \land \phi_{\textsf{trans}} \land \phi_{\textsf{final}}.\mnote{$\phi$} \]
+\[ \phi \defeq \encodeList~0~x_0 \land \phi_{\textsf{trans}} \land \phi_{\textsf{final}}.\mnote[encodeTableau]{$\phi$} \]
 
-\begin{lemma}[Correctness of $\phi$]\label{lem:phi_correct}
+\begin{lemma}[Correctness of $\phi$][encodeTableau_encodesPredicate]\label{lem:phi_correct}
   \begin{align*}
     \encodesPred~&0~((\natS{t}) \cdot m)~\phi \\
                  &(\lambda e. \begin{aligned}[t]
@@ -303,7 +304,7 @@ Therefore, in the end the whole formula is
   \end{align*}
 \end{lemma}
 
-\begin{theorem}[\BPR{} Reduces to \fsat{}]
+\begin{theorem}[\BPR{} Reduces to \fsat{}][BinaryPR_to_FSAT]
   \[\fsat~\phi \leftrightarrow \exists x_t, x_0 \strent{R}^t x_t \land x_t \models \Rfinal \]
 \end{theorem}
 \begin{proof}\leavevmode
@@ -328,12 +329,12 @@ We again comment on some aspects of the mechanisation.
 
 As in the previous chapter, we have to treat non-wellformed instances separately by first deciding wellformedness and mapping violating instances to a trivial no-instance. 
 
-A major inconvenience is that many of the representation proofs are somewhat repetitive and mainly rely on inductively forming conjunctions and disjunctions of formulas. 
+A major inconvenience is that many of the representation proofs are somewhat repetitive and mainly rely on inductively forming conjunctions and disjunctions of formulas. Except for the two functions which need step-indexing, these can be taken care of by a few lemmas that allow to form the disjunction or conjunction of a list of formulas at a fixed position, or by instantiating replicating a formula parameterised by the index of the first variable it uses at various positions for a given offset between the instantiations. 
 The authors of~\cite{Larchey-WendlingForster:2019:H10_in_Coq} face a similar problem in encoding certain predicates using Diophantine equations. They come up with Coq tactics that can largely automate the process of finding an encoding and proving its correctness if the predicate has a shape that is already known, using the Coq unification mechanism. If the predicate is not in a known shape, extensionality can be used to bring it into an equivalent shape, similar to our Fact~\ref{fact:enc_congruent}.
 The key idea of their approach is to use Sigma types that informatively bundle the encoding and its proof of correctness. 
 Sadly, a similar trick can not be applied in our setting: Sigma types (or even their computational part) currently are not extractable to L. Thus, it seems unavoidable to explicitly define the formula encoding a particular predicate.
 
 As both \BPR{} and \fsat{} are directly extractable, we need not define separate flat versions. Thus, we obtain the following polynomial-time reduction:
-\begin{theorem}
+\begin{theorem}[][BinaryPR_to_FSAT_poly]
   $\BPR{} \redP{} \fsat{}$
 \end{theorem}

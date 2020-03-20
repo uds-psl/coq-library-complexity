@@ -20,9 +20,10 @@
 \tikzexternalize[prefix=figures/]
 
 \usepackage{marginnote}
+\usepackage{xifthen}
 
-\newcommand{\mnote}[1]{\marginnote{\centering\fbox{#1}}}
-\newcommand{\mnotec}[1]{#1\mnote{#1}}
+\newcommand{\mnote}[2][]{\marginnote{\centering\ifthenelse{\isempty{#1}}{\fbox{#2}}{\href{\baseurl\filename.html\##1}{\fbox{#2}}}}}
+\newcommand{\mnotec}[2][]{#2\mnote[#1]{#2}}
 
 \settitle{Towards a Formal Proof of the Cook-Levin Theorem}
 \setauthor{Lennard Gäher}
@@ -35,7 +36,7 @@
 \thesistype{Bachelor's}
 \DTMsavedate{subdate}{2020-03-31}
 \city{Saarbr\"ucken}
-\setBaseUrl{{https://www. ... .de/coq/}}
+\setBaseUrl{{https://uds-psl.github.io/ba-gaeher/website/}}
 
 \DeclareTextFontCommand{\emph}{\bfseries}
 

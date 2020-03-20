@@ -1,5 +1,6 @@
 
 \chapter{Reducing Formula Satisfiability To SAT}\label{chap:fsat_sat}
+\setCoqFilename{Undecidability.L.Complexity.Cook.FSAT_to_SAT}
 In this chapter, we finally show how to convert an arbitrary logical formula $f : \formula$ into CNF. 
 If one does the conversion in a naive way, this incurs an exponential blowup. Consider, for instance, the formula $\phi_1 \lor \phi_2$ for two arbitrary formulas $\phi_1, \phi_2$. If we were to first recursively convert $\phi_1, \phi_2$ to CNFs $N_1, N_2$ and then apply distributivity to end up with a new CNF $N$ equivalent to $N_1 \lor N_2$, the number of clauses in $N$ were in $\bigO{\length{N_1} \cdot \length{N_2}}$. 
 \begin{example}\label{ex:cnf_large}
@@ -26,30 +27,38 @@ In the Tseytin transformation, each subformula $f'$ of the formula $f$ is repres
 \section{Preliminaries: Composing Partial Assignments}\label{sec:tseytin_prelim}
 As mentioned in the introduction, the Tseytin transformation adds new variables. In order to prove the transformation correct, we need some tools to be able to introduce fresh variables and compose assignments to different ranges of variables.
 
-First of all, we define functions computing the maximum variable used in a CNF or formula, or zero if no variable is used. We refer to both of these functions by \mnotec{\maxVar{}}; it will be clear from the context whether we mean CNFs or formulas. 
+\setCoqFilename{Undecidability.L.Complexity.Problems.SAT}
+First of all, we define functions computing the maximum variable used in a CNF or formula, or zero if no variable is used. We refer to both of these functions by \mnotec{\maxVar{}}; it will be clear from the context whether we mean \coqlink[cnf_maxVar]{CNFs}
+\setCoqFilename{Undecidability.L.Complexity.Problems.FSAT}%
+or \coqlink[formula_maxVar]{formulas}. 
 
 \newcommand{\inlit}{\ensuremath{\in_{\textsf{lit}}}}
 \newcommand{\inclause}{\ensuremath{\in_{\textsf{clause}}}}
 \newcommand{\incnf}{\ensuremath{\in_{\textsf{cnf}}}}
 \newcommand{\infor}{\ensuremath{\in_{\formula}}}
-Moreover, we need predicates that allow us to express that all variables of a formula or CNF are contained in a non-contiguous range of variables such as $[0, b_1) \cup [b_2, b_3]$. 
+Moreover, we need predicates that allow us to express that all variables of a formula
+or CNF are contained in a non-contiguous range of variables such as $[0, b_1) \cup [b_2, b_3]$. 
 Variable ranges are formalised as predicates $r : \nat \rightarrow \Prop$. For instance, the range $[0, b_1) \cup [b_2, b_3]$ is represented as $\lambda n. n < b_1 \lor (n \ge b_2 \land n \le b_3)$. \mnote{$v \in r$}Nevertheless, we use the more intuitive mathematical notation on paper and write $v \in r$ for $r~v$ and $r_1 \subseteq r_2$ for $\forall v, r_1~v \rightarrow r_2~v$.\mnote{$r_1 \subseteq r_2$}
 
+\setCoqFilename{Undecidability.L.Complexity.Problems.SAT}%
+We use the predicates \mnotec[varInCnf]{$v \incnf N$} and $v \infor f$ to denote that a variable is contained in a CNF or formula.
+\setCoqFilename{Undecidability.L.Complexity.Problems.FSAT}%
+\mnote[varInFormula]{$v \infor f$}
 
-We use the predicates \mnotec{$v \incnf N$} and $v \infor f$ to denote that a variable is contained in a CNF or formula.
-\mnote{$v \infor f$}
 \begin{definition}[Variable Containment]
   Let a range $r : \nat \rightarrow \Prop$, a formula $f$, and a CNF $N$ be given. 
-  $N$ only uses variables of $r$, written \mnotec{$N \subseteq r$}, if $\forall v, v \incnf N \rightarrow v \in r$. 
+  $f$ only uses variables of $r$, written \mnotec[formula_varsIn]{$f \subseteq r$}, if $\forall v, v \infor N \rightarrow v \in r$.
 
-  $f$ only uses variables of $r$, written \mnotec{$f \subseteq r$}, if $\forall v, v \infor N \rightarrow v \in r$.
+  \setCoqFilename{Undecidability.L.Complexity.Problems.SAT}
+
+  $N$ only uses variables of $r$, written \mnotec[cnf_varsIn]{$N \subseteq r$}, if $\forall v, v \incnf N \rightarrow v \in r$. 
 \end{definition}
 
 Of course, variable containment is monotonous. 
 \begin{proposition}\label{prop:var_contain}\leavevmode
   \begin{enumerate}
-    \item $r_1 \subseteq r_2 \rightarrow N \subseteq r_1 \rightarrow N \subseteq r_2$
-    \item $(N_1 \concat N_2) \subseteq r \leftrightarrow N_1 \subseteq r \land N_2 \subseteq r$
+    \coqitem[cnf_varsIn_monotonic] $r_1 \subseteq r_2 \rightarrow N \subseteq r_1 \rightarrow N \subseteq r_2$
+    \coqitem[cnf_varsIn_app] $(N_1 \concat N_2) \subseteq r \leftrightarrow N_1 \subseteq r \land N_2 \subseteq r$
   \end{enumerate}
 \end{proposition}
 
@@ -57,35 +66,36 @@ We now turn to the composition of assignments. Recall that assignments are repre
 In principle, this form of assignments is completely non-compositional as all assignments are total. 
 However, we may still get a form of composition by overriding implicit $\bfalse$ values. If we only compose assignments over disjoint variable ranges, we may still obtain the properties one would intuitively expect. 
 
-We define variable containment \mnotec{$a \subseteq r$} for assignments in the same way as for formulas and CNFs:
+\setCoqFilename{Undecidability.L.Complexity.Cook.BinaryPR_to_FSAT}
+We define variable containment \mnotec[assgn_varsIn]{$a \subseteq r$} for assignments in the same way as for formulas and CNFs:
 \[a \subseteq r \defeq \forall v, v \in a \rightarrow v \in r \]
 Note that this definition only talks about variables to which $\btrue$ is assigned.
 We obtain the same properties as in Proposition~\ref{prop:var_contain}.
 Moreover, the following fact will be quite helpful in the sequel:
-\begin{fact}
+\begin{fact}[][evalVar_no_assgn_varsIn_false]
   Let $a \subseteq r$ and $v \notin r$. Then $\evalA{a}{v} = \bfalse$.
 \end{fact}
 
 \begin{definition}[Composition and Restriction]
-  For two assignments $a_1, a_2$, the composition \mnotec{$a_1 \cup a_2$} is given as $a_1 \cup a_2 \defeq a_1 \concat a_2$. 
+  For two assignments $a_1, a_2$, the composition \mnotec[join]{$a_1 \cup a_2$} is given as $a_1 \cup a_2 \defeq a_1 \concat a_2$. 
   That is, we assign $\btrue$ to the variables to which either $a_1$ or $a_2$ assigns $\btrue$, and assign $\bfalse$ only to those values to which neither $a_1$ nor $a_2$ assigns $\btrue$.
 
   The restriction of $a$ to the range $[0, b)$ is defined as $a|_b \defeq \withl v \withm v \in a \land v \overset{?}{<} b \withr$.\footnote{We restrict this to ranges $[0, b)$ as we would have to reason about Boolean deciders for arbitrary ranges $r$ otherwise.} 
-  \mnote{$a|_b$}
+  \mnote[restrict]{$a|_b$}
 \end{definition}
 
 Regarding composition, we can show that adding an assignment to variables which are disjoint from the variables used by a CNF or formula does not change the result of evaluation. 
 \begin{proposition}\label{prop:eval_ext_assgn}
   Let ranges $r, r' : \nat \rightarrow \Prop$ and assignments $a, a'$ be given with $a' \subseteq r'$ and $\forall n, \lnot (n \in r \land n \in r')$, i.e.\ $r$ and $r'$ are disjoint. Then:
   \begin{enumerate}
-    \item $v \in r \rightarrow \evalA{a}{v} = \evalA{(a \cup a')}{v}$
-    \item $N \subseteq r \rightarrow (\evalA{a}{N} = \btrue \leftrightarrow \evalA{(a \cup a')}{N} = \btrue)$
-    \item $f \subseteq r \rightarrow (\evalA{a}{f} = \btrue \leftrightarrow \evalA{(a \cup a')}{f} = \btrue)$
+    \coqitem[join_extension_var_sat] $v \in r \rightarrow \evalA{a}{v} = \evalA{(a \cup a')}{v}$
+    \coqitem[join_extension_cnf_sat] $N \subseteq r \rightarrow (\evalA{a}{N} = \btrue \leftrightarrow \evalA{(a \cup a')}{N} = \btrue)$
+    \coqitem[join_extension_formula_sat] $f \subseteq r \rightarrow (\evalA{a}{f} = \btrue \leftrightarrow \evalA{(a \cup a')}{f} = \btrue)$
   \end{enumerate}
 \end{proposition}
 
 Similarly, we can restrict an assignment. We only need this for formulas. 
-\begin{proposition}\label{prop:eval_restrict}
+\begin{proposition}[][restrict_formula_equisat]\label{prop:eval_restrict}
   If $f \subseteq [0, n)$, then $a \models f \leftrightarrow (a|_n) \models f$.
 \end{proposition}
 
@@ -101,14 +111,14 @@ The main effort will be to justify the individual tranformations for the operato
 
 \newcommand{\eliminateOr}{\textsf{eliminateOr}}
 \newcommand{\orFree}{\textsf{orFree}}
-\mnote{\eliminateOr}
+\mnote[eliminateOR]{\eliminateOr}
 The operator $\lor$ can directly be eliminated by applying De Morgan's law $f_1 \lor f_2 \leftrightarrow \lnot (\lnot f_1 \land \lnot f_2)$. We assume a function $\eliminateOr : \formula \rightarrow \formula$ applying this law recursively. 
-Moreover, we use an inductive predicate $\orFree : \formula \rightarrow \Prop$ that holds exactly for all formulas not containing an application of $\lor$. \mnote{\orFree}
+Moreover, we use an inductive predicate $\orFree : \formula \rightarrow \Prop$ that holds exactly for all formulas not containing an application of $\lor$. \mnote[orFree]{\orFree}
 We have the following properties:
 \begin{proposition}[Properties of \eliminateOr]\label{prop:eliminateOr}\leavevmode
   \begin{enumerate}
-    \item $\orFree~(\eliminateOr~f)$
-    \item $\evalA{a}{f} = \evalA{a}{(\eliminateOr~f)}$
+    \coqitem[orFree_eliminate] $\orFree~(\eliminateOr~f)$
+    \coqitem[eliminateOR_eval] $\evalA{a}{f} = \evalA{a}{(\eliminateOr~f)}$
   \end{enumerate}
 \end{proposition}
 
@@ -124,7 +134,7 @@ The transformation function \tseytin{} (Figure~\ref{lst:tseytin}) can be derived
 
 \begin{figure}
 \begin{align*}
-  \tseytin' &: \var \rightarrow \formula \rightarrow \var \times \cnf \times \var \mnote{$\tseytin'$}\\
+  \tseytin' &: \var \rightarrow \formula \rightarrow \var \times \cnf \times \var \mnote[tseytin']{$\tseytin'$}\\
   \tseytin'~nf~\btrue &\defeq (nf, \textsf{tseytinTrue}~nf, \natS{nf}) \\
   \tseytin'~nf~v &\defeq (nf, \textsf{tseytinEquiv}~v~nf, \natS{nf}) \\
   \tseytin'~nf~(f_1 \land f_2) &\defeq \begin{aligned}[t] 
@@ -138,7 +148,7 @@ The transformation function \tseytin{} (Figure~\ref{lst:tseytin}) can be derived
       &\lin (nf', N \concat \textsf{tseytinNot}~nf'~rv, \natS{nf})
     \end{aligned} \\
   \tseytin'~nf~(f_1 \lor f_2) &\defeq \ldots \\[0.8em]
-  \tseytin & : \formula \rightarrow \var \times \cnf \mnote{\tseytin}\\
+  \tseytin & : \formula \rightarrow \var \times \cnf \mnote[tseytin]{\tseytin}\\
   \tseytin~f &\defeq \llet (v, N, \_) = \tseytin'~(\natS{\textsf{maxVar}~f})~\lin (v, N) 
 \end{align*}
 \caption{The Tseytin transformation is defined via an auxiliary function keeping track of the next free variable which is initialised with the successor variable of the maximum variable used by the formula. The omitted case for $\lor$ is defined analogously to $\land$, replacing \textsf{tseytinAnd} with \textsf{tseytinOr}.}\label{lst:tseytin}
@@ -149,11 +159,11 @@ The transformation function \tseytin{} (Figure~\ref{lst:tseytin}) can be derived
     \begin{tabular}{c|c} 
       Function & CNF \\
       \midrule{}
-      $\textsf{tseytinAnd}~v~v_1~v_2$ & $(\overline{v} \lor v_1) \land (\overline{v} \lor v_2) \land (v \lor \overline{v_1} \lor \overline{v_2})$ \\
-      $\textsf{tseytinOr}~v~v_1~v_2$ & $(\overline{v} \lor v_1 \lor v_2) \land (v \lor \overline{v_1}) \land (v \lor \overline{v_2})$ \\
-      $\textsf{tseytinNot}~v~v'$ & $(\overline{v} \lor \overline{v'}) \land (v \lor v')$ \\
-      $\textsf{tseytinEquiv}~v~v'$ & $(v \lor \overline{v'}) \land (\overline{v} \lor v')$ \\
-      $\textsf{tseytinTrue}~v$ & $v$ 
+      $\coqlink[tseytinAnd]{\textsf{tseytinAnd}}~v~v_1~v_2$ & $(\overline{v} \lor v_1) \land (\overline{v} \lor v_2) \land (v \lor \overline{v_1} \lor \overline{v_2})$ \\
+      $\coqlink[tseytinOr]{\textsf{tseytinOr}}~v~v_1~v_2$ & $(\overline{v} \lor v_1 \lor v_2) \land (v \lor \overline{v_1}) \land (v \lor \overline{v_2})$ \\
+      $\coqlink[tseytinNot]{\textsf{tseytinNot}}~v~v'$ & $(\overline{v} \lor \overline{v'}) \land (v \lor v')$ \\
+      $\coqlink[tseytinEquiv]{\textsf{tseytinEquiv}}~v~v'$ & $(v \lor \overline{v'}) \land (\overline{v} \lor v')$ \\
+      $\coqlink[tseytinTrue]{\textsf{tseytinTrue}}~v$ & $v$ 
       %$a \models \textsf{tseytinAnd}~v~v_1~v_2 \leftrightarrow (\evalA{a}{v} = \btrue \leftrightarrow \evalA{a}{v_1} = \btrue \land \evalA{a}{v_2} = \btrue)$ 
     \end{tabular}
   \end{center}
@@ -163,7 +173,7 @@ The transformation function \tseytin{} (Figure~\ref{lst:tseytin}) can be derived
 \subsection{Proof of Correctness}
 We now show \tseytin{} to be correct, in the sense that the resulting pair $(v, N)$ of representing variable $v$ and CNF $N$ is equisatisfiable to the original formula. Formally, we define the following relation:
 \newcommand{\frepr}{\sdststile{}{}}
-\begin{definition}[Representation of Formulas by CNFs]
+\begin{definition}[Representation of Formulas by CNFs][formula_repr]
   \[ f \frepr{} (v, N) \defeq \fsat{}~f \leftrightarrow \SAT{}~([(\btrue, v)] :: N) \mnote{$f \frepr{} (v, N)$}\]
 \end{definition}
 
@@ -175,7 +185,7 @@ We therefore define a stronger relation parameterised over $b$, $nf$, and $nf'$.
 
 \newcommand{\Frepr}[3]{\sdststile{\ensuremath{#3}}{\ensuremath{#1, #2}}}
 \begin{definition}[Strengthened Representation Relation]~\\
-  \mnotec{$f \Frepr{nf}{nf'}{b} (v, N)$}, if the following conditions hold:
+  \mnotec[tseytin_formula_repr]{$f \Frepr{nf}{nf'}{b} (v, N)$}, if the following conditions hold:
   \begin{enumerate}
     \item $N \subseteq ([0, b) \cup [nf, nf'))$,
     \item $v \in [nf, nf')$,
@@ -197,7 +207,7 @@ Based on this relation, we can prove the following statement by induction on $f$
 
 We factor out the inductive steps into compatbility lemmas for the operators. 
 
-\begin{lemma}[Compatibility with $\land$]\label{lem:compat_and}
+\begin{lemma}[Compatibility with $\land$][and_compat]\label{lem:compat_and}
   Assume that $f_1 \subseteq [0, b)$, $f_2 \subseteq [0, b)$, and 
   \begin{itemize}
     \item $\forall nf~nf'~v~N, nf \ge b \rightarrow \tseytin'~nf~f_1 = (v, N, nf') \rightarrow f_1 \Frepr{nf}{nf'}{b} (v, N)$,
@@ -222,7 +232,7 @@ We factor out the inductive steps into compatbility lemmas for the operators.
   The rest of the proof is a bit technical, using the third and fourth conditions of the inductive hypotheses and the various results of Section~\ref{sec:tseytin_prelim}, mainly monotonicity (Proposition~\ref{prop:var_contain}) and the results on evaluation under extended assignments (Proposition~\ref{prop:eval_ext_assgn}). 
 \end{proof}
 
-\begin{lemma}[Compatiblity with $\lnot$]\label{lem:compat_not}~\\
+\begin{lemma}[Compatiblity with $\lnot$][not_compat]\label{lem:compat_not}~\\
   Assume $f \subseteq [0, b)$ and 
   \[\forall nf~nf'~v~N, nf \ge b \rightarrow \tseytin'~nf~f = (v, N, nf') \rightarrow f \Frepr{nf}{nf'}{b} (v, N).\]
   Then 
@@ -233,7 +243,7 @@ We factor out the inductive steps into compatbility lemmas for the operators.
 \end{proof}
 
 Assuming that the formula does not contain $\lor$'s, we can now prove the desired statement. 
-\begin{theorem}[Correctness of $\tseytin'$]
+\begin{theorem}[Correctness of $\tseytin'$][tseytin'_repr]
   \[\orFree~f \rightarrow f \subseteq [0, b) \rightarrow nf \ge b \rightarrow \tseytin'~nf~f = (v, N, nf') \rightarrow f \Frepr{nf}{nf'}{b} (v, N)\] 
 \end{theorem}
 \begin{proof}
@@ -249,7 +259,7 @@ Assuming that the formula does not contain $\lor$'s, we can now prove the desire
 
 We get the correctness statement for \tseytin{} as a straightforward corollary, after having shown that $\Frepr{nf}{nf'}{b}$ is indeed stronger than $\frepr$.
 
-\begin{proposition}
+\begin{proposition}[][tseytin_formula_repr_s]
   Let $f \subseteq [0, b)$ and $nf \ge b$. 
   Then $f \Frepr{nf}{nf'}{b} (v, N) \rightarrow f \frepr{} (v, N)$. 
 \end{proposition}
@@ -262,13 +272,13 @@ We get the correctness statement for \tseytin{} as a straightforward corollary, 
   \end{itemize}
 \end{proof}
 
-\begin{corollary}[Correctness of \tseytin]\label{cor:tseytin_correct}~\\
+\begin{corollary}[Correctness of \tseytin][tseytin_repr]\label{cor:tseytin_correct}~\\
   Assume that $\orFree~f$. Then $\tseytin~f = (v, N) \rightarrow f \frepr{} (v, N)$. 
 \end{corollary}
 
 The full reduction first eliminates disjunctions and then applies the Tseytin transformation.
-\[\textsf{reduction}~f \defeq \llet (v, N) = \tseytin~(\eliminateOr~f) \lin [(\btrue, v)] \concat N \mnote{\textsf{reduction}}\]
-\begin{lemma}[\fsat{} Reduces to \SAT{}]
+\[\textsf{reduction}~f \defeq \llet (v, N) = \tseytin~(\eliminateOr~f) \lin [(\btrue, v)] \concat N \mnote[reduction]{\textsf{reduction}}\]
+\begin{lemma}[\fsat{} Reduces to \SAT{}][FSAT_to_SAT]
   $\fsat{}~f \leftrightarrow \SAT{}~(\textsf{reduction}~f)$
 \end{lemma}
 \begin{proof}
@@ -278,29 +288,32 @@ The full reduction first eliminates disjunctions and then applies the Tseytin tr
 One quickly notes that the CNFs produced by this reduction have a clause size of at most 3. We can easily adapt the reduction to produce 3-CNFs by making the clause size exactly 3. For that, we duplicate some of the literals in the clauses produced by the functions in Figure~\ref{fig:prim_cnfs} and the function \textsf{reduction}.
 Thus, we directly obtain a reduction to 3-\SAT{}, too.
 
-\begin{lemma}[\fsat{} Reduces to 3-\SAT{}]
+\begin{lemma}[\fsat{} Reduces to 3-\SAT{}][FSAT_to_3SAT]
   \[\fsat{}~f \leftrightarrow \text{3-\SAT{}}~(\textsf{reduction}'~f), \]
   where $\textsf{reduction}'$ is the reduction obtained by the modifications described above.
 \end{lemma}
 
-\mnote{$\textsf{size}_{\formula}$}
+\setCoqFilename{Undecidability.L.Complexity.Problems.FSAT}
+\mnote[formula_size]{$\textsf{size}_{\formula}$}
 We close this chapter by noting that the Tseytin transformation does indeed only incur a linear increase in size, where we define the size $\textsf{size}_{\formula}$ of a formula and the size $\textsf{size}_{\cnf}$ of a CNF (up to constant factors) as the number of nodes in the AST induced by it. 
-\mnote{$\textsf{size}_{\cnf}$}
+\setCoqFilename{Undecidability.L.Complexity.Problems.SAT}
+\mnote[size_cnf]{$\textsf{size}_{\cnf}$}
 
+\setCoqFilename{Undecidability.L.Complexity.Cook.FSAT_to_SAT}
 \begin{proposition}
   There are constants $c_{\textsf{eliminateOr}}$ and $c_{\textsf{tseytin}}$ such that:
-  \begin{itemize}
-    \item $\textsf{size}_{\formula}~(\eliminateOr{}~f) \le c_{\textsf{eliminateOr}} \cdot \textsf{size}_{\formula}~f$
-    \item If $\tseytin'~nf~f = (v, N, nf')$, then $\textsf{size}_{\cnf}~N \le c_{\textsf{tseytin}} \cdot \textsf{size}_{\formula}~f$
-  \end{itemize}
+  \begin{enumerate}
+    \coqitem[eliminateOR_size] $\textsf{size}_{\formula}~(\eliminateOr{}~f) \le c_{\textsf{eliminateOr}} \cdot \textsf{size}_{\formula}~f$
+    \coqitem[tseytin'_size] If $\tseytin'~nf~f = (v, N, nf')$, then $\textsf{size}_{\cnf}~N \le c_{\textsf{tseytin}} \cdot \textsf{size}_{\formula}~f$
+  \end{enumerate}
   Moreover, if $\orFree~f$, then
-  \[\tseytin~f = (v, N) \rightarrow v < \natS{\maxVar~f} + \textsf{size}_{\formula}~f \land N \subseteq [0, \natS{\maxVar~f} + \textsf{size}_{\formula}~f). \]
+  \[\tseytin~f = (v, N) \rightarrow \coqlink[tseytin_size]{v < \natS{\maxVar~f} + \textsf{size}_{\formula}~f} \land \coqlink[tseytin_varBound]{N \subseteq [0, \natS{\maxVar~f} + \textsf{size}_{\formula}~f)}. \]
 \end{proposition}
 
 The mechanisation in Coq closely follows the description on paper. The running-time analysis crucially relies on the size bounds of the previous proposition.
 \begin{theorem}\leavevmode
   \begin{enumerate}
-    \item $\fsat{} \redP{} \text{3-\SAT{}}$
-    \item $\fsat{} \redP{} \SAT{}$
+    \coqitem[FSAT_reduces_to_SAT] $\fsat{} \redP{} \text{3-\SAT{}}$
+    \coqitem[FSAT_reduces_to_3SAT] $\fsat{} \redP{} \SAT{}$
   \end{enumerate}
 \end{theorem}
