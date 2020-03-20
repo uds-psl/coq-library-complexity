@@ -1,0 +1,147 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link href="coqdoc.css" rel="stylesheet" type="text/css" />
+<link href="coqdocjs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="config.js"></script>
+<script type="text/javascript" src="coqdocjs.js"></script>
+</head>
+
+<body onload="document.getElementById('content').focus()">
+  <div id="header">
+    <span class="left">
+      <span class="modulename"> <script> document.write(document.title) </script> </span>
+    </span>
+
+    <span class="button" id="toggle-proofs"></span>
+
+    <span class="right">
+      <a href="../">Project Page</a>
+      <a href="./indexpage.html"> Index </a>
+      <a href="./toc.html"> Table of Contents </a>
+    </span>
+</div>
+    <div id="content" tabindex="-1" onblur="document.getElementById('content').focus()">
+    <div id="main">
+<div class="code">
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability.L</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Export</span> <a class="idref" href="Undecidability.L.Tactics.LTactics.html#"><span class="id" title="library">Tactics.LTactics</span></a> <a class="idref" href="Undecidability.L.Datatypes.LNat.html#"><span class="id" title="library">Datatypes.LNat</span></a> <a class="idref" href="Undecidability.L.Datatypes.LProd.html#"><span class="id" title="library">Datatypes.LProd</span></a> <a class="idref" href="Undecidability.L.Datatypes.Lists.html#"><span class="id" title="library">Datatypes.Lists</span></a>.<br/>
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Export</span> <a class="idref" href="Undecidability.PCP.MPCP_PCP.html#"><span class="id" title="library">PCP.MPCP_PCP</span></a> <a class="idref" href="Undecidability.PCP.Definitions.html#"><span class="id" title="library">PCP.Definitions</span></a> <a class="idref" href="Undecidability.Problems.PCP.html#"><span class="id" title="library">Problems.PCP</span></a>.<br/>
+
+<br/>
+
+<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Hint Transparent</span> <a class="idref" href="Undecidability.PCP.Definitions.html#string"><span class="id" title="definition">Definitions.string</span></a> <a class="idref" href="Undecidability.Problems.PCP.html#SRS"><span class="id" title="definition">SRS</span></a> <a class="idref" href="Undecidability.Problems.PCP.html#card"><span class="id" title="definition">card</span></a> <a class="idref" href="Undecidability.Problems.PCP.html#stack"><span class="id" title="definition">stack</span></a>: <span class="id" title="var">Lrewrite</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <a name="computable_fresh"><span class="id" title="instance">computable_fresh</span></a> : <a class="idref" href="Undecidability.L.Tactics.Computable.html#computable"><span class="id" title="class">computable</span></a> <a class="idref" href="Undecidability.PCP.Definitions.html#fresh"><span class="id" title="definition">fresh</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="var">extract</span>.<br/>
+<span class="id" title="keyword">Defined</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <a name="computable_sym"><span class="id" title="instance">computable_sym</span></a> : <a class="idref" href="Undecidability.L.Tactics.Computable.html#computable"><span class="id" title="class">computable</span></a> <a class="idref" href="Undecidability.PCP.Definitions.html#sym"><span class="id" title="definition">sym</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="var">extract</span>.<br/>
+<span class="id" title="keyword">Defined</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <a name="computable_Sigma"><span class="id" title="instance">computable_Sigma</span></a> : <a class="idref" href="Undecidability.L.Tactics.Computable.html#computable"><span class="id" title="class">computable</span></a> <a class="idref" href="Undecidability.PCP.MPCP_PCP.html#Sigma"><span class="id" title="definition">Sigma</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="var">extract</span>.<br/>
+<span class="id" title="keyword">Defined</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <a name="computable_dollar"><span class="id" title="instance">computable_dollar</span></a> : <a class="idref" href="Undecidability.L.Tactics.Computable.html#computable"><span class="id" title="class">computable</span></a> <a class="idref" href="Undecidability.PCP.MPCP_PCP.html#dollar"><span class="id" title="definition">dollar</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="var">extract</span>.<br/>
+<span class="id" title="keyword">Defined</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <a name="computable_hash"><span class="id" title="instance">computable_hash</span></a> : <a class="idref" href="Undecidability.L.Tactics.Computable.html#computable"><span class="id" title="class">computable</span></a> <a class="idref" href="Undecidability.PCP.MPCP_PCP.html#hash"><span class="id" title="definition">hash</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="var">extract</span>.<br/>
+<span class="id" title="keyword">Defined</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <a name="computable_hash_l"><span class="id" title="instance">computable_hash_l</span></a> : <a class="idref" href="Undecidability.L.Tactics.Computable.html#computable"><span class="id" title="class">computable</span></a> <a class="idref" href="Undecidability.PCP.MPCP_PCP.html#hash_l"><span class="id" title="definition">hash_l</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="var">extract</span>.<br/>
+<span class="id" title="keyword">Defined</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <a name="computable_hash_r"><span class="id" title="instance">computable_hash_r</span></a> : <a class="idref" href="Undecidability.L.Tactics.Computable.html#computable"><span class="id" title="class">computable</span></a> <a class="idref" href="Undecidability.PCP.MPCP_PCP.html#hash_r"><span class="id" title="definition">hash_r</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="var">extract</span>.<br/>
+<span class="id" title="keyword">Defined</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <a name="computable_d"><span class="id" title="instance">computable_d</span></a> : <a class="idref" href="Undecidability.L.Tactics.Computable.html#computable"><span class="id" title="class">computable</span></a> <a class="idref" href="Undecidability.PCP.MPCP_PCP.html#d"><span class="id" title="definition">d</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="var">extract</span>.<br/>
+<span class="id" title="keyword">Defined</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <a name="computable_e"><span class="id" title="instance">computable_e</span></a> : <a class="idref" href="Undecidability.L.Tactics.Computable.html#computable"><span class="id" title="class">computable</span></a> <a class="idref" href="Undecidability.PCP.MPCP_PCP.html#e"><span class="id" title="definition">e</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="var">extract</span>.<br/>
+<span class="id" title="keyword">Defined</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <a name="computable_is_cons"><span class="id" title="instance">computable_is_cons</span></a> <span class="id" title="var">X</span> `{<a class="idref" href="Undecidability.L.Tactics.Computable.html#registered"><span class="id" title="class">registered</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#X"><span class="id" title="variable">X</span></a>} : <a class="idref" href="Undecidability.L.Tactics.Computable.html#computable"><span class="id" title="class">computable</span></a> (@<a class="idref" href="Undecidability.PCP.MPCP_PCP.html#is_cons"><span class="id" title="definition">is_cons</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#X"><span class="id" title="variable">X</span></a>).<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="var">extract</span>.<br/>
+<span class="id" title="keyword">Defined</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <a name="both_cons"><span class="id" title="definition">both_cons</span></a> : <a class="idref" href="Undecidability.PCP.Definitions.html#string"><span class="id" title="definition">Definitions.string</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#d19c7eafd0e2d195d10df94b392087b5"><span class="id" title="notation">*</span></a> <a class="idref" href="Undecidability.PCP.Definitions.html#string"><span class="id" title="definition">Definitions.string</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <span class="id" title="var">_</span> := (<span class="id" title="keyword">fun</span> '(<span class="id" title="var">x</span> <a class="idref" href="Undecidability.PCP.Definitions.html#f8414b4a3d1218309342fcee4de2b9ee"><span class="id" title="notation">/</span></a> <span class="id" title="var">y</span>) =&gt; <a class="idref" href="Undecidability.PCP.MPCP_PCP.html#is_cons"><span class="id" title="definition">is_cons</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#x"><span class="id" title="variable">x</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#14a7a9c7dc61f86bfb664d400fabaf8a"><span class="id" title="notation">||</span></a> <a class="idref" href="Undecidability.PCP.MPCP_PCP.html#is_cons"><span class="id" title="definition">is_cons</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#y"><span class="id" title="variable">y</span></a>).<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <a name="computable_both_cons"><span class="id" title="instance">computable_both_cons</span></a> : <a class="idref" href="Undecidability.L.Tactics.Computable.html#computable"><span class="id" title="class">computable</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#both_cons"><span class="id" title="definition">both_cons</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="var">extract</span>.<br/>
+<span class="id" title="keyword">Defined</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <a name="hash_l_r"><span class="id" title="definition">hash_l_r</span></a> <span class="id" title="var">R</span> <span class="id" title="var">x0</span> <span class="id" title="var">y0</span> := (<span class="id" title="keyword">fun</span> '(<span class="id" title="var">x</span> <a class="idref" href="Undecidability.PCP.Definitions.html#f8414b4a3d1218309342fcee4de2b9ee"><span class="id" title="notation">/</span></a> <span class="id" title="var">y</span>) =&gt; <a class="idref" href="Undecidability.PCP.MPCP_PCP.html#hash_l"><span class="id" title="definition">hash_l</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#R"><span class="id" title="variable">R</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#x0"><span class="id" title="variable">x0</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#y0"><span class="id" title="variable">y0</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#x"><span class="id" title="variable">x</span></a> <a class="idref" href="Undecidability.PCP.Definitions.html#f8414b4a3d1218309342fcee4de2b9ee"><span class="id" title="notation">/</span></a> <a class="idref" href="Undecidability.PCP.MPCP_PCP.html#hash_r"><span class="id" title="definition">hash_r</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#R"><span class="id" title="variable">R</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#x0"><span class="id" title="variable">x0</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#y0"><span class="id" title="variable">y0</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#y"><span class="id" title="variable">y</span></a>).<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <a name="computable_hash_l_r"><span class="id" title="instance">computable_hash_l_r</span></a> : <a class="idref" href="Undecidability.L.Tactics.Computable.html#computable"><span class="id" title="class">computable</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#hash_l_r"><span class="id" title="definition">hash_l_r</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="var">extract</span>.<br/>
+<span class="id" title="keyword">Defined</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <a name="P'"><span class="id" title="definition">P'</span></a> := <span class="id" title="keyword">fun</span> (<span class="id" title="var">R</span> : <a class="idref" href="Undecidability.Problems.PCP.html#SRS"><span class="id" title="definition">SRS</span></a>) (<span class="id" title="var">x0</span> <span class="id" title="var">y0</span> : <a class="idref" href="Undecidability.PCP.Definitions.html#string"><span class="id" title="definition">Definitions.string</span></a>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;(<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Lists.List.html#f83abbde7679bdbfec6afddd39d41e15"><span class="id" title="notation">[</span></a><a class="idref" href="Undecidability.PCP.MPCP_PCP.html#d"><span class="id" title="definition">d</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#R"><span class="id" title="variable">R</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#x0"><span class="id" title="variable">x0</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#y0"><span class="id" title="variable">y0</span></a><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Lists.List.html#f83abbde7679bdbfec6afddd39d41e15"><span class="id" title="notation">;</span></a> <a class="idref" href="Undecidability.PCP.MPCP_PCP.html#e"><span class="id" title="definition">e</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#R"><span class="id" title="variable">R</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#x0"><span class="id" title="variable">x0</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#y0"><span class="id" title="variable">y0</span></a><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Lists.List.html#f83abbde7679bdbfec6afddd39d41e15"><span class="id" title="notation">]</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#5d35a99a6abff1d64bf70538feb70e36"><span class="id" title="notation">++</span></a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Lists.List.html#map"><span class="id" title="definition">map</span></a> (<a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#hash_l_r"><span class="id" title="definition">hash_l_r</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#R"><span class="id" title="variable">R</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#x0"><span class="id" title="variable">x0</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#y0"><span class="id" title="variable">y0</span></a>) <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Lists.List.html#filter"><span class="id" title="definition">filter</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#both_cons"><span class="id" title="definition">both_cons</span></a> (<a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#x0"><span class="id" title="variable">x0</span></a> <a class="idref" href="Undecidability.PCP.Definitions.html#f8414b4a3d1218309342fcee4de2b9ee"><span class="id" title="notation">/</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#y0"><span class="id" title="variable">y0</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#0a8150c3c4df34d205c5ed9a427e2ed5"><span class="id" title="notation">::</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#R"><span class="id" title="variable">R</span></a>)))%<span class="id" title="var">list</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <a name="computable_P"><span class="id" title="instance">computable_P</span></a> : <a class="idref" href="Undecidability.L.Tactics.Computable.html#computable"><span class="id" title="class">computable</span></a> <a class="idref" href="Undecidability.PCP.MPCP_PCP.html#P"><span class="id" title="definition">P</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">change</span> <a class="idref" href="Undecidability.PCP.MPCP_PCP.html#P"><span class="id" title="definition">P</span></a> <span class="id" title="keyword">with</span> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#P'"><span class="id" title="definition">P'</span></a>. <span class="id" title="var">extract</span>.<br/>
+<span class="id" title="keyword">Defined</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <a name="red"><span class="id" title="definition">red</span></a> := (<span class="id" title="keyword">fun</span> '<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">(</span></a><span class="id" title="var">x</span><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">,</span></a> <span class="id" title="var">y</span><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">,</span></a> <span class="id" title="var">R</span><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">)</span></a> =&gt; <a class="idref" href="Undecidability.PCP.MPCP_PCP.html#P"><span class="id" title="definition">P</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#R"><span class="id" title="variable">R</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#x"><span class="id" title="variable">x</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#y"><span class="id" title="variable">y</span></a>).<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <a name="computable_test"><span class="id" title="lemma">computable_test</span></a> : <a class="idref" href="Undecidability.L.Tactics.Computable.html#computable"><span class="id" title="class">computable</span></a> <a class="idref" href="Undecidability.L.Reductions.MPCP_PCP_computable.html#red"><span class="id" title="definition">red</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="var">extract</span>.<br/>
+<span class="id" title="keyword">Defined</span>.<br/>
+</div>
+</div>
+<div id="footer">
+  Generated by <a href="http://coq.inria.fr/">coqdoc</a> and improved with <a href="https://github.com/tebbi/coqdocjs">CoqdocJS</a>
+</div>
+</div>
+</body>
+
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link href="coqdoc.css" rel="stylesheet" type="text/css" />
+<link href="coqdocjs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="config.js"></script>
+<script type="text/javascript" src="coqdocjs.js"></script>
+</head>
+
+<body onload="document.getElementById('content').focus()">
+  <div id="header">
+    <span class="left">
+      <span class="modulename"> <script> document.write(document.title) </script> </span>
+    </span>
+
+    <span class="button" id="toggle-proofs"></span>
+
+    <span class="right">
+      <a href="../">Project Page</a>
+      <a href="./indexpage.html"> Index </a>
+      <a href="./toc.html"> Table of Contents </a>
+    </span>
+</div>
+    <div id="content" tabindex="-1" onblur="document.getElementById('content').focus()">
+    <div id="main">
+<div class="code">
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability.L.Complexity.Cook</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Export</span> <a class="idref" href="Undecidability.L.Complexity.Cook.FlatFinTypes.html#"><span class="id" title="library">FlatFinTypes</span></a>.<br/>
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability.L.Complexity.Cook</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="Undecidability.L.Complexity.Cook.Prelim.html#"><span class="id" title="library">Prelim</span></a>.<br/>
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability.L.Tactics</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="Undecidability.L.Tactics.LTactics.html#"><span class="id" title="library">LTactics</span></a> <a class="idref" href="Undecidability.L.Tactics.GenEncode.html#"><span class="id" title="library">GenEncode</span></a>.<br/>
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability.L.Datatypes</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="Undecidability.L.Datatypes.LProd.html#"><span class="id" title="library">LProd</span></a> <a class="idref" href="Undecidability.L.Datatypes.LOptions.html#"><span class="id" title="library">LOptions</span></a> <a class="idref" href="Undecidability.L.Datatypes.LBool.html#"><span class="id" title="library">LBool</span></a> <a class="idref" href="Undecidability.L.Datatypes.LLNat.html#"><span class="id" title="library">LLNat</span></a> <a class="idref" href="Undecidability.L.Datatypes.LLists.html#"><span class="id" title="library">LLists</span></a> <a class="idref" href="Undecidability.L.Datatypes.LSum.html#"><span class="id" title="library">LSum</span></a>.<br/>
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability.L.Complexity</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="Undecidability.L.Complexity.PolyBounds.html#"><span class="id" title="library">PolyBounds</span></a>.<br/>
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability.L.Functions</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="Undecidability.L.Functions.EqBool.html#"><span class="id" title="library">EqBool</span></a>.<br/>
+
+<br/>
+
+<br/>
+
+<br/>
+
+<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <a name="term_id"><span class="id" title="instance">term_id</span></a> (<span class="id" title="var">X</span> : <span class="id" title="keyword">Type</span>) `{<a class="idref" href="Undecidability.L.Tactics.Computable.html#registered"><span class="id" title="class">registered</span></a> <a class="idref" href="Undecidability.L.Complexity.Cook.FlatFinTypes_extraction.html#X"><span class="id" title="variable">X</span></a>}: <a class="idref" href="Undecidability.L.Tactics.ComputableTime.html#3e67ab8c26164b1905bb19d5d26897dc"><span class="id" title="notation">computableTime'</span></a> <a class="idref" href="Undecidability.L.Tactics.ComputableTime.html#3e67ab8c26164b1905bb19d5d26897dc"><span class="id" title="notation">(</span></a>@<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#id"><span class="id" title="definition">id</span></a> <a class="idref" href="Undecidability.L.Complexity.Cook.FlatFinTypes_extraction.html#X"><span class="id" title="variable">X</span></a><a class="idref" href="Undecidability.L.Tactics.ComputableTime.html#3e67ab8c26164b1905bb19d5d26897dc"><span class="id" title="notation">)</span></a> (<span class="id" title="keyword">fun</span> <span class="id" title="var">a</span> <span class="id" title="var">_</span> =&gt; <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">(</span></a>1<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">,</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#tt"><span class="id" title="constructor">tt</span></a><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">)</span></a>).<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="var">extract</span>. <span class="id" title="var">solverec</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <a name="c__flatPair"><span class="id" title="definition">c__flatPair</span></a> := <a class="idref" href="Undecidability.L.Datatypes.LLNat.html#c__add1"><span class="id" title="definition">c__add1</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Peano.html#b3eea360671e1b32b18a26e15b3aace3"><span class="id" title="notation">+</span></a> 2 <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Peano.html#b3eea360671e1b32b18a26e15b3aace3"><span class="id" title="notation">+</span></a> <a class="idref" href="Undecidability.L.Datatypes.LLNat.html#c__mult1"><span class="id" title="definition">c__mult1</span></a>.<br/>
+<span class="id" title="keyword">Definition</span> <a name="flatPair_time"><span class="id" title="definition">flatPair_time</span></a> <span class="id" title="var">x</span> <span class="id" title="var">b</span> := <a class="idref" href="Undecidability.L.Datatypes.LLNat.html#mult_time"><span class="id" title="definition">mult_time</span></a> <a class="idref" href="Undecidability.L.Complexity.Cook.FlatFinTypes_extraction.html#x"><span class="id" title="variable">x</span></a> <a class="idref" href="Undecidability.L.Complexity.Cook.FlatFinTypes_extraction.html#b"><span class="id" title="variable">b</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Peano.html#b3eea360671e1b32b18a26e15b3aace3"><span class="id" title="notation">+</span></a> <a class="idref" href="Undecidability.L.Datatypes.LLNat.html#add_time"><span class="id" title="definition">add_time</span></a> (<a class="idref" href="Undecidability.L.Complexity.Cook.FlatFinTypes_extraction.html#x"><span class="id" title="variable">x</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Peano.html#697e4695610f677ae98a52af81f779d2"><span class="id" title="notation">*</span></a> <a class="idref" href="Undecidability.L.Complexity.Cook.FlatFinTypes_extraction.html#b"><span class="id" title="variable">b</span></a>) <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Peano.html#b3eea360671e1b32b18a26e15b3aace3"><span class="id" title="notation">+</span></a> <a class="idref" href="Undecidability.L.Complexity.Cook.FlatFinTypes_extraction.html#c__flatPair"><span class="id" title="definition">c__flatPair</span></a>.<br/>
+<span class="id" title="keyword">Instance</span> <a name="term_flatPair"><span class="id" title="instance">term_flatPair</span></a> : <a class="idref" href="Undecidability.L.Tactics.ComputableTime.html#3e67ab8c26164b1905bb19d5d26897dc"><span class="id" title="notation">computableTime'</span></a> <a class="idref" href="Undecidability.L.Complexity.Cook.FlatFinTypes.html#flatPair"><span class="id" title="definition">flatPair</span></a> (<span class="id" title="keyword">fun</span> <span class="id" title="var">a</span> <span class="id" title="var">_</span> =&gt; <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">(</span></a>1<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">,</span></a> <span class="id" title="keyword">fun</span> <span class="id" title="var">b</span> <span class="id" title="var">_</span> =&gt; <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">(</span></a>1<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">,</span></a> <span class="id" title="keyword">fun</span> <span class="id" title="var">x</span> <span class="id" title="var">_</span> =&gt; <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">(</span></a>1<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">,</span></a> <a class="idref" href="Undecidability.L.Tactics.Computable.html#TT"><span class="id" title="class">fun</span></a> <span class="id" title="var">y</span> <span class="id" title="var">_</span> =&gt; <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">(</span></a><a class="idref" href="Undecidability.L.Complexity.Cook.FlatFinTypes_extraction.html#flatPair_time"><span class="id" title="definition">flatPair_time</span></a> <a class="idref" href="Undecidability.L.Complexity.Cook.FlatFinTypes_extraction.html#x"><span class="id" title="variable">x</span></a> <a class="idref" href="Undecidability.L.Complexity.Cook.FlatFinTypes_extraction.html#b"><span class="id" title="variable">b</span></a><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">,</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#tt"><span class="id" title="constructor">tt</span></a><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">))))</span></a>).<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="var">extract</span>. <span class="id" title="var">solverec</span>. <span class="id" title="tactic">unfold</span> <a class="idref" href="Undecidability.L.Complexity.Cook.FlatFinTypes_extraction.html#flatPair_time"><span class="id" title="definition">flatPair_time</span></a>, <a class="idref" href="Undecidability.L.Complexity.Cook.FlatFinTypes_extraction.html#c__flatPair"><span class="id" title="definition">c__flatPair</span></a>; <span class="id" title="var">solverec</span>.<br/>
+<span class="id" title="keyword">Defined</span>.<br/>
+</div>
+</div>
+<div id="footer">
+  Generated by <a href="http://coq.inria.fr/">coqdoc</a> and improved with <a href="https://github.com/tebbi/coqdocjs">CoqdocJS</a>
+</div>
+</div>
+</body>
+
+</html>

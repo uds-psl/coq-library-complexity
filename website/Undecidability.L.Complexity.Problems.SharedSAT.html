@@ -1,0 +1,69 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link href="coqdoc.css" rel="stylesheet" type="text/css" />
+<link href="coqdocjs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="config.js"></script>
+<script type="text/javascript" src="coqdocjs.js"></script>
+</head>
+
+<body onload="document.getElementById('content').focus()">
+  <div id="header">
+    <span class="left">
+      <span class="modulename"> <script> document.write(document.title) </script> </span>
+    </span>
+
+    <span class="button" id="toggle-proofs"></span>
+
+    <span class="right">
+      <a href="../">Project Page</a>
+      <a href="./indexpage.html"> Index </a>
+      <a href="./toc.html"> Table of Contents </a>
+    </span>
+</div>
+    <div id="content" tabindex="-1" onblur="document.getElementById('content').focus()">
+    <div id="main">
+<div class="code">
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability.L</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="Undecidability.L.L.html#"><span class="id" title="library">L</span></a>.<br/>
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability.L.Datatypes</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="Undecidability.L.Datatypes.LLists.html#"><span class="id" title="library">LLists</span></a> <a class="idref" href="Undecidability.L.Datatypes.LLNat.html#"><span class="id" title="library">LLNat</span></a>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.micromega.Lia.html#"><span class="id" title="library">Lia</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Notation</span> <a name="var"><span class="id" title="abbreviation">var</span></a> := (<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#nat"><span class="id" title="inductive">nat</span></a>) (<span class="id" title="var">only</span> <span class="id" title="var">parsing</span>).<br/>
+<span class="id" title="keyword">Notation</span> <a name="assgn"><span class="id" title="abbreviation">assgn</span></a> := (<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#list"><span class="id" title="inductive">list</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#var"><span class="id" title="abbreviation">var</span></a>).<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <a name="evalVar"><span class="id" title="definition">evalVar</span></a> <span class="id" title="var">a</span> <span class="id" title="var">v</span>  := <a class="idref" href="Undecidability.L.Datatypes.LLists.html#list_in_decb"><span class="id" title="definition">list_in_decb</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Arith.PeanoNat.html#Nat.eqb"><span class="id" title="definition">Nat.eqb</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#a"><span class="id" title="variable">a</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#v"><span class="id" title="variable">v</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <a name="evalVar_in_iff"><span class="id" title="lemma">evalVar_in_iff</span></a> <span class="id" title="var">a</span> <span class="id" title="var">v</span> : <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#evalVar"><span class="id" title="definition">evalVar</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#a"><span class="id" title="variable">a</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#v"><span class="id" title="variable">v</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#true"><span class="id" title="constructor">true</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#df1ced36fc33ce188051218bca314374"><span class="id" title="notation">&lt;-&gt;</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#v"><span class="id" title="variable">v</span></a> <span class="id" title="notation">el</span> <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#a"><span class="id" title="variable">a</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">unfold</span> <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#evalVar"><span class="id" title="definition">evalVar</span></a>. <span class="id" title="tactic">rewrite</span> <a class="idref" href="Undecidability.L.Datatypes.LLists.html#list_in_decb_iff"><span class="id" title="lemma">list_in_decb_iff</span></a>; [<span class="id" title="var">easy</span> | <span class="id" title="tactic">symmetry</span>; <span class="id" title="tactic">apply</span> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Arith.PeanoNat.html#Nat.eqb_eq"><span class="id" title="lemma">Nat.eqb_eq</span></a>].<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <a name="evalVar_monotonic"><span class="id" title="lemma">evalVar_monotonic</span></a> <span class="id" title="var">a</span> <span class="id" title="var">a'</span> <span class="id" title="var">v</span> : <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#a"><span class="id" title="variable">a</span></a> <span class="id" title="notation">&lt;&lt;=</span> <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#a'"><span class="id" title="variable">a'</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#evalVar"><span class="id" title="definition">evalVar</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#a"><span class="id" title="variable">a</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#v"><span class="id" title="variable">v</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#true"><span class="id" title="constructor">true</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#evalVar"><span class="id" title="definition">evalVar</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#a'"><span class="id" title="variable">a'</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#v"><span class="id" title="variable">v</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#true"><span class="id" title="constructor">true</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">intros</span> <span class="id" title="var">H1</span> <span class="id" title="var">H2</span>. <span class="id" title="tactic">rewrite</span> <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#evalVar_in_iff"><span class="id" title="lemma">evalVar_in_iff</span></a> <span class="id" title="tactic">in</span> *. <span class="id" title="tactic">firstorder</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <a name="evalVar_assgn_equiv"><span class="id" title="lemma">evalVar_assgn_equiv</span></a> <span class="id" title="var">a</span> <span class="id" title="var">a'</span> <span class="id" title="var">v</span> : <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#a"><span class="id" title="variable">a</span></a> <span class="id" title="notation">===</span> <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#a'"><span class="id" title="variable">a'</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#evalVar"><span class="id" title="definition">evalVar</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#a"><span class="id" title="variable">a</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#v"><span class="id" title="variable">v</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#evalVar"><span class="id" title="definition">evalVar</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#a'"><span class="id" title="variable">a'</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#v"><span class="id" title="variable">v</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">intros</span> <span class="id" title="var">H</span>. <span class="id" title="var">enough</span> (<a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#evalVar"><span class="id" title="definition">evalVar</span></a> <span class="id" title="var">a</span> <span class="id" title="var">v</span> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#true"><span class="id" title="constructor">true</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#df1ced36fc33ce188051218bca314374"><span class="id" title="notation">&lt;-&gt;</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#evalVar"><span class="id" title="definition">evalVar</span></a> <span class="id" title="var">a'</span> <span class="id" title="var">v</span> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#true"><span class="id" title="constructor">true</span></a>).<br/>
+&nbsp;&nbsp;{ <span class="id" title="tactic">destruct</span> <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#evalVar"><span class="id" title="definition">evalVar</span></a>, <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#evalVar"><span class="id" title="definition">evalVar</span></a>; <span class="id" title="tactic">firstorder</span>. }<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">split</span>; <span class="id" title="tactic">apply</span> <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#evalVar_monotonic"><span class="id" title="lemma">evalVar_monotonic</span></a>; <span class="id" title="tactic">apply</span> <span class="id" title="var">H</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+</div>
+</div>
+<div id="footer">
+  Generated by <a href="http://coq.inria.fr/">coqdoc</a> and improved with <a href="https://github.com/tebbi/coqdocjs">CoqdocJS</a>
+</div>
+</div>
+</body>
+
+</html>

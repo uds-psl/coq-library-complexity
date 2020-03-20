@@ -1,0 +1,90 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link href="coqdoc.css" rel="stylesheet" type="text/css" />
+<link href="coqdocjs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="config.js"></script>
+<script type="text/javascript" src="coqdocjs.js"></script>
+</head>
+
+<body onload="document.getElementById('content').focus()">
+  <div id="header">
+    <span class="left">
+      <span class="modulename"> <script> document.write(document.title) </script> </span>
+    </span>
+
+    <span class="button" id="toggle-proofs"></span>
+
+    <span class="right">
+      <a href="../">Project Page</a>
+      <a href="./indexpage.html"> Index </a>
+      <a href="./toc.html"> Table of Contents </a>
+    </span>
+</div>
+    <div id="content" tabindex="-1" onblur="document.getElementById('content').focus()">
+    <div id="main">
+<div class="code">
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability.L</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="Undecidability.L.Tactics.LTactics.html#"><span class="id" title="library">Tactics.LTactics</span></a> <a class="idref" href="Undecidability.L.Datatypes.LBool.html#"><span class="id" title="library">Datatypes.LBool</span></a>.<br/>
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability.L</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="Undecidability.L.Tactics.GenEncode.html#"><span class="id" title="library">Tactics.GenEncode</span></a>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab340"></a><h2 class="section">Encoding of sum type</h2>
+
+</div>
+<div class="code">
+<span class="id" title="keyword">Section</span> <a name="Fix_XY"><span class="id" title="section">Fix_XY</span></a>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Variable</span> <a name="Fix_XY.X"><span class="id" title="variable">X</span></a> <a name="Fix_XY.Y"><span class="id" title="variable">Y</span></a>:<span class="id" title="keyword">Type</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Context</span> {<span class="id" title="var">intX</span> : <a class="idref" href="Undecidability.L.Tactics.Computable.html#registered"><span class="id" title="class">registered</span></a> <a class="idref" href="Undecidability.L.Datatypes.LSum.html#Fix_XY.X"><span class="id" title="variable">X</span></a>}.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Context</span> {<span class="id" title="var">intY</span> : <a class="idref" href="Undecidability.L.Tactics.Computable.html#registered"><span class="id" title="class">registered</span></a> <a class="idref" href="Undecidability.L.Datatypes.LSum.html#Fix_XY.Y"><span class="id" title="variable">Y</span></a>}.<br/>
+
+<br/>
+
+<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="var">Run</span> <span class="id" title="var">TemplateProgram</span> (<a class="idref" href="Undecidability.L.Tactics.GenEncode.html#tmGenEncode"><span class="id" title="definition">tmGenEncode</span></a> "sum_enc" (<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#sum"><span class="id" title="inductive">sum</span></a> <a class="idref" href="Undecidability.L.Datatypes.LSum.html#Fix_XY.X"><span class="id" title="variable">X</span></a> <a class="idref" href="Undecidability.L.Datatypes.LSum.html#Fix_XY.Y"><span class="id" title="variable">Y</span></a>)).<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Hint Resolve</span> <span class="id" title="var">sum_enc_correct</span> : <span class="id" title="var">Lrewrite</span>.<br/>
+
+<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Global Instance</span> <a name="term_inl"><span class="id" title="instance">term_inl</span></a> : <a class="idref" href="Undecidability.L.Tactics.ComputableTime.html#3e67ab8c26164b1905bb19d5d26897dc"><span class="id" title="notation">computableTime'</span></a> <a class="idref" href="Undecidability.L.Tactics.ComputableTime.html#3e67ab8c26164b1905bb19d5d26897dc"><span class="id" title="notation">(</span></a>@<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#inl"><span class="id" title="constructor">inl</span></a> <a class="idref" href="Undecidability.L.Datatypes.LSum.html#Fix_XY.X"><span class="id" title="variable">X</span></a> <a class="idref" href="Undecidability.L.Datatypes.LSum.html#Fix_XY.Y"><span class="id" title="variable">Y</span></a><a class="idref" href="Undecidability.L.Tactics.ComputableTime.html#3e67ab8c26164b1905bb19d5d26897dc"><span class="id" title="notation">)</span></a> (<span class="id" title="keyword">fun</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> =&gt; <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">(</span></a>1<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">,</span></a><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#tt"><span class="id" title="constructor">tt</span></a><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">)</span></a>).<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">extract</span> <span class="id" title="tactic">constructor</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">solverec</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Defined</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Global Instance</span> <a name="term_inr"><span class="id" title="instance">term_inr</span></a> : <a class="idref" href="Undecidability.L.Tactics.ComputableTime.html#3e67ab8c26164b1905bb19d5d26897dc"><span class="id" title="notation">computableTime'</span></a> <a class="idref" href="Undecidability.L.Tactics.ComputableTime.html#3e67ab8c26164b1905bb19d5d26897dc"><span class="id" title="notation">(</span></a>@<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#inr"><span class="id" title="constructor">inr</span></a> <a class="idref" href="Undecidability.L.Datatypes.LSum.html#Fix_XY.X"><span class="id" title="variable">X</span></a> <a class="idref" href="Undecidability.L.Datatypes.LSum.html#Fix_XY.Y"><span class="id" title="variable">Y</span></a><a class="idref" href="Undecidability.L.Tactics.ComputableTime.html#3e67ab8c26164b1905bb19d5d26897dc"><span class="id" title="notation">)</span></a> (<span class="id" title="keyword">fun</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> =&gt; <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">(</span></a>1<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">,</span></a><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#tt"><span class="id" title="constructor">tt</span></a><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">)</span></a>).<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">extract</span> <span class="id" title="tactic">constructor</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">solverec</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Defined</span>.<br/>
+<span class="id" title="keyword">End</span> <a class="idref" href="Undecidability.L.Datatypes.LSum.html#Fix_XY"><span class="id" title="section">Fix_XY</span></a>.<br/>
+<span class="id" title="keyword">Hint Resolve</span> <span class="id" title="var">sum_enc_correct</span> : <span class="id" title="var">Lrewrite</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <a name="size_sum"><span class="id" title="lemma">size_sum</span></a> <span class="id" title="var">X</span> <span class="id" title="var">Y</span> `{<a class="idref" href="Undecidability.L.Tactics.Computable.html#registered"><span class="id" title="class">registered</span></a> <a class="idref" href="Undecidability.L.Datatypes.LSum.html#X"><span class="id" title="variable">X</span></a>} `{<a class="idref" href="Undecidability.L.Tactics.Computable.html#registered"><span class="id" title="class">registered</span></a> <a class="idref" href="Undecidability.L.Datatypes.LSum.html#Y"><span class="id" title="variable">Y</span></a>} (<span class="id" title="var">l</span>: <a class="idref" href="Undecidability.L.Datatypes.LSum.html#X"><span class="id" title="variable">X</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#3dcaec3b772747610227247939f96b01"><span class="id" title="notation">+</span></a> <a class="idref" href="Undecidability.L.Datatypes.LSum.html#Y"><span class="id" title="variable">Y</span></a>):<br/>
+&nbsp;&nbsp;<a class="idref" href="Undecidability.L.L.html#size"><span class="id" title="definition">size</span></a> (<a class="idref" href="Undecidability.L.Tactics.Computable.html#enc"><span class="id" title="method">enc</span></a> <a class="idref" href="Undecidability.L.Datatypes.LSum.html#l"><span class="id" title="variable">l</span></a>) <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> <span class="id" title="keyword">match</span> <a class="idref" href="Undecidability.L.Datatypes.LSum.html#l"><span class="id" title="variable">l</span></a> <span class="id" title="keyword">with</span> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#inl"><span class="id" title="constructor">inl</span></a> <span class="id" title="var">x</span> =&gt; <a class="idref" href="Undecidability.L.L.html#size"><span class="id" title="definition">size</span></a> (<a class="idref" href="Undecidability.L.Tactics.Computable.html#enc"><span class="id" title="method">enc</span></a> <span class="id" title="var">x</span>) <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Peano.html#b3eea360671e1b32b18a26e15b3aace3"><span class="id" title="notation">+</span></a> 5 | <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#inr"><span class="id" title="constructor">inr</span></a> <span class="id" title="var">x</span> =&gt; <a class="idref" href="Undecidability.L.L.html#size"><span class="id" title="definition">size</span></a> (<a class="idref" href="Undecidability.L.Tactics.Computable.html#enc"><span class="id" title="method">enc</span></a> <span class="id" title="var">x</span>) <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Peano.html#b3eea360671e1b32b18a26e15b3aace3"><span class="id" title="notation">+</span></a> 4 <span class="id" title="keyword">end</span>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">change</span> (<a class="idref" href="Undecidability.L.Tactics.Computable.html#enc"><span class="id" title="method">enc</span></a> <span class="id" title="var">l</span>) <span class="id" title="keyword">with</span> (<a class="idref" href="Undecidability.L.Datatypes.LSum.html#sum_enc"><span class="id" title="definition">sum_enc</span></a> <span class="id" title="var">l</span>).<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">destruct</span> <span class="id" title="var">l</span> <span class="id" title="keyword">as</span> [<span class="id" title="var">x</span>|<span class="id" title="var">x</span>]. <span class="id" title="var">all</span>:<span class="id" title="var">cbn</span> [<span class="id" title="var">sum_enc</span> <span class="id" title="var">map</span> <span class="id" title="var">sumn</span> <span class="id" title="var">size</span>].<br/>
+&nbsp;&nbsp;<span class="id" title="var">all</span>:<span class="id" title="tactic">change</span> ((<span class="id" title="keyword">match</span> <span class="id" title="var">_</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| @<span class="id" title="var">mk_registered</span> <span class="id" title="var">_</span> <span class="id" title="var">enc</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> =&gt; <span class="id" title="var">enc</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">end</span> <span class="id" title="var">x</span>)) <span class="id" title="keyword">with</span> (<a class="idref" href="Undecidability.L.Tactics.Computable.html#enc"><span class="id" title="method">enc</span></a> <span class="id" title="var">x</span>).<br/>
+&nbsp;&nbsp;<span class="id" title="var">all</span>:<span class="id" title="var">lia</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+</div>
+</div>
+<div id="footer">
+  Generated by <a href="http://coq.inria.fr/">coqdoc</a> and improved with <a href="https://github.com/tebbi/coqdocjs">CoqdocJS</a>
+</div>
+</div>
+</body>
+
+</html>
