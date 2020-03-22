@@ -8,6 +8,7 @@ CoqDoc: https://uds-psl.github.io/ba-gaeher/website/toc.html
 The project is based on the [library of undecidable problems](https://github.com/uds-psl/coq-library-undecidability). 
 The main new files contributed as part of the thesis are: 
 
+```
 L/Complexity/PolyBounds.v
 L/Complexity/Tactics.v
 L/Complexity/MorePrelim.v
@@ -45,7 +46,7 @@ L/Complexity/Reductions/FSAT_to_SAT.v
 L/Complexity/Reductions/Cook/BinaryPR_to_FSAT.v
 L/Complexity/Reductions/Cook/PR_to_BinaryPR.v
 L/Complexity/Reductions/Cook/UniformHomomorphisms.v
-
+```
 
 # A library of formalised undecidable problems in Coq
 
