@@ -1,11 +1,11 @@
 From PslBase Require Import Base. 
-From Undecidability.L.Complexity Require Import Tactics. 
+From Undecidability.L.Complexity Require Import Tactics MorePrelim. 
 From Undecidability.L.Datatypes Require Import LLists LLNat LBool LProd LOptions. 
-From Undecidability.L.Complexity.Cook Require Import Prelim BinaryPR.
+From Undecidability.L.Complexity.Cook Require Import BinaryPR.
 From Undecidability.L.Complexity.Problems Require Import FSAT.
 Require Import Lia. 
 
-(** *Reduction of BinaryPR to FSAT *)
+(** * Reduction of BinaryPR to FSAT *)
 (** High-level overview:
 We lay out the BinaryPR computation in a tableau which has (steps + 1) lines, where steps is the number of steps of the BPR instance, 
 and each line has a length which is equal to the length of the BPR strings.
@@ -256,7 +256,7 @@ Section fixInstance.
   Definition combinedLength start1 start2 l1 l2 := max (start1 +l1) (start2 + l2) - min start1 start2. 
   Definition combinedStart start1 start2 := min start1 start2. 
 
-  (*from the combined assignment for the combination of two formulas, we can restore an assignment for the first formula *)
+  (** from the combined assignment for the combination of two formulas, we can restore an assignment for the first formula *)
   Lemma projVars_combined1 s1 s2 l1 l2 a: explicitAssignment a s1 l1 = projVars (s1 - combinedStart s1 s2) l1 (explicitAssignment a (combinedStart s1 s2) (combinedLength s1 s2 l1 l2)).
   Proof. 
     unfold projVars. 
@@ -495,7 +495,7 @@ Section fixInstance.
                     | S stepindex => encodeWindowsAt startA startB ∧ encodeWindowsInLine' stepindex (l - offset) (startA + offset) (startB + offset)
                     end.
 
-  Lemma encodeWindowsInLine'_stepindex_monotone' index startA startB : forall n, n <= index -> encodeWindowsInLine' index n startA startB = encodeWindowsInLine' (S index) n startA startB. 
+  Lemma encodeWindowsInLineP_stepindex_monotone' index startA startB : forall n, n <= index -> encodeWindowsInLine' index n startA startB = encodeWindowsInLine' (S index) n startA startB. 
   Proof. 
     destruct A as (A1 & A2 & _).
     revert startA startB.
@@ -505,17 +505,17 @@ Section fixInstance.
       erewrite IHindex by lia. easy. 
   Qed. 
 
-  Lemma encodeWindowsInLine'_stepindex_monotone index index' startA startB : index' >= index -> encodeWindowsInLine' index index startA startB = encodeWindowsInLine' index' index startA startB. 
+  Lemma encodeWindowsInLineP_stepindex_monotone index index' startA startB : index' >= index -> encodeWindowsInLine' index index startA startB = encodeWindowsInLine' index' index startA startB. 
   Proof. 
     intros. revert index H.
     induction index'; intros. 
     - assert (index = 0) as -> by lia. easy.
     - destruct (nat_eq_dec (S index') index). 
       + now rewrite e.
-      + assert (index' >= index) as H1 by lia. rewrite <- encodeWindowsInLine'_stepindex_monotone' by lia. now apply IHindex'.
+      + assert (index' >= index) as H1 by lia. rewrite <- encodeWindowsInLineP_stepindex_monotone' by lia. now apply IHindex'.
   Qed.
 
-  Lemma encodeWindowsInLine'_encodesPredicate start l : l <= llength -> (exists k, l = k * offset) -> encodesPredicateAt start (l + llength) (encodeWindowsInLine' l l start (start + llength)) (fun m => valid offset width windows (projVars 0 l m) (projVars llength l m)). 
+  Lemma encodeWindowsInLineP_encodesPredicate start l : l <= llength -> (exists k, l = k * offset) -> encodesPredicateAt start (l + llength) (encodeWindowsInLine' l l start (start + llength)) (fun m => valid offset width windows (projVars 0 l m) (projVars llength l m)). 
   Proof. 
     intros A0.
     (*need strong induction *)
@@ -546,7 +546,7 @@ Section fixInstance.
         replace (start + S offset + (S l - S offset + llength) - start) with (S (l + llength)) in H2. 
         2: { destruct A2 as (? & A2 & A6). nia. }
         
-        rewrite encodeWindowsInLine'_stepindex_monotone with (index' := l) in H2; [ | lia].
+        rewrite encodeWindowsInLineP_stepindex_monotone with (index' := l) in H2; [ | lia].
         eapply encodesPredicateAt_extensional; [ | apply H2].
 
         clear H2 H3. 
@@ -609,7 +609,7 @@ Section fixInstance.
   Lemma encodeWindowsInLine_encodesPredicate start : encodesPredicateAt start (llength + llength) (encodeWindowsInLine start) (fun m => valid offset width windows (projVars 0 llength m) (projVars llength llength m)). 
   Proof. 
     unfold encodeWindowsInLine.
-    apply (@encodeWindowsInLine'_encodesPredicate start llength); [easy | apply A].
+    apply (@encodeWindowsInLineP_encodesPredicate start llength); [easy | apply A].
   Qed. 
 
   (*encoding of windows in all lines of the tableau *)
@@ -641,7 +641,7 @@ Section fixInstance.
                     end.
 
   (*the requirement |s| > 0 is needed for monotonicity *)
-  Lemma encodeSubstringInLine'_stepindex_monotone' s index start : forall n, |s| > 0 -> n <= index -> encodeSubstringInLine' s index n start = encodeSubstringInLine' s (S index) n start. 
+  Lemma encodeSubstringInLineP_stepindex_monotone' s index start : forall n, |s| > 0 -> n <= index -> encodeSubstringInLine' s index n start = encodeSubstringInLine' s (S index) n start. 
   Proof. 
     destruct A as (A1 & A2 & _).
     revert start.
@@ -651,7 +651,7 @@ Section fixInstance.
       erewrite IHindex by lia. easy. 
   Qed. 
 
-  Lemma encodeSubstringInLine'_stepindex_monotone s index1 index2 start : 
+  Lemma encodeSubstringInLineP_stepindex_monotone s index1 index2 start : 
     |s| > 0 -> index2 >= index1 -> encodeSubstringInLine' s index1 index1 start = encodeSubstringInLine' s index2 index1 start.
   Proof. 
     intros. revert index1 H0. 
@@ -659,10 +659,10 @@ Section fixInstance.
     - assert (index1 = 0) as -> by lia. easy.
     - destruct (nat_eq_dec (S index2) index1). 
       + now rewrite e.
-      + assert (index2 >= index1) as H1 by lia. rewrite <- encodeSubstringInLine'_stepindex_monotone' by lia. now apply IHindex2.
+      + assert (index2 >= index1) as H1 by lia. rewrite <- encodeSubstringInLineP_stepindex_monotone' by lia. now apply IHindex2.
   Qed. 
 
-  Lemma encodeSubstringInLine'_encodesPredicate s start l : |s| > 0 -> l <= llength 
+  Lemma encodeSubstringInLineP_encodesPredicate s start l : |s| > 0 -> l <= llength 
     -> (exists k, l = k * offset) -> encodesPredicateAt start l (encodeSubstringInLine' s l l start) (fun m => (exists k, k * offset <= l /\ projVars (k * offset) (|s|) m = s)). 
   Proof. 
     intros F.
@@ -696,7 +696,7 @@ Section fixInstance.
         replace (start + S offset + (S l - S offset) - start) with (S l) in H by nia.
         replace (start + S offset - start) with (S offset) in H by lia.
 
-        rewrite encodeSubstringInLine'_stepindex_monotone with (index2 := l) in H; [ | apply F| lia].
+        rewrite encodeSubstringInLineP_stepindex_monotone with (index2 := l) in H; [ | apply F| lia].
         eapply encodesPredicateAt_extensional; [ | apply H]. clear H.
         intros. split.
         * intros (k0 & H2 & H3). 
@@ -735,7 +735,7 @@ Section fixInstance.
     - unfold satisfies. cbn. intros; split.
       + intros _. exists 0; cbn; firstorder.
       + intros _. reflexivity. 
-    - apply encodeSubstringInLine'_encodesPredicate; cbn; easy.
+    - apply encodeSubstringInLineP_encodesPredicate; cbn; easy.
   Qed. 
 
   (** the final constraint now is a disjunction over all given substrings *)
@@ -1150,12 +1150,12 @@ Qed.
 
 (** encodeWindowsInLine' *)
 Definition c__encodeWindowsInLineP := c__width + c__sub1 + 3 * c__offset + 2 * c__add1 + 24.
-Fixpoint encodeWindowsInLine'_time (bpr : BinaryPR) (stepindex l startA startB : nat) := 
+Fixpoint encodeWindowsInLineP_time (bpr : BinaryPR) (stepindex l startA startB : nat) := 
   match stepindex with 
   | 0 => 0 
-  | S stepi => encodeWindowsAt_time bpr startA startB + sub_time l (offset bpr) + add_time startA + add_time startB + encodeWindowsInLine'_time bpr stepi (l - offset bpr) (startA + offset bpr) (startB + offset bpr)
+  | S stepi => encodeWindowsAt_time bpr startA startB + sub_time l (offset bpr) + add_time startA + add_time startB + encodeWindowsInLineP_time bpr stepi (l - offset bpr) (startA + offset bpr) (startB + offset bpr)
   end + ltb_time l (width bpr) + c__encodeWindowsInLineP.
-Instance term_encodeWindowsInLine': computableTime' encodeWindowsInLine' (fun bpr _ => (1, fun stepi _ => (5, fun l _ => (1, fun s1 _ => (5, fun s2 _ => (encodeWindowsInLine'_time bpr stepi l s1 s2, tt)))))). 
+Instance term_encodeWindowsInLine': computableTime' encodeWindowsInLine' (fun bpr _ => (1, fun stepi _ => (5, fun l _ => (1, fun s1 _ => (5, fun s2 _ => (encodeWindowsInLineP_time bpr stepi l s1 s2, tt)))))). 
 Proof. 
   extract. 
   solverec. all: unfold c__encodeWindowsInLineP; solverec. 
@@ -1164,13 +1164,13 @@ Qed.
 (** we first bound the components that can be accounted for by the pr instance and bound the start indices inductively; 
     we have the invariant that start' <= start + stepindex * offset for every start' obtained by recursion*)
 Definition poly__encodeWindowsInLineP1 n := poly__encodeWindowsAt n + (n + 1) * c__sub + (c__leb * (1 + n) + c__ltb) + c__encodeWindowsInLineP.
-Lemma encodeWindowsInLine'_time_bound1 bpr stepindex l startA startB : 
+Lemma encodeWindowsInLineP_time_bound1 bpr stepindex l startA startB : 
   BinaryPR_wellformed bpr 
-  -> encodeWindowsInLine'_time bpr stepindex l startA startB <= (stepindex + 1) * poly__encodeWindowsInLineP1 (size (enc bpr)) 
+  -> encodeWindowsInLineP_time bpr stepindex l startA startB <= (stepindex + 1) * poly__encodeWindowsInLineP1 (size (enc bpr)) 
     + stepindex * (stepindex * (offset bpr) + startA + stepindex * (offset bpr) + startB + 2) * c__add. 
 Proof. 
   intros H.
-  revert l startA startB. unfold encodeWindowsInLine'_time. induction stepindex; intros.
+  revert l startA startB. unfold encodeWindowsInLineP_time. induction stepindex; intros.
   - unfold ltb_time, leb_time. rewrite Nat.le_min_r. 
     rewrite size_nat_enc_r with (n := width bpr) at 1. 
     replace_le (size (enc (width bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; cbn; lia). 
@@ -1192,10 +1192,10 @@ Qed.
 
 (** in a second step, we also bound the numbers by their encoding size *)
 Definition poly__encodeWindowsInLine' n := (n + 1) * poly__encodeWindowsInLineP1 n + n * (n * n + n + 1) * c__add * 2.
-Lemma encodeWindowsInLine'_time_bound bpr stepindex l startA startB : 
-  BinaryPR_wellformed bpr -> encodeWindowsInLine'_time bpr stepindex l startA startB <= poly__encodeWindowsInLine' (size (enc bpr) + size (enc stepindex) + size (enc startA) + size (enc startB)). 
+Lemma encodeWindowsInLineP_time_bound bpr stepindex l startA startB : 
+  BinaryPR_wellformed bpr -> encodeWindowsInLineP_time bpr stepindex l startA startB <= poly__encodeWindowsInLine' (size (enc bpr) + size (enc stepindex) + size (enc startA) + size (enc startB)). 
 Proof. 
-  intros H. rewrite encodeWindowsInLine'_time_bound1 by easy.
+  intros H. rewrite encodeWindowsInLineP_time_bound1 by easy.
   rewrite size_nat_enc_r with (n := stepindex) at 1 2 3 4. 
   rewrite size_nat_enc_r with (n := offset bpr) at 1 2. 
   replace_le (size (enc (offset bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
@@ -1209,12 +1209,12 @@ Proof.
   fold g. 
   unfold poly__encodeWindowsInLine'. nia. 
 Qed.
-Lemma encodeWindowsInLine'_poly : monotonic poly__encodeWindowsInLine' /\ inOPoly poly__encodeWindowsInLine'. 
+Lemma encodeWindowsInLineP_poly : monotonic poly__encodeWindowsInLine' /\ inOPoly poly__encodeWindowsInLine'. 
 Proof. 
   unfold poly__encodeWindowsInLine'; split; smpl_inO; apply encodeWindowsInLineP1_poly. 
 Qed. 
 
-Lemma encodeWindowsInLine'_varsIn bpr stepi l startA startB : 
+Lemma encodeWindowsInLineP_varsIn bpr stepi l startA startB : 
   BinaryPR_wellformed bpr
   -> formula_varsIn (fun n => (n >= startA /\ n < startA + l) \/ (n >= startB /\ n < startB + l)) (encodeWindowsInLine' bpr stepi l startA startB). 
 Proof. 
@@ -1229,7 +1229,7 @@ Proof.
 Qed. 
 
 (* a more precise bound could be obtained by replacing stepi with div l (offset bpr) *)
-Lemma encodeWindowsInLine'_size bpr stepi l startA startB : 
+Lemma encodeWindowsInLineP_size bpr stepi l startA startB : 
   BinaryPR_wellformed bpr -> formula_size (encodeWindowsInLine' bpr stepi l startA startB) <= stepi * (|windows bpr| * (6 * width bpr + 4) + 3) + 1.
 Proof. 
   intros H0. revert l startA startB. induction stepi; cbn -[Nat.mul Nat.add]; intros. 
@@ -1245,7 +1245,7 @@ Qed.
 Definition c__encodeWindowsInLine := 3 * c__init + 3 * c__length + c__add1 + 13.
 Definition encodeWindowsInLine_time (bpr : BinaryPR) (s : nat) := 
   3 * c__length * (| init bpr |) + add_time s +
-  encodeWindowsInLine'_time bpr (| init bpr |) (| init bpr |) s (s + (| init bpr |)) + c__encodeWindowsInLine.
+  encodeWindowsInLineP_time bpr (| init bpr |) (| init bpr |) s (s + (| init bpr |)) + c__encodeWindowsInLine.
 Instance term_encodeWindowsInLine :computableTime' encodeWindowsInLine (fun bpr _ => (1, fun s _ => (encodeWindowsInLine_time bpr s, tt))). 
 Proof. 
   extract. solverec. 
@@ -1258,8 +1258,8 @@ Lemma encodeWindowsInLine_time_bound bpr s :
   -> encodeWindowsInLine_time bpr s <= poly__encodeWindowsInLine (size (enc bpr) + size (enc s)). 
 Proof. 
   intros H. unfold encodeWindowsInLine_time. 
-  rewrite encodeWindowsInLine'_time_bound by easy.
-  poly_mono encodeWindowsInLine'_poly. 
+  rewrite encodeWindowsInLineP_time_bound by easy.
+  poly_mono encodeWindowsInLineP_poly. 
   2: { setoid_rewrite size_nat_enc at 3. rewrite list_size_enc_length, list_size_length. 
        rewrite size_nat_enc_r with (n := s) at 2. 
        replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
@@ -1272,8 +1272,8 @@ Qed.
 Lemma encodeWindowsInLine_poly : monotonic poly__encodeWindowsInLine /\ inOPoly poly__encodeWindowsInLine. 
 Proof. 
   unfold poly__encodeWindowsInLine; split; smpl_inO.
-  - apply encodeWindowsInLine'_poly.
-  - apply inOPoly_comp; smpl_inO; apply encodeWindowsInLine'_poly. 
+  - apply encodeWindowsInLineP_poly.
+  - apply inOPoly_comp; smpl_inO; apply encodeWindowsInLineP_poly. 
 Qed. 
 
 Lemma encodeWindowsInLine_varsIn bpr s : 
@@ -1281,14 +1281,14 @@ Lemma encodeWindowsInLine_varsIn bpr s :
   -> formula_varsIn (fun n => (n >= s /\ n < s + 2 * (|init bpr|))) (encodeWindowsInLine bpr s). 
 Proof. 
   intros H. eapply formula_varsIn_monotonic. 
-  2: { unfold encodeWindowsInLine. apply encodeWindowsInLine'_varsIn, H. }
+  2: { unfold encodeWindowsInLine. apply encodeWindowsInLineP_varsIn, H. }
   cbn. intros n. lia. 
 Qed. 
 
 Lemma encodeWindowsInLine_size bpr s: 
   BinaryPR_wellformed bpr
   -> formula_size (encodeWindowsInLine bpr s) <= (|init bpr|) * (|windows bpr| * (6 * width bpr + 4) + 3) +1. 
-Proof.  apply encodeWindowsInLine'_size.  Qed. 
+Proof.  apply encodeWindowsInLineP_size.  Qed. 
   
 (** encodeWindowsInAllLines *)
 Definition c__encodeWindowsInAllLines := c__init + c__length + c__steps + 5.
@@ -1365,24 +1365,24 @@ Qed.
 
 (** encodeSubstringInLine' *)
 Definition c__encodeSubstringInLine' := c__length +  23 + c__sub1 + 2 * c__offset.
-Fixpoint encodeSubstringInLine'_time (bpr : BinaryPR) (s : list bool) (stepindex l start : nat) := 
+Fixpoint encodeSubstringInLineP_time (bpr : BinaryPR) (s : list bool) (stepindex l start : nat) := 
  match stepindex with 
   | 0 => 0 
-  | S stepi => encodeListAt_time s +  sub_time l (offset bpr) + c__add1 + add_time start + encodeSubstringInLine'_time bpr s stepi (l - offset bpr) (start + offset bpr)
+  | S stepi => encodeListAt_time s +  sub_time l (offset bpr) + c__add1 + add_time start + encodeSubstringInLineP_time bpr s stepi (l - offset bpr) (start + offset bpr)
  end + c__length * (|s|) + ltb_time l (|s|) + c__encodeSubstringInLine'. 
-Instance term_encodeSubstringInLine' : computableTime' encodeSubstringInLine' (fun bpr _ => (1, fun s _ => (5, fun stepi _ => (1, fun l _ => (1, fun start _ => (encodeSubstringInLine'_time bpr s stepi l start, tt)))))). 
+Instance term_encodeSubstringInLine' : computableTime' encodeSubstringInLine' (fun bpr _ => (1, fun s _ => (5, fun stepi _ => (1, fun l _ => (1, fun start _ => (encodeSubstringInLineP_time bpr s stepi l start, tt)))))). 
 Proof. 
   extract. solverec. 
-  all: unfold encodeSubstringInLine'_time, c__encodeSubstringInLine'. all: solverec. 
+  all: unfold encodeSubstringInLineP_time, c__encodeSubstringInLine'. all: solverec. 
 Qed.
 
 Definition poly__encodeSubstringInLineP1 n := poly__encodeListAt n + (n + 1) * c__sub + c__add1 + c__length * n + (c__leb * (1 + n) + c__ltb) + c__encodeSubstringInLine'.
-Lemma encodeSubstringInLine'_time_bound1 bpr s stepindex l start : 
+Lemma encodeSubstringInLineP_time_bound1 bpr s stepindex l start : 
   BinaryPR_wellformed bpr 
-  -> encodeSubstringInLine'_time bpr s stepindex l start <= (stepindex + 1) * poly__encodeSubstringInLineP1 (size (enc bpr) + size (enc s)) + stepindex * (stepindex * (offset bpr) + start + 1) * c__add.
+  -> encodeSubstringInLineP_time bpr s stepindex l start <= (stepindex + 1) * poly__encodeSubstringInLineP1 (size (enc bpr) + size (enc s)) + stepindex * (stepindex * (offset bpr) + start + 1) * c__add.
 Proof. 
   intros H.
-  revert l start. unfold encodeSubstringInLine'_time. induction stepindex; intros.
+  revert l start. unfold encodeSubstringInLineP_time. induction stepindex; intros.
   - unfold ltb_time, leb_time. rewrite Nat.le_min_r. 
     rewrite list_size_length. 
     unfold poly__encodeSubstringInLineP1. nia. 
@@ -1396,18 +1396,18 @@ Proof.
     poly_mono encodeListAt_poly. 2: { instantiate (1 := size (enc bpr) + size (enc s)). lia. }
     unfold poly__encodeSubstringInLineP1. unfold add_time. nia.  
 Qed.
-Lemma encodeSubstringInLine'_poly1 : monotonic poly__encodeSubstringInLineP1 /\ inOPoly poly__encodeSubstringInLineP1. 
+Lemma encodeSubstringInLineP_poly1 : monotonic poly__encodeSubstringInLineP1 /\ inOPoly poly__encodeSubstringInLineP1. 
 Proof. 
   unfold poly__encodeSubstringInLineP1; split; smpl_inO; apply encodeListAt_poly. 
 Qed.
 
 Definition poly__encodeSubstringInLine' n := (n + 1) * poly__encodeSubstringInLineP1 n + n * (n * n + n + 1) * c__add. 
-Lemma encodeSubstringInLine'_time_bound bpr s stepindex l start : 
-  BinaryPR_wellformed bpr -> encodeSubstringInLine'_time bpr s stepindex l start <= poly__encodeSubstringInLine' (size (enc bpr) + size (enc s) + size (enc stepindex) + size (enc start)). 
+Lemma encodeSubstringInLineP_time_bound bpr s stepindex l start : 
+  BinaryPR_wellformed bpr -> encodeSubstringInLineP_time bpr s stepindex l start <= poly__encodeSubstringInLine' (size (enc bpr) + size (enc s) + size (enc stepindex) + size (enc start)). 
 Proof. 
-  intros H. rewrite encodeSubstringInLine'_time_bound1 by apply H. 
+  intros H. rewrite encodeSubstringInLineP_time_bound1 by apply H. 
   pose (g := size (enc bpr) + size (enc s) + size (enc stepindex) + size (enc start)).
-  poly_mono encodeSubstringInLine'_poly1. 2 : { instantiate (1 := g). subst g; lia. }
+  poly_mono encodeSubstringInLineP_poly1. 2 : { instantiate (1 := g). subst g; lia. }
   rewrite size_nat_enc_r with (n := stepindex) at 1 2 3. 
   rewrite size_nat_enc_r with (n := offset bpr). replace_le (size (enc (offset bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
   rewrite size_nat_enc_r with (n := start) at 1. 
@@ -1416,12 +1416,12 @@ Proof.
   replace_le (size (enc start)) with g by (unfold g; lia) at 1. 
   fold g.  unfold poly__encodeSubstringInLine'.  nia.  
 Qed.
-Lemma encodeSubstringInLine'_poly : monotonic poly__encodeSubstringInLine' /\ inOPoly poly__encodeSubstringInLine'. 
+Lemma encodeSubstringInLineP_poly : monotonic poly__encodeSubstringInLine' /\ inOPoly poly__encodeSubstringInLine'. 
 Proof. 
-  unfold poly__encodeSubstringInLine'; split; smpl_inO; apply encodeSubstringInLine'_poly1. 
+  unfold poly__encodeSubstringInLine'; split; smpl_inO; apply encodeSubstringInLineP_poly1. 
 Qed.
 
-Lemma encodeSubstringInLine'_varsIn bpr s stepindex l start: formula_varsIn (fun n => n >= start /\ n < start + l) (encodeSubstringInLine' bpr s stepindex l start). 
+Lemma encodeSubstringInLineP_varsIn bpr s stepindex l start: formula_varsIn (fun n => n >= start /\ n < start + l) (encodeSubstringInLine' bpr s stepindex l start). 
 Proof. 
   revert l start. induction stepindex; cbn; intros. 
   - destruct s; cbn.
@@ -1437,7 +1437,7 @@ Proof.
       * apply IHstepindex in H1. nia. 
 Qed. 
 
-Lemma encodeSubstringInLine'_size bpr s stepindex l start : formula_size (encodeSubstringInLine' bpr s stepindex l start) <= stepindex * (3 * |s| + 1) + 2. 
+Lemma encodeSubstringInLineP_size bpr s stepindex l start : formula_size (encodeSubstringInLine' bpr s stepindex l start) <= stepindex * (3 * |s| + 1) + 2. 
 Proof. 
   revert l start. induction stepindex; cbn; intros. 
   - destruct s; cbn; [lia | ]. destruct leb; cbn; lia. 
@@ -1449,7 +1449,7 @@ Qed.
 
 (** encodeSubstringInLine *)
 Definition c__encodeSubstringInLine := 14. 
-Definition encodeSubstringInLine_time (bpr : BinaryPR) (s : list bool) (start l : nat) := encodeSubstringInLine'_time bpr s l l start + c__encodeSubstringInLine. 
+Definition encodeSubstringInLine_time (bpr : BinaryPR) (s : list bool) (start l : nat) := encodeSubstringInLineP_time bpr s l l start + c__encodeSubstringInLine. 
 Instance term_encodeSubstringInLine : computableTime' encodeSubstringInLine (fun bpr _ => (1, fun s _ => (1, fun start _ => (1, fun l _ => (encodeSubstringInLine_time bpr s start l, tt))))). 
 Proof. 
   extract. solverec. all: unfold encodeSubstringInLine_time, c__encodeSubstringInLine; solverec. 
@@ -1459,14 +1459,14 @@ Lemma encodeSubstringInLine_varsIn bpr s start l: formula_varsIn (fun n => n >= 
 Proof. 
   unfold encodeSubstringInLine. destruct s. 
   - intros a H. inv H. 
-  - apply encodeSubstringInLine'_varsIn. 
+  - apply encodeSubstringInLineP_varsIn. 
 Qed. 
 
 Lemma encodeSubstringInLine_size bpr s start l : formula_size (encodeSubstringInLine bpr s start l) <= l * (3 * |s| + 1) + 2.
 Proof. 
   unfold encodeSubstringInLine. destruct s. 
   - cbn. lia. 
-  - apply encodeSubstringInLine'_size. 
+  - apply encodeSubstringInLineP_size. 
 Qed. 
 
 (** encodeFinalConstraint *)
@@ -1499,9 +1499,9 @@ Proof.
   rewrite map_time_mono. 
   2: { intros l Hel. unfold encodeFinalConstraint_step_time, encodeSubstringInLine_time.  
        instantiate (1 := fun _ => _). cbn -[Nat.mul Nat.add]. 
-       rewrite encodeSubstringInLine'_time_bound by apply H.
+       rewrite encodeSubstringInLineP_time_bound by apply H.
        rewrite list_size_length at 1. replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
-       poly_mono encodeSubstringInLine'_poly. 
+       poly_mono encodeSubstringInLineP_poly. 
        2: { instantiate (1 := 2 * (size (enc bpr) + size (enc start))). 
             rewrite (list_el_size_bound Hel), list_size_enc_length. 
             cbn. rewrite BinaryPR_enc_size at 2. lia. 
@@ -1515,8 +1515,8 @@ Qed.
 Lemma encodeFinalConstraint_poly : monotonic poly__encodeFinalConstraint /\ inOPoly poly__encodeFinalConstraint. 
 Proof. 
   unfold poly__encodeFinalConstraint; split; smpl_inO. 
-  - apply encodeSubstringInLine'_poly. 
-  - apply inOPoly_comp; smpl_inO; apply encodeSubstringInLine'_poly. 
+  - apply encodeSubstringInLineP_poly. 
+  - apply inOPoly_comp; smpl_inO; apply encodeSubstringInLineP_poly. 
 Qed. 
 
 Lemma encodeFinalConstraint_varsIn bpr start : formula_varsIn (fun n => n >= start /\ n < start + (|init bpr|)) (encodeFinalConstraint bpr start).

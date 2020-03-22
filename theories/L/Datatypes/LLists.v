@@ -304,30 +304,36 @@ Section list_in.
     - intros H H'. apply list_incl_decb_iff in H'. congruence.
   Qed. 
 End list_in.
+
 Section list_in_time.
   Variable (X : Type).
   Context {H : registered X}.
+  Context (eqbX : X -> X -> bool).
+  Context {Xeq : eqbClass eqbX}. 
+  Context {XeqbComp : eqbCompT X}. 
 
-  Definition c__list_in_decb := 16. 
-  Fixpoint list_in_decb_time (eqbT: X -> X -> nat) (l : list X) (e : X) : nat :=
-    match l with [] => c__list_in_decb | (l :: ls) => eqbT l e + c__list_in_decb + list_in_decb_time eqbT ls e end. 
-
-  Global Instance term_list_in_decb : computableTime' (@list_in_decb X)
-  (fun eqb eqbT => (1, fun l _ => (5, fun x _ => (list_in_decb_time (callTime2 eqbT) l x, tt)))). 
+  Definition c__listInDecb := 21. 
+  Fixpoint list_in_decb_time (l : list X) (e : X) := 
+    match l with 
+    | [] => c__listInDecb 
+    | x :: l => eqbTime (X := X) (size (enc x)) (size (enc e)) + c__listInDecb + list_in_decb_time l e
+    end. 
+  Global Instance term_list_in_decb : computableTime' (@list_in_decb X eqbX) (fun l _ => (5, fun x _ => (list_in_decb_time l x, tt))). 
   Proof. 
-    extract. 
-    solverec. all: unfold c__list_in_decb; solverec. 
+    extract. solverec. 
+    all: unfold c__listInDecb; solverec.
   Qed. 
 
+
   Definition c__list_incl_decb := 22.
-  Fixpoint list_incl_decb_time (eqbT : X -> X -> nat) (a b : list X) := 
+  Fixpoint list_incl_decb_time (a b : list X) := 
     match a with 
     | [] => c__list_incl_decb
-    | (x::a) => list_in_decb_time eqbT b x + list_incl_decb_time eqbT a b + c__list_incl_decb
+    | (x::a) => list_in_decb_time b x + list_incl_decb_time a b + c__list_incl_decb
     end. 
   
-  Global Instance term_list_incl_decb : computableTime' (@list_incl_decb X) 
-    (fun _ eqbT => (5, fun a _ => (5, fun b _ => (list_incl_decb_time (callTime2 eqbT) a b, tt)))). 
+  Global Instance term_list_incl_decb : computableTime' (@list_incl_decb X eqbX) 
+    (fun a _ => (5, fun b _ => (list_incl_decb_time a b, tt))). 
   Proof. 
     extract. solverec. all: unfold c__list_incl_decb; solverec. 
   Defined. 
@@ -366,15 +372,18 @@ End dupfree_dec.
 Section dupfree_dec_time.
   Context {X : Type}.
   Context {H : registered X}. 
+  Context (eqbX : X -> X -> bool).
+  Context {Xeq : eqbClass eqbX}. 
+  Context {XeqbComp : eqbCompT X}. 
 
   Definition c__dupfreeb := 25. 
-  Fixpoint dupfreeb_time (eqbT : X -> X -> nat) (l : list X) := 
+  Fixpoint dupfreeb_time (l : list X) := 
     match l with 
     | [] => c__dupfreeb 
-    | l :: ls => list_in_decb_time eqbT ls l + c__dupfreeb + dupfreeb_time eqbT ls 
+    | l :: ls => list_in_decb_time ls l + c__dupfreeb + dupfreeb_time ls 
     end.
 
-  Global Instance term_dupfreeb: computableTime' (@dupfreeb X) (fun eqb eqbT => (1, fun l _ => (dupfreeb_time (callTime2 eqbT) l, tt))).
+  Global Instance term_dupfreeb: computableTime' (@dupfreeb X eqbX) (fun l _ => (dupfreeb_time l, tt)).
   Proof.
     extract. 
     solverec. all: unfold c__dupfreeb; solverec. 

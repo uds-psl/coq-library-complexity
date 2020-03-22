@@ -3,9 +3,9 @@ From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import LLists LLNat LProd.
 From PslBase Require Import FinTypes. 
 From Undecidability.L.Complexity.Problems Require Import UGraph.
-From Undecidability.L.Complexity.Cook Require Import FlatFinTypes.
+From Undecidability.L.Complexity Require Import FlatFinTypes.
 
-(** *Flat representation of an undirected graph. *)
+(** * Flat representation of an undirected graph. *)
 
 (** We represent graphs using a number, denoting the number of nodes, and a list of edges. *)
 Notation fvertex := (nat) (only parsing).
@@ -97,3 +97,13 @@ Inductive isFlatEdgesOf E V (finV : finType) (finE : finV * finV -> Prop) : Prop
                                                   
 Definition isFlatGraphOf (g : fgraph) (UG : UGraph) := 
   let (fV, fE) := g in isFlatVerticesOf fV (V UG) /\ isFlatEdgesOf fE fV (@E UG). 
+
+Lemma isFlatGraphOf_wf g (G : UGraph) : isFlatGraphOf g G -> fgraph_wf g. 
+Proof. 
+  destruct g as (fV & fE). intros [H1 H2]. 
+  unfold fgraph_wf. inv H2. split. 
+  - intros v1 v2 Hel%R__edgesSound. destruct Hel as (H2 & (V1 & V2 & Hel & H3 & H4 )).  
+    unfold isFlatVertexOf, finReprEl' in *. rewrite <- H3, <- H4. apply R__edgesComplete. 
+    apply G, Hel.
+  - intros (v1 & v2) Hel%R__edgesSound. apply Hel.
+Qed.

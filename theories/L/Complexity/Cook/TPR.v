@@ -1,10 +1,10 @@
 From PslBase Require Import Base. 
 From PslBase Require Import FiniteTypes. 
-From Undecidability Require Import L.Complexity.Cook.Prelim.
+From Undecidability.L.Complexity Require Import MorePrelim.
 Require Import Lia.
 
-(** *3-Parallel Rewriting *)
-(*We define a variant of Parallel Rewriting where the width is fixed to 3 and the offset is fixed to 1. 
+(** * 3-Parallel Rewriting *)
+(** We define a variant of Parallel Rewriting where the width is fixed to 3 and the offset is fixed to 1. 
   The resulting specialised definitions make reduction from Turing machines easier to construct.
 
 Moreover, we generalise the definition of valid to arbitrary rewritesHead predicates. 
@@ -20,13 +20,13 @@ Section abstractDefs.
   Variable (X : Type). 
   Notation string := (list X). 
 
-  (*We first define some general notions for an arbitrary rewritesHead predicate *)
+  (** We first define some general notions for an arbitrary rewritesHead predicate *)
   Definition rewritesHeadAbstract := string -> string -> Prop. 
 
   Section fixRewritesHead.
     Variable (p : rewritesHeadAbstract). 
 
-    (* rewrites inside a string *)
+    (** rewrites inside a string *)
     Definition rewritesAt (i : nat) a b := p (skipn i a) (skipn i b).
     Lemma rewritesAt_head a b : p a b <-> rewritesAt 0 a b. 
     Proof. 
@@ -39,7 +39,7 @@ Section abstractDefs.
     Lemma rewritesAt_step a b x y (i:nat) : rewritesAt i a b <-> rewritesAt (S i) (x :: a) (y:: b). 
     Proof. intros. unfold rewritesAt. now cbn. Qed. 
 
-    (*validity of a rewrite *)
+    (** validity of a rewrite *)
     Inductive valid : string -> string -> Prop :=
     | validB: valid [] [] 
     | validSA a b x y: valid a b -> length a < 2 -> valid (x:: a) (y:: b)
@@ -73,8 +73,8 @@ Section abstractDefs.
       - constructor 3. 2: apply H. repeat constructor.
     Qed. 
 
-    (*a different characterisation not allowing vacuous rewrites *)
-    (*this is conceptually nicer, but it has the problem that p is used in two cases, which makes some proofs harder *)
+    (** a different characterisation not allowing vacuous rewrites *)
+    (** this is conceptually nicer, but it has the problem that p is used in two cases, which makes some proofs harder *)
     Inductive validDirect : string -> string -> Prop :=
     | validDirectB a b : |a| = 3 -> |b| = 3 -> p a b -> validDirect a b 
     | validDirectS a b x y : validDirect a b -> p (x::a) (y::b) -> validDirect (x::a) (y::b). 
@@ -92,7 +92,7 @@ Section abstractDefs.
         + constructor 2; [ | apply H]. apply IHvalid. now cbn. 
     Qed. 
 
-    (*the explicit characterisation using bounded quantification *)
+    (** the explicit characterisation using bounded quantification *)
     Definition validExplicit a b := 
       length a = length b 
       /\ forall i, 0 <= i < length a - 2  -> rewritesAt i a b.
@@ -130,7 +130,7 @@ Section abstractDefs.
 
   Hint Constructors valid. 
 
-  (*valid is congruent with regards to rewritesHead predicates*)
+  (** valid is congruent with regards to rewritesHead predicates*)
   Lemma valid_monotonous (p1 p2 : rewritesHeadAbstract) : (forall x y, p1 x y -> p2 x y) -> forall x y, valid p1 x y -> valid p2 x y.
   Proof. 
     intros H x y. induction 1.  
@@ -161,9 +161,9 @@ Ltac inv_valid := match goal with
                   end.
 
 
-(** *TPR using list-based windows *)
+(** ** TPR using list-based windows *)
 
-(*use an explicit representation instead of vectors of size 3 since this will make the problem closer to the flattened extractable problem *)
+(** use an explicit representation instead of vectors of size 3 since this will make the problem closer to the flattened extractable problem *)
 Inductive TPRWinP (Sigma : Type) := {
          winEl1 : Sigma;
          winEl2 : Sigma;
@@ -193,11 +193,11 @@ Definition TPR_wellformed C := length (init C) >= 3.
 
 Implicit Type (C : TPR).
 
-(* the final constraint*)
+(** the final constraint*)
 Definition satFinal (X : Type) final (s : list X) := 
   exists subs, subs el final /\ substring subs s.
 
-(*specific definitions and results for list-based windows*)
+(** specific definitions and results for list-based windows*)
 Section fixInstance.
   Variable (Sigma : Type).
   Variable (init : list Sigma).
@@ -219,7 +219,7 @@ Section fixInstance.
     cbn. destruct prem0, conc0. now cbn. 
   Qed. 
 
-  (*we now define a concrete rewrite predicate based on a set of windows *)
+  (** we now define a concrete rewrite predicate based on a set of windows *)
   Definition rewritesHead win a b :=
     prefix (prem win) a /\ prefix (conc win) b.
 
@@ -245,7 +245,7 @@ Section fixInstance.
   Proof. 
     intros. unfold rewritesAt, rewritesHeadList in *.
     destruct H as (win & H0 & H). exists win; split; [assumption | ]. 
-    unfold Prelim.prefix in *. destruct H as ((b1 & H1) & (b2 & H2)). 
+    unfold prefix in *. destruct H as ((b1 & H1) & (b2 & H2)). 
     split.
     - exists (b1 ++ c). rewrite app_assoc. apply skipn_app2 with (c := prem win ++ b1); [ | assumption]. 
       destruct win, prem. now cbn.  
@@ -255,13 +255,13 @@ Section fixInstance.
 End fixInstance. 
 
 
-(*we define it using the rewritesHead_pred rewrite predicate *)
+(** we define it using the rewritesHead_pred rewrite predicate *)
 Definition TPRLang (C : TPR) := 
   TPR_wellformed C 
   /\ exists (sf : list (Sigma C)), relpower (valid (rewritesHeadList (windows C))) (steps C) (init C) sf 
     /\ satFinal (final C) sf. 
 
-(** *variant PTPR using propositional rules *)
+(** ** variant PTPR using propositional rules *)
 
 Record PTPR := {
              PSigma : finType;
@@ -274,7 +274,7 @@ Record PTPR := {
 Definition PTPR_wellformed D := length (Pinit D) >= 3. 
 
 Section fixRulePred.
-  (*We define the equivalent of rewritesHeadList for predicate-based rules  *)
+  (** We define the equivalent of rewritesHeadList for predicate-based rules  *)
 
   Variable (X : Type).
   Definition windowPred := X -> X -> X -> X -> X -> X -> Prop.
@@ -285,7 +285,7 @@ Section fixRulePred.
 
   Hint Constructors rewritesHeadInd. 
 
-  (*a few facts which will be useful *)
+  (** a few facts which will be useful *)
   Lemma rewritesHeadInd_tail_invariant (γ1 γ2 γ3 γ4 γ5 γ6 : X) s1 s2 s1' s2' :
     rewritesHeadInd (γ1 :: γ2 :: γ3 :: s1) (γ4 :: γ5 :: γ6 :: s2) <-> rewritesHeadInd (γ1 :: γ2 :: γ3 :: s1') (γ4 :: γ5 :: γ6 :: s2').
   Proof. split; intros; inv H; eauto. Qed. 

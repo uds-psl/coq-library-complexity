@@ -1,13 +1,14 @@
 From PslBase Require Import Base FinTypes.
 From PslBase Require Import Vectors.Vectors. 
-From Undecidability.L.Complexity.Cook Require Import Prelim BinaryPR PR PR_homomorphisms. 
+From Undecidability.L.Complexity Require Import MorePrelim.
+From Undecidability.L.Complexity.Cook Require Import BinaryPR PR PR_homomorphisms. 
 Require Import Lia.
 
-(** *PR to BinaryPR *)
-(*We reduce arbitrary PR instances to a binary alphabet by using the results on uniform homomorphisms. *)
+(** * PR to BinaryPR *)
+(** We reduce arbitrary PR instances to a binary alphabet by using the results on uniform homomorphisms. *)
 
 Section fixInstance. 
-  (*we first do the reduction for wellformed instances, satisfying the syntactic requirements *)
+  (** we first do the reduction for wellformed instances, satisfying the syntactic requirements *)
   Variable (pr : PR). 
 
   Notation Sigma := (Sigma pr).
@@ -34,7 +35,7 @@ Section fixInstance.
     - now rewrite repEl_length.
   Qed. 
 
-  Lemma h'_inv1 (Sig x n : nat) : hNat Sig x = repEl n false ++ [true] ++ repEl (Sig - n -1) false -> x = n. 
+  Lemma hP_inv1 (Sig x n : nat) : hNat Sig x = repEl n false ++ [true] ++ repEl (Sig - n -1) false -> x = n. 
   Proof. 
     intros. unfold hNat in H. 
     destruct leb eqn:H1. 
@@ -55,14 +56,14 @@ Section fixInstance.
   (*now, the homomorphism for finite types is defined by composing hNat and index *)
   Definition h' (x : Sigma) := hNat (|elem Sigma|) (index x). 
 
-  Lemma h'_injective : injective h'. 
+  Lemma hP_injective : injective h'. 
   Proof. 
     intros x y H. unfold h', hNat in H. 
     erewrite (leb_correct (S (index y))) in H. 2: apply index_le.   
-    now apply h'_inv1, injective_index in H. 
+    now apply hP_inv1, injective_index in H. 
   Qed. 
 
-  Lemma h'_length x : |h' x| = |elem Sigma|. 
+  Lemma hP_length x : |h' x| = |elem Sigma|. 
   Proof. 
     unfold h'. now rewrite hNat_length.   
   Qed. 
@@ -80,7 +81,7 @@ Section fixInstance.
 
   Lemma h_multiplier_sp x : |h x| = (|elem Sigma|) * |x|. 
   Proof. 
-    unfold h. erewrite h_multiplier. 2: apply h'_length. easy.
+    unfold h. erewrite h_multiplier. 2: apply hP_length. easy.
   Qed. 
 
   Lemma PR_homomorphism_wf : PR_wellformed pr -> BinaryPR.BinaryPR_wellformed hBinaryPR. 
@@ -104,10 +105,10 @@ Section fixInstance.
     split; intros. 
     - destruct H as (_ & sf & H1 & H2).
       split; [ apply PR_homomorphism_wf; auto | ]. 
-      apply PR_homomorphism_iff; eauto; [ apply h'_length | apply h'_injective].
+      apply PR_homomorphism_iff; eauto; [ apply hP_length | apply hP_injective].
     - destruct H as (_ & H1).
       split; [ apply A | ]. 
-      apply (PR_homomorphism_iff h'_length A1 h'_injective) in H1; [apply H1 | apply A]. 
+      apply (PR_homomorphism_iff hP_length A1 hP_injective) in H1; [apply H1 | apply A]. 
   Qed. 
 End fixInstance. 
 

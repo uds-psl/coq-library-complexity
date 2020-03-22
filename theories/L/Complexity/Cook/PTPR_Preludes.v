@@ -1,9 +1,11 @@
-From Undecidability.L.Complexity Require Import Cook.TPR Cook.Prelim.
+From Undecidability.L.Complexity Require Import Cook.TPR MorePrelim.
 From PslBase Require Import Base. 
 From PslBase Require Import FinTypes. 
 Require Import Lia. 
 
-(*We introduce preludes for TPR instances (for simplicity, we restrict ourselves to the propositional variant PTPR) *)
+(** * Adding preludes to P-3-PR instances *)
+(**We introduce preludes for TPR instances (for simplicity, we restrict ourselves to the propositional variant PTPR) *)
+
 (* Preludes allow us to reduce the problem "∃ init, P init /\ PTPRLang (instance(init))" to "PTPRLang (instance')", where 
   instance is a PTPR instance which lacks an initial string and P is an arbitrary predicate on initial strings. 
   A prelude is a set of rewrite windows together with a new initial string which generates a new string.
@@ -13,39 +15,36 @@ Require Import Lia.
   the initial string and adding t' to the number of steps of instance. 
 
   In order to ensure that the new rewrite windows and the old ones do not interfere, we require their alphabets to be disjoint
-  (but of course, the prelude needs to rewrite to strings of the old alphabet; it just is not allowed to rewrite _from_ 
+  (but of course, the prelude needs to rewrite to strings of the old alphabet; it just is not allowed to rewrite *from* 
   strings of the old alphabet). 
   In this formalisation, this constraint is mostly enforced syntactically by taking the new alphabet to be the sum of 
   the prelude alphabet and the old alphabet.
   *)
 
-(* Remark: One can also see preludes of providing a limited form of compositionality; for instance, one could also show 
+(** Remark: One can also see preludes of providing a limited form of compositionality; for instance, one could also show 
   that preludes allow one to reduce an existential question to another (possibly simpler) existential question.
   *)
 
 Section defExPTPR. 
-  (*original instance lacking an initial string*)
+  (** original instance lacking an initial string*)
   Variable (Sigma : finType). 
-
-  (*we do not directly assume Sigma to be a finType in order to be able to use the definitions not depending on Sigma being a finType for ordinary Types *)
+  (* we do not directly assume Sigma to be a finType in order to be able to use the definitions not depending on Sigma being a finType for ordinary Types *)
 
   Variable (p : Sigma -> Sigma -> Sigma -> Sigma -> Sigma -> Sigma -> Prop). 
   Variable (finalCondition : list (list Sigma)). 
   Variable (t : nat). 
 
-  (*instead of an initial string, we have an initial condition and a length l*)
+  (** instead of an initial string, we have an initial condition and a length l*)
   Variable (initCond: list Sigma -> Prop). 
   Variable (l : nat).
 
-  (*the question now is: does there exist x0 satisfying initCond such that it ends up in a final state? *)
+  (** the question now is: does there exist x0 satisfying initCond such that it ends up in a final state? *)
   Definition ExPTPR := exists x0, |x0| = l /\ initCond x0 /\ PTPRLang (Build_PTPR x0 p finalCondition t). 
 End defExPTPR.
 
 Section fixPTPRInstance. 
-  (*original instance lacking an initial string*)
   Variable (Sigma : Type). 
 
-  (*we do not directly assume Sigma to be a finType in order to be able to use the definitions not depending on Sigma being a finType for ordinary Types *)
   Variable (ESigma : eq_dec Sigma). 
   Variable (FSigma : finTypeC (EqType Sigma)). 
 
@@ -56,17 +55,17 @@ Section fixPTPRInstance.
   Variable (initCond: list Sigma -> Prop). 
   Variable (l : nat).
 
-  (*otherwise, vacuous rewrites destroy everything *)
+  (** otherwise, vacuous rewrites destroy everything *)
   Variable (A0 : l >= 3). 
 
-  (*a prelude generates initial strings satisfying initCond *)
+  (** a prelude generates initial strings satisfying initCond *)
   Variable (Sigma' : Type). 
   Variable (eSigma' : eq_dec Sigma').
   Variable (FSigma' : finTypeC (EqType Sigma')). 
 
   Notation combSigma := (sum Sigma Sigma').
   Variable (p' : Sigma' -> Sigma' -> Sigma' -> combSigma -> combSigma -> combSigma -> Prop). 
-  (*We prove the following results not for a fixed initial string, but for a string satisfying initialPred.
+  (** We prove the following results not for a fixed initial string, but for a string satisfying initialPred.
     This allows us to compose multiple preludes, each reducing to a simpler ExPTPR instance.
   *)
   Variable (initialPred : list Sigma' -> Prop).   
@@ -88,16 +87,16 @@ Section fixPTPRInstance.
 
   Definition validPreludeInitial s := length s = l /\ initialPred s. 
 
-  (*the prelude rules always produce a string that is a valid initial string for the original instance, up to the injection inl *)
+  (** The prelude rules always produce a string that is a valid initial string for the original instance, up to the injection inl *)
   Variable (A1: forall init x0, validPreludeInitial init -> relpower (valid (rewritesHeadInd liftPrelude)) t' (map inr init) x0 -> isOrigString x0). 
 
-  (*disjointness: string is not produced too early *)
+  (** Disjointness: string is not produced too early *)
   Variable (A2 : forall init k x, validPreludeInitial init -> k < t' -> relpower (valid (rewritesHeadInd liftPrelude)) k (map inr init) x -> isPreludeString x).  
 
-  (*completeness *)
+  (** Completeness *)
   Variable (A3 : forall x0, initCond x0 /\ |x0| = l -> exists init, validPreludeInitial init /\ relpower (valid (rewritesHeadInd liftPrelude)) t' (map inr init) (map inl x0)). 
 
-  (*soundness *)
+  (** Soundness *)
   Variable (A4 : forall init x0, validPreludeInitial init -> relpower (valid (rewritesHeadInd liftPrelude)) t' (map inr init) x0 -> exists x0', x0 = map inl x0' /\ initCond x0'). 
 
   Lemma liftPrelude_subs_combP : windowPred_subs liftPrelude combP. 
@@ -197,7 +196,7 @@ Section fixPTPRInstance.
         + split; [ | apply IH2]. apply relpowerS with (b := map inl x); [ apply H2 |apply IH1].  
     Qed. 
 
-    (*important intermediate result for the proof: we can split a sequence of t' + t rewrite steps into t' rewrite steps of the prelude and t rewrite steps of the original PR instance *)
+    (** important intermediate result for the proof: we can split a sequence of t' + t rewrite steps into t' rewrite steps of the prelude and t rewrite steps of the original PR instance *)
     Lemma relpower_comb_split sf : 
       relpower (valid (rewritesHeadInd combP)) (t' + t) (map inr initialString) sf 
       -> exists x0, relpower (valid (rewritesHeadInd liftPrelude)) t' (map inr initialString) x0 
@@ -214,7 +213,7 @@ Section fixPTPRInstance.
     Qed. 
   End fixInitial. 
 
-  (*we need to be able to go back from liftOrig to p*)
+  (** we need to be able to go back from liftOrig to p*)
   Lemma valid_liftOrig_isOrigString a b : |a| >= 3 -> valid (rewritesHeadInd liftOrig) a b -> isOrigString b. 
   Proof. 
     clear A1 A2 A3 A4 A0. intros H. induction 1; unfold isOrigString. 
@@ -257,7 +256,7 @@ Section fixPTPRInstance.
   (*TODO: reduction to ExPTPR *)
 End fixPTPRInstance.
 
-(*we now specialise to the case where the initial condition on the prelude string is fixed to equality with a given string, 
+(** We now specialise to the case where the initial condition on the prelude string is fixed to equality with a given string, 
   i.e. we reduce an ExPTPR instance to a full PTPR instance
 *)
 Section fixPrelude. 

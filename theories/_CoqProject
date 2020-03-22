@@ -372,13 +372,12 @@ L/Complexity/Reductions/kSAT_to_Clique.v
 L/Complexity/Reductions/kSAT_to_FlatClique.v
 L/Complexity/Reductions/kSAT_to_SAT.v
 
-L/Complexity/Cook/Prelim.v
 L/Complexity/Cook/PR.v
 L/Complexity/Cook/GenNP.v
 L/Complexity/Cook/TPR.v
 L/Complexity/Cook/PTPR_Preludes.v
 L/Complexity/Cook/SingleTMGenNP_to_TPR.v
-L/Complexity/Cook/FlatFinTypes.v
+L/Complexity/FlatFinTypes.v
 L/Complexity/Cook/TM_single.v
 L/Complexity/Cook/TPR_to_PR.v
 L/Complexity/Cook/FlatPR.v
@@ -394,7 +393,6 @@ L/Complexity/Cook/FSAT_to_SAT.v
 L/Complexity/Cook/BinaryPR_to_FSAT.v
 L/Complexity/Cook/PR_to_BinaryPR.v
 L/Complexity/Cook/UniformHomomorphisms.v
-L/Complexity/Cook/FlatFinTypes_extraction.v
 L/Datatypes/LLists.v
 L/Datatypes/LLNat.v
 

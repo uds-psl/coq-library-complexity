@@ -117,7 +117,7 @@ Lemma list_size_of_el {X : Type} `{registered X} (l : list X) (k : nat) : (foral
 Proof.
   intros H1. induction l. 
   - cbn. rewrite size_list. cbn.  lia.
-  - cbn -[c__listsizeCons]. rewrite list_size_cons. rewrite IHl; [ |now firstorder]. rewrite H1; [|now left].
+  - cbn -[c__listsizeCons]. rewrite list_size_cons. rewrite IHl; [ |now firstorder]. rewrite H1; [ |now left].
     solverec. 
 Qed. 
 
@@ -196,6 +196,66 @@ Proof.
   unfold leb_time. rewrite Nat.le_min_r. rewrite size_nat_enc_r with (n:= b) at 1. lia. 
 Qed. 
 
+Lemma forallb_time_exp (X : Type) (f : X -> nat) l: forallb_time f l = sumn (map (fun x => f x + c__forallb) l) + c__forallb. 
+Proof. 
+  unfold forallb_time; induction l; cbn; [lia | ].
+  rewrite IHl. easy.
+Qed. 
+
+Section fixXEq. 
+  Context {X : Type}.
+  Context {H : registered X}.
+  Context (Xeqb : X -> X -> bool). 
+  Context {HXeq : eqbClass Xeqb}. 
+  Context {HeqbComp : eqbCompT X}. 
+
+  Definition poly__listInDecb n := (n + 1) * (c__listInDecb + 1 + c__eqbComp X).
+  Lemma list_in_decb_time_bound (l : list X) e: list_in_decb_time l e <= poly__listInDecb (size (enc l)). 
+  Proof. 
+    induction l; cbn. 
+    - unfold poly__listInDecb. nia. 
+    - rewrite IHl. unfold eqbTime. 
+      rewrite Nat.le_min_l. unfold poly__listInDecb. 
+      rewrite list_size_cons. unfold c__listsizeCons; leq_crossout.
+  Qed.
+  Lemma list_in_decb_poly : monotonic poly__listInDecb /\ inOPoly poly__listInDecb. 
+  Proof. 
+    unfold poly__listInDecb; split; smpl_inO. 
+  Qed. 
+
+  Definition poly__listInclDecb n := n * poly__listInDecb n + (n + 1) * c__list_incl_decb.
+  Lemma list_incl_decb_time_bound (l1 l2 :list X) : list_incl_decb_time l1 l2 <= poly__listInclDecb (size (enc l1) + size (enc l2)). 
+  Proof.
+    induction l1; cbn. 
+    - unfold poly__listInclDecb. nia. 
+    - rewrite list_in_decb_time_bound. rewrite IHl1. 
+      poly_mono list_in_decb_poly. 2: { instantiate (1 := size (enc (a :: l1)) + size (enc l2)). lia. }
+      unfold poly__listInclDecb. rewrite list_size_cons at 2 4. 
+      poly_mono list_in_decb_poly at 2. 2 : { instantiate (1 := size (enc (a :: l1)) + size (enc l2)). rewrite list_size_cons. lia. }
+      unfold c__listsizeCons. nia. 
+  Qed. 
+  Lemma list_incl_decb_poly : monotonic poly__listInclDecb /\ inOPoly poly__listInclDecb.       
+  Proof. 
+    unfold poly__listInclDecb; split; smpl_inO; apply list_in_decb_poly. 
+  Qed. 
+
+  Definition poly__dupfreeb n := n * poly__listInDecb n + (n + 1) * c__dupfreeb. 
+  Lemma dupfreeb_time_bound (l : list X) : dupfreeb_time l <= poly__dupfreeb (size (enc l)). 
+  Proof. 
+    induction l; cbn. 
+    - unfold poly__dupfreeb; nia. 
+    - rewrite list_in_decb_time_bound. rewrite IHl. 
+      poly_mono list_in_decb_poly. 2: { instantiate (1 := size (enc (a :: l))). rewrite list_size_cons. nia. }
+      unfold poly__dupfreeb. 
+      poly_mono list_in_decb_poly at 2. 2: { instantiate (1 := size (enc (a :: l))). rewrite list_size_cons. nia. }
+      rewrite list_size_cons at 3 5. unfold c__listsizeCons. nia. 
+  Qed. 
+  Lemma dupfreeb_poly : monotonic poly__dupfreeb /\ inOPoly poly__dupfreeb. 
+  Proof. 
+    unfold poly__dupfreeb; split; smpl_inO; apply list_in_decb_poly. 
+  Qed. 
+End fixXEq. 
+
 Section fixX.
   Context {X : Type}.
   Context {H : registered X}.
@@ -204,53 +264,6 @@ Section fixX.
   (* i.e. their running time depends on some values in their environment *)
   Variable (Y : Type).
   Context {RY : registered Y}.
-
-  Lemma list_in_decb_time_bound_env (eqbT : Y -> (X -> X -> nat)) (f : nat -> nat):
-    (forall (a b : X) (y : Y), eqbT y a b <= f(size(enc a) + size(enc b) + size(enc y))) /\ monotonic f 
-      -> forall (l : list X) (e : X) (y : Y), list_in_decb_time (eqbT y) l e <= ((|l| + 1) * (f(size(enc l) + size(enc e) + size(enc y)) + c__list_in_decb)).  
-  Proof.
-    intros [H1 H2]. intros. induction l. 
-    - rewrite size_list; cbn. nia.
-    - cbn [list_in_decb_time]. rewrite IHl, H1. unfold monotonic in H2. 
-      rewrite H2 with (x' := size (enc (a ::l)) + size(enc e) + size(enc y)). 
-      2: rewrite list_size_cons; unfold c__list_in_decb; nia. 
-      setoid_rewrite H2 with (x' := size (enc (a ::l)) + size(enc e) + size(enc y)) at 2. 
-      2: rewrite list_size_cons; unfold c__list_in_decb; nia. 
-      cbn. solverec. 
-  Qed. 
-
-  Lemma list_incl_decb_time_bound_env (eqbT : Y -> (X -> X -> nat)) (f : nat -> nat) :
-    (forall (a b : X) (y : Y), eqbT y a b <= f (size (enc a) + size (enc b) + size (enc y))) /\ monotonic f
-    -> forall (a b : list X) (y : Y), list_incl_decb_time (eqbT y) a b <= ((|a|) + 1) * ((|b|) + 1) * (f (size (enc b) + size (enc a) + size (enc y)) + c__list_in_decb) + (|a|+1) * c__list_incl_decb.
-  Proof. 
-    intros [H1 H2] a b env. induction a. 
-    - cbn -[c__list_incl_decb c__list_in_decb]. lia.
-    - cbn -[c__list_incl_decb c__list_in_decb]. rewrite list_in_decb_time_bound_env by easy.
-      rewrite IHa. 
-      unfold monotonic in H2. 
-      rewrite H2. 
-      2: { replace_le (size (enc a)) with (size (enc (a::a0))) by (rewrite list_size_cons; lia). reflexivity. }
-      setoid_rewrite H2 at 2. 
-      2: { replace_le (size (enc a0)) with (size (enc (a::a0))) by (rewrite list_size_cons; lia). reflexivity. }
-      nia. 
-  Qed. 
-
-  Definition c__dupfreeBound := c__dupfreeb + c__list_in_decb. 
-  Lemma dupfreeb_time_bound_env (eqbT : Y -> X -> X -> nat) (f : nat -> nat): 
-    (forall (a b : X) (y : Y), eqbT y a b <= f (size (enc a) + size (enc b) + size(enc y))) /\ monotonic f 
-     -> forall (l : list X) (y : Y), dupfreeb_time (eqbT y) l <= (|l| + 1) * (|l| + 1) * (f (2* size (enc l) + size (enc y)) + c__dupfreeBound). 
-  Proof.  
-    intros [H1 H2]. intros. induction l.  
-    - unfold c__dupfreeBound. cbn -[Nat.add]. lia.  
-    - cbn -[c__dupfreeBound c__list_in_decb]. rewrite IHl. rewrite list_in_decb_time_bound_env by easy.   
-      rewrite !Nat.add_0_r. 
-      unfold monotonic in H2. erewrite H2. 
-      2: (replace_le (size (enc l) + size (enc a)) with (size (enc (a::l)) + size(enc(a::l))) by (rewrite list_size_cons; lia)); reflexivity. 
-      setoid_rewrite H2 at 2.  
-      2: (replace_le (size(enc l)) with (size (enc (a::l))) by (rewrite list_size_cons; lia)); reflexivity. 
-      unfold c__dupfreeBound. cbn [Nat.mul]. rewrite !Nat.add_0_r. 
-      nia. 
-  Qed. 
 
   Lemma forallb_time_bound_env (predT : Y -> X -> nat) (f : nat -> nat):
     (forall (a : X) (y : Y), predT y a <= f (size(enc a) + size(enc y))) /\ monotonic f 
@@ -340,3 +353,55 @@ Section fixXY.
       nia.
   Qed. 
 End fixXY.
+
+(** Facts we need to prove that a small assignment has an encoding size which is polynomial in the CNF's encoding size *)
+Lemma list_dupfree_incl_length (X : eqType) (a b : list X) : a <<= b -> dupfree a -> |a| <= |b|. 
+Proof. 
+  intros H1 H2. eapply NoDup_incl_length. 
+  - apply dupfree_Nodup, H2.
+  - apply H1. 
+Qed. 
+
+Lemma rem_app_eq (X : eqType) (l1 l2 : list X) (x : X) : rem (l1 ++ l2) x = rem l1 x ++ rem l2 x. 
+Proof. 
+  induction l1; cbn; [easy | ].
+  destruct Dec; cbn. 
+  - fold (rem (l1 ++ l2) x). rewrite IHl1. easy.
+  - fold (rem (l1 ++ l2) x). now rewrite IHl1. 
+Qed. 
+
+Lemma list_rem_size_le (X : eqType) `{H : registered X} (l : list X) x : size (enc (rem l x)) <= size (enc l). 
+Proof. 
+  induction l. 
+  - cbn. lia. 
+  - cbn. destruct Dec; cbn; rewrite !list_size_cons, IHl; lia. 
+Qed. 
+
+Lemma list_incl_dupfree_size (X : eqType) `{registered X} (a b : list X) : a <<= b -> dupfree a -> size (enc a) <= size (enc b). 
+Proof. 
+  intros H1 H2.  revert b H1.
+  induction H2 as [ | a0 a H1 H2 IH]; intros. 
+  - cbn. rewrite !size_list. cbn. lia.
+  - specialize (IH (rem b a0)). 
+    rewrite list_size_cons.
+    cbn. rewrite IH. 
+    2: { 
+      assert (rem (a0 :: a) a0 = a).  
+      { cbn. destruct Dec; [congruence | ]. cbn. 
+       fold (rem a a0). now rewrite rem_id. 
+      } 
+      rewrite <- H3. now apply rem_mono. 
+    } 
+    specialize (H0 a0 (or_introl eq_refl)). apply In_explicit in H0 as (b1 & b2 & ->).
+    rewrite !size_list, !rem_app_eq, !map_app, !sumn_app. cbn. 
+    destruct Dec; cbn; [congruence | ]. 
+    pose (elem_size := fun (x : X) => size (enc x) + c__listsizeCons). 
+    fold elem_size.
+    enough (sumn (map elem_size (rem b1 a0)) <= sumn (map elem_size b1) /\ sumn (map elem_size (rem b2 a0)) <= sumn (map elem_size b2)) as H0.
+    { destruct H0 as [-> ->]. nia. }
+    specialize (list_rem_size_le b1 a0) as F1. 
+    specialize (list_rem_size_le b2 a0) as F2. 
+    rewrite !size_list in F1. rewrite !size_list in F2. 
+    fold elem_size in F1. fold elem_size in F2.
+    split; nia. 
+Qed. 

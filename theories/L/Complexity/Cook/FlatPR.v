@@ -1,6 +1,6 @@
 From PslBase Require Import Base FinTypes. 
-From Undecidability Require Import L.Complexity.Cook.Prelim L.Functions.EqBool.
-From Undecidability.L.Complexity.Cook Require Export PR FlatFinTypes. 
+From Undecidability Require Import L.Functions.EqBool.
+From Undecidability.L.Complexity Require Export Cook.PR FlatFinTypes MorePrelim.
 Require Import Lia.
 
 (**Flat Parallel Rewriting *)
@@ -634,56 +634,6 @@ Proof.
 Qed. 
 
 (*extraction of isValidFlattening_dec *)
-
-(*ofFlatTypeDec *)
-Definition c__ofFlatTypeDec := c__leb2 + 2. 
-Definition ofFlatType_dec_time (sig e : nat) := leb_time (1 + e) sig + c__ofFlatTypeDec. 
-Instance term_ofFlatType_dec : computableTime' ofFlatType_dec (fun sig _ => (1, fun e _ => (ofFlatType_dec_time sig e, tt))). 
-Proof. 
-  extract. solverec. unfold ofFlatType_dec_time, c__ofFlatTypeDec. solverec. 
-Defined. 
-Definition c__ofFlatTypeDecBound := c__ofFlatTypeDec + c__leb. 
-Definition poly__ofFlatTypeDec n := (n +1) * c__ofFlatTypeDecBound. 
-Lemma ofFlatType_dec_time_bound sig e: ofFlatType_dec_time sig e <= poly__ofFlatTypeDec (size (enc sig)). 
-Proof. 
-  unfold ofFlatType_dec_time. rewrite leb_time_bound_r. unfold poly__ofFlatTypeDec, c__ofFlatTypeDecBound; nia.
-Qed. 
-Lemma ofFlatType_dec_poly : monotonic poly__ofFlatTypeDec /\ inOPoly poly__ofFlatTypeDec. 
-Proof.
-  split; unfold poly__ofFlatTypeDec; smpl_inO. 
-Qed. 
-
-
-(*list_ofFlatType_dec *)
-Definition c__listOfFlatTypeDec := 3.
-Definition list_ofFlatType_dec_time (sig : nat) (l : list nat) := forallb_time (fun x1 => ofFlatType_dec_time sig x1) l + c__listOfFlatTypeDec. 
-Instance term_list_ofFlatType_dec : computableTime' list_ofFlatType_dec (fun sig _ => (1, fun l _ => (list_ofFlatType_dec_time sig l, tt))). 
-Proof. 
-  extract. solverec. unfold list_ofFlatType_dec_time, c__listOfFlatTypeDec. solverec. 
-Qed. 
-
-
-Definition c__listOfFlatTypeDecBound := c__forallb + c__listOfFlatTypeDec. 
-Definition poly__listOfFlatTypeDec n := ((n+1) * (poly__ofFlatTypeDec n + c__listOfFlatTypeDecBound)).
-Lemma list_ofFlatType_dec_time_bound t l : list_ofFlatType_dec_time t l <= poly__listOfFlatTypeDec (size (enc t) + size (enc l)).
-Proof.
-  unfold list_ofFlatType_dec_time. 
-  erewrite forallb_time_bound_env.
-  2: {
-    split; [ intros | ]. 
-    - rewrite (ofFlatType_dec_time_bound y a). poly_mono ofFlatType_dec_poly.
-      2: apply le_add_l with (n := size(enc a)). reflexivity.
-    - apply ofFlatType_dec_poly.
-  }
-  rewrite list_size_length.
-  replace_le (size(enc l)) with (size (enc t) + size (enc l)) by lia at 1.
-  setoid_rewrite Nat.add_comm at 5.
-  unfold poly__listOfFlatTypeDec, c__listOfFlatTypeDecBound. nia.
-Qed. 
-Lemma list_ofFlatType_dec_poly : monotonic poly__listOfFlatTypeDec /\ inOPoly poly__listOfFlatTypeDec. 
-Proof.
-  split; unfold poly__listOfFlatTypeDec; smpl_inO; apply ofFlatType_dec_poly.
-Qed. 
 
 (*PRWin_ofFlatType_dec *)
 Definition c__PRWinOfFlatTypeDec := cnst_prem + cnst_conc +8.

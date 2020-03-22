@@ -4,8 +4,9 @@ From Undecidability.L.Datatypes Require Import LLists LLNat LProd.
 From PslBase.FiniteTypes Require Import FinTypes Cardinality VectorFin.
 From Undecidability.L.Complexity Require Import MorePrelim.
 From Undecidability.L.Complexity.Problems Require Import Clique UGraph SAT kSAT.
-From Undecidability.L.Complexity.Cook Require Import Prelim.
 From Undecidability.L.Complexity.Reductions Require Pigeonhole.
+
+(** * Reduction from k-SAT to Clique *)
 
 Implicit Types (a : assgn) (N : cnf) (C : clause) (l :literal).
 
@@ -21,6 +22,8 @@ Section fixSAT.
   Variable (N : cnf).
   Variable (Hkcnf : kCNF k N).
 
+  (** We start by defining the graph *)
+
   Definition Ncl := (|N|). 
 
   Definition literalsConflict l1 l2 := 
@@ -34,7 +37,7 @@ Section fixSAT.
     | _, _ => False
     end. 
 
-  (* the first component describes the literal, the second one the clause *)
+  (** The nodes are pairs (ci, li): the first component describes the clause, the second one the literal *)
   Definition Vcnf := finType_CS ((Fin.t Ncl * Fin.t k)%type).
   Implicit Type v : Vcnf. 
 

@@ -1,6 +1,6 @@
 From PslBase Require Import Base. 
 From Undecidability.L.Datatypes Require Import LLists.
-From Undecidability.L.Complexity.Cook Require Import Prelim.
+From Undecidability.L.Complexity Require Import MorePrelim.
 From Undecidability.L.Complexity.Problems Require Import FSAT SAT kSAT.
 Require Import Lia. 
 
@@ -149,7 +149,7 @@ Fixpoint tseytin' (nfVar : var) (f : formula) : (var * cnf * var) :=
 Definition tseytin f : var * cnf := 
   let '(repVar, N, _) := tseytin' (S (formula_maxVar f)) f in (repVar, N). 
 
-Lemma tseytin'_nf_monotonic f nf v N nf' : tseytin' nf f = (v, N, nf') -> nf' >= nf. 
+Lemma tseytinP_nf_monotonic f nf v N nf' : tseytin' nf f = (v, N, nf') -> nf' >= nf. 
 Proof. 
   revert nf v N nf'. induction f; cbn; intros nf v N nf' H; inv H; [lia | lia | | | ].
   1-2: destruct (tseytin' nf f1) as ((rv1 & N1) & nfVar1) eqn:F1;
@@ -300,8 +300,8 @@ Proof.
   destruct (tseytin' nf f1) as ((rv1 & N1) & nfVar1) eqn:F1. 
   destruct (tseytin' nfVar1 f2) as ((rv2 & N2) & nfVar2) eqn:F2. 
   specialize (IHf1 nf nfVar1 _ _ ltac:(lia) F1) as (IH1 & IH2 & IH2' & (IH31 & IH32)). 
-  specialize (tseytin'_nf_monotonic F1) as H7. 
-  specialize (tseytin'_nf_monotonic F2) as H8.
+  specialize (tseytinP_nf_monotonic F1) as H7. 
+  specialize (tseytinP_nf_monotonic F2) as H8.
   specialize (IHf2 nfVar1 nfVar2 _ _ ltac:(lia) F2) as (IH4 & IH5 & IH5' & (IH61 & IH62)). clear F1 F2.
   symmetry in H0. inv H0. split; [ | split; [lia | split; [lia | split; [ | split]]]]. 
   - repeat rewrite cnf_varsIn_app. 
@@ -402,7 +402,7 @@ Proof.
   cbn. intros bound IHf nf nf' v N H H0.  
   destruct (tseytin' nf f) as ((rv & N') & nfVar') eqn:F1. 
   specialize (IHf nf nfVar' _ _ ltac:(lia) F1) as (IH1 & IH2 & IH2' & (IH31 & IH32)). 
-  specialize (tseytin'_nf_monotonic F1) as H1. 
+  specialize (tseytinP_nf_monotonic F1) as H1. 
   symmetry in H0. inv H0. split; [ | split; [lia | split; [lia | split]]]. 
   - rewrite cnf_varsIn_app. split.
     + eapply cnf_varsIn_monotonic, IH1. cbn; intros; lia.
@@ -452,7 +452,7 @@ Proof.
 Qed.
 
 (** main composed correctness result*)
-Lemma tseytin'_repr b f nf v N nf' : 
+Lemma tseytinP_repr b f nf v N nf' : 
   orFree f -> formula_varsIn (fun n => n < b) f -> nf >= b -> tseytin' nf f = (v, N, nf') -> tseytin_formula_repr f N v b nf nf'. 
 Proof. 
   intros Hor H. revert nf nf' v N. induction f; intros. 
@@ -514,7 +514,7 @@ Proof.
   intros Hor. 
   unfold tseytin. destruct tseytin' as ((repVar & N1) & nfvar') eqn:H1.
   intros H; inv H. 
-  eapply tseytin'_repr in H1. 
+  eapply tseytinP_repr in H1. 
   - eapply tseytin_formula_repr_s, H1. 
     + apply formula_maxVar_varsIn. 
     + lia. 
@@ -574,7 +574,7 @@ Proof.
   unfold tseytinEquiv. eauto. 
 Qed. 
 
-Lemma tseytin'_3CNF nf nf' v N f: tseytin' nf f = (v, N, nf') -> kCNF 3 N. 
+Lemma tseytinP_3CNF nf nf' v N f: tseytin' nf f = (v, N, nf') -> kCNF 3 N. 
 Proof. 
   revert nf nf' N v; induction f; cbn; intros nf nf' N v H. 
   - inv H. apply tseytinTrue_3CNF. 
@@ -594,7 +594,7 @@ Qed.
 
 Corollary tseytin_3CNF v N f : tseytin f = (v, N) -> kCNF 3 N. 
 Proof.
-  unfold tseytin. destruct tseytin' eqn:H. destruct p as (v' & N'). apply tseytin'_3CNF in H.  
+  unfold tseytin. destruct tseytin' eqn:H. destruct p as (v' & N'). apply tseytinP_3CNF in H.  
   intros H1. inv H1. apply H. 
 Qed. 
 
@@ -610,7 +610,7 @@ Proof.
   - apply orFree_eliminate.
 Qed. 
 
-(** * size analysis : the tseytin transformation incurs a linear blowup wrt to the size measures defined for formulas and CNFs. *)
+(** ** size analysis : the tseytin transformation incurs a linear blowup wrt to the size measures defined for formulas and CNFs. *)
 
 Definition c__eliminateOrSize := 4.
 Lemma eliminateOR_size f : formula_size (eliminateOR f) <= c__eliminateOrSize * formula_size f. 
@@ -633,7 +633,7 @@ Proof.
 Qed. 
 
 Definition c__tseytinSize := 12.
-Lemma tseytin'_size nf nf' v N f: tseytin' nf f = (v, N, nf') -> size_cnf N <= c__tseytinSize * formula_size f. 
+Lemma tseytinP_size nf nf' v N f: tseytin' nf f = (v, N, nf') -> size_cnf N <= c__tseytinSize * formula_size f. 
 Proof. 
   revert nf nf' v N. induction f; cbn -[c__tseytinSize]; intros nf nf' v N H.
   - inv H. cbn. lia. 
@@ -656,7 +656,7 @@ Proof.
     cbn -[c__tseytinSize]. unfold c__tseytinSize; lia. 
 Qed. 
 
-Lemma tseytin'_nf_bound nf nf' v N f : tseytin' nf f = (v, N, nf') -> nf' <= nf + formula_size f. 
+Lemma tseytinP_nf_bound nf nf' v N f : tseytin' nf f = (v, N, nf') -> nf' <= nf + formula_size f. 
 Proof. 
   revert nf nf' v N. induction f; cbn; intros nf nf' v N H. 
   - inv H. lia. 
@@ -675,14 +675,14 @@ Proof.
 Qed. 
 
 (** We get the varBound directly from the Tseytin representation relation. *)
-Lemma tseytin'_varBound nf nf' v N f : orFree f -> formula_varsIn (fun n => n < nf) f -> tseytin' nf f = (v, N, nf') -> v < nf' /\ cnf_varsIn (fun n => n < nf') N. 
+Lemma tseytinP_varBound nf nf' v N f : orFree f -> formula_varsIn (fun n => n < nf) f -> tseytin' nf f = (v, N, nf') -> v < nf' /\ cnf_varsIn (fun n => n < nf') N. 
 Proof. 
   intros H H1 H2. 
-  specialize (tseytin'_nf_monotonic H2) as H0. 
-  eapply tseytin'_repr in H2 as (H2 & _ & H3 & _). 
+  specialize (tseytinP_nf_monotonic H2) as H0. 
+  eapply tseytinP_repr in H2 as (H2 & _ & H3 & _). 
   3: apply H1.
   - split; [apply H3 | ]. eapply cnf_varsIn_monotonic, H2. 
-    specialize tseytin'_nf_monotonic. 
+    specialize tseytinP_nf_monotonic. 
     cbn; intros; lia.
   - apply H. 
   - lia.
@@ -691,15 +691,15 @@ Qed.
 Lemma tseytin_size f v N : tseytin f = (v, N) -> size_cnf N <= c__tseytinSize * formula_size f.
 Proof. 
   unfold tseytin. destruct (tseytin') eqn:H1. destruct p as (rv & N'). intros H; inv H.  
-  apply tseytin'_size in H1. easy.
+  apply tseytinP_size in H1. easy.
 Qed. 
 
 Lemma tseytin_varBound f v N : orFree f -> tseytin f = (v, N) -> v < S (formula_maxVar f) + formula_size f /\ cnf_varsIn (fun n => n < S (formula_maxVar f) + formula_size f) N. 
 Proof. 
   unfold tseytin. destruct tseytin' eqn:H1. destruct p as (v' & N'). 
   intros H0 H; inv H.
-  specialize (tseytin'_varBound H0 ltac:(apply formula_maxVar_varsIn) H1) as (H2 & H3).
-  apply tseytin'_nf_bound in H1. 
+  specialize (tseytinP_varBound H0 ltac:(apply formula_maxVar_varsIn) H1) as (H2 & H3).
+  apply tseytinP_nf_bound in H1. 
   split; [lia | ].
   eapply cnf_varsIn_monotonic, H3. cbn. intros n0. lia. 
 Qed. 
@@ -748,7 +748,7 @@ Proof.
   - split; subst p; smpl_inO. 
 Qed. 
 
-(** Running-time analysis *)
+(** *** Running-time analysis *)
 
 (** eliminateOr *)
 Definition c__eliminateOR := 18.
@@ -819,12 +819,12 @@ Defined.
 Definition c__tseytinP1 := c__app * c__tseytinSize. 
 Definition c__tseytinP2 := 60 + 2 * c__app.
 
-Fixpoint tseytin'_time (f : formula) := match f with 
+Fixpoint tseytinP_time (f : formula) := match f with 
 | Ftrue => c__tseytinTrue 
 | Fvar _ => c__tseytinEquiv
-| For f1 f2 => tseytin'_time f1 + tseytin'_time f2 + c__tseytinP1 * (formula_size f1 + formula_size f2) + c__tseytinOr
-| Fand f1 f2 => tseytin'_time f1 + tseytin'_time f2 + c__tseytinP1 * (formula_size f1 + formula_size f2) + c__tseytinAnd
-| Fneg f => tseytin'_time f + c__tseytinP1 * formula_size f + c__tseytinNot
+| For f1 f2 => tseytinP_time f1 + tseytinP_time f2 + c__tseytinP1 * (formula_size f1 + formula_size f2) + c__tseytinOr
+| Fand f1 f2 => tseytinP_time f1 + tseytinP_time f2 + c__tseytinP1 * (formula_size f1 + formula_size f2) + c__tseytinAnd
+| Fneg f => tseytinP_time f + c__tseytinP1 * formula_size f + c__tseytinNot
 end + c__tseytinP2.  
 
 Fact size_cnf_ge_length N : |N| <= size_cnf N. 
@@ -832,46 +832,46 @@ Proof.
   now unfold size_cnf. 
 Qed. 
 
-Instance term_tseytin' : computableTime' tseytin' (fun nf _ => (5, fun f _ => (tseytin'_time f, tt))). 
+Instance term_tseytin' : computableTime' tseytin' (fun nf _ => (5, fun f _ => (tseytinP_time f, tt))). 
 Proof. 
   extract. solverec. 
   - unfold c__tseytinP2; solverec. 
   - unfold c__tseytinP2; solverec. 
   - fold tseytin' in H2, H0. 
-    apply tseytin'_size in H0. apply tseytin'_size in H2. 
+    apply tseytinP_size in H0. apply tseytinP_size in H2. 
     rewrite !size_cnf_ge_length, H0, H2. unfold c__tseytinP1, c__tseytinP2. solverec. 
   - fold tseytin' in H2, H0. 
-    apply tseytin'_size in H0. apply tseytin'_size in H2. 
+    apply tseytinP_size in H0. apply tseytinP_size in H2. 
     rewrite !size_cnf_ge_length, H0, H2. unfold c__tseytinP1, c__tseytinP2. solverec. 
-  - fold tseytin' in H0. apply tseytin'_size in H0.
+  - fold tseytin' in H0. apply tseytinP_size in H0.
     rewrite size_cnf_ge_length, H0. unfold c__tseytinP1, c__tseytinP2. solverec. 
 Defined.  
 
 Definition c__tseytinPBound1 := c__tseytinTrue + c__tseytinEquiv + c__tseytinAnd + c__tseytinOr + c__tseytinNot + c__tseytinP2.
 Definition poly__tseytin' n := c__tseytinP1 * n * n + c__tseytinPBound1 * n. 
-Lemma tseytin'_time_bound f : tseytin'_time f <= poly__tseytin' (size (enc f)). 
+Lemma tseytinP_time_bound f : tseytinP_time f <= poly__tseytin' (size (enc f)). 
 Proof. 
-  unfold tseytin'_time. induction f; rewrite formula_enc_size. 
+  unfold tseytinP_time. induction f; rewrite formula_enc_size. 
   - unfold poly__tseytin', c__tseytinPBound1. solverec. 
   - unfold poly__tseytin', c__tseytinPBound1. nia. 
-  - fold tseytin'_time in IHf1, IHf2. 
+  - fold tseytinP_time in IHf1, IHf2. 
     rewrite IHf1, IHf2. rewrite !formula_size_enc_bound. 
     unfold poly__tseytin', c__tseytinPBound1. leq_crossout.  
-  - fold tseytin'_time in IHf1, IHf2. 
+  - fold tseytinP_time in IHf1, IHf2. 
     rewrite IHf1, IHf2. rewrite !formula_size_enc_bound. 
     unfold poly__tseytin', c__tseytinPBound1. leq_crossout.  
-  - fold tseytin'_time in IHf. rewrite IHf. 
+  - fold tseytinP_time in IHf. rewrite IHf. 
     rewrite formula_size_enc_bound. 
     unfold poly__tseytin', c__tseytinPBound1. leq_crossout. 
 Qed. 
-Lemma tseytin'_poly : monotonic poly__tseytin' /\ inOPoly poly__tseytin'. 
+Lemma tseytinP_poly : monotonic poly__tseytin' /\ inOPoly poly__tseytin'. 
 Proof. 
   unfold poly__tseytin'; split; smpl_inO. 
 Qed. 
 
 (** tseytin *)
 Definition c__tseytin := 17. 
-Definition tseytin_time (f : formula) := formula_maxVar_time f + tseytin'_time f + c__tseytin.
+Definition tseytin_time (f : formula) := formula_maxVar_time f + tseytinP_time f + c__tseytin.
 Instance term_tseytin : computableTime' tseytin (fun f _ => (tseytin_time f, tt)). 
 Proof. 
   extract. solverec. 
@@ -881,12 +881,12 @@ Defined.
 Definition poly__tseytin n := poly__formulaMaxVar n + poly__tseytin' n + c__tseytin. 
 Lemma tseytin_time_bound f : tseytin_time f <= poly__tseytin (size (enc f)). 
 Proof. 
-  unfold tseytin_time. rewrite tseytin'_time_bound, formula_maxVar_time_bound. 
+  unfold tseytin_time. rewrite tseytinP_time_bound, formula_maxVar_time_bound. 
   unfold poly__tseytin; lia.  
 Qed.
 Lemma tseytin_poly : inOPoly poly__tseytin /\ monotonic poly__tseytin. 
 Proof. 
-  unfold poly__tseytin; split; smpl_inO; first [apply formula_maxVar_poly | apply tseytin'_poly]. 
+  unfold poly__tseytin; split; smpl_inO; first [apply formula_maxVar_poly | apply tseytinP_poly]. 
 Qed. 
 
 (** reduction *)
@@ -921,7 +921,7 @@ Proof.
 Qed. 
   
   
-(** full reduction *)
+(** *** full reduction *)
 Theorem FSAT_reduces_to_SAT : reducesPolyMO (unrestrictedP FSAT) (unrestrictedP SAT). 
 Proof. 
   apply reducesPolyMO_intro with (f := reduction). 

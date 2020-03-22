@@ -1,7 +1,8 @@
 From Undecidability.TM Require Import TM.
-From Undecidability.L.Complexity.Cook Require Import Prelim. 
+From Undecidability.L.Complexity Require Import MorePrelim. 
 Require Import Lia. 
 
+(** * Simpler definitions for single-tape Turing machines. *)
 (** We introduce easier definitions for single-tape Turing machines where the single tape is not wrapped in a singleton vector.
     We also define a relpower-based computation relation (instead of using loopM). 
     (This is motivated by the fact that it is easier to reason inductively about a relpower-based relation.)
@@ -34,7 +35,7 @@ Section TM_single.
     intros. revert t. apply Vector.case0. easy.
   Qed. 
 
-  (** agreement for single computation steps *)
+  (** Agreement for single computation steps *)
   Lemma sstep_agree1 c : sconfig_for_mconfig (@step Sigma 1 TM (mconfig_for_sconfig c)) = sstep strans c.
   Proof. 
     destruct c. cbn.
@@ -64,7 +65,7 @@ Section TM_single.
   Notation "s '≻' s'" := (sstepRel s s') (at level 50).
   Notation "s '≻(' k ')' s'" := (relpower sstepRel k s s') (at level 40). 
 
-  (** this is similar to what loopM does*)
+  (** This is similar to what loopM does*)
   Notation "s '▷(' k ')' s'" := (s ≻(k) s' /\ halt (configState s') = true) (at level 40).
   Notation "s '▷(≤' k ')' s'" := (exists l, l <= k /\ s ▷(l) s') (at level 40).
 

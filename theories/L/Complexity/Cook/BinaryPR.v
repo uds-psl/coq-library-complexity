@@ -1,6 +1,6 @@
 From PslBase Require Import Base.
 Require Import Lia.
-From Undecidability Require Import L.Complexity.Cook.Prelim.
+From Undecidability.L.Complexity Require Import MorePrelim. 
 From Undecidability.L.Complexity.Cook Require Export PR.
 From Undecidability.L.Complexity.Cook Require Import FlatPR.
 

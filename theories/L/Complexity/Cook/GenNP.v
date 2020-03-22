@@ -1,10 +1,10 @@
 From Undecidability.TM Require Import TM.
 From Undecidability.L.TM Require Import TMflat TMflatEnc TMflatFun TMEncoding TapeDecode TMunflatten TMflatten.
-From Undecidability.L.Complexity.Cook Require Import FlatFinTypes Prelim.
+From Undecidability.L.Complexity Require Import FlatFinTypes MorePrelim.
 From Undecidability.L.Complexity.Problems Require Export TMGenNP_fixed_mTM. 
 
-(** *Definition of a generic NP-hard problem *)
-(*(at least it is NP-hard if one accepts Turing machines)*)
+(** * Definition of a generic NP-hard problem *)
+(** (at least it is NP-hard if one accepts Turing machines)*)
 
 Definition isValidCert (sig : finType) k' (c : list sig) := |c| <= k'.
 Definition isValidInput (sig : finType) s k' (inp : list sig) := exists c, isValidCert k' c /\ inp = s ++ c. 

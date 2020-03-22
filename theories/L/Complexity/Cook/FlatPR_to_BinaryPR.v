@@ -1,6 +1,7 @@
 From PslBase Require Import Base. 
 From PslBase Require Import Vectors.Vectors. 
-From Undecidability.L.Complexity.Cook Require Import Prelim UniformHomomorphisms BinaryPR FlatPR PR_to_BinaryPR. 
+Require Import Undecidability.L.Complexity.MorePrelim. 
+From Undecidability.L.Complexity.Cook Require Import UniformHomomorphisms BinaryPR FlatPR PR_to_BinaryPR. 
 Require Import Lia.
 
 (** Reduction of FlatPR to BinaryPR *)

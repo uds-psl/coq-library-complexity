@@ -2,6 +2,8 @@ From Undecidability.L Require Import L.
 From Undecidability.L.Datatypes Require Import LLists LLNat. 
 Require Import Lia. 
 
+(** * Shared Definitions for SAT and FSAT *)
+
 Notation var := (nat) (only parsing). 
 Notation assgn := (list var). 
 

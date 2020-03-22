@@ -1,12 +1,13 @@
 From Undecidability.TM Require Import TM.
 From Undecidability.L.TM Require Import TMflat TMflatEnc TMflatFun TMEncoding TapeDecode TMunflatten TMflatten.
-From Undecidability.L.Complexity.Cook Require Import FlatFinTypes Prelim.
 From Undecidability.L.Complexity.Problems Require Import TMGenNP_fixed_mTM. 
 From Undecidability.L.Functions Require Import EqBool.
 
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Complexity Require Import PolyBounds Cook.GenNP.
+From Undecidability.L.Complexity Require Import PolyBounds Cook.GenNP FlatFinTypes MorePrelim.
 From Undecidability.L.Datatypes Require Import LProd LOptions LBool LSum LLNat LLists LFinType.
+
+(** * Reduction of GenNP with fixed TM to GenNP with variable TM *)
 
 Lemma execFlatTM_isValidFlatTapes M tp steps c' tp' : execFlatTM M tp steps = Some (c', tp') -> isValidFlatTapes (sig M) (tapes M) tp' = true.
 Proof. 

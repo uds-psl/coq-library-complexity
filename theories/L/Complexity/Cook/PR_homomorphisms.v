@@ -1,5 +1,5 @@
 From PslBase Require Import Base FiniteTypes. 
-From Undecidability.L.Complexity.Cook Require Import Prelim PR UniformHomomorphisms.
+From Undecidability.L.Complexity Require Import MorePrelim Cook.PR Cook.UniformHomomorphisms.
 From Undecidability.L.Complexity.Cook Require BinaryPR .
 Require Import Lia.
 

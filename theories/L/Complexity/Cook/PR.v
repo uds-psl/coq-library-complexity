@@ -1,8 +1,8 @@
 From PslBase Require Import Base FiniteTypes.
 Require Import Lia.
-From Undecidability Require Import L.Complexity.Cook.Prelim.
+From Undecidability.L.Complexity Require Import MorePrelim.
 
-(** *Parallel Rewriting *)
+(** * Parallel Rewriting *)
 (*
   Parallel Rewriting is a string-based problem. 
   We are given an initial string and ask whether this string can be rewritten to another string of the same length in exactly t rewrite steps.
@@ -17,7 +17,7 @@ From Undecidability Require Import L.Complexity.Cook.Prelim.
   Therefore we impose constraints on the relation between o, w and the length of the strings, namely that o symbols always belong together.
 *)
 
-(*a single rewrite window *)
+(** a single rewrite window *)
 Inductive PRWin (Sigma : Type):= {
                                 prem : list Sigma;
                                 conc : list Sigma
@@ -33,7 +33,7 @@ Inductive PR := {
                steps : nat
              }.
 
-(*the windows need to have a size of width *)
+(**the windows need to have a size of width *)
 Definition PRWin_of_size (X : Type) (win : PRWin X) (k : nat) := |prem win| = k /\ |conc win| = k. 
 
 Definition PRWin_of_size_dec (X : Type) width (win : PRWin X) := Nat.eqb (|prem win|) width && Nat.eqb (|conc win|) width.
@@ -42,7 +42,7 @@ Proof.
   unfold PRWin_of_size, PRWin_of_size_dec. rewrite andb_true_iff. rewrite <- !(reflect_iff _ _ (Nat.eqb_spec _ _ )). easy.
 Qed. 
 
-(*we impose a number of syntactic constraints; instances not satisfying these constraints do not behave in an intuitive way *)
+(** We impose a number of syntactic constraints; instances not satisfying these constraints do not behave in an intuitive way *)
 Definition PR_wellformed (c : PR) := 
   width c > 0 
   /\ offset c > 0
@@ -76,7 +76,7 @@ Proof.
 Qed. 
 
 
-(*we now give a semantics to PR instances *)
+(** We now give a semantics to PR instances *)
 Section fixX. 
   Variable (X : Type).
   Variable (offset : nat). 
@@ -85,12 +85,12 @@ Section fixX.
 
   Context (G0 : width > 0).
 
-  (* the final constraint*)
-  (* this is defined in terms of the offset: there must exist an element of a list of strings final which is a substring of the the string s at a multiple of offset *)
+  (** The final constraint*)
+  (** This is defined in terms of the offset: there must exist an element of a list of strings final which is a substring of the the string s at a multiple of offset *)
   Definition satFinal l (final : list (list X)) s := 
     exists subs k, subs el final /\ k * offset <= l /\  prefix subs (skipn (k * offset) s).
 
-  (* rewrites inside a string *)
+  (** rewrites inside a string *)
   Definition rewritesHead (X : Type) (win : PRWin X) a b := prefix (prem win) a /\ prefix (conc win) b.
 
   Definition rewritesAt (win : PRWin X) (i : nat) a b := rewritesHead win (skipn i a) (skipn i b).
@@ -108,9 +108,9 @@ Section fixX.
     rewrite Nat.add_comm. now repeat rewrite skipn_add. 
   Qed. 
 
-  (** validity of a rewrite *)
-  (*we use an inductive definition; the main motivation behind this definition is to only have a rewritesHead premise in one case as this leads to fewer cases in proofs*)
-  (*the drawback of this definition is that it allows vacuous rewrites (using only the first two constructors); but if the two strings have a length of at least width, this is not a problem *)
+  (** ** Validity of a rewrite *)
+  (** We use an inductive definition; the main motivation behind this definition is to only have a rewritesHead premise in one case as this leads to fewer cases in proofs.
+      The drawback of this definition is that it allows vacuous rewrites (using only the first two constructors); but if the two strings have a length of at least width, this is not a problem. *)
   Inductive valid: list X -> list X -> Prop :=
   | validB: valid [] [] 
   | validSA a b u v : valid a b -> length a < width - offset -> length u = offset -> length v = offset -> valid (u++ a) (v++ b)
@@ -124,7 +124,7 @@ Section fixX.
     - repeat rewrite app_length; firstorder. 
   Qed. 
 
-  (*we can rewrite to any string if the length is less than width *)
+  (** We can rewrite to any string if the length is less than width *)
   Lemma valid_vacuous (a b : list X) m: |a| = |b| -> |a| < width -> |a| = m * offset -> valid a b.
   Proof. 
     clear G0. 
@@ -150,8 +150,8 @@ Section fixX.
     - setoid_rewrite app_length. destruct IHvalid as (k & ->).  exists (S k); nia. 
   Qed. 
 
-  (*a more direct characterisation which does not allow vacuous rewrites, making some proofs simpler *)
-  (*its drawback is that it uses rewritesHead in two cases, which makes many proofs more complicated *)
+  (** A more direct characterisation which does not allow vacuous rewrites, making some proofs simpler. *)
+  (** Its drawback is that it uses rewritesHead in two cases, which makes many proofs more complicated *)
   Inductive validDirect: list X -> list X -> Prop :=
   | validDirectB a b win : |a| = |b| -> |a| = width -> win el windows -> rewritesHead win a b -> validDirect a b 
   | validDirectS a b u v win: validDirect a b -> length u = offset -> length v = offset -> win el windows -> rewritesHead win (u ++ a) (v ++ b) -> validDirect (u ++ a) (v ++ b). 
@@ -185,7 +185,7 @@ Section fixX.
         econstructor 1; eauto. apply valid_length_inv in H1. now rewrite !app_length. 
   Qed. 
 
-  (*we can give an explicit characterisation which better captures the original intuition: a rewrite window has to hold at every multiple of offset *)
+  (** We can give an explicit characterisation which better captures the original intuition: a rewrite window has to hold at every multiple of offset. *)
   Definition validExplicit a b := length a = length b 
     /\ (exists k, length a = k * offset) 
     /\ forall i, 0 <= i < length a + 1 - width /\ (exists j, i = j * offset)
@@ -241,14 +241,14 @@ Section fixX.
           rewrite H2 in H7. now apply (proj2 (@rewritesAt_step win a' b' u v i H2 H1)) in H7. 
   Qed. 
 
-  (*in order to reason about a sequence of rewrites, we use relational powers *)
+  (** In order to reason about a sequence of rewrites, we use relational powers *)
   Lemma relpower_valid_length_inv k a b : relpower valid k a b -> length a = length b. 
   Proof. 
     induction 1; [ auto | rewrite <- IHrelpower; now apply valid_length_inv]. 
   Qed. 
 End fixX. 
 
-(*we can now define the language of valid PR instances *)
+(** We can now define the language of valid PR instances *)
 Definition PRLang (C : PR) :=
   PR_wellformed C
   /\ exists (sf : list (Sigma C)),
@@ -257,7 +257,7 @@ Definition PRLang (C : PR) :=
 
 
 Section fixValid.
-  (** we consider syntactically equivalent instances: equivalent instances are obtained by reordering the windows and final substrings *)
+  (** We consider syntactically equivalent instances: equivalent instances are obtained by reordering the windows and final substrings *)
   Variable (X : Type).
   Variable (offset width l : nat). 
 
@@ -288,7 +288,7 @@ Section fixValid.
 End fixValid.
 
 Section fixInstance.
-  (*results specific to PR instances *)
+  (** Results specific to PR instances *)
   Variable (c : PR). 
   Context (wf : PR_wellformed c). 
 

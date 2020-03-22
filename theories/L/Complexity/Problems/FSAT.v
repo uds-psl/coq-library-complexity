@@ -3,7 +3,7 @@ From Undecidability.L.Datatypes Require Import LLists LLNat.
 From Undecidability.L.Complexity.Problems Require Export SharedSAT.
 Require Import Lia. 
 
-(** *Formula Satisfiability: the satisfiability problem on arbitrary Boolean formulas *)
+(** * Formula Satisfiability: the satisfiability problem on arbitrary Boolean formulas *)
 
 Inductive formula : Type := 
   | Ftrue : formula
@@ -20,7 +20,7 @@ Coercion Fvar : var >-> formula.
 Notation "⋁ [ x , .. , z , y ]" := (For x .. (For z y) ..). 
 Notation "⋀ [ x , .. , z , y ]" := (Fand x .. (Fand z y) ..). 
 
-(*assignments: we list the variables which are assigned the value true; all other variables are assigned the value false *)
+(** assignments: we list the variables which are assigned the value true; all other variables are assigned the value false *)
 Implicit Types (a : assgn) (f : formula) (v : var). 
 
 Fixpoint evalFormula a f := 
@@ -49,7 +49,7 @@ Proof. cbn. rewrite negb_true_iff. split; eauto. Qed.
 Lemma evalFormula_prim_iff a v : evalFormula a v = true <-> v el a. 
 Proof. cbn. unfold evalVar. rewrite list_in_decb_iff; [easy | intros ]. now rewrite Nat.eqb_eq. Qed. 
 
-(*satisfaction of formulas *)
+(** satisfaction of formulas *)
 Definition satisfies a f := evalFormula a f = true. 
 Definition FSAT f := exists a, satisfies a f. 
 
@@ -65,7 +65,7 @@ Hint Constructors varInFormula.
 
 Definition formula_varsIn (p : nat -> Prop) f := forall v, varInFormula v f -> p v. 
 
-(*A computable notion of boundedness *)
+(** A computable notion of boundedness *)
 Fixpoint formula_maxVar (f : formula) := match f with
   | Ftrue => 0
   | Fvar v => v
@@ -108,7 +108,7 @@ Fixpoint formula_size (f : formula) := match f with
   | Fneg f => formula_size f + 1
 end. 
 
-(** extraction *)
+(** ** extraction *)
 From Undecidability.L.Datatypes Require Import LLNat.
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import  LProd LOptions LBool LLists LUnit.
@@ -205,7 +205,6 @@ Defined.
 
 Definition c__formulaMaxVarBound1 := c__formulaMaxVar + c__max2.
 Definition poly__formulaMaxVar n := (n+1) * (n + 1) * c__formulaMaxVarBound1.
-(*+ (n + 1) * c__formulaMaxVarBound1.*)
 Lemma formula_maxVar_time_bound (f : formula) : formula_maxVar_time f <= poly__formulaMaxVar (size (enc f)). 
 Proof. 
   induction f; cbn -[Nat.add Nat.mul].

@@ -1,7 +1,7 @@
 Require Import PslBase.Base.
 Require Import Lia. 
 
-(** Derivation of the pigeonhole principle on lists *)
+(** * Derivation of the pigeonhole principle on lists *)
 (** Adapted from ICL 2019 *)
 Notation "x 'nel' A" := (~ In x A) (at level 70).
 Section rep.

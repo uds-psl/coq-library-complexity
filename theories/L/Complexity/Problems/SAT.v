@@ -1,4 +1,3 @@
-From Undecidability.L.Complexity.Cook Require Import Prelim.
 From Undecidability.L.Complexity.Problems Require Export SharedSAT.
 Require Import Lia. 
 From Undecidability.L.Datatypes Require Import LLists. 
@@ -6,15 +5,19 @@ From Undecidability.L.Datatypes Require Import LLists.
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import  LProd LOptions LBool LLNat LLists LUnit.
 From Undecidability.L.Functions Require Import EqBool. 
-From Undecidability.L.Complexity Require Import PolyBounds. 
+From Undecidability.L.Complexity Require Import PolyBounds MorePrelim. 
 
-(*Conjunctive normal forms (need not be canonical)*)
+(** * SAT: Satisfiability of CNFs *)
+
+(** ** Definition of SAT *)
+(** Conjunctive normal forms (need not be canonical)*)
+(* We use notations instead of definitions because the extraction mechanism does not cope well with aliases *)
 Notation var := (nat) (only parsing). 
 Notation literal := ((bool * var)%type) (only parsing).
 Notation clause := (list literal) (only parsing). 
 Notation cnf := (list clause) (only parsing).
 
-(*Assignments as lists of natural numbers: contain the indices of variables that are mapped to true *)
+(** Assignments as lists of natural numbers: contain the indices of variables that are mapped to true *)
 Notation assgn := (list nat). 
 Implicit Types (a : assgn) (N : cnf) (C : clause) (l :literal).
 
@@ -22,22 +25,22 @@ Definition evalLiteral a l : bool := match l with
   | (s, v) => Bool.eqb (evalVar a v) s 
 end. 
 
-(*Empty disjunction evaluates to false*)
+(**Empty disjunction evaluates to false*)
 Fixpoint evalClause a C := 
   match C with 
   | [] => false
   | (l :: C) => evalClause a C || evalLiteral a l
   end. 
 
-(*Empty conjunction evaluates to true *)
+(**Empty conjunction evaluates to true *)
 Fixpoint evalCnf a N := 
   match N with 
   | [] => true
   | (C :: N) => evalCnf a N && evalClause a C
   end. 
 
-(*more helpful properties *)
-(*a characterisation of one processing step of evalClause *)
+(** Some helpful properties *)
+(** A characterisation of one processing step of evaluation *)
 Lemma evalClause_step_inv a C l b : 
   evalClause a (l::C) = b <-> exists b1 b2, evalClause a C = b1 /\ evalLiteral a l = b2 /\ b = b1 || b2.
 Proof.
@@ -157,12 +160,12 @@ Proof.
   unfold size_cnf. rewrite map_app, sumn_app, app_length. lia.
 Qed. 
 
-(** * Verifier for SAT*)
+(** ** Verifier for SAT*)
 (** The certificate is a satisfying assignment.
   The assignment needs to be short enough and must not contain variables not occuring in the CNF.
 *)
 
-(*produce a list (possibly containing duplicates) of variables occuring in a CNF *)
+(** Produce a list (possibly containing duplicates) of variables occuring in a CNF *)
 Definition varsOfLiteral (l : literal) := match l with (_, v) => [v] end. 
 Definition varsOfClause (C : clause) := concat (map varsOfLiteral C).
 Definition varsOfCnf (N : cnf) := concat (map varsOfClause N).
@@ -184,6 +187,7 @@ Proof.
   unfold varsOfCnf. now rewrite in_concat_map_iff. 
 Qed.
 
+(** An assignment is small if it only contains variables used by the CNF and is duplicate-free *)
 Definition assignment_small N a := a <<= varsOfCnf N /\ dupfree a.
 
 Lemma varsOfLiteral_size (l : literal) : size (enc (varsOfLiteral l)) <= size (enc l) + c__listsizeCons + c__listsizeNil. 
@@ -208,56 +212,6 @@ Proof.
   rewrite list_size_length. nia.
 Qed. 
 
-Lemma list_dupfree_incl_length (X : eqType) (a b : list X) : a <<= b -> dupfree a -> |a| <= |b|. 
-Proof. 
-  intros H1 H2. eapply NoDup_incl_length. 
-  - apply dupfree_Nodup, H2.
-  - apply H1. 
-Qed. 
-
-Lemma rem_app_eq (X : eqType) (l1 l2 : list X) (x : X) : rem (l1 ++ l2) x = rem l1 x ++ rem l2 x. 
-Proof. 
-  induction l1; cbn; [easy | ].
-  destruct Dec; cbn. 
-  - fold (rem (l1 ++ l2) x). rewrite IHl1. easy.
-  - fold (rem (l1 ++ l2) x). now rewrite IHl1. 
-Qed. 
-
-Lemma list_rem_size_le (X : eqType) `{H : registered X} (l : list X) x : size (enc (rem l x)) <= size (enc l). 
-Proof. 
-  induction l. 
-  - cbn. lia. 
-  - cbn. destruct Dec; cbn; rewrite !list_size_cons, IHl; lia. 
-Qed. 
-
-Lemma list_incl_dupfree_size (X : eqType) `{registered X} (a b : list X) : a <<= b -> dupfree a -> size (enc a) <= size (enc b). 
-Proof. 
-  intros H1 H2.  revert b H1.
-  induction H2 as [ | a0 a H1 H2 IH]; intros. 
-  - cbn. rewrite !size_list. cbn. lia.
-  - specialize (IH (rem b a0)). 
-    rewrite list_size_cons.
-    cbn. rewrite IH. 
-    2: { 
-      assert (rem (a0 :: a) a0 = a).  
-      { cbn. destruct Dec; [congruence | ]. cbn. 
-       fold (rem a a0). now rewrite rem_id. 
-      } 
-      rewrite <- H3. now apply rem_mono. 
-    } 
-    specialize (H0 a0 (or_introl eq_refl)). apply In_explicit in H0 as (b1 & b2 & ->).
-    rewrite !size_list, !rem_app_eq, !map_app, !sumn_app. cbn. 
-    destruct Dec; cbn; [congruence | ]. 
-    pose (elem_size := fun (x : X) => size (enc x) + c__listsizeCons). 
-    fold elem_size.
-    enough (sumn (map elem_size (rem b1 a0)) <= sumn (map elem_size b1) /\ sumn (map elem_size (rem b2 a0)) <= sumn (map elem_size b2)) as H0.
-    { destruct H0 as [-> ->]. nia. }
-    specialize (list_rem_size_le b1 a0) as F1. 
-    specialize (list_rem_size_le b2 a0) as F2. 
-    rewrite !size_list in F1. rewrite !size_list in F2. 
-    fold elem_size in F1. fold elem_size in F2.
-    split; nia. 
-Qed. 
 
 Lemma assignment_small_size N a : assignment_small N a -> size (enc a) <= size (enc N) * (1 + c__listsizeCons + c__listsizeNil). 
 Proof. 
@@ -267,10 +221,11 @@ Proof.
   now eapply list_incl_dupfree_size.
 Qed. 
 
+(** SAT verifier *)
 Definition sat_verifier N (a : assgn) :=
   evalCnf a N = true /\ assignment_small N a. 
 
-(*we need to show that, given a satisfying assignment for a CNF, we can obtain a small assignment that still satisfies the CNF*)
+(** We need to show that, given a satisfying assignment for a CNF, we can obtain a small assignment that still satisfies the CNF*)
 Section fixX. 
   Variable (X : Type).
   Variable (eqbX : X -> X -> bool). 
@@ -366,7 +321,7 @@ Proof.
     apply varsOfLiteral_correct. exists b; easy.
 Qed. 
 
-(*now that we've got the tools to verify the verifier, let's build a boolean verifier and prove its correctness*)
+(** Now that we've got the tools to verify the verifier, let's build a boolean verifier and prove its correctness*)
 Definition assignment_small_decb N a := list_incl_decb Nat.eqb a (varsOfCnf N) && dupfreeb Nat.eqb a. 
 Definition sat_verifierb (input : cnf * assgn) :=
   let (N, a) := input in assignment_small_decb N a && evalCnf a N.
@@ -387,7 +342,7 @@ Proof.
   tauto. 
 Qed. 
 
-(** A computable notion of boundedness *)
+(** A computable notion of boundedness: calculate the maximum variable used by a CNF*)
 Definition clause_maxVar C := fold_right (fun '(_, v) acc => Nat.max acc v) 0 C. 
 Definition cnf_maxVar N := fold_right (fun C acc => Nat.max acc (clause_maxVar C)) 0 N.
 
@@ -518,31 +473,22 @@ Qed.
 
 (** extraction of evalVar *)
 Definition c__evalVar := 7. 
-Definition evalVar_time a (v : var) := list_in_decb_time (fun x y => 5 + eqbTime (X := nat) (size (enc x)) (size (enc y))) a v + c__evalVar.
+Definition evalVar_time a (v : var) := list_in_decb_time a v + c__evalVar.
 Instance term_evalVar : computableTime' evalVar (fun a _ => (1, fun v _ => (evalVar_time a v, tt))). 
 Proof. 
   extract. solverec. unfold evalVar_time, c__evalVar; solverec. 
 Defined. 
 
-Definition poly__evalVar n := (n + 1) * (c__list_in_decb + 5 + (n + size(enc tt)+ 1) * c__eqbComp nat) + c__evalVar.
-Lemma evalVar_time_bound a v : evalVar_time a v <= poly__evalVar (size (enc a) + size (enc v)). 
+Definition poly__evalVar n := poly__listInDecb (X := var) n + c__evalVar.
+Lemma evalVar_time_bound a v : evalVar_time a v <= poly__evalVar (size (enc a)). 
 Proof. 
   unfold evalVar_time. 
-  change (fun x y => 5 + eqbTime (X := nat) (size (enc x)) (size (enc y))) with ((fun z (x y : nat) => 5 + eqbTime (X := nat) (size (enc x)) (size (enc y))) tt). 
-  rewrite list_in_decb_time_bound_env. 
-  2: { 
-    split. 
-    - intros. rewrite eqbTime_le_l. replace_le (size (enc a0)) with (size (enc a0) + size (enc b) + size (enc y)) by nia at 1. 
-      instantiate (2 := fun n => 5 + (n + 1) * c__eqbComp nat).
-      cbn -[Nat.add]. instantiate (1 := registered_unit_enc). nia. 
-    - smpl_inO. 
-  } 
-  rewrite list_size_length. unfold poly__evalVar. nia. 
+  rewrite list_in_decb_time_bound. unfold poly__evalVar. lia. 
 Qed. 
 
 Lemma evalVar_poly : monotonic poly__evalVar /\ inOPoly poly__evalVar. 
 Proof. 
-  split; unfold poly__evalVar; smpl_inO. 
+  split; unfold poly__evalVar; smpl_inO; apply list_in_decb_poly. 
 Qed. 
 
 Definition c__eqbBool := 7.
@@ -552,7 +498,7 @@ Proof.
   solverec. 
 Qed.
 
-(*evalLiteral*)
+(** evalLiteral*)
 Definition c__evalLiteral := c__eqbBool + 7. 
 Definition evalLiteral_time a (l : literal) := match l with (_, v) => evalVar_time a v + c__evalLiteral end. 
 Instance term_evalLiteral : computableTime' evalLiteral (fun a _ => (1, fun l _ => (evalLiteral_time a l, tt))). 
@@ -562,11 +508,9 @@ Qed.
 
 Definition c__evalLiteralBound := 1. 
 Definition poly__evalLiteral n := poly__evalVar n + c__evalLiteral.
-Lemma evalLiteral_time_bound a l : evalLiteral_time a l <= poly__evalLiteral (size (enc a) + size (enc l)). 
+Lemma evalLiteral_time_bound a l : evalLiteral_time a l <= poly__evalLiteral (size (enc a)). 
 Proof. 
   unfold evalLiteral_time. destruct l. rewrite evalVar_time_bound. 
-  poly_mono evalVar_poly. 
-  2: (replace_le (size (enc n)) with (size (enc (b, n))) by (rewrite size_prod; cbn; lia)); reflexivity. 
   unfold poly__evalLiteral; lia.
 Qed. 
 Lemma evalLiteral_poly : monotonic poly__evalLiteral /\ inOPoly poly__evalLiteral. 
@@ -574,8 +518,7 @@ Proof.
   split; unfold poly__evalLiteral; smpl_inO; apply evalVar_poly.
 Qed. 
 
-
-(*evalClause *)
+(** evalClause *)
 
 Definition c__evalClause := 17.
 Fixpoint evalClause_time a (C : clause) :=
@@ -606,7 +549,7 @@ Proof.
   split; unfold poly__evalClause; smpl_inO; apply evalLiteral_poly. 
 Qed.
 
-(*evalCnf *)
+(** evalCnf *)
 Definition c__evalCnf := 21.
 Fixpoint evalCnf_time a (N : cnf) :=
   match N with 
@@ -637,14 +580,14 @@ Proof.
   split; unfold poly__evalCnf; smpl_inO; apply evalClause_poly. 
 Qed. 
 
-(*varsOfLiteral *)
+(** varsOfLiteral *)
 Definition c__varsOfLiteral := 7.
 Instance term_varsOfLiteral : computableTime' varsOfLiteral (fun l _ => (c__varsOfLiteral, tt)). 
 Proof. 
   extract. solverec. unfold c__varsOfLiteral; solverec. 
 Defined. 
 
-(*varsOfClause *)
+(** varsOfClause *)
 Definition c__varsOfClause := 2.
 Definition varsOfClause_time (c : clause) := map_time (fun _ => c__varsOfLiteral) c + concat_time (map varsOfLiteral c) + c__varsOfClause. 
 Instance term_varsOfClause : computableTime' varsOfClause (fun c _ => (varsOfClause_time c, tt)). 
@@ -687,7 +630,7 @@ Proof.
   - apply inOPoly_comp; [apply concat_poly | apply concat_poly | smpl_inO]. 
 Qed. 
 
-(*varsOfCnf *)
+(** varsOfCnf *)
 Definition c__varsOfCnf := 2.
 Definition varsOfCnf_time (cn : cnf) := map_time (fun cl => varsOfClause_time cl) cn + concat_time (map varsOfClause cn) + c__varsOfCnf.
 Instance term_varsOfCnf : computableTime' varsOfCnf (fun c _ => (varsOfCnf_time c, tt)). 
@@ -730,94 +673,36 @@ Proof.
   - apply inOPoly_comp; [apply concat_poly | apply concat_poly | smpl_inO]. 
 Qed. 
 
-(*assignment_small_decb *)
+(** assignment_small_decb *)
 Definition c__assignmentSmallDecb := 17.
-Definition assignment_small_decb_time (cn : cnf) a := varsOfCnf_time cn + list_incl_decb_time (fun (x y : nat) => 5 + eqbTime (X := nat) (size (enc x)) (size (enc y))) a (varsOfCnf cn) + dupfreeb_time (fun x y => 5 + eqbTime (X := nat) (size (enc x)) (size (enc y)) ) a + c__assignmentSmallDecb.
+Definition assignment_small_decb_time (cn : cnf) a := varsOfCnf_time cn + list_incl_decb_time a (varsOfCnf cn) + dupfreeb_time a + c__assignmentSmallDecb.
 Instance term_assignment_small_decb : computableTime' assignment_small_decb (fun cn _ => (1, fun a _ => (assignment_small_decb_time cn a, tt))). 
 Proof. 
   extract. solverec. unfold assignment_small_decb_time, c__assignmentSmallDecb. solverec. 
 Defined. 
 
-(*we first bound the components separately *)
-Definition c__assignmentSmallDecbBound1 := (1 + c__listsizeCons + c__listsizeNil).
-Definition c__assignmentSmallDecbBound2 := 5 + c__list_in_decb.
-Definition poly__assignmentSmallDecb1 n := (n + 1) * (n * c__assignmentSmallDecbBound1 + 1) * (c__assignmentSmallDecbBound2 + (n * c__assignmentSmallDecbBound1 + n + size (enc tt) + 1) * c__eqbComp nat) + (n + 1) * c__list_incl_decb.
-Lemma assignment_small_decb_time_bound1 a cn: list_incl_decb_time (fun x y => 5 + eqbTime (X := nat) (size (enc x)) (size (enc y)) )a (varsOfCnf cn) <= poly__assignmentSmallDecb1 (size (enc cn) + size (enc a)).
-Proof. 
-  change (fun x y => 5 + eqbTime (size (enc x)) (size (enc y))) with ((fun env (x y : nat) => 5 + eqbTime (X := nat) (size (enc x)) (size (enc y))) tt). 
-  rewrite list_incl_decb_time_bound_env. 
-  2: { 
-    split. 
-    - intros x y env. rewrite eqbTime_le_l. 
-      instantiate (1 := registered_unit_enc).
-      instantiate (1 := fun n => 5 + (n + 1) * c__eqbComp nat). nia. 
-    - smpl_inO. 
-  }
-  rewrite !list_size_length. rewrite varsOfCnf_size.
-  unfold poly__assignmentSmallDecb1, c__assignmentSmallDecbBound1, c__assignmentSmallDecbBound2.
-
-  (*help nia to achieve an acceptable rt *)
-  replace_le (size (enc a)) with (size (enc cn) + size (enc a)) by lia at 1. 
-  replace_le (size (enc cn)) with (size (enc cn) + size (enc a)) by lia at 2.
-  replace_le (size (enc cn)) with (size (enc cn) + size (enc a)) by lia at 3. 
-  replace_le (size (enc a)) with (size (enc cn) + size (enc a)) by lia at 4. 
-  replace_le (size (enc a)) with (size (enc cn) + size (enc a)) by lia at 5. 
-  generalize (size (enc cn) + size (enc a)). intros n. nia.
-Qed.
-Lemma assignment_small_decb_poly1 : monotonic poly__assignmentSmallDecb1 /\ inOPoly poly__assignmentSmallDecb1. 
-Proof. 
-  unfold poly__assignmentSmallDecb1; split; smpl_inO.
-Qed. 
-
-Definition poly__assignmentSmallDecb2 n := (n + 1) * (n + 1) * (5 + (2 * n + size (enc tt) + 1) * c__eqbComp nat + c__dupfreeBound).
-Lemma assignment_small_decb_time_bound2 a : dupfreeb_time (fun x y => 5 + eqbTime (X := nat) (size (enc x)) (size (enc y))) a <= poly__assignmentSmallDecb2 (size (enc a)). 
-Proof. 
-  change (fun (x y :nat) => 5 + eqbTime (X := nat) (size (enc x)) (size (enc y))) with ((fun env (x y : nat) => 5 + eqbTime (X := nat) (size (enc x)) (size (enc y))) tt).
-  rewrite dupfreeb_time_bound_env. 
-  2: { 
-    split.
-    - intros x y env. rewrite eqbTime_le_l. 
-      instantiate (1 := registered_unit_enc).
-      instantiate (1 := fun n => 5 + (n + 1) * c__eqbComp nat). nia. 
-    - smpl_inO. 
-  } 
-  rewrite list_size_length. 
-  unfold poly__assignmentSmallDecb2. nia.
-Qed.
-Lemma assignment_small_decb_poly2 : monotonic poly__assignmentSmallDecb2 /\ inOPoly poly__assignmentSmallDecb2. 
-Proof. 
-  unfold poly__assignmentSmallDecb2; split; smpl_inO.
-Qed.
-
-Definition c__assignmentSmallDecbBound3 := 5 + c__dupfreeBound.
-  
 Definition poly__assignmentSmallDecb n := 
-  poly__varsOfCnf n 
-  + poly__assignmentSmallDecb1 n 
-  + poly__assignmentSmallDecb2 n
-  + c__assignmentSmallDecb.
+  poly__varsOfCnf n + poly__listInclDecb (X := nat) (n * (1 + c__listsizeCons + c__listsizeNil)) + poly__dupfreeb (X := nat) n + c__assignmentSmallDecb.
 Lemma assignment_small_decb_time_bound cn a : assignment_small_decb_time cn a <= poly__assignmentSmallDecb (size (enc cn) + size (enc a)). 
 Proof. 
   unfold assignment_small_decb_time.
   rewrite varsOfCnf_time_bound. 
-  rewrite assignment_small_decb_time_bound1. 
-  rewrite assignment_small_decb_time_bound2.  
-  poly_mono varsOfCnf_poly. 
-  2: { instantiate (1 := size (enc cn) + size (enc a)); lia. }
-  poly_mono assignment_small_decb_poly2.
-  2: { instantiate (1 := size (enc cn) + size (enc a)); lia. } 
-  unfold poly__assignmentSmallDecb; lia. 
+  rewrite list_incl_decb_time_bound. 
+  rewrite dupfreeb_time_bound. 
+  poly_mono varsOfCnf_poly. 2: { instantiate (1 := size (enc cn) + size (enc a)); lia. }
+  poly_mono (@dupfreeb_poly nat _ Nat.eqb _ _ ). 2: { instantiate (1 := size (enc cn) + size (enc a)); lia. } 
+  poly_mono (@list_incl_decb_poly nat _ Nat.eqb _ _). 
+  2: { rewrite varsOfCnf_size. instantiate (1 := (size (enc cn) + size (enc a)) * (1 + c__listsizeCons + c__listsizeNil)). nia. }
+  unfold poly__assignmentSmallDecb; nia.  
 Qed. 
 
 Lemma assignment_small_decb_poly : monotonic poly__assignmentSmallDecb /\ inOPoly poly__assignmentSmallDecb.
 Proof. 
-  unfold poly__assignmentSmallDecb; split; smpl_inO.
-  3, 6: apply assignment_small_decb_poly2. 
-  2, 4: apply assignment_small_decb_poly1. 
-  1, 2: apply varsOfCnf_poly.
+  unfold poly__assignmentSmallDecb; split; smpl_inO; try apply inOPoly_comp; smpl_inO; 
+  first [apply varsOfCnf_poly | apply list_incl_decb_poly | apply dupfreeb_poly]. 
 Qed. 
 
-(*sat_verifierb *)
+(** sat_verifierb *)
 Definition c__satVerifierb := 16. 
 Definition sat_verifierb_time (p : cnf * assgn) := match p with (cn, a) => assignment_small_decb_time cn a + evalCnf_time a cn + c__satVerifierb end.
 Instance term_sat_verifierb : computableTime' sat_verifierb (fun p _ => (sat_verifierb_time p, tt)). 

@@ -4,8 +4,10 @@ From Undecidability.L.Datatypes Require Import LLists LLNat LProd.
 From PslBase.FiniteTypes Require Import FinTypes Cardinality VectorFin.
 From Undecidability.L.Complexity.Problems Require Import FlatUGraph kSAT FlatClique.
 From Undecidability.L.Complexity.Reductions Require Import kSAT_to_Clique.
-From Undecidability.L.Complexity.Cook Require Import FlatFinTypes Prelim.
-From Undecidability.L.Complexity Require Import MorePrelim. 
+From Undecidability.L.Complexity Require Import FlatFinTypes MorePrelim.
+
+(** * k-SAT to FlatClique *)
+(** We compute a flat graph corresponding to the graph of the k-SAT to Clique reduction and then use the correctness of that reduction to derive the correctness of the flat reduction. *)
 
 Section fixSAT. 
   Variable (k : nat).
@@ -116,8 +118,8 @@ Section fixSAT.
     fold (ofFlatType Ncl ci) in H1. fold (ofFlatType k li) in H2. 
     rewrite <- Card_Fint in H1 at 1.
     rewrite <- Card_Fint in H2 at 1.
-    apply finReprEl'_exists in H1 as (Va & H1). 
-    apply finReprEl'_exists in H2 as (Vb & H2). 
+    apply finReprElP_exists in H1 as (Va & H1). 
+    apply finReprElP_exists in H2 as (Vb & H2). 
     exists Va, Vb. split; [apply H1 | split; [apply H2 | ]].
     finRepr_simpl.
     - split; [now rewrite <- Card_Fint | apply H1].
@@ -175,14 +177,15 @@ Section fixSAT.
     intros (a & H).
     specialize (exists_clique Hkgt Hkcnf H) as (L & [H1 H2]). 
     destruct (clique_flatten flat_graph H2) as (l & H3 & H4). 
-    exists l. split. 
+    exists l. split; [ | split]. 
+    - eapply isFlatGraphOf_wf, flat_graph. 
     - apply H3. 
     - rewrite H4, H1. easy.
   Qed. 
 
   Lemma FlatClique_implies_SAT : FlatClique (Gflat, Ncl) -> SAT N. 
   Proof. 
-    intros (l & [H1 H2]). 
+    intros (l & [_ [H1 H2]]). 
     specialize (clique_unflatten flat_graph H1) as (L & H3 & H4). 
     eapply (exists_assignment Hkgt Hkcnf). 
     split.
@@ -199,7 +202,7 @@ End fixSAT.
 Definition trivialNoInstance := ((0, []):fgraph, 1).
 Proposition trivialNoInstance_isNoInstance : not (FlatClique trivialNoInstance). 
 Proof. 
-  intros [l [H1 H2]]. destruct H1 as (H1 & _).
+  intros [l [_ [H1 H2]]]. destruct H1 as (H1 & _).
   destruct l; cbn in *; [congruence | ]. unfold list_ofFlatType in H1. 
   specialize (H1 n ltac:(now left)). unfold ofFlatType in H1. lia.
 Qed. 
@@ -222,4 +225,3 @@ Proof.
     + intros (_ & H3 & _). apply kCNF_decb_iff in H3. congruence. 
     + intros []%trivialNoInstance_isNoInstance. 
 Qed. 
-
