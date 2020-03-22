@@ -35,7 +35,8 @@
 </div>
 
 <div class="doc">
-*Formula Satisfiability: the satisfiability problem on arbitrary Boolean formulas 
+<a name="lab393"></a><h1 class="section">Formula Satisfiability: the satisfiability problem on arbitrary Boolean formulas</h1>
+
 </div>
 <div class="code">
 
@@ -58,6 +59,12 @@
 <span class="id" title="keyword">Notation</span> <a name="3457186994d0d2b9a9e9bd2e14e6bef4"><span class="id" title="notation">&quot;</span></a>⋀ [ x , .. , z , y ]" := (<a class="idref" href="Undecidability.L.Complexity.Problems.FSAT.html#Fand"><span class="id" title="constructor">Fand</span></a> <span class="id" title="var">x</span> .. (<a class="idref" href="Undecidability.L.Complexity.Problems.FSAT.html#Fand"><span class="id" title="constructor">Fand</span></a> <span class="id" title="var">z</span> <span class="id" title="var">y</span>) ..).<br/>
 
 <br/>
+</div>
+
+<div class="doc">
+assignments: we list the variables which are assigned the value true; all other variables are assigned the value false 
+</div>
+<div class="code">
 <span class="id" title="keyword">Implicit</span> <span class="id" title="keyword">Types</span> (<span class="id" title="var">a</span> : <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#assgn"><span class="id" title="abbreviation">assgn</span></a>) (<span class="id" title="var">f</span> : <a class="idref" href="Undecidability.L.Complexity.Problems.FSAT.html#formula"><span class="id" title="inductive">formula</span></a>) (<span class="id" title="var">v</span> : <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#var"><span class="id" title="abbreviation">var</span></a>).<br/>
 
 <br/>
@@ -93,6 +100,12 @@
 <span class="id" title="keyword">Proof</span>. <span class="id" title="var">cbn</span>. <span class="id" title="tactic">unfold</span> <a class="idref" href="Undecidability.L.Complexity.Problems.SharedSAT.html#evalVar"><span class="id" title="definition">evalVar</span></a>. <span class="id" title="tactic">rewrite</span> <a class="idref" href="Undecidability.L.Datatypes.LLists.html#list_in_decb_iff"><span class="id" title="lemma">list_in_decb_iff</span></a>; [<span class="id" title="var">easy</span> | <span class="id" title="tactic">intros</span> ]. <span class="id" title="var">now</span> <span class="id" title="tactic">rewrite</span> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Arith.PeanoNat.html#Nat.eqb_eq"><span class="id" title="lemma">Nat.eqb_eq</span></a>. <span class="id" title="keyword">Qed</span>.<br/>
 
 <br/>
+</div>
+
+<div class="doc">
+satisfaction of formulas 
+</div>
+<div class="code">
 <span class="id" title="keyword">Definition</span> <a name="satisfies"><span class="id" title="definition">satisfies</span></a> <span class="id" title="var">a</span> <span class="id" title="var">f</span> := <a class="idref" href="Undecidability.L.Complexity.Problems.FSAT.html#evalFormula"><span class="id" title="definition">evalFormula</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.FSAT.html#a"><span class="id" title="variable">a</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.FSAT.html#f"><span class="id" title="variable">f</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#true"><span class="id" title="constructor">true</span></a>.<br/>
 <span class="id" title="keyword">Definition</span> <a name="FSAT"><span class="id" title="definition">FSAT</span></a> <span class="id" title="var">f</span> := <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#84eb6d2849dbf3581b1c0c05add5f2d8"><span class="id" title="notation">exists</span></a> <span class="id" title="var">a</span><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#84eb6d2849dbf3581b1c0c05add5f2d8"><span class="id" title="notation">,</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.FSAT.html#satisfies"><span class="id" title="definition">satisfies</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.FSAT.html#a"><span class="id" title="variable">a</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.FSAT.html#f"><span class="id" title="variable">f</span></a>.<br/>
 
@@ -116,6 +129,12 @@ bounds on the number of used variables
 <span class="id" title="keyword">Definition</span> <a name="formula_varsIn"><span class="id" title="definition">formula_varsIn</span></a> (<span class="id" title="var">p</span> : <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#nat"><span class="id" title="inductive">nat</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <span class="id" title="keyword">Prop</span>) <span class="id" title="var">f</span> := <span class="id" title="keyword">forall</span> <span class="id" title="var">v</span>, <a class="idref" href="Undecidability.L.Complexity.Problems.FSAT.html#varInFormula"><span class="id" title="inductive">varInFormula</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.FSAT.html#v"><span class="id" title="variable">v</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.FSAT.html#f"><span class="id" title="variable">f</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.FSAT.html#p"><span class="id" title="variable">p</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.FSAT.html#v"><span class="id" title="variable">v</span></a>.<br/>
 
 <br/>
+</div>
+
+<div class="doc">
+A computable notion of boundedness 
+</div>
+<div class="code">
 <span class="id" title="keyword">Fixpoint</span> <a name="formula_maxVar"><span class="id" title="definition">formula_maxVar</span></a> (<span class="id" title="var">f</span> : <a class="idref" href="Undecidability.L.Complexity.Problems.FSAT.html#formula"><span class="id" title="inductive">formula</span></a>) := <span class="id" title="keyword">match</span> <a class="idref" href="Undecidability.L.Complexity.Problems.FSAT.html#f"><span class="id" title="variable">f</span></a> <span class="id" title="keyword">with</span><br/>
 &nbsp;&nbsp;| <a class="idref" href="Undecidability.L.Complexity.Problems.FSAT.html#Ftrue"><span class="id" title="constructor">Ftrue</span></a> =&gt; 0<br/>
 &nbsp;&nbsp;| <a class="idref" href="Undecidability.L.Complexity.Problems.FSAT.html#Fvar"><span class="id" title="constructor">Fvar</span></a> <span class="id" title="var">v</span> =&gt; <span class="id" title="var">v</span><br/>
@@ -170,7 +189,8 @@ size of formulas
 </div>
 
 <div class="doc">
-extraction 
+<a name="lab394"></a><h2 class="section">extraction</h2>
+
 </div>
 <div class="code">
 <span class="id" title="var">From</span> <span class="id" title="var">Undecidability.L.Datatypes</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="Undecidability.L.Datatypes.LLNat.html#"><span class="id" title="library">LLNat</span></a>.<br/>
