@@ -154,7 +154,7 @@ By conjoining formulas encoding single literals, a list $L : \listsof{\bool}$ ca
 
 \encodeList{} will be the basic ingredient of encoding \PR{}. 
 
-\section{The Reduction}
+\section{Reduction to \fsat{}}
 In this section, we show how to encode the three subformulas $\phi_{\textsf{init}}, \phi_{\textsf{trans}}, \phi_{\textsf{final}}$. 
 As most of the encodings are straightforward to see from the definition of \PR{}, we only give an informal description for some of them. 
 
@@ -218,8 +218,8 @@ The variable layout of the formula we produce is demonstrated by Figure~\ref{fig
 \end{figure}
 
 
-We start with the encoding of $\phi_{\textsf{trans}}$.
-First of all, we need to be able to encode a single rewrite window. As a rewrite windows just encodes two lists, this is straightforward to derive. Since the premise of the window needs to match in one line of the tableau while the conclusion needs to hold for the next line, the encoding is parameterised over two indices $s_1$ and $s_2$ giving the respective start of the encoding. 
+We start with the encoding of $\phi_{\textsf{trans}}$. This is most intuitive when looking at the explicit characterisation of validity (see Definition~\ref{def:valid_exp}): we have a big conjunction over all pairs of subsequent lines for which we have to enforce validity. Validity can be encoded as a conjunction over the offsets at which a window needs to hold, and at each position we have a disjunction over all possible rewrite windows. 
+First of all, we need to be able to encode a single rewrite window. As a rewrite windows just encodes two lists, this is straightforward to derive as a conjunction for premise and conclusion. Since the premise of the window needs to match in one line of the tableau while the conclusion needs to hold for the next line, the encoding is parameterised over two indices $s_1$ and $s_2$ giving the respective start of the encoding. 
 \newcommand{\encodeWindow}{\textsf{encodeWindow}}
 \[ \encodeWindow~s_1~s_2~w \defeq \encodeList~s_1~(\prem~w) \land \encodeList~s_2~(\conc~w)\mnote[encodeWindowAt]{\encodeWindow} \]
 The correctness statement of course also needs to range over all the variables between the two starting indices.
@@ -258,7 +258,7 @@ Instead, we employ a step index which is initialised to the length $m = \length{
 Intuitively, the parameter $s_1$ of $\encodeWindowsLine'$ determines the first index starting at which the premises of the windows are placed, while $s_2$ is the starting index of the conclusions.
 
 \todo{find solution for encodeWindowsLine box}
-\begin{proposition}[Correctness of $\encodeWindowsLine'$][encodeWindowsInLine'_encodesPredicate]
+\begin{proposition}[Correctness of $\encodeWindowsLine'$][encodeWindowsInLineP_encodesPredicate]
   Let $l \le m$. 
   \begin{align*}
     \encodesPred~s~(l + m)~&(\encodeWindowsLine'~l~l~s~(s + m)) \\
@@ -279,8 +279,6 @@ Now we can obtain the formula \mnotec[encodeWindowsInAllLines]{$\phi_{\textsf{tr
                                                    &(\lambda e. \forall 0 \le i < t, ((e[i \cdot m..+m)) \strent{R} (e[(\natS{i}) \cdot m ..+m)))
   \end{align*}
 \end{lemma}
-
-\todo{more intuitive explanation of all this stuff}
 
 The final constraint can be encoded similarly: we have a nested disjunction over the strings in $\Rfinal$ and the possible positions at which they can match. For the latter, remember that the final substrings need to match at positions which are multiples of the offset $o$. Therefore, we employ a step-indexing technique similar to the one for \encodeWindowsLine. 
 
@@ -310,7 +308,7 @@ Therefore, in the end the whole formula is
 \begin{proof}\leavevmode
   \begin{description}
     \item[$\rightarrow$:]
-      As $\fsat{}~\phi$, we have a satisfying assignment $a$. 
+      As $\fsat{}~\phi$ holds, we have a satisfying assignment $a$. 
       By Lemma~\ref{lem:phi_correct}, the corresponding explicit assignment to the first $(\natS{t}) \cdot \length{x_0}$ variables witnesses a valid rewrite sequence satisfying the final constraint. 
       We prove that $(e[0 ..m) \strent{R}^t e[t \cdot m ..+ m)$ by switching to $\prescript{t}{}{\strent{R}}$ and doing an induction on $t$.
     \item[$\leftarrow$:]

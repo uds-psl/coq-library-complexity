@@ -66,7 +66,7 @@ We now turn to the composition of assignments. Recall that assignments are repre
 In principle, this form of assignments is completely non-compositional as all assignments are total. 
 However, we may still get a form of composition by overriding implicit $\bfalse$ values. If we only compose assignments over disjoint variable ranges, we may still obtain the properties one would intuitively expect. 
 
-\setCoqFilename{Undecidability.L.Complexity.Cook.BinaryPR_to_FSAT}
+\setCoqFilename{Undecidability.L.Complexity.Cook.FSAT_to_SAT}
 We define variable containment \mnotec[assgn_varsIn]{$a \subseteq r$} for assignments in the same way as for formulas and CNFs:
 \[a \subseteq r \defeq \forall v, v \in a \rightarrow v \in r \]
 Note that this definition only talks about variables to which $\btrue$ is assigned.
@@ -174,7 +174,7 @@ The transformation function \tseytin{} (Figure~\ref{lst:tseytin}) can be derived
 We now show \tseytin{} to be correct, in the sense that the resulting pair $(v, N)$ of representing variable $v$ and CNF $N$ is equisatisfiable to the original formula. Formally, we define the following relation:
 \newcommand{\frepr}{\sdststile{}{}}
 \begin{definition}[Representation of Formulas by CNFs][formula_repr]
-  \[ f \frepr{} (v, N) \defeq \fsat{}~f \leftrightarrow \SAT{}~([(\btrue, v)] :: N) \mnote{$f \frepr{} (v, N)$}\]
+  \[ f \frepr{} (v, N) \defeq \fsat{}~f \leftrightarrow \SAT{}~([(\btrue, v)] :: N) \mnote[formula_repr]{$f \frepr{} (v, N)$}\]
 \end{definition}
 
 The statement we would like to prove is that $\tseytin~f = (v, N) \rightarrow f \frepr{} (v, N)$. As the function is defined in terms of $\tseytin'$, we first prove a statement for this function. The first direct generalisation one might come up with is
@@ -184,7 +184,7 @@ However, an inductive proof still does not go through: in the cases where an ope
 We therefore define a stronger relation parameterised over $b$, $nf$, and $nf'$. Intuitively, the variable range $[0, b)$ is used by the original formula and $[nf, nf')$ is the range of new variables introduced by the transformation.
 
 \newcommand{\Frepr}[3]{\sdststile{\ensuremath{#3}}{\ensuremath{#1, #2}}}
-\begin{definition}[Strengthened Representation Relation]~\\
+\begin{definition}[Strengthened Representation Relation][tseytin_formula_repr]~\\
   \mnotec[tseytin_formula_repr]{$f \Frepr{nf}{nf'}{b} (v, N)$}, if the following conditions hold:
   \begin{enumerate}
     \item $N \subseteq ([0, b) \cup [nf, nf'))$,
@@ -243,7 +243,7 @@ We factor out the inductive steps into compatbility lemmas for the operators.
 \end{proof}
 
 Assuming that the formula does not contain $\lor$'s, we can now prove the desired statement. 
-\begin{theorem}[Correctness of $\tseytin'$][tseytin'_repr]
+\begin{theorem}[Correctness of $\tseytin'$][tseytinP_repr]
   \[\orFree~f \rightarrow f \subseteq [0, b) \rightarrow nf \ge b \rightarrow \tseytin'~nf~f = (v, N, nf') \rightarrow f \Frepr{nf}{nf'}{b} (v, N)\] 
 \end{theorem}
 \begin{proof}
@@ -304,7 +304,7 @@ We close this chapter by noting that the Tseytin transformation does indeed only
   There are constants $c_{\textsf{eliminateOr}}$ and $c_{\textsf{tseytin}}$ such that:
   \begin{enumerate}
     \coqitem[eliminateOR_size] $\textsf{size}_{\formula}~(\eliminateOr{}~f) \le c_{\textsf{eliminateOr}} \cdot \textsf{size}_{\formula}~f$
-    \coqitem[tseytin'_size] If $\tseytin'~nf~f = (v, N, nf')$, then $\textsf{size}_{\cnf}~N \le c_{\textsf{tseytin}} \cdot \textsf{size}_{\formula}~f$
+    \coqitem[tseytinP_size] If $\tseytin'~nf~f = (v, N, nf')$, then $\textsf{size}_{\cnf}~N \le c_{\textsf{tseytin}} \cdot \textsf{size}_{\formula}~f$
   \end{enumerate}
   Moreover, if $\orFree~f$, then
   \[\tseytin~f = (v, N) \rightarrow \coqlink[tseytin_size]{v < \natS{\maxVar~f} + \textsf{size}_{\formula}~f} \land \coqlink[tseytin_varBound]{N \subseteq [0, \natS{\maxVar~f} + \textsf{size}_{\formula}~f)}. \]

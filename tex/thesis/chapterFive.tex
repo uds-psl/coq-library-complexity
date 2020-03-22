@@ -105,10 +105,12 @@ Let us fix the structural parameters $\Sigma$, $o$ and $\omega$ satisfying the c
 We start by defining what it means for a string $a$ to validly rewrite to another string $b$, denoted $a \strent{} b$.
 \begin{definition}[Matching Windows]\label{def:rewHead}
   \mnote[rewritesHead]{\textsf{rewHead}}
+  \setCoqFilename{Undecidability.L.Complexity.MorePrelim}
   \begin{gather*}
     \rewHead{w}{a}{b} \defeq \prefix{(\prem{w})}{a} \land \prefix{(\conc{w})}{b} \\
     \prefix{s}{t} \defeq \exists b, t = s \concat{} b,\mnote[prefix]{\textsf{prefix}}
   \end{gather*}
+  \setCoqFilename{Undecidability.L.Complexity.Cook.PR}%
   that is, a window $w$ justifies a rewrite at the head of two strings $a$ and $b$ if it matches the heads of $a$ and $b$.
 
   A windows $w$ justifies a rewrite at position $i$ of strings $a, b$ if it matches the head of the strings starting from position $i$:
@@ -341,7 +343,7 @@ For the correctness statements, we use $u \reprt{p} h$, but usually generalise t
   We have the following basic facts related to the representation of tapes.
   \begin{enumerate}
     \coqitem[E_polarityFlip] $\withl \pFlipi{\gamma} \withm \gamma \in \nilstr{p}{n} \withr = \nilstr{(\pFlipi p)}{n}$
-    %\coqitem[string_reprTape'_length] $u \reprtt{n}{p} h \rightarrow \length{h} = \natS{\hat{n}}$
+    %\coqitem[string_reprTapeP_length] $u \reprtt{n}{p} h \rightarrow \length{h} = \natS{\hat{n}}$
     \coqitem[tape_repr_polarityFlip] $u \reprtt{n}{p} h \rightarrow u \reprtt{n}{\pFlipi{p}} \withl \pFlipi{\gamma} \withm \gamma \in h \withr$
   \end{enumerate}
 \end{proposition}

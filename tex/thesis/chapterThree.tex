@@ -301,7 +301,9 @@ Thus, we can define a representation relation for graphs as follows:
 \end{definition}
 
 \setCoqFilename{Undecidability.L.Complexity.Problems.FlatClique}
-Cliques can be defined \coqlink[isfKClique]{in the expected way} for the flat graphs. The corresponding problem is called \mnotec[FlatClique]{\FlatClique{}}. A proof that \FlatClique{} is contained in \NP{} is straightforward. \todo{Coq, link}
+Cliques can be defined \coqlink[isfKClique]{in the expected way} for the flat graphs. 
+The only difference to the definition on non-flat graphs is that we have to explicitly require the graph to be syntactically wellformed (see \text{FlatUGraph\_wf}). 
+The corresponding problem is called \mnotec[FlatClique]{\FlatClique{}}. A proof that \FlatClique{} is contained in \NP{} is \coqlink[FlatClique_in_NP]{straightforward}.
 
 We can then derive an agreement statement statement for the two definitions: if $(v, e) \approx (V, E)$ and if $l : \listsof{\nat}$ and $L : \listsof{V}$, then $l$ is a clique in $(v, e)$ \coqlink[clique_flat_agree]{if, and only if,} $L$ is a clique in $(V, E)$. Moreover, from a clique for one representation we can compute a clique for the \coqlink[clique_flatten]{other} \coqlink[clique_unflatten]{representation}.
 This agreement allows us to reason using the propositional version, but analyse the running time on the flat version. 
