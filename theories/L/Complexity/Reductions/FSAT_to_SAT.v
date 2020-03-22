@@ -4,7 +4,9 @@ From Undecidability.L.Complexity Require Import MorePrelim.
 From Undecidability.L.Complexity.Problems Require Import FSAT SAT kSAT.
 Require Import Lia. 
 
-(** * eliminate ORs *)
+(** * FSAT to SAT via Tseytin transformation*)
+
+(** ** eliminate ORs *)
 (** First eliminating ORs before applying the transformation allows us to omit the proof of correctness for the 
   OR case, which isn't really a loss as it is completely similar to the AND case. *)
 
@@ -41,7 +43,7 @@ Proof.
   unfold FSAT. unfold FSAT.satisfies. now setoid_rewrite <- eliminateOR_eval. 
 Qed. 
 
-(** * Tseytin transformation*) 
+(** ** Tseytin transformation*) 
 (** The following functions give the individual clauses generated for the different cases. 
     All the CNFS are in 3-CNF, which is achieved by duplicating some literals. 
     *)
@@ -748,7 +750,7 @@ Proof.
   - split; subst p; smpl_inO. 
 Qed. 
 
-(** *** Running-time analysis *)
+(** ** Running-time analysis *)
 
 (** eliminateOr *)
 Definition c__eliminateOR := 18.
@@ -921,7 +923,7 @@ Proof.
 Qed. 
   
   
-(** *** full reduction *)
+(** ** full reduction *)
 Theorem FSAT_reduces_to_SAT : reducesPolyMO (unrestrictedP FSAT) (unrestrictedP SAT). 
 Proof. 
   apply reducesPolyMO_intro with (f := reduction). 

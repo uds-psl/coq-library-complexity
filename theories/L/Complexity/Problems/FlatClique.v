@@ -120,7 +120,7 @@ Section fixGraph.
   Defined. 
 End fixGraph.
 
-(** *** extraction *)
+(** ** extraction *)
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Complexity Require Import PolyBounds FlatFinTypes. 
 From Undecidability.L.Datatypes Require Import LProd LOptions LBool LSum LLNat LLists. 
@@ -344,7 +344,7 @@ Proof.
 Qed. 
 
 
-(** *** NP containment *)
+(** ** NP containment *)
 Lemma FlatClique_in_NP : inNP (unrestrictedP FlatClique). 
 Proof. 
   eapply inNP_intro with (R := fun (i : { p : fgraph * nat | True}) l => let (G, k) := proj1_sig i in fgraph_wf G /\ isfKClique k G l). 

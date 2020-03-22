@@ -1,10 +1,9 @@
-
 From Undecidability.L.TM Require Import TMflatEnc TMflat TMEncoding. 
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Complexity Require Import MorePrelim PolyBounds FlatFinTypes. 
 From Undecidability.L.Datatypes Require Import LProd LOptions LBool LSum LLNat LLists. 
 From Undecidability.L.Functions Require Import EqBool.
-From Undecidability.L.Complexity.Cook Require Import SingleTMGenNP_to_TPR FlatTPR. 
+From Undecidability.L.Complexity Require Import Reductions.Cook.SingleTMGenNP_to_TPR Problems.Cook.FlatTPR. 
 
 Fact None_ofFlatType n : ofFlatType (flatOption n) flatNone . 
 Proof. 
@@ -2876,7 +2875,7 @@ Proof.
 Qed.
 
 (** full reduction statement *)
-From Undecidability.L.Complexity.Cook Require Import GenNP. 
+From Undecidability.L.Complexity.Problems.Cook Require Import GenNP. 
 Theorem FlatSingleTMGenNP_to_FlatTPRLang_poly : reducesPolyMO (unrestrictedP FlatSingleTMGenNP) (unrestrictedP FlatTPRLang). 
 Proof. 
   apply reducesPolyMO_intro with (f := reduction). 

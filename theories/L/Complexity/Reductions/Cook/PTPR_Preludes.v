@@ -1,4 +1,4 @@
-From Undecidability.L.Complexity Require Import Cook.TPR MorePrelim.
+From Undecidability.L.Complexity Require Import Problems.Cook.TPR MorePrelim.
 From PslBase Require Import Base. 
 From PslBase Require Import FinTypes. 
 Require Import Lia. 

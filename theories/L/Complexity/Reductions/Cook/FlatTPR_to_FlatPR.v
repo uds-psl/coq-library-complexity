@@ -1,6 +1,6 @@
 From PslBase Require Import Base FinTypes. 
 From PslBase Require Import Vectors.Vectors. 
-From Undecidability.L.Complexity Require Import MorePrelim Cook.FlatTPR Cook.FlatPR Cook.TPR_to_PR.
+From Undecidability.L.Complexity Require Import MorePrelim Problems.Cook.FlatTPR Problems.Cook.FlatPR Reductions.Cook.TPR_to_PR.
 Require Import Lia.
 
 (** *Reduction of FlatTPR to FlatPR*)

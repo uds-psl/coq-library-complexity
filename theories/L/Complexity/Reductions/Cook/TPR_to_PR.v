@@ -1,5 +1,5 @@
 From PslBase Require Import Base FinTypes. 
-From Undecidability.L.Complexity Require Import MorePrelim Cook.TPR Cook.PR.
+From Undecidability.L.Complexity Require Import MorePrelim Problems.Cook.TPR Problems.Cook.PR.
 Require Import Lia.
 
 (** *Reduction of 3-PR to PR. *)

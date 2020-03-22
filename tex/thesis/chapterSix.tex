@@ -11,7 +11,7 @@ For the reduction, we need to modify the offset $o$ of the \PR{} instance by mul
 The variant of \PR{} in which the alphabet is fixed to $\bool$ is called \BPR{}. All definitions of Section~\ref{sec:pr} carry over.
 
 \section{Uniform Homomorphisms}
-\setCoqFilename{Undecidability.L.Complexity.Cook.UniformHomomorphisms}
+\setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.UniformHomomorphisms}
 We introduce string homomorphisms and a special subclass of them, uniform homomorphisms.
 While one usually uses string homomorphisms over a finite alphabet, we do not require finiteness for most of the definitions and results in this section.
 
@@ -74,7 +74,7 @@ Conversely, we can formalise the above intuition that the length of a string is 
 \end{proof}
 
 \section{Applying Uniform Homomorphisms to \PR{}}\label{sec:unif_hom_pr}
-\setCoqFilename{Undecidability.L.Complexity.Cook.PR_homomorphisms}
+\setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.PR_homomorphisms}
 We can show that \PR{} is invariant under injective uniform homomorphisms. That is, given a uniform homomorphism $h$ and a \PR{} instance $S$, we can define another \PR{} instance $S'$ where we have applied $h$ to all strings of $S$. $S'$ is a yes-instance if, and only if, $S$ is a yes-instance. 
 
 Fix a \PR{} instance $S = (\Sigma_1, o, \omega, x_0, R, \Rfinal, t)$. 
@@ -135,7 +135,7 @@ For the proof of equivalence of $S$ and $S'$, we need a stronger statement: if w
 \end{proof}
 
 This can be lifted to $\strent{}$. For the proof, yet another characterisation of validity will be quite convenient:
-\setCoqFilename{Undecidability.L.Complexity.Cook.PR}
+\setCoqFilename{Undecidability.L.Complexity.Problems.Cook.PR}
 \begin{gather*}
   \infer{a \strentD{R} b}{\length{a} = \length{b} \quad \length{a} = \omega \quad w \in R}
   \mnote[validDirect]{$\strentD{R}$}\\
@@ -146,7 +146,7 @@ To some extent, this is the most intuitive characterisation of validity: it does
   $a \strent{R} b \land \length{a} \ge \omega \leftrightarrow a \strentD{R} b$
 \end{lemma}
 
-\setCoqFilename{Undecidability.L.Complexity.Cook.PR_homomorphisms}
+\setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.PR_homomorphisms}
 The restriction to strings of length at least $\omega$ does not pose a problem as Definition~\ref{def:pr} imposes that as a syntactic constraint.
 Using the new characterisation, we can now prove the equivalence for $\strent{}$.
 \begin{lemma}[Agreement of $\strent{}$]
@@ -186,7 +186,7 @@ After having show that the final constraints \coqlink[final_agree]{agree in the 
 %Thus, the transformed \PR{} instance is equivalent to the original instance.
 
 \section{Reduction to \BPR{}}
-\setCoqFilename{Undecidability.L.Complexity.Cook.PR_to_BinaryPR}
+\setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.PR_to_BinaryPR}
 The previous section's results can be applied to an injective uniform homomorphism into $\bool$ to directly obtain the reduction of \PR{} to \BPR{}. 
 We use a homomorphism which just computes a unary encoding of the alphabet's elements over a binary alphabet. The $i$-th element $\sigma_i$ (counting from zero) of the finite type $\Sigma$ is mapped to the string $0^i10^{\length{\Sigma}-i-1}$.
 
@@ -247,7 +247,7 @@ Remember that we enforce the syntactic constraints on valid \PR{} instances (see
 
 The main verification is done for the reduction of \PR{} to \BPR{}, as described in this chapter. As this reduction cannot be extracted, we define a separate reduction of \FlatPR{} to \BPR{}. This reduction basically uses the $h_{\nat}$ function of Definition~\ref{def:hnat_hsig} to transform the finite subset of $\nat$ to $\bool$. 
 For the verification of this reduction, we show that for instances of \FlatPR{} and \PR{} that are the same up to representation of finite types $\approx$, the output of the respective reductions to \BPR{} is the same up to reordering of elements in lists. Logically, the reduction thus consists of two parts: a reduction from \FlatPR{} to \PR{}, converting the finite subset $\{0, \ldots, n-1\}$ of $\nat$ into the finite type $F_n$, and the reduction from \PR{} to \BPR{}. Computationally, however, this is shortcut to a single direct reduction which runs in polynomial time.
-\setCoqFilename{Undecidability.L.Complexity.Cook.FlatPR_to_BinaryPR}
+\setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.FlatPR_to_BinaryPR}
 \begin{theorem}[][FlatPR_to_BinaryPR_poly]
   $\textbf{FlatPR} \redP{} \textbf \BPR{}$ 
 \end{theorem}

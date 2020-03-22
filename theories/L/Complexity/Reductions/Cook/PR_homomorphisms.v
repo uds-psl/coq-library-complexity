@@ -1,6 +1,6 @@
 From PslBase Require Import Base FiniteTypes. 
-From Undecidability.L.Complexity Require Import MorePrelim Cook.PR Cook.UniformHomomorphisms.
-From Undecidability.L.Complexity.Cook Require BinaryPR .
+From Undecidability.L.Complexity Require Import MorePrelim Problems.Cook.PR Reductions.Cook.UniformHomomorphisms.
+From Undecidability.L.Complexity.Problems.Cook Require BinaryPR .
 Require Import Lia.
 
 (** * Results on the behaviour of PR under string homomorphisms *)

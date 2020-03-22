@@ -1,6 +1,6 @@
 From PslBase Require Import Base FinTypes. 
 From Undecidability Require Import L.Functions.EqBool.
-From Undecidability.L.Complexity Require Export Cook.PR FlatFinTypes MorePrelim.
+From Undecidability.L.Complexity Require Export Problems.Cook.PR FlatFinTypes MorePrelim.
 Require Import Lia.
 
 (**Flat Parallel Rewriting *)

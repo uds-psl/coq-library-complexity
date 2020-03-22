@@ -167,7 +167,7 @@ We give the full definition of the semantics of Turing machines in Appendix~\ref
   \caption{Turing machine tape movements. Note how the tape does not change if the Turing machine wants to move the head one more symbol beyond the used tape region if the head currently is not on a symbol. This means that it is not possible for the head to reside two or more symbols beyond the used the tape region.}\label{fig:movetape}
 \end{figure}
 
-\setCoqFilename{Undecidability.L.Complexity.Cook.TM_single}
+\setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.TM_single}
 In the presentation on paper, it will suffice to assume a transition relation $\succ$ on configurations such that 
 \mnote[sstep]{$c \succ c'$}$(q, tp) \succ (q', tp')$ holds if, and only if, $\textsf{halt}~q = \bfalse$ and $(q', tp')$ is the successor configuration of $(q, tp)$ according to the transition function. 
 \begin{definition}[Termination Relation]

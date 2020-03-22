@@ -88,6 +88,7 @@ Section fixSAT.
   (** we show the correctness of the encoding *) 
 
   Section SAT_implies_Clique.
+    (** ** SAT implies Clique *)
     (** Assume that there is a satisfying assignment for the CNF. *)
     Variable (a__sat : assgn).
     Context (H_sat : evalCnf a__sat N = true). 
@@ -200,6 +201,7 @@ Section fixSAT.
   End SAT_implies_Clique. 
 
   Section Clique_implies_SAT.
+    (** ** Clique implies SAT *)
     (** Assume that the graph has a clique *)
     Variable (L : list (V Gcnf)). 
     Context (Hclique : isKClique Ncl L). 
@@ -211,7 +213,7 @@ Section fixSAT.
         - From this list of literals, a satisfying assignment can be derived. 
       *)
 
-    (** * Step 1*)
+    (** *** Step 1*)
 
     (** proof by contradiction for decidable predicates *)
     Fact contradiction_dec_bipredicate (X Y : Type) (p : X -> Y -> Prop) : (forall x y, dec (p x y)) -> forall x y, (~ (~ p x y)) -> p x y. 
@@ -270,7 +272,7 @@ Section fixSAT.
     Qed.
 
 
-    (** Step 2 *)
+    (** *** Step 2 *)
     (** We map to a list of (clause, literal) positions *)
     Definition toPos (L : list (V Gcnf)) := map (fun '(ci, li) => (index ci, index li)) L. 
     
@@ -356,7 +358,7 @@ Section fixSAT.
       eauto.
     Qed.
 
-    (** Step 3: map to literals *)
+    (** ** Step 3: map to literals *)
     Definition toLiterals (L : list (nat * nat)) := filterSome (map (fun '(ci, li) => cnfGetLiteral N ci li) L). 
 
     Definition satLiterals := toLiterals satPositions. 
@@ -396,7 +398,7 @@ Section fixSAT.
         apply H3. 
     Qed. 
 
-    (** Step 4: map to a satisfying assignment *)
+    (** *** Step 4: map to a satisfying assignment *)
     Fixpoint toAssignment (L : list literal) := 
       match L with 
       | [] => []

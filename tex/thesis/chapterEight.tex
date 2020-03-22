@@ -1,6 +1,6 @@
 
 \chapter{Reducing Formula Satisfiability To SAT}\label{chap:fsat_sat}
-\setCoqFilename{Undecidability.L.Complexity.Cook.FSAT_to_SAT}
+\setCoqFilename{Undecidability.L.Complexity.Reductions.FSAT_to_SAT}
 In this chapter, we finally show how to convert an arbitrary logical formula $f : \formula$ into CNF. 
 If one does the conversion in a naive way, this incurs an exponential blowup. Consider, for instance, the formula $\phi_1 \lor \phi_2$ for two arbitrary formulas $\phi_1, \phi_2$. If we were to first recursively convert $\phi_1, \phi_2$ to CNFs $N_1, N_2$ and then apply distributivity to end up with a new CNF $N$ equivalent to $N_1 \lor N_2$, the number of clauses in $N$ were in $\bigO{\length{N_1} \cdot \length{N_2}}$. 
 \begin{example}\label{ex:cnf_large}
@@ -66,7 +66,7 @@ We now turn to the composition of assignments. Recall that assignments are repre
 In principle, this form of assignments is completely non-compositional as all assignments are total. 
 However, we may still get a form of composition by overriding implicit $\bfalse$ values. If we only compose assignments over disjoint variable ranges, we may still obtain the properties one would intuitively expect. 
 
-\setCoqFilename{Undecidability.L.Complexity.Cook.FSAT_to_SAT}
+\setCoqFilename{Undecidability.L.Complexity.Reductions.FSAT_to_SAT}
 We define variable containment \mnotec[assgn_varsIn]{$a \subseteq r$} for assignments in the same way as for formulas and CNFs:
 \[a \subseteq r \defeq \forall v, v \in a \rightarrow v \in r \]
 Note that this definition only talks about variables to which $\btrue$ is assigned.
@@ -299,7 +299,7 @@ We close this chapter by noting that the Tseytin transformation does indeed only
 \setCoqFilename{Undecidability.L.Complexity.Problems.SAT}
 \mnote[size_cnf]{$\textsf{size}_{\cnf}$}
 
-\setCoqFilename{Undecidability.L.Complexity.Cook.FSAT_to_SAT}
+\setCoqFilename{Undecidability.L.Complexity.Reductions.FSAT_to_SAT}
 \begin{proposition}
   There are constants $c_{\textsf{eliminateOr}}$ and $c_{\textsf{tseytin}}$ such that:
   \begin{enumerate}

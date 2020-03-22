@@ -1,7 +1,7 @@
 From PslBase Require Import Base FinTypes.
 From PslBase Require Import Vectors.Vectors. 
 From Undecidability.L.Complexity Require Import MorePrelim.
-From Undecidability.L.Complexity.Cook Require Import BinaryPR PR PR_homomorphisms. 
+From Undecidability.L.Complexity Require Import Problems.Cook.BinaryPR Problems.Cook.PR Reductions.Cook.PR_homomorphisms. 
 Require Import Lia.
 
 (** * PR to BinaryPR *)

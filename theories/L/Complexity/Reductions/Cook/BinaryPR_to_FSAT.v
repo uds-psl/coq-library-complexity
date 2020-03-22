@@ -1,8 +1,7 @@
 From PslBase Require Import Base. 
 From Undecidability.L.Complexity Require Import Tactics MorePrelim. 
 From Undecidability.L.Datatypes Require Import LLists LLNat LBool LProd LOptions. 
-From Undecidability.L.Complexity.Cook Require Import BinaryPR.
-From Undecidability.L.Complexity.Problems Require Import FSAT.
+From Undecidability.L.Complexity.Problems Require Import FSAT Cook.BinaryPR.
 Require Import Lia. 
 
 (** * Reduction of BinaryPR to FSAT *)
@@ -904,7 +903,7 @@ Proof.
     + now apply trivialNoInstance_isNoInstance in H. 
 Qed. 
 
-(** * extraction *)
+(** *** extraction *)
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Complexity Require Import PolyBounds. 
 From Undecidability.L.Datatypes Require Import LProd LOptions LBool LSum LLNat LLists. 
@@ -1566,7 +1565,6 @@ Proof.
   unfold poly__encodeTableau; split; smpl_inO; try apply inOPoly_comp; smpl_inO; first [apply encodeListAt_poly | apply encodeWindowsInAllLines_poly | apply encodeFinalConstraint_poly]. 
 Qed. 
 
-Check encodeWindowsInAllLines_varsIn. 
 Lemma encodeTableau_varsIn bpr: BinaryPR_wellformed bpr -> formula_varsIn (fun n => n < (1 + steps bpr) * (|init bpr|)) (encodeTableau bpr). 
 Proof. 
   intros H. 

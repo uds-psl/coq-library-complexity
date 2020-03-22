@@ -1,22 +1,22 @@
 From PslBase Require Import FiniteTypes.
 Require Import PslBase.FiniteTypes.BasicDefinitions.
 Require Import Lia.
-From Undecidability.L.Complexity.Cook Require Import Prelim.
+From Undecidability.L.Complexity Require Import MorePrelim.
 Require Export smpl.Smpl. 
 
-(** Representation of finite types by natural numbers *)
-(*this is needed as finite types are not extractable to L currently *)
+(** * Representation of finite types by natural numbers *)
+(** This is needed as working with the direct extraction of finite types to L is not pleasant *)
 
-(*a finite type is represented by the number of its elements *)
+(** A finite type is represented by the number of its elements *)
 Definition finRepr (X : finType) (n : nat) := n = |elem X|. 
 
-(* we define what it means for a number to be of a flat type *)
+(** We define what it means for a number to be of a flat type *)
 Definition ofFlatType (k : nat) (e : nat) := e < k.
 
-(*we just enumerate the elements starting at 0 *)
+(** We just enumerate the elements starting at 0 *)
 Definition finReprEl (X : finType) (n : nat) k (x : X) := finRepr X n /\ index x = k.  
 
-(*a weaker version that does not explicitly enforce x to have a flat type *)
+(** A weaker version that does not explicitly enforce x to have a flat type *)
 Definition finReprEl' (X : finType) (k : nat) (x : X) := index x = k. 
 
 Lemma finReprEl_finReprEl' (X : finType) (n k : nat) (x : X) : finReprEl n k x -> finReprEl' k x.
@@ -29,14 +29,14 @@ Proof.
   rewrite H1, <- H2. apply index_le.
 Qed. 
 
-(*for some of the proofs below, the stronger version of finReprEl is much more pleasant (e.g. for sum types)*)
+(** For some of the proofs below, the stronger version of finReprEl is much more pleasant than the weaker version finReprEl' (e.g. for sum types)*)
 
-(*flat type constructors *)
+(** flat type constructors *)
 Definition flatOption (n : nat) := S n.
 Definition flatProd (a b : nat) := a * b.
 Definition flatSum (a b : nat) := a + b.
 
-(*flat value constructors *)
+(** flat value constructors *)
 Definition flatNone := 0.
 Definition flatSome k := S k. 
 Definition flatInl (k : nat) := k.
@@ -204,7 +204,7 @@ Proof.
   induction n; cbn; intros; [ easy | now apply isFlatListOf_cons].
 Qed. 
 
-(* lists that only contain elements which belong to the flat representation of a finite type *)
+(** lists that only contain elements which belong to the flat representation of a finite type *)
 Definition list_ofFlatType (k : nat) (l : list nat) := forall a, a el l -> ofFlatType k a. 
 
 Lemma isFlatListOf_list_ofFlatType (X : finType) (L : list X) l : isFlatListOf l L -> list_ofFlatType (|elem X|) l. 
@@ -240,7 +240,7 @@ Proof.
   - intros v Hel. rewrite Hmap. apply in_map_iff. eauto.
 Qed. 
 
-(*given a representation of a finite type by natural numbers, we can restore original elements *)
+(** Given a representation of a finite type by natural numbers, we can restore the original elements *)
 Lemma finRepr_exists (X : finType) (x : nat) (a : nat) : 
   finRepr X x -> ofFlatType x a -> sigT (fun (a' : X) => finReprEl x a a'). 
 Proof. 
@@ -257,7 +257,7 @@ Proof.
   + eapply utils.nth_error_Some_length, H2. 
 Qed.
 
-Lemma finReprEl'_exists (X : finType) n : ofFlatType (Cardinality X) n -> { e:X | finReprEl' n e}.
+Lemma finReprElP_exists (X : finType) n : ofFlatType (Cardinality X) n -> { e:X | finReprEl' n e}.
 Proof. 
   intros. unfold ofFlatType,Cardinality in H. apply nth_error_Some in H. destruct (nth_error (elem X) n) eqn:H1; [ | congruence ].
   exists e. unfold finReprEl'. clear H.
@@ -277,7 +277,7 @@ Proof.
     now rewrite H1, <- H2. 
 Defined. 
 
-(*deciders for isValidFlattening*)
+(** deciders for isValidFlattening*)
 Definition ofFlatType_dec (b a : nat) := leb (S a) b.
 Definition list_ofFlatType_dec (t : nat)  (s : list nat) := forallb (ofFlatType_dec t) s. 
 
@@ -295,11 +295,77 @@ Proof.
   split; intros H; intros; now apply H.
 Qed. 
  
-(*unflattening *)
+(** unflattening to Fin.t *)
 Lemma unflattenString (f : list nat) k : list_ofFlatType k f -> {f' : list (finType_CS (Fin.t k)) & isFlatListOf f f'}.
 Proof. 
   intros H. 
   eapply finRepr_exists_list with (X := finType_CS (Fin.t k)) in H as (a' & H). 
   2: { unfold finRepr. specialize (Card_Fint k). unfold Cardinality. easy. }
   eauto.
+Qed. 
+
+(** extraction *)
+From Undecidability.L.Tactics Require Import LTactics GenEncode.
+From Undecidability.L.Datatypes Require Import LProd LOptions LBool LLNat LLists LSum.
+From Undecidability.L.Complexity Require Import PolyBounds. 
+From Undecidability.L.Functions Require Import EqBool.
+
+Instance term_id (X : Type) `{registered X}: computableTime' (@id X) (fun a _ => (1, tt)). 
+Proof. 
+  extract. solverec. 
+Qed.
+
+Definition c__flatPair := c__add1 + 2 + c__mult1. 
+Definition flatPair_time x b := mult_time x b + add_time (x * b) + c__flatPair.
+Instance term_flatPair : computableTime' flatPair (fun a _ => (1, fun b _ => (1, fun x _ => (1, fun y _ => (flatPair_time x b, tt))))). 
+Proof. 
+  extract. solverec. unfold flatPair_time, c__flatPair; solverec. 
+Defined. 
+
+(*ofFlatTypeDec *)
+Definition c__ofFlatTypeDec := c__leb2 + 2. 
+Definition ofFlatType_dec_time (sig e : nat) := leb_time (1 + e) sig + c__ofFlatTypeDec. 
+Instance term_ofFlatType_dec : computableTime' ofFlatType_dec (fun sig _ => (1, fun e _ => (ofFlatType_dec_time sig e, tt))). 
+Proof. 
+  extract. solverec. unfold ofFlatType_dec_time, c__ofFlatTypeDec. solverec. 
+Defined. 
+Definition c__ofFlatTypeDecBound := c__ofFlatTypeDec + c__leb. 
+Definition poly__ofFlatTypeDec n := (n +1) * c__ofFlatTypeDecBound. 
+Lemma ofFlatType_dec_time_bound sig e: ofFlatType_dec_time sig e <= poly__ofFlatTypeDec (size (enc sig)). 
+Proof. 
+  unfold ofFlatType_dec_time. rewrite leb_time_bound_r. unfold poly__ofFlatTypeDec, c__ofFlatTypeDecBound; nia.
+Qed. 
+Lemma ofFlatType_dec_poly : monotonic poly__ofFlatTypeDec /\ inOPoly poly__ofFlatTypeDec. 
+Proof.
+  split; unfold poly__ofFlatTypeDec; smpl_inO. 
+Qed. 
+
+(*list_ofFlatType_dec *)
+Definition c__listOfFlatTypeDec := 3.
+Definition list_ofFlatType_dec_time (sig : nat) (l : list nat) := forallb_time (fun x1 => ofFlatType_dec_time sig x1) l + c__listOfFlatTypeDec. 
+Instance term_list_ofFlatType_dec : computableTime' list_ofFlatType_dec (fun sig _ => (1, fun l _ => (list_ofFlatType_dec_time sig l, tt))). 
+Proof. 
+  extract. solverec. unfold list_ofFlatType_dec_time, c__listOfFlatTypeDec. solverec. 
+Qed. 
+
+Definition c__listOfFlatTypeDecBound := c__forallb + c__listOfFlatTypeDec. 
+Definition poly__listOfFlatTypeDec n := ((n+1) * (poly__ofFlatTypeDec n + c__listOfFlatTypeDecBound)).
+Lemma list_ofFlatType_dec_time_bound t l : list_ofFlatType_dec_time t l <= poly__listOfFlatTypeDec (size (enc t) + size (enc l)).
+Proof.
+  unfold list_ofFlatType_dec_time. 
+  erewrite forallb_time_bound_env.
+  2: {
+    split; [ intros | ]. 
+    - rewrite (ofFlatType_dec_time_bound y a). poly_mono ofFlatType_dec_poly.
+      2: apply le_add_l with (n := size(enc a)). reflexivity.
+    - apply ofFlatType_dec_poly.
+  }
+  rewrite list_size_length.
+  replace_le (size(enc l)) with (size (enc t) + size (enc l)) by lia at 1.
+  setoid_rewrite Nat.add_comm at 5.
+  unfold poly__listOfFlatTypeDec, c__listOfFlatTypeDecBound. nia.
+Qed. 
+Lemma list_ofFlatType_dec_poly : monotonic poly__listOfFlatTypeDec /\ inOPoly poly__listOfFlatTypeDec. 
+Proof.
+  split; unfold poly__listOfFlatTypeDec; smpl_inO; apply ofFlatType_dec_poly.
 Qed. 

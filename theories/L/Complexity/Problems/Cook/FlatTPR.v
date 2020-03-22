@@ -1,5 +1,5 @@
-From Undecidability.L.Complexity Require Import MorePrelim Cook.FlatPR FlatFinTypes. 
-From Undecidability.L.Complexity.Cook Require Export TPR.
+From Undecidability.L.Complexity Require Import MorePrelim Problems.Cook.FlatPR FlatFinTypes. 
+From Undecidability.L.Complexity.Problems.Cook Require Export TPR.
 From PslBase Require Import Base FinTypes. 
 Require Import Lia.
 

@@ -1,5 +1,6 @@
 (* -*- company-coq-local-symbols: (("|_|" .?␣)); -*- *)
-From Undecidability.L.Complexity.Cook Require Import GenNP TPR FlatTPR PTPR_Preludes TM_single. 
+From Undecidability.L.Complexity.Problems.Cook Require Import GenNP TPR FlatTPR . 
+From Undecidability.L.Complexity.Reductions.Cook Require Import PTPR_Preludes TM_single.
 From Undecidability.L.Complexity Require Import FlatFinTypes MorePrelim. 
 From PslBase Require Import FiniteTypes. 
 From Undecidability.TM Require Import TM.
@@ -205,7 +206,7 @@ Section fixTM.
     - rewrite H2. unfold mapPolarity, polarityFlipGamma. rewrite map_app, map_map, E_polarityFlip. easy. 
   Qed. 
 
-  (** * representation of configurations *)
+  (** ** Representation of configurations *)
   Notation strconfig := (list Gamma).
 
   Definition embedState (q : states) (m : stateSigma) : Gamma := inl (q, m). 
@@ -250,7 +251,7 @@ Section fixTM.
       split; cbn; [reflexivity | split; apply stringForTapeHalf_reprTape; cbn in *; try rewrite app_length, rev_length in H; cbn in H; easy].  
   Qed. 
 
-  (** * automation for discrimination of the tape relation *)
+  (** ** Automation for discrimination of the tape relation *)
 
   Lemma tape_repr_step u h a b p w : (a :: u) ≃t(p, S w) (b :: h) -> u ≃t(p, w) h. 
   Proof. 
@@ -436,7 +437,7 @@ Section fixTM.
                         repeat match goal with [H : ?h = ?h |- _] => clear H end.
 
 
-  (** * inductive rules for tape rewrites *)
+  (** ** Inductive rules for tape rewrites *)
   (*For easier automation, we define the rewrite rules using inductive predicates *)
 
   (** We use the rewritesHeadInd predicate from TPR.v *)
@@ -1502,7 +1503,7 @@ Section fixTM.
   end.  
 
 
-  (** ** predicate for halting extensions *)
+  (** ** Predicate for halting extensions *)
 
   (** these are the rules that leave the configuration unchanged in a halting configuration *)
   Inductive haltRules : transRule := 
@@ -1840,7 +1841,7 @@ Section fixTM.
   Lemma app_fold5 (X : Type) (a b c d e: X) (l : list X) : a :: b :: c :: d :: e :: l = [a; b; c; d; e] ++ l.  
   Proof. now cbn. Qed.  
 
-  (** * automation for the simulation proofs *) 
+  (** ** Automation for the simulation proofs *) 
 
   (*brings the goal into a form in which valid_rewHeadSim_center can be applied *) 
   (*precondition: the tape strings have been destructed such that there are at least two symbols available in each direction, both in premise and conclusion *) 
@@ -2806,7 +2807,7 @@ Section fixTM.
     rewrite <- prelude_reduction_from_ExPTPR. apply TM_reduction_to_ExPTPR.
   Qed. 
 
-  (** * list-based windows *)
+  (** ** list-based windows *)
   Notation Alphabet := ((Gamma + preludeSig')%type). 
 
   Hint Constructors preludeSig'. 
@@ -2815,7 +2816,7 @@ Section fixTM.
   Definition FstateSigma := finType_CS stateSigma. 
   Definition Fpolarity := finType_CS polarity.
 
-  (** ** list-based window infrastructure *)
+  (** *** list-based window infrastructure *)
   (** We use a abstract representation of elements of the alphabet Gamma with holes where the elements of the abstract TM alphabets Sigma and states need to be placed. 
   The following development is centered around the goal of easily being able to instantiate the abstract fGamma elements with finTypes and with the flat representation using natural numbers. 
   *)
@@ -3090,7 +3091,7 @@ Section fixTM.
       end; eauto; try congruence. 
   Qed.
 
-  (** * We now prove that the outputs of both reification procedures are related via finReprEl *)
+  (** *** Proof that the outputs of both reification procedures are related via finReprEl *)
 
   Lemma flattenPolarity_reprEl p : finReprEl flatPolarity (flattenPolarity p) p. 
   Proof. 
@@ -3211,7 +3212,7 @@ Section fixTM.
     all: try finRepr_simpl; eauto.
   Qed. 
 
-  (** ** reification of rewrite windows *)
+  (** *** Reification of rewrite windows *)
 
   Definition reifyWindow (X Y Z W M: Type) (r : evalEnv X Y Z W -> fAlphabet -> option M) (env : evalEnv X Y Z W) rule :=
     match rule with {a, b, c} / {d, e, f} =>
@@ -3844,7 +3845,7 @@ Section fixTM.
   (**generate windows for all states*)
   Definition finStateWindows := concat (map generateWindowsForFin (elem states)).  
 
-  (** * proof of transition agreement *)
+  (** *** Proof of transition agreement *)
   (**We first define the inductive rules structured in a different way, in order for it to resemble the structure of the list-based rules.
     (writing the list-based rules in a way which resembles the inductive predicates is not possible in an elegant way)
   *)
@@ -4238,7 +4239,7 @@ Section fixTM.
     * apply fin_agreement. 
   Qed.
 
-  (** * flat windows *)
+  (** *** Flat windows *)
   (*tape windows *)
   Definition flatMTRWindows := makeWindowsFlat (makeAllEvalEnvFlat 1 4 0 0) mtrRules.
   Definition flatMTIWindows := makeWindowsFlat (makeAllEvalEnvFlat 2 0 4 0) mtiRules.

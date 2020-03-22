@@ -56,7 +56,7 @@ This reduction captures the main work of encoding Turing machines: one can see t
 However, we do not yet encode these rewrite windows as Boolean formulas, but instead stay at a string-based representation.
 
 First of all, we make the informal description of \gennp{} given in the previous chapter precise.
-\setCoqFilename{Undecidability.L.Complexity.Cook.GenNP}
+\setCoqFilename{Undecidability.L.Complexity.Problems.Cook.GenNP}
 \begin{definition}[TMGenNP][SingleTMGenNP]\label{def:tmgennp}
   \mnote[SingleTMGenNP]{TMGenNP}
   \begin{align*}
@@ -72,12 +72,12 @@ First of all, we make the informal description of \gennp{} given in the previous
   \end{align*}
   that is, the head is initially positioned left of the input.
 \end{definition}
-\setCoqFilename{Undecidability.L.Complexity.Cook.GenNP}
+\setCoqFilename{Undecidability.L.Complexity.Problems.Cook.GenNP}
 
 Syntactically, it is important that the numbers $t$ and $k'$ are given in a unary encoding instead of a binary encoding: with a binary encoding, a verifier for \gennp{} could not even take time linear in the number of steps. 
 
 \section{Parallel Rewriting}\label{sec:pr}
-\setCoqFilename{Undecidability.L.Complexity.Cook.PR}
+\setCoqFilename{Undecidability.L.Complexity.Problems.Cook.PR}
 Parallel Rewriting works over a finite alphabet $\Sigma$. Given an initial string $x_0$, a set of rewrite windows $R$, a number of steps $t$, and a final constraint $\Rfinal$, we are tasked with determining whether there exists a sequence of valid rewrites $x_0 \strent{R} \ldots \strent{R} x_t$ using the rewrite windows $R$ such that $x_t$ contains an element of a set of strings $\Rfinal$ as a substring, written $x_t \models \Rfinal$. The rewrite windows we consider here correspond to the rewrite windows of Chapter~\ref{chap:informaloverview}.
 
 \begin{definition}[Parallel Rewriting instances]\label{def:pr}
@@ -110,7 +110,7 @@ We start by defining what it means for a string $a$ to validly rewrite to anothe
     \rewHead{w}{a}{b} \defeq \prefix{(\prem{w})}{a} \land \prefix{(\conc{w})}{b} \\
     \prefix{s}{t} \defeq \exists b, t = s \concat{} b,\mnote[prefix]{\textsf{prefix}}
   \end{gather*}
-  \setCoqFilename{Undecidability.L.Complexity.Cook.PR}%
+  \setCoqFilename{Undecidability.L.Complexity.Problems.Cook.PR}%
   that is, a window $w$ justifies a rewrite at the head of two strings $a$ and $b$ if it matches the heads of $a$ and $b$.
 
   A windows $w$ justifies a rewrite at position $i$ of strings $a, b$ if it matches the head of the strings starting from position $i$:
@@ -191,7 +191,7 @@ One can interpret \PR{} to be a problem between Turing machines and circuits: of
 Circuits, on the other hand, are similar in the sense that they also work in parallel. The fact that adjacent rewrite positions overlap and can thus enforce a global constraint in a single rewrite step is unlike circuits, though. 
 
 \subsection{3-\PR{}}\label{sec:3pr}
-\setCoqFilename{Undecidability.L.Complexity.Cook.TPR}
+\setCoqFilename{Undecidability.L.Complexity.Problems.Problems.Cook.TPR}
 For the rest of this chapter, we fix the width $\omega$ to $3$ and the offset $o$ to $1$, which are the parameters needed for the Turing machine encoding. We call this variant 3-\PR{}. 
 The inductive definition of validity can be simplified a bit:
 \mnote[valid]{$a \strent{R} b$}
@@ -208,7 +208,7 @@ We use the notation introduced in the previous chapter to denote the window $((x
 Sometimes, we also use $\irewwin{x_1}{x_2}{x_3}{x_4}{x_5}{x_6}$ if we need to write down a window in-line.
 
 \section{Encoding Tapes and Configurations}
-\setCoqFilename{Undecidability.L.Complexity.Cook.GenNP}
+\setCoqFilename{Undecidability.L.Complexity.Problems.Cook.GenNP}
 We start with the construction of the Turing machine simulation. Our goal is to devise and verify a 3-\PR{} instance simulating a given Turing machine. 
 For the rest of the chapter, let us fix a \gennp{} instance consisting of a finite tape alphabet $\Sigma$, a single-tape Turing machine $M = (Q, \delta, \textsf{start}, \textsf{halt})$ over $\Sigma$, an input $in$, a number $t$ of steps, and a maximum size $k'$ of the certificate. 
 
@@ -222,7 +222,7 @@ Formalising the intuitions from Chapter~\ref{chap:informaloverview}, we define t
 \newcommand{\delimSigma}{\Sigma_{\mathit{delim}}}
 \newcommand{\tapeSigma}{\Sigma_{\mathit{tape}}}
 \newcommand{\States}{\textsf{States}}
-\setCoqFilename{Undecidability.L.Complexity.Cook.SingleTMGenNP_to_TPR}
+\setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.SingleTMGenNP_to_TPR}
 \begin{align*}
   \polarity : \Type &\defeq + \bnfmid - \bnfmid \circ \\
   \textsf{delim} : \Type &\defeq \# \\
@@ -978,7 +978,7 @@ We have now \coqlink[simulation]{reduced} \gennp{} to the following question:
 \end{problem}
 
 \section{Interlude: Nondeterministic Preludes}\label{sec:preludes}
-\setCoqFilename{Undecidability.L.Complexity.Cook.PTPR_Preludes}
+\setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.PTPR_Preludes}
 In this section, we give a recipe to reduce existential questions as in Problem~\ref{prob:exinput}, where the initial string of a \PR{} instance is unknown, to full \PR{} instances with a fixed initial string. 
 While all rewrite windows seen so far only allowed for deterministic rewriting, the key is to make the rewrite windows nondeterministic. The results presented here can also be seen as providing a (very limited) form of compositionality for \PR{}.
 
@@ -1059,7 +1059,7 @@ The main result is now a straightforward consequence.
 \todo{remark that we can also reduce to another (simpler) exptpr instance}
 
 \section{Guessing the Certificate}
-\setCoqFilename{Undecidability.L.Complexity.Cook.SingleTMGenNP_to_TPR}
+\setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.SingleTMGenNP_to_TPR}
 In this section, we apply the technique presented in Section~\ref{sec:preludes} to ``guess'' an accepted certificate and thus generate a full input for the Turing machine. To that end, we design an initial string and nondeterministic rewrite rules that generate an input in a single rewrite step.
 
 \newcommand{\nblank}{\ensuremath{\underline{\blank}}}
@@ -1183,9 +1183,9 @@ However, for the proof of the reduction, we use another instantiation: sets of r
 with arguments corresponding to the six elements determining a rewrite window. 
 Using inductive predicates instead of lists has the huge advantage of easier automation in Coq: inversions are straightforward and proving that a rewrite is possible can be done by \texttt{eauto} with suitable hints.
 
-\setCoqFilename{Undecidability.L.Complexity.Cook.FlatPR}
+\setCoqFilename{Undecidability.L.Complexity.Problems.Cook.FlatPR}
 As \mnote[FlatPRLang]{\textbf{FlatPR}} the finite types for the alphabet of \PR{} are not directly extractable to L, we define flat versions \textbf{FlatPR} and \textbf{Flat3PR} similar 
-\setCoqFilename{Undecidability.L.Complexity.Cook.FlatTPR}
+\setCoqFilename{Undecidability.L.Complexity.Problems.Cook.FlatTPR}
 to the definition of \FlatClique{} in Chapter~\ref{chap:ksat_clique}.\mnote[FlatTPRLang]{\textbf{Flat3PR}}
 The agreement with the non-flat variants is straightforward to derive.
 
@@ -1242,10 +1242,10 @@ In order to generate the windows for the transitions, this needs to be combined 
 
 The proof of agreement with the inductive rules can mostly be automated and only requires the manual choice of an assignment to the variables of a rule.
 
-\setCoqFilename{Undecidability.L.Complexity.Cook.GenNP}
+\setCoqFilename{Undecidability.L.Complexity.Problems.Cook.GenNP}
 The full reduction produces a \textbf{Flat3PR} instance, where the flat reification of the rewrite windows is used. As the Turing machines use finite types and vectors, which are both not directly extractable, we also have a flat encoding of these together with a flat variant \mnotec[FlatSingleTMGenNP]{\textbf{FlatTMGenNP}} of \gennp{}.
 
-\setCoqFilename{Undecidability.L.Complexity.Cook.FlatSingleTMGenNP_to_FlatTPR}
+\setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.FlatSingleTMGenNP_to_FlatTPR}
 \begin{theorem}[][FlatSingleTMGenNP_to_FlatTPRLang_poly]
   $\textbf{FlatTMGenNP} \redP{} \textbf{Flat3PR}$
 \end{theorem}

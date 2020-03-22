@@ -1,8 +1,8 @@
 From PslBase Require Import Base.
 Require Import Lia.
 From Undecidability.L.Complexity Require Import MorePrelim. 
-From Undecidability.L.Complexity.Cook Require Export PR.
-From Undecidability.L.Complexity.Cook Require Import FlatPR.
+From Undecidability.L.Complexity.Problems.Cook Require Export PR.
+From Undecidability.L.Complexity.Problems.Cook Require Import FlatPR.
 
 (** *BinaryPR: Parallel Rewriting restricted to a binary alphabet *)
 

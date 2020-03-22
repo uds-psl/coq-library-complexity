@@ -6,11 +6,13 @@ By combining the results of the previous chapters, we obtain our following main 
   \gennp{} is in \NP{}. Moreover, if \gennp{} is \NP{}-hard, then \SAT{} is \NP{}-complete.
 \end{theorem}
 We do not see this as a full result, yet, as a mechanised proof of the step from L to Turing machines is missing for a proof of the Cook-Levin-Theorem in L, but think that this work contributes a significant part towards a fully mechanised proof.
+\todo{consistent usage of metavariables in boxes}
 
 \section{Related Work}
 There are a number of different proofs of the Cook-Levin-Theorem available. In this thesis, we have formalised the tableau-style proof by Sipser~\cite[Chapter~7.4]{Sipser:TheoryofComputation}, which is in the spirit of Cook's original construction~\cite{cook_theorem}. However, Cook considers the problem of determining tautologihood of DNFs, which he does by first building a CNF and then negating it. The construction is also limited to Turing machines with one-sided infinite tapes.
 A class of more modern proofs uses circuits. First of all, a family of circuits is designed which encodes the computation of a Turing machine for different input lengths. Then, it is shown how a circuit can be encoded as a Boolean formula. This proof is available in different flavours, for example the construction of the circuit family can proceed in a tableau-like style (e.g.\ in Chapter 9.3 of~\cite{Sipser:TheoryofComputation}) or by first restricting the Turing machine to be \textit{oblivious}, such that it shows the same sequence of head movements on every input of a certain length~\cite[p.~199ff]{Bläser:TISkript}.
 Although the circuit-based proofs might appear more elegant on paper and their ideas can be used for other proofs in circuit complexity, their mechanisation seems to be a lot more tedious as one would first have to formalise the standard notions of complexity and constructibility of circuits.
+\todo{levin's proof}
 
 As mentioned in the introduction, there is an existing mechanisation of the translation of Turing machines to Boolean formulas in the theorem prover ACL2~\cite{gamboa:cook}. They also use a tableau-style construction. However, there are a number of key differences to our mechanisation.
 First of all, they restrict their proof to Turing machines with one-sided infinite tapes. By this restriction, they also circumvent the problem of non-uniqueness of the representation of a tape which we explained in Chapter~\ref{chap:informaloverview} and addressed by using a moving-tape semantics instead of the standard moving-head semantics. Thus, their proof is using moving-head semantics just fine.
