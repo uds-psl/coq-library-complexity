@@ -1,3 +1,52 @@
+# Towards a Formal Proof of the Cook-Levin Theorem 
+
+This contains Lennard Gäher's Bachelor's thesis at the [Programming Systems Lab](https://www.ps.uni-saarland.de/) of [Saarland University](https://www.uni-saarland.de/). 
+
+Homepage of this project: https://www.ps.uni-saarland.de/~gaeher/bachelor.php
+CoqDoc: https://uds-psl.github.io/ba-gaeher/website/toc.html
+
+The project is based on the [library of undecidable problems](https://github.com/uds-psl/coq-library-undecidability). 
+The main new files contributed as part of the thesis are: 
+
+L/Complexity/PolyBounds.v
+L/Complexity/Tactics.v
+L/Complexity/MorePrelim.v
+L/Complexity/FlatFinTypes.v
+
+L/Complexity/Problems/UGraph.v
+L/Complexity/Problems/FlatUGraph.v
+L/Complexity/Problems/Clique.v
+L/Complexity/Problems/FlatClique.v
+L/Complexity/Problems/SharedSAT.v
+L/Complexity/Problems/FSAT.v
+L/Complexity/Problems/SAT.v
+L/Complexity/Problems/kSAT.v
+L/Complexity/Reductions/kSAT_to_Clique.v
+L/Complexity/Reductions/kSAT_to_FlatClique.v
+L/Complexity/Reductions/kSAT_to_SAT.v
+
+L/Complexity/Problems/Cook/PR.v
+L/Complexity/Problems/Cook/GenNP.v
+L/Complexity/Problems/Cook/TPR.v
+L/Complexity/Problems/Cook/FlatPR.v
+L/Complexity/Problems/Cook/FlatTPR.v
+L/Complexity/Problems/Cook/BinaryPR.v
+
+L/Complexity/Reductions/Cook/PTPR_Preludes.v
+L/Complexity/Reductions/Cook/SingleTMGenNP_to_TPR.v
+L/Complexity/Reductions/Cook/TM_single.v
+L/Complexity/Reductions/Cook/TPR_to_PR.v
+L/Complexity/Reductions/Cook/FlatTPR_to_FlatPR.v
+L/Complexity/Reductions/Cook/PR_homomorphisms.v
+L/Complexity/Reductions/Cook/FlatPR_to_BinaryPR.v
+L/Complexity/Reductions/Cook/TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP.v
+L/Complexity/Reductions/Cook/FlatSingleTMGenNP_to_FlatTPR.v
+L/Complexity/Reductions/FSAT_to_SAT.v
+L/Complexity/Reductions/Cook/BinaryPR_to_FSAT.v
+L/Complexity/Reductions/Cook/PR_to_BinaryPR.v
+L/Complexity/Reductions/Cook/UniformHomomorphisms.v
+
+
 # A library of formalised undecidable problems in Coq
 
 This library contains undecidable problems and formalised reductions between them.
