@@ -78,7 +78,7 @@ make deps
 - `make clean` removes all build files in `theories` and `.html` files in the `website` directory
 - `make realclean` also removes all build files in the `external` directory. You have to run `make deps` again after this.
 
-Use `make all -j[num #cores * 2]` to speed up compilation if you have enough RAM. For compilation with 8 threads or more, about 8-10GB RAM are needed. Minimum RAM needed is ~5GB.
+Use `make all -j[#cores * 2]` to speed up compilation if you have enough RAM. For compilation with 8 threads or more, about 8-10GB RAM are needed. Minimum RAM needed is ~5GB.
 This should take about 1-2 hours, depending on the speed of your system.
 
 ## Thesis
@@ -86,6 +86,11 @@ The source code of the thesis is located in `tex/thesis`. Build it with `make`.
 A PDF can be downloaded [here](https://www.ps.uni-saarland.de/~gaeher/files/thesis.pdf). 
 
 ## Acknowledgements
+The main definitions of NP and poly-time reductions were developed by [Fabian Kunze](https://www.ps.uni-saarland.de/~kunze/); this includes all files in the `theories/L/Complexity/` folder except for the ones listed above.
+
+The Coq notation definitions for the option monad in file `theories/L/Complexity/MorePrelim.v` have been taken from [Thomas Strathmann's blog post](https://pdp7.org/blog/2011/01/the-maybe-monad-in-coq/). 
+
+Please also read the Acknowledgements section of the thesis.
 
 ## License
 
