@@ -107,3 +107,10 @@ Proof.
     apply G, Hel.
   - intros (v1 & v2) Hel%R__edgesSound. apply Hel.
 Qed.
+
+Fact isFlatEdgesOf_fedges_wf E V (finV : finType) (finE : finV * finV -> Prop) : isFlatEdgesOf E V finE -> fedges_wf V E. 
+Proof. 
+  intros H. destruct H. 
+  unfold fedges_wf. intros (e1& e2) Hel. 
+  apply R__edgesSound, Hel. 
+Qed.

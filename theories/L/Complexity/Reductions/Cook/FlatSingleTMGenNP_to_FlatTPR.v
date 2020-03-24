@@ -819,16 +819,6 @@ Proof.
   now unfold c__tupToEvalEnv. 
 Defined.
 
-(** seq *)
-Definition c__seq := 20.
-Definition seq_time (len : nat) := (len + 1) * c__seq.
-Instance term_seq : computableTime' seq (fun start _ => (5, fun len _ => (seq_time len, tt))). 
-Proof. 
-  extract. solverec. 
-  all: unfold seq_time, c__seq; solverec. 
-Defined. 
-
-(** prodLists *)
 Section fixprodLists. 
   Variable (X Y : Type).
   Context `{Xint : registered X} `{Yint : registered Y}.
@@ -850,12 +840,12 @@ Section fixprodLists.
   Defined. 
 
   Definition poly__prodLists n := n * (n + 1) * c__prodLists2 + c__prodLists1.
-  Lemma prodLists_time_bound l1 l2 : prodLists_time l1 l2 <= poly__prodLists (size (enc l1) + size (enc l2)). 
+  Lemma prodLists_time_bound (l1 : list X) (l2 : list Y) : prodLists_time l1 l2 <= poly__prodLists (size (enc l1) + size (enc l2)). 
   Proof. 
     unfold prodLists_time. rewrite !list_size_length. 
     unfold poly__prodLists. solverec. 
   Qed. 
-  Lemma prodList_poly : monotonic poly__prodLists /\ inOPoly poly__prodLists. 
+  Lemma prodLists_poly : monotonic poly__prodLists /\ inOPoly poly__prodLists. 
   Proof. 
     unfold poly__prodLists; split; smpl_inO. 
   Qed. 
@@ -2878,7 +2868,7 @@ Qed.
 From Undecidability.L.Complexity.Problems.Cook Require Import GenNP. 
 Theorem FlatSingleTMGenNP_to_FlatTPRLang_poly : reducesPolyMO (unrestrictedP FlatSingleTMGenNP) (unrestrictedP FlatTPRLang). 
 Proof. 
-  apply reducesPolyMO_intro with (f := reduction). 
+  apply reducesPolyMO_intro_unrestricted with (f := reduction). 
   - exists poly__reduction.
     + exists (extT reduction). eapply computesTime_timeLeq. 2: apply term_reduction.
       cbn. intros p _. split; [ | easy]. destruct p as (((tm & fixed) & t) & k').
@@ -2888,5 +2878,5 @@ Proof.
     + evar (f :nat -> nat). exists f. 
       1: { intros p. rewrite reduction_size_bound. [f]: intros n. subst f; reflexivity. }
       all: subst f; smpl_inO; unfold poly__reductionSize; smpl_inO; apply reduction_wf_size_poly. 
-  - cbn. intros p _. exists Logic.I. apply FlatSingleTMGenNP_to_FlatTPR.
+  - apply FlatSingleTMGenNP_to_FlatTPR.
 Qed.

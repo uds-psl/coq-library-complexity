@@ -501,12 +501,12 @@ Qed.
 
 Lemma FlatPR_to_BinaryPR_poly : reducesPolyMO (unrestrictedP FlatPRLang) (unrestrictedP BinaryPRLang).
 Proof. 
-  apply reducesPolyMO_intro with (f := reduction).
+  apply reducesPolyMO_intro_unrestricted with (f := reduction).
   - exists poly__reduction. 
     + extract. solverec. 
       all: specialize (reduction_time_bound x) as H1; unfold reduction_time, c__reduction in H1; nia.
     + apply reduction_poly.
     + apply reduction_poly. 
     + destruct (reduction_size_bound) as (f & H1 & H2 & H3). exists f; auto.
-  - intros fpr ?. cbn. exists Logic.I. apply FlatPR_to_BinaryPR. 
+  - apply FlatPR_to_BinaryPR. 
 Qed. 

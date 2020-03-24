@@ -20,7 +20,7 @@ Proof.
   } 
 
   (*check if it is a kCNF. if so, the reduction the SAT instance is the identity. otherwise, return a negative SAT instance*)
-  apply reducesPolyMO_intro with (f := fun N => if kCNF_decb (S k) N then N else [[(true, 0)]; [(false, 0)]]) . 
+  apply reducesPolyMO_intro_unrestricted with (f := fun N => if kCNF_decb (S k) N then N else [[(true, 0)]; [(false, 0)]]) . 
   - evar (f : nat -> nat). exists f. 
     + extract. solverec.
       all: rewrite kCNF_decb_time_bound. 
@@ -34,7 +34,7 @@ Proof.
         all: subst g; solverec. 
       * subst g; smpl_inO. 
       * subst g; smpl_inO. 
-  - intros N ?. cbn. exists Logic.I. split.
+  - intros N. split.
     + intros [H1 [H2 H3]].
       apply kCNF_decb_iff in H2. rewrite H2. apply H3.  
     + destruct kCNF_decb eqn:H1. 

@@ -21,6 +21,7 @@ Section fixTM.
   Variable (sig : finType).
   Variable (M : mTM sig 1). 
 
+  (*Variable (H : registered sig). *)
   Let reg_sig := @registered_finType sig.
   Existing Instance reg_sig.
   
@@ -31,6 +32,19 @@ Section fixTM.
 
   Definition reduction (p : list sig * nat * nat) := 
     let '(ts, maxSize, steps) := p in (flatM, map index (ts : list sig), maxSize, steps). 
+
+  (* need to either assume index or enc to be computable on sig if we want to work with arbitrary encodings of sig*)
+
+  (*Definition list_encodings := map enc (elem sig).*)
+  (*Definition c__index := 1. *)
+  (*Definition index_time (e : sig) := 1. *)
+  (*Instance term_index : computableTime' (@index sig) (fun e _ => (1, tt)). *)
+  (*Proof. *)
+    (*apply computableTimeExt with (x := fun x => getPosition list_encodings (enc x)). *)
+    (*1:{ unfold index. intros x. cbn.*)
+        (*unfold list_encodings. apply getPosition_map. apply H. *)
+    (*} *)
+    (*extract. *)
 
   Definition c__reduction := (16 + 2 * c__map).
   Definition reduction_time (ts : list sig) := (|ts| + 1) * c__reduction.
@@ -91,7 +105,7 @@ Section fixTM.
   Lemma TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP : 
     reducesPolyMO (unrestrictedP (TMGenNP_fixed_singleTapeTM M)) (unrestrictedP FlatFunSingleTMGenNP). 
   Proof. 
-    apply reducesPolyMO_intro with (f := reduction). 
+    apply reducesPolyMO_intro_unrestricted with (f := reduction). 
     - evar (f : nat -> nat). exists f. 
       + eexists. eapply computesTime_timeLeq. 2: apply term_reduction. 
         cbn. intros ((ts & ?) & ?) _. split; [ | easy]. 
@@ -108,7 +122,7 @@ Section fixTM.
           subst g. cbn. nia. 
         * subst g. smpl_inO. 
         * subst g. smpl_inO. 
-    - intros ((ts & maxSize) & steps) ?. exists Logic.I. 
-      cbn -[TMGenNP_fixed_singleTapeTM FlatFunSingleTMGenNP]. apply reduction_correct. 
+    - apply reduction_correct. 
   Qed. 
 End fixTM. 
+

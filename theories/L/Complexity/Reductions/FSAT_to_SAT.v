@@ -924,26 +924,26 @@ Qed.
   
   
 (** ** full reduction *)
-Theorem FSAT_reduces_to_SAT : reducesPolyMO (unrestrictedP FSAT) (unrestrictedP SAT). 
+Theorem FSAT_to_SAT_poly : reducesPolyMO (unrestrictedP FSAT) (unrestrictedP SAT). 
 Proof. 
-  apply reducesPolyMO_intro with (f := reduction). 
+  apply reducesPolyMO_intro_unrestricted with (f := reduction). 
   - exists poly__reduction. 
     + eexists. eapply computesTime_timeLeq. 2: apply term_reduction. 
       cbn -[Nat.add Nat.mul]. intros f _. split; [ | easy]. apply reduction_time_bound. 
     + apply reduction_poly. 
     + apply reduction_poly. 
     + destruct (reduction_poly_size) as (h & H1 & H2). exists h; [apply H1 | apply H2 | apply H2]. 
-  - cbn. intros f _. exists Logic.I. apply FSAT_to_SAT. 
+  - apply FSAT_to_SAT. 
 Qed. 
 
-Theorem FSAT_reduces_to_3SAT : reducesPolyMO (unrestrictedP FSAT) (unrestrictedP (kSAT 3)). 
+Theorem FSAT_to_3SAT_poly : reducesPolyMO (unrestrictedP FSAT) (unrestrictedP (kSAT 3)). 
 Proof. 
-  apply reducesPolyMO_intro with (f := reduction). 
+  apply reducesPolyMO_intro_unrestricted with (f := reduction). 
   - exists poly__reduction. 
     + eexists. eapply computesTime_timeLeq. 2: apply term_reduction. 
       cbn -[Nat.add Nat.mul]. intros f _. split; [ | easy]. apply reduction_time_bound. 
     + apply reduction_poly. 
     + apply reduction_poly. 
     + destruct (reduction_poly_size) as (h & H1 & H2). exists h; [apply H1 | apply H2 | apply H2]. 
-  - cbn. intros f _. exists Logic.I. apply FSAT_to_3SAT. 
+  - apply FSAT_to_3SAT. 
 Qed.

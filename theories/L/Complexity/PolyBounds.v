@@ -405,3 +405,19 @@ Proof.
     fold elem_size in F1. fold elem_size in F2.
     split; nia. 
 Qed. 
+
+Section prodLists_bound. 
+  Variable (X Y : Type).
+  Context `{Xint : registered X} `{Yint : registered Y}.
+
+  Definition poly__prodLists n := n * (n + 1) * c__prodLists2 + c__prodLists1.
+  Lemma prodLists_time_bound (l1 : list X) (l2 : list Y) : prodLists_time l1 l2 <= poly__prodLists (size (enc l1) + size (enc l2)). 
+  Proof. 
+    unfold prodLists_time. rewrite !list_size_length. 
+    unfold poly__prodLists. solverec. 
+  Qed. 
+  Lemma prodLists_poly : monotonic poly__prodLists /\ inOPoly poly__prodLists. 
+  Proof. 
+    unfold poly__prodLists; split; smpl_inO. 
+  Qed. 
+End prodLists_bound. 

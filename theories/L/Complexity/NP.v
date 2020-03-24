@@ -188,6 +188,15 @@ Proof.
   intros H H'. econstructor. eassumption. all:intros ? ?. apply (proj2_sig (H' _ Hx)).
 Qed.
 
+Lemma reducesPolyMO_intro_unrestricted X Y `{RX: registered X} `{RY:registered Y} (P : X -> Prop) (Q : Y -> Prop) (f:X -> Y):
+  polyTimeComputable f
+  -> (forall x , P x <-> Q (f x))
+  -> (unrestrictedP P) ⪯p (unrestrictedP Q).
+Proof.
+  intros H H'. 
+  eapply reducesPolyMO_intro; [apply H | ].  
+  cbn. intros x _. exists Logic.I. apply H'. 
+Qed.
 
 Lemma reducesPolyMO_intro_restrictBy X Y `{RX: registered X} `{RY:registered Y} (vP P : X -> Prop) (vQ Q:Y->Prop) (f:X -> Y):
   polyTimeComputable f

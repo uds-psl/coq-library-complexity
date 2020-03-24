@@ -440,3 +440,37 @@ Section concat_fixX.
   Qed. 
   
 End concat_fixX. 
+
+(** seq *)
+Definition c__seq := 20.
+Definition seq_time (len : nat) := (len + 1) * c__seq.
+Instance term_seq : computableTime' seq (fun start _ => (5, fun len _ => (seq_time len, tt))). 
+Proof. 
+  extract. solverec. 
+  all: unfold seq_time, c__seq; solverec. 
+Defined. 
+
+(** prodLists *)
+Section fixprodLists. 
+  Variable (X Y : Type).
+  Context `{Xint : registered X} `{Yint : registered Y}.
+
+  Definition c__prodLists1 := 22 + c__map + c__app. 
+  Definition c__prodLists2 := 2 * c__map + 39 + c__app.
+  Definition prodLists_time (l1 : list X) (l2 : list Y) := (|l1|) * (|l2| + 1) * c__prodLists2 + c__prodLists1. 
+  Global Instance term_prodLists : computableTime' (@list_prod X Y) (fun l1 _ => (5, fun l2 _ => (prodLists_time l1 l2, tt))). 
+  Proof. 
+    apply computableTimeExt with (x := fix rec (A : list X) (B : list Y) : list (X * Y) := 
+      match A with 
+      | [] => []
+      | x :: A' => map (@pair X Y x) B ++ rec A' B 
+      end). 
+    1: { unfold list_prod. change (fun x => ?h x) with h. intros l1 l2. induction l1; easy. }
+    extract. solverec. 
+    all: unfold prodLists_time, c__prodLists1, c__prodLists2; solverec. 
+    rewrite map_length, map_time_const. leq_crossout. 
+  Defined. 
+
+End fixprodLists. 
+
+

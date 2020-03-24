@@ -1666,7 +1666,7 @@ Qed.
 (** full reduction statement *)
 Theorem BinaryPR_to_FSAT_poly : reducesPolyMO (unrestrictedP BinaryPRLang) (unrestrictedP FSAT). 
 Proof. 
-  eapply reducesPolyMO_intro with (f := reduction). 
+  eapply reducesPolyMO_intro_unrestricted with (f := reduction). 
   - exists (fun n => poly__encodeTableau n + poly__BinaryPRWfDec n + c__reduction). 
     + eexists. 
       eapply computesTime_timeLeq. 2: { apply term_reduction. }
@@ -1684,5 +1684,5 @@ Proof.
         -- lia. 
       * smpl_inO. 
       * smpl_inO. 
-  - intros bpr ?. exists Hx. cbn. apply BinaryPR_to_FSAT. 
+  - apply BinaryPR_to_FSAT. 
 Qed. 
