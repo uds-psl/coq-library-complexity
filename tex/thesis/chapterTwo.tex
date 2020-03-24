@@ -16,7 +16,7 @@
 
 \newcommand{\encsize}[1]{\left\lVert#1\right\rVert}
 
-\newcommand{\redP}{\ensuremath{\prec_p}}
+\newcommand{\redP}{\ensuremath{\preceq_p}}
 
 \chapter{Preliminaries}\label{chap:preliminaries}
 \setCoqFilename{Undecidability.L.Complexity.MorePrelim}
@@ -352,6 +352,7 @@ $\redP$ is \coqlink[reducesPolyMO_transitive]{transitive} and inclusion in \NP{}
 \begin{definition}[\NP{} hardness and \NP{} completeness]
   A problem $Q : X \rightarrow \Prop$ is \coqlink[NPhard]{\NP{}-hard} if any problem $P : Y \rightarrow \Prop$ can be reduced to it in polynomial time, i.e.\ $P \redP{} Q$. It is \coqlink[NPcomplete]{\NP{}-complete} if, in addition, $Q \in \normalfont\NP{}$.
 \end{definition}
+\todo{why does the coq formalisation require registeredP for NP-hardness?}
 
 \NP{} hardness \coqlink[red_NPhard]{transfers along} polynomial-time reductions: if $p \redP{} q$ and $p$ is \NP{}-hard, then $q$ is \NP{}-hard.
 

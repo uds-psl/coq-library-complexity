@@ -2,7 +2,8 @@
 
 In this chapter, we present the parts of the semantics of Turing machines that were left out in Section~\ref{sec:tm}. Let us fix a Turing machine tape alphabet $\Sigma :\finType$ and a Turing machine $M = (Q, \delta, \textsf{start}, \textsf{halt}) : \textsf{TM}~\Sigma~n$.
 
-We start with the functions $\tmleft, \tmright : \textsf{tape}_\Sigma \rightarrow \listsof{\Sigma}$ and $\tmcurrent : \textsf{tape}_\Sigma \rightarrow \opt{\Sigma}$ giving the parts of the tape left, right or under the head.
+\setCoqFilename{Undecidability.TM.TM}%
+We start with the functions \coqlink[left]{\textsf{left}}, \coqlink[right]{\textsf{right}} $: \textsf{tape}_\Sigma \rightarrow \listsof{\Sigma}$ and \coqlink[current]{\textsf{current}} $: \textsf{tape}_\Sigma \rightarrow \opt{\Sigma}$ giving the parts of the tape left, right, or under the head.
 
 \begin{minipage}{0.5\textwidth}
 \begin{align*}
@@ -25,48 +26,54 @@ We start with the functions $\tmleft, \tmright : \textsf{tape}_\Sigma \rightarro
   \tmcurrent~\_ &\defeq \ONone 
 \end{align*}
 
-The function \textsf{tape\_write} writes a symbol to the current position of a tape.
+The function \coqlink[tape_write]{\textsf{tape\_write}} writes a symbol to the current position of a tape.
 \begin{align*}
   \textsf{tape\_write} &: \textsf{tape}_\Sigma \rightarrow \opt{\Sigma} \rightarrow \textsf{tape}~\Sigma \\
   \textsf{tape\_write}~t~\ONone &\defeq t \\
   \textsf{tape\_write}~t~(\OSome s) &\defeq \tmmidtape~(\tmleft~t)~s~(\tmright t)
 \end{align*}
 
-Recall the function $\tapemove{} : \textsf{tape}_\Sigma \rightarrow \textsf{move} \rightarrow \textsf{tape}_\Sigma$ we have defined on Page~\pageref{fig:movetape} that moves a tape in a given direction. 
-The function $\textsf{doAct} : \textsf{tape}_\Sigma \rightarrow \textsf{Act}_\Sigma \rightarrow \textsf{tape}_\Sigma$ performs an action on a tape by first writing a symbol and then moving the tape.
+Recall the function \coqlink[tape_move]{\tapemove{}} $: \textsf{tape}_\Sigma \rightarrow \textsf{move} \rightarrow \textsf{tape}_\Sigma$ we have defined on Page~\pageref{fig:movetape} that moves a tape in a given direction. 
+The function \coqlink[doAct]{\textsf{doAct}} $: \textsf{tape}_\Sigma \rightarrow \textsf{Act}_\Sigma \rightarrow \textsf{tape}_\Sigma$ performs an action on a tape by first writing a symbol and then moving the tape.
 \[\textsf{doAct}~t~(s, m) \defeq \textsf{tape\_move}~(\textsf{tape\_write}~t~s)~m \]
 
 In order to perform a computational step, we start by gathering the symbols under the heads and then lookup the value of the transition function to perform the actions given by the transition function on all tapes. 
 \begin{align*}
-  \textsf{step} &: \textsf{conf}_M \rightarrow \textsf{conf}_M \\
+  \coqlink[step]{\textsf{step}} &: \textsf{conf}_M \rightarrow \textsf{conf}_M \\
   \textsf{step}~(q, ts) &\defeq \llet (q', as) \defeq \delta (q, \withl \tmcurrent~t \withm t \in ts \withr) \lin (q', \withl \textsf{doAct}~t~a \withm t \in ts, a \in as \withr) 
 \end{align*}
 
-The execution is defined computationally. We first define an abstract loop function $\textsf{loop} : \forall A, (A \rightarrow A) \rightarrow (A \rightarrow \bool) \rightarrow A \rightarrow \nat \rightarrow \opt{A}$: 
+\setCoqFilename{Undecidability.TM.Prelim}
+The execution is defined computationally. We first define an abstract loop function. 
 \begin{align*}
-  \textsf{loop}~f~p~a~k \defeq \ITE{p~a}{\OSome{a}}{\match~k~\withl 0 \Rightarrow \ONone \withm S~k' \Rightarrow \textsf{loop}~f~p~(f~a)~k' \withr}
+  \coqlink[loop]{\textsf{loop}} &: \forall A, (A \rightarrow A) \rightarrow (A \rightarrow \bool) \rightarrow A \rightarrow \nat \rightarrow \opt{A} \\
+  \textsf{loop}~f~p~a~k &\defeq \ITE{p~a}{\OSome{a}}{\match~k~\withl 0 \Rightarrow \ONone \withm S~k' \Rightarrow \textsf{loop}~f~p~(f~a)~k' \withr}
 \end{align*}
-Before we define the loop functions for Turing machines, we fix initial configurations and halting configurations.
+Intuitively, $f$ is a step function, $p$ is a predicate that is $\btrue$ when the loop should break, $a$ is the initial value, and $k$ is the maximum number of steps. If the loop terminates within at most $k$ steps, the final value is returned.
+Before we give the loop function for Turing machines, we fix initial configurations and halting configurations.
 \begin{align*}
   \textsf{initConf}~t \defeq (\textsf{start}, t) \\
   \textsf{haltingConf}~(q, t) \defeq \textsf{halt}~q 
 \end{align*}
 
-Now, we can instantiate $\textsf{loop}$ suitably to obtain a function executing the Turing machine $M$.
+\setCoqFilename{Undecidability.TM.TM}
+Now, we can instantiate \textsf{loop} suitably to obtain a function executing the Turing machine $M$.
 \begin{align*}
-  \textsf{loopTM} &: \textsf{Conf}_M \rightarrow \nat \rightarrow \opt{\textsf{Conf}_M} \\
-  \textsf{loopTM}~c~\textsf{steps} &\defeq \textsf{loop}~\textsf{step}~\textsf{haltingConf}~c~\textsf{steps}
+  \coqlink[loopM]{\textsf{loopTM}} &: \textsf{Conf}_M \rightarrow \nat \rightarrow \opt{\textsf{Conf}_M} \\
+  \textsf{loopTM}~c~\textsf{steps} &\defeq \textsf{loop}~\textsf{step}~\textsf{haltingConf}~c~\textsf{steps} \\[0.7ex]
+  \coqlink[execTM]{\textsf{execTM}}~t &\defeq \textsf{loopTM}~(\textsf{initConf}~t)
 \end{align*}
 
 \section{Single-tape Turing Machines}
+\setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.TM_single} 
 For the whole of Chapter~\ref{chap:gennp_pr}, we have used simpler definitions for single-tape Turing machines. 
 In the following, we present the derived definitions. 
 \begin{align*}
-  \textsf{sconf}_M &\defeq Q \times \textsf{tape}_\Sigma \\
-  \textsf{trans}_M~((q, t) : \textsf{sconf}_M) &\defeq \llet (q', [a]) \defeq \delta (q, [t]) \lin (q', a) \\
-  \textsf{sstep}~((q, t) : \textsf{sconf}_M) &\defeq \llet (q', a) \defeq \textsf{trans}_M (q, \tmcurrent~t) \lin (q', \textsf{doAct}~tp~a) 
+  \coqlink[sconfig]{\textsf{sconf}_M} &\defeq Q \times \textsf{tape}_\Sigma \\
+  \coqlink[strans]{\textsf{trans}_M}~((q, t) : \textsf{sconf}_M) &\defeq \llet (q', [a]) \defeq \delta (q, [t]) \lin (q', a) \\
+  \coqlink[sstep]{\textsf{sstep}}~((q, t) : \textsf{sconf}_M) &\defeq \llet (q', a) \defeq \textsf{trans}_M (q, \tmcurrent~t) \lin (q', \textsf{doAct}~tp~a) 
 \end{align*}
-
+Here we use the same notations for vectors as for lists, i.e.\ $[a]$ is a singleton vector in the definition of $\textsf{trans}_M$, for instance.
 We define the following relations: 
 \begin{align*}
   (q, t) \succ (q', t') &\defeq \textsf{halt}~q = \bfalse \land \textsf{sstep}~s = s' \\
@@ -74,5 +81,5 @@ We define the following relations:
   (q, tp) \rhd^{\le k} (q', tp') &\defeq \exists l \le k, (q, tp) \rhd^l (q', tp')
 \end{align*}
 
-One can show that these relational definitions agree with \textsf{loopTM} in the expected way. 
+One can show that these relational definitions agree with \textsf{loopTM} in the \coqlink[relpower_loop_agree]{expected} \coqlink[loop_relpower_agree]{way}. 
 

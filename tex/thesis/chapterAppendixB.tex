@@ -1,5 +1,6 @@
 \chapter{Full Rewrite Rules}\label{app:rewrite_rules}
 The following list contains the full set of rewrite rules as implemented by the Coq mechanisation.
+\setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.SingleTMGenNP_to_TPR}
 
 \section{Tape Rules}
 \paragraph{Right Shifts}
@@ -27,7 +28,7 @@ The rules for left shifts are defined to be the polarity-reversion of the rules 
 \end{center}
 
 
-\section{Transition Rules}
+\section{\coqlink[transRules]{Transition Rules}}
 \paragraph{\bm{$\delta(q, \OSome{a}) = (p, \OSome{b}, \movel)$}:}
 \begin{center}
   \tikzset{baseline={([yshift=-22pt]current bounding box.north)}}
