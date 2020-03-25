@@ -18,7 +18,7 @@ The following list contains the full set of rewrite rules as implemented by the 
 \end{center}
 
 \paragraph{Left Shifts}
-The rules for left shifts are defined to be the polarity-reversion of the rules for shifting to the right. 
+The rules for left shifts are defined to be the polarity-reversion of the rules for shifting to the right, i.e. $\irewwin{\gamma_1}{\gamma_2}{\gamma_3}{\gamma_4}{\gamma_5}{\gamma_6}$ is a rule for shifting to the left if, and only if, $\irewwin{\pFlipi{\gamma_3}}{\pFlipi{\gamma_2}}{\pFlipi{\gamma_1}}{\pFlipi{\gamma_6}}{\pFlipi{\gamma_5}}{\pFlipi{\gamma_4}}$ is a rule for shifting to the right. 
 
 \paragraph{Identity Rules}
 \begin{center}
@@ -28,7 +28,7 @@ The rules for left shifts are defined to be the polarity-reversion of the rules 
 \end{center}
 
 
-\section{\coqlink[transRules]{Transition Rules}}
+\section{Transition Rules}
 \paragraph{\bm{$\delta(q, \OSome{a}) = (p, \OSome{b}, \movel)$}:}
 \begin{center}
   \tikzset{baseline={([yshift=-22pt]current bounding box.north)}}

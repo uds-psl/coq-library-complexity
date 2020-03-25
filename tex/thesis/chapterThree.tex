@@ -4,7 +4,7 @@
 \chapter{Reducing $k$-SAT to Clique}\label{chap:ksat_clique}
 In this chapter, we give a first formalisation of a polynomial-time reduction from the $k$-\SAT{} problem to the \Clique{} problem on undirected graphs. The main purpose of this chapter is to introduce the style of proofs we use. In particular, we comment on some of the more technical aspects of doing the running time analysis in Coq so that we can focus on the less technical aspects in the later chapters. 
 
-The satisfiablity problem \SAT{} on CNFs is well-known: given a Boolean formula in conjunctive normal form, we determine whether there exists a satisfying assignment to the variables. 
+The satisfiablity problem \SAT{} on CNFs is well-known: given a Boolean formula in conjunctive normal form, we determine whether there exists a satisfying assignment to the variables. $k$-\SAT{} restricts the definition to CNFs with a clause size of $k$ for a fixed $k$.
 \Clique{} is a graph-based problem. Given an undirected graph $G = (V, E)$, a $k$-clique is a set of vertices $C \subseteq V$ such that $\length{C} = k$ and all possible edges between vertices of $C$ are present in $E$. For a graph $G$ and a number $k$, the \Clique{} problem asks whether there exists a $k$-clique in the graph $G$. 
 
 The reduction from $k$-\SAT{} to \Clique{} is an example of a relatively simple reduction: in~\cite{Bläser:TISkript}, it is one of the first examples of a polynomial-time reduction in an undergraduate course on theoretical computer science. There, the full proof on paper does not even span half a page. 
@@ -30,8 +30,7 @@ A literal is either a Boolean variable or its negation. The disjunction of a num
 \end{align*}
 Here, the Boolean $b$ of a literal $(b, v)$ denotes the literal's \textit{sign}. If the sign is negative (i.e.\ $b = \bfalse$), the literal represents $v$'s negation, otherwise it represents $v$.
 
-An assignment to a CNF assigns a Boolean value to each of its variables. We choose to model an assignment as the list of variables which are assigned the value $\btrue$. All other variables are implicitly assigned the value $\bfalse$:
-$a : \assgn \defeq \listsof{\bvar}\mnote[assgn]{\assgn}$.
+An assignment $a : \mnote[assgn]{\assgn}$ to a CNF assigns a Boolean value to each of its variables. We choose to model an assignment as the list of variables which are assigned the value $\btrue$. All other variables are implicitly assigned the value $\bfalse$: $\assgn \defeq \listsof{\bvar}$.
 
 \setCoqFilename{Undecidability.L.Complexity.Problems.SharedSAT}
 One can define evaluation functions \mnotec{$\eval$} for \coqlink[evalVar]{variables},
@@ -68,13 +67,14 @@ Therefore, we introduce the notion of \emph{small} assignments.
 \newcommand{\varsOfClause}{\textsf{varsOfClause}}
 \newcommand{\varsOfCnf}{\textsf{varsOfCnf}}
 \begin{definition}[Used Variables]
-  We can define functions
-  \begin{itemize}
-    \item $\varsOfLiteral : \literal \rightarrow \listsof{\bvar}$,\mnote[varsOfLiteral]{\varsOfLiteral}
-    \item $\varsOfClause : \clause \rightarrow \listsof{\bvar}$, \mnote[varsOfClause]{\varsOfClause}
-    \item $\varsOfCnf : \cnf \rightarrow \listsof{\bvar}$ \mnote[varsOfCnf]{\varsOfCnf}
-  \end{itemize}
-  calculating a list of variables contained in a literal, clause, or CNF.\
+  We can define a function $\varsOfCnf : \cnf \rightarrow \listsof{\bvar}$ \mnote[varsOfCnf]{\varsOfCnf} calculating a list of variables contained in a CNF.\
+  %We can define functions
+  %\begin{itemize}
+    %\item $\varsOfLiteral : \literal \rightarrow \listsof{\bvar}$,\mnote[varsOfLiteral]{\varsOfLiteral}
+    %\item $\varsOfClause : \clause \rightarrow \listsof{\bvar}$, \mnote[varsOfClause]{\varsOfClause}
+    %\item $\varsOfCnf : \cnf \rightarrow \listsof{\bvar}$ \mnote[varsOfCnf]{\varsOfCnf}
+  %\end{itemize}
+  %calculating a list of variables contained in a literal, clause, or CNF.\
 \end{definition}
 
 \newcommand{\smallA}{\textsf{small}}
@@ -128,7 +128,7 @@ Semantically, \compressA{} changes the assignment: after removing assignments to
 \end{lemma}
 
 In order to prove Lemma~\ref{lem:sat_in_np}, we need to show that there are valid certificates of polynomial size exactly for those CNFs $N$ for which $\SAT{}~N$ holds. 
-Moreover, we need to show that the verifier runs in polynomial time. 
+Moreover, it has to be shown that the verifier runs in polynomial time. 
 As these proofs are quite technical, we usually omit them on paper. However, as the analyses are an integral part of this work, the following section is an exception and treats the general procedure we use.
 
 \subsection{Running-time Analysis Using the Extraction Mechanism}
@@ -143,9 +143,9 @@ As these proofs are quite technical, we usually omit them on paper. However, as 
   Here, we have annotated the evaluation function with a subscript to make clearer which one we mean: $\eval_N$ is the evaluation function for CNFs, while $\eval_C$ is the function for clauses.
 
   In order to extract this function to L, we first need to generate the encodings for the used datatypes, in this case for lists, $\nat$, and $\bool$\footnote{This has to be done only once and then never again.}. 
-  Next, all the used functions need to be extracted first, in this case the evaluation of clauses. We assume this has already been done. 
+  Next, all the used functions need to be extracted first, in this case the evaluation of clauses and the Boolean conjunction. We assume this has already been done. 
 
-  Now the evaluation function itself can be extracted. During the process, the following recurrences for the running time are generated:
+  Now, the evaluation function itself can be extracted. During the process, the following recurrences for the running time are generated:
   \begin{align}
     T(\eval_N)~a~\nil &\ge 9 \\
     T(\eval_N)~a~(C :: N) &\ge T(\eval_N)~a~N + T (\eval_C)~a~C + 22
@@ -156,11 +156,11 @@ As these proofs are quite technical, we usually omit them on paper. However, as 
   Next, we aim to bound the function $T(\eval_N)$ by a monotonic polynomial $p_{\eval_N} : \nat \rightarrow \nat$ in the encoding size of the arguments such that 
   \[\forall a~N, T(\eval_N)~a~N \le p_{\eval_N}(\encsize{\overline{a}} + \encsize{\overline{N}}) \]
   holds. In principle, we could also use a multivariate polynomial having one variable for each of the arguments, but this would only complicate things. 
-  In the case of $\eval_N$, the polynomial $\coqlink[poly__evalCnf]{p_{\eval_N}}~n \defeq n \cdot p_{\eval_C}~n + c_{\eval_N} \cdot (n +1)$ works, where $p_{\eval_C}$ is the polynomial bounding $T(\eval_C)$ and $c_{\eval_N}$ is a constant. The bounding equation is then proved by induction on the CNF $N$. 
+  In the case of $\eval_N$, the polynomial $\coqlink[poly__evalCnf]{p_{\eval_N}}(n) \defeq n \cdot p_{\eval_C}(n) + c_{\eval_N} \cdot (n +1)$ works, where $p_{\eval_C}$ is the polynomial bounding $T(\eval_C)$ and $c_{\eval_N}$ is a constant. The bounding equation is then proved by induction on the CNF $N$. 
 
-  Higher-order functions can be treated in a similar way, but there the running time bounds are conditional on bounds for the argument functions. In many cases, however, it seems to be easier to define a function via direct recursion instead of using a higher-order functions whose bounding is more complicated.
+  Higher-order functions can be treated in a similar way, but there the running time bounds are conditional on bounds for the argument functions. In many cases, however, it seems to be easier to define a function via direct recursion instead of using a higher-order functions which is more complicated to bound.
 
-  Recall that, regarding the size, we only need to bound the size of the result. The procedure of deriving a polynomial is similar in that case, although the extraction mechanism does not derive space bounds currently; instead, we derive bounds semantically.
+  Recall that, regarding the size, we only need to bound the size of the result. The procedure of deriving a polynomial is similar in that case, although the extraction mechanism does not derive space bounds currently; instead, we derive bounds via semantic arguments.
 
   \begin{remark}[Binary versus Unary Numbers]
     In complexity theory, the question of the specific encoding of a problem is an important one. Especially for numbers, this is a delicate subject: a unary encoding of numbers is exponentially larger than the binary encoding. Therefore, one usually uses a binary encoding of numbers. Some number-theoretic problems, for instance, are not \NP{}-hard anymore if a unary encoding instead of a binary encoding is used.
@@ -212,7 +212,7 @@ The second problem involved in our first reduction is the \Clique{} problem on u
   An undirected graph $G = (V, E) : \UGraph$\mnote[UGraph]{\UGraph} consists of a type of vertices $V : \finType$ and an edge relation $E : V \rightarrow V \rightarrow \Prop$ together with the following proofs:
   \begin{itemize}
     \item $E$ is symmetric, i.e. $\forall v_1~v_2 : V, E~v_1~v_2 \leftrightarrow E~v_2~v_1$, 
-    \item and $E$ is decidable, that is, there exists a function $\Edec : \forall v_1~v_2 : V, (\{v_1, v_2\} \in E) + (\{v_1, v_2\} \notin E)$, where the $+$ denotes the sum type and we write $\{v_1, v_2\} \in E$ for $E~v_1~v_2$.
+    \item and $E$ is decidable, that is, there exists a function $\Edec : \forall v_1~v_2 : V, \textsf{dec}~(\{v_1, v_2\} \in E)$, where $\textsf{dec}~p \defeq p + (\lnot p)$ and we write $\{v_1, v_2\} \in E$ for $E~v_1~v_2$.
   \end{itemize}
   We use the notation $\{v_1, v_2\} \in E$ instead of $(v_1, v_2) \in E$ to explicitly express that $E$ is symmetric.
 \end{definition}
@@ -301,11 +301,11 @@ Thus, we can define a representation relation for graphs as follows:
 \end{definition}
 
 \setCoqFilename{Undecidability.L.Complexity.Problems.FlatClique}
-Cliques can be defined \coqlink[isfKClique]{in the expected way} for the flat graphs. 
-The only difference to the definition on non-flat graphs is that we have to explicitly require the graph to be syntactically wellformed (see \text{FlatUGraph\_wf}). 
+Cliques can be defined \coqlink[isfKClique]{in the expected way} for flat graphs. 
+The only difference to the definition on non-flat graphs is that we have to explicitly require the graph to be syntactically wellformed (see \textsf{FlatUGraph\_wf}). 
 The corresponding problem is called \mnotec[FlatClique]{\FlatClique{}}. A proof that \FlatClique{} is contained in \NP{} is \coqlink[FlatClique_in_NP]{straightforward}.
 
-We can then derive an agreement statement statement for the two definitions: if $(v, e) \approx (V, E)$ and if $l : \listsof{\nat}$ and $L : \listsof{V}$, then $l$ is a clique in $(v, e)$ \coqlink[clique_flat_agree]{if, and only if,} $L$ is a clique in $(V, E)$. Moreover, from a clique for one representation we can compute a clique for the \coqlink[clique_flatten]{other} \coqlink[clique_unflatten]{representation}.
+We can then derive an agreement statement for the two definitions: if $(v, e) \approx (V, E)$ and if $l : \listsof{\nat}$ and $L : \listsof{V}$, then $l$ is a clique in $(v, e)$ \coqlink[clique_flat_agree]{if, and only if,} $L$ is a clique in $(V, E)$. Moreover, from a clique for one representation we can compute a clique for the \coqlink[clique_flatten]{other} \coqlink[clique_unflatten]{representation}.
 This agreement allows us to reason using the propositional version, but analyse the running time on the flat version. 
 
 \section{Reduction from $k$-\SAT{} to \Clique{}}
@@ -318,7 +318,7 @@ In the following, we present this construction and its proof of correctness form
 
 We start with the reduction to the non-flat version \Clique{} using graphs of type \UGraph{}. In order to prove polynomial-time computability, we then transfer the results to the flat version \FlatClique{}. 
 
-For the rest of this section, let us fix a number $k$ with $k > 0$ and a CNF $N$ with $\kCNF{k}~N$.\footnote{We will later handle $k = 0$ and instances not satisfying $\kCNF{k}~N$ as special cases.}
+For the rest of this section, let us fix a number $k$ with $k > 0$ and a $k$-CNF $N$.\footnote{We will later handle $k = 0$ and instances not satisfying $\kCNF{k}~N$ as special cases.}
 
 \setCoqFilename{Undecidability.L.Complexity.Reductions.kSAT_to_Clique}
 In order to define the graph, we need to be able to index into a CNF to obtain the clauses and literals at particular positions. 
@@ -443,7 +443,7 @@ We use an instance of the pigeonhole principle:
 %\end{lemma}
 
 %Finally, we can construct an assignment from the list of literals by mapping the positive literals to $\btrue$ and the negative literals to $\bfalse$. Let $a_\textsf{sat}$ be such an assignment satisfying $v \in a_{\textsf{sat}} \leftrightarrow (\btrue, v) \in \satLiterals$. It follows that $\forall l \in \satLiterals, \evalA{a_\textsf{sat}}{l} = \btrue$. By part 2 of Lemma~\ref{lem:satLiterals}, $a_\textsf{sat}$ satisfies $N$.
-We omit the formal proof of the other steps in this presentation. In the end, we obtain a satisfying assignment $a_{\textsf{sat}}$ for $N$. 
+We omit the formal proof of the other steps in this presentation. In the end, we \coqlink[exists_assignment]{obtain a satisfying assignment} $a_{\textsf{sat}}$ for $N$. 
 
 Combining both directions, we get a reduction $f : \cnf \rightarrow \UGraph \times \nat$ if we map CNFs which are not in $k$-CNF to a trivial no-instance.
 \begin{theorem}[Correctness of the Reduction][reduction_to_Clique]
@@ -455,12 +455,12 @@ Therefore, we derive a reduction to the flat version \FlatClique{}. The construc
 This graph is connected to the non-flat graph $G$ by the relation $\approx$ (Definition~\ref{def:graph_repr}). 
 We obtain the following polynomial-time reduction:
 \setCoqFilename{Undecidability.L.Complexity.Reductions.kSAT_to_FlatClique}
-\begin{theorem}[][kSAT_reduces_to_FlatClique]
+\begin{theorem}[][kSAT_to_FlatClique_poly]
   $\textsf{$k$-\SAT{}} \redP{} \FlatClique{}$
 \end{theorem}
 
 \begin{remark}
   A first version of this reduction~\cite{memo_clique} did not use a separate non-extractable version of graphs but instead directly proved correctness on the flat version. 
   The mechanisation was much more tedious because, among other things, we always had to work with the possibility that a vertex is invalid, i.e.\ not actually part of the graph. 
-  The new proof halved the lines of code of the Coq mechanisation and is also much more understandable. Therefore, we believe that defining a separate extractable problem is the right way.
+  The new proof halved the lines of code of the Coq mechanisation and is also much more understandable. Therefore, we believe that defining a separate extractable problem is the right way if the natural formalisation of a problem in Coq is not directly extractable.
 \end{remark}

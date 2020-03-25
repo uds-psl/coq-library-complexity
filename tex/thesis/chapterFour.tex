@@ -8,12 +8,23 @@
 \newcommand{\fsat}{\textbf{FSAT}}
 \newcommand{\sat}{\textbf{SAT}}
 
-\newcommand{\rewwin}[2]{
-  \begin{tabular}{C|C|C}
-    #1 \\ 
-    \midrule #2
-  \end{tabular}
+\newcommand{\trewwin}[6]{
+  \tikzexternaldisable
+  \begin{tikzpicture}
+    \draw[thick] (0, 0) -- (2.25, 0);
+    \draw (0.75, -0.75) -- (0.75, 0.75);
+    \draw (1.5, -0.75) -- (1.5, 0.75);
+    \node at (0.375, 0.375) {\ensuremath{#1}};
+    \node at (0.375, -0.375) {\ensuremath{#4}};
+    \node at (1.125, 0.375) {\ensuremath{#2}};
+    \node at (1.125, -0.375) {\ensuremath{#5}};
+    \node at (1.875, 0.375) {\ensuremath{#3}};
+    \node at (1.875, -0.375) {\ensuremath{#6}};
+  \end{tikzpicture}
+  \tikzexternalenable
 }
+
+\newcommand*{\irewwin}[6]{\ensuremath{[#1, #2, #3]~/~[#4, #5, #6]}}
 
 \newcommand{\blank}{\textbf{\textvisiblespace}}
 \newcommand{\delim}{\#}
@@ -35,7 +46,7 @@
 
 
 \chapter{Informal Overview of the Proof of the Cook-Levin Theorem}\label{chap:informaloverview}
-We give an outline of our proof of the Cook-Levin-Threorem, which is loosely based on the presentation by Sipser~\cite{Sipser:TheoryofComputation}. After introducing the problem we reduce from, a tableau construction is presented. We show how we can encode deterministic computations of a Turing machine in such a tableau and later adapt the construction to incorporate a form of nondeterminism. Finally, the structure of the formal proof is described. 
+We give an outline of our proof of the Cook-Levin Theorem, which is loosely based on the presentation by Sipser~\cite{Sipser:TheoryofComputation}. After introducing the problem we reduce from, a tableau construction is presented. We show how we can encode deterministic computations of a Turing machine in such a tableau and later adapt the construction to incorporate a form of nondeterminism. Finally, the structure of the formal proof is described. 
 
 We formally state the main part of the Cook-Levin Theorem:
 \begin{theorem}[Cook-Levin]
@@ -43,10 +54,9 @@ We formally state the main part of the Cook-Levin Theorem:
 \end{theorem}
 
 \section{A Generic Problem for Turing Machines}
-Recall that, in order to show a problem $P$ to be \NP{}-hard, we have to show that any problem $Q$ contained in \NP{} can be reduced to it. In our setting of complexity theory in L, we thus have to reduce the computation of L to \SAT{}.
+Recall that, in order to show a problem $P$ to be \NP{}-hard, we have to prove that any problem $Q$ contained in \NP{} can be reduced to it. In our setting of complexity theory in L, we thus have to reduce the computation of L to \SAT{}.
 In Remark~\ref{rem:cook_L}, we argued why it is hard to directly reduce from L to any natural problem. 
 Therefore, we believe that the most practical path of reducing from L to \SAT{} is to use Turing machines as an intermediate problem. 
-
 We start from a generic problem for Turing machines. A definition of such a problem the reader might be familiar with is the following:
 \begin{center}
   Given a nondeterministic Turing machine $M$, an input $in$ and a number of steps $t$, does $M$ accept $in$ in at most $t$ steps?
@@ -58,7 +68,8 @@ This definition explicitly employs nondeterminism, making it hard to reason form
 \end{center}
 
 In a theory with Turing machines as the computational model, \gennp{} would be almost trivially \NP{}-hard, although it would not be a natural problem as it depends on the model of computation.
-Using L, however, the hardness is not trivial anymore. In this setting, we just see \gennp{} the same as any other problem.
+Using L, however, the hardness is not trivial anymore. 
+%In this setting, we just see \gennp{} the same as any other problem.
 
 \section{Deterministic Simulation: Tableau of Configurations}
 We first consider how the computation of a deterministic Turing machine can be encoded for an arbitrary input of which we only know that its size is at most $k$. 
@@ -139,12 +150,12 @@ Thus, the formula can be made large enough to account for the worst-case: $t$ co
   \caption{The tableau of configurations}\label{fig:tableau}
 \end{figure}
 
-With this insight, we write down the computation of the Turing machine in a tableau (Fig.~\ref{fig:tableau}).
+With this insight, we write down the computation of the Turing machine in a tableau (Figure~\ref{fig:tableau}).
 The tableau consists of $t+1$ lines, one for each configuration that can be encountered in $t$ computational steps. Each line encodes one configuration consisting of a state symbol and the contents of the tape. We call such a line a \emph{configuration string}. The state symbol is also annotated with the symbol currently under the head.
 The first line contains the initial state $q_0$ and the input $\sigma_1, \ldots, \sigma_l$ for $l \le k$, where the head is one symbol to the left of the input (denoted by the blank the state is annotated with).
 Note that each line has a fixed length accounting for the maximum number of tape cells the Turing machine can use. However, the Turing machine will usually use less space than is available. The cells unused by a configuration do contain special blanks \blank.
 These blanks are not contained in the Turing machine tape alphabet but are part of the tableau encoding, as our Turing machines do not have blanks built-in.
-Each line of the tableau is delimited by \delim, the purpose of which will become clear later.
+Each line of the tableau is delimited by \delim, the purpose of which will become clear in Chapter~\ref{chap:gennp_pr}.
 In the end, each cell of the tableau will be represented by a number of Boolean variables used by the \SAT{} formula.
 
 As noted above, the state symbol also contains the current symbol under the head. This choice is clear as it makes the transition taken by the Turing machine only depend on one cell.
@@ -376,16 +387,29 @@ With the moving-tape representation, we have arrived at a formally pleasing hand
 It remains to encode that the successive lines of the tableau follow from each other according to the Turing machine's transition function.
 For this, we introduce \emph{rewrite windows} consisting of $3 \times 2$ symbols. 
 \begin{center}
-  \begin{tabular}{C}
-    \arrayrulecolor{white}
-    premise\\
-    \midrule
-    \color{black}conclusion
-  \end{tabular}
-  \begin{tabular}{C|C|C}
-    x_1 & x_2 & x_3 \\ 
-    \midrule x_4 & x_5 & x_6
-  \end{tabular}
+  %\begin{tabular}{C}
+    %\arrayrulecolor{white}
+    %premise\\
+    %\midrule
+    %\color{black}conclusion
+  %\end{tabular}
+  %\begin{tabular}{C|C|C}
+    %x_1 & x_2 & x_3 \\ 
+    %\midrule x_4 & x_5 & x_6
+  %\end{tabular}
+  \begin{tikzpicture}
+    \node at (-1, 0.375) {premise};
+    \node at (-1, -0.375) {conclusion};
+    \draw[thick] (0, 0) -- (2.25, 0);
+    \draw (0.75, -0.75) -- (0.75, 0.75);
+    \draw (1.5, -0.75) -- (1.5, 0.75);
+    \node at (0.375, 0.375) {$x_1$};
+    \node at (0.375, -0.375) {$x_4$};
+    \node at (1.125, 0.375) {$x_2$};
+    \node at (1.125, -0.375) {$x_5$};
+    \node at (1.875, 0.375) {$x_3$};
+    \node at (1.875, -0.375) {$x_6$};
+  \end{tikzpicture}
 \end{center}
 
 These rewrite windows are used to justify that one line of the tableau \emph{validly} follows from the previous one. At each possible offset, there must exist a rewrite window whose premise matches a prefix of the previous string and whose conclusion matches a prefix of the succeding string.
@@ -393,11 +417,11 @@ These rewrite windows are used to justify that one line of the tableau \emph{val
 \begin{example}[Rewrite Windows]\label{ex:rewwindows}
   Consider again example~\ref{ex:movingtape}. For the positions labelled -2, -1, 0, 1 and 2 we need the following rewrite windows (from left to right):
   \begin{center}
-    \rewwin{\blank{} & c & q_0^a}{\blank{} & \blank{} & q_1^c}
-    \rewwin{c & q_0^a & b}{\blank{} & q_1^c & b}
-    \rewwin{q_0^a & b & b}{q_1^c & b & b}
-    \rewwin{b & b & \blank}{b & b & b}
-    \rewwin{b & \blank{} & \blank{}}{b & b & \blank{}}
+    \trewwin{\blank{}}{c}{q_0^a}{\blank{}}{\blank{}}{q_1^c}
+    \trewwin{c}{q_0^a}{b}{\blank{}}{q_1^c}{b}
+    \trewwin{q_0^a}{b}{b}{q_1^c}{b}{b}
+    \trewwin{b}{b}{\blank}{b}{b}{b}
+    \trewwin{b}{\blank{}}{\blank{}}{b}{b}{\blank{}}
   \end{center}
 \end{example}
 
@@ -406,26 +430,38 @@ The key behind this construction is that the windows have to overlap. In this wa
 We create a set of rewrite windows that encode the valid transitions. 
 Intuitively, these rewrite windows make the behaviours the Turing machine can have explicit, compared with the symbolic representation of the transition function.
 %In the end, these rewrite windows and the validity constraint are encoded using Boolean formulas. 
-Of course, a great number of rewrite windows is needed. We mainly have three types of windows: for shifts of the tape, for the transition function involving the center state symbol, and for replicating the final configuration if the Turing machine halts early in less than $t$ steps.
+Of course, a great number of rewrite windows is needed. We mainly have three types of them: for shifts of the tape, for the transition function involving the center state symbol, and for replicating the final configuration if the Turing machine halts early in less than $t$ steps.
 
 Most of the windows need to exist for every possible combination of tape symbols. For instance, shifting the tape should be possible independently of its contents. Therefore, we introduce \emph{rewrite rules} which are parameterised over variables ranging over, for instance, the tape alphabet.
 \begin{example}[Rewrite Rules for Tape Shifts]
   The rewrite window
   \begin{center}
-    \rewwin{b & b & \blank{}}{b & b & b}
+    \trewwin{b}{b}{\blank{}}{b}{b}{b}
   \end{center}
   is an instance of the more general rewrite rule
   \begin{center}
-    \rewwin{\sigma_1 & \sigma_2 & \blank{}}{\sigma_3 & \sigma_1 & \sigma_2},
+  \begin{tikzpicture}
+    \draw[thick] (0, 0) -- (2.25, 0);
+    \draw (0.75, -0.75) -- (0.75, 0.75);
+    \draw (1.5, -0.75) -- (1.5, 0.75);
+    \node at (0.375, 0.375) {$\sigma_1$};
+    \node at (0.375, -0.375) {$\sigma_3$};
+    \node at (1.125, 0.375) {$\sigma_2$};
+    \node at (1.125, -0.375) {$\sigma_1$};
+    \node at (1.875, 0.375) {$\blank{}$};
+    \node at (1.875, -0.375) {$\sigma_2$};
+    \node at (2.5, 0) {,};
+  \end{tikzpicture}
+  %\trewwin{\sigma_1}{\sigma_2}{\blank{}}{\sigma_3}{\sigma_1}{\sigma_2},
   \end{center}
   where $\sigma_i : \Sigma$. 
 \end{example}
-Note that we distinguish between blanks $\blank$ and elements of $\Sigma$ as $\blank$ is only a part of the representation of configurations as strings.
+Note that we distinguish blanks $\blank$ and elements of $\Sigma$ as $\blank$ is only a part of the representation of configurations as strings.
 Seeing this generalisation, one might now realise a problem regarding the tape shifts: the rewrite windows are not provided enough information for the overlapping constraints to enforce a consistent tape shift.
 \begin{example}[Inconsistent Tape Shifts]
   We need not only be able to shift the tape to the right, but also leave its position unchanged. For instance, we need the following rewrite rule:
   \begin{center}
-    \rewwin{\sigma_1 & \sigma_2 & \blank{}}{\sigma_1 & \sigma_2 & \blank{}}
+  \trewwin{\sigma_1}{\sigma_2}{\blank{}}{\sigma_1}{\sigma_2}{\blank{}}
   \end{center}
   Looking again at Example~\ref{ex:movingtape}, this rule can be applied at the position labelled with 1 to obtain an alternative successor string:
   \begin{center}
@@ -495,10 +531,10 @@ Seeing this generalisation, one might now realise a problem regarding the tape s
       \node at (3.375, -0.375) {\blank};
     \end{tikzpicture}
   \end{center}
-  This change of configuration is inconsistent: The left half of the tape is shifted to the right, while the right half of the tape is left unchanged.
+  This change of configuration is inconsistent: the left half of the tape is shifted to the right, while the right half of the tape is left unchanged.
 \end{example}
 
-The reason for this inconsistency is that the rewrite window cannot infer from the overlapping tape symbols alone in which direction the tape is shifted. 
+The reason for this inconsistency is that one cannot infer from the overlapping tape symbols alone in which direction the tape is shifted. 
 We fix this problem by adding more information: polarities. Polarities $p : \polarity{} \defeq + \bnfmid - \bnfmid \circ{}$ are positive, negative, or neutral. 
 Each symbol of the tape alphabet and each blank is annotated with a polarity indicating in which direction the tape is shifted. Polarities do not add any information to the configuration strings in their own right and are just relevant for the configuration changes.
 Notationally, we write $\polpos{\sigma}, \polneg{\sigma}, \polneut{\sigma}$ for a symbol $\sigma$ annotated with a positive, negative, or neutral polarity.
@@ -506,8 +542,8 @@ Notationally, we write $\polpos{\sigma}, \polneg{\sigma}, \polneut{\sigma}$ for 
 \begin{example}[Polarities]\label{ex:polarities}
   The rewrite rules mentioned above now have the following form:
   \begin{center}
-    \rewwin{\sigma_1 & \sigma_2 & \blank{}}{\polpos{\sigma_3} & \polpos{\sigma_1} & \polpos{\sigma_2}} 
-    \rewwin{\sigma_1 & \sigma_2 & \blank{}}{\polneut{\sigma_1} & \polneut{\sigma_2} & \polneut{\blank{}}}
+    \trewwin{\sigma_1}{\sigma_2}{\blank{}}{\polpos{\sigma_3}}{\polpos{\sigma_1}}{\polpos{\sigma_2}} 
+    \trewwin{\sigma_1}{\sigma_2}{\blank{}}{\polneut{\sigma_1}}{\polneut{\sigma_2}}{\polneut{\blank{}}}
   \end{center}
   The inconsistent rewrite is not possible anymore as the windows overlapping from the left force a positive polarity:
   \begin{center}
@@ -586,7 +622,7 @@ Formally, for each of the rewrite rules depicted in Example~\ref{ex:polarities},
   Formally, it is not necessary for blanks to be annotated with polarities. However, adding polarities to blanks allows us to handle symbols of the tape alphabet and blanks in a more uniform way, simplifying the proofs. 
 \end{remark}
 
-Finally, we need to enforce that the final configuration is a halting configuration. This can be encoded by requiring that an element of $[q^m~|~\textsf{halt}~q = \btrue, m : \Sigma + \{\blank\}]$ is contained in the last line of the tableau.\todo{fix notation for type}
+Finally, we need to enforce that the final configuration is a halting configuration. This can be encoded by requiring that an element of $[q^m~|~\textsf{halt}~q = \btrue, m : \Sigma + \{\blank\}]$ is contained in the last line of the tableau.
 
 \section{Nondeterministic Input}\label{sec:informal_nondet}
 The construction presented in the previous section can simulate a deterministic Turing machine given an initial configuration. In the definition of \gennp{}, however, a part of the input, the certificate, is existentially quantified. 
@@ -670,7 +706,7 @@ The idea is to add rewrite rules which can replace the $\underline{*}$ (wildcard
 If one wildcard is replaced by a blank, all the other wildcards to the right of it also need to be replaced by blanks in order to ensure that the used tape region is contiguous. 
 
 \section{Intermediate Problems}
-In the presentation by Sipser~\cite{Sipser:TheoryofComputation}, the tableau is directly encoded as a CNF. Doing this formally seems to be hard as one needs to handle the invariants of simulating the Turing machine, the representation of symbols of an arbitrary finite alphabet and the encoding as a CNF all at once. 
+In the presentation by Sipser~\cite{Sipser:TheoryofComputation}, the tableau is directly encoded as a CNF. Doing this formally seems to be hard as one needs to handle the invariants of simulating the Turing machine, the representation of symbols of an arbitrary finite alphabet, and the encoding as a CNF all at once. 
 Instead, we factorise the proof into smaller parts by introducing three intermediate problems that deal with these concerns one-by-one. 
 Figure~\ref{fig:redoverview} gives an overview over the reductions.
 The reduction of \gennp{} to Parallel Rewriting (\PR{}), a string-based problem which will be introduced in Section~\ref{sec:pr}, handles the main part of the Turing machine simulation. 
@@ -680,7 +716,7 @@ The remaining three reductions subsequently deal with the encoding of the alphab
 
 \begin{figure}
   \begin{center}
-    \begin{tikzpicture}[scale=0.65, every node/.style={scale=0.65}, node distance=0.5cm]
+    \begin{tikzpicture}[scale=1, every node/.style={scale=1}]
       \node[rectangle, draw=black, minimum width=13cm] (gennp) {Generic Problem on Turing Machines (\gennp{})}; 
       \node[rectangle, draw=black, minimum width = 13cm, below = of gennp] (strrew1) {Parallel Rewriting (\PR{}) on arbitrary $\Sigma$};
       \node[rectangle, draw=black, below = of strrew1, minimum width = 13cm] (strrew2) {Binary Parallel Rewriting on $\{0, 1\}$};

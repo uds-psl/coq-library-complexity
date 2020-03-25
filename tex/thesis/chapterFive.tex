@@ -32,27 +32,10 @@
 \newcommand{\stringForTapeHalf}{\textsf{stringForTapeHalf}}
 \newcommand{\stringForConfig}{\textsf{stringForConfig}}
 
-\newcommand{\trewwin}[6]{
-  \tikzexternaldisable
-  \begin{tikzpicture}
-    \draw[thick] (0, 0) -- (2.25, 0);
-    \draw (0.75, -0.75) -- (0.75, 0.75);
-    \draw (1.5, -0.75) -- (1.5, 0.75);
-    \node at (0.375, 0.375) {\ensuremath{#1}};
-    \node at (0.375, -0.375) {\ensuremath{#4}};
-    \node at (1.125, 0.375) {\ensuremath{#2}};
-    \node at (1.125, -0.375) {\ensuremath{#5}};
-    \node at (1.875, 0.375) {\ensuremath{#3}};
-    \node at (1.875, -0.375) {\ensuremath{#6}};
-  \end{tikzpicture}
-  \tikzexternalenable
-}
-
-\newcommand*{\irewwin}[6]{\ensuremath{[#1, #2, #3]~/~[#4, #5, #6]}}
 \chapter{Reducing GenNP to Parallel Rewriting}\label{chap:gennp_pr}
 This chapter is concerned with the encoding of Turing machines using the string-based \emph{Parallel Rewriting} (\PR{}) problem which formally captures the idea of a string tableau constrained by rewrite windows. 
 The rest of this chapter is then devoted to formalising the tableau construction presented in Chapter~\ref{chap:informaloverview} and proving its correctness in a reduction from \gennp{} to \PR{}.
-This reduction captures the main work of encoding Turing machines: one can see the construction as moving from a symbolical representation of Turing machines to an explicit representation, where all possible ``local'' behaviours (expressed by the rewrite windows of the previous chapter) are written down explicitly. 
+This reduction captures the main work of encoding Turing machines: one can see the construction as moving from a symbolic representation of Turing machines to an explicit representation, where all possible ``local'' behaviours (expressed by the rewrite windows of the previous chapter) are written down explicitly. 
 However, we do not yet encode these rewrite windows as Boolean formulas, but instead stay at a string-based representation.
 
 First of all, we make the informal description of \gennp{} given in the previous chapter precise.
@@ -63,7 +46,7 @@ First of all, we make the informal description of \gennp{} given in the previous
     \gennp{} (\Sigma, M,  in, k', t) \defeq \exists~cert, \length{cert} \le k' \land \exists f, ({\textsf{start}}_M, \textsf{initTape}~(in \concat cert)) \rhd_M^{\le t} f, 
   \end{align*}
   where 
-  \[\gennp{} : \sigtype{{\Sigma}}. (TM~\Sigma~1 \times \listsof{\Sigma} \times \nat \times \nat) \rightarrow \Prop \]
+  \[\gennp{} : (\sigtype{{\Sigma}}. TM~\Sigma~1 \times \listsof{\Sigma} \times \nat \times \nat) \rightarrow \Prop \]
   and 
   \setCoqFilename{Undecidability.L.Complexity.Problems.GenNP.TMGenNP_fixed_mTM}
   \begin{align*}
@@ -86,7 +69,7 @@ Parallel Rewriting works over a finite alphabet $\Sigma$. Given an initial strin
   \begin{itemize}
     \item $\Sigma : \textsf{finType}$ is the finite alphabet,
     \item $o : \nat$ with $o > 0$ is the rewriting offset,
-    \item $\omega : \nat$ with $\omega > 0$ and $o \divides \omega$ is the width of rewriting windows,
+    \item $\omega : \nat$ with $\omega > 0$ and $o \divides \omega$ is the width of rewrite windows,
     \item $x_0 : \str{\Sigma}$ with $\length{x_0} \ge \omega$ and $o \divides \length{x_0}$ is the initial string, 
     \item $R : \listsof{\winw{\omega}{\Sigma}}$ is the set of rewrite windows,
     \item $\Rfinal : \listsof{\str{\Sigma}}$ is a set of final substrings,
@@ -95,7 +78,7 @@ Parallel Rewriting works over a finite alphabet $\Sigma$. Given an initial strin
   Here, $\winw{\omega}{\Sigma} := {\Sigma}^\omega \times {\Sigma}^\omega$\mnote{$\winw{\omega}{\Sigma}$} denotes the type of windows of width $w$ over $\Sigma$ and $ n \divides{} m$ means that $n$ divides $m$.
 \end{definition}
 If the width is clear from the context, we write $\win{\Sigma}$ instead of $\winw{\omega}{\Sigma}$.
-Instead of directly using the projections $\pi_1$ and $\pi_2$ on a window $w$, we usually write $\prem{w}$ and $\conc{w}$\mnote{$\prem, \conc$}. In the previous chapter, we considered rewrite windows of width 3.
+Instead of directly using the projections $\pi_1$ and $\pi_2$ on a window $w$, we usually write $\prem{w}$ and $\conc{w}$\mnote{$\textsf{prem}, \textsf{conc}$}. In the previous chapter, we considered rewrite windows of width 3.
 
 Pictorially, $o$ symbols are always grouped together to form one abstract symbol, explaining the divisibility constraints. Throughout this chapter, we always work with an offset of 1 and the more general case will only become relevant in Chapter~\ref{chap:pr_bpr}.
 

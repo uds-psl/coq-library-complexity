@@ -250,7 +250,7 @@ Assuming that the formula does not contain $\lor$'s, we can now prove the desire
   By induction on $f$.
   \begin{description}
     \item[$f = \btrue$:] The conditions of the representation relation are straightforward to verify, using monotonicity (Proposition~\ref{prop:var_contain}). For the third condition, we pick the assignment $[nf]$, setting the newly introduced variable to $\btrue$.
-    \item[$f = v$:] Again an easy proof. For the third condition, given an assignment $a \subseteq [0, b)$ to the original variables, for the assignment to the newly added variable $nf$ we pick the same value that $a$ assigns to $v$ (as $v$ should be equivalent to the new variable $nf$). 
+    \item[$f = v$:] Again an easy proof. For the third condition, given an assignment $a \subseteq [0, b)$ to the original variables, we pick the same value that $a$ assigns to $v$ for the assignment to the newly added variable $nf$ (as $v$ should be equivalent to the new variable $nf$). 
     \item[$f = f_1 \land f_2$:] By Lemma~\ref{lem:compat_and}.
     \item[$f = f_1 \lor f_2$:] Contradictory.
     \item[$f = \lnot f'$:] By Lemma~\ref{lem:compat_not}.
@@ -268,7 +268,7 @@ We get the correctness statement for \tseytin{} as a straightforward corollary, 
   \begin{itemize}
     \item Assume that $a \models f$. By the hypothesis' third condition instantiated with the assignment $a|_b$ to the original variables, we get an assignment $a' \subseteq [nf, nf')$ to the new variables with $(a|_b \cup a') \models N$. We have to show that $(a|_b \cup a') \models (v \land N)$. Satisfaction of $N$ follows by assumption. By the fourth condition of the assumption, it now suffices to show $a|_b \cup a' \models f$. We have shown that it is fine to extend an assignment by $a'$ and still get the same evaluation if $f \subseteq [0, b)$ (Propositon~\ref{prop:eval_ext_assgn}).
       Moreover, Proposition~\ref{prop:eval_restrict} justifies the restriction of $a$ to $a|_b$. Therefore the goal follows by the assumption $a \models f$.
-    \item We have $\evalA{a}{([(\btrue, v)] :: N)}$ for an assignment $a$ and show that $a \models f$. Straightforward using the fourth condition of the strenghtened relation.
+    \item We have $\evalA{a}{([(\btrue, v)] :: N)}$ for an assignment $a$ and show that $a \models f$. This is straightforward using the fourth condition of the strengthened relation.
   \end{itemize}
 \end{proof}
 
