@@ -21,8 +21,7 @@ Require Import Lia.
   the prelude alphabet and the old alphabet.
   *)
 
-(** Remark: One can also see preludes of providing a limited form of compositionality; for instance, one could also show 
-  that preludes allow one to reduce an existential question to another (possibly simpler) existential question.
+(** Remark: One can also see preludes of providing a limited form of compositionality; for instance, one can also show that preludes allow one to reduce an existential question to another (possibly simpler) existential question (see below).
   *)
 
 Section defExPTPR. 
@@ -253,7 +252,75 @@ Section fixPTPRInstance.
         subst. apply valid_length_inv in H. now rewrite !map_length in H.  
   Qed. 
 
-  (*TODO: reduction to ExPTPR *)
+ (*TODO: maybe more general form using retracts?*)
+  Lemma relpower_valid_map_inl x0 xt m: relpower (valid (rewritesHeadInd p)) m x0 xt -> relpower (valid (rewritesHeadInd combP)) m (map inl x0) (map inl xt).
+  Proof. 
+    intros H. induction H. 
+    - constructor. 
+    - econstructor. 2: apply IHrelpower. 
+      clear H0 IHrelpower. induction H.
+       + cbn; constructor. 
+       + cbn; constructor; [ apply IHvalid | rewrite map_length; apply H0]. 
+       + cbn; constructor 3; [apply IHvalid | ]. inv H0. cbn; eauto.  
+  Qed.
+
+  Lemma lift_final sf : satFinal finalCondition sf <-> satFinal (map (map inl) finalCondition : list (list combSigma)) (map inl sf). 
+  Proof. 
+    split. 
+    - intros H. unfold satFinal in *. destruct H as (subs & H1 & H2). exists (map inl subs). 
+      split. 
+      + apply in_map_iff. eauto.  
+      + unfold substring. destruct H2 as (b1 & b2 & H2). 
+        exists (map inl b1), (map inl b2). now rewrite H2, !map_app. 
+    - unfold satFinal in *. intros H.
+      destruct H as (subs & H1 & H2). apply in_map_iff in H1 as (subs' & <- & H1).
+      exists subs'; split; [apply H1 | ]. 
+      unfold substring in *. destruct H2 as (b1 & b2 & H). 
+      apply map_eq_app in H as (b1' & b & H & -> & H2). 
+      symmetry in H2. apply map_eq_app in H2 as (b' & b2' & -> & H2 & ->). 
+      exists b1', b2'. enough (subs' = b') by (subst; reflexivity). 
+      apply Prelim.map_inj in H2; [apply H2 | unfold injective; congruence].
+  Qed.
+
+  (** Reduction to ExPTPR *)
+  (** This result enables one to reduce an ExPTPR instance to another (potentially simpler) ExPTPR instance *)
+  Lemma red_to_exptpr : ExPTPR p finalCondition t initCond l <-> ExPTPR combP (map (map inl) finalCondition) (t' + t) (fun s => exists s', s = map inr s' /\ initialPred s') l. 
+  Proof. 
+    split; intros H. 
+    - destruct H as (x0 & H1 & H2 & H3). 
+      destruct (A3 (conj H2 H1)) as (init & F1 & F2). 
+      exists (map inr init). 
+      split; [ rewrite map_length; apply F1 | split; [ exists init; split; [easy | apply F1] | ] ]. 
+      destruct H3 as (G1 & (sf & G2 & G3)). 
+      split. 
+      {unfold PTPR_wellformed. cbn. rewrite map_length. unfold validPreludeInitial in F1. lia. }
+      exists (map inl sf). 
+      cbn; split. 
+      + eapply relpower_trans. 
+        * eapply relpower_monotonous. 
+          { eapply valid_monotonous. eapply rewritesHeadInd_monotonous. apply liftPrelude_subs_combP. }
+          apply F2.  
+        * cbn in G2. now apply relpower_valid_map_inl. 
+      + now apply lift_final. 
+    - destruct H as (x0 & H1 & H2 & H3). 
+      destruct H2 as (initialString & -> & H2). rewrite map_length in H1.
+      destruct H3 as (H3 & sf & Hv & Hf). cbn in *.
+      assert (validPreludeInitial initialString) as Hi by easy.
+      apply (@relpower_comb_split initialString Hi) in Hv as (x0 & H4 & H5 & H6). 
+      specialize (A1 Hi H4) as (x0' & ->). exists x0'. split; [ | split]. 
+      + apply relpower_valid_length_inv in H4. rewrite !map_length in H4. cbn. lia.
+      + apply (A4 Hi) in H4. destruct H4 as (? & H4' & H4). 
+        apply Prelim.map_inj in H4'; [subst; apply H4 | unfold injective; intros; congruence  ]. 
+      + unfold PTPRLang. split. 
+        1: { 
+          unfold PTPR_wellformed. cbn. 
+          apply relpower_valid_length_inv in H4. rewrite !map_length in H4. cbn. lia. 
+        }
+        cbn. destruct H6 as (sf' & ->). exists sf'. split. 
+        * eapply liftOrig_relpower_p, H5. 
+          apply relpower_valid_length_inv in H4. rewrite !map_length in H4. lia.
+        * now apply lift_final. 
+  Qed. 
 End fixPTPRInstance.
 
 (** We now specialise to the case where the initial condition on the prelude string is fixed to equality with a given string, 
@@ -262,7 +329,7 @@ End fixPTPRInstance.
 Section fixPrelude. 
   Variable (Sigma : Type). 
 
-  (*we do not directly assume Sigma to be a finType in order to be able to use the definitions not depending on Sigma being a finType for ordinary Types *)
+  (**We do not directly assume Sigma to be a finType in order to be able to use the definitions not depending on Sigma being a finType for ordinary Types *)
   Variable (ESigma : eq_dec Sigma). 
   Variable (FSigma : finTypeC (EqType Sigma)). 
 
@@ -273,10 +340,10 @@ Section fixPrelude.
   Variable (initCond: list Sigma -> Prop). 
   Variable (l : nat).
 
-  (*otherwise, vacuous rewrites destroy everything *)
+  (** Otherwise, vacuous rewrites destroy everything *)
   Variable (A0 : l >= 3). 
 
-  (*a prelude generates initial strings satisfying initCond *)
+  (** A prelude generates initial strings satisfying initCond *)
   Variable (Sigma' : Type). 
   Variable (eSigma' : eq_dec Sigma').
   Variable (FSigma' : finTypeC (EqType Sigma')). 
@@ -284,7 +351,7 @@ Section fixPrelude.
   Notation combSigma := (sum Sigma Sigma').
   Variable (p' : Sigma' -> Sigma' -> Sigma' -> combSigma -> combSigma -> combSigma -> Prop). 
 
-  (*we now specialise to a fixed initial string *)
+  (** We specialise to a fixed initial string *)
   Variable (initialString : list Sigma').
   Variable (t' : nat). 
 
@@ -294,21 +361,21 @@ Section fixPrelude.
   Notation liftPrelude := (liftPrelude p').
   Notation combP := (combP p p').
 
-  (*the prelude rules always produce a string that is a valid initial string for the original instance, up to the injection inl *)
+  (** The prelude rules always produce a string that is a valid initial string for the original instance, up to the injection inl *)
   Variable (A1: forall x0, relpower (valid (rewritesHeadInd liftPrelude)) t' (map inr initialString) x0 -> isOrigString x0). 
 
-  (*disjointness: string is not produced too early *)
+  (** disjointness: string is not produced too early *)
   Variable (A2 : forall k x, k < t' -> relpower (valid (rewritesHeadInd liftPrelude)) k (map inr initialString) x -> isPreludeString x).  
 
-  (*completeness *)
+  (** completeness *)
   Variable (A3 : forall x0, initCond x0 /\ |x0| = l -> relpower (valid (rewritesHeadInd liftPrelude)) t' (map inr initialString) (map inl x0)). 
 
-  (*soundness *)
+  (** soundness *)
   Variable (A4 : forall x0, relpower (valid (rewritesHeadInd liftPrelude)) t' (map inr initialString) x0 -> exists x0', x0 = map inl x0' /\ initCond x0'). 
 
   Variable (A5 : length initialString = l). 
 
-  (*We use the results of the previous section. For that, we setup the initial condition and prove the assumptions the previous section has. *)
+  (** We use the results of the previous section. For that, we setup the initial condition and prove the assumptions the previous section has. *)
   Definition preludeInitialPred s := s = initialString. 
 
   Notation validPreludeInitial := (validPreludeInitial l preludeInitialPred). 
@@ -336,7 +403,7 @@ Section fixPrelude.
   Fact initialString_validPreludeInitial : validPreludeInitial initialString. 
   Proof. easy. Qed. 
 
-  (*the main result *)
+  (** The main result *)
   Lemma prelude_ok : ExPTPR p finalCondition t initCond l <-> PTPRLang (Build_PTPR (map inr initialString) combP (map (map inl) finalCondition) (t' + t)). 
   Proof. 
     split. 
@@ -347,19 +414,8 @@ Section fixPrelude.
         * eapply relpower_monotonous. 
           { eapply valid_monotonous. eapply rewritesHeadInd_monotonous. apply liftPrelude_subs_combP. }
           apply A3. eauto. 
-        * clear H1 H2 F2. (*TODO: maybe more general form using retracts?*)
-          induction F1. 
-          -- constructor. 
-          -- econstructor. 2: apply IHF1. 
-             clear F1 IHF1. induction H.
-             ++ cbn; constructor. 
-             ++ cbn; constructor; [ apply IHvalid | rewrite map_length; apply H0]. 
-             ++ cbn; constructor 3; [apply IHvalid | ]. inv H0. cbn; eauto.  
-      + unfold satFinal in *. destruct F2 as (subs & F2 & F3). exists (map inl subs). 
-        split. 
-        * apply in_map_iff. eauto.  
-        * unfold substring. destruct F3 as (b1 & b2 & F3). 
-          exists (map inl b1), (map inl b2). now rewrite F3, !map_app. 
+        * now apply relpower_valid_map_inl.
+      + now apply lift_final. 
     - intros (_ & sf & F1 & F2). cbn in *. unfold ExPTPR. 
       (*we need to split up F1 into the prelude and original part *)
       apply (@relpower_comb_split Sigma p t initCond l A0 Sigma' p' preludeInitialPred t' A1p A2p initialString initialString_validPreludeInitial) in F1 as (x0 & H1 & H2 & H3). 
@@ -375,13 +431,6 @@ Section fixPrelude.
         cbn. destruct H3 as (sf' & ->). exists sf'. split. 
         * clear F2 A2 A3 A4. eapply liftOrig_relpower_p, H2. 
           apply relpower_valid_length_inv in H1.  rewrite !map_length in H1. lia.
-        * clear A0 A2 A3 A4 A5 H1 H2. unfold satFinal in *. 
-          destruct F2 as (subs & H1 & H2). apply in_map_iff in H1 as (subs' & <- & H1).
-          exists subs'; split; [apply H1 | ]. 
-          unfold substring in *. destruct H2 as (b1 & b2 & H). 
-          apply map_eq_app in H as (b1' & b & H & -> & H2). 
-          symmetry in H2. apply map_eq_app in H2 as (b' & b2' & -> & H2 & ->). 
-          exists b1', b2'. enough (subs' = b') by (subst; reflexivity). 
-          apply Prelim.map_inj in H2; [apply H2 | unfold injective; congruence].  
+        * now apply lift_final. 
   Qed. 
 End fixPrelude. 

@@ -1039,7 +1039,11 @@ The main result is now a straightforward consequence.
   Using Lemma~\ref{lem:prelude_split} and the assumptions.
 \end{proof}
 
-\todo{remark that we can also reduce to another (simpler) exptpr instance}
+\begin{remark}
+  We can generalise the above setup a bit by replacing the fixed initial prelude string $x_0$ with another predicate stating which prelude strings are valid. This way, one can reduce an \expr{} instance to another (possibly simpler) \expr{} instance by adding a prelude.
+  This may be interpreted as providing a (very limited) form of compositionality for \PR{}. 
+  In the mechanisation, we \coqlink[red_to_exptpr]{prove this more general statement}, but we do not need it for the Turing machine simulation.
+\end{remark}
 
 \section{Guessing the Certificate}
 \setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.SingleTMGenNP_to_TPR}
@@ -1178,10 +1182,10 @@ The rules for shifting the tape to the left are \emph{defined} to be the polarit
 
 For the transitions, the rules are much more complicated. We have a hierarchy of inductive predicates that organises them (Figure~\ref{fig:orga_rules}). First, we differentiate according to the syntactic form of the read and written symbols. For instance, the inductive predicate for (Some, None) corresponds to transitions of the form $\delta (q, \OSome{\sigma}) = (q', \ONone, a)$. 
 Next is a case analysis on the location of the state symbol, and finally, we distinguish between the three types of movement.
-It might seem peculiar that we analyse the state symbol location before the movement as the transition function determines the movement but not the location. The reason is that this makes the inversions in the proofs of Lemmas~\ref{lem:stepsim} and~\ref{lem:haltsim} more efficient. Based on the location of the state symbol, one arrives at a contradiction earlier. Moving to this organisation provided a significant reduction in RAM usage when running the proof. 
+It might seem peculiar that we analyse the state symbol location before the movement as the transition function determines the movement but not the location. This makes the inversions in the proofs of the Lemmas~\ref{lem:stepsim} and~\ref{lem:haltsim} more efficient. Based on the location of the state symbol, one arrives at a contradiction earlier. Moving to this organisation provided a significant reduction in RAM usage when running the proof. 
 \begin{figure}
   \begin{center}
-    \begin{tikzpicture}[level 1/.style={sibling distance=2.7cm}, level 2/.style={sibling distance =1.3cm}]
+    \begin{tikzpicture}[level 1/.style={sibling distance=2.7cm}, level 2/.style={sibling distance =1.3cm}, scale=0.95, every node/.style={scale=1}]
       \node {transition}
         child { node {(Some, Some)}
           child {node {left}

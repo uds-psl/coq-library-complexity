@@ -1,7 +1,7 @@
 From Undecidability.L Require Import L.
 From Undecidability.L.Datatypes Require Import LProd LTerm LBool.
 From Undecidability.L.Complexity Require Import NP Synthetic Monotonic CanEnumTerm_def. 
-From Undecidability.L.Complexity.Problems Require Import GenNP.
+From Undecidability.L.Complexity.Problems.GenNP Require Import GenNP.
 From Undecidability.L.Functions Require Import Size.
 
 Lemma NPhard_GenNP X__cert `{R__cert : registered X__cert}:
