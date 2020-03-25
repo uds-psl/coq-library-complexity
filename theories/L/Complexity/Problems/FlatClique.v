@@ -183,22 +183,17 @@ Proof.
     poly_mono (@list_in_decb_poly (nat * nat) _ _ _ _). 2: { instantiate (1 := size (enc E) + size (enc (a::l))). lia. }
     unfold poly__allPairsOfEdgesDecb. 
     poly_mono (@list_in_decb_poly (nat * nat) _ _ _ _) at 2. 2: { instantiate (1 := size (enc E) + size (enc (a::l))). rewrite list_size_cons. lia. }
-    rewrite list_size_cons at 3 4 6. unfold c__listsizeCons. 
+    rewrite list_size_cons at 3 4 6. 
+    
     (* nia is too dumb to solve this; leq_crossout is smart enough and fast, but produces proof terms which are too large*)
-    (* thus we have to do this unmaintainable, annoying cluster**** *)
+    replace_le (size (enc l)) with (size (enc E) + size (enc l)) by lia at 1. 
+    remember (size (enc E) + size (enc l)) as g eqn:H1. 
+    replace (size (enc E) + (size (enc a) + size (enc l) + c__listsizeCons)) with (g + size (enc a) + c__listsizeCons) by lia. 
     replace (poly__listInDecb (X := nat * nat) (size (enc E) + size (enc (a :: l))) + c__fedgesEdgeInDecb +
  c__allPairsOfEdgesDecbStep + c__forallb) with (poly__listInDecb (X := nat * nat) (size (enc E) + size (enc (a::l))) + c__allPairsOfEdgesDecbBound1) by (unfold c__allPairsOfEdgesDecbBound1; lia). 
-    replace (size (enc l) * (poly__listInDecb (size (enc E) + size (enc (a :: l))) +
-     c__allPairsOfEdgesDecbBound1) + c__forallb + ((size (enc E) + size (enc l)) * (size (enc E) + size (enc l)) * (poly__listInDecb (size (enc E) + size (enc (a :: l))) +
-     c__allPairsOfEdgesDecbBound1) +
-     (size (enc E) + size (enc l) + 1) * c__allPairsOfEdgesDecbBound2) +
-     c__allPairsOfEdgesDecb) with (size (enc l) * (poly__listInDecb (X := nat * nat)(size (enc E) + size (enc (a :: l))) +
-     c__allPairsOfEdgesDecbBound1) + ((size (enc E) + size (enc l)) * (size (enc E) + size (enc l)) * (poly__listInDecb (X := nat * nat) (size (enc E) + size (enc (a :: l))) +
-     c__allPairsOfEdgesDecbBound1) +
-     (size (enc E) + size (enc l) + 1) * c__allPairsOfEdgesDecbBound2) +
-     c__allPairsOfEdgesDecbBound2) by (unfold c__allPairsOfEdgesDecbBound2; lia). 
-    leq_crossout. (* leq_crossout says this is okay, so we just admit *)
-Admitted. 
+    unfold c__allPairsOfEdgesDecbBound2. 
+    unfold c__listsizeCons. nia.
+Qed.
 Lemma allPairsOfEdges_decb_poly : monotonic poly__allPairsOfEdgesDecb /\ inOPoly poly__allPairsOfEdgesDecb. 
 Proof. 
   unfold poly__allPairsOfEdgesDecb; split; smpl_inO; apply list_in_decb_poly. 
