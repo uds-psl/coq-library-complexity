@@ -8,12 +8,9 @@ Despite its importance, most proofs do not even attempt to verify the constructi
 %Despite its importance, a fully formal correctness proof including a running time verification has never been given.
 
 For the proof, one has to encode computations of a chosen reasonable computational model using Boolean formulas. 
-We use the call-by-value $\lambda$-calculus L as the computational model, which has been shown to be polynomial-time and linear-space equivalent to Turing machines~\cite{ForsterKunzeRoth:2019:wcbv-Reasonable}. It is much easier to write and verify L programs than to program Turing machines.
-Thus, we need to reduce the computation of L-terms to SAT.
-However, Turing machines are structurally simpler than the $\lambda$-calculus and we therefore propose to use Turing machines as an intermediate problem in the reduction of L to SAT.
+We use the call-by-value $\lambda$-calculus L as the computational model, which has been shown to be polynomial-time and linear-space equivalent to Turing machines~\cite{ForsterKunzeRoth:2019:wcbv-Reasonable}. It is much easier to write and verify L-programs than to program Turing machines, which is why L is the model of choice for a larger effort to formalise the basics of complexity theory.
 
-\todo{It does not become clear here why we use the lambda calculus in the first place. Mention that this is part of an effort to formalise basics of complexity theory, and that L is used because it is much easier to program in it.}
+Thus, we need to reduce the computation of L-terms to SAT\@.
+However, Turing machines are structurally simpler than the $\lambda$-calculus and we therefore propose to use Turing machines as an intermediate problem in the reduction of L to SAT, performing the computation of a Turing machine from an L-term and the construction of a SAT-formula from a Turing machine in L.
 
-In this work, we introduce the basics of formalising polynomial-time reductions in Coq. We present a polynomial-time reduction from Turing machines to SAT which is based on the original tableau construction by Cook and formally verify its correctness. The original construction is adapted and factorised in order to make a formal proof feasible. We see this as a significant first step towards showing SAT to be NP-complete in L, leaving the reduction from Turing machines to L for future work.
-
-\todo{Should it become clear here that we do not see this as a full proof of the theorem?}
+In this work, we introduce the basics of formalising polynomial-time reductions in Coq. We present a polynomial-time reduction from Turing machines to SAT in L which is based on the original tableau construction by Cook and formally verify its correctness. The original construction is adapted and factorised in order to make a formal proof feasible. We see this as a significant first step towards showing SAT to be NP-complete in L, leaving the reduction from Turing machines to L for future work.

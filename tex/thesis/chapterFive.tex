@@ -43,10 +43,11 @@ First of all, we make the informal description of \gennp{} given in the previous
 \begin{definition}[TMGenNP][SingleTMGenNP]\label{def:tmgennp}
   \mnote[SingleTMGenNP]{TMGenNP}
   \begin{align*}
-    \gennp{} (\Sigma, M,  in, k', t) \defeq \exists~cert, \length{cert} \le k' \land \exists f, ({\textsf{start}}_M, \textsf{initTape}~(in \concat cert)) \rhd_M^{\le t} f, 
+    \gennp{} (\Sigma, M,  in, k', t) \defeq \exists~cert, &\length{cert} \le k' \\
+    \land &\exists q_f, ({\textsf{start}}_M, \textsf{initTape}~(in \concat cert)) \rhd_M^{\le t} q_f, 
   \end{align*}
   where 
-  \[\gennp{} : (\sigtype{{\Sigma}}. TM~\Sigma~1 \times \listsof{\Sigma} \times \nat \times \nat) \rightarrow \Prop \]
+  \[\gennp{} : (\sigtype{{\Sigma}}. \textsf{mTM}~\Sigma~1 \times \listsof{\Sigma} \times \nat \times \nat) \rightarrow \Prop \]
   and 
   \setCoqFilename{Undecidability.L.Complexity.Problems.GenNP.TMGenNP_fixed_mTM}
   \begin{align*}
@@ -1162,7 +1163,8 @@ First of all, we impose the syntactic constraints (like $\omega > 0$) on \PR{} i
 Similarly, we do not model windows as elements of type $\Sigma^\omega \times \Sigma^\omega$ using vectors\footnote{This is mainly because Coq's built-in vectors are unpleasant to use.}, but instead use lists: $\listsof{\Sigma} \times \listsof{\Sigma}$. The constraint that the lists have length $\omega$ is separate.
 
 In order to ease the mechanisation of the reduction, the variant 3-\PR{} is defined explicitly as a new problem using a separate inductive predicate for validity (cf. Section~\ref{sec:3pr}) and an inductive datatype for storing the three symbols of the premise or conclusion of a window instead of lists.
-We then do another reduction from 3-\PR{} to \PR{}, which is just a trivial embedding.
+\setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.TPR_to_PR}%
+Then, we do \coqlink[TPR_to_PR]{another reduction} from 3-\PR{} to \PR{}, which is just a trivial embedding.
 
 Our definition of validity for 3-\PR{} is parameterised over an abstract $\textsf{rewritesHead} : \listsof{\Sigma} \rightarrow \listsof{\Sigma} \rightarrow \Prop$ predicate which determines whether the prefix of the first list rewrites to the prefix of the second list. The $\textsf{rewHead}$ predicate of Definition~\ref{def:rewHead} is an instance of that.
 However, for the proof of the reduction, we use another instantiation: sets of rewrite windows can be alternatively formalised as inductive predicates of type
@@ -1171,9 +1173,8 @@ with arguments corresponding to the six elements determining a rewrite window.
 Using inductive predicates instead of lists has the huge advantage of easier automation in Coq: inversions are straightforward and proving that a rewrite is possible can be done by \texttt{eauto} with suitable hints.
 
 \setCoqFilename{Undecidability.L.Complexity.Problems.Cook.FlatPR}
-As \mnote[FlatPRLang]{\textbf{FlatPR}} the finite types for the alphabet of \PR{} are not directly extractable to L, we define flat versions \textbf{FlatPR} and \textbf{Flat3PR} similar 
-\setCoqFilename{Undecidability.L.Complexity.Problems.Cook.FlatTPR}
-to the definition of \FlatClique{} in Chapter~\ref{chap:ksat_clique}.\mnote[FlatTPRLang]{\textbf{Flat3PR}}
+As \mnote[FlatPRLang]{\textbf{FlatPR}} the finite types for the alphabet of \PR{} are not directly extractable to L, we define flat versions \textbf{FlatPR} and \textbf{Flat-3-PR} similar \setCoqFilename{Undecidability.L.Complexity.Problems.Cook.FlatTPR}
+to the definition of \FlatClique{} in Chapter~\ref{chap:ksat_clique}.\mnote[FlatTPRLang]{\textbf{Flat-3-PR}}
 The agreement with the non-flat variants is straightforward to derive.
 
 \subsection{Organisation of Rewrite Rules}
@@ -1230,14 +1231,33 @@ In order to generate the windows for the transitions, this needs to be combined 
 The proof of agreement with the inductive rules can mostly be automated and only requires the manual choice of an assignment to the variables of a rule.
 
 \setCoqFilename{Undecidability.L.Complexity.Problems.Cook.GenNP}
-The full reduction produces a \textbf{Flat3PR} instance, where the flat reification of the rewrite windows is used. As the Turing machines use finite types and vectors, which are both not directly extractable, we also have a flat encoding of these together with a flat variant \mnotec[FlatSingleTMGenNP]{\textbf{FlatTMGenNP}} of \gennp{}.
+The full reduction produces a \textbf{Flat-3-PR} instance, where the flat reification of the rewrite windows is used. As the Turing machines use finite types and vectors, which are both not directly extractable, we also have a flat encoding of these together with a flat variant \mnotec[FlatSingleTMGenNP]{\textbf{FlatTMGenNP}} of \gennp{}. 
+\setCoqFilename{Undecidability.L.TM.TMflat}
+The definition of flat Turing machines \textsf{TM} also represents the finite type for the tape alphabet by natural numbers and uses a list-based representation of the transition function;\ the formalisation was already available in the Coq library of undecidable problems~\cite{coq_undec}.\mnote[TM]{\textsf{TM}} 
 
 \setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.FlatSingleTMGenNP_to_FlatTPR}
 \begin{theorem}[][FlatSingleTMGenNP_to_FlatTPRLang_poly]
-  $\textbf{FlatTMGenNP} \redP{} \textbf{Flat3PR}$
+  $\textbf{FlatTMGenNP} \redP{} \textbf{Flat-3-PR}$
 \end{theorem}
 
-\todo{maybe diagram of the logical reduction}
-\todo{comment on the definition of the flat problems, why are existentially-defined problems ugly}
+Logically, the reduction for the flat problems takes the following shape: 
+\begin{center}
+  \begin{tikzpicture}
+    \node (flattm) at (0, 0) {\textbf{FlatTMGenNP}}; 
+    \node (flatpr) at (1, 0) {\textbf{Flat-3-PR}};
+    \node (tm) at (0, 1) {\gennp{}};
+    \node (pr) at (1, 1) {\textbf{3-PR}};
+    \path[dashed, ->] (flattm) -- (tm);
+    \path[dashed, ->] (tm) -- (pr);
+    \path[dashed, ->] (pr) -- (flatpr);
+    \path[->] (flattm) -- (flatpr);
+  \end{tikzpicture}
+\end{center}
+Computationally, we do a direct reduction from \textbf{FlatTMGenNP} to \textbf{Flat-3-PR}, but for proving the equivalence, we take the route via the non-flat variants of the problems. 
+
+\setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.FlatTPR_to_FlatPR}
+Together with \coqlink[FlatTPR_to_FlatPR_poly]{a trivial proof} of $\textbf{Flat-3-PR} \redP{} \textbf{FlatPR}$, we obtain a reduction to $\textbf{FlatPR}$.
+
+%\todo{comment on the definition of the flat problems, why are existentially-defined problems ugly}
 
 %\todo{comment on design choice of blanks having polarities: makes inversions and generation of list-based rules a whole lot easier}

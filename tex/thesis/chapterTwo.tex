@@ -18,6 +18,16 @@
 
 \newcommand{\redP}{\ensuremath{\preceq_p}}
 
+\makeatletter
+\newcommand{\oset}[3]{%
+  {\mathop{#2}\limits^{\vbox to #3\ex@{\kern-\tw@\ex@
+   \hbox{\scriptsize #1}\vss}}}}
+\makeatother
+
+\newcommand{\eqb}[2]{#1\oset{?}{\scriptsize =}{+1.5}#2}
+\newcommand{\leb}[2]{#1\oset{?}{\scriptsize \le}{+0.2}#2}
+
+
 \chapter{Preliminaries}\label{chap:preliminaries}
 \setCoqFilename{Undecidability.L.Complexity.MorePrelim}
 In this chapter, we present the needed basic definitions, including notations, Turing machines and the call-by-value $\lambda$-calculus L.
@@ -30,7 +40,7 @@ Natural numbers are accomodated by the inductively defined type $\nat$ featuring
 
 The type of options $\opt{X}$ over $X$ consists of the element $\ONone$, denoting the absence of a value, and elements $\OSome{x}$ for $x : X$.
 
-We write $\listsof{X}$ for the type of lists over $X$. Lists are constructed inductively, starting from the empty list $\nil$, using the cons constructor: for an element $x : X$ and a list $A : \listsof{X}$, $x\cons{} A$ is the list $A$ prepended with $x$.
+We write $\listsof{X}$ for the type of lists over $X$. Lists are constructed inductively using the cons constructor starting from the empty list $\nil$: for an element $x : X$ and a list $A : \listsof{X}$, $x\cons{} A$ is the list $A$ prepended with $x$.
 For an arbitrary list $A$, $\length{A}$ is the length of $A$. 
 The concatenation of two lists $A$ and $B$ is written as $A \con{} B$. 
 We use positions to refer to the elements of a list at a certain offset, starting at 0. The valid positions of a list $A$ are the numbers $0, \ldots, \length{A}-1$. 
@@ -50,9 +60,9 @@ The sum type $X + Y$ of the types $X$ and $Y$ consists of the elements of $X$ an
 
 Sigma types $\sigtype{x}.p~x$ allow us to define pairs where the type of the second component depends on the first component (therefore its inhabitants are also called \textit{dependent pairs}). We write $(x, s)$ for the dependent pair consisting of $x$ and $s : p~x$. 
 
-A type $X$ is called \textit{discrete} if equality on it is decidable, that is, there exists a function $\textsf{eq}_X : X \rightarrow X \rightarrow \bool$ such that $\textsf{eq}_X~a~b = \btrue$ if, and only if, $a = b$. We also write $\eqb{a}{b}$ instead of $\textsf{eq}_X~a~b$, omitting the type which can be inferred from the context. We use the type $\eqType$ to refer to those types which are discrete.
+A type $X$ is called \textit{discrete} if equality on it is decidable, that is, there exists a function $\textsf{eq}_X : X \rightarrow X \rightarrow \bool$ such that $\textsf{eq}_X~a~b = \btrue$ if and only if $a = b$. We also write $\eqb{a}{b}$ instead of $\textsf{eq}_X~a~b$, omitting the type which can be inferred from the context. We use the type $\eqType$ to refer to those types which are discrete.
 
-More generally, we extend the notation $\eqb{a}{b}$ to other decidable binary predicates, for instance to $a~\overset{?}{\le} b$ for deciding the relation $\le$.
+More generally, we extend the notation $\smash{\eqb{a}{b}}$ to other decidable binary predicates, for instance to $\smash{a~\leb~b}$ for deciding the relation $\le$.
 
 We also need \textit{finite types}. Finite types are discrete types with a finite number of elements. Formally, we require a list of all values of the type, in which each element occurs exactly once, as the witness that it is finite~\cite{menz2016}. Given a finite type $F$ and $e : F$, $\findex{e}$ is the position of $e$ in this list. We refer to finite types using the type $\finType{}$.
 For any number $n$, there is a type $F_n$ with exactly $n$ elements $f_0, \ldots, f_{n-1}$.
@@ -60,7 +70,8 @@ Finite types are closed under the type constructors $\opt{\cdot}$, $\cdot + \cdo
 
 \paragraph{Relations}
 As is common in type theory, we model relations on a type $X$ using binary predicates of type $X \rightarrow X \rightarrow \Prop$. 
-For a relation $R$, we write $(a, b) \in R$ or $a~R~b$ for $R~a~b$. 
+For a relation $R$, we write $(a, b) \in R$ or $a~R~b$ for $R~a~b$. A relation $R$ is included in another relation $S$, denoted $R \subseteq S$, if $\forall a~b, (a, b) \in R \rightarrow (a, b) \in S$.
+$R$ and $S$ are equivalent if they mutually include each other: $R \equiv S \defeq R \subseteq S \land S \subseteq R$. 
 
 The $n$-th power $R^n$ of a relation $R$ is defined inductively:
 \begin{align*}
@@ -134,13 +145,13 @@ $\textsf{move} := \movel \bnfmid \mover \bnfmid \moven$\mnote[move]{\textsf{move
 defines the possible movements. 
 
 \begin{definition}[Turing machines]
-  Given a finite type $\Sigma$ and a number of tapes $n$, Turing machines of type \mnotec[mTM]{$\textsf{TM}~\Sigma~n$} are tuples $(Q, \delta, \textsf{start}, \textsf{halt})$, where $Q$ is the finite type of states, $\delta : Q \times {(\opt{\Sigma})}^n \rightarrow Q \times {\textsf{Act}_\Sigma}^n$ is the transition function, $\textsf{start}$ is the initial state and $\textsf{halt} : Q \rightarrow \bool$ defines the halting states.
+  Given a finite type $\Sigma$ and a number of tapes $n$, Turing machines of type \mnotec[mTM]{$\textsf{mTM}~\Sigma~n$} are tuples $(Q, \delta, \textsf{start}, \textsf{halt})$, where $Q$ is the finite type of states, $\delta : Q \times {(\opt{\Sigma})}^n \rightarrow Q \times {\textsf{Act}_\Sigma}^n$ is the transition function, $\textsf{start}$ is the initial state and $\textsf{halt} : Q \rightarrow \bool$ defines the halting states.
 \end{definition}
 For the semantics of Turing machines, the values of the transition function for halting states, i.e.\ states $q$ for which $\textsf{halt}~q = \btrue$, are irrelevant. 
 
 A configuration of a Turing machine $M$ is a pair consisting of the current state and its tapes.
 \begin{definition}[Configurations]
-  Let $M : \textsf{TM}~\Sigma~n$. The type of configurations over $M$ is given by 
+  Let $M : \textsf{mTM}~\Sigma~n$. The type of configurations over $M$ is given by 
   $\textsf{conf}_{M} \defeq Q_{M} \times {(\textsf{tape}_{\Sigma})}^n$.\mnote[mconfig]{$\textsf{conf}_M$}
 \end{definition}
 
@@ -150,7 +161,9 @@ We give the full definition of the semantics of Turing machines in Appendix~\ref
 \newcommand{\tmrightof}{\textsf{rightof}}
 \newcommand{\tmniltape}{\textsf{niltape}}
 \newcommand{\tmmidtape}{\textsf{midtape}}
-\newcommand{\tapemove}{\textsf{tape\_move}}
+%\renewcommand{\_}{\textscale{.7}{\textunderscore}}
+\newcommand{\shortunderscore}{\textscale{.7}{\textunderscore{}}}
+\newcommand{\tapemove}{\textsf{tape\shortunderscore{}move}}
 \begin{figure}
   \begin{align*}
     \tapemove~\movel~(\tmleftof~r~rs) &\defeq \tmleftof~r~rs \\
@@ -164,12 +177,12 @@ We give the full definition of the semantics of Turing machines in Appendix~\ref
     \tapemove~~\_~~\tmniltape &\defeq \tmniltape \\
     \tapemove~\moven~tp &\defeq tp
   \end{align*}
-  \caption{Turing machine tape movements. Note how the tape does not change if the Turing machine wants to move the head one more symbol beyond the used tape region if the head currently is not on a symbol. This means that it is not possible for the head to reside two or more symbols beyond the used the tape region.}\label{fig:movetape}
+  \caption{Turing machine tape movements. Note how the tape does not change if the Turing machine wants to move the head one more symbol beyond the used tape region if the head currently is not on a symbol. This means that it is not possible for the head to reside two or more symbols beyond the used tape region.}\label{fig:movetape}
 \end{figure}
 
 \setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.TM_single}
 In the presentation on paper, it will suffice to assume a transition relation $\succ$ on configurations such that 
-\mnote[sstep]{$c \succ c'$}$(q, tp) \succ (q', tp')$ holds if, and only if, $\textsf{halt}~q = \bfalse$ and $(q', tp')$ is the successor configuration of $(q, tp)$ according to the transition function. 
+\mnote[sstep]{$c \succ c'$}$(q, tp) \succ (q', tp')$ holds if and only if $\textsf{halt}~q = \bfalse$ and $(q', tp')$ is the successor configuration of $(q, tp)$ according to the transition function. 
 \begin{definition}[Termination Relation]
   \begin{align*}
     (q, tp) \rhd^{k} (q', tp') &\defeq (q, tp) \succ^k (q', tp') \land \textsf{halt}~q' = \btrue \mnote{$c \rhd^k c'$}\\
@@ -180,7 +193,7 @@ In the presentation on paper, it will suffice to assume a transition relation $\
 We only need single-tape Turing machines throughout this thesis and therefore we restrict this notation to single-tape machines.
 The following result states that with each computational step, a Turing machine can take up at most one additional tape cell. 
 \begin{lemma}[``Time Bounds Space''][tm_step_size]\label{lem:time_bounds_space}~\\
-  Assume a Turing machine $M : \textsf{TM}~\Sigma~1$ and $(q, tp) \succ (q', tp')$. Then $\textsf{sizeOfTape}~tp' \le \natS{\textsf{sizeOfTape}~tp}$, 
+  Assume a Turing machine $M : \textsf{mTM}~\Sigma~1$ and $(q, tp) \succ (q', tp')$. Then $\textsf{sizeOfTape}~tp' \le \natS{\textsf{sizeOfTape}~tp}$, 
   where $\textsf{sizeOfTape} : \textsf{tape}_\Sigma \rightarrow \nat$ describes the number of symbols contained on a tape.
 \end{lemma}
 
@@ -194,17 +207,18 @@ L is defined over terms\mnote{\Lterm} $s, t, u: \Lterm \defeq x \bnfmid \lambda 
 
 \subsection{Semantics of L}
 For the semantics, we start by defining the reduction relation. Let $s^x_t$ be the term that is obtained by replacing every free occurrence of the variable $x$ in $s$ by the term $t$. 
-L features a weak call-by-value reduction. This means that reduction is not possible below binders (i.e. $\lambda$s) and arguments need to be fully reduced to a value (a $\lambda$-abstraction) before $\beta$-reduction is possible.
+L features a weak call-by-value reduction $\succ$. This means that reduction is not possible below binders (i.e.\ lambdas) and arguments need to be fully reduced to a value (a $\lambda$-abstraction) before $\beta$-reduction is possible.
 \begin{align*}
   \infer{s~t \succ s'~t}{s \succ s'} \quad \infer{s~t \succ s~t'}{t \succ t'} \quad \infer{(\lambda x.s)(\lambda y.t) \succ s^x_{\lambda y. t}}{} 
 \end{align*}
 The last rule is the interesting one: only if both sides of an application have been fully evaluated to an abstraction can we do a $\beta$-reduction. 
 
+
 Note that the reduction relation is not deterministic as we have not specified an evaluation order for applications. This does not pose a problem, however, as L can be shown to be uniformly confluent: 
 \begin{fact}[Fact 7 in~\cite{ForsterSmolka:2017:L-Computability}]
   If $s \succ t_1$ and $s \succ t_2$, then either $t_1 = t_2$ or $t_1 \succ u$ and $t_2 \succ u$ for some $u$.
 \end{fact}
-We say that a term $t$ is normal if it cannot be reduced further according to $\succ$. $t$ is a normal form of $s$ if $s \succ^* t$ and $t$ is normal. 
+We say that a term $t$ is normal if it cannot be reduced further according to $\succ$. $t$ is a normal form of $s$ if $s \succ^* t$ and $t$ is normal, where $\succ^*$ is the reflexive-transitive closure of $\succ$.
 Uniform confluence implies that normal forms are unique, if they exist. Moreover, every term $s$ which has a normal form $t$ always normalises to $t$ in the same number of steps: 
 \begin{corollary}[Uniform Normalisation, Fact 29 in~\cite{smolka:semantics_ars}]
   Assume that $s \succ^m t$ and $s \succ^n u$ and let $t$ be normal. Then $n \le m$ and $u \succ^{m - n} t$.
@@ -214,7 +228,7 @@ Thus, the result of evaluation is deterministic, only the way to get there is no
 \subsection{Encoding of Inductive Datatypes and Recursive Functions}
 While L is very simple in nature and does not have built-in suppport for Booleans or natural numbers, for instance, one can easily encode inductive datatypes using procedures. One way to do this is to use Scott encodings. 
 The Scott encodings of elements of an inductive datatype are procedures with one argument for each of the datatype's constructors. 
-As an example, we look at the encoding of natural numbers, which have two constructors $O : \nat$ and $S : \nat \rightarrow \nat$.
+As an example, we look at the encoding of natural numbers, which feature two constructors $O : \nat$ and $S : \nat \rightarrow \nat$.
 Their Scott encoding looks as follows: 
 \begin{align*}
   \overline{O} \defeq \lambda a. \lambda b. a 
@@ -231,12 +245,12 @@ This encoding can be derived systematically for arbitrary datatypes such as list
 Of course, having inductive datatypes is not of much use if one cannot define recursive functions on them. 
 Luckily, there is a function with which recursive terms can be obtained: 
 \begin{fact}[Fact 6 from~\cite{ForsterSmolka:2017:L-Computability}]
-  There is a function $\rho : \Lterm \rightarrow \Lterm$ such that $\rho~s$ is a procedure if $s$ is closed and $(\rho~u)v \succ^3 u(p~u)v$ for all procedures $u, v$.
+  There is a function $\rho : \Lterm \rightarrow \Lterm$ such that (1)~$\rho~s$ is a procedure if $s$ is closed and (2)~$(\rho~u)v \succ^3 u(p~u)v$ for all procedures $u, v$.
 \end{fact}
 The procedure $u$ can be seen as a step function taking the function to call for recursion as the first argument. 
 With the help of the recursion operator $\rho$, one can define recursive functions on Scott encodings by directly translating the recursive equations one would use in a functional programming language.
 
-This systematic encoding has been exploited by Forster and Kunze~\cite{ForsterKunze:2019:Certifying-extraction} to develop a certifying extraction mechanism which can automatically generate Scott encodings for inductive datatypes defined in Coq as well as encodings for recursive and non-recursive functions on these datatypes. The correctness of these encodings, in the sense that the encoded terms behave similarly to the original terms, is derived fully automatically.
+This systematic encoding has been utilised by Forster and Kunze~\cite{ForsterKunze:2019:Certifying-extraction} to develop a certifying extraction mechanism which can automatically generate Scott encodings for inductive datatypes defined in Coq as well as encodings for recursive and non-recursive functions on these datatypes. The correctness of these encodings, in the sense that the encoded terms behave similarly to the original terms, is derived fully automatically.
 The mechanism thus allows one to program functions for L without having to directly work with L.
 
 \begin{remark}
@@ -270,7 +284,7 @@ The intuition behind this result is that computations which exhibit the size exp
   For the proof of the reasonability result, L is defined with a deterministic left-to-right reduction in order to evade the problem of distinct reduction paths having a different space usage. This does not matter for us as we will only be concerned with the size of the results of computations in this thesis.
 \end{remark}
 
-Based on the natural time measure, the certifying extraction mechanism~\cite{ForsterKunze:2019:Certifying-extraction} we already mentioned can also automatically generate recurrences describing the running time of an extracted function. It is up to the user to solve these recurrences.
+Based on the natural time measure, the certifying extraction mechanism~\cite{ForsterKunze:2019:Certifying-extraction} we already mentioned can also automatically generate recurrences describing the running time of an extracted function. It is up to the user to solve these recurrences to obtain explicit time bounds.
 For the running time analyses in this thesis, we make heavy use of this functionality.
 
 \section{Basic Notions of Complexity Theory}\label{sec:np_basics}
@@ -301,33 +315,33 @@ Monotonicity would not strictly be required for the bounding functions, but is q
 
 \paragraph{\textsf{P} and \textsf{NP}}
 We continue with the definition of the important classes \textsf{P} and \textsf{NP}. 
-A problem is a predicate $P : X \rightarrow \Prop$ for an L-encodable type $X$.
+A problem is a predicate $Q : X \rightarrow \Prop$ for an L-encodable type $X$.
 \begin{definition}[Decidable Problems][decInTime]
-  Let $P : X \rightarrow \Prop$ for an L-encodable type $X$. $P$ is L-decidable if there exists a L-computable function $f : X \rightarrow \bool$ such that 
-  $\forall x, P~x \leftrightarrow f~x = \btrue$. 
-  Moreover, $P$ is decidable in time $f_t : \nat \rightarrow \nat$ if additionally the number of reduction steps of $f$'s encoding on the encoding of $x$ is bounded by $f_t(\encsize{\overline{x}})$.
+  Let $Q : X \rightarrow \Prop$ for an L-encodable type $X$. $Q$ is L-decidable if there exists a L-computable function $f : X \rightarrow \bool$ such that 
+  $\forall x, Q~x \leftrightarrow f~x = \btrue$. 
+  Moreover, $Q$ is decidable in time $f_t : \nat \rightarrow \nat$ if additionally the number of reduction steps of $f$'s encoding on the encoding of $x$ is bounded by $f_t(\encsize{\overline{x}})$.
 \end{definition}
 
 \setCoqFilename{Undecidability.L.Complexity.NP}
 \begin{definition}[Polynomial-time Decidable Problems][inTimePoly]
-  Let $P : X \rightarrow \Prop$ for an L-encodable type $X$. $P$ is polynomial-time decidable if there exists a monotonic and polynomially bounded function $f_P : \nat \rightarrow \nat$ such that $P$ is decidable in time $f_P$. 
+  Let $Q : X \rightarrow \Prop$ for an L-encodable type $X$. $Q$ is polynomial-time decidable if there exists a monotonic and polynomially bounded function $f_Q : \nat \rightarrow \nat$ such that $Q$ is decidable in time $f_Q$. 
 \end{definition}
 
-\textsf{P} is the class of problems for which there exists a polynomial-time decider. 
-\begin{definition}[\textsf{P}][inP]
-  $P \in \normalfont{\textsf{P}} \defeq P \text{ is polynomial-time decidable} $
+\PC{} is the class of problems for which there exists a polynomial-time decider. 
+\begin{definition}[\PC{}][inP]
+  $Q \in \normalfont{\PC{}} \defeq Q \text{ is polynomial-time decidable} $
 \end{definition}
 
 For \NP{}, we do not use the usual definition via nondeterminism. While nondeterministic additions to the $\lambda$-calculus have been explored in the literature, for instance via the addition of a new combinator allowing to nondeterministically guess a single bit~\cite{kutzner:nondet_lambda}, using nondeterminism would make formal reasoning much harder.
 Instead, we adapt the well-known alternative verifier characterisation of \NP{}, where there must exist a verifier which decides whether a certificate of polynomial size correctly proves that an instance is a yes-instance. Intuitively, the verifier characterisation moves the nondeterminism into the input.
 \begin{definition}[\NP{}][inNP]
-  Let $P : X \rightarrow \Prop$ and $X$ be an $L$-encodable type. $P \in \normalfont{\NP{}}$ if there exists a verifier $R : X \rightarrow \Lterm \rightarrow \Prop$ such that: 
+  Let $Q : X \rightarrow \Prop$ and $X$ be an $L$-encodable type. $Q \in \normalfont{\NP{}}$ if there exists a verifier $R : X \rightarrow \Lterm \rightarrow \Prop$ such that: 
   \begin{itemize}
-    \item $\lambda (x, y). R~x~y$ is polynomial-time decidable, 
-    \item and there exists a monotonic and polynomially-bounded function $f_P : \nat \rightarrow \nat$ bounding the size of certificates, such that
+    \item $\lambda (x, y). R~x~y$ is polynomial-time decidable 
+    \item and there exists a monotonic and polynomially-bounded function $f_Q : \nat \rightarrow \nat$ bounding the size of certificates, such that
       \begin{itemize}
-        \item if $R~x~y$, then $P~x$, 
-        \item and for all $x$ with $P~x$, there exists $y$ such that $R~x~y$ and $\encsize{\overline{y}} \le f_P(\encsize{\overline{x}})$.
+        \item if $R~x~y$, then $Q~x$, 
+        \item and for all $x$ with $Q~x$, there exists $y$ such that $R~x~y$ and $\encsize{\overline{y}} \le f_Q(\encsize{\overline{x}})$.
       \end{itemize}
   \end{itemize}
 \end{definition}
@@ -335,7 +349,7 @@ Instead, we adapt the well-known alternative verifier characterisation of \NP{},
 Note that we require that the type of certificates is $\Lterm$. This \coqlink[inNP_intro]{does not pose a restriction} in practice as we can still use any $L$-encodable type (since these types have an encoding as a $\Lterm$) whose encoding can be decoded in polynomial time, i.e.\ for which there exists a function $f : \Lterm \rightarrow \opt{X}$ running in polynomial time. It turns out that the Scott encoding of any inductive datatype can in practice be decoded in linear time.
 
 \begin{fact}[\NP{} subsumes \textsf{P}][P_NP_incl]
-  If $P \in \normalfont{\textsf{P}}$ then $P \in \NP{}$. 
+  If $Q \in \normalfont{\PC{}}$ then $Q \in \NP{}$. 
 \end{fact}
 
 \paragraph{Polynomial-time Reductions}
@@ -349,7 +363,7 @@ Note that, since we require $f$ to be polynomial-time computable, its output siz
 $\redP$ is \coqlink[reducesPolyMO_transitive]{transitive} and inclusion in \NP{} \coqlink[red_inNP]{transfers backwards} along reductions, i.e.\ if $P \redP{} Q$ and $Q \in \normalfont\NP{}$, then $P \in \NP{}$.
 
 \begin{definition}[\NP{}-hardness and \NP{}-completeness]
-  A problem $Q : X \rightarrow \Prop$ is \coqlink[NPhard]{\NP{}-hard} if any problem $P : Y \rightarrow \Prop$, where the encoding $\lambda~x. \overline{x}$ of $Y$ can be computed in polynomial time, can be reduced to it in polynomial time, i.e.\ $P \redP{} Q$. It is \coqlink[NPcomplete]{\NP{}-complete} if, in addition, $Q \in \normalfont\NP{}$.
+  A problem $Q : X \rightarrow \Prop$ is \coqlink[NPhard]{\NP{}-hard} if for any $Y$ whose encoding $\lambda~x. \overline{x}$ can be computed in polynomial time any problem $P : Y \rightarrow \Prop$ can be reduced to $Q$ in polynomial time, i.e.\ $P \redP{} Q$. It is \coqlink[NPcomplete]{\NP{}-complete} if, in addition, $Q \in \normalfont\NP{}$.
 \end{definition}
 
 The requirement that $Y$ needs to be encodable in polynomial time is new compared to Turing machines. Intuitively, this corresponds to re-encoding the alphabet of Turing machines from an arbitrary alphabet $\Sigma$ to, for instance, a binary alphabet, which is needed if one wants to employ a universal Turing machine. This change of alphabet is trivially polynomial-time computable.
@@ -359,10 +373,12 @@ Similarly, we need a common input format for a universal L-term -- the type of L
 
 \begin{remark}\label{rem:cook_L}
 We close this chapter by giving an intuitive explanation why one should not expect there to be an easy proof for the existence of a natural (i.e.\ machine-independent) and intuitive \NP{}-complete problem in our setting of complexity theory in L.
-Assume that $P$ is a natural \NP{}-complete problem. We conjecture that, if there is a simple verifier for $P$ using L, $P$ also has a simple Turing machine verifier. This is supported by the fact that Karp's 21 \NP{}-complete problems~\cite{Karp1972} all have relatively simple verifiers using Turing machines.
-Thus we obtain a direct reduction from $P$ to the computation of Turing machines. 
-Since $P$ is \NP{}-hard, we can reduce the computation of L-terms to $P$. By transititivity of reduction, we get a polynomial-time-overhead simulation of L using Turing machines. The two combined reductions thus solve L's size explosion problem. 
+
+Assume that $Q$ is a natural \NP{}-complete problem. We conjecture that, if there is a simple verifier for $Q$ using L, $Q$ also has a simple Turing machine verifier. This is supported by the fact that Karp's 21 \NP{}-complete problems~\cite{Karp1972} all have relatively simple verifiers using Turing machines.
+Thus we obtain a direct reduction from $Q$ to the computation of Turing machines. 
+Since $Q$ is \NP{}-hard, we can reduce the computation of L-terms to $Q$. By transititivity of reduction, we get a polynomial-time-overhead simulation of L using Turing machines. The two combined reductions thus solve L's size explosion problem. 
 For a direct polynomial overhead simulation, one however needs a heap-based simulation of L.
-This indicates that the \NP{}-hardness proof of $P$ is at least as advanced as the heap-based simulation of L, which is arguably not very simple.
+
+This indicates that the \NP{}-hardness proof of $Q$ is at least as advanced as the heap-based simulation of L, which is arguably not very simple.
 Motivated by this reasoning, we propose to use Turing machines as an intermediate problem for proving a natural problem to be \NP{}-hard: Turing machines are much more expressive than most natural problems, thus they seem to be a good reduction target candidate for solving the size explosion problem.
 \end{remark}

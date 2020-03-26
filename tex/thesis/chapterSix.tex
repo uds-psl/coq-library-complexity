@@ -2,11 +2,12 @@
 \newcommand{\FlatPR}{\textbf{FlatPR}}
 
 \chapter{Reducing PR to Binary PR}\label{chap:pr_bpr}
-In this chapter, we reduce \PR{} instances over an arbitrary finite alphabet $\Sigma : \finType$ to a binary alphabet over type $\bool$. The idea of this reduction is to replace every symbol $\sigma : \Sigma$ with a unique bitstring of length $\length{\Sigma}$. 
+In this chapter, we reduce \PR{} instances over an arbitrary finite alphabet $\Sigma : \finType$ to instances over a binary alphabet represented by the type $\bool$. The idea of this reduction is to replace every symbol $\sigma : \Sigma$ with a unique bitstring of length $\length{\Sigma}$.
+More specifically, the $i$-th element $\sigma_i$ (counting from zero) of the finite type $\Sigma$ is replaced by the string $0^i10^{\length{\Sigma}-i-1}$, where we write $0$ for $\bfalse$ and $1$ for $\btrue$ for convenience.
 Thus, initial strings, rewrite windows, and final substrings need to be adapted.
 This operation is incorporated using special string homomorphisms which we call uniform.
 
-For the reduction, we need to modify the offset $o$ of the \PR{} instance by multiplying it with $\length{\Sigma}$\footnote{In fact, this reduction is the motivation for having the offset in the first place.}. This is motivated by the fact that, semantically, a bitstring of length $\length{\Sigma}$ represents a single symbol of the original alphabet.
+For the reduction, we modify the offset $o$ of the \PR{} instance by multiplying it with $\length{\Sigma}$\footnote{In fact, this reduction is the motivation for having the offset in the first place.}. This is motivated by the fact that, semantically, a bitstring of length $\length{\Sigma}$ represents a single symbol of the original alphabet.
 
 The variant of \PR{} in which the alphabet is fixed to $\bool$ is called \BPR{}. All definitions of Section~\ref{sec:pr} carry over.
 

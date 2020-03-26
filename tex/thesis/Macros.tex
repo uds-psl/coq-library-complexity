@@ -2,6 +2,7 @@
 \usepackage{array}
 \usepackage{mathtools}
 \usepackage{bm}
+\usepackage{mathrsfs}
 
 %% Macros
 \newcommand{\M}[1]{\ensuremath{\textit{#1}}} % \mathup
@@ -64,7 +65,7 @@ $\square$% % the end-of-proof mark
 \newcommand{\ITE}[3]{\textbf{if}~{#1}~\textbf{then}~{#2}~\textbf{else}~{#3}}
 
 \newcommand{\Type}{\textsf{\bfseries T}}
-\newcommand{\Prop}{\textsf{\bfseries P}}
+\newcommand{\Prop}{\mathbb{P}}
 \newcommand{\bool}{\textsf{B}}
 \newcommand{\btrue}{\mathsf{T}}
 \newcommand{\bfalse}{\mathsf{F}}
@@ -77,15 +78,12 @@ $\square$% % the end-of-proof mark
 
 \newcommand{\con}{\mathbin{+\mkern-10mu+}}
 \newcommand{\rev}{\mathsf{rev}}
-\newcommand{\opt}[1]{\mathcal{O}{(#1)}}
-\newcommand{\nil}{[]}
+\newcommand{\opt}[1]{\mathbb{O}{(#1)}}
+\newcommand{\nil}{[~]}
 \newcommand{\cons}{::}
 
 \newcommand{\injl}{\textsf{L}}
 \newcommand{\injr}{\textsf{R}}
-
-\newcommand{\eqb}[2]{#1\overset{?}{=}#2}
-\newcommand{\leb}[2]{#1\overset{?}{\le}#2}
 
 \newcommand{\bnfmid}{~\mid~}
 

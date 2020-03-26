@@ -81,7 +81,7 @@ Therefore, we introduce the notion of \emph{small} assignments.
 \newcommand{\dupfree}{\textsf{dupfree}}
 \begin{definition}[Small Assignments][assignment_small]
   \mnote[assignment_small]{$\smallA~N~a$}
-  An assignment $a$ is small with respect to a CNF $N$ if it is duplicate-free and only contains variables used by the CNF:\ 
+  An assignment $a$ is small with respect to a CNF $N$ if it is duplicate-free and only contains variables used by the CNF\@:
   \[ \smallA~N~a \defeq \dupfree~a \land a \subseteq \varsOfCnf~N,\]
   where $\dupfree : \forall X, \listsof{X} \rightarrow \Prop$ is a predicate capturing the absence of duplicates.
 \end{definition}
@@ -127,7 +127,7 @@ Semantically, \compressA{} changes the assignment: after removing assignments to
   $\SAT{} \in \normalfont{\NP{}}$
 \end{lemma}
 
-In order to prove Lemma~\ref{lem:sat_in_np}, we need to show that there are valid certificates of polynomial size exactly for those CNFs $N$ for which $\SAT{}~N$ holds. 
+In order to prove Lemma~\ref{lem:sat_in_np}, we need to show that there are valid certificates of polynomial size exactly for all satisfiable CNFs. 
 Moreover, it has to be shown that the verifier runs in polynomial time. 
 As these proofs are quite technical, we usually omit them on paper. However, as the analyses are an integral part of this work, the following section is an exception and treats the general procedure we use.
 
@@ -138,9 +138,9 @@ As these proofs are quite technical, we usually omit them on paper. However, as 
   \begin{align*}
     \eval_N &: \assgn \rightarrow \cnf \rightarrow \bool \\
     \eval_N~a~\nil &\defeq \btrue \\
-    \eval_N~a~(C::N) &\defeq \eval_C~a~C~\&\&~\eval_N~a~N
+    \eval_N~a~(C::N) &\defeq \eval_C~a~C~\&~\eval_N~a~N
   \end{align*}
-  Here, we have annotated the evaluation function with a subscript to make clearer which one we mean: $\eval_N$ is the evaluation function for CNFs, while $\eval_C$ is the function for clauses.
+  Here, we have annotated the evaluation function with a subscript to make clear which one we mean: $\eval_N$ is the evaluation function for CNFs, while $\eval_C$ is the function for clauses.
 
   In order to extract this function to L, we first need to generate the encodings for the used datatypes, in this case for lists, $\nat$, and $\bool$\footnote{This has to be done only once and then never again.}. 
   Next, all the used functions need to be extracted first, in this case the evaluation of clauses and the Boolean conjunction. We assume this has already been done. 
@@ -151,14 +151,14 @@ As these proofs are quite technical, we usually omit them on paper. However, as 
     T(\eval_N)~a~(C :: N) &\ge T(\eval_N)~a~N + T (\eval_C)~a~C + 22
   \end{align}
   $T(\cdot)$ can be read as ``time-of''. The numerical constants appearing in the inequalities are the numbers of reduction steps of the extracted function.
-  We do not solve the recurrences directly, but instead define a recursive function $T(\eval_N)$ implementing the equations.
+  We do not solve the recurrences directly, but instead define a recursive function $T_{\eval_N}$ implementing the equations.
 
-  Next, we aim to bound the function $T(\eval_N)$ by a monotonic polynomial $p_{\eval_N} : \nat \rightarrow \nat$ in the encoding size of the arguments such that 
-  \[\forall a~N, T(\eval_N)~a~N \le p_{\eval_N}(\encsize{\overline{a}} + \encsize{\overline{N}}) \]
+  Next, we aim to bound the function $T_{\eval_N}$ by a monotonic polynomial $p_{\eval_N} : \nat \rightarrow \nat$ in the encoding size of the arguments such that 
+  \[\forall a~N, T_{\eval_N}~a~N \le p_{\eval_N}(\encsize{\overline{a}} + \encsize{\overline{N}}) \]
   holds. In principle, we could also use a multivariate polynomial having one variable for each of the arguments, but this would only complicate things. 
   In the case of $\eval_N$, the polynomial $\coqlink[poly__evalCnf]{p_{\eval_N}}(n) \defeq n \cdot p_{\eval_C}(n) + c_{\eval_N} \cdot (n +1)$ works, where $p_{\eval_C}$ is the polynomial bounding $T(\eval_C)$ and $c_{\eval_N}$ is a constant. The bounding equation is then proved by induction on the CNF $N$. 
 
-  Higher-order functions can be treated in a similar way, but there the running time bounds are conditional on bounds for the argument functions. In many cases, however, it seems to be easier to define a function via direct recursion instead of using a higher-order functions which is more complicated to bound.
+  Higher-order functions can be treated in a similar way, but there the running time bounds are conditional on bounds for the argument functions. In many cases, however, it seems to be easier to define a function via direct recursion instead of using a higher-order function which is more complicated to bound.
 
   Recall that, regarding the size, we only need to bound the size of the result. The procedure of deriving a polynomial is similar in that case, although the extraction mechanism does not derive space bounds currently; instead, we derive bounds via semantic arguments.
 
@@ -184,7 +184,7 @@ The $k$-\SAT{} problem additionally requires that $k > 0$. This is an arbitrary 
 \end{definition}
 
 \begin{remark}
-Note that $k$ acts as a parameter to the problem and is not part of an instance. More precisely, we might say that $k$-\SAT{} is a \emph{class} of problems, where we get the problem $k$-\SAT{} for every $k : \nat$. 
+  Note that $k$ acts as a parameter to the problem and is not part of an instance. More precisely, we might say that $k$-\SAT{} (for indeterminate $k$) is a \emph{class} of problems, where we get the problem $k$-\SAT{} for every fixed $k : \nat$. 
 \end{remark}
 
 As $\kCNF{k}~N$ can easily be decided in polynomial-time, we obtain a reduction from $k$-\SAT{} to \SAT{}. For the case that $k = 0$ or that $N$ is not a \kCNF{k}, we map to a trivial no-instance such as $x_0 \land \lnot x_0$. 
@@ -258,10 +258,10 @@ Note that the number $k$ is part of the instance, in contrast to the parameter $
 \subsection{First-order Encoding of Graphs}\label{sec:flat_clique}
 \setCoqFilename{Undecidability.L.Complexity.Problems.FlatUGraph}
 We now present a variant of graphs and the Clique problem which is extractable to L. This representation eliminates the components which cause trouble (see Remark~\ref{rem:ugraph}) in the above definition: the finite type and the propositional edge relation. 
-The finite type we replace by a natural number $v$ giving the number of vertices. Valid vertices are natural numbers which are $< v$. The edge relation is replaced by a list of pairs of vertices: $\FlatUGraph \defeq \nat \times \listsof{\nat \times \nat}$.\mnote[FlatUGraph]{\FlatUGraph}
+The finite type we replace by a natural number $v$ giving the number of vertices. Valid vertices are natural numbers which are smaller than $v$. The edge relation is replaced by a list of pairs of vertices: $\FlatUGraph \defeq \nat \times \listsof{\nat \times \nat}$.\mnote[FlatUGraph]{\FlatUGraph}
 
 This type does allow instances which do not make any sense syntactically. Therefore, we enforce syntactic constraints externally:
-\[\textsf{FlatUGraph\_wf}~(v, e) \defeq (\forall (v_1, v_2) \in e, (v_2, v_1) \in e) \land (\forall (v_1, v_2) \in e, v_1 < v \land v_2 < v)\mnote[fgraph_wf]{\textsf{FlatUGraph\_wf}} \]
+\[\textsf{FlatUGraph\shortunderscore{}wf}~(V, E) \defeq (\forall (v_1, v_2) \in E, (v_2, v_1) \in E) \land (\forall (v_1, v_2) \in E, v_1 < V \land v_2 < V)\mnote[fgraph_wf]{\textsf{FlatUGraph\shortunderscore{}wf}} \]
 One can easily build a Boolean decider for these constraints. 
 
 Of course, we want to connect graphs of type \UGraph{} and flat graphs of type \FlatUGraph{} somehow. We first define some general relations for the representation of finite types by natural numbers. 
@@ -305,15 +305,15 @@ Cliques can be defined \coqlink[isfKClique]{in the expected way} for flat graphs
 The only difference to the definition on non-flat graphs is that we have to explicitly require the graph to be syntactically wellformed (see \textsf{FlatUGraph\_wf}). 
 The corresponding problem is called \mnotec[FlatClique]{\FlatClique{}}. A proof that \FlatClique{} is contained in \NP{} is \coqlink[FlatClique_in_NP]{straightforward}.
 
-We can then derive an agreement statement for the two definitions: if $(v, e) \approx (V, E)$ and if $l : \listsof{\nat}$ and $L : \listsof{V}$, then $l$ is a clique in $(v, e)$ \coqlink[clique_flat_agree]{if, and only if,} $L$ is a clique in $(V, E)$. Moreover, from a clique for one representation we can compute a clique for the \coqlink[clique_flatten]{other} \coqlink[clique_unflatten]{representation}.
-This agreement allows us to reason using the propositional version, but analyse the running time on the flat version. 
+We can then derive an agreement statement for the two definitions: if $(v, e) \approx (V, E)$ and if $l : \listsof{\nat}$ and $L : \listsof{V}$, then $l$ is a clique in $(v, e)$ \coqlink[clique_flat_agree]{if, and only if,} $L$ is a clique in $(V, E)$. Moreover, from a clique for one representation we can obtain a clique for the \coqlink[clique_flatten]{other} \coqlink[clique_unflatten]{one}.
+This agreement allows us to reason using the propositional version, but analyse the running time on the flat version. Reductions essentially solely use the flat definition, the propositional variant is only needed to make the proof of the reduction equivalence more elegant.
 
 \section{Reduction from $k$-\SAT{} to \Clique{}}
 Now that we have defined the involved problems, we present the reduction of $k$-\SAT{} to \Clique{}. 
 Assume that the CNF is given as 
-\[(l_{0, 0} \lor \ldots \lor l_{0, k-1}) \land \ldots \land (l_{n-1, 0} \lor \ldots \lor l_{m-1, k-1}), \]
+\[(l_{0, 0} \lor \ldots \lor l_{0, k-1}) \land \ldots \land (l_{m-1, 0} \lor \ldots \lor l_{m-1, k-1}), \]
 for a number of clauses $m$.
-The basic idea of the reduction is to create a graph with vertices $(i, j)$ for $i \in [0..m-1]$ and $j \in [0..k-1]$ such that we have a vertex $(i, j)$ for every literal $l_{i, j}$. The edges between the vertices corresponding to two literals encode whether the literals can be satisfied at the same time and belong to different clauses. As a CNF is satisfied if, and only if, there exists a satisfied literal for every clause, the satisfiability problem then reduces to checking whether there exists a $m$-clique in the constructed graph. 
+The basic idea of the reduction is to create a graph with vertices $(i, j)$ for $i \in [0..m-1]$ and $j \in [0..k-1]$ such that we have a vertex $(i, j)$ for every literal $l_{i, j}$. The edges between the vertices corresponding to two literals encode whether the literals can be satisfied at the same time and belong to different clauses. As a CNF is satisfied if and only if there exists a satisfied literal for every clause, the satisfiability problem then reduces to checking whether there exists a $m$-clique in the constructed graph. 
 In the following, we present this construction and its proof of correctness formally.
 
 We start with the reduction to the non-flat version \Clique{} using graphs of type \UGraph{}. In order to prove polynomial-time computability, we then transfer the results to the flat version \FlatClique{}. 
@@ -365,7 +365,7 @@ To prove this formally, we require a few facts.
 \end{fact}
 Note that we could strengthen the preceding fact by also fixing the position of the literal inside the clause. However, for the proof it is only relevant that the literal belongs to a specific clause.
 
-We prove the existence of a clique by an induction over the number of clauses. In order for an induction to go through, the statement needs to be strengthened: as we have fixed a graph for the whole CNF, we also require that the clique provided by the inductive hypothesis only uses vertices belonging to the smaller CNF. Moreover, we need that the corresponding literals are satisfied by $a_{\textsf{sat}}$ in order to derive the existence of the necessary edges if we add a vertex for the new clause in the inductive step. Thus, we arrive at the following statement:
+We prove the existence of a clique by induction over the number of clauses. In order for an induction to go through, the statement needs to be strengthened: as we have fixed a graph for the whole CNF, we also require that the clique provided by the inductive hypothesis only uses vertices belonging to the smaller CNF. Moreover, we need that the corresponding literals are satisfied by $a_{\textsf{sat}}$ in order to derive the existence of the necessary edges if we add a vertex for the new clause in the inductive step. Thus, we arrive at the following statement:
 
 \begin{lemma}[Existence of a Clique][exists_clique']
   Assume a sub-CNF $N'$ of $N$ such that $N = N'' \concat N'$ for some $N''$. Then there exists $L : \listsof{V_G}$ with: 
