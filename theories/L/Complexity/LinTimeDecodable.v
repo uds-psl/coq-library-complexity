@@ -58,4 +58,10 @@ Proof.
   solverec. [c]: exact 5. all: subst c; lia.
 Qed. 
 
-
+Instance linDec_prod X Y `{_ : linTimeDecodable X} `{_:linTimeDecodable Y} : linTimeDecodable (X * Y). 
+Proof. 
+  evar (c : nat). exists c. 
+  unfold decode, decode_prod, prod_decode; cbn. 
+  extract. recRel_prettify2; cbn [size]; ring_simplify. 
+  [c]: exact (max (max (c__linDec X) (c__linDec Y)) 14). all: unfold c; try nia. 
+Qed. 

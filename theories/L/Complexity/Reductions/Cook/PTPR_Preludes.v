@@ -252,7 +252,6 @@ Section fixPTPRInstance.
         subst. apply valid_length_inv in H. now rewrite !map_length in H.  
   Qed. 
 
- (*TODO: maybe more general form using retracts?*)
   Lemma relpower_valid_map_inl x0 xt m: relpower (valid (rewritesHeadInd p)) m x0 xt -> relpower (valid (rewritesHeadInd combP)) m (map inl x0) (map inl xt).
   Proof. 
     intros H. induction H. 
@@ -431,6 +430,6 @@ Section fixPrelude.
         cbn. destruct H3 as (sf' & ->). exists sf'. split. 
         * clear F2 A2 A3 A4. eapply liftOrig_relpower_p, H2. 
           apply relpower_valid_length_inv in H1.  rewrite !map_length in H1. lia.
-        * now apply lift_final. 
+        * now eapply lift_final. 
   Qed. 
 End fixPrelude. 
