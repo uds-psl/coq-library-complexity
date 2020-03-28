@@ -357,6 +357,7 @@ L/Complexity/Problems/GenNP/TMGenNP.v
 
 
 L/Complexity/PolyBounds.v
+L/Complexity/SharpP.v
 L/Complexity/Tactics.v
 L/Complexity/MorePrelim.v
 L/Complexity/FlatFinTypes.v

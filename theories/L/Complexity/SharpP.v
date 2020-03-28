@@ -16,7 +16,7 @@ Lemma cardOf_functional (X : eqType) (p : X -> Prop) (n1 n2 : nat) : cardOf p n1
 Proof. 
   intros (l1 & (H1 & H2) & H3) (l2 & (F1 & F2) & F3). 
   enough (l1 === l2). 
-  { rewrite H3, F3. SearchAbout dupfree. rewrite <- !dupfree_card by easy. now rewrite H. }
+  { rewrite H3, F3. rewrite <- !dupfree_card by easy. now rewrite H. }
   split; intros x Hel.
   - apply F2, H2, Hel. 
   - apply H2, F2, Hel.
