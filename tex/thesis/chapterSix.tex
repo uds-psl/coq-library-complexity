@@ -31,7 +31,7 @@ While one usually uses string homomorphisms over a finite alphabet, we do not re
 \end{fact}
 
 \newcommand{\canonicalHom}{\textsf{canonicalHom}}
-Given a function $f : \Sigma_1 \rightarrow \str{\Sigma_2}$, we can define a canonical homomorphism \[\canonicalHom~f \defeq \lambda~l. \rconcat~\withl f~x \withm x \in l \withr \mnote[canonicalHom]{\canonicalHom}\]  lifting $f$ to lists.
+Given a function $f : \Sigma_1 \rightarrow \str{\Sigma_2}$, we can define a canonical homomorphism \[\canonicalHom~f \defeq \lambda l. \rconcat~\withl f~x \withm x \in l \withr \mnote[canonicalHom]{\canonicalHom}\]  lifting $f$ to lists.
 
 \begin{proposition}
   Let $f : \Sigma_1 \rightarrow \str{\Sigma_2}$. 
@@ -58,8 +58,8 @@ Note that the definition is in terms of singleton lists. The more general proper
   \end{enumerate}
 \end{proposition}
 
-Again, we can define a canonical uniform homomorphism starting from a function $f : \Sigma_1 \rightarrow \str{\Sigma_2}$ satisfying $\length{f~x} = k > 0$ for all $x : \Sigma_1$. 
-\begin{proposition}[Canonical Uniform Homomorphisms][canonical_uniform_homo]
+Again, we can define a canonical uniform homomorphism starting from a function $f : \Sigma_1 \rightarrow \str{\Sigma_2}$ satisfying $\length{f~x} = k$ for all $x : \Sigma_1$ and some $k > 0$. 
+\begin{proposition}[Canonical Uniform Homomorphisms][canonical_uniform_homo]$~$\\
   Let $f : \Sigma_1 \rightarrow \str{\Sigma_2}$ with $\forall x, \length{f~x} = k$ for some $k > 0$. 
   Then $\uniformHomo~(\canonicalHom~f)$. 
 \end{proposition}
@@ -76,18 +76,18 @@ Conversely, we can formalise the above intuition that the length of a string is 
 
 \section{Applying Uniform Homomorphisms to \PR{}}\label{sec:unif_hom_pr}
 \setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.PR_homomorphisms}
-We can show that \PR{} is invariant under injective uniform homomorphisms. That is, given a uniform homomorphism $h$ and a \PR{} instance $S$, we can define another \PR{} instance $S'$ where we have applied $h$ to all strings of $S$. $S'$ is a yes-instance if, and only if, $S$ is a yes-instance. 
+We can show that \PR{} is invariant under injective uniform homomorphisms. That is, given an injective uniform homomorphism $h$ and a \PR{} instance $S$, we can define another \PR{} instance $S'$ where we have applied $h$ to all strings of $S$. $S'$ is a yes-instance if, and only if, $S$ is a yes-instance. 
 
 Fix a \PR{} instance $S = (\Sigma_1, o, \omega, x_0, R, \Rfinal, t)$. 
 Assume that $\length{\Sigma_1} > 0$. Instances of \PR{} not satisfying this property are trivial no-instances. 
 
-Without loss of generality\footnote{This follows from the results of the previous section.}, we assume that the homomorphism is given as $h' : \Sigma_1 \rightarrow \Sigma_2$ with 
+Without loss of generality\footnote{This follows from the results of the previous section.}, we assume that the homomorphism is given as $h' : \Sigma_1 \rightarrow \Sigma_2^*$ with 
 \begin{gather*}
   (A_1) \quad \length{h'~x} = k~\text{for a fixed } k > 0 \\
   (A_2) \quad \textsf{injective}~h'
 \end{gather*}
 
-Then define the full homomorphism $h \defeq \canonicalHom~h'$. 
+Then, we define the full homomorphism as $h \defeq \canonicalHom~h'$. 
 Properties $(A_1)$ and $(A_2)$ carry over to $h$:
 \begin{proposition}\label{prop:h_properties}\leavevmode
   \begin{enumerate}
@@ -119,16 +119,16 @@ The transformed \PR{} instance is defined as
 \end{align*}
 Note that the offset and the width both need to be multiplied by the multiplicative factor $k$ of $h$.
 It is easy to see that this definition is well-formed, that is, $S'$ does again satisfy the syntactic constraints of \PR{} (Definition~\ref{def:pr}).
-The goal for the rest of this section is to show that $\PR{}~S \leftrightarrow \PR{}~s'$. 
+The goal for the rest of this section is to show that $\PR{}~S \leftrightarrow \PR{}~S'$. 
 
 We start with the agreement of $\textsf{rewHead}$.
 The first statement of the following lemma is the equivalence one would expect. However, it is rather weak, as the backwards direction requires that we know the premise and conclusion to be in the image of $h$.
 For the proof of equivalence of $S$ and $S'$, we need a stronger statement: if we have a string $h~a$ that rewrites to a string $s$, we need to be able to derive that $s$ is in the image of $h$.
 
-\begin{lemma}[Agreement of $\textsf{rewHead}$]\label{lem:rewHead_agree}\leavevmode
+\begin{lemma}[Agreement for $\textsf{rewHead}$]\label{lem:rewHead_agree}\leavevmode
   \begin{enumerate}
     \coqitem[rewritesHead_homomorphism_iff] $\rewHead{w}{a}{b} \leftrightarrow \rewHead{(h_{\text{window}}~w)}{(h~a)}{(h~b)}$
-    \coqitem[rewritesHead_homomorphism2] If $w \in \textsf{hwindows}$, $\length{a_1} = o$, $\length{u} = k \cdot o$, and $\rewHead{w}{(h~a_1 \concat h~a_2)}{(u \concat v)}$, then there exists $b_1$ with $u = h~b_1$ and $\length{b_1} = o$.
+    \coqitem[rewritesHead_homomorphism2] If $w \in R_h$, $\length{a_1} = o$, $\length{u} = k \cdot o$, and $\rewHead{w}{(h~a_1 \concat h~a_2)}{(u \concat v)}$, then there exists $b_1$ with $u = h~b_1$ and $\length{b_1} = o$.
   \end{enumerate}
 \end{lemma}
 \begin{proof}
@@ -150,7 +150,7 @@ To some extent, this is the most intuitive characterisation of validity: it does
 \setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.PR_homomorphisms}
 The restriction to strings of length at least $\omega$ does not pose a problem as Definition~\ref{def:pr} imposes that as a syntactic constraint.
 Using the new characterisation, we can now prove the equivalence for $\strent{}$.
-\begin{lemma}[Agreement of $\strent{}$]
+\begin{lemma}[Agreement for $\strent{}$]
   Let $a$ with $\length{a} \ge \omega$ be given.
   \begin{enumerate}
     \coqitem[valid_homomorphism_iff] $(h~a) \strent{R_h} b' \rightarrow \exists b, b' = h~b \land a \strent{R} b$. 
@@ -189,7 +189,7 @@ After having show that the final constraints \coqlink[final_agree]{agree in the 
 \section{Reduction to \BPR{}}
 \setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.PR_to_BinaryPR}
 The previous section's results can be applied to an injective uniform homomorphism into $\bool$ to directly obtain the reduction of \PR{} to \BPR{}. 
-We use a homomorphism which just computes a unary encoding of the alphabet's elements over a binary alphabet. The $i$-th element $\sigma_i$ (counting from zero) of the finite type $\Sigma$ is mapped to the string $0^i10^{\length{\Sigma}-i-1}$.
+We use a homomorphism which just computes a unary encoding of the alphabet's elements over a binary alphabet. The $i$-th element $\sigma_i$ (counting from zero) of the finite type $\Sigma$ is mapped to the string $\bfalse^i\btrue \bfalse^{\length{\Sigma}-i-1}$.
 
 Formally, let us fix a $\PR{}$-instance $S = (\Sigma, o, \omega, x_0, R, \Rfinal, t)$. In order to apply the results of the previous section, we rely on $\length{\Sigma} > 0$. We handle the case $\length{\Sigma} = 0$ separately in the end.
 
@@ -197,8 +197,8 @@ The following function defines the homomorphism for single elements.
 \begin{definition}\label{def:hnat_hsig}
   \begin{align*}
     \mnote[hNat]{$h_{\nat}$}
-    h_{\nat}~sig~n&\defeq \ITE{n~\overset{?}{<}~sig}{\bfalse^n \concat [\btrue] \concat \bfalse^{sig -n -1}}{\bfalse^{sig}} \\
-    h_{\Sigma}~\sigma : \listsof{\bool} &\defeq h_{\nat}~(\length{\Sigma})~(\textsf{index}~\sigma)\mnote[h']{$h_\Sigma$}
+    h_{\nat}~sig~n&\defeq \ITE{n~\oset{?}{<}{+0.9}~sig}{\bfalse^n \concat [\btrue] \concat \bfalse^{sig -n -1}}{\bfalse^{sig}} \\
+    h_{\Sigma}~\sigma &\defeq h_{\nat}~(\length{\Sigma})~(\textsf{index}~\sigma)\mnote[h']{$h_\Sigma$}
   \end{align*}
 \end{definition}
 The corresponding homomorphism can be obtained by using $\canonicalHom$. However, the technique of Section~\ref{sec:unif_hom_pr} justs asks us to provide a function operating on single symbols.
@@ -211,7 +211,7 @@ Properties $(A_1)$ and $(A_2)$ are straightforward to verify.
     \coqitem[hP_length] $\length{h_{\Sigma}~\sigma} = \length{\Sigma}$
   \end{enumerate}
 \end{fact}
-
+\pagebreak
 \begin{fact}[Injectivity]\leavevmode
   \begin{enumerate}
     \coqitem[hP_inv1] $h_{\nat}~sig~m = \bfalse^n \concat [\btrue] \concat \bfalse^{sig - n - 1} \rightarrow m = n$

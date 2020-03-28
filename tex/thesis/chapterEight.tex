@@ -16,7 +16,7 @@ If one does the conversion in a naive way, this incurs an exponential blowup. Co
 Clearly, this does not work if we want to obtain a polynomial-time reduction. Instead, we use the Tseytin transformation~\cite{Tseitin1983}. The key insight behind the transformation is that the exponential blowup is caused by having to duplicate subformulas, as can be seen in Example~\ref{ex:cnf_large}. This can be prevented by introducing new variables which represent the subformulas, so that we may use the variable instead of duplicating the whole formula.
 Introducing new variables is fine since we only require the resulting CNF $N$ to be \textit{equisatisfiable} to the original formula $f$, i.e. $\SAT{}~N \leftrightarrow \fsat{}~f$, but not equivalent.  
 
-In the Tseytin transformation, each subformula $f'$ of the formula $f$ is represented by a variable $v'$ together with a CNF $N'$, such that $\fsat{}~f' \leftrightarrow \SAT{}~(v' \land N')$. Intuitively, the CNF $N'$ forces variable $v'$ to be equivalent to $f'$ for any assignment.
+In the Tseytin transformation, each subformula $f'$ of the formula $f$ is represented by a variable $v'$ together with a CNF $N'$, such that $\fsat{}~f' \leftrightarrow \SAT{}~(v' \land N')$. Intuitively, the CNF $N'$ forces the variable $v'$ to be equivalent to $f'$ for any assignment.
 \begin{example}
   As an example, we consider the transformation for the disjunctive formula $f = \phi_1 \lor \phi_2$. First of all, we recursively apply the transformation to $\phi_1$ and $\phi_2$ in order to obtain variables $v_1$ and $v_2$ and CNFs $N_1$ and $N_2$ that represent the respective formulas. Of course, we have to take care that the new variables introduced for the transformations of $\phi_1$ and $\phi_2$ do not overlap.
   We now add a fresh variable $v$ for the subformula $\phi_1 \lor \phi_2$ and build a CNF $N$ such that $v \land N$ is equisatisfiable to $\phi_1 \lor \phi_2$. $N$ should enforce that $v \leftrightarrow (v_1 \lor v_2)$ and that $v_1$ and $v_2$ represent $\phi_1$ and $\phi_2$, respectively.
@@ -29,7 +29,7 @@ In the Tseytin transformation, each subformula $f'$ of the formula $f$ is repres
 As mentioned in the introduction, the Tseytin transformation adds new variables. In order to prove the transformation correct, we need some tools to be able to introduce fresh variables and compose assignments to different ranges of variables.
 
 \setCoqFilename{Undecidability.L.Complexity.Problems.SAT}
-First of all, we define functions computing the maximum variable used in a CNF or formula, or zero if no variable is used. We refer to both of these functions by \mnotec{\maxVar{}}; it will be clear from the context whether we mean \coqlink[cnf_maxVar]{CNFs}
+First of all, we define functions computing the maximum variable used in a CNF or formula (or zero if no variable is used). We refer to both of these functions by \mnotec{\maxVar{}}; it will be clear from the context whether we mean \coqlink[cnf_maxVar]{CNFs}
 \setCoqFilename{Undecidability.L.Complexity.Problems.FSAT}%
 or \coqlink[formula_maxVar]{formulas}. 
 
@@ -52,7 +52,7 @@ We use the predicates \mnotec[varInCnf]{$v \incnf N$} and $v \infor f$ to denote
 
   \setCoqFilename{Undecidability.L.Complexity.Problems.SAT}
 
-  $N$ only uses variables of $r$, written \mnotec[cnf_varsIn]{$N \subseteq r$}, if $\forall v, v \incnf N \rightarrow v \in r$. 
+  $N$ only uses variables of $r$, written \mnotec[cnf_varsIn]{$N \subseteq r$}, if $\forall v \incnf N, v \in r$. 
 \end{definition}
 
 Of course, variable containment is monotonous. 
@@ -63,25 +63,21 @@ Of course, variable containment is monotonous.
   \end{enumerate}
 \end{proposition}
 
-We now turn to the composition of assignments. Recall that assignments are represented by a list of variables to which $\btrue$ is assigned and to all other variables, $\bfalse$ is assigned implicitly. 
+We now turn to the composition of assignments. Recall that assignments are represented by a list of variables to which $\btrue$ is assigned and to all other variables $\bfalse$ is assigned implicitly. 
 In principle, this form of assignments is completely non-compositional as all assignments are total. 
-However, we may still get a form of composition by overriding implicit $\bfalse$ values. If we only compose assignments over disjoint variable ranges, we may still obtain the properties one would intuitively expect. 
+However, we may still get a form of composition by overriding implicit $\bfalse$ values. If we only compose assignments which explicitly assign values to disjoint variable ranges, we may still obtain the properties one would intuitively expect. 
 
 \setCoqFilename{Undecidability.L.Complexity.Reductions.FSAT_to_SAT}
 We define variable containment \mnotec[assgn_varsIn]{$a \subseteq r$} for assignments in the same way as for formulas and CNFs:
-\[a \subseteq r \defeq \forall v, v \in a \rightarrow v \in r \]
+\[a \subseteq r \defeq \forall v \in a, v \in r \]
 Note that this definition only talks about variables to which $\btrue$ is assigned.
 We obtain the same properties as in Proposition~\ref{prop:var_contain}.
-Moreover, the following fact will be quite helpful in the sequel:
-\begin{fact}[][evalVar_no_assgn_varsIn_false]
-  Let $a \subseteq r$ and $v \notin r$. Then $\evalA{a}{v} = \bfalse$.
-\end{fact}
 
 \begin{definition}[Composition and Restriction]
   For two assignments $a_1, a_2$, the composition \mnotec[join]{$a_1 \cup a_2$} is given as $a_1 \cup a_2 \defeq a_1 \concat a_2$. 
   That is, we assign $\btrue$ to the variables to which either $a_1$ or $a_2$ assigns $\btrue$, and assign $\bfalse$ only to those values to which neither $a_1$ nor $a_2$ assigns $\btrue$.
 
-  The restriction of $a$ to the range $[0, b)$ is defined as $a|_b \defeq \withl v \withm v \in a \land v \overset{?}{<} b \withr$.\footnote{We restrict this to ranges $[0, b)$ as we would have to reason about Boolean deciders for arbitrary ranges $r$ otherwise.} 
+  The restriction of $a$ to the range $[0, b)$ is defined as $a|_b \defeq \withl v \withm v \in a \land v \oset{?}{<}{+0.7} b \withr$.\footnote{We restrict this to ranges $[0, b)$ as we would have to reason about Boolean deciders for arbitrary ranges $r$ otherwise.} 
   \mnote[restrict]{$a|_b$}
 \end{definition}
 
@@ -108,7 +104,7 @@ Similarly, we can restrict an assignment. We only need this for formulas.
 
 \section{Correctness of the Tseytin Transformation}
 In this section, we formally define the Tseytin transformation and verify its correctness. 
-The main effort will be to justify the individual tranformations for the operators $\land, \lor$ and $\lnot$ due to the need to compose the new variables introduced by the subformulas. With this in mind, our first step is to eliminate $\lor$ in the formula so that we can omit the proof of correctness for this operator without loss of generality. Then, the main step for proving the correctness is to define a relation between formulas and CNFs that is strong enough for an inductive proof to go through.
+The main effort will be to justify the individual transformations for the operators $\land, \lor$ and $\lnot$ due to the need to compose the new variables introduced by the subformulas. With this in mind, our first step is to eliminate $\lor$ in the formula so that we can omit the proof of correctness for this operator without loss of generality. Then, the main verification step is to define a relation between formulas and CNFs that is strong enough for an inductive proof to go through.
 
 \newcommand{\eliminateOr}{\textsf{eliminateOr}}
 \newcommand{\orFree}{\textsf{orFree}}
@@ -146,7 +142,7 @@ The transformation function \tseytin{} (Figure~\ref{lst:tseytin}) can be derived
   \end{aligned}\\
     \tseytin'~nf~(\lnot f) &\defeq \begin{aligned}[t]
       &\llet (rv, N, nf') = \tseytin'~nf~f \\
-      &\lin (nf', N \concat \textsf{tseytinNot}~nf'~rv, \natS{nf})
+      &\lin (nf', N \concat \textsf{tseytinNot}~nf'~rv, \natS{nf}')
     \end{aligned} \\
   \tseytin'~nf~(f_1 \lor f_2) &\defeq \ldots \\[0.8em]
   \tseytin & : \formula \rightarrow \var \times \cnf \mnote[tseytin]{\tseytin}\\
@@ -178,7 +174,7 @@ We now show \tseytin{} to be correct, in the sense that the resulting pair $(v, 
   \[ f \frepr{} (v, N) \defeq \fsat{}~f \leftrightarrow \SAT{}~([(\btrue, v)] :: N) \mnote[formula_repr]{$f \frepr{} (v, N)$}\]
 \end{definition}
 
-The statement we would like to prove is that $\tseytin~f = (v, N) \rightarrow f \frepr{} (v, N)$. As the function is defined in terms of $\tseytin'$, we first prove a statement for this function. The first direct generalisation one might come up with is
+The statement we would like to prove is that $\tseytin~f = (v, N) \rightarrow f \frepr{} (v, N)$. As \tseytin{} is defined in terms of $\tseytin'$, we first prove a more general statement for this function. The first direct generalisation one might come up with is
 \[f \subseteq [0, b) \rightarrow nf \ge b \rightarrow \tseytin'~nf~f = (v, N, nf') \rightarrow f \frepr{} (v, N), \]
 where we have generalised the initial value $\natS{\textsf{maxVar}~f}$ for $nf$.
 However, an inductive proof still does not go through: in the cases where an operator is used, we do not know enough to do any reasoning about the assignments as the relation does not hold any information on the structure of the CNFs and assignments. 
@@ -191,7 +187,7 @@ We therefore define a stronger relation parameterised over $b$, $nf$, and $nf'$.
     \item $N \subseteq ([0, b) \cup [nf, nf'))$,
     \item $v \in [nf, nf')$,
     \item for all $a \subseteq [0, b)$, there exists $a' \subseteq [nf, nf')$ such that $(a \cup a') \models N$,
-    \item and for all $a$ with $a \models N$, the equivalence $\evalA{a}{v} = \btrue \leftrightarrow a \models f$ holds.
+  \item and for all $a$ with $a \models N$, the equivalence $a \models v \leftrightarrow a \models f$ holds.
   \end{enumerate}
 \end{definition}
 
@@ -201,12 +197,12 @@ The third condition states that for any assignment to the original variables $[0
 Intuitively, the condition does hold since the CNF produced by the Tseytin transformation only contains constraints which relate the original variables to the new variables; therefore, for any assignment to the original variables, we should be able to find a consistent assignment for the new variables. 
 Only if we force the representing variable to be $\btrue$ is $N$ actually equisatisfiable to $f$.
 
-Finally, the fourth condition says that an assignment satifying $N$ assigns the value $\btrue$ to the representing variable $v$ if, and only if, it satisfies $f$. 
+Finally, the fourth condition says that an assignment satisfying $N$ assigns the value $\btrue$ to the representing variable $v$ if and only if it satisfies $f$. 
 
 Based on this relation, we can prove the following statement by induction on $f$: 
 \[f \subseteq [0, b) \rightarrow nf \ge b \rightarrow \tseytin'~nf~f = (v, N, nf') \rightarrow f \Frepr{nf}{nf'}{b} (v, N) \]
 
-We factor out the inductive steps into compatbility lemmas for the operators. 
+We factor out the inductive steps into compatibility lemmas for the operators. 
 
 \begin{lemma}[Compatibility with $\land$][and_compat]\label{lem:compat_and}
   Assume that $f_1 \subseteq [0, b)$, $f_2 \subseteq [0, b)$, and 
@@ -286,7 +282,7 @@ The full reduction first eliminates disjunctions and then applies the Tseytin tr
   By combining Proposition~\ref{prop:eliminateOr} and Corollary~\ref{cor:tseytin_correct}.
 \end{proof}
 
-One quickly notes that the CNFs produced by this reduction have a clause size of at most 3. We can easily adapt the reduction to produce 3-CNFs by making the clause size exactly 3. For that, we duplicate some of the literals in the clauses produced by the functions in Figure~\ref{fig:prim_cnfs} and the function \textsf{reduction}.
+One quickly notes that the CNFs produced by this reduction have a clause size of at most 3. We can easily adapt the reduction to yield 3-CNFs by making the clause size exactly 3. For that, we duplicate some of the literals in the clauses computed by the functions in Figure~\ref{fig:prim_cnfs} and the function \textsf{reduction}.
 Thus, we directly obtain a reduction to 3-\SAT{}, too.
 
 \begin{lemma}[\fsat{} Reduces to 3-\SAT{}][FSAT_to_3SAT]

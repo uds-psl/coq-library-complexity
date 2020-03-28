@@ -35,17 +35,14 @@ As we will be working with ranges of variables $[\textsf{start}, \textsf{start} 
 
 We can naturally convert back and forth between such explicit assignments and assignments $a : \assgn$.
 First, we present a function that generates an explicit assignments for the variables in range $[\text{start}, \text{start} + \text{len})$. 
-
-\setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.BinaryPR_to_FSAT}
+\setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.BinaryPR_to_FSAT}%
 \newcommand{\explicitA}{\textsf{explicitAssgn}}
 \begin{align*}
   \mnote[explicitAssignment]{explicitA}\explicitA &: \assgn \rightarrow \nat \rightarrow \nat \rightarrow \listsof{\nat} \\
   \explicitA~a~\textsf{start}~0 &\defeq \nil \\
-  \explicitA~a~\textsf{start}~(\natS{\textsf{len}}) &\defeq \explicitA~a~\textsf{start}~\textsf{len} \concat [(\textsf{start} + \textsf{len}) \overset{?}{\in} a]
+  \explicitA~a~\textsf{start}~(\natS{\textsf{len}}) &\defeq \explicitA~a~\textsf{start}~\textsf{len} \concat [(\textsf{start} + \textsf{len}) \oset{?}{\in}{+1.2} a]
 \end{align*}
-
 We use the notation $a[s ..+l) \defeq \explicitA~a~s~l$ and may also write \mnotec{$a[I]$} for a variable range $I$.
-
 \begin{lemma}[Properties of \explicitA]\leavevmode
   \begin{enumerate}
     \coqitem[explicitAssignment_length] $\length{\explicitA~a~\textsf{start}~\textsf{len}} = \textsf{len}$
@@ -75,12 +72,12 @@ Based on explicit assignments, we now present ways to encode predicates using fo
 \newcommand{\encodesPred}{\textsf{encodesPredAt}}
 \begin{definition}[Encoding of Predicates][encodesPredicateAt]
   \mnote[encodesPredicateAt]{\encodesPred}
-  A formula $f$ encodes a predicate $p$ on a range of variables $I = [\textsf{start}.. \textsf{start} + \textsf{len})$ if, for every assignment $a$, $a \models f$ is equivalent to satisfaction of $p$ under the partial assignment given by $I$:
+  A formula $f$ encodes a predicate $p$ on a range of variables $I = [\textsf{start}.. + \textsf{len})$ if, for every assignment $a$, $a \models f$ is equivalent to satisfaction of $p$ under the partial assignment given by $I$:
   \[\encodesPred~\textsf{start}~l~f~p \defeq \forall a, a \models f \leftrightarrow p~(a[\textsf{start}.. + l]) \]
 \end{definition}
 
 This encoding scheme is rather simple: we can only prove statements about contiguous ranges of variables. 
-A more elaborate definition allowing a more fine-grained control would be possible, but over-complicated for our simple use case.
+An elaborate definition allowing a more fine-grained control would be possible, but over-complicated for our simple use case.
 
 To stay in line with the variable range notation, we also write $\encodesPred~I~f~p$ for a range of variables $I$.
 
@@ -98,15 +95,14 @@ As one would expect, the formula $\encodeLiteral~v~s$ forces variable $v$ to tak
   \[\encodesPred~v~1~(\encodeLiteral~v~s) (\lambda l. l = [s])\]
 \end{proposition}
 
-Next, we show that conjunction and disjunction of formulas correspond to conjunction and disjunction of represented predicates. One problem with this is that the two predicates may talk about different or overlapping variable ranges $I_1$ and $I_2$. 
+Next, we show that conjunction and disjunction of formulas correspond to conjunction and disjunction of represented predicates. One problem with this is that the two predicates may talk about different variable ranges $I_1$ and $I_2$. 
 Our simple representation model does not allow to accurately depict this, hence the new predicate will talk about the smallest range of variables $I$ that contains $I_1$ and $I_2$. We write this as $I = I_1 \sqcup I_2$.
-
 \newcommand{\cStart}{\textsf{combStart}}
 \newcommand{\cLength}{\textsf{combLength}}
 \begin{align*}
   \cStart~s_1~s_2 &\defeq \min~s_1~s_2 \mnote[combinedStart]{\cStart}\\
   \cLength~s_1~s_2~l_1~l_2 &\defeq \max~(s_1 + l_1) (s_2 + l_2) - \min~s_1~s_2 \mnote[combinedLength]{\cLength}\\
-  [s_1, s_1 + l_1) \sqcup [s_2, s_2 + l_2) &\defeq [\cStart~s_1~s_2.. +\cLength~s_1~s_2~l_1~l_2) \mnote{$I_1 \sqcup I_2$}
+  [s_1.. + l_1) \sqcup [s_2.. + l_2) &\defeq [\cStart~s_1~s_2.. +\cLength~s_1~s_2~l_1~l_2) \mnote{$I_1 \sqcup I_2$}
 \end{align*}
 
 Using $e[s..+l]$, we can restore the assignments to $I_1$ and $I_2$ given an assignment to $I_1 \sqcup I_2$:
@@ -140,8 +136,7 @@ Now, we have all the tools necessary to combine the encoding of two predicates:
 \end{proof}
 
 By conjoining formulas encoding single literals, a list $L : \listsof{\bool}$ can be encoded by forcing a range of variables to be equal to the list. 
-
-\newcommand{\encodeList}{\textsf{encodeList}}
+\newcommand{\encodeList}{\textsf{encodeList}}%
 \begin{align*}
   \mnote[encodeListAt]{\encodeList}
   \encodeList~s~\nil &\defeq \btrue \\
@@ -149,7 +144,7 @@ By conjoining formulas encoding single literals, a list $L : \listsof{\bool}$ ca
 \end{align*}
 
 \begin{proposition}[Correctness of \encodeList][encodeListAt_encodesPredicate]
-  \[\encodesPred~s~(\length{L})~(\encodeList~s~L)~(\lambda e. L = e) \]
+  \[\encodesPred~s~(\length{L})~(\encodeList~s~L)~(\lambda e. L = e)\]
 \end{proposition}
 
 \encodeList{} will be the basic ingredient of encoding \PR{}. 
@@ -215,8 +210,7 @@ The variable layout of the formula we produce is demonstrated by Figure~\ref{fig
     \end{tikzpicture}     
   \end{center}
   \caption{The variable layout of the constructed \fsat{} instance does directly mirror the layout of the \PR{} strings in a tableau.}\label{fig:varlayout}
-\end{figure}
-
+\end{figure} 
 
 We start with the encoding of $\phi_{\textsf{trans}}$. This is most intuitive when looking at the explicit characterisation of validity (see Definition~\ref{def:valid_exp}): we have a big conjunction over all pairs of subsequent lines for which we have to enforce validity. Validity can be encoded as a conjunction over the offsets at which a window needs to hold, and at each position we have a disjunction over all possible rewrite windows. 
 First of all, we need to be able to encode a single rewrite window. As a rewrite windows just encodes two lists, this is straightforward to derive as a conjunction for premise and conclusion. Since the premise of the window needs to match in one line of the tableau while the conclusion needs to hold for the next line, the encoding is parameterised over two indices $s_1$ and $s_2$ giving the respective start of the encoding. 
@@ -232,7 +226,7 @@ The correctness statement of course also needs to range over all the variables b
 \end{proposition}
 
 \newcommand{\encodeWindows}{\textsf{encodeWindows}}
-This can be lifted to express that one of the windows of $R$ holds by computing a disjunction over the list of windows. 
+This can be lifted to express that one of the windows of $R$ holds at a given position by computing a disjunction over the list of windows. 
 We assume a function $\encodeWindows : \nat \rightarrow \nat \rightarrow \formula$ \mnote[encodeWindowsAt]{\encodeWindows} taking the two start indices for that purpose, without going into more detail.
 \begin{proposition}[Correctness of \encodeWindows][encodeWindowsAt_encodesPredicate]
   Let $s, l : \nat$.
@@ -246,7 +240,7 @@ A bit more interesting is the function needed to encode all windows at every off
 Instead, we employ a step index which is initialised to the length $m = \length{x_0}$ of the lines of the tableau to make the function structurally recursive.
 \newcommand{\encodeWindowsLine}{\textsf{encodeWindowsLine}}
 \begin{align*}
-  &\encodeWindowsLine'~\textsf{step}~l~s_1~s_2 \defeq \textbf{if}~{l \overset{?}{<} \omega}~\textbf{then}~{\btrue} \mnote[encodeWindowsLine]{\encodeWindowsLine}\\
+  &\encodeWindowsLine'~\textsf{step}~l~s_1~s_2 \defeq \textbf{if}~{l \oset{?}{<}{+0.9} \omega}~\textbf{then}~{\btrue} \mnote[encodeWindowsLine]{\encodeWindowsLine}\\
   &\quad\textbf{else}~\match \textsf{step} \withl 
     0 \Rightarrow \btrue \withm \natS{\textsf{step}}  
     \begin{aligned}[t]
@@ -258,7 +252,7 @@ Instead, we employ a step index which is initialised to the length $m = \length{
 Intuitively, the parameter $s_1$ of $\encodeWindowsLine'$ determines the first index starting at which the premises of the windows are placed, while $s_2$ is the starting index of the conclusions.
 
 \todo{find solution for encodeWindowsLine box}
-\begin{proposition}[Correctness of $\encodeWindowsLine'$][encodeWindowsInLineP_encodesPredicate]
+\begin{proposition}[Correctness of $\encodeWindowsLine$][encodeWindowsInLineP_encodesPredicate]
   Let $l \le m$. 
   \begin{align*}
     \encodesPred~s~(l + m)~&(\encodeWindowsLine'~l~l~s~(s + m)) \\
@@ -295,7 +289,7 @@ Therefore, in the end the whole formula is
   \begin{align*}
     \encodesPred~&0~((\natS{t}) \cdot m)~\phi \\
                  &(\lambda e. \begin{aligned}[t]
-                  &e[0..m) = x_0 \\
+                  &e[0.. + m) = x_0 \\
                    \land &  (\forall 0 \le i < t, ((e[i \cdot m..+m)) \strent{R} (e[(\natS{i}) \cdot m..+m))) \\
                   \land & e \models \Rfinal)
                 \end{aligned}
@@ -310,7 +304,7 @@ Therefore, in the end the whole formula is
     \item[$\rightarrow$:]
       As $\fsat{}~\phi$ holds, we have a satisfying assignment $a$. 
       By Lemma~\ref{lem:phi_correct}, the corresponding explicit assignment to the first $(\natS{t}) \cdot \length{x_0}$ variables witnesses a valid rewrite sequence satisfying the final constraint. 
-      We prove that $(e[0 ..m) \strent{R}^t e[t \cdot m ..+ m)$ by switching to $\prescript{t}{}{\strent{R}}$ and doing an induction on $t$.
+      We prove that $e[0 ..m) \strent{R}^t e[t \cdot m ..+ m)$ by switching to $\prescript{t}{}{\strent{R}}$ and doing an induction on $t$.
     \item[$\leftarrow$:]
       From the proof that the initial string rewrites in $t$ steps to a final string we have to generate a sequence of intermediate strings that together form a satisfying assignment. 
       For this, we generalise to arbitrary strings $x, y$ with $\length{x} = \length{x_0} = m$ and show that, if $x \strent{R}^n y$, then there exists $e$ with $\length{e} = (\natS{n}) \cdot m$ and 
@@ -327,7 +321,7 @@ We again comment on some aspects of the mechanisation.
 
 As in the previous chapter, we have to treat non-wellformed instances separately by first deciding wellformedness and mapping violating instances to a trivial no-instance. 
 
-A major inconvenience is that many of the representation proofs are somewhat repetitive and mainly rely on inductively forming conjunctions and disjunctions of formulas. Except for the two functions which need step-indexing, these can be taken care of by a few lemmas that allow to form the disjunction or conjunction of a list of formulas at a fixed position, or by instantiating replicating a formula parameterised by the index of the first variable it uses at various positions for a given offset between the instantiations. 
+A major inconvenience is that many of the representation proofs are somewhat repetitive and mainly rely on inductively forming conjunctions and disjunctions of formulas. Except for the two functions which need step-indexing, these can be taken care of by a few lemmas that allow to form the disjunction or conjunction of a list of formulas at a fixed position or by replicating a formula parameterised by the index of the first variable it uses at various positions for a given offset between the replications. 
 The authors of~\cite{Larchey-WendlingForster:2019:H10_in_Coq} face a similar problem in encoding certain predicates using Diophantine equations. They come up with Coq tactics that can largely automate the process of finding an encoding and proving its correctness if the predicate has a shape that is already known, using the Coq unification mechanism. If the predicate is not in a known shape, extensionality can be used to bring it into an equivalent shape, similar to our Fact~\ref{fact:enc_congruent}.
 The key idea of their approach is to use Sigma types that informatively bundle the encoding and its proof of correctness. 
 Sadly, a similar trick can not be applied in our setting: Sigma types (or even their computational part) currently are not extractable to L. Thus, it seems unavoidable to explicitly define the formula encoding a particular predicate.

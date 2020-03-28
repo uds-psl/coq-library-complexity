@@ -64,7 +64,7 @@ A type $X$ is called \textit{discrete} if equality on it is decidable, that is, 
 
 More generally, we extend the notation $\smash{\eqb{a}{b}}$ to other decidable binary predicates, for instance to $\smash{a~\leb~b}$ for deciding the relation $\le$.
 
-We also need \textit{finite types}. Finite types are discrete types with a finite number of elements. Formally, we require a list of all values of the type, in which each element occurs exactly once, as the witness that it is finite~\cite{menz2016}. Given a finite type $F$ and $e : F$, $\findex{e}$ is the position of $e$ in this list. We refer to finite types using the type $\finType{}$.
+We also need \textit{finite types}. Finite types are discrete types with a finite number of elements. Formally, we require a list of all values of the type, in which each element occurs exactly once, as the witness that it is finite~\cite{menz2016}. Given a finite type $F$ and $e : F$, $\findex{e}$ is the position of $e$ in this list. $\length{F}$ is the cardinality of $F$. We refer to finite types using the type $\finType{}$.
 For any number $n$, there is a type $F_n$ with exactly $n$ elements $f_0, \ldots, f_{n-1}$.
 Finite types are closed under the type constructors $\opt{\cdot}$, $\cdot + \cdot$ and $\cdot \times \cdot$. For instance, if $A$ and $B$ are finite types, then also $A \times B$ is a finite type.
 
