@@ -417,6 +417,16 @@ Proof.
   - rewrite IHl. split; intros H; [ eauto | now destruct H]. 
 Qed. 
 
+(*an actually usable version of the lemma without useless bool2Prop stuff *)
+Lemma in_filter_iff (X : Type) (x : X) (p : X -> bool) (A : list X): x el filter p A <-> x el A /\ p x = true. 
+Proof. 
+  induction A; cbn. 
+  - tauto. 
+  - destruct (p a) eqn:H1.
+    + cbn. rewrite IHA. split; [intros [-> | [H2 H3]]; tauto | tauto ]. 
+    + rewrite IHA. split; [tauto | intros [[-> | H2] H3]; [congruence | tauto] ]. 
+Qed.
+
 
 Lemma nth_error_nth (X : Type) x (l : list X) n : nth_error l n = Some x -> nth n l x = x.  
 Proof. 

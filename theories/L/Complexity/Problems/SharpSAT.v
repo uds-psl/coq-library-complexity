@@ -99,6 +99,131 @@ Qed.
 Definition SharpSATP (N : cnf) := cardOf (fun a => satisfies a N /\ assignment_canonical N a). 
 (* TODO: this is somewhat ugly : we have to define the function computing the number of assignments explicitly, i.e. enumerate canonical assignments.. *)
 
+Fixpoint all_subsequences (X : Type) (l : list X) := match l with 
+    | [] => [[]]
+    | (x :: l) => (map (fun l => x :: l) (all_subsequences l)) ++ all_subsequences l 
+    end. 
+
+Inductive isSubsequence (X : Type) : list X -> list X -> Prop := 
+  | isSubsequenceB : isSubsequence [] []
+  | isSubsequenceS1 l' s' a : isSubsequence l' s' -> isSubsequence (a :: l') (a :: s') 
+  | isSubsequenceS2 l' s' a : isSubsequence l' s' -> isSubsequence (a :: l') s'. 
+Hint Constructors isSubsequence.
+
+Lemma all_subsequences_isSubsequence (X : Type) (l : list X) : forall s, s el all_subsequences l <-> isSubsequence l s. 
+Proof. 
+  split.
+  - revert s; induction l; cbn; intros s H.
+    + destruct H as [<- | []]; auto.
+    + apply in_app_iff in H. rewrite in_map_iff in H.
+      destruct H as [(x & <- & H) | H]. 
+      * constructor. now apply IHl. 
+      * constructor 3. now apply IHl. 
+  - induction 1. 
+    + cbn. eauto.
+    + cbn. apply in_app_iff. left. apply in_map_iff. eauto.
+    + cbn. apply in_app_iff. right. eauto.
+Qed.
+
+(** the assignment from which we start taking subsequences *)
+Definition baseAssgn (N : cnf) :=
+  let vars := varsOfCnf N in 
+  filter (list_in_decb Nat.eqb vars) (seq 0 (cnf_maxVar N)). 
+
+Definition allCanonical (N : cnf) := all_subsequences (baseAssgn N).
+Definition allSatisfyingCanonical (N : cnf) := filter (fun a => evalCnf a N) (allCanonical N). 
+
+Lemma dupfree_seq a b : dupfree (seq a b).  
+Proof. 
+  revert a. induction b; cbn; intros; constructor.
+  - intros (H1 & H2)%in_seq. lia. 
+  - apply IHb. 
+Qed.
+
+Lemma baseAssgn_canonical N : assignment_canonical N (baseAssgn N).
+Proof. 
+  split. 
+  - unfold assignment_small. split. 
+    + unfold baseAssgn. intros v Hel. 
+      apply in_filter_iff in Hel as (H1 & H2). 
+      apply list_in_decb_iff in H2; [ | symmetry; apply Nat.eqb_eq]. 
+      easy.
+    + unfold baseAssgn. apply dupfree_filter, dupfree_seq. 
+  - unfold assignment_ordered. intros v1 v2. 
+    unfold baseAssgn. rewrite !in_filter_iff, !in_seq, !list_in_decb_iff. 
+    2, 3: symmetry; apply Nat.eqb_eq. 
+    intros ((_ & H1) & H2)  ((_ & H3) & H4). 
+
+
+
+(* ... *)
+
+(*[> a better way might be to inject into term and only enumerate terms; + establish a bound on the encoding size <]*)
+(*Axiom (PI : forall (X : Prop), forall (x1 x2 : X), x1 = x2). *)
+
+(*Definition dep_map (X Y : Type) (l : list X) (f : forall x, x el l -> Y) : list Y. *)
+(*Proof. *)
+  (*induction l. *)
+  (*- exact []. *)
+  (*- specialize (IHl ltac:(easy)). exact (f a ltac:(now left) :: IHl). *)
+(*Defined.*)
+
+(*[>Lemma in_dep_map_iff (X Y : Type) (l : list X) (f : forall x, x el l -> Y) : forall y, y el dep_map f <-> exists x (Hx : x el l), y = f x Hx. <]*)
+(*[>Proof. <]*)
+  (*[>intros y. induction l. <]*)
+  (*[>- cbn. split; [intros [] | intros (x & [] & _)]. <]*)
+  (*[>- unfold dep_map. rewrite (IHl (fun x Hel => f x ltac:(easy))). <]*)
+
+(*Check Prelim.Injective. *)
+(*Print bijective. *)
+
+(*Lemma bijection_cardOf_imp (X Y : eqType) (pX : X -> Prop) (pY : Y -> Prop) (f : {x : X | pX x} -> {y : Y | pY y}) (fInv : { y : Y | pY y} -> {x : X | pX x}): *)
+  (*inverse f fInv -> forall n, cardOf pX n -> cardOf pY n.*)
+(*Proof. *)
+  (*intros H n. unfold cardOf, listOf. intros (l & [H1  H2] & H3).*)
+  (*revert l H1 H2 H3. *)
+  (*enough (forall l1 l2, dupfree (l1 ++ l2) -> (forall x : X, pX x /\ not (x el l1) <-> x el l2) -> n = (|l1|) + (|l2|) -> exists (l1' l2' : list Y), (dupfree (l1' ++ l2') /\ (forall y : Y, pY y /\ (not (y el l1')) <-> y el l2') /\ n = (|l1'|) + (|l2'|))) as H0. *)
+  (*{ intros l H1 H2 H3. specialize (H0 [] l). edestruct H0 as (l1' & l2' & F1 & F2 & F3). *)
+    (*- cbn. apply H1. *)
+    (*- intros x. rewrite <- H2. easy.*)
+    (*- cbn. apply H3. *)
+    (*- exists (l1' ++ l2'). repeat split. *)
+      (*+ apply F1. *)
+      (*+ intros Hy. rewrite in_app_iff. destruct (List.in_dec (@eqType_dec Y) x l1') as [Hel | Hnel]. *)
+        (** now left. *)
+        (** right; now apply F2. *)
+      (*+ intros [Hel | Hel]%in_app_iff; *)
+  (*assert (forall x : X, pX x /\ not (x el []) <-> x el l*)
+  (*exists (fun *)
+
+
+
+  (*assert (exists (f' : {x : X | x el l} -> {y : Y | pY y}) (fInv' : {y : Y | pY y} -> {x : X| x el l}), inverse f' fInv') as (f' & fInv' & Hinv). *)
+  (*{ eexists (fun x => match x with exist _ x Hx => f (exist pX x (proj2 (H2 x) Hx)) end).*)
+    (*eexists (fun y => match fInv y with exist _ x Hx => exist _ x (proj1 (H2 x) Hx) end). *)
+    (*destruct H as (Hinv1 & Hinv2). *)
+    (*split; unfold left_inverse, right_inverse. *)
+    (*- intros (x & Hx). destruct fInv as (x' & Hx') eqn:Heq1. *)
+      (*unfold left_inverse in Hinv1. rewrite Hinv1 in Heq1. *)
+      (*assert (x' = x) by congruence. *)
+      (*inv Heq1. now rewrite (PI (proj1 (H2 x) Hx') (Hx)). *)
+    (*- intros (y & Hy). destruct fInv as (x & Hx) eqn:Heq1. *)
+      (*rewrite (PI (proj2 (H2 x) (proj1 (H2 x) Hx)) (Hx)). *)
+      (*change (fun x => pX x) with pX in Heq1. rewrite <- Heq1. *)
+      (*unfold right_inverse in Hinv2. now rewrite Hinv2. *)
+  (*} *)
+  (*clear f fInv H H2 pX. *)
+  (*revert n H3. *)
+  (*induction l; intros. *)
+  (*- exists []. repeat split.*)
+    (*+ eauto.*)
+    (*+ intros Hy. destruct (fInv' (exist pY x Hy)). easy.  *)
+    (*+ intros []. *)
+    (*+ easy.*)
+  (*- edestruct IHl. *)
+    (*+ now inv H1. *)
+    (*+ apply Hinv. *)
+
 
 (** extraction *)
 Section fixEqTypegetp. 

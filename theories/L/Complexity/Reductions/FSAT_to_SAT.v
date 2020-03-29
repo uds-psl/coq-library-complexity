@@ -177,16 +177,6 @@ Qed.
 Lemma assgn_varsIn_monotonic (p1 p2 : nat -> Prop) a : (forall n, p1 n -> p2 n) -> assgn_varsIn p1 a -> assgn_varsIn p2 a.
 Proof. intros H H1 v H0. eauto. Qed. 
 
-(*an actually usable version of the lemma without useless bool2Prop stuff *)
-Lemma in_filter_iff (X : Type) (x : X) (p : X -> bool) (A : list X): x el filter p A <-> x el A /\ p x = true. 
-Proof. 
-  induction A; cbn. 
-  - tauto. 
-  - destruct (p a) eqn:H1.
-    + cbn. rewrite IHA. split; [intros [-> | [H2 H3]]; tauto | tauto ]. 
-    + rewrite IHA. split; [tauto | intros [[-> | H2] H3]; [congruence | tauto] ]. 
-Qed.
-
 Lemma restrict_formula_equisat n f a : formula_varsIn (fun v => v < n) f -> (FSAT.satisfies a f <-> FSAT.satisfies (restrict a n) f). 
 Proof.
   intros H. unfold FSAT.satisfies, restrict. unfold formula_varsIn in H. 
