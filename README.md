@@ -15,6 +15,7 @@ L/Complexity/Tactics.v
 L/Complexity/MorePrelim.v
 L/Complexity/FlatFinTypes.v
 L/Complexity/SharpP.v
+L/Complexity/overview.v
 
 L/Complexity/Problems/UGraph.v
 L/Complexity/Problems/FlatUGraph.v
@@ -49,6 +50,8 @@ L/Complexity/Reductions/Cook/BinaryPR_to_FSAT.v
 L/Complexity/Reductions/Cook/PR_to_BinaryPR.v
 L/Complexity/Reductions/Cook/UniformHomomorphisms.v
 ```
+
+The file `theories/L/Complexity/overview.v` gives a summary of the results we proved.
 
 ## How to build
 
