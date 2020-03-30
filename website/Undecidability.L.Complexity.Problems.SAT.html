@@ -40,11 +40,11 @@
 </div>
 
 <div class="doc">
-<a name="lab395"></a><h1 class="section">SAT: Satisfiability of CNFs</h1>
+<a name="lab399"></a><h1 class="section">SAT: Satisfiability of CNFs</h1>
 
 <div class="paragraph"> </div>
 
-<a name="lab396"></a><h2 class="section">Definition of SAT</h2>
+<a name="lab400"></a><h2 class="section">Definition of SAT</h2>
  Conjunctive normal forms (need not be canonical)
 </div>
 <div class="code">
@@ -238,7 +238,7 @@ size of CNF in terms of number of operators
 </div>
 
 <div class="doc">
-<a name="lab397"></a><h2 class="section">Verifier for SAT</h2>
+<a name="lab401"></a><h2 class="section">Verifier for SAT</h2>
  The certificate is a satisfying assignment.
   The assignment needs to be short enough and must not contain variables not occuring in the CNF.
 
@@ -531,7 +531,7 @@ A computable notion of boundedness: calculate the maximum variable used by a CNF
 </div>
 
 <div class="doc">
-<a name="lab398"></a><h2 class="section">extraction</h2>
+<a name="lab402"></a><h2 class="section">extraction</h2>
 
 <div class="paragraph"> </div>
 
@@ -642,8 +642,6 @@ extraction of evalVar
 &nbsp;&nbsp;<span class="id" title="tactic">unfold</span> <a class="idref" href="Undecidability.L.Complexity.Problems.SAT.html#evalVar_time"><span class="id" title="definition">evalVar_time</span></a>.<br/>
 &nbsp;&nbsp;<span class="id" title="tactic">rewrite</span> <a class="idref" href="Undecidability.L.Complexity.PolyBounds.html#list_in_decb_time_bound"><span class="id" title="lemma">list_in_decb_time_bound</span></a>. <span class="id" title="tactic">unfold</span> <a class="idref" href="Undecidability.L.Complexity.Problems.SAT.html#poly__evalVar"><span class="id" title="definition">poly__evalVar</span></a>. <span class="id" title="var">lia</span>.<br/>
 <span class="id" title="keyword">Qed</span>.<br/>
-
-<br/>
 <span class="id" title="keyword">Lemma</span> <a name="evalVar_poly"><span class="id" title="lemma">evalVar_poly</span></a> : <a class="idref" href="Undecidability.L.Complexity.Monotonic.html#monotonic"><span class="id" title="definition">monotonic</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.SAT.html#poly__evalVar"><span class="id" title="definition">poly__evalVar</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d82a7d96d3659d805ffe732283716822"><span class="id" title="notation">/\</span></a> <a class="idref" href="Undecidability.L.Complexity.ONotation.html#inOPoly"><span class="id" title="definition">inOPoly</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.SAT.html#poly__evalVar"><span class="id" title="definition">poly__evalVar</span></a>.<br/>
 <span class="id" title="keyword">Proof</span>.<br/>
 &nbsp;&nbsp;<span class="id" title="tactic">split</span>; <span class="id" title="tactic">unfold</span> <a class="idref" href="Undecidability.L.Complexity.Problems.SAT.html#poly__evalVar"><span class="id" title="definition">poly__evalVar</span></a>; <span class="id" title="var">smpl_inO</span>; <span class="id" title="tactic">apply</span> <a class="idref" href="Undecidability.L.Complexity.PolyBounds.html#list_in_decb_poly"><span class="id" title="lemma">list_in_decb_poly</span></a>.<br/>
@@ -691,8 +689,6 @@ evalLiteral
 evalClause 
 </div>
 <div class="code">
-
-<br/>
 <span class="id" title="keyword">Definition</span> <a name="c__evalClause"><span class="id" title="definition">c__evalClause</span></a> := 17.<br/>
 <span class="id" title="keyword">Fixpoint</span> <a name="evalClause_time"><span class="id" title="definition">evalClause_time</span></a> <span class="id" title="var">a</span> (<span class="id" title="var">C</span> : <a class="idref" href="Undecidability.L.Complexity.Problems.SAT.html#clause"><span class="id" title="abbreviation">clause</span></a>) :=<br/>
 &nbsp;&nbsp;<span class="id" title="keyword">match</span> <a class="idref" href="Undecidability.L.Complexity.Problems.SAT.html#C"><span class="id" title="variable">C</span></a> <span class="id" title="keyword">with</span> <br/>

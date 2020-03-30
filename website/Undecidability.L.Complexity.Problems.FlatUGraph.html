@@ -37,7 +37,7 @@
 </div>
 
 <div class="doc">
-<a name="lab388"></a><h1 class="section">Flat representation of an undirected graph.</h1>
+<a name="lab392"></a><h1 class="section">Flat representation of an undirected graph.</h1>
 
 <div class="paragraph"> </div>
 
@@ -178,6 +178,14 @@ We relate UGraph and fgraph instances in the following way
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">unfold</span> <a class="idref" href="Undecidability.L.Complexity.Problems.FlatUGraph.html#isFlatVertexOf"><span class="id" title="definition">isFlatVertexOf</span></a>, <a class="idref" href="Undecidability.L.Complexity.FlatFinTypes.html#finReprEl'"><span class="id" title="definition">finReprEl'</span></a> <span class="id" title="tactic">in</span> *. <span class="id" title="tactic">rewrite</span> &lt;- <span class="id" title="var">H3</span>, &lt;- <span class="id" title="var">H4</span>. <span class="id" title="tactic">apply</span> <span class="id" title="var">R__edgesComplete</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">apply</span> <span class="id" title="var">G</span>, <span class="id" title="var">Hel</span>.<br/>
 &nbsp;&nbsp;- <span class="id" title="tactic">intros</span> (<span class="id" title="var">v1</span> &amp; <span class="id" title="var">v2</span>) <span class="id" title="var">Hel</span>%<span class="id" title="var">R__edgesSound</span>. <span class="id" title="tactic">apply</span> <span class="id" title="var">Hel</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Fact</span> <a name="isFlatEdgesOf_fedges_wf"><span class="id" title="lemma">isFlatEdgesOf_fedges_wf</span></a> <span class="id" title="var">E</span> <span class="id" title="var">V</span> (<span class="id" title="var">finV</span> : <span class="id" title="record">finType</span>) (<span class="id" title="var">finE</span> : <a class="idref" href="Undecidability.L.Complexity.Problems.FlatUGraph.html#finV"><span class="id" title="variable">finV</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#d19c7eafd0e2d195d10df94b392087b5"><span class="id" title="notation">*</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.FlatUGraph.html#finV"><span class="id" title="variable">finV</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <span class="id" title="keyword">Prop</span>) : <a class="idref" href="Undecidability.L.Complexity.Problems.FlatUGraph.html#isFlatEdgesOf"><span class="id" title="inductive">isFlatEdgesOf</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.FlatUGraph.html#E"><span class="id" title="variable">E</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.FlatUGraph.html#V"><span class="id" title="variable">V</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.FlatUGraph.html#finE"><span class="id" title="variable">finE</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.FlatUGraph.html#fedges_wf"><span class="id" title="definition">fedges_wf</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.FlatUGraph.html#V"><span class="id" title="variable">V</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.FlatUGraph.html#E"><span class="id" title="variable">E</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">intros</span> <span class="id" title="var">H</span>. <span class="id" title="tactic">destruct</span> <span class="id" title="var">H</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">unfold</span> <a class="idref" href="Undecidability.L.Complexity.Problems.FlatUGraph.html#fedges_wf"><span class="id" title="definition">fedges_wf</span></a>. <span class="id" title="tactic">intros</span> (<span class="id" title="var">e1</span>&amp; <span class="id" title="var">e2</span>) <span class="id" title="var">Hel</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">apply</span> <span class="id" title="var">R__edgesSound</span>, <span class="id" title="var">Hel</span>.<br/>
 <span class="id" title="keyword">Qed</span>.<br/>
 </div>
 </div>

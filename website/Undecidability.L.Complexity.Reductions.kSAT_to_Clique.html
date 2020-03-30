@@ -38,7 +38,7 @@
 </div>
 
 <div class="doc">
-<a name="lab401"></a><h1 class="section">Reduction from k-SAT to Clique</h1>
+<a name="lab405"></a><h1 class="section">Reduction from k-SAT to Clique</h1>
 
 </div>
 <div class="code">
@@ -157,7 +157,8 @@ we show the correctness of the encoding
 </div>
 
 <div class="doc">
-Assume that there is a satisfying assignment for the CNF. 
+<a name="lab406"></a><h2 class="section">SAT implies Clique</h2>
+ Assume that there is a satisfying assignment for the CNF. 
 </div>
 <div class="code">
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Variable</span> (<a name="fixSAT.SAT_implies_Clique.a__sat"><span class="id" title="variable">a__sat</span></a> : <a class="idref" href="Undecidability.L.Complexity.Problems.SAT.html#assgn"><span class="id" title="abbreviation">assgn</span></a>).<br/>
@@ -283,7 +284,8 @@ Assume that there is a satisfying assignment for the CNF.
 </div>
 
 <div class="doc">
-Assume that the graph has a clique 
+<a name="lab407"></a><h2 class="section">Clique implies SAT</h2>
+ Assume that the graph has a clique 
 </div>
 <div class="code">
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Variable</span> (<a name="fixSAT.Clique_implies_SAT.L"><span class="id" title="variable">L</span></a> : <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#list"><span class="id" title="inductive">list</span></a> (<a class="idref" href="Undecidability.L.Complexity.Problems.UGraph.html#V"><span class="id" title="projection">V</span></a> <a class="idref" href="Undecidability.L.Complexity.Reductions.kSAT_to_Clique.html#Gcnf"><span class="id" title="definition">Gcnf</span></a>)).<br/>
@@ -311,7 +313,7 @@ The proof proceeds in four steps:
       
 <div class="paragraph"> </div>
 
-<a name="lab402"></a><h1 class="section">Step 1</h1>
+<a name="lab408"></a><h3 class="section">Step 1</h3>
 
 <div class="paragraph"> </div>
 
@@ -380,7 +382,8 @@ The proof proceeds in four steps:
 </div>
 
 <div class="doc">
-Step 2  We map to a list of (clause, literal) positions 
+<a name="lab409"></a><h3 class="section">Step 2</h3>
+ We map to a list of (clause, literal) positions 
 </div>
 <div class="code">
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <a name="toPos"><span class="id" title="definition">toPos</span></a> (<span class="id" title="var">L</span> : <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#list"><span class="id" title="inductive">list</span></a> (<a class="idref" href="Undecidability.L.Complexity.Problems.UGraph.html#V"><span class="id" title="projection">V</span></a> <a class="idref" href="Undecidability.L.Complexity.Reductions.kSAT_to_Clique.html#Gcnf"><span class="id" title="definition">Gcnf</span></a>)) := <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Lists.List.html#map"><span class="id" title="definition">map</span></a> (<span class="id" title="keyword">fun</span> '<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">(</span></a><span class="id" title="var">ci</span><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">,</span></a> <span class="id" title="var">li</span><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">)</span></a> =&gt; <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">(</span></a><span class="id" title="definition">index</span> <a class="idref" href="Undecidability.L.Complexity.Reductions.kSAT_to_Clique.html#ci"><span class="id" title="variable">ci</span></a><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">,</span></a> <span class="id" title="definition">index</span> <a class="idref" href="Undecidability.L.Complexity.Reductions.kSAT_to_Clique.html#li"><span class="id" title="variable">li</span></a><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">)</span></a>) <a class="idref" href="Undecidability.L.Complexity.Reductions.kSAT_to_Clique.html#L"><span class="id" title="variable">L</span></a>.<br/>
@@ -486,7 +489,8 @@ Step 2  We map to a list of (clause, literal) positions
 </div>
 
 <div class="doc">
-Step 3: map to literals 
+<a name="lab410"></a><h2 class="section">Step 3: map to literals</h2>
+
 </div>
 <div class="code">
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <a name="toLiterals"><span class="id" title="definition">toLiterals</span></a> (<span class="id" title="var">L</span> : <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#list"><span class="id" title="inductive">list</span></a> (<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#nat"><span class="id" title="inductive">nat</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#d19c7eafd0e2d195d10df94b392087b5"><span class="id" title="notation">*</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#nat"><span class="id" title="inductive">nat</span></a>)) := <a class="idref" href="Undecidability.L.Complexity.MorePrelim.html#filterSome"><span class="id" title="definition">filterSome</span></a> (<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Lists.List.html#map"><span class="id" title="definition">map</span></a> (<span class="id" title="keyword">fun</span> '<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">(</span></a><span class="id" title="var">ci</span><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">,</span></a> <span class="id" title="var">li</span><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">)</span></a> =&gt; <a class="idref" href="Undecidability.L.Complexity.Reductions.kSAT_to_Clique.html#cnfGetLiteral"><span class="id" title="definition">cnfGetLiteral</span></a> <a class="idref" href="Undecidability.L.Complexity.Reductions.kSAT_to_Clique.html#fixSAT.N"><span class="id" title="variable">N</span></a> <a class="idref" href="Undecidability.L.Complexity.Reductions.kSAT_to_Clique.html#ci"><span class="id" title="variable">ci</span></a> <a class="idref" href="Undecidability.L.Complexity.Reductions.kSAT_to_Clique.html#li"><span class="id" title="variable">li</span></a>) <a class="idref" href="Undecidability.L.Complexity.Reductions.kSAT_to_Clique.html#L"><span class="id" title="variable">L</span></a>).<br/>
@@ -536,7 +540,8 @@ Step 3: map to literals
 </div>
 
 <div class="doc">
-Step 4: map to a satisfying assignment 
+<a name="lab411"></a><h3 class="section">Step 4: map to a satisfying assignment</h3>
+
 </div>
 <div class="code">
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Fixpoint</span> <a name="toAssignment"><span class="id" title="definition">toAssignment</span></a> (<span class="id" title="var">L</span> : <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#list"><span class="id" title="inductive">list</span></a> <a class="idref" href="Undecidability.L.Complexity.Problems.SAT.html#literal"><span class="id" title="abbreviation">literal</span></a>) := <br/>
