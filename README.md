@@ -14,6 +14,8 @@ L/Complexity/PolyBounds.v
 L/Complexity/Tactics.v
 L/Complexity/MorePrelim.v
 L/Complexity/FlatFinTypes.v
+L/Complexity/SharpP.v
+L/Complexity/overview.v
 
 L/Complexity/Problems/UGraph.v
 L/Complexity/Problems/FlatUGraph.v
@@ -48,6 +50,8 @@ L/Complexity/Reductions/Cook/BinaryPR_to_FSAT.v
 L/Complexity/Reductions/Cook/PR_to_BinaryPR.v
 L/Complexity/Reductions/Cook/UniformHomomorphisms.v
 ```
+
+The file `theories/L/Complexity/overview.v` gives a summary of the results we proved.
 
 ## How to build
 
@@ -90,13 +94,14 @@ The main definitions of NP and poly-time reductions were developed by [Fabian Ku
 
 The Coq notation definitions for the option monad in file `theories/L/Complexity/MorePrelim.v` have been taken from [Thomas Strathmann's blog post](https://pdp7.org/blog/2011/01/the-maybe-monad-in-coq/). 
 
+The file `theories/L/Complexity/Reductions/pigeonhole.v` contains a proof of the pigeonhole principle adapted from the [ICL 2019 lecture](https://courses.ps.uni-saarland.de/icl_19/2/Resources). 
+
 Please also read the Acknowledgements section of the thesis.
 
 ## License
 
 The Coq files listed above are Copyright 2019-2020 Lennard Gäher. 
-They are licensed under TODO.
-TODO: work out compatibility of CeCILL of undec library with MIT license
+They are licensed under under the [CeCILL license](https://github.com/uds-psl/ba-gaeher/blob/master/CeCILL_LICENSE.txt).
 
 The files in tex/ are Copyright 2019-2020 Lennard Gäher. The files in tex/thesis are based on [Yannick Forster's](https://www.ps.uni-saarland.de/~forster/) [thesis template](https://github.com/yforster/thesis-template). 
 
