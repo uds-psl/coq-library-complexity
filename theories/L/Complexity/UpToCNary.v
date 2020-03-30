@@ -5,6 +5,7 @@ From Coq Require Import Setoid.
 From Coq Require Import CRelationClasses CMorphisms.
 From Undecidability Require Export UpToC.
 From Undecidability Require Export GenericNary.
+Import UnivPolyList.
 From PslBase Require FinTypes.
 
 Local Set Universe Polymorphism. 

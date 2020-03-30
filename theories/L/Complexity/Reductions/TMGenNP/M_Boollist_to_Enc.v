@@ -80,8 +80,8 @@ Module BoollistToEnc.
              -> isRight tin[@Fin3]
              -> isRight tout[@Fin0]
                /\ tout[@Fin1]  ≃ compile (Computable.enc (rev bs))
-               /\ isRight tin[@Fin2]
-               /\ isRight tin[@Fin3]).
+               /\ isRight tout[@Fin2]
+               /\ isRight tout[@Fin3]).
 
     (* für step (prepend the bs-dependent symbols) 
                Tapes: 
@@ -194,7 +194,7 @@ Module BoollistToEnc.
            -> isRight tin[@Fin2]
            -> isRight tout[@Fin0]
              /\ tout[@Fin1] ≃ flat_map enc_bool_perElem (rev bs)++res
-             /\ isRight tin[@Fin2]
+             /\ isRight tout[@Fin2]
              /\ tout[@Fin3] = tin[@Fin3]).
 
     Lemma Realises__loop : M__loop ⊨ Rel__loop .
@@ -256,21 +256,21 @@ Module BoollistToEnc.
       intros tin (yout,tout) H. hnf. intros bs Hbs Htin1 Htin2 Htin3.
       hnf in H. cbn in H. TMSimp. modpon H;[]. specialize H0 with (x:=[]). modpon H0;[].
       modpon H1;[]. modpon H2;[]. modpon H3;[].  modpon H4;[]. modpon H5;[]. modpon H6;[].
-      modpon H7;[].  repeat (simple apply conj). 1,3,4:now isRight_mono.
+      modpon H7;[]. TMSimp.  repeat (simple apply conj). 1,3,4:now isRight_mono.
       { rewrite enc_bool_explicit,rev_length. autorewrite with list in H14. contains_ext. }
     Qed.
 
     
     Definition Ter time: tRel sig^+ 4 :=
       (fun tin k =>
-         exists (bs : list bool) (res : Pro),
+         exists (bs : list bool),
            tin[@Fin0] ≃ bs 
            /\ isRight tin[@Fin1]
            /\ isRight tin[@Fin2]
            /\ isRight tin[@Fin3]
            /\ time (length bs) <= k ).
 
-    Lemma Terminates :
+    Lemma _Terminates :
       { time : UpToC (fun l => l + 1) &
                projT1 M ↓ Ter time}.
     Proof.
@@ -281,7 +281,7 @@ Module BoollistToEnc.
         all: try now (notypeclasses refine (@Reset_Terminates _ _ _ _ _);shelve).
         all: try now (notypeclasses refine (@Reset_Realise _ _ _ _ _);shelve).
         simple apply Terminates__loop. }
-      intros tin k H. hnf in H. destruct H as (bs&res&Hbs&Hres&Htin2&Htin3&Hl).
+      intros tin k H. hnf in H. destruct H as (bs&Hbs&Hres&Htin2&Htin3&Hl).
       cbn -[plus]. infTer 3.
       { unfold Length_T. cbn. eexists. repeat simple apply conj. now contains_ext. 1-3:now isRight_mono.
         assert (H':=proj2_sig (Length_steps_nice _) bs). hnf in H'. rewrite H',(correct__leUpToC boollist_size). reflexivity.
@@ -307,6 +307,8 @@ Module BoollistToEnc.
       - rewrite <- Hl. set (l:=length bs). [time]:intros l.  unfold time. reflexivity.
       -unfold time. solve [smpl_upToC_solve].
     Qed.
+
+    Definition Terminates := projT2 _Terminates.
 
   End M.
 End BoollistToEnc.

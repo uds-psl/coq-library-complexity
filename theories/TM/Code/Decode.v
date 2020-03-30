@@ -181,7 +181,7 @@ Module CheckTapeContains.
        unfold retract_inr_f. autorewrite with list. unfold id. rewrite map_map , <- map_rev,rev_involutive. easy.
     Qed.
 
-    Context T__X (Terminates_M_checkX : projT1 M_checkX ↓ T__X).
+    Context {T__X} (Terminates_M_checkX : projT1 M_checkX ↓ T__X).
 
     Lemma Terminates: projT1 M ↓ (fun t k => exists k', T__X ([|tape_move_right t[@Fin0]|]) k'
                                                 /\ k' + 4 * S(| right t[@Fin0] |) + 19 <= k ).
