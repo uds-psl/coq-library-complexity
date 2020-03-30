@@ -2004,86 +2004,85 @@ Section fixTM.
     -> (sizeOfTape tp) < z
     -> exists s', s ⇝ s' /\ (forall s'', s ⇝ s'' -> s'' = s') /\ (q', tp') ≃c s'.
   Proof. 
-  (*  Set Default Goal Selector "all".*)
-    (*intros H (H0' &  H0) H1. cbn in H0'. unfold sstep in H0. destruct trans eqn:H2 in H0. inv H0. rename p into p'. *)
-    (*apply valid_reprConfig_unfold. *)
-    (*rewrite sizeOfTape_lcr in H1. *)
-    (*destruct H as (ls & qm & rs & -> & H). destruct H as (p & -> & F1 & F2). unfold embedState. *)
-    (*destruct p' as ([wsym | ] & []); destruct tp as [ | ? l1 | ? l0 | l0 ? l1]; cbn in *; destruct_tape_in_tidy F1; destruct_tape_in_tidy F2. *)
-    (*try match type of F1 with ?l0 ≃t(_, _) _ => is_var l0; destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end. *)
-    (*try match type of F1 with _ :: ?l0 ≃t(_, _) _ => destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end. *)
-    (*try match type of F2 with ?l1 ≃t(_, _) _ => is_var l1; destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end. *)
-    (*try match type of F2 with _ :: ?l1 ≃t(_, _) _ => destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end. *)
+    Set Default Goal Selector "all".
+    intros H (H0' &  H0) H1. cbn in H0'. unfold sstep in H0. destruct trans eqn:H2 in H0. inv H0. rename p into p'. 
+    apply valid_reprConfig_unfold. 
+    rewrite sizeOfTape_lcr in H1. 
+    destruct H as (ls & qm & rs & -> & H). destruct H as (p & -> & F1 & F2). unfold embedState. 
+    destruct p' as ([wsym | ] & []); destruct tp as [ | ? l1 | ? l0 | l0 ? l1]; cbn in *; destruct_tape_in_tidy F1; destruct_tape_in_tidy F2. 
+    try match type of F1 with ?l0 ≃t(_, _) _ => is_var l0; destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end. 
+    try match type of F1 with _ :: ?l0 ≃t(_, _) _ => destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end. 
+    try match type of F2 with ?l1 ≃t(_, _) _ => is_var l1; destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end. 
+    try match type of F2 with _ :: ?l1 ≃t(_, _) _ => destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end. 
     
-    (*Optimize Proof. *)
-    (*cbn in H1. *)
+    Optimize Proof. 
+    cbn in H1. 
 
-    (*[>analyse what transition should be taken, instantiate the needed lemmas and solve all of the obligations except for uniqueness<]*)
-    (*match type of H2 with *)
-      (*| trans (?q, ?csym) = (?q', (?wsym, ?dir)) => *)
-        (*let nextsym := get_next_headsym F1 F2 csym wsym dir in *)
-        (*let writesym := get_written_sym csym wsym in *)
-        (*let shiftdir := get_shift_direction writesym dir F1 F2 in *)
-        (*[>init next tape halves<]*)
-        (*let Z1 := fresh "Z1" in let Z2 := fresh "Z2" in let Z3 := fresh "Z3" in *)
-        (*let W1 := fresh "W1" in let W2 := fresh "W2" in let W3 := fresh "W3" in *)
-        (*let h1 := fresh "h1" in let h2 := fresh "h2" in *)
-        (*cbn in F1; cbn in F2; *)
-        (*match shiftdir with *)
-        (*| R => match type of F1 with *)
-              (*| [] ≃t(?p, ?w) _ => specialize (E_rewrite_blank_rev p shiftdir w) as [Z1 Z3]; *)
-                                  (*specialize (proj1 (@niltape_repr w shiftdir)) as Z2*)
-              (*| _ => destruct (tape_repr_rem_left F1) as (h1 & Z1 & Z3 & Z2); *)
-                    (*[>need to have one more head symbol in that case <]*)
-                    (*try match type of Z2 with _ :: ?l ≃t(_, _) _ => is_var l; *)
-                                                                  (*destruct l end; destruct_tape_in_tidy Z2 *)
-              (*end; *)
-              (*match writesym with *)
-              (*| Some ?sym => (destruct (tape_repr_add_right sym F2) as (h2 & W1 & W3 & W2)); [cbn; lia | destruct_tape_in_tidy W2] *)
-              (*| None => *)
-                  (*match type of F2 with *)
-                  (*| [] ≃t(?p, ?w) _ => specialize (E_rewrite_blank p shiftdir w) as [W1 W3]; *)
-                                      (*specialize (proj1 (@niltape_repr w shiftdir)) as W2*)
-                  (*end *)
-              (*end *)
-        (*| L => match type of F2 with *)
-              (*| [] ≃t(?p, ?w) _ => specialize (E_rewrite_blank p shiftdir w) as [W1 W3]; *)
-                                  (*specialize (proj1 (@niltape_repr w shiftdir)) as W2*)
-                (*| _ => destruct (tape_repr_rem_right F2) as (h2 & W1 & W3 & W2); *)
-                      (*[>need to have one more head symbol in that case <]*)
-                      (*try match type of W2 with _ :: ?l ≃t(_, _) _ => is_var l; *)
-                                                                    (*destruct l end; destruct_tape_in_tidy W2 *)
-              (*end; *)
-              (*match writesym with *)
-                (*Some ?sym => destruct (tape_repr_add_left sym F1) as (h1 & Z1 & Z3 & Z2); [cbn; lia | destruct_tape_in_tidy Z2] *)
-              (*| None => match type of F1 with *)
-                      (*| [] ≃t(?p, ?w) _ => specialize (E_rewrite_blank_rev p shiftdir w) as [Z1 Z3]; *)
-                                          (*specialize (proj1 (@niltape_repr w shiftdir)) as Z2 *)
-                  (*end *)
-            (*end *)
-        (*| N => destruct (tape_repr_stay_left F1) as (h1 & Z1 & Z3 & Z2); destruct_tape_in_tidy Z2; *)
-              (*destruct (tape_repr_stay_right F2) as (h2 & W1 & W3 & W2); destruct_tape_in_tidy W2 *)
-        (*end; *)
+    (*analyse what transition should be taken, instantiate the needed lemmas and solve all of the obligations except for uniqueness*)
+    match type of H2 with 
+      | trans (?q, ?csym) = (?q', (?wsym, ?dir)) => 
+        let nextsym := get_next_headsym F1 F2 csym wsym dir in 
+        let writesym := get_written_sym csym wsym in 
+        let shiftdir := get_shift_direction writesym dir F1 F2 in 
+        (*init next tape halves*)
+        let Z1 := fresh "Z1" in let Z2 := fresh "Z2" in let Z3 := fresh "Z3" in 
+        let W1 := fresh "W1" in let W2 := fresh "W2" in let W3 := fresh "W3" in 
+        let h1 := fresh "h1" in let h2 := fresh "h2" in 
+        cbn in F1; cbn in F2; 
+        match shiftdir with 
+        | R => match type of F1 with 
+              | [] ≃t(?p, ?w) _ => specialize (E_rewrite_blank_rev p shiftdir w) as [Z1 Z3]; 
+                                  specialize (proj1 (@niltape_repr w shiftdir)) as Z2
+              | _ => destruct (tape_repr_rem_left F1) as (h1 & Z1 & Z3 & Z2); 
+                    (*need to have one more head symbol in that case*)
+                    try match type of Z2 with _ :: ?l ≃t(_, _) _ => is_var l; 
+                                                                  destruct l end; destruct_tape_in_tidy Z2 
+              end; 
+              match writesym with 
+              | Some ?sym => (destruct (tape_repr_add_right sym F2) as (h2 & W1 & W3 & W2)); [cbn; lia | destruct_tape_in_tidy W2] 
+              | None => 
+                  match type of F2 with 
+                  | [] ≃t(?p, ?w) _ => specialize (E_rewrite_blank p shiftdir w) as [W1 W3]; 
+                                      specialize (proj1 (@niltape_repr w shiftdir)) as W2
+                  end 
+              end 
+        | L => match type of F2 with 
+              | [] ≃t(?p, ?w) _ => specialize (E_rewrite_blank p shiftdir w) as [W1 W3]; 
+                                  specialize (proj1 (@niltape_repr w shiftdir)) as W2
+                | _ => destruct (tape_repr_rem_right F2) as (h2 & W1 & W3 & W2); 
+                      (*need to have one more head symbol in that case *)
+                      try match type of W2 with _ :: ?l ≃t(_, _) _ => is_var l; 
+                                                                    destruct l end; destruct_tape_in_tidy W2 
+              end; 
+              match writesym with 
+                Some ?sym => destruct (tape_repr_add_left sym F1) as (h1 & Z1 & Z3 & Z2); [cbn; lia | destruct_tape_in_tidy Z2] 
+              | None => match type of F1 with 
+                      | [] ≃t(?p, ?w) _ => specialize (E_rewrite_blank_rev p shiftdir w) as [Z1 Z3]; 
+                                          specialize (proj1 (@niltape_repr w shiftdir)) as Z2 
+                  end 
+            end 
+        | N => destruct (tape_repr_stay_left F1) as (h1 & Z1 & Z3 & Z2); destruct_tape_in_tidy Z2; 
+              destruct (tape_repr_stay_right F2) as (h2 & W1 & W3 & W2); destruct_tape_in_tidy W2 
+        end; 
 
-      (*[>instantiate existenials <]*)
-      (*match type of Z2 with _ ≃t(_, _) ?h => exists h end; *)
-      (*exists (inl (q', nextsym) : Gamma); *)
-      (*match type of W2 with _ ≃t(_, _) ?h => exists h end; *)
+      (*instantiate existenials *)
+      match type of Z2 with _ ≃t(_, _) ?h => exists h end; 
+      exists (inl (q', nextsym) : Gamma); 
+      match type of W2 with _ ≃t(_, _) ?h => exists h end; 
 
-      (*[>solve goals, except for the uniqueness goal (factored out due to performance)<]*)
-      (*(split; [solve_stepsim_rewrite shiftdir Z1 W1 | split; [  | solve_stepsim_repr shiftdir Z2 W2]]) *)
-    (*end. *)
+      (*solve goals, except for the uniqueness goal (factored out due to performance)*)
+      (split; [solve_stepsim_rewrite shiftdir Z1 W1 | split; [  | solve_stepsim_repr shiftdir Z2 W2]]) 
+    end. 
     
-    (*Optimize Proof. *)
+    Optimize Proof. 
 
-    (*[>solve the uniqueness obligations - this is very expensive because of the needed inversions <]*)
-    (*[>therefore abstract into opaque lemmas <]*)
-    (*idtac "solving uniqueness - this may take a while (25-30 minutes)".*)
-    (*unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). *)
-  (*Qed. *)
-    Admitted. 
+    (*solve the uniqueness obligations - this is very expensive because of the needed inversions *)
+    (*therefore abstract into opaque lemmas *)
+    idtac "solving uniqueness - this may take a while (25-30 minutes)".
+    unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1; abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). 
+  Qed. 
 
-  (*if we are in a halting state, we can only rewrite to the same string (identity), except for setting the polarity to neutral *)
+  (** if we are in a halting state, we can only rewrite to the same string (identity), except for setting the polarity to neutral *)
   Lemma haltsim q tp s :
     (q, tp) ≃c s
     -> halt q = true
@@ -2179,7 +2178,6 @@ Section fixTM.
     apply H3 in H1. subst. apply H4.  
   Qed. 
 
-  (*Lemma 5.36 *)
   Lemma multistep_simulation q tp q' tp' l s :
     (q, tp) ≃c s
     -> (q, tp) ≻(l) (q', tp')
@@ -2246,11 +2244,10 @@ Section fixTM.
         * apply tm_step_size with (l := sizeOfTape tp') in G2; [lia | reflexivity ].  
   Qed. 
 
-  (** Our final constraint. we don't use the definition via a list of final substrings from the TPR definition, but instead use this more specific form. *)
+  (** Our final constraint. We don't use the definition via a list of final substrings from the TPR definition, but instead use this more specific form. *)
   (** We will later show that the two notions are equivalent for a suitable list of final substrings.*)
   Definition containsHaltingState s := exists q qs, halt q = true /\ isSpecStateSym q qs /\ qs el s.  
 
-  (*Lemma 28 *)
   Lemma finalCondition q tp s : (q, tp) ≃c s -> (halt q = true <-> containsHaltingState s). 
   Proof.
     intros; split; intros.
@@ -2271,7 +2268,6 @@ Section fixTM.
   Qed. 
 
 
-  (*Theorem 29 *)
   Theorem completeness q tp q' tp' s :
     sizeOfTape tp <= k
     -> (q, tp) ≃c s
@@ -2290,7 +2286,6 @@ Section fixTM.
     + eapply finalCondition; eauto. 
   Qed. 
 
-  (*Theorem 30 *)
   Theorem soundness q tp s s' :
     (q, tp) ≃c s
     -> sizeOfTape tp <= k
@@ -2309,7 +2304,7 @@ Section fixTM.
   Qed. 
 
 
-  (*initial strings *)
+  (** initial strings *)
   Definition fullInput (c : list Sigma) := fixedInput ++ c.
   Definition initialString (c : list Sigma) := stringForConfig start (initTape_singleTapeTM (fullInput c)). 
 
@@ -2329,7 +2324,7 @@ Section fixTM.
     rewrite isValidCert_sizeOfTape by apply H. unfold z; lia.
   Qed. 
 
-  (*final condition *)
+  (** final condition *)
   Definition haltingStates := filter (fun x => halt x) (elem states). 
   Definition finalSubstrings : list (list Gamma) := map (fun e => [inl e]) (prodLists haltingStates (elem (FinType (EqType (stateSigma))))). 
 

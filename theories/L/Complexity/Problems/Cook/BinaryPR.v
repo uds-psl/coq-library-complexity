@@ -4,9 +4,9 @@ From Undecidability.L.Complexity Require Import MorePrelim.
 From Undecidability.L.Complexity.Problems.Cook Require Export PR.
 From Undecidability.L.Complexity.Problems.Cook Require Import FlatPR.
 
-(** *BinaryPR: Parallel Rewriting restricted to a binary alphabet *)
+(** * BinaryPR: Parallel Rewriting restricted to a binary alphabet *)
 
-(*Note that BinaryPR is syntactially flat as we need not artificially restrict 𝔹 to be a finite type*)
+(** Note that BinaryPR is syntactially flat as we need not artificially restrict 𝔹 to be a finite type*)
 Inductive BinaryPR := {
   offset : nat;
   width : nat;
@@ -16,7 +16,7 @@ Inductive BinaryPR := {
   steps : nat
   }.
 
-(*the same well-formedness conditions as for Parallel Rewriting *)
+(** the same well-formedness conditions as for Parallel Rewriting *)
 Definition BinaryPR_wellformed (c : BinaryPR) := 
   width c > 0 
   /\ offset c > 0
@@ -31,7 +31,7 @@ Definition BinaryPRLang (C : BinaryPR) :=
                      /\ satFinal (offset C) (length (init C)) (final C) sf.
 
 
-(*extraction *)
+(** extraction *)
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import  LProd LOptions LLNat LLists.
 

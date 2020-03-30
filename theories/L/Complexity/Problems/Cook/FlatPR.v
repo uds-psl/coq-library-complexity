@@ -474,7 +474,7 @@ Proof.
   cbn. unfold finRepr. specialize (Card_Fint (Sigma f)). easy.  
 Qed.
 
-(** *extraction *)
+(** ** extraction *)
 
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import  LProd LOptions LLNat LLists.
