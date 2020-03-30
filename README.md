@@ -94,6 +94,8 @@ The main definitions of NP and poly-time reductions were developed by [Fabian Ku
 
 The Coq notation definitions for the option monad in file `theories/L/Complexity/MorePrelim.v` have been taken from [Thomas Strathmann's blog post](https://pdp7.org/blog/2011/01/the-maybe-monad-in-coq/). 
 
+The file `theories/L/Complexity/Reductions/pigeonhole.v` contains a proof of the pigeonhole principle adapted from the [ICL 2019 lecture](https://courses.ps.uni-saarland.de/icl_19/2/Resources). 
+
 Please also read the Acknowledgements section of the thesis.
 
 ## License
