@@ -39,10 +39,17 @@ or \coqlink[formula_maxVar]{formulas}.
 \newcommand{\infor}{\ensuremath{\in_{\formula}}}
 Moreover, we need predicates that allow us to express that all variables of a formula
 or CNF are contained in a non-contiguous range of variables such as $[0, b_1) \cup [b_2, b_3]$. 
-Variable ranges are formalised as predicates $r : \nat \rightarrow \Prop$. For instance, the range $[0, b_1) \cup [b_2, b_3]$ is represented as $\lambda n. n < b_1 \lor (n \ge b_2 \land n \le b_3)$. \mnote{$v \in r$}Nevertheless, we use the more intuitive mathematical notation on paper and write $v \in r$ for $r~v$ and $r_1 \subseteq r_2$ for $\forall v, r_1~v \rightarrow r_2~v$.\mnote{$r_1 \subseteq r_2$}
-
+\mnote{$v \in r$}%
+Variable ranges are formalised as predicates $r : \nat \rightarrow \Prop$. 
+For instance, the range $[0, b_1) \cup [b_2, b_3]$ is represented 
+\mnote{$r_1 \subseteq r_2$}%
+as $\lambda n. n < b_1 \lor (n \ge b_2 \land n \le b_3)$. 
+Nevertheless, we use the more intuitive mathematical notation on paper 
+and write $v \in r$ for $r~v$ and $r_1 \subseteq r_2$ for $\forall v, r_1~v \rightarrow r_2~v$.
 \setCoqFilename{Undecidability.L.Complexity.Problems.SAT}%
-We use the predicates \mnotec[varInCnf]{$v \incnf N$} and $v \infor f$ to denote that a variable is contained in a CNF or formula.
+\mnote[varInCnf]{$v \incnf N$}%
+
+We use the predicates $v \incnf N$ and $v \infor f$ to denote that a variable is contained in a CNF or formula.
 \setCoqFilename{Undecidability.L.Complexity.Problems.FSAT}%
 \mnote[varInFormula]{$v \infor f$}
 

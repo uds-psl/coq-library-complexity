@@ -1,165 +1,89 @@
-\chapter{Full Rewrite Rules}\label{app:rewrite_rules}
-The following list contains the full set of rewrite rules as implemented by the Coq mechanisation.
-\setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.SingleTMGenNP_to_TPR}
+\chapter{Structure of the Mechanisation}\label{app:mecha}
+We give an overview of the structure of our mechanisation. Our development is based on the Coq library of undecidable problems~\cite{coq_undec}, which contains among other things a formalisation of L and Turing machines as well as the extraction framework. 
+The files we contribute mainly live in the \texttt{/L/Complexity} directory of the project.
 
-\section{Tape Rules}
-\paragraph{Right Shifts}
+\paragraph{Basic Definitions}
+For completeness, we start with an overview over the basic definitions for complexity theory which were developed by Fabian Kunze. 
 \begin{center}
-\trewwin{\sigma_1}{\sigma_2}{\sigma_3}{\polpos{\sigma_4}}{\polpos{\sigma_1}}{\polpos{\sigma_2}} 
-  \quad \trewwin{\blank}{\blank}{\blank}{\polpos{\blank}}{\polpos{\blank}}{\polpos{\blank}}
-\\ 
-\trewwin{\blank}{\blank}{\blank}{\polpos{\sigma_1}}{\polpos{\blank}}{\polpos{\blank}} 
-  \quad \trewwin{\sigma_1}{\blank}{\blank}{\polpos{\sigma_2}}{\polpos{\sigma_1}} {\polpos{\blank}}
-\quad \trewwin{\sigma_1}{\sigma_2}{\blank}{\polpos{\sigma_3}}{\polpos{\sigma_1}}{ \polpos{\sigma_2}}
- \\
-\trewwin{\blank}{\blank}{\sigma_1}{\polpos{\blank}}{\polpos{\blank}}{\polpos{\blank}}
-  \quad \trewwin{\blank}{\sigma_1}{\sigma_2} {\polpos{\blank}}{\polpos{\blank}}{ \polpos{\sigma_1}} 
-\quad \trewwin{\sigma_1}{\sigma_2}{\sigma_3}{\polpos{\blank}}{\polpos{\sigma_1}}{ \polpos{\sigma_2}}
+  \begin{tabular}{ccc}
+    Component & Spec & Proof \\
+    \midrule
+    $\mathcal{O}$-notation and monotonicity & 70 & 167  \\ %monotonic + ONotation
+    decidability \& computability in time & 118 & 182 \\ %Synthetic + registeredP + linTimeDecodable
+    \textsf{P}, \NP{} and reductions & 102 & 157 %NP 
+    %analysis up to constants & 340 & 126 
+  \end{tabular}
+\end{center}
+The basic definitions we need are quite compact. The files for $\mathcal{O}$ notation mostly contain automation, for instance for proving that a particular function is polynomial or monotonic.
+The file for \NP{} includes basic facts like properties of polynomial-time reductions and the inclusion $\textsf{P} \subseteq \NP{}$.
+
+Throughout the thesis, we use a small library of additional facts about lists and other things that are not yet present in the Coq standard library or the undecidability library. 
+Moreover, we have a shared file providing running time and size bounds for common functions.
+\begin{center}
+  \begin{tabular}{ccc}
+    Component & Spec & Proof \\
+    \midrule
+    preliminaries & 169 & 381 \\
+    polynomial bounds & 112 & 253
+  \end{tabular}
 \end{center}
 
-\paragraph{Left Shifts}
-The rules for left shifts are defined to be the polarity-reversion of the rules for shifting to the right, i.e. $\irewwin{\gamma_1}{\gamma_2}{\gamma_3}{\gamma_4}{\gamma_5}{\gamma_6}$ is a rule for shifting to the left if, and only if, $\irewwin{\pFlipi{\gamma_3}}{\pFlipi{\gamma_2}}{\pFlipi{\gamma_1}}{\pFlipi{\gamma_6}}{\pFlipi{\gamma_5}}{\pFlipi{\gamma_4}}$ is a rule for shifting to the right. 
-
-\paragraph{Identity Rules}
+\paragraph{Problem Definitions}
+The definitions of the problems we use are contained in the subfolder \texttt{Problems}. 
 \begin{center}
-  \trewwin{m_1}{m_2}{m_3}{\polneut{m_1}}{\polneut{m_2}}{\polneut{m_3}}\\
-  \trewwin{\#}{\blank}{\blank}{\#}{\blank}{\blank} 
-  \quad \trewwin{\blank}{\blank}{\#}{\blank}{\blank}{\#}
+  \begin{tabular}{ccc}
+    Component & Spec & Proof \\
+    \midrule
+    \SAT{} & 201 & 446 \\
+    \fsat{} & 93 & 87 \\
+    $k$-\SAT{} & 26 & 42 \\
+    \Clique{} \& \FlatClique{} & 194 & 263 \\
+    variants of \textbf{Parallel Rewriting} & 551 & 1022 \\
+    \gennp{} & 28 & 50 \\
+    %297  /233
+  \end{tabular}
+\end{center}
+The files for extractable problems include the respective extraction to L.
+For example, the extraction of \SAT{} makes up 84 lines of specification and 247 lines of proof of the total number of lines.
+The definitions for flat problems include predicates connecting them to the corresponding non-flat version. 
+In total, we have five variants of Parallel Rewriting: \PR{}, \FlatPR{}, \textbf{3-PR}, \textbf{Flat-3-PR} and \BPR{}. As the \textbf{3-PR} variant fixes all definitions to the special case of the width being 3 and the offset being 1, most definitions and lemmas have to be stated again for the variant. 
+The file on generic problems for Turing machines explores different definitions and proves their equivalence. 
+
+\paragraph{Reduction to Clique}
+\begin{center}
+  \begin{tabular}{ccc}
+    Component & Spec & Proof \\
+    \midrule
+    pigeonhole principle & 64 & 150 \\
+    $k$-\SAT{} to \Clique{} & 140 & 249 \\
+    $k$-\SAT{} to \FlatClique{} & 176 & 333 \\
+    $k$-\SAT{} to \SAT{} & 6 & 41 
+    %74 /216
+  \end{tabular}
+\end{center}
+While the (not extractable) proof using the abstract representation of graphs is fairly compact, with a major part component being a proof of the pigeonhole principle adapted from the ICL 2019 course~\cite{icl_coq}, defining a computable variant and analysing its running time takes up some space. 
+For completeness, we include a reduction from $k$-\SAT{} to \SAT{} proving that it is contained in \NP{}. 
+
+\paragraph{Proof of the Cook-Levin-Theorem}
+Recall that our proof of the Cook-Levin Theorem consists of four main reductions and a minor embedding of \textbf{3-PR} into \PR{}.
+
+\begin{center}
+  \begin{tabular}{cccc}
+    \multicolumn{2}{c}{Component} & Spec & Proof \\
+    \midrule
+    \multirow{2}{*}{\gennp{} to \textbf{3-PR}} & reduction & 1843 & 2481 \\ % + TM_single + PTPR_Preludes
+                                               & time analysis & 838 & 1706 \\
+    \multicolumn{2}{c}{\textbf{3-PR} to \PR{}} & 37 & 174 \\ 
+    \multicolumn{2}{c}{\PR{} to \BPR{}} & 222 & 719 \\% + Uniform Hom + PR_hom 
+    \multicolumn{2}{c}{\BPR{} to \fsat{}} & 312 & 1078 \\
+    \multicolumn{2}{c}{\fsat{} to \SAT{}} & 213 & 605 
+    %1153 / 2479
+  \end{tabular}
 \end{center}
 
+The reduction of \gennp{} to \textbf{3-PR} includes the formalisation of preludes for \PR{} needed for guessing the certificate. 735 lines of specification of 909 lines of proof of the reduction are for generating the list-based windows and proving their agreement with the inductive predicates. 
+The running-time analysis makes up a very significant part of the whole reduction. 
 
-\section{Transition Rules}
-\paragraph{\bm{$\delta(q, \OSome{a}) = (p, \OSome{b}, \movel)$}:}
-\begin{center}
-  \tikzset{baseline={([yshift=-22pt]current bounding box.north)}}
-  \trewwin{m_1}{q^a}{m_2}{\polpos{m_3}}{p^{m_2}}{\polpos{b}} 
-  \quad \trewwin{m_1}{m_2}{q^a}{\polpos{m_3}}{\polpos{m_1}}{p^{m_2}}
-  \quad \trewwin{q^a}{m_1}{m_2}{p^{m_3}}{\polpos{a}}{\polpos{m_1}}. 
-\end{center}
+The remaining reductions are much simpler, with the reduction to \BPR{} including a formalisation of uniform homomorphisms and their action on \PR{} instances.
 
-\paragraph{\bm{$\delta(q, \OSome{a}) = (p, \OSome{b}, \mover)$}:}
-\begin{center}
-  \trewwin{m_1}{q^a}{m_2}{\polneg{b}}{p^{m_2}}{\polneg{m_3}} 
-  \quad \trewwin{q^a}{m_1}{m_2}{p^{m_1}}{\polneg{m_2}}{\polneg{m_3}}
-  \quad \trewwin{m_1}{m_2}{q^a}{\polneg{m_2}}{\polneg{a}}{p^{m_3}}
-\end{center}
-
-\paragraph{\bm{$\delta(q, \OSome{a}) = (p, \OSome{b}, \moven)$}:}
-\begin{center}
-  \trewwin{m_1}{q^a}{m_2}{\polneut{m_1}}{p^b}{\polneut{m_2}} 
-  \quad \trewwin{q^a}{m_1}{m_2}{p^b}{\polneut{m_1}}{\polneut{m_2}}
-  \quad \trewwin{m_1}{m_2}{q^a}{\polneut{m_1}}{\polneut{m_2}}{p^b}
-\end{center}
-
-\paragraph{\bm{$\delta(q, \OSome{a}) = (p, \ONone, \movel)$}:}
-\begin{center}
-  \trewwin{m_1}{q^a}{m_2}{\polpos{m_3}}{p^{m_2}}{\polpos{a}} 
-  \quad \trewwin{m_1}{m_2}{q^a}{\polpos{m_3}}{\polpos{m_1}}{p^{m_2}}
-  \quad \trewwin{q^a}{m_1}{m_2}{p^{m_3}}{\polpos{a}}{\polpos{m_1}}
-\end{center}
-
-\paragraph{\bm{$\delta(q, \OSome{a}) = (p, \ONone, \mover)$}:}
-\begin{center}
-  \trewwin{m_1}{q^a}{m_2}{\polneg{a}}{p^{m_2}}{\polneg{m_3}} 
-  \quad \trewwin{q^a}{m_1}{m_2}{p^{m_1}}{\polneg{m_2}}{\polneg{m_3}}
-  \quad \trewwin{m_1}{m_2}{q^a}{\polneg{m_2}}{\polneg{a}}{p^{m_3}}
-\end{center}
-
-\paragraph{\bm{$\delta(q, \OSome{a}) = (p, \ONone, \moven)$}:}
-\begin{center}
-  \trewwin{m_1}{q^a}{m_2}{\polneut{m_1}}{p^a}{\polneut{m_2}} 
-  \quad \trewwin{q^a}{m_1}{m_2}{p^a}{\polneut{m_1}}{\polneut{m_2}}
-  \quad \trewwin{m_1}{m_2}{q^a}{\polneut{m_1}}{\polneut{m_2}}{p^a}
-\end{center}
-
-\paragraph{\bm{$\delta(q, \ONone) = (p, \OSome{b}, \movel)$}:}
-\begin{center}
-  \trewwin{m_1}{q^\blank}{m_2}{\polpos{m_3}}{p^{m_2}}{\polpos{b}} 
-  \quad \trewwin{m_1}{m_2}{q^\blank}{\polpos{m_3}}{\polpos{m_1}}{p^{m_2}}
-  \quad \trewwin{q^\blank}{m_1}{m_2}{p^{m_3}}{\polpos{a}}{\polpos{m_1}}
-\end{center}
-
-\paragraph{\bm{$\delta(q, \ONone) = (p, \OSome{b}, \mover)$}:}
-\begin{center}
-  \trewwin{m_1}{q^\blank}{m_2}{\polneg{b}}{p^{m_2}}{\polneg{m_3}} 
-  \quad \trewwin{q^\blank}{m_1}{m_2}{p^{m_1}}{\polneg{m_2}}{\polneg{m_3}}
-  \quad \trewwin{m_1}{m_2}{q^\blank}{\polneg{m_2}}{\polneg{a}}{p^{m_3}}
-\end{center}
-
-\paragraph{\bm{$\delta(q, \ONone) = (p, \OSome{b}, \moven)$}:}
-\begin{center}
-  \trewwin{m_1}{q^\blank}{m_2}{\polneut{m_1}}{p^b}{\polneut{m_2}} 
-  \quad \trewwin{q^\blank}{m_1}{m_2}{p^b}{\polneut{m_1}}{\polneut{m_2}}
-  \quad \trewwin{m_1}{m_2}{q^\blank}{\polneut{m_1}}{\polneut{m_2}}{p^b}
-\end{center}
-
-\paragraph{\bm{$\delta(q, \ONone) = (p, \ONone, \movel)$}:}
-\begin{center}
-  \trewwin{\blank}{q^\blank}{m_1}{\polneut{\blank}}{p^\blank}{\polneut{m_1}}
-  \quad \trewwin{\sigma_1}{q^\blank}{\blank}{\polpos{m_1}}{p^{\sigma_1}}{\blank}\\
-  \trewwin{\blank}{\blank}{q^\blank}{\polneut{\blank}}{\polneut{\blank}}{p^\blank} 
-  \quad \trewwin{\blank}{\sigma_1}{q^\blank}{\polpos{\blank}}{\polpos{\blank}}{p^{\sigma_1}} 
-  \quad \trewwin{\sigma_2}{\sigma_1}{q^\blank}{\polpos{m_1}}{\polpos{\sigma_2}}{p^{\sigma_1}} \\
-  \trewwin{q^\blank}{\blank}{\blank}{p^{m_1}}{\polpos{\blank}}{\polpos{\blank}}
-  \quad \trewwin{q^\blank}{\sigma_1}{m_1}{p^\blank}{\polneut{\sigma_1}}{\polneut{m_1}}
-\end{center}
-
-\paragraph{\bm{$\delta(q, \ONone) = (p, \ONone, \moven)$}:}
-\begin{center}
-  \trewwin{m}{q^\blank}{\blank}{\polneut{m}}{p^\blank}{\polneut{\blank}}
-  \quad \trewwin{\blank}{q^\blank}{m}{\polneut{\blank}}{p^\blank}{\polneut{m}}\\
-  \trewwin{\blank}{\blank}{q^\blank}{\polneut{\blank}}{\polneut{\blank}}{p^\blank}
-  \quad \trewwin{m_1}{\sigma_1}{q^\blank}{\polneut{m_1}}{\polneut{\sigma_1}}{p^\blank} \\
-  \trewwin{q^\blank}{\blank}{\blank}{p^\blank}{\polneut{\blank}}{\polneut{\blank}}
-  \quad \trewwin{q^\blank}{\sigma_1}{m_1}{p^\blank}{\polneut{\sigma_1}}{\polneut{m_1}}
-\end{center} 
-
-\paragraph{\bm{$\delta(q, \ONone) = (p, \ONone, \mover)$}:}
-\begin{center}
-  \trewwin{m_1}{q^\blank}{\blank}{\polneut{m_1}}{p^\blank}{\polneut{\blank}}
-  \quad \trewwin{\blank}{q^\blank}{\sigma_1}{\polneg{\blank}}{p^\sigma_1}{\polneg{m_1}}\\
-  \trewwin{q^\blank}{\blank}{\blank}{p^\blank}{\polneut{\blank}}{\polneut{\blank}} 
-  \quad \trewwin{q^\blank}{\sigma_1}{\blank}{p^{\sigma_1}}{\polneg{\blank}}{\polneg{\blank}}
-  \quad \trewwin{q^\blank}{\sigma_1}{\sigma_2}{p^{\sigma_1}}{\polneg{\sigma_2}}{\polneg{m_1}}\\
-  \trewwin{m_1}{\sigma_1}{q^\blank}{\polneut{m_1}}{\polneut{\sigma_1}}{p^\blank} 
-  \quad \trewwin{\blank}{\blank}{q^\blank}{\polneg{\blank}}{\polneg{\blank}}{p^{m_1}}
-\end{center}
-
-\section{Halting Rules}
-
-\begin{center}
-  \trewwin{m_1}{q^{m_2}}{m_3}{\polneut{m_1}}{q^{m_2}}{\polneut{m_3}}
-  \quad \trewwin{m_1}{m_2}{q^{m_3}}{\polneut{m_1}}{\polneut{m_2}}{q^{m_3}}
-  \quad \trewwin{q^{m_1}}{m_2}{m_3}{q^{m_1}}{\polneut{m_2}}{\polneut{m_3}}
-\end{center}
-
-\section{Prelude Rules}
-\begin{center}
-  \trewwin{\nblank}{\nblank}{\nblank}{\polneut\blank}{\polneut\blank}{\polneut\blank}
-  \quad \trewwin{\ndelim}{\nblank}{\nblank}{\#}{\polneut\blank}{\polneut\blank}
-  \quad \trewwin{\nblank}{\nblank}{\ndelim}{\polneut\blank}{\polneut\blank}{\#}\\
-  \trewwin{\nblank}{\nblank}{\ninit}{\polneut\blank}{\polneut\blank}{q_0^\blank}
-  \quad \trewwin{\nblank}{\ninit}{\nsig{\sigma_1}}{\polneut\blank}{q_0^\blank}{\sigma_1}
-  \quad \trewwin{\nblank}{\ninit}{\nstar}{\polneut\blank}{q_0^\blank}{\polneut{m_1}}
-  \quad \trewwin{\nblank}{\ninit}{\nblank}{\polneut\blank}{q_0^\blank}{\polneut\blank}\\
-  \trewwin{\ninit}{\nblank}{\nblank}{q_0^\blank}{\polneut\blank}{\polneut\blank}
-  \quad \trewwin{\ninit}{\nsig{\sigma_1}}{\nstar}{q_0^\blank}{\polneut{\sigma_1}}{\polneut{m_1}} 
-\quad \trewwin{\ninit}{\nsig{\sigma_1}}{\nblank}{q_0^\blank}{\polneut{\sigma_1}}{\polneut\blank}
-\quad \trewwin{\ninit}{\nsig{\sigma_1}}{\nsig{\sigma_2}}{q_0^\blank}{\polneut{\sigma_1}}{\polneut{\sigma_2}}\\
-  \trewwin{\ninit}{\nstar}{\nblank}{q_0^\blank}{\polneut{m_1}}{\polneut\blank}
-  \quad \trewwin{\ninit}{\nstar}{\nstar}{q_0^\blank}{\polneut{\sigma_1}}{\polneut{m_1}}
-  \quad \trewwin{\ninit}{\nstar}{\nstar}{q_0^\blank}{\polneut\blank}{\polneut\blank}\\
-  \trewwin{\nsig{\sigma_1}}{\nsig{\sigma_2}}{\nsig{\sigma_3}}{\polneut{\sigma_1}}{\polneut{\sigma_2}}{\polneut{\sigma_3}} 
-  \quad \trewwin{\nsig{\sigma_1}}{\nsig{\sigma_2}}{\nstar}{\polneut{\sigma_1}}{\polneut{\sigma_2}}{\polneut{m_1}} 
-  \quad \trewwin{\nsig{\sigma_1}}{\nstar}{\nstar}{\polneut{\sigma_1}}{\polneut{\sigma_2}}{\polneut{m_1}}
-  \quad \trewwin{\nsig{\sigma_1}}{\nstar}{\nstar}{\polneut{\sigma_1}}{\polneut\blank}{\polneut\blank} \\
-  \trewwin{\nsig{\sigma_1}}{\nstar}{\nblank}{\polneut{\sigma_1}}{\polneut{m_1}}{\polneut\blank} 
-  \quad \trewwin{\nsig{\sigma_1}}{\nsig{\sigma_2}}{\nblank}{\polneut{\sigma_1}}{\polneut{\sigma_2}}{\polneut\blank} 
-  \quad \trewwin{\nsig{\sigma_1}}{\nblank}{\nblank}{\polneut{\sigma_1}}{\polneut\blank}{\polneut\blank} \\
-  \trewwin{\nstar}{\nstar}{\nstar}{\polneut{\sigma_1}}{\polneut{\sigma_2}}{\polneut{m_1}}
-  \quad\trewwin{\nstar}{\nstar}{\nstar}{\polneut{\sigma_1}}{\polneut\blank}{\polneut\blank}
-  \quad\trewwin{\nstar}{\nstar}{\nstar}{\polneut\blank}{\polneut\blank}{\polneut\blank}\\
-  \hspace{0.10mm}\trewwin{\nstar}{\nstar}{\nblank}{\polneut{\sigma_1}}{\polneut{m_1}}{\polneut{\blank}}
-  \quad\trewwin{\nstar}{\nstar}{\nblank}{\polneut{\blank}}{\polneut{\blank}}{\polneut{\blank}}
-  \quad\trewwin{\nstar}{\nblank}{\nblank}{\polneut{m_1}}{\polneut{\blank}}{\polneut{\blank}}
-\end{center}
+In total, we have contributed 5230 lines of specification and 10038 lines of proof, of which 1636 and 3181 lines are for the extraction/running-time analysis (not including the definition of the flat problems or the flat reductions). 

@@ -249,7 +249,7 @@ Alternatively, we can define $k$-cliques inductively, obtaining a definition whi
 
 The \Clique{} problem asks whether there exists a $k$-clique in a graph $G$: 
 \begin{definition}[\Clique{}][Clique]
-  $\Clique{}~(G, k) \defeq \exists L : \listsof{V_G}, \kclique{k}~L\mnote{\Clique{}}$
+  $\normalfont{\Clique{}}~(G, k) \defeq \exists L : \listsof{V_G}, \kclique{k}~L\mnote[Clique]{\normalfont\Clique{}}$
 \end{definition}
 Note that the number $k$ is part of the instance, in contrast to the parameter $k$ of the class $k$-\SAT{}.\footnote{One can show that for every fixed $k$, the \Clique{} problem is decidable in polynomial time.}
 
@@ -464,3 +464,7 @@ We obtain the following polynomial-time reduction:
   The mechanisation was much more tedious because, among other things, we always had to work with the possibility that a vertex is invalid, i.e.\ not actually part of the graph. 
   The new proof halved the lines of code of the Coq mechanisation and is also much more understandable. Therefore, we believe that defining a separate extractable problem is the right way if the natural formalisation of a problem in Coq is not directly extractable.
 \end{remark}
+
+In the introduction to this chapter, we mentioned that the proof of this reduction given in an introductory course on theoretical computer science merely spans half a page. Doing the proof formally is a bit more work, as this chapter has shown. Nevertheless, if one uses the right abstractions (in our case the representation of graphs using finite types), it is quite manageable. 
+Deriving a flat version which is extractable to L and doing the running time analysis poses some additional technical effort, especially if one relates this to the usual approach on paper, which amounts to ``The reduction is \textit{obviously} polynomial-time computable''. 
+The systematic approach of representing finite types using natural numbers makes the correctness proof of the flat reduction feasible and will be useful for the more complicated reductions of the coming chapters.

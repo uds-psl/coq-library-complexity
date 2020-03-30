@@ -73,10 +73,10 @@ Parallel Rewriting works over a finite alphabet $\Sigma$. Given an initial strin
     \item $\omega : \nat$ with $\omega > 0$ and $o \divides \omega$ is the width of rewrite windows,
     \item $x_0 : \str{\Sigma}$ with $\length{x_0} \ge \omega$ and $o \divides \length{x_0}$ is the initial string, 
     \item $R : \listsof{\winw{\omega}{\Sigma}}$ is the set of rewrite windows,
-    \item $\Rfinal : \listsof{\str{\Sigma}}$ is a set of final substrings,
+    \item $\Rfinal : \listsof{\str{\Sigma}}$ is the set of final substrings,
     \item $t : \nat$ is the number of rewrite steps.
   \end{itemize}
-  \todo{move to lists instead of vectors}
+  %\todo{move to lists instead of vectors}
   Here, $\winw{\omega}{\Sigma} := {\Sigma}^\omega \times {\Sigma}^\omega$\mnote{$\winw{\omega}{\Sigma}$} denotes the type of windows of width $w$ over $\Sigma$ and $ n \divides{} m$ means that $n$ divides $m$.
 \end{definition}
 If the width is clear from the context, we write $\win{\Sigma}$ instead of $\winw{\omega}{\Sigma}$.
@@ -202,18 +202,17 @@ For the rest of the chapter, let us fix a \gennp{} instance consisting of a fini
 \end{definition}
 
 Formalising the intuitions from Chapter~\ref{chap:informaloverview}, we define the alphabet $\Gamma$ of the Parallel Rewriting instance for the deterministic simulation\footnote{This does not include the part for generating the initial configuration.}.
-
-\newcommand{\stateSigma}{\Sigma_{\mathit{state}}}
-\newcommand{\delimSigma}{\Sigma_{\mathit{delim}}}
-\newcommand{\tapeSigma}{\Sigma_{\mathit{tape}}}
-\newcommand{\States}{\textsf{States}}
-\setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.SingleTMGenNP_to_TPR}
+\newcommand{\stateSigma}{\Sigma_{\mathit{state}}}%
+\newcommand{\delimSigma}{\Sigma_{\mathit{delim}}}%
+\newcommand{\tapeSigma}{\Sigma_{\mathit{tape}}}%
+\newcommand{\States}{\textsf{States}}%
+\setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.SingleTMGenNP_to_TPR}%
 \begin{align*}
   \polarity : \Type &\defeq + \bnfmid - \bnfmid \circ \\
-  \textsf{delim} : \Type &\defeq \# \\
-  \stateSigma &\defeq \opt{\Sigma} \mnote[stateSigma]{$\stateSigma$}\\
-  \States &\defeq Q \times \stateSigma \mnote[States]{$\States$}\\
-  \tapeSigma &\defeq \polarity \times \stateSigma \mnote[polSigma]{$\tapeSigma$}\\
+  \textsf{delim} : \Type &\defeq \# \mnote[stateSigma]{$\stateSigma$}\\
+  \stateSigma &\defeq \opt{\Sigma} \mnote[States]{$\States$}\\
+  \States &\defeq Q \times \stateSigma \mnote[polSigma]{$\tapeSigma$}\\
+  \tapeSigma &\defeq \polarity \times \stateSigma \\
   \delimSigma &\defeq \textsf{delim} + \tapeSigma \mnote[tapeSigma]{$\delimSigma$}\\
   \Gamma &\defeq \States + \delimSigma
   \mnote[Gamma]{$\Gamma$}
@@ -311,7 +310,7 @@ In order to make reasoning about configuration strings possible, we define repre
 
 \begin{definition}[Tape Representation]
   The string $E$ represents the empty tape: 
-  \mnote[E]{$\nilstr{p}{n}$}
+  \mnote[E]{\normalfont{E}}%
   \begin{align*}
     \nilstr{p}{0} &\defeq [\#] \\
     \nilstr{p}{(\natS{n})} &\defeq (p, \blank) :: \nilstr{p}{n}
@@ -899,7 +898,7 @@ If there is enough space left on the tape, the rewrite windows $\Rsim$ can exact
 \end{lemma}
 
 \begin{lemma}[Multi-step Soundness][multistep_inversion]\label{lem:multistep_sound}
-  If $(q, tp) \reprc{} s$, $i \le z$, $\length{tp} \le z - i$,\todo{$i \le t$} and $s~\strent{\Rsim}^i~s'$, then there exist $q', tp'$ and $j$ with 
+  If $(q, tp) \reprc{} s$, $i \le z$, $\length{tp} \le z - i$, and $s~\strent{\Rsim}^i~s'$, then there exist $q', tp'$ and $j$ with 
   \begin{itemize}
     \item $(q', tp') \reprc{} s'$, 
     \item $j \le i$, 

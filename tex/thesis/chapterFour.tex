@@ -706,22 +706,14 @@ The idea is to add rewrite rules which can replace the $*$ (wildcard) symbols by
 If one wildcard is replaced by a blank, all the other wildcards to the right of it also need to be replaced by blanks in order to ensure that the used tape region is contiguous. 
 
 \section{Intermediate Problems}
-In the presentation by Sipser~\cite{Sipser:TheoryofComputation}, the tableau is directly encoded as a CNF. Doing this formally seems to be hard as one needs to handle the invariants of simulating the Turing machine, the representation of symbols of an arbitrary finite alphabet, and the encoding as a CNF all at once. 
-Instead, we factorise the proof into smaller parts by introducing three intermediate problems that deal with these concerns one-by-one. 
-Figure~\ref{fig:redoverview} gives an overview over the reductions.
-The reduction of \gennp{} to Parallel Rewriting (\PR{}), a string-based problem which will be introduced in Section~\ref{sec:pr}, handles the main part of the Turing machine simulation. 
-It creates an explicit representation of the Turing machine by enumerating all rewrite windows. After that, we do not have to reason about Turing machines anymore. 
-Parallel Rewriting can be seen as a model between Turing machines and circuits.
-The remaining three reductions subsequently deal with the encoding of the alphabet, the encoding as a Boolean formula and the conversion to a CNF.
-
 \begin{figure}
   \begin{center}
     \begin{tikzpicture}[scale=1, every node/.style={scale=1}]
       \node[rectangle, draw=black, minimum width=13cm] (gennp) {Generic Problem on Turing Machines (\gennp{})}; 
       \node[rectangle, draw=black, minimum width = 13cm, below = of gennp] (strrew1) {Parallel Rewriting (\PR{}) on arbitrary $\Sigma$};
       \node[rectangle, draw=black, below = of strrew1, minimum width = 13cm] (strrew2) {Binary Parallel Rewriting on $\{0, 1\}$};
-      \node[rectangle, draw=black, below = of strrew2, minimum width = 13cm] (csat) {Propositional SAT (\fsat{})};
-      \node[rectangle, draw=black, below = of csat, minimum width = 13cm] (sat) {SAT on CNFs (\sat{})};
+      \node[rectangle, draw=black, below = of strrew2, minimum width = 13cm] (csat) {Formula SAT (\fsat{})};
+      \node[rectangle, draw=black, below = of csat, minimum width = 13cm] (sat) {SAT of CNFs (\sat{})};
       \draw[->] 
         (gennp) edge node[right] {tableau construction} (strrew1)
         (strrew1) edge node[right] {string homomorphism} (strrew2)
@@ -732,4 +724,11 @@ The remaining three reductions subsequently deal with the encoding of the alphab
   \caption{The chain of reductions from \gennp{} to \SAT{}.}\label{fig:redoverview}
 \end{figure}
 
+In the presentation by Sipser~\cite{Sipser:TheoryofComputation}, the tableau is directly encoded as a CNF. Doing this formally seems to be hard as one needs to handle the invariants of simulating the Turing machine, the representation of symbols of an arbitrary finite alphabet, and the encoding as a CNF all at once. 
+Instead, we factorise the proof into smaller parts by introducing three intermediate problems that deal with these concerns one-by-one. 
+Figure~\ref{fig:redoverview} gives an overview over the reductions.
+The reduction of \gennp{} to Parallel Rewriting (\PR{}), a string-based problem which will be introduced in Section~\ref{sec:pr}, handles the main part of the Turing machine simulation. 
+It creates an explicit representation of the Turing machine by enumerating all rewrite windows. After that, we do not have to reason about Turing machines anymore. 
+Parallel Rewriting can be seen as a model between Turing machines and circuits.
+The remaining three reductions subsequently deal with the encoding of the alphabet, the encoding as a Boolean formula and the conversion to a CNF.
 
