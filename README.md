@@ -14,6 +14,7 @@ L/Complexity/PolyBounds.v
 L/Complexity/Tactics.v
 L/Complexity/MorePrelim.v
 L/Complexity/FlatFinTypes.v
+L/Complexity/SharpP.v
 
 L/Complexity/Problems/UGraph.v
 L/Complexity/Problems/FlatUGraph.v
@@ -95,8 +96,7 @@ Please also read the Acknowledgements section of the thesis.
 ## License
 
 The Coq files listed above are Copyright 2019-2020 Lennard Gäher. 
-They are licensed under TODO.
-TODO: work out compatibility of CeCILL of undec library with MIT license
+They are licensed under under the [CeCILL license](https://github.com/uds-psl/ba-gaeher/blob/master/CeCILL_LICENSE.txt).
 
 The files in tex/ are Copyright 2019-2020 Lennard Gäher. The files in tex/thesis are based on [Yannick Forster's](https://www.ps.uni-saarland.de/~forster/) [thesis template](https://github.com/yforster/thesis-template). 
 
