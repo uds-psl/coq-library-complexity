@@ -3,7 +3,7 @@ From Undecidability Require Import L.Functions.EqBool.
 From Undecidability.L.Complexity Require Export Problems.Cook.PR FlatFinTypes MorePrelim.
 Require Import Lia.
 
-(**Flat Parallel Rewriting *)
+(** * Flat Parallel Rewriting *)
 (*A flattened version of parallel rewriting using natural numbers to represent finite types *)
 
 Inductive FlatPR := {

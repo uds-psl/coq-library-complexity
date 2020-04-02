@@ -358,7 +358,7 @@ Section fixSAT.
       eauto.
     Qed.
 
-    (** ** Step 3: map to literals *)
+    (** *** Step 3: map to literals *)
     Definition toLiterals (L : list (nat * nat)) := filterSome (map (fun '(ci, li) => cnfGetLiteral N ci li) L). 
 
     Definition satLiterals := toLiterals satPositions. 

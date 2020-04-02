@@ -3,6 +3,8 @@ From Undecidability.L.Complexity Require Export Monotonic ONotation LinTimeDecod
 
 Global Generalizable Variable vX.
 
+(** * Basics of decision problems *)
+
 (** Semantics for [[restrictedP]]: fst is the subset of X which is an admsisable input, second is the Problem itself. *)
 Definition restrictedP {X} vX := ({x:X | vX x} -> Prop).
 (* Notation "vX '@With' P" := (restrPWhere vX P) (at level 0, P at level 0). *)

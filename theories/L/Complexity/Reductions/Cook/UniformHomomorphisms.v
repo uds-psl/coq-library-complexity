@@ -7,6 +7,7 @@ Require Import Lia.
 (** We define uniform homomorphisms (of strings): Given strings of the same length, they output strings of the same length.*)
 Section fixX.
   Variable (X Y : Type). 
+  (** ** Homomorphisms *)
 
   Definition homomorphism (h : list X -> list Y) := forall x1 x2, h (x1 ++ x2) = h x1 ++ h x2. 
 
@@ -30,7 +31,7 @@ Section fixX.
     - cbn. rewrite H. now rewrite IHx. 
   Qed. 
 
-  (** given an arbitrary function mapping elements of X into strings over Y, we can derive a homomorphism in a canonical way*)
+  (** Given an arbitrary function mapping elements of X into strings over Y, we can derive a homomorphism in a canonical way*)
   Definition canonicalHom (h' : X -> list Y) := fun (l : list X) => concat (map h' l). 
   Lemma canonicalHom_is_homomorphism h' : homomorphism (canonicalHom h'). 
   Proof. 
@@ -45,7 +46,7 @@ Section fixX.
     - erewrite homo_cons; [ | easy]; cbn. rewrite IHx. now rewrite H0. 
   Qed. 
 
-  (** uniform homomorphisms *)
+  (** ** Uniform Homomorphisms *)
 
   (** A uniform homomorphism is ε-free and maps all strings of the same length to strings of the same length,
     (stated differently: |h x| = n * |x| for n > 0) *)

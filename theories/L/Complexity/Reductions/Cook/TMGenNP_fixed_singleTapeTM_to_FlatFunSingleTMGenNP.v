@@ -33,19 +33,6 @@ Section fixTM.
   Definition reduction (p : list sig * nat * nat) := 
     let '(ts, maxSize, steps) := p in (flatM, map index (ts : list sig), maxSize, steps). 
 
-  (* need to either assume index or enc to be computable on sig if we want to work with arbitrary encodings of sig*)
-
-  (*Definition list_encodings := map enc (elem sig).*)
-  (*Definition c__index := 1. *)
-  (*Definition index_time (e : sig) := 1. *)
-  (*Instance term_index : computableTime' (@index sig) (fun e _ => (1, tt)). *)
-  (*Proof. *)
-    (*apply computableTimeExt with (x := fun x => getPosition list_encodings (enc x)). *)
-    (*1:{ unfold index. intros x. cbn.*)
-        (*unfold list_encodings. apply getPosition_map. apply H. *)
-    (*} *)
-    (*extract. *)
-
   Definition c__reduction := (16 + 2 * c__map).
   Definition reduction_time (ts : list sig) := (|ts| + 1) * c__reduction.
   Instance term_reduction : computableTime' reduction (fun p _ => (let '(ts, maxSize, steps) := p in reduction_time ts, tt)). 

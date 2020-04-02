@@ -4,7 +4,7 @@ From Undecidability.L.Tactics Require Import LTactics.
 From Undecidability.L.Datatypes Require Import LProd LOptions LTerm LUnit LSum.
 From Undecidability.L Require Export Functions.Decoding.
 
-(** * #P (verifier characterisation) *)
+(** * ##P (verifier characterisation) *)
 
 
 (** counting problems are functions f : X -> nat for registered X *)
