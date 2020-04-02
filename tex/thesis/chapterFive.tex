@@ -1115,7 +1115,7 @@ As in Section~\ref{sec:informal_nondet}, the initial string has the following fo
 
 Let $\initStr : \listsof{\Delta}$ be this initial string.\mnote[preludeInitialString]{$\initStr$}
 
-For the rewrite windows, we have to ensure that all elements of $\Sigma$ are placed contiguously and that certificates of length less than $k'$ are allowed, too. Exploiting the fact that the rewrite windows overlap, this is easy to achieve.
+For the rewrite windows, we have to ensure that all elements of $\Sigma$ are placed contiguously and that certificates of length less than $k'$ are allowed, too. Exploiting the fact that the rewrite windows overlap, this is easy to achieve. The following rules are a subset of the needed ones, with the full set of rules being given in Appendix~\ref{app:rewrite_rules}.
 \begin{center}
   \trewwin{\nblank}{\nblank}{\nblank}{\polneut\blank}{\polneut\blank}{\polneut\blank}
   \quad \trewwin{\ndelim}{\nblank}{\nblank}{\#}{\polneut\blank}{\polneut\blank}
@@ -1124,26 +1124,9 @@ For the rewrite windows, we have to ensure that all elements of $\Sigma$ are pla
   \quad \trewwin{\nblank}{\ninit}{\nsig{\sigma_1}}{\polneut\blank}{q_0^\blank}{\sigma_1}
   \quad \trewwin{\nblank}{\ninit}{\nstar}{\polneut\blank}{q_0^\blank}{\polneut{m_1}}
   \quad \trewwin{\nblank}{\ninit}{\nblank}{\polneut\blank}{q_0^\blank}{\polneut\blank}\\
-  \trewwin{\ninit}{\nblank}{\nblank}{q_0^\blank}{\polneut\blank}{\polneut\blank}
-  \quad \trewwin{\ninit}{\nsig{\sigma_1}}{\nstar}{q_0^\blank}{\polneut{\sigma_1}}{\polneut{m_1}} 
-\quad \trewwin{\ninit}{\nsig{\sigma_1}}{\nblank}{q_0^\blank}{\polneut{\sigma_1}}{\polneut\blank}
-\quad \trewwin{\ninit}{\nsig{\sigma_1}}{\nsig{\sigma_2}}{q_0^\blank}{\polneut{\sigma_1}}{\polneut{\sigma_2}}\\
-  \trewwin{\ninit}{\nstar}{\nblank}{q_0^\blank}{\polneut{m_1}}{\polneut\blank}
-  \quad \trewwin{\ninit}{\nstar}{\nstar}{q_0^\blank}{\polneut{\sigma_1}}{\polneut{m_1}}
-  \quad \trewwin{\ninit}{\nstar}{\nstar}{q_0^\blank}{\polneut\blank}{\polneut\blank}\\
-  \trewwin{\nsig{\sigma_1}}{\nsig{\sigma_2}}{\nsig{\sigma_3}}{\polneut{\sigma_1}}{\polneut{\sigma_2}}{\polneut{\sigma_3}} 
-  \quad \trewwin{\nsig{\sigma_1}}{\nsig{\sigma_2}}{\nstar}{\polneut{\sigma_1}}{\polneut{\sigma_2}}{\polneut{m_1}} 
-  \quad \trewwin{\nsig{\sigma_1}}{\nstar}{\nstar}{\polneut{\sigma_1}}{\polneut{\sigma_2}}{\polneut{m_1}}
-  \quad \trewwin{\nsig{\sigma_1}}{\nstar}{\nstar}{\polneut{\sigma_1}}{\polneut\blank}{\polneut\blank} \\
   \trewwin{\nsig{\sigma_1}}{\nstar}{\nblank}{\polneut{\sigma_1}}{\polneut{m_1}}{\polneut\blank} 
   \quad \trewwin{\nsig{\sigma_1}}{\nsig{\sigma_2}}{\nblank}{\polneut{\sigma_1}}{\polneut{\sigma_2}}{\polneut\blank} 
-  \quad \trewwin{\nsig{\sigma_1}}{\nblank}{\nblank}{\polneut{\sigma_1}}{\polneut\blank}{\polneut\blank} \\
-  \trewwin{\nstar}{\nstar}{\nstar}{\polneut{\sigma_1}}{\polneut{\sigma_2}}{\polneut{m_1}}
-  \quad\trewwin{\nstar}{\nstar}{\nstar}{\polneut{\sigma_1}}{\polneut\blank}{\polneut\blank}
-  \quad\trewwin{\nstar}{\nstar}{\nstar}{\polneut\blank}{\polneut\blank}{\polneut\blank}\\
-  \hspace{0.10mm}\trewwin{\nstar}{\nstar}{\nblank}{\polneut{\sigma_1}}{\polneut{m_1}}{\polneut{\blank}}
-  \quad\trewwin{\nstar}{\nstar}{\nblank}{\polneut{\blank}}{\polneut{\blank}}{\polneut{\blank}}
-  \quad\trewwin{\nstar}{\nblank}{\nblank}{\polneut{m_1}}{\polneut{\blank}}{\polneut{\blank}}
+  \quad \trewwin{\nsig{\sigma_1}}{\nblank}{\nblank}{\polneut{\sigma_1}}{\polneut\blank}{\polneut\blank} 
 \end{center}
 The windows enforce that, if we decide to replace a $\nstar$ with a blank instead of an element of $\Sigma$, all $\nstar$s to the right of it are also replaced by a blank.
 Let \mnotec[prelueRules]{$\Rprelude$} denote the set of prelude rewrite windows.
