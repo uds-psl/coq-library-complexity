@@ -62,6 +62,8 @@ You need `Coq 8.8.1` or `8.8.2` built on OCAML `> 4.02.3` and the [Equations](ht
 ```
 opam switch create coq-library-undecidability 4.07.1+flambda
 eval $(opam env)
+opam repo add coq-released https://coq.inria.fr/opam/released
+opam update
 opam install . --deps-only
 ```
 
