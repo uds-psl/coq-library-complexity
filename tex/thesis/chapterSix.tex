@@ -34,11 +34,7 @@ Given types $\Sigma_1, \Sigma_2$, $h : \str{\Sigma_1} \rightarrow \str{\Sigma_2}
 Given a function $f : \Sigma_1 \rightarrow \str{\Sigma_2}$, we can define a canonical homomorphism \[\canonicalHom~f \defeq \lambda l. \rconcat~\withl f~x \withm x \in l \withr \mnote[canonicalHom]{\canonicalHom}\]  lifting $f$ to lists.
 
 \begin{proposition}
-  Let $f : \Sigma_1 \rightarrow \str{\Sigma_2}$. 
-  \begin{enumerate}
-    \coqitem[canonicalHom_is_homomorphism] $\homomorphism~(\canonicalHom~f)$
-    \coqitem[canonicalHom_is_unique] $\forall h, \homomorphism~h \rightarrow (\forall x, h [x] = f~x) \rightarrow h \equiv \canonicalHom~f$
-  \end{enumerate}
+  Let $f : \Sigma_1 \rightarrow \str{\Sigma_2}$. Then \coqlink[canonicalHom_is_homomorphism]{(1)} $\canonicalHom~f$ is a homomorphism and \coqlink[canonicalHom_is_unique]{(2)} it is the unique homomorphism satisfying the property $\forall x, h[x] = f~x$.
 \end{proposition}
 
 A uniform homomorphism is a special kind of homomorphism. First of all, it is \emph{$\varepsilon$-free}, meaning that it only maps $\nil$ to $\nil$. Secondly, it maps all pairs of strings $a, b$ with $\length{a} = \length{b}$ to strings of the same length. 
@@ -135,10 +131,10 @@ For the proof of equivalence of $S$ and $S'$, we need a stronger statement: if w
   Using Lemma~\ref{lem:h_inv} and the results of Proposition~\ref{prop:h_properties}.
 \end{proof}
 
-This can be lifted to $\strent{}$. For the proof, yet another characterisation of validity will be quite convenient:
+This can be lifted to $\strent{}$. For the proof, yet another characterisation of validity will be quite convenient. The base case allows one to prove a rewrite using a single rewrite window\footnote{In the mechanisation, this first rule is formulated differently so that the proof of equivalence works without assuming the rewrite windows to have width $\omega$, see the comments at the end of Chapter~\ref{chap:gennp_pr}.}. In the successor case, we can add $o$ symbols, where $o$ is the offset, by providing a rewrite window for the head.
 \setCoqFilename{Undecidability.L.Complexity.Problems.Cook.PR}
 \begin{gather*}
-  \infer{a \strentD{R} b}{\length{a} = \length{b} \quad \length{a} = \omega \quad w \in R}
+  \infer{\prem{w} \strentD{R} \conc{w}}{w \in R}
   \mnote[validDirect]{$\strentD{R}$}\\
   \infer{(u \concat a) \strentD{R} (v \concat b)}{a \strentD{R} b \quad \length{u} = o \quad \length{v} = o \quad w \in R \quad \rewHead{w}{(u \concat a)}{(v \concat b)}}
 \end{gather*}
@@ -200,8 +196,9 @@ The following function defines the homomorphism for single elements.
     h_{\nat}~sig~n&\defeq \ITE{n~\oset{?}{<}{+0.9}~sig}{\bfalse^n \concat [\btrue] \concat \bfalse^{sig -n -1}}{\bfalse^{sig}} \\
     h_{\Sigma}~\sigma &\defeq h_{\nat}~(\length{\Sigma})~(\textsf{index}~\sigma)\mnote[h']{$h_\Sigma$}
   \end{align*}
+  Here, $\oset{?}{<}{+0.9}$ denotes a Boolean decider for the relation $<$ and \textsf{index} gives the position of an element of the finite type.
 \end{definition}
-The corresponding homomorphism can be obtained by using $\canonicalHom$. However, the technique of Section~\ref{sec:unif_hom_pr} justs asks us to provide a function operating on single symbols.
+The corresponding homomorphism can be obtained by using $\canonicalHom$. However, the technique of Section~\ref{sec:unif_hom_pr} just asks us to provide a function operating on single symbols.
 
 Properties $(A_1)$ and $(A_2)$ are straightforward to verify.
 
@@ -211,7 +208,6 @@ Properties $(A_1)$ and $(A_2)$ are straightforward to verify.
     \coqitem[hP_length] $\length{h_{\Sigma}~\sigma} = \length{\Sigma}$
   \end{enumerate}
 \end{fact}
-\pagebreak
 \begin{fact}[Injectivity]\leavevmode
   \begin{enumerate}
     \coqitem[hP_inv1] $h_{\nat}~sig~m = \bfalse^n \concat [\btrue] \concat \bfalse^{sig - n - 1} \rightarrow m = n$
@@ -247,7 +243,7 @@ Remember that we enforce the syntactic constraints on valid \PR{} instances (see
 \end{center}
 
 The main verification is done for the reduction of \PR{} to \BPR{}, as described in this chapter. As this reduction cannot be extracted, we define a separate reduction of \FlatPR{} to \BPR{}. This reduction basically uses the $h_{\nat}$ function of Definition~\ref{def:hnat_hsig} to transform the finite subset of $\nat$ to $\bool$. 
-For the verification of this reduction, we show that for instances of \FlatPR{} and \PR{} that are the same up to representation of finite types $\approx$, the output of the respective reductions to \BPR{} is the same up to reordering of elements in lists. Logically, the reduction thus consists of two parts: a reduction from \FlatPR{} to \PR{}, converting the finite subset $\{0, \ldots, n-1\}$ of $\nat$ into the finite type $F_n$, and the reduction from \PR{} to \BPR{}. Computationally, however, this is shortcut to a single direct reduction which runs in polynomial time.
+For the verification of this reduction, we show that for instances of \FlatPR{} and \PR{} that are equal up to representation of finite types $\approx$, the output of the respective reductions to \BPR{} is the same up to reordering of elements in lists. Logically, the reduction thus consists of two parts: a reduction from \FlatPR{} to \PR{}, converting the finite subset $\{0, \ldots, n-1\}$ of $\nat$ into the finite type $F_n$, and the reduction from \PR{} to \BPR{}. Computationally, however, this is shortcut to a single direct reduction which runs in polynomial time.
 \setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.FlatPR_to_BinaryPR}
 \begin{theorem}[][FlatPR_to_BinaryPR_poly]
   $\textbf{FlatPR} \redP{} \textbf \BPR{}$ 

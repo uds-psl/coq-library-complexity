@@ -28,7 +28,7 @@ We could prove that \fsat{} is in \NP{} using the same notion of small assignmen
 
 \paragraph{Explicit Assignments}
 The assignments we use, where we just store a list of variables to which the value $\btrue$ is assigned and to all other variables the value $\bfalse$ is assigned implicitly, are quite indirect and unstructured. 
-For the rest of this chapter a more explicit characterisation bearing resemblance to the Boolean strings over which \BPR{} is defined will be quite convenient.
+For the rest of this chapter a more explicit characterisation bearing resemblance to the Boolean strings used by \BPR{} will be quite convenient.
 One possible characterisation is a list of Booleans $e : \listsof{\bool}$ together with a start index $s$, where the value $e[i]$ at position $i$ of this list is the value assigned to variable $s + i$. To variables outside the range $[s, s+\length{e})$, the value $\bfalse$ is assigned.
 
 As we will be working with ranges of variables $[\textsf{start}, \textsf{start} + \textsf{len})$ a lot throughout this chapter, we introduce the notation \mnotec{$[s .. +l)$} instead of $[s, s+l)$, which makes the notation less redundant. In the following, we use the letter $I$ to denote variable ranges of this form.
@@ -109,8 +109,8 @@ Using $e[s..+l]$, we can restore the assignments to $I_1$ and $I_2$ given an ass
 \begin{proposition}\label{prop:comb_proj}
   Let $I_1 = [s_1 ..+ l_1)$ and $I_2 = [s_2 ..+l_2)$. 
   \begin{enumerate}
-    \coqitem[projVars_combined1] $a[I_1] = (a[I_1 \sqcup I_2])[s_1 - \cStart~s_1~s_2 .. + l_1]$
-    \coqitem[projVars_combined2] $a[I_2] = (a[I_1 \sqcup I_2])[s_2 - \cStart~s_1~s_2 .. + l_2]$
+    \coqitem[projVars_combined1] $a[I_1] = (a[I_1 \sqcup I_2])[(s_1 - \cStart~s_1~s_2) .. + l_1]$
+    \coqitem[projVars_combined2] $a[I_2] = (a[I_1 \sqcup I_2])[(s_2 - \cStart~s_1~s_2) .. + l_2]$
   \end{enumerate}
 \end{proposition}
 

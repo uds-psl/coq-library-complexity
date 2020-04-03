@@ -69,9 +69,9 @@ Parallel Rewriting works over a finite alphabet $\Sigma$. Given an initial strin
   $(\Sigma, o, w, x_0, R, \Rfinal, t)$ is a Parallel Rewriting instance, where 
   \begin{itemize}
     \item $\Sigma : \textsf{finType}$ is the finite alphabet,
-    \item $o : \nat$ with $o > 0$ is the rewriting offset,
-    \item $\omega : \nat$ with $\omega > 0$ and $o \divides \omega$ is the width of rewrite windows,
-    \item $x_0 : \str{\Sigma}$ with $\length{x_0} \ge \omega$ and $o \divides \length{x_0}$ is the initial string, 
+    \item $o : \nat$ is the rewrite offset with $o > 0$,
+    \item $\omega : \nat$ is the width of rewrite windows, where $\omega > 0$ and $o \divides \omega$,
+    \item $x_0 : \str{\Sigma}$ is the initial string, where $\length{x_0} \ge \omega$ and $o \divides \length{x_0}$,
     \item $R : \listsof{\winw{\omega}{\Sigma}}$ is the set of rewrite windows,
     \item $\Rfinal : \listsof{\str{\Sigma}}$ is the set of final substrings,
     \item $t : \nat$ is the number of rewrite steps.
@@ -319,7 +319,7 @@ In order to make reasoning about configuration strings possible, we define repre
   \mnote[reprTape']{$u \reprtt{n}{p} h$}
   \begin{align*}
     u \reprtt{n}{p} h &\defeq \length{u} \le n \land h = \withl(p, x) \withm x \in u\withr \concat \nilstr{p}{(\hat{n} - \length{u})}\\
-    u \reprt{p} h &\defeq u \reprtt{z}{p}, \mnote[reprTape]{$ u \reprt{p} h$}
+    u \reprt{p} h &\defeq u \reprtt{z}{p} h, \mnote[reprTape]{$ u \reprt{p} h$}
   \end{align*}
 \end{definition}
 $u \reprtt{n}{p} h$ means that $h$ contains the elements of $u$ annotated with polarity $p$ where a total of $n$ symbols are available for the simulation to use (not counting the three additional symbols).
@@ -328,9 +328,9 @@ For the correctness statements, we use $u \reprt{p} h$, but usually generalise t
 \begin{proposition}\label{prop:tapefacts}\leavevmode
   We have the following basic facts related to the representation of tapes.
   \begin{enumerate}
-    \coqitem[E_polarityFlip] $\withl \pFlipi{\gamma} \withm \gamma \in \nilstr{p}{n} \withr = \nilstr{(\pFlipi p)}{n}$
+    \coqitem[E_polarityFlip] $\pFlipi{}$ commutes with $E$: $\withl \pFlipi{\gamma} \withm \gamma \in \nilstr{p}{n} \withr = \nilstr{(\pFlipi p)}{n}$
     %\coqitem[string_reprTapeP_length] $u \reprtt{n}{p} h \rightarrow \length{h} = \natS{\hat{n}}$
-    \coqitem[tape_repr_polarityFlip] $u \reprtt{n}{p} h \rightarrow u \reprtt{n}{\pFlipi{p}} \withl \pFlipi{\gamma} \withm \gamma \in h \withr$
+    \coqitem[tape_repr_polarityFlip] tape representation is invariant under $\pFlipi{}$: $u \reprtt{n}{p} h \rightarrow u \reprtt{n}{\pFlipi{p}} \withl \pFlipi{\gamma} \withm \gamma \in h \withr$
   \end{enumerate}
 \end{proposition}
 
@@ -441,7 +441,8 @@ If we want to prove a statement for the left and the right tape half, it allows 
     \coqitem[tape_rewrite_symm3] $h \strent{\Rtape} h' \rightarrow \withl \pFlipi{x} \withm x \in h \withr \strent{\Rtape} h'$
   \end{enumerate}
 \end{lemma}
-\begin{proof}
+
+\begin{proof}\leavevmode
   \begin{enumerate}
     \item By induction on $h \strent{\Rtape} h'$. The first two cases are trivial. 
       In the successor case, there is the problem that the new symbols are appended at the end of the strings, while the inductive definition of $\strent{}$ only allows to prepend new symbols. We switch to the explicit characterisation by Lemma~\ref{lem:agree_valid} and do a case analysis on the position for which we need to provide a rewrite window. For all but the last position, we can apply the inductive hypothesis, while we use the polarity-reversed new rewrite window, which exists by Lemma~\ref{lem:symm_rtape}, for the last position.
@@ -464,14 +465,16 @@ The results are each proven for the right tape half and then derived for the lef
 We start with a statement about empty tape halfs which will later be the base case of more general results.
 \begin{lemma}[Empty Tape Half: Blank Rewriting]\label{lem:nilstr_blank}\leavevmode
   \begin{enumerate}
-    \coqitem[E_rewrite_blank] $\nilstr{p}{\hat{n}} \strent{\Rtape} \nilstr{p'}{\hat{n}}$ and $\nilstr{p}{\hat{n}} \strent{\Rtape} \blank^{p'} :: s \rightarrow s = \nilstr{p'}{(\natS{n})}$
+    \coqitem[E_rewrite_blank] $\nilstr{p}{\hat{n}} \strent{\Rtape} \nilstr{p'}{\hat{n}}$ and if $\nilstr{p}{\hat{n}} \strent{\Rtape} \blank^{p'} :: s$, then $s = \nilstr{p'}{(\natS{n})}$
     \coqitem[E_rewrite_blank_rev] $\rev~{(\nilstr{p}{\hat{n}})} \strent{\Rtape} \rev~{(\nilstr{p}{\hat{n}})}$ and $\rev~{(\nilstr{p}{\hat{n}})} \strent{\Rtape} \rev~{(\blank^{p'}) :: s)} \rightarrow s = \nilstr{p'}{(\natS{n})}$
   \end{enumerate}
 \end{lemma}
-\begin{proof}
+\begin{proof}\leavevmode
   \begin{enumerate}
     \item The first statement follows by induction on $n$. For the second one, we unfold $\hat{n} = \natS{(\natS{n})}$ and generalise $\natS{n}$ to arbitrary $n \ge 1$. The statement then follows by induction on $n$: the base case is contradictory. In the successor case, we do another case analysis on $n$. If $n =0$, the statement holds by inversion on the used rewrite rule. 
-      Otherwise, $n = \natS{n'}$. We have $\nilstr{p}{(3+n')} \strent{} \blank^{p'} :: s$ and show $s = \nilstr{p'}{(2 + n)}$. By inversion on the rewrite rule used at the head, we get four cases and in each one, $s = \blank^{p'} :: s'$ and $\nilstr{p}{(2+n)} \strent{} \blank^{p'} :: s'$. As $\natS{n'} \ge 1$, we apply the inductive hypothesis and get $s' = \nilstr{p'}{(\natS{n})}$, closing the proof. 
+      
+      Otherwise, $n = \natS{n'}$. 
+      We have $\nilstr{p}{(3+n')} \strent{} \blank^{p'} :: s$ and show $s = \nilstr{p'}{(2 + n)}$. By inversion on the rewrite rule used at the head, we get four cases and in each one, $s = \blank^{p'} :: s'$ and $\nilstr{p}{(2+n)} \strent{} \blank^{p'} :: s'$. As $\natS{n'} \ge 1$, we apply the inductive hypothesis and get $s' = \nilstr{p'}{(\natS{n})}$, closing the proof. 
     \item For the first statement, it suffices to show $\rev~{(\nilstr{(\pFlipi{\pFlipi{p}})}{\hat{n}})} \strent{\Rtape} \rev~{(\nilstr{(\pFlipi{\pFlipi{p}})}{\hat{n}})}$. By Proposition~\ref{prop:tapefacts}.1, we can pull out one of the $\textsf{pFlip}$s to turn the $\rev$ into a $\pRev$. Applying Lemma~\ref{lem:symm_tape_rew}.1, we are left with $\withl \pFlipi{\gamma} \withm \gamma \in \nilstr{p}{\hat{n}} \withr \strent{\Rtape} \withl \pFlipi{\gamma} \withm \gamma \in \nilstr{p'}{\hat{n}} \withr$. This follows by another application of Proposition~\ref{prop:tapefacts}.1 and part 1. 
 
       The second part is proved in a similar way: we use that $\pFlip$ is involutive, apply Lemma~\ref{lem:symm_tape_rew}.2, and use part 1.
@@ -1066,7 +1069,7 @@ In this section, we apply the technique presented in Section~\ref{sec:preludes} 
 
 The alphabet \mnotec[preludeSig']{$\Delta$} of the prelude has $4 + \length{\Sigma}$ elements, where $q_0 \defeq \textsf{start}$ is the initial state.
 \[\Delta \defeq \nblank \bnfmid \nstar \bnfmid \ninit \bnfmid \ndelim \bnfmid \nsig{\sigma} \qquad \sigma : \Sigma\]
-The symbols $\nblank$ and $\ndelim$ just mirror the corresponding symbols of $\Gamma$. $\ninit$ is the fixed initial state symbol, $\nstar$s are wildcards that will be replaced by the certificate and the $\nsig{\sigma}$ are used for the fixed input. 
+The symbols $\nblank$ and $\ndelim$ just mirror the corresponding symbols of $\Gamma$. $\ninit$ is the fixed initial state symbol, the $\nstar$ symbols are wildcards that will be replaced by the certificate and the $\nsig{\sigma}$ are used for the fixed input. 
 As in the previous section, we implicitly lift $\Delta$ and $\Gamma$ to the combined alphabet $\mathcal{A}\defeq \Gamma + \Delta$. This requires some additional work for the formal proofs which we omit on paper.\mnote[preludeSig]{$\mathcal{A}$}
 
 As in Section~\ref{sec:informal_nondet}, the initial string has the following form, where $\underline{in} = \withl \underline{\sigma} \withm \sigma \in in \withr$:
@@ -1218,7 +1221,7 @@ In the second step, the flat list-based rules are defined and it is shown that t
 We desire that the finite-type and flat rules are defined in one go, with a minimal effort required to show their agreement.
 Moreover, in the end, we also need to instantiate the rules with all concrete elements of $\Sigma$ and with the possible polarities to obtain the list of rewrite windows. 
 In order to fulfill these two requirements, we define an abstract version \mnotec[fAlphabet]{\textsf{fAlphabet}} of the alphabet $\mathcal{A}$ that contains ``holes'' where an element of $\Sigma$ or $\Sigma_{\text{state}}$, a state of $Q$, or a polarity has to be placed. 
-More specifically, these holes are formalised as variables which can be of type $\Sigma, \Sigma_{\text{state}}, Q, \polarity$. \mnote[reifyAlphabetFin]{\textsf{reifyFin}}
+More specifically, these holes are formalised as variables which can be of type $\Sigma$, $\Sigma_{\text{state}}$, $Q$, or $\polarity$. \mnote[reifyAlphabetFin]{\textsf{reifyFin}}
 Given an environment which provides values for the variables, we have two reification procedures \textsf{reifyFin}
 and \textsf{reifyFlat} taking an element of \textsf{fAlphabet} either to a representation using the finite type $\mathcal{A}$ or a flat representation using $\nat$.\mnote[reifyAlphabetFlat]{\textsf{reifyFlat}}
 It is shown that, for environments related by $\approx$, the corresponding outputs of \textsf{reifyFin} and \textsf{reifyFlat} are again related by $\approx$.

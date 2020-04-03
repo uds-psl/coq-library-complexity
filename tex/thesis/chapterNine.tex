@@ -1,5 +1,5 @@
 \chapter{Conclusion}\label{chap:conclusion}
-In this final chapter we give an overview on related work and comment on potential future work, both from the perspective of formalisation and mechanisation.
+In this final chapter we evaluate our results, give an overview on related work, and comment on potential future work, both from the perspective of formalisation and mechanisation.
 
 In the preceding chapters, we have proved the following chain of reductions\footnote{Formally, we have shown the statements for the corresponding ``flat'' encodings in L.}:
 \begin{align*}
@@ -12,6 +12,10 @@ Combining these results, we obtain our following main mechanised result:
 \end{theorem}
 We do not see this as a full result, yet. Recall that we proposed to use Turing machines as an intermediate problem for the reduction from L to \SAT{} as Turing machines are structurally simpler and seem to be a good reduction target for eliminating L's size explosion problem (see Remark~\ref{rem:cook_L}).
 Thus, a mechanised proof of the step from L to Turing machines is still missing for a proof of the Cook-Levin Theorem in L, but we think that this work contributes a significant part towards a fully mechanised proof.
+
+As this thesis shows, formal complexity theory including running time analyses with reference to a concrete model of computation is to some extent feasible. The overhead for producing computable reductions and analysing their running time is quite noticeable, however, see Appendix~\ref{app:mecha}. 
+We think that more abstract results like the Hierarchy Theorems might be mechanisable with a smaller overhead and are thus more promising candidates for future mechanisations.
+Most running-time bounds we have established in this thesis are not very precise as we only required polynomial bounds. In order to be able to comfortably establish precise bounds, some work needs to be done to be able to properly work with asymptotic complexities, like a suitable abstraction for constants. 
 
 \section{Related Work}
 \paragraph{Proofs of the Cook-Levin Theorem}
