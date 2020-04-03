@@ -143,6 +143,12 @@ Proof.
   destruct t;cbn. all:autorewrite with list;cbn. all:nia.
 Qed.
 
+Lemma length_tape_local_right sig' (t:tape sig') :
+  length (tape_local (tape_move_right t)) <= sizeOfTape t.
+Proof.
+  destruct t;cbn.  1-3:nia. rewrite tape_local_move_right'. autorewrite with list;cbn. all:nia.
+Qed.
+
 Lemma size_list X sigX (cX: codable sigX X) (l:list X) :
   size _ l = sumn (map (size cX) l) + length l + 1.
 Proof.

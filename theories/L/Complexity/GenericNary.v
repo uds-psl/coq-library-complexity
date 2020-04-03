@@ -5,12 +5,17 @@ From smpl Require Import Smpl.
 
 Local Set Universe Polymorphism. 
 
-Local Inductive UPlist (A : Type) : Type :=
- | nil : UPlist A
- | cons : A -> UPlist A -> UPlist A.
+Module UnivPolyList.
 
-Arguments nil {A}.
-Arguments cons {A} a l.
+  Local Inductive UPlist (A : Type) : Type :=
+  | nil : UPlist A
+  | cons : A -> UPlist A -> UPlist A.
+
+  Arguments nil {A}.
+  Arguments cons {A} a l.
+End UnivPolyList.
+
+Import UnivPolyList.
 
 Definition toUPList := fun X l => List.fold_left (fun xs x => @cons X x xs) l nil.
 Global Coercion toUPList : list >-> UPlist.
