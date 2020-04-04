@@ -1,15 +1,15 @@
-\newcommand*{\gennp}{\textbf{TMGenNP}}
+\newcommand*{\gennp}{\normalfont\textbf{TMGenNP}}
 
 \newcommand{\strent}{\rightsquigarrow}
 \newcommand{\Rfinal}{R_{\text{final}}}
 
 
-\newcommand{\BPR}{\textbf{BinaryPR}}
-\newcommand{\fsat}{\textbf{FSAT}}
-\newcommand{\sat}{\textbf{SAT}}
+\newcommand{\BPR}{\normalfont\textbf{BinaryPR}}
+\newcommand{\fsat}{\normalfont\textbf{FSAT}}
+\newcommand{\sat}{\normalfont\textbf{SAT}}
 
-\newcommand{\trewwin}[6]{
-  \tikzexternaldisable
+\newcommand{\trewwin}[6]{%
+  \tikzexternaldisable{}
   \begin{tikzpicture}[baseline={([yshift=-22pt]current bounding box.north)}]
     \draw[thick] (0, 0) -- (2.25, 0);
     \draw (0.75, -0.75) -- (0.75, 0.75);
@@ -21,19 +21,19 @@
     \node at (1.875, 0.375) {\ensuremath{#3}};
     \node at (1.875, -0.375) {\ensuremath{#6}};
   \end{tikzpicture}
-  \tikzexternalenable
+  \tikzexternalenable{}
 }
 
 \newcommand*{\irewwin}[6]{\ensuremath{[#1, #2, #3]~/~[#4, #5, #6]}}
 
-\newcommand{\blank}{\textbf{\textvisiblespace}}
+\newcommand{\blank}{\textbf{\normalfont\textvisiblespace}}
 \newcommand{\delim}{\#}
 
 \newcommand{\polarity}{\textsf{polarity}}
 
 
 %workaround so that polarities on blanks have the same height as on other symbols
-\newcommand*{\TallestContent}{\ensuremath{b}}% <-- This should be the tallest content
+\newcommand*{\TallestContent}{\ensuremath{b \sigma_1 \blank}}% <-- This should be the tallest content
 
 \newcommand{\polneg}[1]{\overleftarrow{#1\vphantom{\TallestContent}}}
 \newcommand{\polpos}[1]{\overrightarrow{#1\vphantom{\TallestContent}}}
@@ -116,16 +116,16 @@ Thus, the formula can be made large enough to account for the worst-case: $t$ co
       \node at (9.75, 1.75) {\#};
       \node at (9.75, -3.75) {\#};
 
-      \node at (2.25, 2.75) {\textvisiblespace};
+      \node at (2.25, 2.75) {$\blank$};
       \node at (3.5, 2.75) {$\ldots$};
-      \node at (4.75, 2.75) {\textvisiblespace};
+      \node at (4.75, 2.75) {$\blank$};
       \node at (5.25, 2.75) {\small $q_0^{\blank}$};
       \node at (5.75, 2.75) {\small $\sigma_1$};
       \node at (6.5, 2.75) {$\ldots$};
       \node at (7.25, 2.75) {\small $\sigma_l$};
-      \node at (7.75, 2.75) {\textvisiblespace};
+      \node at (7.75, 2.75) {$\blank$};
       \node at (8.5, 2.75) {$\ldots$};
-      \node at (9.25, 2.75) {\textvisiblespace};
+      \node at (9.25, 2.75) {$\blank$};
 
       %\node at (6.5, 2.75) {$\ldots$};
       %\node at (5, 2.25) {$\ldots$};
@@ -189,11 +189,11 @@ The most straightforward way might be to move the position of the state symbol, 
       \node at (9.125, 0.375) {$\cdots$};
       \node at (5.6125, 0.375) {$b$};
       \node at (6.375, 0.375) {$b$};
-      \node at (7.125, 0.375) {\blank};
-      \node at (7.875, 0.375) {\blank};
+      \node at (7.125, 0.375) {$\blank$};
+      \node at (7.875, 0.375) {$\blank$};
       \node at (4.875, 0.375) {$q_0^a$};
       \node at (4.125, 0.375) {$c$};
-      \node at (3.375, 0.375) {\blank};
+      \node at (3.375, 0.375) {$\blank$};
 
     \end{tikzpicture}
   \end{center}
@@ -223,11 +223,11 @@ The most straightforward way might be to move the position of the state symbol, 
       \node at (9.125, 0.375) {$\cdots$};
       \node at (5.6125, 0.375) {$b$};
       \node at (6.375, 0.375) {$b$};
-      \node at (7.125, 0.375) {\blank};
-      \node at (7.875, 0.375) {\blank};
+      \node at (7.125, 0.375) {$\blank$};
+      \node at (7.875, 0.375) {$\blank$};
       \node at (4.875, 0.375) {$b$};
       \node at (4.125, 0.375) {$q_1^c$};
-      \node at (3.375, 0.375) {\blank};
+      \node at (3.375, 0.375) {$\blank$};
     \end{tikzpicture}.
   \end{center}
 \end{example}
@@ -260,11 +260,11 @@ Thus, for any given configuration $(q, tp)$ of the machine, there are multiple w
     \node at (9.125, -0.375) {$\cdots$};
     \node at (5.6125, -0.375) {$b$};
     \node at (6.375, -0.375) {$b$};
-    \node at (7.125, -0.375) {\blank};
-    \node at (7.875, -0.375) {\blank};
+    \node at (7.125, -0.375) {$\blank$};
+    \node at (7.875, -0.375) {$\blank$};
     \node at (4.875, -0.375) {$b$};
     \node at (4.125, -0.375) {$q_1^c$};
-    \node at (3.375, -0.375) {\blank};
+    \node at (3.375, -0.375) {$\blank$};
 
     \draw[-{>[scale=2.0]}, dashed] (3.75, -0.75) -- (4.5, -1.5);
     \draw[-{>[scale=2.0]}, dashed] (6.75, -0.75) -- (7.5, -1.5);
@@ -294,10 +294,10 @@ Thus, for any given configuration $(q, tp)$ of the machine, there are multiple w
     \node at (5.6125, -1.875) {$b$};
     \node at (6.375, -1.875) {$b$};
     \node at (7.125, -1.875) {$b$};
-    \node at (7.875, -1.875) {\blank};
+    \node at (7.875, -1.875) {$\blank$};
     \node at (4.875, -1.875) {$q_1^c$};
-    \node at (4.125, -1.875) {\blank};
-    \node at (3.375, -1.875) {\blank};
+    \node at (4.125, -1.875) {$\blank$};
+    \node at (3.375, -1.875) {$\blank$};
 
   \end{tikzpicture}
 \end{center}
@@ -339,11 +339,11 @@ Therefore, we instead use a \emph{moving-tape semantics} where the position of t
       \node at (9.125, 0.375) {$\cdots$};
       \node at (5.6125, 0.375) {$b$};
       \node at (6.375, 0.375) {$b$};
-      \node at (7.125, 0.375) {\blank};
-      \node at (7.875, 0.375) {\blank};
+      \node at (7.125, 0.375) {$\blank$};
+      \node at (7.875, 0.375) {$\blank$};
       \node at (4.875, 0.375) {$q_0^a$};
       \node at (4.125, 0.375) {$c$};
-      \node at (3.375, 0.375) {\blank};
+      \node at (3.375, 0.375) {$\blank$};
 
       \path[<->] (0, 1.5) edge node[fill=white, anchor=center, pos= 0.5] {\small $\hat{z}$} (4.5, 1.5);
       \node[color=white] at (4.75, 1.5) {l};
@@ -373,10 +373,10 @@ Therefore, we instead use a \emph{moving-tape semantics} where the position of t
       \node at (5.6125, -0.375) {$b$};
       \node at (6.375, -0.375) {$b$};
       \node at (7.125, -0.375) {$b$};
-      \node at (7.875, -0.375) {\blank};
+      \node at (7.875, -0.375) {$\blank$};
       \node at (4.875, -0.375) {$q_1^c$};
-      \node at (4.125, -0.375) {\blank};
-      \node at (3.375, -0.375) {\blank};
+      \node at (4.125, -0.375) {$\blank$};
+      \node at (3.375, -0.375) {$\blank$};
     \end{tikzpicture}
   \end{center}
   Note that the size of the substrings left and right of the center symbol is the same number $\hat{z}$ depending on $t$ and $k$, expressing that the state symbol is fixed at the center.
@@ -496,11 +496,11 @@ Seeing this generalisation, one might now realise a problem regarding the tape s
       \node at (9.125, 0.375) {$\cdots$};
       \node at (5.6125, 0.375) {$b$};
       \node at (6.375, 0.375) {$b$};
-      \node at (7.125, 0.375) {\blank};
-      \node at (7.875, 0.375) {\blank};
+      \node at (7.125, 0.375) {$\blank$};
+      \node at (7.875, 0.375) {$\blank$};
       \node at (4.875, 0.375) {$q_0^a$};
       \node at (4.125, 0.375) {$c$};
-      \node at (3.375, 0.375) {\blank};
+      \node at (3.375, 0.375) {$\blank$};
 
       \draw (-0.75, -0.75) -- (10.5, -0.75);
       \draw (-0.75, -0.75) -- (-0.75, 0);
@@ -525,10 +525,10 @@ Seeing this generalisation, one might now realise a problem regarding the tape s
       \node at (5.6125, -0.375) {$b$};
       \node at (6.375, -0.375) {$b$};
       \node at (7.125, -0.375) {$\blank$};
-      \node at (7.875, -0.375) {\blank};
+      \node at (7.875, -0.375) {$\blank$};
       \node at (4.875, -0.375) {$q_1^c$};
-      \node at (4.125, -0.375) {\blank};
-      \node at (3.375, -0.375) {\blank};
+      \node at (4.125, -0.375) {$\blank$};
+      \node at (3.375, -0.375) {$\blank$};
     \end{tikzpicture}
   \end{center}
   This change of configuration is inconsistent: the left half of the tape is shifted to the right, while the right half of the tape is left unchanged.
@@ -578,11 +578,11 @@ Notationally, we write $\polpos{\sigma}, \polneg{\sigma}, \polneut{\sigma}$ for 
       \node at (9.125, 0.375) {$\cdots$};
       \node at (5.6125, 0.375) {$b$};
       \node at (6.375, 0.375) {$b$};
-      \node at (7.125, 0.375) {\blank};
-      \node at (7.875, 0.375) {\blank};
+      \node at (7.125, 0.375) {$\blank$};
+      \node at (7.875, 0.375) {$\blank$};
       \node at (4.875, 0.375) {$q_0^a$};
       \node at (4.125, 0.375) {$c$};
-      \node at (3.375, 0.375) {\blank};
+      \node at (3.375, 0.375) {$\blank$};
 
       \draw (-0.75, -0.75) -- (10.5, -0.75);
       \draw (-0.75, -0.75) -- (-0.75, 0);
@@ -685,15 +685,15 @@ This nondeterminism of the input can be encoded by prepending a new line to the 
 
     \node at (2.75, -0.25) {$\cdots$};
     \node at (0.25, -0.25) {\#};
-    \node at (0.75, -0.25) {\blank};
-    \node at (4.75, -0.25) {\blank};
+    \node at (0.75, -0.25) {$\polneut{\blank}$};
+    \node at (4.75, -0.25) {$\polneut{\blank}$};
     \node at (5.25, -0.25) {$q^{\blank}$};
-    \node at (6, -0.25) {\textsf{in}};
-    \node at (6.75, -0.25) {$\sigma_1$};
-    \node at (7.25, -0.25) {$\sigma_2$};
-    \node at (7.75, -0.25) {\blank};
+    \node at (6, -0.25) {$\overline{\textsf{in}}$};
+    \node at (6.75, -0.25) {$\polneut{\sigma_1}$};
+    \node at (7.25, -0.25) {$\polneut{\sigma_2}$};
+    \node at (7.75, -0.25) {$\polneut{\blank}$};
     \node at (8.75, -0.25) {$\cdots$};
-    \node at (9.75, -0.25) {\blank};
+    \node at (9.75, -0.25) {$\polneut{\blank}$};
     \node at (10.25, -0.25) {\#};
 
     \path[<->] (5.5, 0.75) edge node[fill=white, anchor=center, pos= 0.5] {\small $k$} (8, 0.75);
@@ -724,11 +724,11 @@ If one wildcard is replaced by a blank, all the other wildcards to the right of 
   \caption{The chain of reductions from \gennp{} to \SAT{}.}\label{fig:redoverview}
 \end{figure}
 
-In the presentation by Sipser~\cite{Sipser:TheoryofComputation}, the tableau is directly encoded as a CNF. Doing this formally seems to be hard as one needs to handle the invariants of simulating the Turing machine, the representation of symbols of an arbitrary finite alphabet, and the encoding as a CNF all at once. 
+In the presentation by Sipser~\cite{Sipser:TheoryofComputation}, the tableau is directly encoded as a CNF\@. Doing this formally seems to be hard as one needs to handle the invariants of simulating the Turing machine, the representation of symbols of an arbitrary finite alphabet, and the encoding as a CNF all at once. 
 Instead, we factorise the proof into smaller parts by introducing three intermediate problems that deal with these concerns one-by-one. 
 Figure~\ref{fig:redoverview} gives an overview over the reductions.
 The reduction of \gennp{} to Parallel Rewriting (\PR{}), a string-based problem which will be introduced in Section~\ref{sec:pr}, handles the main part of the Turing machine simulation. 
 It creates an explicit representation of the Turing machine by enumerating all rewrite windows. After that, we do not have to reason about Turing machines anymore. 
 Parallel Rewriting can be seen as a model between Turing machines and circuits.
-The remaining three reductions subsequently deal with the encoding of the alphabet, the encoding as a Boolean formula and the conversion to a CNF.
+The remaining three reductions subsequently deal with the encoding of the alphabet, the encoding as a Boolean formula and the conversion to a CNF\@.
 

@@ -34,11 +34,11 @@
 </div>
 
 <div class="doc">
-<a name="lab300"></a><h1 class="section">Value-Containing</h1>
+<a name="lab301"></a><h1 class="section">Value-Containing</h1>
 
 <div class="paragraph"> </div>
 
-<a name="lab301"></a><h2 class="section">Right tapes</h2>
+<a name="lab302"></a><h2 class="section">Right tapes</h2>
 
 <div class="paragraph"> </div>
 
@@ -290,6 +290,10 @@ A tape <span class="inlinecode"><span class="id" title="var">t</span></span> con
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="Undecidability.TM.Code.Code.html#Encode_map"><span class="id" title="definition">Encode_map</span></a> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <a class="idref" href="Undecidability.TM.Code.CodeTM.html#x"><span class="id" title="variable">x</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> <a class="idref" href="Undecidability.TM.Code.Code.html#Encode_map"><span class="id" title="definition">Encode_map</span></a> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <a class="idref" href="Undecidability.TM.Code.CodeTM.html#y"><span class="id" title="variable">y</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="Undecidability.TM.Code.CodeTM.html#t"><span class="id" title="variable">t</span></a> <a class="idref" href="Undecidability.TM.Code.CodeTM.html#31ba2bf219d7c2b4da6ac934074517b9"><span class="id" title="notation">≃(</span></a><a class="idref" href="Undecidability.TM.Code.CodeTM.html#Fix_Sig.Encodes_Ext.I2"><span class="id" title="variable">I2</span></a><a class="idref" href="Undecidability.TM.Code.CodeTM.html#31ba2bf219d7c2b4da6ac934074517b9"><span class="id" title="notation">)</span></a> <a class="idref" href="Undecidability.TM.Code.CodeTM.html#y"><span class="id" title="variable">y</span></a>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Proof</span>. <span class="id" title="var">cbn</span>. <span class="id" title="tactic">intros</span> (<span class="id" title="var">r1</span>&amp;-&gt;). <span class="id" title="tactic">repeat</span> <span class="id" title="tactic">econstructor</span>. <span class="id" title="var">cbn</span>. <span class="id" title="tactic">do</span> 2 <span class="id" title="tactic">f_equal</span>. <span class="id" title="var">now</span> <span class="id" title="tactic">rewrite</span> <span class="id" title="var">H</span>. <span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Implicit</span> <span class="id" title="keyword">Type</span> <span class="id" title="var">x</span> : <a class="idref" href="Undecidability.TM.Code.CodeTM.html#Fix_Sig.Encodes_Ext.X"><span class="id" title="variable">X</span></a>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Implicit</span> <span class="id" title="keyword">Type</span> <span class="id" title="var">y</span> : <a class="idref" href="Undecidability.TM.Code.CodeTM.html#Fix_Sig.Encodes_Ext.Y"><span class="id" title="variable">Y</span></a>.<br/>
 
 <br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Lemma</span> <a name="tape_contains_size_ext"><span class="id" title="lemma">tape_contains_size_ext</span></a> (<span class="id" title="var">t</span> : <a class="idref" href="Undecidability.TM.TM.html#tape"><span class="id" title="inductive">tape</span></a> (<a class="idref" href="Undecidability.TM.Code.CodeTM.html#Fix_Sig.sig"><span class="id" title="variable">sig</span></a><a class="idref" href="Undecidability.TM.Code.CodeTM.html#8329d468d4b8e8e7b97689fb88f3b995"><span class="id" title="notation">^+</span></a>)) <span class="id" title="var">x</span> <span class="id" title="var">y</span> <span class="id" title="var">s1</span> <span class="id" title="var">s2</span> :<br/>

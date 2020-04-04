@@ -72,7 +72,7 @@ Based on explicit assignments, we now present ways to encode predicates using fo
 \newcommand{\encodesPred}{\textsf{encodesPredAt}}
 \begin{definition}[Encoding of Predicates][encodesPredicateAt]
   \mnote[encodesPredicateAt]{\encodesPred}
-  A formula $f$ encodes a predicate $p$ on a range of variables $I = [\textsf{start}.. + \textsf{len})$ if, for every assignment $a$, $a \models f$ is equivalent to satisfaction of $p$ under the partial assignment given by $I$:
+  A formula $f$ encodes a predicate $p : \listsof{\bool} \rightarrow \Prop$ on a range of variables $I = [\textsf{start}.. + \textsf{len})$ if, for every assignment $a$, $a \models f$ is equivalent to satisfaction of $p$ under the partial assignment given by $I$:
   \[\encodesPred~\textsf{start}~l~f~p \defeq \forall a, a \models f \leftrightarrow p~(a[\textsf{start}.. + l]) \]
 \end{definition}
 
@@ -291,7 +291,7 @@ Therefore, in the end the whole formula is
                  &(\lambda e. \begin{aligned}[t]
                   &e[0.. + m) = x_0 \\
                    \land &  (\forall 0 \le i < t, ((e[i \cdot m..+m)) \strent{R} (e[(\natS{i}) \cdot m..+m))) \\
-                  \land & e \models \Rfinal)
+                   \land & e[t \cdot m .. + m) \models \Rfinal)
                 \end{aligned}
   \end{align*}
 \end{lemma}
