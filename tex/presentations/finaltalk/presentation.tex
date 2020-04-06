@@ -28,6 +28,8 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 \usepackage{stmaryrd}
 \usepackage{pgfplots}
 \usepackage{ifthen}
+\usepackage{latexsym}
+\usepackage{turnstile}
 
 
 \pgfplotsset{compat=1.16}
@@ -186,6 +188,9 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 \newcommand{\fsat}{\textbf{FSAT}}
 \newcommand{\NP}{\textsf{NP}}
 
+\newcommand{\redP}{\ensuremath{\preceq_p}}
+\newcommand{\Clique}{\normalfont\textbf{Clique}}
+
 \newcolumntype{C}{>{$}c<{$}}
 \newcommand{\rewwin}[2]{
   \begin{tabular}{C|C|C}
@@ -313,10 +318,69 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
   \end{itemize}
 \end{frame}
 
+\newcommand{\Term}{\textsf{term}}
 \begin{frame}{The call-by-value $\lambda$-calculus L}
-  \TODO{superficial stuff as a quick refresher which is needed to understand why it would be hard to directly encode L in SAT}
-  \TODO{basic definitions of complexity theory: superficial, basically the same as for TMs}
+\begin{align*}
+    s, t : \Term := n \bnfmid s~t \bnfmid \lambda s
+  \end{align*}
+
+  \begin{align*}
+    \infer{(\lambda s)(\lambda t) \succ s^0_{\lambda t}}{}
+    && 
+    \infer{s~t \succ s'~t}{s \succ s'}
+    && 
+    \infer{s~t \succ s~t'}{t \succ t'}
+  \end{align*}
+  %\begin{alignat*}{2}
+    %&k^k_u := u \qquad& n^k_u := n \qquad \mathit{if}~n\neq k \\
+    %& {(s~t)}^k_u := (s^k_u)~(t^k_u) 
+    %\qquad & {(\lambda s)}^k_u := \lambda(s^{\natS k}_u)
+  %\end{alignat*}
+  \begin{itemize}
+    \item inductive datatypes using Scott encoding \& recursion operator
+    \item time measure: reduction steps
+    \item space measure: maximum size of terms
+    \item size explosion: \textbf{``time bounds space'' does not hold}
+  \end{itemize}
+  %\TODO{superficial stuff as a quick refresher which is needed to understand why it would be hard to directly encode L in SAT}
+  %\TODO{basic definitions of complexity theory: superficial, basically the same as for TMs}
 \end{frame}
+
+\begin{frame}{L for Complexity Theory\footnote{Definitions by Fabian}}
+  Problem $Q : X \rightarrow \Prop$
+
+  \vspace{2ex}
+  $Q \in \NP{}$ iff:
+  \begin{itemize}
+    \item there is a verifier $V : X \rightarrow \Term \rightarrow \Prop$
+    \item $V$ is polynomial-time computable (in $\textsf{size}(\overline x), \textsf{size}(\overline{cert})$)
+    \item $V$ verifies $Q$ 
+      \begin{itemize}
+        \item $V~x~y \rightarrow Q~x$
+        \item $Q~x \rightarrow \exists y, V~x~y$ and $y$ has polynomial size 
+    %\item $\exists (p : \nat \rightarrow \nat), \forall x~\mathit{cert}, V~x~\mathit{cert} \rightarrow \textsf{size}(\overline {\mathit{cert}}) \le p(\textsf{size}(\overline x))$
+    %\item $V$ only accepts certificates of polynomial size
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Basic Definitions: Polynomial-time Reductions}
+  \[P : X \rightarrow \Prop \qquad Q : Y \rightarrow \Prop\]
+
+  \begin{align*}
+    P \redP{} Q := \exists f : X \rightarrow Y, \quad&(\forall x, P~x \leftrightarrow Q(f~x)) \\
+    \land& \text{ polynomial-time computable } f\\
+    \onslide<2->{\land & f \text{ increases the size polynomially}} 
+  \end{align*}
+  
+  \onslide<3->{
+    \begin{align*}
+      \textsf{NP-hard}~P := \forall Q, Q \in \NP{} \rightarrow Q \redP{} P 
+    \end{align*}
+  }
+\end{frame}
+
+
 
 \newcommand{\SAT}{\textbf{SAT}}
 \begin{frame}{The Cook-Levin Theorem}
@@ -346,28 +410,27 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 
 \begin{frame}{Generic Problem for Turing Machines}
   \begin{block}{\gennp{}}
+    \vspace{-3ex}
     \begin{align*}
       \gennp{}~&(M, \mathit{inp}, k', t) := M \text{ is a det.\ 1-tape TM} \\
       \land & \exists~\mathit{cert}, \length{cert} \le k' \\
             & \land M \text{ accepts on } \mathit{inp}\concat\mathit{cert} \text{ in } \le t \text{ steps}
     \end{align*}
   \end{block}
-
-  \sat{} formula has a fixed size, but: 
-  \begin{itemize} 
-    \item TM may have different space usage depending on input
-    \item TM may take a different number of steps until it halts
-  \end{itemize}
-\end{frame}
-
-\section{Tableau Construction}
-\begin{frame}{Turing Machines}
   \begin{itemize}
     \item formalisation by~\cite{asperti_ricciotti} and mechanisation from~\cite{ForsterEtAl:2019:VerifiedTMs}
     \item two-sided infinite tapes
     \item no explicit blanks
   \end{itemize}
-  \TODO{maybe mention time bounds space}
+\end{frame}
+
+\section{Tableau Construction}
+\begin{frame}{Bounded Size}
+  \sat{} formula has a fixed size, but: 
+  \begin{itemize} 
+    \item TM may have different space usage depending on input
+    \item TM may take a different number of steps until it halts
+  \end{itemize}
 \end{frame}
 
 \begin{frame}{Tableau of Configurations\footnote{based on\cite{Sipser:TheoryofComputation}, similar to \cite{Cook:1971:CTP:800157.805047}}}
@@ -853,6 +916,41 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
     \item in general: injective \emph{uniform} homomorphisms \\
       $\rightarrow$ scale length up by constant factor
   \end{itemize}
+
+  Example ($\length{\Sigma} = 2$):
+  \begin{center}
+    \begin{tikzpicture}[scale=0.7]
+      \draw (0, 0) -- (4, 0);
+      \draw (0, 1) -- (4, 1);
+      \draw (0, 0) -- (0, 1); 
+      \draw (4, 0) -- (4, 1);
+
+      \draw (1, 0) -- (1, 1);
+      \draw (2, 0) -- (2, 1);
+      \draw (3, 0) -- (3, 1);
+
+      \draw[dashed, thick, color=\colorTikzB] (0, -1) -- (0, 1) -- (3, 1) -- (3, -1) -- (0, -1);
+      \draw[dotted, thick, color=\colorTikzA] (1,-1) -- (1, 1) -- (4, 1) -- (4, -1) -- (1, -1);
+
+      \draw (-2, -2.5) -- (6, -2.5);
+      \draw (-2, -1.5) -- (6, -1.5);
+      \draw (-2, -2.5) -- (-2, -1.5); 
+      \draw (6, -2.5) -- (6, -1.5);
+
+      \draw[dashed] (1, -2.5) -- (1, -1.5);
+      \draw (2, -2.5) -- (2, -1.5);
+      \draw[dashed] (3, -2.5) -- (3, -1.5);
+      \draw (4, -2.5) -- (4, -1.5);
+      \draw[dashed] (5, -2.5) -- (5, -1.5);
+      \draw (0, -2.5) -- (0, -1.5);
+      \draw[dashed] (-1, -2.5) -- (-1, -1.5);
+
+      \draw[dashed, thick, color=\colorTikzB] (-2, -3.5) -- (-2, -1.5) -- (4, -1.5) -- (4, -3.5) -- (-2, -3.5);
+      \draw[dotted, thick, color=\colorTikzA] (0, -3.5) -- (0, -1.5) -- (6, -1.5) -- (6, -3.5) -- (0, -3.5);
+
+    \end{tikzpicture}
+  \end{center}
+
 \end{frame}
 
 \againframe<3>{chain}
@@ -863,32 +961,90 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 \newcommand{\encodesPred}{\textsf{encodesPredAt}}
 
 \begin{frame}{Encoding as a Boolean Formula}
+  \vspace{2ex}
+
+  \begin{center}
+    \begin{tikzpicture}
+      \draw (1.5, -0.75) -- (1.5, 3) -- (10, 3) -- (10, -0.75) -- (1.5, -0.75);
+      \draw (1.5, 2.25) -- (10, 2.25);
+      \draw (1.5, 0) -- (10, 0);
+      \draw (1.5, 1.5) -- (10, 1.5);
+
+      \draw (2.5, 1.5) -- (2.5, 3);
+      \draw (9, 1.5) -- (9, 3);
+      \draw (2.5, 0) -- (2.5, -0.75);
+      \draw (9, 0) -- (9, -0.75);
+      
+      \node at (2, 2.625) {\small$x_0$};
+      \node at (9.5, 2.625) {\small$x_{l-1}$};
+      \node at (2, 1.875) {\small$x_l$};
+      \node at (9.5, 1.875) {\small$x_{2l-1}$};
+      \node at (2, -0.375) {\small$x_{t\cdot l}$};
+      %\node at (9.75, 0.25) {\small$x_{(t+1) \cdot m -1}$};
+
+      \node at (5.75, -0.375) {$\cdots$};
+      \node at (5.75, 2.625) {$\cdots$};
+      \node at (5.75, 0.875) {$\vdots$};
+
+      \path[<->] (0.75, -0.75) edge node[fill=white, anchor=center, pos= 0.5] {\small $t+1$} (0.75, 3);
+      \path[<->] (1.5, -1.25) edge node[fill=white, anchor=center, pos=0.5] {\small $l$} (10, -1.25);
+    \end{tikzpicture}     
+  \end{center}
+
+  $\Phi \defeq \Phi_{\textsf{init}} \land \Phi_{\textsf{trans}} \land \Phi_{\textsf{final}}$
+  \begin{align*}
+    \Phi_{\textsf{trans}} \defeq \bigwedge_{\text{lines}} \bigwedge_{\text{positions}} \bigvee_{w \in R} \bigwedge_{\text{characters of } w} \textsf{encodeBit}
+  \end{align*}
+\end{frame}
+
+\begin{frame}{Formulas: Representation of Predicates}
+  \[f : \formula \defeq \btrue \bnfmid v \bnfmid f_1 \lor f_2 \bnfmid f_1 \land f_2 \bnfmid \lnot f \qquad (v : \nat) \]
+
   \begin{itemize}
-    \item $f : \formula \defeq \btrue \bnfmid v \bnfmid f_1 \lor f_2 \bnfmid f_1 \land f_2 \bnfmid \lnot f \qquad (v : \nat)$
     \item explicit assignments $e : \listsof{\bool}$ to variables $[s, s + \length{e})$
     \item encoding of predicates $p : \listsof{\bool} \rightarrow \Prop$: \[\encodesPred~\textsf{start}~l~f~p \defeq \forall a, a \models f \leftrightarrow p~(a[\textsf{start}, \textsf{start} + l])\]
     \item $\textsf{encodeBit}~\textsf{var}~\textsf{bit} \defeq \ITE{\textsf{bit}}{\textsf{var}}{\lnot \textsf{var}}$
       \[\encodesPred~v~1~(\textsf{encodeBit}~v~b) (\lambda e. e = [s]) \]
-    \item $\Phi \defeq \Phi_{\textsf{init}} \land \Phi_{\textsf{trans}} \land \Phi_{\textsf{final}}$
-      \begin{align*}
-        \Phi_{\textsf{trans}} \defeq \bigwedge_{\text{lines}} \bigwedge_{\text{positions}} \bigvee_{w \in R} \bigwedge_{\text{characters of } w} \textsf{encodeBit}
-      \end{align*}
   \end{itemize} 
 \end{frame}
 
 \againframe<4>{chain}
 
+\newcommand{\frepr}{\sdststile{}{}}
 \begin{frame}{The Tseytin Transformation}
-  Goal: translation into CNF ($\bigwedge_{C \in \textsf{clauses}} \bigvee_{l \in \textsf{literals}(C)} l$)
-  \TODO{todo}
-    %\item naive approach: exponential blowup
-    %\item Tseytin: introduce new variables for each subformula
-  %\end{itemize}
+  Goal: convert formula to CNF
+  \vspace{2ex}
+
+  \begin{overlayarea}{\textwidth}{0.5\textwidth}
+    \only<1-4>{
+      Naive approach: 
+      \begin{align*}
+        f = f_1 \lor f_2 \leadsto &\alt<1>{\phantom{(C_1}N_1\phantom{C_2)} \lor \phantom{(C_3}N_2\phantom{C_4)}}{(C_1 \land C_2)\lor (C_3 \land C_4)} \\
+        \onslide<3->{ \leftrightarrow & (C_1 \lor C_3) \land (C_1 \lor C_4) \land (C_2 \lor C_3) \land (C_2 \land C_4) }
+      \end{align*}
+      \onslide<4>{{\colorHOne exponential blowup!}}
+    }
+
+    \only<5->{ 
+      \emph{solution:} introduce new variables: $f \mapsto (v, N)$ s.t. 
+      \[f \frepr{} (v, N) \defeq \SAT{} f \leftrightarrow \SAT (v \land N) \]
+      \vspace{-2ex}
+      \onslide<6->{
+        \begin{gather*}
+          f_1 \frepr{} (v_1, N_1) \qquad f_2 \frepr{} (v_2, N_2) \\
+          \text{Goal: } f = f_1 \lor f_2 \frepr{} (v, N) \text{ for fresh } v \\
+          \only<7-> { 
+            N \defeq \underbrace{N_1}_{f_1 \leftrightarrow v_1} \concat{} \underbrace{N_2}_{f_2 \leftrightarrow v_2} \concat{} \alt<-7>{?\phantom{(\leftrightarrow (v_1 \lor v_2))}}{(v \leftrightarrow (v_1 \lor v_2))} \\ 
+            \only<8->{\Rightarrow f \leftrightarrow v}
+          }
+        \end{gather*}
+      }
+    }
+  \end{overlayarea}
 \end{frame}
 
 \section{Conclusion}
-\newcommand{\redP}{\ensuremath{\preceq_p}}
-\newcommand{\Clique}{\normalfont\textbf{Clique}}
+
 \begin{frame}{Contributions}
   \begin{block}{Main result}
     If \gennp{} is \NP{}-hard, then \SAT{} is \NP{}-complete. 
