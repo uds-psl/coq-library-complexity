@@ -829,7 +829,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
     \node at (0.75, 0.24) {$\underline{\blank}$};
     \node at (4.75, 0.25) {$\underline{\blank}$};
     \node at (5.25, 0.25) {$\underline{q^{\blank}}$};
-    \node at (6, 0.25) {\underline{\textsf{in}}};
+    \node at (6, 0.25) {\underline{\textsf{inp}}};
     \node at (6.75, 0.25) {$\underline{*}$};
     \node at (7.75, 0.25) {$\underline{*}$};
     \node at (8.25, 0.25) {$\underline{\blank}$};
@@ -861,7 +861,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
     \node at (0.75, -0.25) {\blank};
     \node at (4.75, -0.25) {\blank};
     \node at (5.25, -0.25) {$q^{\blank}$};
-    \node at (6, -0.25) {\textsf{in}};
+    \node at (6, -0.25) {\textsf{inp}};
     \node at (6.75, -0.25) {$\sigma_1$};
     \node at (7.25, -0.25) {$\sigma_2$};
     \node at (7.75, -0.25) {\blank};
@@ -995,10 +995,14 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
   \begin{align*}
     \Phi_{\textsf{trans}} \defeq \bigwedge_{\text{lines}} \bigwedge_{\text{positions}} \bigvee_{w \in R} \bigwedge_{\text{characters of } w} \textsf{encodeBit}
   \end{align*}
+
+  \centering {\color{gray} $x_i \rightsquigarrow x_{i+1}$: ``for all offsets, there exists a rewrite window''}
 \end{frame}
 
 \begin{frame}{Formulas: Representation of Predicates}
-  \[f : \formula \defeq \btrue \bnfmid v \bnfmid f_1 \lor f_2 \bnfmid f_1 \land f_2 \bnfmid \lnot f \qquad (v : \nat) \]
+  \vspace{-3ex}
+  \[f : \formula \defeq \btrue \bnfmid v \bnfmid f_1 \lor f_2 \bnfmid f_1 \land f_2 \bnfmid \lnot f \qquad (v : \bvar{} \defeq \nat) \]
+  \vspace{3ex}
 
   \begin{itemize}
     \item explicit assignments $e : \listsof{\bool}$ to variables $[s, s + \length{e})$
@@ -1011,11 +1015,12 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 \againframe<4>{chain}
 
 \newcommand{\frepr}{\sdststile{}{}}
-\begin{frame}{The Tseytin Transformation}
-  Goal: convert formula to CNF
+\begin{frame}[t]{The Tseytin Transformation}
+  Goal: convert formula to CNF \\
+  Example: $f = f_1 \lor f_2$
   \vspace{2ex}
 
-  \begin{overlayarea}{\textwidth}{0.5\textwidth}
+  \begin{overlayarea}{\textwidth}{0.4\textwidth}
     \only<1-4>{
       Naive approach: 
       \begin{align*}
@@ -1026,7 +1031,7 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
     }
 
     \only<5->{ 
-      \emph{solution:} introduce new variables: $f \mapsto (v, N)$ s.t. 
+      \emph{Solution:} introduce new variables: $f \mapsto (v, N)$ s.t. 
       \[f \frepr{} (v, N) \defeq \SAT{} f \leftrightarrow \SAT (v \land N) \]
       \vspace{-2ex}
       \onslide<6->{
@@ -1034,13 +1039,16 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
           f_1 \frepr{} (v_1, N_1) \qquad f_2 \frepr{} (v_2, N_2) \\
           \text{Goal: } f = f_1 \lor f_2 \frepr{} (v, N) \text{ for fresh } v \\
           \only<7-> { 
-            N \defeq \underbrace{N_1}_{f_1 \leftrightarrow v_1} \concat{} \underbrace{N_2}_{f_2 \leftrightarrow v_2} \concat{} \alt<-7>{?\phantom{(\leftrightarrow (v_1 \lor v_2))}}{(v \leftrightarrow (v_1 \lor v_2))} \\ 
+            N \defeq \underbrace{N_1}_{f_1 \leftrightarrow v_1} \land \underbrace{N_2}_{f_2 \leftrightarrow v_2} \land \alt<-7>{?\phantom{(\leftrightarrow (v_1 \lor v_2))}}{(v \leftrightarrow (v_1 \lor v_2))} \\ 
             \only<8->{\Rightarrow f \leftrightarrow v}
           }
         \end{gather*}
       }
     }
   \end{overlayarea}
+
+  \vspace{5ex}
+  \[\scalebox{0.9}{$N : \textsf{cnf} \qquad C : \textsf{clause} \qquad v : \textsf{var} \qquad f: \formula{}$} \]
 \end{frame}
 
 \section{Conclusion}
@@ -1076,29 +1084,636 @@ hyperref={pdfencoding=auto,psdextra}]{beamer}
 \miniframesoff
 \section{}
 
+\newcommand{\BPR}{\textbf{BinaryPR}}
 \begin{frame}{LOC}
+  \begin{center}
+  \begin{tabular}{cccc}
+    \multicolumn{2}{c}{Component} & Spec & Proof \\
+    \midrule
+    \multicolumn{2}{c}{preliminaries} & 281 & 634 \\
+    \multicolumn{2}{c}{flat finite types} & 83 & 223 \\
+    \multicolumn{2}{c}{problem definitions + \NP{} proofs} & 1093 & 1860\\ 
+    \midrule
+    \multirow{2}{*}{\gennp{} to \PR{}} & correctness & 1843 & 2481\\
+     & time analysis & 838 & 1706 \\
+    \multicolumn{2}{c}{\textbf{3-PR} to \PR{}} & 37 & 174 \\
+    \multicolumn{2}{c}{\PR{} to \BPR{}} & 222 & 719 \\ 
+    \multicolumn{2}{c}{\BPR{} to \fsat{}} & 312& 1078\\ 
+    \multicolumn{2}{c}{\fsat{} to \SAT{}} & 213 & 605 \\ 
+    \midrule
+    \multicolumn{2}{c}{$k$-\SAT{} to \Clique{}} & 386 & 773 \\
+    \midrule
+      \multicolumn{2}{c}{total} & 5230 & 10038 \\
+      \multicolumn{2}{c}{without extraction} & 3594 & 6857 \\
+      \multicolumn{2}{c}{without computability} & 2339 & 4524
+
+%for rt: 1636 / 3181 
+%only correctness: 2339 / 4524
+
+%preliminaries: preliminaries + polynomial bounds
+
+  \end{tabular}
+  \end{center}
+
 \end{frame}
 
-\begin{frame}{Comparison with~\cite{gamboa:cook}}
-
+\begin{frame}[allowframebreaks]{Comparison with~\cite{gamboa:cook}}
+  \begin{itemize}
+    \item existing formalisation in ACL2 
+    \item differences in setting: 
+      \begin{itemize}
+        \item single-sided infinite tapes 
+        \item explicit nondeterminism instead of verifiers
+        \item reduction only to \fsat{}
+      \end{itemize}
+    \item \emph{direct} reduction, no factorisation $\rightarrow$ only seems to be feasible because of restricted setting
+    \item no running time analysis with respect to reasonable model
+  \end{itemize}
 \end{frame}
+
+\begin{frame}[t]{Tape Shifts}
+  Add one symbol to the right half of the tape:
+  \begin{overlayarea}{\textwidth}{0.15\textwidth}
+    \vspace{-0.5ex}
+    \begin{minipage}{0.58\textwidth}
+      \begin{center}
+        \begin{tikzpicture}
+          \draw (5.25, 0.75) -- (9.75, 0.75);
+          \draw[thick] (5.25, 0) -- (9.75, 0);
+          \draw (5.25, 0) -- (5.25, 0.75);
+          \draw (9.75, 0) -- (9.75, 0.75);
+
+          \draw (5.25, 0) -- (5.25, 0.75);
+          \draw (6, 0) -- (6, 0.75);
+          \draw (6.75, 0) -- (6.75, 0.75);
+          \draw (7.5, 0) -- (7.5, 0.75);
+          \draw (8.25, 0) -- (8.25, 0.75);
+
+          \node at (9.125, 0.375) {$\cdots$};
+          \node at (7.125, 0.375) {\blank};
+          \node at (7.875, 0.375) {\blank};
+
+          \node at (5.6125, 0.375) {$\sigma_1$};
+          \node at (6.375, 0.375) {$\sigma_2$};
+
+          \draw (5.25, -0.75) -- (9.75, -0.75);
+          \draw (5.25, -0.75) -- (5.25, 0);
+          \draw (9.75, -0.75) -- (9.75, 0);
+
+          \draw (5.25, 0) -- (5.25, -0.75);
+          \draw (6, 0) -- (6, -0.75);
+          \draw (6.75, 0) -- (6.75, -0.75);
+          \draw (7.5, 0) -- (7.5, -0.75);
+          \draw (8.25, 0) -- (8.25, -0.75);
+
+          \node at (9.125, -0.375) {$\cdots$};
+          \node at (7.875, -0.375) {\blank};
+          \node at (5.6125, -0.375) {$\sigma_3$};
+          \node at (6.375, -0.375) {$\sigma_1$};
+          \node at (7.125, -0.375) {$\sigma_2$};
+        \end{tikzpicture}
+        \only<2->{
+          \begin{tikzpicture}[overlay, remember picture]
+            \node at (4.5, 0.8) {$\sigma_i \in \Sigma_{\text{TM}}$ };
+          \end{tikzpicture}
+        }
+      \end{center}
+    \end{minipage}
+    \begin{minipage}{0.38\textwidth}
+      \trewwin{\sigma_1}{\sigma_2}{\blank}{\sigma_3}{\sigma_1}{\sigma_2}
+    \end{minipage}
+  \end{overlayarea}
+
+  \vspace{2ex}
+
+  \onslide<3->
+  Leave the tape unchanged:
+
+  \begin{overlayarea}{\textwidth}{0.15\textwidth}
+    \vspace{-0.5ex}
+    \begin{minipage}{0.58\textwidth}
+      \begin{center}
+        \begin{tikzpicture}
+          \draw (5.25, 0.75) -- (9.75, 0.75);
+          \draw[thick] (5.25, 0) -- (9.75, 0);
+          \draw (5.25, 0) -- (5.25, 0.75);
+          \draw (9.75, 0) -- (9.75, 0.75);
+
+          \draw (5.25, 0) -- (5.25, 0.75);
+          \draw (6, 0) -- (6, 0.75);
+          \draw (6.75, 0) -- (6.75, 0.75);
+          \draw (7.5, 0) -- (7.5, 0.75);
+          \draw (8.25, 0) -- (8.25, 0.75);
+
+          \node at (9.125, 0.375) {$\cdots$};
+          \node at (7.125, 0.375) {\blank};
+          \node at (7.875, 0.375) {\blank};
+          \node at (5.6125, 0.375) {$\sigma_1$};
+          \node at (6.375, 0.375) {$\sigma_2$};
+
+
+          \draw (5.25, -0.75) -- (9.75, -0.75);
+          \draw (5.25, -0.75) -- (5.25, 0);
+          \draw (9.75, -0.75) -- (9.75, 0);
+
+          \draw (5.25, 0) -- (5.25, -0.75);
+          \draw (6, 0) -- (6, -0.75);
+          \draw (6.75, 0) -- (6.75, -0.75);
+          \draw (7.5, 0) -- (7.5, -0.75);
+          \draw (8.25, 0) -- (8.25, -0.75);
+
+          \node at (9.125, -0.375) {$\cdots$};
+          \node at (7.125, -0.375) {\blank};
+          \node at (7.875, -0.375) {\blank};
+          \node at (5.6125, -0.375) {$\sigma_1$};
+          \node at (6.375, -0.375) {$\sigma_2$};
+        \end{tikzpicture}
+      \end{center}
+    \end{minipage}
+    \begin{minipage}{0.38\textwidth}
+      \only<5>{\colorHOne}
+      \trewwin{\sigma_1}{\sigma_2}{\blank}{\sigma_1}{\sigma_2}{\blank}
+    \end{minipage}
+  \end{overlayarea}
+
+  \vspace{2ex}
+  \onslide<4->
+  \begin{center}
+
+    \begin{tikzpicture}
+      \draw (0, 0.75) -- (9.75, 0.75);
+      \draw[thick] (0, 0) -- (9.75, 0);
+      \draw (0, 0) -- (0, 0.75);
+      \draw (9.75, 0) -- (9.75, 0.75);
+
+      \draw (4.5, 0) -- (4.5, 0.75);
+      \draw (5.25, 0) -- (5.25, 0.75);
+      \draw (3.75, 0) -- (3.75, 0.75);
+      \draw (3, 0) -- (3, 0.75);
+      \draw (6, 0) -- (6, 0.75);
+      \draw (6.75, 0) -- (6.75, 0.75);
+      \draw (7.5, 0) -- (7.5, 0.75);
+      \draw (8.25, 0) -- (8.25, 0.75);
+
+      %\node at (5.6125, 1) {\small$1$};
+      %\node at (6.375, 1) {\small$2$};
+      %\node at (7.125, 1) {\small$3$};
+      %\node at (4.875, 1) {\small$0$};
+      %\node at (4.125, 1) {\small$-1$};
+      %\node at (3.375, 1) {\small$-2$};
+
+      \node at (1.5, 0.375) {$\cdots$};
+      \node at (9.125, 0.375) {$\cdots$};
+      \node at (5.6125, 0.375) {\only<5>{\colorHOne}\only<6->{\colorHTwo}$b$};
+      \node at (6.375, 0.375) {\only<5>{\colorHOne}\only<6->{\colorHTwo}$b$};
+      \node at (7.125, 0.375) {\only<5>{\colorHOne}\blank};
+      \node at (7.875, 0.375) {\blank};
+      \node at (4.875, 0.375) {\only<6->{\colorHTwo}$q_1^a$};
+      \node at (4.125, 0.375) {$c$};
+      \node at (3.375, 0.375) {\blank};
+
+      %\path[<->] (0, 1.5) edge node[fill=white, anchor=center, pos= 0.5] {\small $z$} (4.5, 1.5);
+      %\node[color=white] at (4.75, 1.5) {l};
+      %\path[<->] (5.25, 1.5) edge node[fill=white, anchor=center, pos =0.5] {\small $z$} (9.75, 1.5);
+
+      \draw (0, -0.75) -- (9.75, -0.75);
+      \draw (0, -0.75) -- (0, 0);
+      \draw (9.75, -0.75) -- (9.75, 0);
+
+      \draw (4.5, 0) -- (4.5, -0.75);
+      \draw (5.25, 0) -- (5.25, -0.75);
+      \draw (3.75, 0) -- (3.75, -0.75);
+      \draw (3, 0) -- (3, -0.75);
+      \draw (6, 0) -- (6, -0.75);
+      \draw (6.75, 0) -- (6.75, -0.75);
+      \draw (7.5, 0) -- (7.5, -0.75);
+      \draw (8.25, 0) -- (8.25, -0.75);
+
+      \only<6->{ 
+        \draw[color=\colorTikzC, thick] (4.5, 0) -- (6.75, 0);
+        \draw[color=\colorTikzC] (5.25, -0.75) -- (5.25, 0.75);
+        \draw[color=\colorTikzC] (6, -0.75) -- (6, 0.75);
+      }
+      \only<5> {
+        \draw[color=\colorTikzA, thick] (5.25, 0) -- (7.5, 0);
+        \draw[color=\colorTikzA] (6, -0.75) -- (6, 0.75);
+        \draw[color=\colorTikzA] (6.75, -0.75) -- (6.75, 0.75);
+      }
+
+      \node at (1.5, -0.375) {$\cdots$};
+      \node at (9.125, -0.375) {$\cdots$};
+      \node at (5.6125, -0.375) {\only<5>{\colorHOne{}}\only<6->{\colorHTwo}$b$};
+      \node at (6.375, -0.375) {\only<4>{b}\only<5->{\only<5>{\colorHOne{}}\only<6->{\colorHTwo}$b$}};
+      \node at (7.125, -0.375) {\only<4>{b}\only<5->{\only<5>{\colorHOne{}}\blank}};
+      \node at (7.875, -0.375) {\blank};
+      \node at (4.875, -0.375) {\only<6->{\colorHTwo}$q_2^c$};
+      \node at (4.125, -0.375) {\blank};
+      \node at (3.375, -0.375) {\blank};
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Polarities $\{\overset{\leftarrow}{\cdot}, \overset{-}{\cdot}, \overset{\rightarrow}{\cdot}\}$}
+  Add one symbol to the right half of the tape:
+  \begin{overlayarea}{\textwidth}{0.15\textwidth}
+    \vspace{-0.5ex}
+    \begin{minipage}{0.58\textwidth}
+      \begin{center}
+        \begin{tikzpicture}
+          \draw (5.25, 0.75) -- (9.75, 0.75);
+          \draw[thick] (5.25, 0) -- (9.75, 0);
+          \draw (5.25, 0) -- (5.25, 0.75);
+          \draw (9.75, 0) -- (9.75, 0.75);
+
+          \draw (5.25, 0) -- (5.25, 0.75);
+          \draw (6, 0) -- (6, 0.75);
+          \draw (6.75, 0) -- (6.75, 0.75);
+          \draw (7.5, 0) -- (7.5, 0.75);
+          \draw (8.25, 0) -- (8.25, 0.75);
+
+          \node at (9.125, 0.375) {$\cdots$};
+          \node at (7.125, 0.375) {\blank};
+          \node at (7.875, 0.375) {\blank};
+
+          \node at (5.6125, 0.375) {$\sigma_1$};
+          \node at (6.375, 0.375) {$\sigma_2$};
+
+
+          \draw (5.25, -0.75) -- (9.75, -0.75);
+          \draw (5.25, -0.75) -- (5.25, 0);
+          \draw (9.75, -0.75) -- (9.75, 0);
+
+          \draw (5.25, 0) -- (5.25, -0.75);
+          \draw (6, 0) -- (6, -0.75);
+          \draw (6.75, 0) -- (6.75, -0.75);
+          \draw (7.5, 0) -- (7.5, -0.75);
+          \draw (8.25, 0) -- (8.25, -0.75);
+
+          \node at (9.125, -0.375) {$\cdots$};
+          \node at (7.875, -0.375) {\blank};
+          \node at (5.6125, -0.375) {$\polpos{\sigma_3}$};
+          \node at (6.375, -0.375) {$\polpos{\sigma_1}$};
+          \node at (7.125, -0.375) {$\polpos{\sigma_2}$};
+        \end{tikzpicture}
+      \end{center}
+    \end{minipage}
+    \begin{minipage}{0.38\textwidth}
+      \trewwin{\sigma_1}{\sigma_2}{\blank}{\polpos{\sigma_3}}{\polpos{\sigma_1}}{\polpos{\sigma_2}}
+    \end{minipage}
+  \end{overlayarea}
+
+  \vspace{2ex}
+
+  Leave the tape unchanged:
+
+  \begin{overlayarea}{\textwidth}{0.15\textwidth}
+    \vspace{-0.5ex}
+    \begin{minipage}{0.58\textwidth}
+      \begin{center}
+        \begin{tikzpicture}
+          \draw (5.25, 0.75) -- (9.75, 0.75);
+          \draw[thick] (5.25, 0) -- (9.75, 0);
+          \draw (5.25, 0) -- (5.25, 0.75);
+          \draw (9.75, 0) -- (9.75, 0.75);
+
+          \draw (5.25, 0) -- (5.25, 0.75);
+          \draw (6, 0) -- (6, 0.75);
+          \draw (6.75, 0) -- (6.75, 0.75);
+          \draw (7.5, 0) -- (7.5, 0.75);
+          \draw (8.25, 0) -- (8.25, 0.75);
+
+          \node at (9.125, 0.375) {$\cdots$};
+          \node at (7.125, 0.375) {\blank};
+          \node at (7.875, 0.375) {\blank};
+          \node at (5.6125, 0.375) {$\sigma_1$};
+          \node at (6.375, 0.375) {$\sigma_2$};
+
+
+          \draw (5.25, -0.75) -- (9.75, -0.75);
+          \draw (5.25, -0.75) -- (5.25, 0);
+          \draw (9.75, -0.75) -- (9.75, 0);
+
+          \draw (5.25, 0) -- (5.25, -0.75);
+          \draw (6, 0) -- (6, -0.75);
+          \draw (6.75, 0) -- (6.75, -0.75);
+          \draw (7.5, 0) -- (7.5, -0.75);
+          \draw (8.25, 0) -- (8.25, -0.75);
+
+          \node at (9.125, -0.375) {$\cdots$};
+          \node at (7.125, -0.375) {\blank};
+          \node at (7.875, -0.375) {\blank};
+          \node at (5.6125, -0.375) {$\polneut{\sigma_1}$};
+          \node at (6.375, -0.375) {$\polneut{\sigma_2}$};
+        \end{tikzpicture}
+      \end{center}
+    \end{minipage}
+    \begin{minipage}{0.38\textwidth}
+      \trewwin{\sigma_1}{\sigma_2}{\blank}{\polneut{\sigma_1}}{\polneut{\sigma_2}}{\blank}
+    \end{minipage}
+  \end{overlayarea}
+
+  \vspace{2ex}
+  \onslide<2->
+  \begin{center}
+
+    \begin{tikzpicture}
+      \draw (0, 0.75) -- (9.75, 0.75);
+      \draw[thick] (0, 0) -- (9.75, 0);
+      \draw (0, 0) -- (0, 0.75);
+      \draw (9.75, 0) -- (9.75, 0.75);
+
+      \draw (4.5, 0) -- (4.5, 0.75);
+      \draw (5.25, 0) -- (5.25, 0.75);
+      \draw (3.75, 0) -- (3.75, 0.75);
+      \draw (3, 0) -- (3, 0.75);
+      \draw (6, 0) -- (6, 0.75);
+      \draw (6.75, 0) -- (6.75, 0.75);
+      \draw (7.5, 0) -- (7.5, 0.75);
+      \draw (8.25, 0) -- (8.25, 0.75);
+
+      %\node at (5.6125, 1) {\small$1$};
+      %\node at (6.375, 1) {\small$2$};
+      %\node at (7.125, 1) {\small$3$};
+      %\node at (4.875, 1) {\small$0$};
+      %\node at (4.125, 1) {\small$-1$};
+      %\node at (3.375, 1) {\small$-2$};
+
+      \node at (1.5, 0.375) {$\cdots$};
+      \node at (9.125, 0.375) {$\cdots$};
+      \node[color=\colorTikzC] at (5.6125, 0.375) {$b$};
+      \node at (6.375, 0.375) {$b$};
+      \node at (7.125, 0.375) {\blank};
+      \node at (7.875, 0.375) {\blank};
+      \node[color=\colorTikzC] at (4.875, 0.375) {$q_1^a$};
+      \node[color=\colorTikzC] at (4.125, 0.375) {$c$};
+      \node at (3.375, 0.375) {\blank};
+
+      %\path[<->] (0, 1.5) edge node[fill=white, anchor=center, pos= 0.5] {\small $z$} (4.5, 1.5);
+      %\node[color=white] at (4.75, 1.5) {l};
+      %\path[<->] (5.25, 1.5) edge node[fill=white, anchor=center, pos =0.5] {\small $z$} (9.75, 1.5);
+      \draw (0, -0.75) -- (9.75, -0.75);
+      \draw (0, -0.75) -- (0, 0);
+      \draw (9.75, -0.75) -- (9.75, 0);
+
+      \draw (4.5, 0) -- (4.5, -0.75);
+      \draw (5.25, 0) -- (5.25, -0.75);
+      \draw (3.75, 0) -- (3.75, -0.75);
+      \draw (3, 0) -- (3, -0.75);
+      \draw (6, 0) -- (6, -0.75);
+      \draw (6.75, 0) -- (6.75, -0.75);
+      \draw (7.5, 0) -- (7.5, -0.75);
+      \draw (8.25, 0) -- (8.25, -0.75);
+
+      \draw[color=\colorTikzC, thick] (3.75, 0) -- (6, 0);
+      \draw[color=\colorTikzC] (4.5, -0.75) -- (4.5, 0.75);
+      \draw[color=\colorTikzC] (5.25, -0.75) -- (5.25, 0.75);
+
+      \node at (1.5, -0.375) {$\cdots$};
+      \node at (9.125, -0.375) {$\cdots$};
+      \node[color=\colorTikzC] at (5.6125, -0.375) {$\polpos{b}$};
+      \node at (6.375, -0.375) {$\polpos{b}$};
+      \node at (7.125, -0.375) {$\polpos{b}$};
+      \node at (7.875, -0.375) {\blank};
+      \node[color=\colorTikzC] at (4.875, -0.375) {$q_2^c$};
+      \node[color=\colorTikzC] at (4.125, -0.375) {\blank};
+      \node at (3.375, -0.375) {\blank};
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Transition Rules -- Example}
+  \onslide<2>{In Coq mechanisation:}
+  \begin{tikzpicture}[overlay, remember picture]
+    \node at (5, 1.17) {$m \in \Sigma_{\text{TM}} \cup \{\blank\}, \sigma \in \Sigma_{\text{TM}}$};
+  \end{tikzpicture}
+
+  $\delta(q, a) = (p, \Some{b}, L)$: 
+  \begin{overlayarea}{\textwidth}{0.7\textheight}
+    \only<1>{
+      \begin{center}
+        \trewwin{\blank}{q^{a}}{m_1}{\blank}{p^{\blank}}{\polpos{b}}
+        \trewwin{\sigma_1}{q^a}{m_1}{\polpos{m_2}}{p^{\sigma_1}}{\polpos{b}}\\
+        \trewwin{\blank}{\blank}{q^a}{\blank}{\blank}{p^{\blank}}
+        \trewwin{\blank}{\sigma_1}{q^a}{\blank}{\blank}{p^{\sigma_1}}
+        \trewwin{\sigma_1}{\sigma_2}{q^a}{\polpos{m_1}}{\polpos{\sigma_1}}{p^{\sigma_2}} \\
+        \trewwin{q^a}{\blank}{\blank}{p^{m_1}}{\polpos{b}}{\blank}
+        \trewwin{q^a}{\sigma_1}{m_1}{p^{m_2}}{\polpos{b}}{\polpos{\sigma_1}}
+      \end{center}
+    }
+    \only<2->{
+      \begin{center}
+        \trewwin{m_1}{q^a}{m_2}{\polpos{m_3}}{p^{m_1}}{\polpos{b}}
+        \trewwin{m_1}{m_2}{q^a}{\polpos{m_3}}{\polpos{m_1}}{p^{m_2}}
+        \trewwin{q^a}{m_1}{m_2}{p^{m_3}}{\polpos{b}}{\polpos{m_1}}
+      \end{center}
+
+      Contains garbage, i.e. 
+      \begin{center}
+        \trewwin{\blank}{q^a}{\blank}{\polpos{\sigma}}{p^{\blank}}{\polpos{b}}
+      \end{center}
+    }
+  \end{overlayarea}
+\end{frame}
+
+
+
+
 
 \begin{frame}{Representation Relations}
+  Representation of tape halves: 
+  \begin{center}
+    $u \sim_t^{n} $
+    \begin{tikzpicture}[scale=0.5, every node/.style={scale=0.9}, baseline=(base), inner sep = 0pt]
+      \node (base) at (0, 0.3) {};
+      \draw (0, 0) -- (0, 1) -- (10, 1) -- (10, 0) -- (0, 0);
+      \draw (3, 0) -- (3, 1);
+      \draw (4, 0) -- (4, 1);
+      \draw (5, 0) -- (5, 1);
+      \draw (7, 0) -- (7, 1);
+      \draw (8, 0) -- (8, 1);
+      \draw (9, 0) -- (9, 1);
+
+      \node at (1.5, 0.5) {$u$};
+      \node at (3.5, 0.5) {\blank};
+      \node at (4.5, 0.5) {\blank};
+      \node at (6, 0.5) {$\cdots$};
+      \node at (7.5, 0.5) {\blank};
+      \node at (8.5, 0.5) {\blank};
+      \node at (9.5, 0.5) {\#};
+
+    \end{tikzpicture}\\
+    \begin{tikzpicture}[remember picture, overlay]
+      \draw[decorate, decoration={brace, mirror}, xshift=-2cm, yshift=0.7cm] (0, -0.5) -- (3.5, -0.5) node[midway, yshift=-0.4cm] {$n$};
+    \end{tikzpicture}
+  \end{center}
+
+  \vspace{3ex}
+
+  Representation of configurations:
+
+  \begin{center}
+  $q; (ls, \sigma, rs) \sim_c $
+  \begin{tikzpicture}[scale=0.5, every node/.style={scale=0.9}, baseline=(base), inner sep = 0pt]
+    \node (base) at (0, 0.3) {};
+    \draw (0, 0) -- (7, 0);
+    \draw (0, 1) -- (7, 1);
+    \draw (0, 0) -- (0, 1);
+    \draw (7, 0) -- (7, 1);
+
+    \draw (3, 0) -- (3, 1);
+    \draw (4, 0) -- (4, 1);
+
+    \node at (1.5, 0.5) { $\rev~\mathit{left}$ };
+    \node at (5.5, 0.5) { $\mathit{right}$ };
+    \node at (3.5, 0.5) { $q^\sigma$ };
+  \end{tikzpicture}, where: 
+\end{center}
+  \begin{itemize}
+    \item $ls \sim_t^{z'} \mathit{left}$
+    \item $rs \sim_t^{z'} \mathit{right}$
+  \end{itemize}
+
 \end{frame}
 
-\begin{frame}{Simulation Proof}
+\begin{frame}{Deterministic Simulation}
+  \begin{center}
+    \begin{tikzpicture}
+      \node at (0, 0.5) {$q; (ls, \sigma, rs)$};
+      \node at (0, -0.5) {$q'; (ls', \sigma', rs')$};
+      \node[rotate=270] at (0, 0) {$\succ$};
+
+      \draw[scale=0.5] (4, 0.5) -- (11, 0.5);
+      \draw[scale=0.5] (4, 1.5) -- (11, 1.5);
+      \draw[scale=0.5] (4, 0.5) -- (4, 1.5);
+      \draw[scale=0.5] (11, 0.5) -- (11, 1.5);
+
+      \draw[scale=0.5] (7, 0.5) -- (7, 1.5);
+      \draw[scale=0.5] (8, 0.5) -- (8, 1.5);
+
+      \node[scale=0.8] at (2.75, 0.5) { $\rev~\mathit{left}$ };
+      \node[scale=0.8] at (4.75, 0.5) { $\mathit{right}$ };
+      \node[scale=0.8] at (3.75, 0.5) { $q^\sigma$ };
+
+      \node[rotate=270] at (3.75, 0) {$\rightsquigarrow$};
+
+      \draw[scale=0.5] (4, -0.5) -- (11, -0.5);
+      \draw[scale=0.5] (4, -1.5) -- (11, -1.5);
+      \draw[scale=0.5] (4, -0.5) -- (4, -1.5);
+      \draw[scale=0.5] (11, -0.5) -- (11, -1.5);
+
+      \draw[scale=0.5] (7, -0.5) -- (7, -1.5);
+      \draw[scale=0.5] (8, -0.5) -- (8, -1.5);
+
+      \node[scale=0.8] at (2.75, -0.5) { $\rev~\mathit{left'}$ };
+      \node[scale=0.8] at (4.75, -0.5) { $\mathit{right'}$ };
+      \node[scale=0.8] at (3.75, -0.5) { ${q'}^{\sigma'}$ };
+
+      \node at (1.5, 0.5) {$\sim_c$};
+      \node at (1.5, -0.5) {$\sim_c$};
+    \end{tikzpicture}
+  \end{center}
+  where $ls \sim_t^{z'} \mathit{left}, rs \sim_t^{z'} \mathit{right}$ and $ls' \sim_t^{z'} \mathit{left'}, rs' \sim_t^{z'} \mathit{right'}$
+
+
+  \onslide<2->{
+    \begin{center}
+      \begin{tikzpicture}
+        \draw (0, 0) -- (11, 0);
+        \draw (0, 1) -- (11, 1);
+        \draw (0, 0) -- (0, 1);
+        \draw (11, 0) -- (11, 1);
+
+        \draw (5, 0) -- (5, 1);
+        \draw (6, 0) -- (6, 1);
+
+        \onslide<3->{
+          \draw[dashed] (7, 0) -- (7, 1);
+          \draw[dashed] (4, 0) -- (4, 1);
+          \node at (4.5, 0.5) {$h_l$};
+          \node at (6.5, 0.5) {$h_r$};
+        }
+
+        \node at (2, 0.5) {$\mathit{left}$};
+        \node at (9, 0.5) {$\mathit{right}$};
+        \node at (5.5, 0.5) {$q^\sigma$};
+
+        \onslide<4-> {
+          \draw (4, -1) -- (7, -1);
+          \draw (5, -1) -- (5, 0);
+          \draw (6, -1) -- (6, 0);
+
+          \draw[dashed] (7, -1) -- (7, 0);
+          \draw[dashed] (4, -1) -- (4, 0);
+
+          \node at (4.5, -0.5) {$h_l'$};
+          \node at (6.5, -0.5) {$h_r'$};
+          \node at (5.5, -0.5) {${q'}^{\sigma'}$};
+        }
+
+        \onslide<5-> {
+          \draw (0, -1) -- (0, 0);
+          \draw (11, -1) -- (11, 0);
+          \draw (0, -1) -- (4, -1);
+          \draw (7, -1) -- (11, -1);
+
+          \node at (2, -0.5) {$\exists! \mathit{left}'$};
+          \node at (9, -0.5) {$\exists! \mathit{right}'$};
+        }
+
+    \end{tikzpicture}
+  \end{center}
+}
+%Somehow portray the idea that everything (flow of information) is propagated from the center of the string; the rewrite is determined uniquely by the head.
+
+%Then: rewrites for tape halves can be proven separately using only a subset of the rules
+
 \end{frame}
 
+
+\begin{frame}{Tape Transformations}
+  Add symbol: 
+  \[ rs \reprt{} h \land |rs| < z' \rightarrow \exists! h', (h \rightsquigarrow \polpos{a} :: h') \land a :: rs \reprt{+} \polpos{a} :: h' \]
+  \[ ls \reprt{} h \land |ls| < z' \rightarrow \exists! h', (\rev{h} \rightsquigarrow \rev{\polneg{a} :: h'}) \land a :: ls \reprt{-} \polneg{a} :: h'
+  \]
+  
+  Remove symbol: 
+  \[a :: b :: rs \reprt{} a :: b :: h \rightarrow \exists! h', (a :: b :: h \rightsquigarrow \polneg{b} :: h') \land b :: rs \reprt{-} \polneg{b} :: h' \]
+
+  Leave unchanged:
+  \[a :: rs \reprt{} a :: h \rightarrow \exists! h', (a :: h \rightsquigarrow \polneut{a} :: h) \land a :: rs \reprt{\circ} \polneut{a} :: h' \]
+
+\end{frame}
+
+\begin{frame}{Main Simulation Results}
+  \begin{block}{Completeness}
+    Let $(q, \mathit{tape})$ be a configuration with $\length{tape} \le k$. There exists $s$ with $(q, \mathit{tape}) \reprc{} s$.
+
+    If $(q, \mathit{tape}) \triangleright^{\le t} (q', \mathit{tape}')$, then there exists $s'$ with $s \rightsquigarrow^t s'$, $(q', \mathit{tape}') \reprc{} s'$ and $s' \models \Rfinal$. 
+  \end{block}
+
+  \begin{block}{Soundness}
+    Let $s$ be given such that $(q, \mathit{tape}) \reprc{} s$ and $\length{\mathit{tape}} \le k$ for some $q, \mathit{tape}$. 
+
+    If $s \rightsquigarrow^t s'$ and $s' \models \Rfinal$, then there exists $(q', \mathit{tape}')$ with $(q', \mathit{tape}') \reprc{} s'$ such that $(q, \mathit{tape}) \triangleright^{\le t} (q', \mathit{tape}')$ and $\length{\mathit{tape}'} \le z'$. 
+  \end{block}
+\end{frame}
+
+\newcommand{\Frepr}[3]{\sdststile{\ensuremath{#3}}{\ensuremath{#1, #2}}}
 \begin{frame}{Tseytin: Correctness Relation}
-\end{frame}
-
-\begin{frame}{Some Rewrite Rules}
+  \[ \textsf{tseytin}' : \underbrace{\textsf{var}}_{\text{next free var}} \rightarrow \formula{} \rightarrow \underbrace{\textsf{var}}_{\text{representing variable}} \times \textsf{cnf} \times \underbrace{\textsf{var}}_{\text{next free var}} \] 
+  
+  \[ f \Frepr{nf}{nf'}{b} (v, N), \text{ iff } \]
+  \begin{itemize} 
+    \item $N \subseteq ([0, b) \cup [nf, nf'))$,
+    \item $v \in [nf, nf')$,
+    \item for all $a \subseteq [0, b)$, there exists $a' \subseteq [nf, nf')$ such that $(a \cup a') \models N$,
+    \item and for all $a$ with $a \models N$, the equivalence $a \models v \leftrightarrow a \models f$ holds.
+  \end{itemize}
 \end{frame}
 
 \begin{frame}{possible other stuff}
   \begin{itemize}
     \item 2-PR vs 3-PR
-    \item polarities and motivation for them
     \item procedure for proving rt bounds
   \end{itemize}
 \end{frame}
