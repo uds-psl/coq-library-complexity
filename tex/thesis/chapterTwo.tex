@@ -24,8 +24,8 @@
    \hbox{\scriptsize #1}\vss}}}}
 \makeatother
 
-\newcommand{\eqb}[2]{#1\oset{?}{\scriptsize =}{+1.5}#2}
-\newcommand{\leb}[2]{#1\oset{?}{\scriptsize \le}{+0.2}#2}
+\newcommand{\eqb}[2]{#1\oset{?}{\scriptstyle{} =}{+1.5}#2}
+\newcommand{\leb}[2]{#1\oset{?}{\scriptstyle{} \le}{+0.2}#2}
 
 
 \chapter{Preliminaries}\label{chap:preliminaries}
@@ -89,7 +89,7 @@ For some proofs, it will be convenient to have an alternative definition where t
 \begin{proposition}\label{prop:relpower}
   We have the following basic facts:
   \begin{enumerate}
-    \coqitem[relpower_trans] Transitivity: $R^n~x~y \rightarrow R^m~y~z \rightarrow R^{n+m}~x~z$ and $\prescript{n}{}R~x~y \rightarrow \prescript{m}{}R~y~z \rightarrow \prescript{n+m}{}R~x~z$
+    \coqitem[relpower_trans] Transitivity: $R^n~x~y \rightarrow R^m~y~z \rightarrow R^{n+m}~x~z$
     \coqitem[relpower_monotonous] Monotonicity: $R \subseteq S \rightarrow R^n~x~y \rightarrow S^n~x~y$
     \coqitem[relpower_congruent] Congruence: $R \equiv S \rightarrow R^n~x~y \leftrightarrow S^n~x~y$
     \coqitem[relpower_relpowerRev] Agreement: $R^n~x~y \leftrightarrow \prescript{n}{}R~x~y$
@@ -183,7 +183,7 @@ We give the full definition of the semantics of Turing machines in Appendix~\ref
 \setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.TM_single}
 In the presentation on paper, it will suffice to assume a transition relation $\succ$ on configurations such that 
 \mnote[sstep]{$c \succ c'$}$(q, tp) \succ (q', tp')$ holds if and only if $\textsf{halt}~q = \bfalse$ and $(q', tp')$ is the successor configuration of $(q, tp)$ according to the transition function. 
-\begin{definition}[Termination Relation]
+\begin{definition}[Termination Relation]\label{def:term_rel}
   \begin{align*}
     (q, tp) \rhd^{k} (q', tp') &\defeq (q, tp) \succ^k (q', tp') \land \textsf{halt}~q' = \btrue \mnote{$c \rhd^k c'$}\\
     (q, tp) \rhd^{\le k} (q', tp') &\defeq \exists l \le k, (q, tp) \rhd^l (q', tp')\mnote{$c \rhd^{\le{} k} c'$}
@@ -207,7 +207,7 @@ L is defined over terms\mnote{\Lterm} $s, t, u: \Lterm \defeq x \bnfmid \lambda 
 
 \subsection{Semantics of L}
 For the semantics, we start by defining the reduction relation. Let $s^x_t$ be the term that is obtained by replacing every free occurrence of the variable $x$ in $s$ by the term $t$. 
-L features a weak call-by-value reduction $\succ$. This means that reduction is not possible below binders (i.e.\ lambdas) and arguments need to be fully reduced to a value (a $\lambda$-abstraction) before $\beta$-reduction is possible.
+L features a weak call-by-value reduction $\succ$. This means that reduction is not possible below binders (i.e.\ lambdas) and arguments need to be fully reduced to a value (a $\lambda$-abstraction) before $\beta$-reduction (i.e.~function application) is possible.
 \begin{align*}
   \infer{s~t \succ s'~t}{s \succ s'} \quad \infer{s~t \succ s~t'}{t \succ t'} \quad \infer{(\lambda x.s)(\lambda y.t) \succ s^x_{\lambda y. t}}{} 
 \end{align*}
@@ -245,12 +245,12 @@ This encoding can be derived systematically for arbitrary datatypes such as list
 Of course, having inductive datatypes is not of much use if one cannot define recursive functions on them. 
 Luckily, there is a function with which recursive terms can be obtained: 
 \begin{fact}[Fact 6 from~\cite{ForsterSmolka:2017:L-Computability}]
-  There is a function $\rho : \Lterm \rightarrow \Lterm$ such that (1)~$\rho~s$ is a procedure if $s$ is closed and (2)~$(\rho~u)v \succ^3 u(p~u)v$ for all procedures $u, v$.
+  There is a function $\rho : \Lterm \rightarrow \Lterm$ such that (1)~$\rho~s$ is a procedure if $s$ is closed and (2)~$(\rho~u)v \succ^3 u(\rho~u)v$ for all procedures $u, v$.
 \end{fact}
 The procedure $u$ can be seen as a step function taking the function to call for recursion as the first argument. 
 With the help of the recursion operator $\rho$, one can define recursive functions on Scott encodings by directly translating the recursive equations one would use in a functional programming language.
 
-This systematic encoding has been utilised by Forster and Kunze~\cite{ForsterKunze:2019:Certifying-extraction} to develop a certifying extraction mechanism which can automatically generate Scott encodings for inductive datatypes defined in Coq as well as encodings for recursive and non-recursive functions on these datatypes. The correctness of these encodings, in the sense that the encoded terms behave similarly to the original terms, is derived fully automatically.
+This systematic encoding has been utilised by Forster and Kunze~\cite{ForsterKunze:2019:Certifying-extraction} to develop a certifying extraction mechanism which can automatically generate Scott encodings of inductive datatypes defined in Coq as well as encodings of recursive and non-recursive functions on these datatypes. The correctness of these encodings, in the sense that the encoded terms behave similarly to the original terms, is derived fully automatically.
 The mechanism thus allows one to program functions for L without having to directly work with L.
 
 \begin{remark}
@@ -268,7 +268,7 @@ The seemingly natural resource measures for the $\lambda$-calculus are the numbe
 However, these measures are a bit unintuitive: there exist terms that exhibit linear time but exponential space usage~\cite{ForsterKunzeRoth:2019:wcbv-Reasonable}. The reason is that, when doing substitution, terms get duplicated if an argument variable occurs multiple times. This problem is known as \emph{size explosion}. A Turing machine implementing a substitution strategy will thus have an exponential time usage (by Lemma~\ref{lem:time_bounds_space}). 
 Size explosion can be mitigated if one does not perform a naive substitution-based evaluation strategy, but instead uses environments that store the values of variables on a heap, thus avoiding duplication. Sadly, due to the needed pointers into the heap, this strategy does have a linear-factor space overhead on some terms, a problem known as \emph{pointer explosion}.
 
-Nevertheless, these resource measures have been shown reasonable for L by Forster et al.\ in~\cite{ForsterKunzeRoth:2019:wcbv-Reasonable}, a non-trivial result. While simulating Turing machines in the $\lambda$-calculus within the desired overhead is relatively easy, the efficient simulation of L using Turing machines is difficult due to size explosion and pointer explosion. The authors solve this by interleaving substitution- and heap-based strategies.
+Nevertheless, these resource measures have been shown to be reasonable for L by Forster et al.\ in~\cite{ForsterKunzeRoth:2019:wcbv-Reasonable}, a non-trivial result. While simulating Turing machines in the $\lambda$-calculus within the desired overhead is relatively easy, the efficient simulation of L using Turing machines is difficult due to size explosion and pointer explosion. The authors solve this by interleaving substitution- and heap-based strategies.
 Their result is, however, limited to decision problems:
 \begin{theorem}[Theorem 2 of~\cite{ForsterKunzeRoth:2019:wcbv-Reasonable}]
   Let $\Sigma$ be a finite alphabet with $\{\btrue, \bfalse\} \subseteq \Sigma$ and let $f : \Sigma^* \rightarrow \{\btrue, \bfalse\}$ be a function. Let $t, s \in \Omega(n)$. 
@@ -346,7 +346,7 @@ Instead, we adapt the well-known alternative verifier characterisation of \NP{},
   \end{itemize}
 \end{definition}
 
-Note that we require that the type of certificates is $\Lterm$. This \coqlink[inNP_intro]{does not pose a restriction} in practice as we can still use any $L$-encodable type (since these types have an encoding as a $\Lterm$) whose encoding can be decoded in polynomial time, i.e.\ for which there exists a function $f : \Lterm \rightarrow \opt{X}$ running in polynomial time. It turns out that the Scott encoding of any inductive datatype can in practice be decoded in linear time.
+Note that we require that the type of certificates is $\Lterm$. This \coqlink[inNP_intro]{does not pose a restriction} in practice as we can still use any $L$-encodable type $X$ (since these types have an encoding as a $\Lterm$) whose encoding can be decoded in polynomial time, i.e.\ for which there exists a function $f : \Lterm \rightarrow \opt{X}$ running in polynomial time. It turns out that the Scott encoding of any inductive datatype can in practice be decoded in linear time.
 
 \begin{fact}[\NP{} subsumes \textsf{P}][P_NP_incl]
   If $Q \in \normalfont{\PC{}}$ then $Q \in \NP{}$. 
@@ -369,7 +369,7 @@ $\redP$ is \coqlink[reducesPolyMO_transitive]{transitive} and inclusion in \NP{}
 The requirement that $Y$ needs to be encodable in polynomial time is new compared to Turing machines. Intuitively, this corresponds to re-encoding the alphabet of Turing machines from an arbitrary alphabet $\Sigma$ to, for instance, a binary alphabet, which is needed if one wants to employ a universal Turing machine. This change of alphabet is trivially polynomial-time computable.
 Similarly, we need a common input format for a universal L-term -- the type of L-terms seems to be a reasonable input type. In practice, the Scott encoding is linear-time computable, although a formal proof of this meta-result seems to be hard.
 
-\NP{} hardness \coqlink[red_NPhard]{transfers along} polynomial-time reductions: if $p \redP{} q$ and $p$ is \NP{}-hard, then $q$ is \NP{}-hard.
+\NP{} hardness \coqlink[red_NPhard]{transfers along} polynomial-time reductions: if $P \redP{} Q$ and $P$ is \NP{}-hard, then $Q$ is \NP{}-hard.
 
 \begin{remark}\label{rem:cook_L}
 We close this chapter by giving an intuitive explanation why one should not expect there to be an easy proof for the existence of a natural (i.e.\ machine-independent) and intuitive \NP{}-complete problem in our setting of complexity theory in L.

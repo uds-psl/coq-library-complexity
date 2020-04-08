@@ -446,7 +446,7 @@ We use an instance of the pigeonhole principle:
 We omit the formal proof of the other steps in this presentation. In the end, we \coqlink[exists_assignment]{obtain a satisfying assignment} $a_{\textsf{sat}}$ for $N$. 
 
 Combining both directions, we get a reduction $f : \cnf \rightarrow \UGraph \times \nat$ if we map CNFs which are not in $k$-CNF to a trivial no-instance.
-\begin{theorem}[Correctness of the Reduction][reduction_to_Clique]
+\begin{theorem}[$k$-\SAT{} reduces to \Clique{}][reduction_to_Clique]
   $\text{$k$-\SAT{}}~N \leftrightarrow \Clique{}~(f~N)$
 \end{theorem}
 

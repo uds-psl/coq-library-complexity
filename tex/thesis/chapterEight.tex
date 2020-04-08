@@ -2,14 +2,14 @@
 \chapter{Reducing Formula Satisfiability To SAT}\label{chap:fsat_sat}
 \setCoqFilename{Undecidability.L.Complexity.Reductions.FSAT_to_SAT}
 In this chapter, we finally show how to convert an arbitrary logical formula $f : \formula$ into CNF. 
-If one does the conversion in a naive way, this incurs an exponential blowup. Consider, for instance, the formula $\phi_1 \lor \phi_2$ for two arbitrary formulas $\phi_1, \phi_2$. If we were to first recursively convert $\phi_1, \phi_2$ to CNFs $N_1, N_2$ and then apply distributivity to end up with a new CNF $N$ equivalent to $N_1 \lor N_2$, the number of clauses in $N$ were in $\bigO{\length{N_1} \cdot \length{N_2}}$. 
+If one does the conversion in a naive way, this incurs an exponential blowup. Consider, for instance, the formula $f_1 \lor f_2$ for two arbitrary formulas $f_1, f_2$. If we were to first recursively convert $f_1, f_2$ to CNFs $N_1, N_2$ and then apply distributivity to end up with a new CNF $N$ equivalent to $N_1 \lor N_2$, the number of clauses in $N$ were in $\bigO{\length{N_1} \cdot \length{N_2}}$. 
 \begin{example}\label{ex:cnf_large}
-  Assume that $N_1 = [C_1, C_2]$ and $N_2 = [C_3, C_4]$. Then
+  Assume that $N_1 = C_1 \land C_2$ and $N_2 = C_3 \land C_4$. Then
   \begin{align*}
     N \leftrightarrow & N_1 \lor N_2 \\
     \leftrightarrow & (C_1 \lor (C_3 \land C_4)) \land (C_2 \lor (C_3 \land C_4)) \\
-    \leftrightarrow & (C_1 \lor C_3) \land (C_1 \lor C_4) \land (C_2 \lor C_3) \land (C_2 \lor C_4) \\
-    \leftrightarrow & [C_1 \concat C_3, C_1 \concat C_4, C_2 \concat C_3, C_2 \concat C_4]
+    \leftrightarrow & (C_1 \lor C_3) \land (C_1 \lor C_4) \land (C_2 \lor C_3) \land (C_2 \lor C_4) 
+    %\leftrightarrow & [C_1 \concat C_3, C_1 \concat C_4, C_2 \concat C_3, C_2 \concat C_4]
   \end{align*}
 \end{example}
 
@@ -18,8 +18,8 @@ Introducing new variables is fine since we only require the resulting CNF $N$ to
 
 In the Tseytin transformation, each subformula $f'$ of the formula $f$ is represented by a variable $v'$ together with a CNF $N'$, such that $\fsat{}~f' \leftrightarrow \SAT{}~(v' \land N')$. Intuitively, the CNF $N'$ forces the variable $v'$ to be equivalent to $f'$ for any assignment.
 \begin{example}
-  As an example, we consider the transformation for the disjunctive formula $f = \phi_1 \lor \phi_2$. First of all, we recursively apply the transformation to $\phi_1$ and $\phi_2$ in order to obtain variables $v_1$ and $v_2$ and CNFs $N_1$ and $N_2$ that represent the respective formulas. Of course, we have to take care that the new variables introduced for the transformations of $\phi_1$ and $\phi_2$ do not overlap.
-  We now add a fresh variable $v$ for the subformula $\phi_1 \lor \phi_2$ and build a CNF $N$ such that $v \land N$ is equisatisfiable to $\phi_1 \lor \phi_2$. $N$ should enforce that $v \leftrightarrow (v_1 \lor v_2)$ and that $v_1$ and $v_2$ represent $\phi_1$ and $\phi_2$, respectively.
+  As an example, we consider the transformation for the disjunctive formula $f = f_1 \lor f_2$. First of all, we recursively apply the transformation to $f_1$ and $f_2$ in order to obtain variables $v_1$ and $v_2$ and CNFs $N_1$ and $N_2$ that represent the respective formulas. Of course, we have to take care that the new variables introduced for the transformations of $f_1$ and $f_2$ do not overlap.
+  We now add a fresh variable $v$ for the subformula $f_1 \lor f_2$ and build a CNF $N$ such that $v \land N$ is equisatisfiable to $f_1 \lor f_2$. $N$ should enforce that $v \leftrightarrow (v_1 \lor v_2)$ and that $v_1$ and $v_2$ represent $f_1$ and $f_2$, respectively.
   Therefore, set $N = N_1 \land N_2 \land N'$, where $N'$ is the CNF 
   \[ N' \defeq (\lnot v \lor v_1 \lor v_2) \land (\lnot v_1  \lor v) \land (\lnot v_2 \lor v), \]
   which is equivalent to $v \leftrightarrow (v_1 \lor v_2)$.
@@ -282,7 +282,7 @@ We get the correctness statement for \tseytin{} as a straightforward corollary, 
 
 The full reduction first eliminates disjunctions and then applies the Tseytin transformation.
 \[\textsf{reduction}~f \defeq \llet (v, N) = \tseytin~(\eliminateOr~f) \lin [(\btrue, v)] \concat N \mnote[reduction]{\textsf{reduction}}\]
-\begin{lemma}[\fsat{} Reduces to \SAT{}][FSAT_to_SAT]
+\begin{lemma}[\fsat{} reduces to \SAT{}][FSAT_to_SAT]
   $\fsat{}~f \leftrightarrow \SAT{}~(\textsf{reduction}~f)$
 \end{lemma}
 \begin{proof}
@@ -292,7 +292,7 @@ The full reduction first eliminates disjunctions and then applies the Tseytin tr
 One quickly notes that the CNFs produced by this reduction have a clause size of at most 3. We can easily adapt the reduction to yield 3-CNFs by making the clause size exactly 3. For that, we duplicate some of the literals in the clauses computed by the functions in Figure~\ref{fig:prim_cnfs} and the function \textsf{reduction}.
 Thus, we directly obtain a reduction to 3-\SAT{}, too.
 
-\begin{lemma}[\fsat{} Reduces to 3-\SAT{}][FSAT_to_3SAT]
+\begin{lemma}[\fsat{} reduces to 3-\SAT{}][FSAT_to_3SAT]
   \[\fsat{}~f \leftrightarrow \text{3-\SAT{}}~(\textsf{reduction}'~f), \]
   where $\textsf{reduction}'$ is the reduction obtained by the modifications described above.
 \end{lemma}

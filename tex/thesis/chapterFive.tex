@@ -44,10 +44,11 @@ First of all, we make the informal description of \gennp{} given in the previous
   \mnote[SingleTMGenNP]{TMGenNP}
   \begin{align*}
     \gennp{} (\Sigma, M,  in, k', t) \defeq \exists~cert, &\length{cert} \le k' \\
-    \land &\exists q_f, ({\textsf{start}}_M, \textsf{initTape}~(in \concat cert)) \rhd_M^{\le t} q_f, 
+    \land &\exists q_f, ({\textsf{start}}_M, \textsf{initTape}~(in \concat cert)) \rhd^{\le t} q_f, 
   \end{align*}
   where 
-  \[\gennp{} : (\sigtype{{\Sigma}}. \textsf{mTM}~\Sigma~1 \times \listsof{\Sigma} \times \nat \times \nat) \rightarrow \Prop \]
+  \[\gennp{} : (\sigtype{{\Sigma}}. \textsf{mTM}~\Sigma~1 \times \listsof{\Sigma} \times \nat \times \nat) \rightarrow \Prop, \]
+  $\rhd$ is the termination relation of Definition~\ref{def:term_rel}, 
   and 
   \setCoqFilename{Undecidability.L.Complexity.Problems.GenNP.TMGenNP_fixed_mTM}
   \begin{align*}
@@ -1146,7 +1147,7 @@ This gives us soundness ($A_4$) and completeness ($A_3$) of the prelude.
 
 Applying Theorem~\ref{thm:expr_to_pr}, we have now arrived at the full reduction of \gennp{} to 3-\PR{}.
 
-\begin{theorem}[Reduction of \gennp{} to \PR{}][SingleTMGenNP_to_PTPR]
+\begin{theorem}[\gennp{} reduces to \PR{}][SingleTMGenNP_to_PTPR]
   \[\gennp~(\Sigma, M, k, t) \leftrightarrow \PR~(\mathcal{A}, 1, 3, \initStr, \Rprelude \concat \Rsim, \Rfinal, 1 + t) \]
 \end{theorem}
 \begin{proof}

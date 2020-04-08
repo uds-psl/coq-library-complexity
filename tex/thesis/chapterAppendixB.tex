@@ -1,6 +1,7 @@
 \chapter{Structure of the Mechanisation}\label{app:mecha}
 We give an overview of the structure of our mechanisation. Our development is based on the Coq library of undecidable problems~\cite{coq_undec}, which contains among other things a formalisation of L and Turing machines as well as the extraction framework. 
 The files we contribute mainly live in the \texttt{/L/Complexity} directory of the project.
+The project is hosted on \href{https://github.com/uds-psl/ba-gaeher}{GitHub}.
 
 \paragraph{Basic Definitions}
 For completeness, we start with an overview over the basic definitions for complexity theory which were developed by Fabian Kunze. 
@@ -81,7 +82,7 @@ Recall that our proof of the Cook-Levin Theorem consists of four main reductions
   \end{tabular}
 \end{center}
 
-The reduction of \gennp{} to \textbf{3-PR} includes the formalisation of preludes for \PR{} needed for guessing the certificate. 735 lines of specification of 909 lines of proof of the reduction are for generating the list-based windows and proving their agreement with the inductive predicates. 
+The reduction of \gennp{} to \textbf{3-PR} includes the formalisation of preludes for \PR{} needed for guessing the certificate. 735 lines of specification of 909 lines of the reduction's correctness proof are for generating the list-based windows and proving their agreement with the inductive predicates. 
 The running-time analysis makes up a very significant part of the whole reduction. 
 
 The remaining reductions are much simpler, with the reduction to \BPR{} including a formalisation of uniform homomorphisms and their action on \PR{} instances.
