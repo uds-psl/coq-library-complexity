@@ -89,7 +89,7 @@ This should take about 1-2 hours, depending on the speed of your system.
 
 ## Thesis
 The source code of the thesis is located in `tex/thesis`. Build it with `make`. 
-A PDF can be downloaded [here](https://www.ps.uni-saarland.de/~gaeher/files/thesis.pdf). 
+A PDF can be downloaded [here](https://www.ps.uni-saarland.de/~gaeher/files/thesis-gaeher.pdf). 
 
 ## Acknowledgements
 The main definitions of NP and poly-time reductions were developed by [Fabian Kunze](https://www.ps.uni-saarland.de/~kunze/); this includes all files in the `theories/L/Complexity/` folder except for the ones listed above.
