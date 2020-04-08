@@ -51,7 +51,7 @@ L/Complexity/Reductions/Cook/PR_to_BinaryPR.v
 L/Complexity/Reductions/Cook/UniformHomomorphisms.v
 ```
 
-The file `theories/L/Complexity/overview.v` gives a summary of the results we proved.
+The file [`theories/L/Complexity/overview.v`](https://github.com/uds-psl/ba-gaeher) gives a summary of the results we proved.
 
 ## How to build
 
