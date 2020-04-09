@@ -357,7 +357,7 @@ Section fixTM.
 
   Ltac destruct_tape1 := repeat match goal with [H : delim |- _ ] => destruct H end.
 
-  (* try to apply the inversion lemmas from above to derive a contradiction*)
+  (** try to apply the inversion lemmas from above to derive a contradiction*)
   Ltac discr_tape := destruct_tape1; match goal with
                      | [H : ?u ≃t(?p, ?w) [] |- _] => now apply tape_repr_inv15 in H
                      | [ H : ?u ≃t(?p, ?w) (inl ?e) :: ?a |- _] => now apply tape_repr_inv in H
@@ -372,8 +372,8 @@ Section fixTM.
                      (* | [H : ?us ≃t(?p, ?w) _ |- _] => try (apply tape_repr_inv10 in H; cbn in H; lia) *)
                       end. 
 
-  (*try to maximally invert the representation relation of tapes (hypothesis H) to derive equalities between the symbols of the represented tape and the representing string *)
-  (*this tactic can be expensive to call as it goes into recursion after having eliminated the head of the strings *)
+  (**try to maximally invert the representation relation of tapes (hypothesis H) to derive equalities between the symbols of the represented tape and the representing string *)
+  (**this tactic can be expensive to call as it goes into recursion after having eliminated the head of the strings *)
   Ltac inv_tape' H := repeat match type of H with
                         | _ ≃t(?p, ?w) ?x :: ?h => is_var x; destruct x; [discr_tape | ]     
                         | _ ≃t(?p, ?w) (inr ?e) :: ?h => is_var e; destruct e; [discr_tape | ]
@@ -396,15 +396,15 @@ Section fixTM.
                          | _ => idtac
                         end.
 
-  (*the destruct_tape_in tactic generates equations for subtapes which are equal to E _. *)
-  (*We do not want to call inv on those equations since they might contain non-trivial equalities which cannot be resolved with a rewrite/subst and would thus be lost with inv*)
+  (**the destruct_tape_in tactic generates equations for subtapes which are equal to E _. *)
+  (**We do not want to call inv on those equations since they might contain non-trivial equalities which cannot be resolved with a rewrite/subst and would thus be lost with inv*)
   Ltac clear_trivial_niltape H := cbn in H; match type of H with
         | inr (inr (?p, |_|)) :: ?h = inr (inr (?p, |_|)) :: ?h' => let H' := fresh in assert (h = h') as H' by congruence; tryif clear_trivial_niltape H' then clear H else clear H'
         | ?h = inr (inr _) :: _ => is_var h; rewrite H in *; clear H
         | ?h = E _ _ => is_var h; rewrite H in *; clear H
   end.
 
-  (*invert the tape relation given by hypothesis H and destruct up to one head symbol *)
+  (**invert the tape relation given by hypothesis H and destruct up to one head symbol *)
   Ltac destruct_tape_in H := unfold reprTape in H;
                              inv_tape' H;
                              try match type of H with
@@ -414,7 +414,7 @@ Section fixTM.
                              inv_tape' H;
                              repeat match goal with [H : ?h = ?h |- _] => clear H end.
 
-  (*a variant of destruct_tape_in that takes care of z constant for the inversion and later tries to substitute the z again *)
+  (**a variant of destruct_tape_in that takes care of z constant for the inversion and later tries to substitute the z again *)
   Ltac destruct_tape_in_tidy H := unfold reprTape in H;
                              try match type of H with
                                  | _ ≃t(_, z) _ => let H' := fresh "n" in let H'' := fresh H' "Zeqn" in
@@ -625,7 +625,7 @@ Section fixTM.
       all: apply IHn in H4; [congruence | lia].
   Qed. 
 
-  (** the same results for the left tape half; we use the _symm lemmas from above *)
+  (** the same results for the left tape half; we use the symm lemmas from above *)
   Lemma E_rewrite_blank_rev p p' w :
     valid rewHeadTape (rev (E p (S (S w)))) (rev (E p' (S (S w))))
     /\ forall s, valid rewHeadTape (rev (E p (S (S w)))) (rev (inr (inr (p', |_|)) :: s)) -> s = (E p' (S (w))).
