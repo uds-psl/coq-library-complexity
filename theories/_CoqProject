@@ -1,14 +1,12 @@
 -Q "../external/smpl/theories/" smpl
 -I "../external/smpl/src/"
 -Q "../external/uds-psl-base" PslBase
--Q "../external/template-coq/template-coq/theories/" Template
--I "../external/template-coq/template-coq/src"
 
 -Q . Undecidability
 
 -install none
 -arg -w -arg -notation-overridden,-redundant-canonical-projection,-several-object-files,cannot-define-projection,records,unused-intro-pattern,tactics
-COQDOCFLAGS = "--charset utf-8 --parse-comments -s --with-header ./website/resources/header.html --with-footer ./website/resources/footer.html --index indexpage"
+COQDOCFLAGS = "--charset utf-8 -s --with-header ../website/resources/header.html --with-footer ../website/resources/footer.html --index indexpage"
 
 Shared/Prelim.v
 
@@ -33,6 +31,8 @@ Shared/Libs/DLW/Utils/power_decomp.v
 Shared/Libs/DLW/Utils/bounded_quantification.v
 Shared/Libs/DLW/Utils/php.v
 Shared/Libs/DLW/Utils/rel_iter.v
+Shared/Libs/DLW/Utils/crt.v
+
 
 Shared/Libs/DLW/Vec/pos.v
 Shared/Libs/DLW/Vec/vec.v
@@ -104,15 +104,42 @@ ILL/UNDEC.v
 MM/mma_defs.v
 MM/mma_utils.v
 MM/fractran_mma.v
+MM/env.v
+MM/mm_instr.v
+MM/mm_env_utils.v
+
+MuRec/recalg.v
+MuRec/ra_utils.v
+MuRec/beta.v
+MuRec/recomp.v
+MuRec/prim_min.v
+MuRec/ra_recomp.v
+MuRec/ra_godel_beta.v
+MuRec/ra_enum.v
+MuRec/ra_univ.v
+MuRec/ra_univ_andrej.v
+
+MuRec/ra_dio_poly.v
+MuRec/ra_mm_env.v
+MuRec/ra_mm.v
+MuRec/ra_simul.v
+MuRec/ra_bs.v
+MuRec/minimizer.v
+MuRec/recursor.v
+MuRec/ra_sem_eq.v
+MuRec/ra_ca.v
 
 H10/Fractran/mm_no_self.v
 H10/Fractran/prime_seq.v
 H10/Fractran/fractran_defs.v
 H10/Fractran/mm_fractran.v
+H10/Fractran/fractran_dio.v
 
 H10/ArithLibs/Zp.v
 H10/ArithLibs/matrix.v
 H10/ArithLibs/luca.v
+H10/ArithLibs/lagrange.v
+
 H10/Matija/alpha.v
 H10/Matija/expo_diophantine.v
 H10/Matija/cipher.v
@@ -127,14 +154,15 @@ H10/Dio/dio_cipher.v
 H10/Dio/dio_bounded.v
 H10/Dio/dio_rt_closure.v
 
-H10/Fractran/fractran_dio.v
-
 H10/HALT_MM.v
 H10/MM_FRACTRAN.v
 H10/FRACTRAN_DIO.v
 H10/H10.v
 H10/DPRM.v
+H10/H10Z.v
 
+H10C/h10c_defs.v
+H10C/h10c_utils.v
 
 # Basics
 TM/Prelim.v
@@ -318,11 +346,12 @@ L/TM/TapeFuns.v
 L/TM/TapeDecode.v
 L/Reductions/TM_to_L.v
 
-L/Reductions/SRH_SR_computable.v
-L/Reductions/SR_MPCP_computable.v
-L/Reductions/MPCP_PCP_computable.v
-L/Reductions/PCP_CFG_computable.v
+# L/Reductions/SRH_SR_computable.v
+# L/Reductions/SR_MPCP_computable.v
+# L/Reductions/MPCP_PCP_computable.v
+# L/Reductions/PCP_CFG_computable.v
 L/Reductions/H10_to_L.v
+L/Reductions/MuRec.v
 
 L/Complexity/UpToC.v
 L/Complexity/UpToCNary.v
@@ -401,26 +430,96 @@ L/Computability/Synthetic.v
 #Reduction L to TM with abstract Heap Machine
 LAM/BaseExtension.v
 # Abstract Machine simulator
-LAM/TM/SizeAnalysis.v
 LAM/TM/Alphabets.v
 LAM/TM/CaseCom.v
 LAM/TM/LookupTM.v
 LAM/TM/JumpTargetTM.v
 LAM/TM/StepTM.v
 LAM/TM/HaltingProblem.v
-LAM/TM/LMBounds.v
 
+## Higher order unficiation
+
+HOU/std/tactics.v
+HOU/std/misc.v
+HOU/std/decidable.v
+HOU/std/lists/basics.v
+HOU/std/lists/misc.v
+HOU/std/lists/advanced.v
+HOU/std/countability.v
+HOU/std/retracts.v
+HOU/std/enumerable.v
+HOU/std/reductions.v
+HOU/std/ars/basic.v
+HOU/std/ars/confluence.v
+HOU/std/ars/normalisation.v
+HOU/std/ars/evaluator.v
+HOU/std/ars/list_reduction.v
+HOU/std/std.v
+
+HOU/axioms.v
+HOU/unscoped.v
+
+HOU/calculus/terms.v
+HOU/calculus/prelim.v
+HOU/calculus/syntax.v
+HOU/calculus/semantics.v
+HOU/calculus/equivalence.v
+HOU/calculus/typing.v
+HOU/calculus/order.v
+HOU/calculus/terms_extension.v
+HOU/calculus/confluence.v
+HOU/calculus/normalisation.v
+HOU/calculus/evaluator.v
+HOU/calculus/calculus.v
+
+HOU/unification/higher_order_unification.v
+HOU/unification/systemunification.v
+HOU/unification/nth_order_unification.v
+HOU/unification/enumerability.v
+HOU/unification/unification.v
+
+HOU/third_order/pcp.v
+HOU/third_order/encoding.v
+HOU/third_order/simplified.v
+HOU/third_order/huet.v
+
+HOU/second_order/diophantine_equations.v
+HOU/second_order/dowek/encoding.v
+HOU/second_order/dowek/reduction.v
+HOU/second_order/goldfarb/encoding.v
+HOU/second_order/goldfarb/multiplication.v
+HOU/second_order/goldfarb/reduction.v
+HOU/second_order/goldfarb/motivation.v
+
+HOU/concon/conservativity.v
+HOU/concon/constants.v
+HOU/concon/enumerability.v
+HOU/concon/concon.v
+
+HOU/firstorder.v
+
+FOLP/axioms.v
+FOLP/unscoped.v
+FOLP/Syntax.v
+FOLP/FOL.v
+FOLP/FullSyntax.v
+FOLP/FullFOL.v
+FOLP/FullTarski.v
+FOLP/Input.v
 
 Problems/FOL.v
 Problems/TM.v
 Problems/SR.v
 Problems/MM.v
+Problems/MM2.v
 Problems/BSM.v
 Problems/ILL.v
 Problems/FRACTRAN.v
 Problems/DIOPHANTINE.v
 Problems/H10C.v
+Problems/RA_UNIV.v
 Problems/cbvLambda.v
+Problems/FOLFS.v
 
 Reductions/TM_to_SRH.v  
 Reductions/SRH_to_SR.v  
@@ -431,7 +530,14 @@ Reductions/BPCP_to_BSM.v
 Reductions/BSM_to_MM.v  
 Reductions/MM_to_ILL.v  
 Reductions/BPCP_to_FOL.v
+Reductions/DIO_MUREC.v
+Reductions/H10C_RA_UNIV.v
+Reductions/MUREC_MM.v
+Reductions/MMA2_to_MM2.v
+Reductions/MM_to_MMA2.v
 Reductions/MM_to_FRACTRAN.v
+Reductions/FRACTRAN_to_MMA2.v
 Reductions/FRACTRAN_to_H10C.v
 Reductions/L_to_mTM.v
-
+Reductions/mTM_to_TM.v
+Reductions/BPCP_to_FOLFS.v

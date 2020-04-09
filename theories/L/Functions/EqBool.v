@@ -42,7 +42,7 @@ Class eqbCompT X {R:registered X} eqb {H:eqbClass (X:=X) eqb} :=
 Arguments eqbCompT _ {_ _ _}.
 Arguments c__eqbComp _ {_ _ _ _}.
 
-Hint Mode eqbCompT - + - -: typeclass_instances.
+Hint Mode eqbCompT + - - -: typeclass_instances.
 
 Existing Instance comp_eqb.
 
@@ -56,16 +56,16 @@ Proof.
   all:unfold c;try lia.
 Qed.
 
-Lemma eqbTime_le_l X (R : registered X) (eqb : X -> X -> bool) (H : eqbClass eqb)
-      (eqbCompT : eqbCompT X) x n':
-  eqbTime x n' <= x * c__eqbComp X.
+Lemma eqbTime_le_l X {R : registered X} (eqb : X -> X -> bool) {H : eqbClass eqb}
+      {H' : eqbCompT X} x n':
+  eqbTime (X:=X) x n' <= x * c__eqbComp X.
 Proof.
   unfold eqbTime. rewrite Nat.le_min_l. easy.
 Qed.
 
 Lemma eqbTime_le_r X (R : registered X) (eqb : X -> X -> bool) (H : eqbClass eqb)
       (eqbCompT : eqbCompT X) x n':
-  eqbTime n' x <= x * c__eqbComp X.
+  eqbTime (X:=X) n' x <= x * c__eqbComp X.
 Proof.
   unfold eqbTime. rewrite Nat.le_min_r. easy.
 Qed.

@@ -5,49 +5,20 @@ From smpl Require Import Smpl.
 
 Local Set Universe Polymorphism. 
 
-Module UnivPolyList.
-
-  Local Inductive UPlist (A : Type) : Type :=
-  | nil : UPlist A
-  | cons : A -> UPlist A -> UPlist A.
-
-  Arguments nil {A}.
-  Arguments cons {A} a l.
-End UnivPolyList.
-
-Import UnivPolyList.
-
-Definition toUPList := fun X l => List.fold_left (fun xs x => @cons X x xs) l nil.
-Global Coercion toUPList : list >-> UPlist.
-
-Module UnivPolyListNotations.
-  Infix "::" := cons (at level 60, right associativity) : uplist_scope.
-  Notation "[ ]" := nil (format "[ ]") : uplist_scope.
-  Notation "[ x ]" := (cons x nil) : uplist_scope.
-  Notation "[ x ; y ; .. ; z ]" :=  (cons x (cons y .. (cons z nil) ..)): uplist_scope.
-
-  Delimit Scope uplist_scope with uplist.
-  Bind Scope uplist_scope with UPlist. 
-End UnivPolyListNotations.
-
-Import UnivPolyListNotations.
-Open Scope uplist_scope.
-
-
-Fixpoint Rarrow (domain : UPlist Type) (range : Type) : Type :=
+Fixpoint Rarrow (domain : list Type) (range : Type) : Type :=
   match domain with
     | nil => range
     | d :: ds => Rarrow ds (d -> range)
 end.
 
-Fixpoint Rtuple (domain : UPlist Type) : Type :=
+Fixpoint Rtuple (domain : list Type) : Type :=
   match domain with
   | nil => unit
   | d :: nil => d
   | d :: ds => prod (Rtuple ds) d
   end.
 
-Fixpoint Const {A : Type} (domain : UPlist Type) (c : A) : Rarrow domain A :=
+Fixpoint Const {A : Type} (domain : list Type) (c : A) : Rarrow domain A :=
   match domain with
   | nil => c
   | d :: ds => Const ds (fun _ => c)
@@ -65,7 +36,7 @@ Hint Rewrite Const_eqn_1 : Const.
 Hint Rewrite Const_eqn_2 : Const.
 Opaque Const.
 
-Fixpoint Fun' {domain : UPlist Type} {range : Type} {struct domain}
+Fixpoint Fun' {domain : list Type} {range : Type} {struct domain}
          : (Rtuple domain -> range) -> (Rtuple domain) -> range
   :=
   match domain with
@@ -101,7 +72,7 @@ Hint Rewrite Fun'_eqn_2 : Fun'.
 Hint Rewrite Fun'_eqn_3 : Fun'.
 Opaque Fun'.
 
-Fixpoint App {domain : UPlist Type} {range : Type} {struct domain}
+Fixpoint App {domain : list Type} {range : Type} {struct domain}
          : (Rarrow domain range) -> Rtuple domain -> range
   :=
   match domain with
@@ -133,8 +104,8 @@ Hint Rewrite App_eqn_1 : App.
 Hint Rewrite App_eqn_2 : App.
 Hint Rewrite App_eqn_3 : App.
 Opaque App.
-
-Lemma Fun'_simpl : forall domain range body t,
+Set Printing Universes.
+Lemma Fun'_simpl : forall (domain : list Type) range body t,
   @Fun' domain range body t = body t.
 Proof.
   intro. induction domain; intros; autorewrite with Fun'.
@@ -169,13 +140,13 @@ Qed.
 Smpl Add 2 _rewrite_anywhere App_Const_simpl : generic.
 
 
-Definition Const' (domain : UPlist Type) {range : Type}
+Definition Const' (domain : list Type) {range : Type}
            (cst : range) : Rtuple domain -> range :=
   Fun' (App (Const domain cst)).
 
 Hint Unfold Const' : generic.
 
-Definition Uncurry {domain : UPlist Type} {range : Type}
+Definition Uncurry {domain : list Type} {range : Type}
            (f : Rarrow domain range) : Rtuple domain -> range :=
   Fun' (App f).
 
@@ -241,10 +212,10 @@ Tactic Notation "nary" "simple" "apply" uconstr(L) := _nary_apply ltac:(fun t =>
 (******************************************************************************)
 (* Utilities *)
 
-Ltac UPlist_of_tuple ty :=
+Ltac list_of_tuple ty :=
   lazymatch ty with
   | prod ?A ?B =>
-    let l := UPlist_of_tuple A in
-    constr:(cons (B:Type) l)
-  | _ => constr:(cons (ty:Type) nil)
+    let l := list_of_tuple A in
+    constr:(cons (B:Set) l)
+  | _ => constr:(cons (ty:Set) nil)
   end.

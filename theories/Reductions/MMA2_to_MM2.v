@@ -9,14 +9,12 @@
 
 Require Import List Arith Relations Omega.
 
-
 From Undecidability.Shared.Libs.DLW Require Import Utils.utils Vec.pos Vec.vec.
 From Undecidability.ILL.Code Require Import sss subcode.
 From Undecidability.ILL.Mm Require Import mm_defs.
 From Undecidability.H10.Fractran Require Import fractran_defs prime_seq mm_fractran.
 From Undecidability.MM Require Import mma_defs fractran_mma.
 From Undecidability.Problems Require Import MM2.
-
 
 (* Require Import utils pos vec subcode sss. *)
 (* Require Import fractran_defs prime_seq mm_fractran.  *)
@@ -42,7 +40,7 @@ Section MMA2_to_MM2.
   Notation "P '/2/' x ↠ y" := (clos_refl_trans _ (mm2_step P) x y) (at level 70, no associativity).
   Notation "P '/2/' s ↓" := (mm2_terminates P s) (at level 70, no associativity).
 
-  Definition mma_mm2_instr : mm_instr 2 -> mm2_instr.
+  Definition mma_mm2_instr : mm_instr (pos 2) -> mm2_instr.
   Proof.
     intros [ [ | p ] | [ | p ] j ].
     + exact mm2_inc_a.
@@ -51,7 +49,7 @@ Section MMA2_to_MM2.
     + exact (mm2_dec_b j).
   Defined.
 
-  Definition mm2_mma_instr : mm2_instr -> mm_instr 2.
+  Definition mm2_mma_instr : mm2_instr -> mm_instr (pos 2).
   Proof.
     intros [ | | j | j ].
     + exact (INC pos0).

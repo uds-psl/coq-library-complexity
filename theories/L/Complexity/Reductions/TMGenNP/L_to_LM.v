@@ -3,6 +3,7 @@ From Undecidability.L.Complexity Require Import NP Synthetic Monotonic GenNP LMG
 
 From Undecidability.L Require Import LM_heap_def LM_heap_correct LBool ResourceMeasures Compile LNat LTerm Compile.
 
+Import Nat.
 Lemma GenNP_to_LMGenNP (X:Type) `{R__X : registered X}:
   restrictBy (LHaltsOrDiverges X) (GenNP X) ⪯p restrictBy (LMHaltsOrDiverges X) (LMGenNP X).
 Proof.

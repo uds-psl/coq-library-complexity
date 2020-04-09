@@ -20,19 +20,32 @@
 
 Require Import Undecidability.ILL.Definitions.
 
-From Undecidability.Shared.Libs.DLW Require Import Utils.utils Vec.pos Vec.vec Utils.utils_tac.
+From Undecidability.Shared.Libs.DLW Require Import Utils.utils Vec.pos Vec.vec.
 From Undecidability.ILL.Code Require Import sss.
 From Undecidability.ILL.Mm Require Import mm_defs.
-From Undecidability.H10.Fractran Require Import fractran_defs prime_seq mm_fractran.
 From Undecidability.MM Require Import mma_defs fractran_mma.
+From Undecidability.H10.Fractran Require Import fractran_defs prime_seq mm_fractran.
+From Undecidability.Reductions Require Import MM_to_FRACTRAN FRACTRAN_to_MMA2.
 
 Set Implicit Arguments.
+
+Corollary MM_MMA2_HALTING : MM_HALTING ⪯ MMA2_HALTING.
+Proof.
+  eapply reduces_transitive. exact MM_FRACTRAN_REG_HALTING.
+  exact FRACTRAN_REG_MMA2_HALTING.
+Qed.
+
+Check MM_MMA2_HALTING.
+Print Assumptions MM_MMA2_HALTING.
+
+(** This is somewhat for direct proof that does not involve
+    testing for (0,_) in the intermediate Fractran program *)
 
 Local Notation "P /MM/ s ↓" := (sss_terminates (@mm_sss _) P s) (at level 70, no associativity). 
 Local Notation "P /MMA/ s ↓" := (sss_terminates (@mma_sss 2) P s) (at level 70, no associativity). 
 
-Theorem mm_mma2 n (P : list (mm_instr n)) : 
-               {   Q : list (mm_instr 2) 
+Theorem mm_mma2 n (P : list (mm_instr (pos n))) : 
+               {   Q : list (mm_instr (pos 2)) 
                & { f : vec nat n -> vec nat 2 
                  | forall v, (1,P) /MM/ (1,v) ↓ <-> (1,Q) /MMA/ (1,f v) ↓ } }.
 Proof.
@@ -41,24 +54,3 @@ Proof.
   intros v; rewrite H2.
   apply fractran_mma_reduction; trivial.
 Qed.
-
-Section MM_MMA2.
-
-  Let f : MM_PROBLEM -> MMA2_PROBLEM.
-  Proof.
-    intros (n & P & v).
-    destruct (mm_mma2 P) as (Q & f & H).
-    exact (Q, f v).
-  Defined.
-
-  Theorem MM_MMA2_HALTING : MM_HALTING ⪯ MMA2_HALTING.
-  Proof.
-    exists f. 
-    intros (n & P & v); simpl; unfold MMA2_HALTING.
-    destruct (mm_mma2 P) as (Q & g & H); simpl; auto.
-  Qed.
-
-End MM_MMA2.
-
-Check MM_MMA2_HALTING.
-Print Assumptions MM_MMA2_HALTING.

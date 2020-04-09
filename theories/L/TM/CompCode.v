@@ -1,6 +1,13 @@
-
-From Undecidability.L Require Import LTactics LBool GenEncode Datatypes.Lists TMEncoding.
 From Undecidability.TM Require Import CodeTM Single.EncodeTapes.
+From Undecidability.L Require Import LTactics LBool GenEncode Datatypes.Lists.
+
+Import Nat.
+Require Export PslBase.FiniteTypes.FinTypes.
+
+Require Import PslBase.Vectors.Vectors.
+     
+From Undecidability Require Import TMEncoding.
+
   
 Run TemplateProgram (tmGenEncode "boundary_enc" boundary).
 Hint Resolve boundary_enc_correct : Lrewrite.
@@ -80,7 +87,8 @@ End sigTape.
 Hint Resolve sigTape_enc_correct : Lrewrite.
 
 Section encTape.
-  Context X `{registered X}.  
+  Context X `{registered X}.
+  Import Datatypes.
   Definition _term_encode_tape : 
     { time : UpToC (fun l => sizeOfTape l + 1)
              &   computableTime' (@encode_tape X) (fun l _ => (time l,tt))}.

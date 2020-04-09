@@ -53,7 +53,8 @@ Section fix_sig.
       extract. solverec.
     Qed.
 
-    
+
+    Import Datatypes.
     Global Instance term_tapeToList:  computableTime' (@tapeToList sig) (fun t _ => (sizeOfTape t*29 + 26,tt)).  
     extract. recRel_prettify2. all:repeat (simpl_list;cbn -[plus mult]). all:nia.
     Proof.
@@ -81,6 +82,7 @@ Section fix_sig.
     Proof. unfold Vector.to_list. induction n in v|-*. all:destruct_vector. all:cbn;congruence.
     Qed.
 
+    Import Nat.
     Global Instance term_sizeOfmTapes n:
       computableTime' (@sizeOfmTapes sig n) (fun t _ => ((sizeOfmTapes t*65+61) * n + 16,tt)).
     Proof.
@@ -96,12 +98,13 @@ Section fix_sig.
         cbn in *. rewrite <- IHx. unfold Vector.to_list. nia.
       }
       assert (computableTime' f (fun acc _ => (5, fun t _ => ((max acc (fold_right max 0 (map (sizeOfTape (sig:=sig))t))*65 + 61) * (length t) + 9,tt)))).
-      { unfold f. extract. solverec. nia. }
+      { unfold f. extract. solverec. }
 
       eapply computableTimeExt. exact H'.
+      Import Vector.
       extract. solverec. unfold sizeOfmTapes. rewrite Vector_fold_left_to_list,fold_symmetric. 2,3:intros;nia.
       rewrite Vector_map_to_list,to_list_length.
-      set (fold_right _ _ _). nia. 
+      set (List.fold_right _ _ _). nia. 
     Qed.
 
     Global Instance term_current: computableTime' ((current (sig:=sig))) (fun _ _ => (10,tt)).

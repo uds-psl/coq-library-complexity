@@ -25,7 +25,7 @@ Definition TM1GenNP := restrictBy (fun '(M,_,_) => M.(TMflat.tapes) = 1)
 Lemma inNP_TMgenericNPCompleteProblem:
   inNP (unrestrictedP TMGenNP).
 Proof.
-  pose (R := fun '(exist _ (M,maxSize, steps (*in unary*)) _ : {x | True}) t =>
+  pose (R := fun '(exist (M,maxSize, steps (*in unary*)) _ : {x | True}) t =>
                sizeOfmTapesFlat t <= maxSize /\  
                exists sig n (M':mTM sig n),
                  isFlatteningTMOf M M'
@@ -63,7 +63,7 @@ Proof.
                    split. now eauto using initFlat_correct.
                    split. eauto. instantiate (1 := (_,_)).
                    split;cbn. constructor.
-     }
+     } Import Nat.
      extract. 
      recRel_prettify.
      intros [[[M maxSize] steps] t] [].

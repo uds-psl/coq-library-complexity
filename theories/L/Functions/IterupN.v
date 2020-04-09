@@ -105,6 +105,7 @@ Qed.
 Instance term_iterupN X `{H:registered X} :
   computable (iterupN (X:=X)).
 Proof.
+  Import N.
   pose (s := rho (λ F i max x f, (!!(ext N.ltb) i max) (λ _ , F (!!(ext N.succ) i) max (f i x) f) (λ _ , x) I)).
   cbv [convert TH minus] in s.
   

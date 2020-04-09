@@ -106,7 +106,6 @@ Proof.
    eapply vector_to_list_inj in H''' as <-. rewrite eq in Ht. inv Ht.
    eassumption.
    Unshelve.
-   2:exact _.
    repeat econstructor. 
 Qed.
 

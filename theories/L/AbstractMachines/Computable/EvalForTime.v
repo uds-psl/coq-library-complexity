@@ -94,7 +94,7 @@ Definition time_evalForTime__step x :=
           then heapStep_time T H
           else 0
   end + 81.
-
+Import N.
 Instance termT_evalForTime__step : computableTime' evalForTime__step (fun x _ => (time_evalForTime__step x,tt)).
 Proof.
   unfold state.
@@ -116,7 +116,7 @@ Arguments evalForTime__step : simpl never.
     all:destruct (N.ltb_spec0 0 i);[|try easy]. all:easy.
   Qed.*)
 
-
+Import L ARS. Import AbstractMachines.AbstractHeapMachineDef.
 
 Instance termT_init__evalForTime : computableTime' init__evalForTime (fun fuel (_:unit) => (1,fun s (_:unit) => (size s * 108 + N.size_nat fuel * 84 + 244,tt))).
 Proof.
@@ -157,8 +157,8 @@ Lemma time_uiter_evalForTime__step s fuel:
   uiterTime evalForTime__step (fun x (_:unit) => (time_evalForTime__step x,tt)) (N.to_nat fuel + 1) (fuel,init s) <=
   (N.to_nat fuel + 1) * (N.size_nat fuel * 12 + heapStep_timeBound (largestVar s) (N.to_nat fuel) + 90).
 Proof.
-  rewrite uiterTime_computesRel
-    with (R:= R__step)
+  rewrite @uiterTime_computesRel
+    with (X:=(N*state)%type)(R:= R__step)
          (t__step := N.size_nat fuel * 12 + heapStep_timeBound (largestVar s) (N.to_nat fuel) + 81)
          (t__end := 0).
   2:{

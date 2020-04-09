@@ -1,7 +1,7 @@
 From Undecidability.L Require Import L Tactics.LTactics.
 
 From Undecidability.L.AbstractMachines Require Import Programs FunctionalDefinitions AbstractHeapMachineDef.
-From Undecidability.L.Datatypes Require Import Lists LOptions.
+From Undecidability.L.Datatypes Require Import Lists LOptions LProd LTerm.
 
 From Undecidability.L Require Import Tactics.GenEncode.
 
@@ -23,7 +23,7 @@ Instance term_get : computableTime' get (fun A _ => (1,fun n _ => (min n (length
 extract. solverec.
 Qed.
 
-
+Import Datatypes.
 Instance put_get : computableTime' put (fun A _ => (1,fun _ _ => (length A * 27 + 22,tt))).
 extract. solverec.
 Qed.

@@ -189,7 +189,7 @@ Qed.*)
 
 (* legacy: asserts R:= s >* ?t for some reduction of ?t *)
 Tactic Notation "standardize" ident(R) constr(n) constr(s) :=
-  is_ground s;
+  has_no_evar s;
   let l := fresh "l" in
   let t := fresh "t" in
   evar (l : nat);

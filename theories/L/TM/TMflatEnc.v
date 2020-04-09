@@ -1,12 +1,13 @@
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import LNat Lists LProd LOptions .
+From Undecidability.L.Datatypes Require Import LNat Lists LProd LOptions LBool.
 From Undecidability.L Require Import Functions.Decoding.
 
 
 From Undecidability.L.TM Require Export TMflat.
 From Undecidability.L.TM Require Import TMEncoding.
 
-
+Import Nat TM.
+Import TMflat.
 Run TemplateProgram (tmGenEncode "TM_enc" TM).
 Hint Resolve TM_enc_correct : Lrewrite.
 
@@ -141,7 +142,7 @@ Proof.
   intros _ M [].
   rewrite size_TM.
   recRel_prettify2.
-  repeat (lazymatch goal with |- context C[@size ?a] => generalize (@size a);intro end).
+  repeat (lazymatch goal with |- context C [ @size ?a] => generalize (@size a);intro end).
   assert (H':c__encTM <= c__encTM) by easy.
   repeat setoid_rewrite Nat.max_lub_iff in H'.
   destruct H' as (H1&H2&H3&H4).

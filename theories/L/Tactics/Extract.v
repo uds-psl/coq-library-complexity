@@ -1,5 +1,5 @@
 From Undecidability.L Require Import L Prelim.StringBase.
-Require Import Template.All.
+From MetaCoq Require Import Template.All Checker.Checker.
 Require Import PslBase.Base. 
 Require Import String Ascii.
 
@@ -55,13 +55,13 @@ Definition hd {X : Type} (l : list X) : TemplateMonad X :=
 Definition tmTypeOf (s : Ast.term) :=
   u <- tmUnquote s ;;
     tmEval hnf (my_projT1 u) >>= tmQuote.
-Set Printing Universes.
+
 (** Try to infer instance, otherwise make lemma *)
 Definition tmTryInfer (n : ident) (red : option reductionStrategy) (A : Type) : TemplateMonad A :=
   r <- tmInferInstance red A ;;
     match r with
-    | mySome _ i => ret i
-    | myNone _ =>
+    | my_Some i => ret i
+    | my_None =>
       A' <- match red with Some red => ret A | None => ret A end;;
 
          (* term <- tmQuote A';; *)
@@ -81,6 +81,40 @@ Definition name_of (t : Ast.term) : ident :=
   | tInd (mkInd n _) _ => "type_" ++ name_after_dot n
   | tVar i => "var_" ++ i
   | _ => "no_name" 
+  end.
+
+(* Fixpoint name_after_dot' (s : string) (r : string) := *)
+(*   match s with *)
+(*   | EmptyString => r *)
+(*   | String "#" xs => name_after_dot' xs xs (* see Coq_name in a section *) *)
+(*   | String ("."%char) xs => name_after_dot' xs xs *)
+(*   | String _ xs => name_after_dot' xs r *)
+(*   end. *)
+
+(* Definition name_after_dot s := name_after_dot' s s. *)
+
+Fixpoint fixNames (t : term) :=
+  match t with
+  | tRel i => tRel i
+  | tEvar ev args => tEvar ev (List.map (fixNames) args)
+  | tLambda na T M => tLambda na (fixNames T) (fixNames M)
+  | tApp u v => tApp (fixNames u) (List.map (fixNames) v)
+  | tProd na A B => tProd na (fixNames A) (fixNames B)
+  | tCast C kind t => tCast (fixNames C) kind (fixNames t)
+  | tLetIn na b t b' => tLetIn na (fixNames b) (fixNames t) (fixNames b')
+  | tCase ind p C brs =>
+    let brs' := List.map (on_snd (fixNames)) brs in
+    tCase ind (fixNames p) (fixNames C) brs'
+  | tProj p C => tProj p (fixNames C)
+  | tFix mfix idx =>
+    let mfix' := List.map (map_def (fixNames) (fixNames)) mfix in
+    tFix mfix' idx
+  | tCoFix mfix idx =>
+    let mfix' := List.map (map_def (fixNames) (fixNames)) mfix in
+    tCoFix mfix' idx
+  | tConst name u => tConst (name_after_dot name) u
+  | tInd (mkInd name i) u => tInd (mkInd (name_after_dot name) i)  u
+  | x => x
   end.
 
 (** Check whether a list of quoted terms starts with a type *)
@@ -184,11 +218,10 @@ Definition tmGetOption {X} (o : option X) (err : string) : TemplateMonad X :=
   end.
 
 
-
-Definition tmGetMyOption {X} (o : myOption X) (err : string) : TemplateMonad X :=
+Definition tmGetMyOption {X} (o : option_instance X) (err : string) : TemplateMonad X :=
   match o with
-  | mySome _ x => ret x
-  | myNone _  => tmFail err
+  | my_Some x => ret x
+  | my_None => tmFail err
   end.
 
 Definition mkFixMatch (f x : ident) (t1 t2 : Ast.term) (cases : nat -> list term -> TemplateMonad term) :=
@@ -208,6 +241,8 @@ Definition mkFixMatch (f x : ident) (t1 t2 : Ast.term) (cases : nat -> list term
                                                 (tLambda nAnon t1 t2)
                                                 (tRel 0)
                                                 body)) 0] 0).
+
+Existing Instance config.default_checker_flags.
 
 Definition encode_arguments (B : term) (a i : nat) A_j :=
     if eq_term uGraph.init_graph B A_j
@@ -361,15 +396,18 @@ Definition tmDependentArgs x:=
   | _ => (*tmPrint ("tmDependentArgs not supported");;*)ret 0
   end.
  *)
-Require Import Template.kernel.Checker.
+
+Definition tmUnquote t := tmUnquote (fixNames t).
+Definition tmUnquoteTyped {A} t := @tmUnquoteTyped A (fixNames t).
+
 Fixpoint inferHead' (s:Ast.term) (revArg R: list Ast.term) : TemplateMonad (L.term * list Ast.term)  :=
   s'0 <- tmEval cbn (if forallb (fun _ => false) revArg then s else Ast.tApp s (rev revArg));;
   s' <- tmUnquote s'0;;
   s'' <- tmEval cbn (my_projT2 s');;
   res <- tmInferInstance None (extracted (A:=my_projT1 s') s'');;
   match res with
-    mySome _ s'' => ret (s'',R) 
-  | myNone _ =>
+    my_Some s'' => ret (s'',R) 
+  | my_None =>
     let doSplit := match R with
                     | [] => false
                     |  r :: R => if closedn 0 r then true else false 
@@ -404,12 +442,13 @@ Fixpoint extract (env : nat -> nat) (s : Ast.term) (fuel : nat) : TemplateMonad 
   | Ast.tLambda _ _ s =>
     t <- extract (↑ env) s fuel ;;
       ret (lam t)
-  | Ast.tFix [BasicAst.mkdef _ nm ty s _] _ =>
+  | Ast.tFix [BasicAst.mkdef nm ty s _] _ =>
     t <- extract (fun n => S (env n)) (Ast.tLambda nm ty s) fuel ;;
     ret (rho t)
   | Ast.tApp s R =>
     res <- inferHead s R;;
-    let '(res,R') := res in
+        let '(res,R') := res in
+        (*tmPrint ("infHead:",res,R');;*)
     t <- (match res with
             inl s' => ret s'
           | inr s => extract env s fuel
@@ -483,7 +522,7 @@ Fixpoint head_of_const (t : term) :=
 Definition tmUnfoldTerm {A}(a:A) :=
   t <- tmQuote a;;
   match head_of_const t with
-  | Some h => tmEval (unfold h) a >>=tmQuote
+  | Some h => tmEval (unfold (name_after_dot h)) a >>=tmQuote
   | _ => ret t
   end.
 

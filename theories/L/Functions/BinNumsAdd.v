@@ -63,6 +63,8 @@ Section pos_add.
 
 End pos_add.
 
+Import N. Import Pos.
 Instance termT_N_add: computableTime' N.add (fun x _ => (1,fun y _ => (12*(N.size_nat x + N.size_nat y) + 27 ,tt))).
+unfold N.add.
 extract. solverec.
 Qed.

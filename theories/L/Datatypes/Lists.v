@@ -255,7 +255,9 @@ Section int.
     recRel_prettify2. easy.
     [c]:exact (c__eqbComp X + 6).
     all:unfold c. all:cbn iota beta delta [list_enc].
-    all:fold (@enc X _).
+    all:  change ((match HX with
+                   | @mk_registered _ enc _ _ => enc
+                   end)) with (enc (X:=X)).
     all:cbn [size]. all: nia.
   Qed.
   

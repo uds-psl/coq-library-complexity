@@ -1,5 +1,5 @@
 From Undecidability.L Require Import L Tactics.LTactics.
-From Undecidability.L.Datatypes Require Import LSum LBool LNat Lists.
+From Undecidability.L.Datatypes Require Import LSum LBool LNat Lists LProd.
 
 From Undecidability.L.AbstractMachines Require Import FunctionalDefinitions AbstractHeapMachineDef UnfoldTailRec UnfoldHeap.
 
@@ -8,6 +8,8 @@ Require Import Undecidability.L.AbstractMachines.LargestVar.
 From Undecidability.L Require Import Prelim.LoopSum Functions.LoopSum Functions.UnboundIteration Functions.LoopSum Functions.Equality.
 
 From Undecidability.L.AbstractMachines.Computable Require Import Shared Lookup.
+Import Nat.
+Import UnfoldTailRec.task.
 
 
 Run TemplateProgram (tmGenEncode "task_enc" task).
@@ -56,13 +58,12 @@ Proof.
 
   -intros n x. assert (H':=unfoldTailRecStep_largestVar_inv x).
    unfold unfoldTailRecStep in *.
-   repeat (let eq := fresh "eq" in destruct _ eqn:eq);inv eq1;try congruence.
+   repeat (let eq := fresh "eq" in destruct _ eqn:eq). all:try congruence. all:subst. all:inv eq2. 
    all:unfold time_unfoldTailRecStep.
    
    all:intros (->&H'1&?).
    all:try rewrite H',H'1.
    all:cbn [fst].
-   all:intuition (try eassumption;cbn [length];try Lia.lia;try eauto).
    
 
    all:repeat match goal with
@@ -70,6 +71,8 @@ Proof.
               | H : _ <=? _ = false |- _ => apply Nat.leb_gt in H
               | H : lookup _ _ _ = Some _ |- _ => apply lookup_size in H;cbn in H
               end.
+   all:intuition (try eassumption;cbn [length];try Lia.nia;try eauto).
+
    3:now cbn in *;Lia.nia.
    1-3:assert (H'3 : n1 <= (Init.Nat.max (largestVarH H) (largestVar s))) by (cbn in *; Lia.nia).
    1-3:rewrite lookupTime_mono with (n' := Init.Nat.max (largestVarH H) (largestVar s));[|reflexivity|try omega].

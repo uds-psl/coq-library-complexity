@@ -27,6 +27,7 @@ Proof.
   apply cast_computableTime.
 Qed.
 
+Import Vector.
 Instance term_vector_map X Y `{registered X} `{registered Y} n (f:X->Y) fT:
   computableTime' f fT ->
   computableTime' (VectorDef.map f (n:=n))
@@ -34,7 +35,8 @@ Instance term_vector_map X Y `{registered X} `{registered Y} n (f:X->Y) fT:
 Proof.
   intros ?.
   computable_casted_result.
-  apply computableTimeExt with (x:= fun x => map f (Vector.to_list x)).
+  set (WA:=@List.map X Y) (* Workaround for https://github.com/MetaCoq/metacoq/issues/385 *).
+  apply computableTimeExt with (x:= fun x => WA f (Vector.to_list x)).
   2:{
     extract.
     solverec.
@@ -70,7 +72,7 @@ Fixpoint time_map2 {X Y Z} `{registered X} `{registered Y} `{registered Z} (gT :
   | _,_ => 9
   end.
 Instance term_map2 n A B C `{registered A} `{registered B} `{registered C} (g:A -> B -> C) gT:
-  computableTime' g gT-> computableTime' (Vector.map2 g (n:=n)) (fun l1 _ => (1,fun l2 _ => (time_map2 gT (Vector.to_list l1) (Vector.to_list l2) +8,tt))).
+  computableTime' g gT-> computableTime' (Vector.map2 g (n:=n)) (fun l1 _ => (1,fun l2 _ => (time_map2 (X:=A) (Y:=B) (Z:=C) gT (Vector.to_list l1) (Vector.to_list l2) +8,tt))).
 Proof.
   intros ?.
   computable_casted_result.

@@ -39,15 +39,17 @@ Definition evalTime X ty x evalTime (computableTime : @computableTime X ty x eva
 Global Arguments evalTime {X} {ty} x {evalTime computableTime}.
 
 Hint Extern 3 (@extracted ?t ?f) => let ty := constr:(_ : TT t) in notypeclasses refine (extT (ty:=ty) f) : typeclass_instances.
-Hint Mode computableTime + + + -: typeclass_instances. (* treat argument as input and force evar-freeness*)
+Hint Mode computableTime + - + -: typeclass_instances. (* treat argument as input and force evar-freeness*)
 
 (** A Notation to allow inference of the TT parameter for function types. Coq checks that functions only appear at positions where functions are allowed before it inferes holes, so t complains that f "is a product while it is expected to be '@timeComplexity (forall _ : _, _) ?ty'". *)
 Notation "'computableTime'' f" := (@computableTime _ ltac:(let t:=type of f in refine (_ : TT t);exact _) f) (at level 0,only parsing).
 
+(* TODO in 8.11: use bidirectional hints Arguments computableTime _ _ _ & _. *)
+                                                                                                             
 Local Fixpoint notHigherOrder t (ty : TT t) :=
   match ty with
-    TyArr (TyB _) ty2 => notHigherOrder ty2 
-  | TyB _ => True
+    TyArr _ _ (TyB _ _) ty2 => notHigherOrder ty2 
+  | TyB _ _ => True
   | _ => False
   end.
 
@@ -205,7 +207,7 @@ Fixpoint changeResType_TimeComplexity t1 (tt1 : TT t1) Y {R: registered Y} {stru
   forall (fT: timeComplexity t1) , @timeComplexity _ (projT2 (changeResType tt1 (TyB Y))):= (
   match tt1 with
     @TyB t1 tt1 => fun fT => fT
-  | TyArr tt11 tt12 => fun fT x xT => (fst (fT x xT),changeResType_TimeComplexity (snd (fT x xT)))
+  | TyArr _ _ tt11 tt12 => fun fT x xT => (fst (fT x xT),changeResType_TimeComplexity (snd (fT x xT)))
   end).
 
 Lemma cast_registeredAs_TimeComplexity t1 (tt1 : TT t1) Y (R: registered Y) fT (cast : projT1 (resType tt1) -> Y) (f:t1)

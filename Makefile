@@ -1,8 +1,9 @@
-deps:
-	+make -C external all
 
 all:
 	+make -C theories all
+
+deps:
+	+make -C external all
 
 clean:
 	+make -C theories clean
@@ -12,6 +13,6 @@ realclean:
 	+make -C theories clean
 
 html:
-	+make -C theories website
+	+make -C theories html
 
 .PHONY: all html clean realclean

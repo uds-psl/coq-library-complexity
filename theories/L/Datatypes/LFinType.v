@@ -2,6 +2,7 @@ From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L Require Import Datatypes.LNat Functions.EqBool.
 From Undecidability.L Require Import UpToC.
 
+Import Nat.
 Require Export PslBase.FiniteTypes.FinTypes.
 
 (** *** Encoding finite types *)
@@ -75,7 +76,7 @@ Proof.
 Qed.
 
 Lemma size_finType_any_le_c (X:finType) `{registered X}:
-  (fun x => L.size (enc x)) <=c (fun _ => 1).
+  (fun (x:X) => L.size (enc x)) <=c (fun _ => 1).
 Proof.
   setoid_rewrite size_finType_any_le. smpl_upToC_solve.
 Qed.

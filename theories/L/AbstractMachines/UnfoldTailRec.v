@@ -2,8 +2,10 @@ From Undecidability.L Require Import L Prelim.LoopSum Functions.UnboundIteration
 From Undecidability.L.AbstractMachines Require Import AbstractHeapMachine UnfoldHeap.
 Import AbstractHeapMachineDef.clos_notation.
 
-Local Inductive task := closT (q:clos) (k:nat) | appT | lamT.
-
+Module task.
+  Inductive task := closT (q:clos) (k:nat) | appT | lamT.
+End task.
+Import task.
 (* function that unfolds if unfoldable *)
 Definition unfoldTailRecStep '(stack,H,res) : (list task * list heapEntry * list term) + option term :=
   match stack with

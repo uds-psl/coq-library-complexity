@@ -112,8 +112,8 @@ Section putFirst.
 
   Definition putEndAtFirst n': Vector.t (Fin.t (S n')) (S n'). 
     refine (tabulate (fun i => match Fin.to_nat i with
-                            | exist _ 0 H => Fin.of_nat_lt (Nat.lt_succ_diag_r n')
-                            | exist _ n' H => Fin.of_nat_lt (p:=n'-1) _
+                            | exist 0 H => Fin.of_nat_lt (Nat.lt_succ_diag_r n')
+                            | exist n' H => Fin.of_nat_lt (p:=n'-1) _
                             end )). abstract nia.
   Defined.
   Arguments putEndAtFirst : simpl never.

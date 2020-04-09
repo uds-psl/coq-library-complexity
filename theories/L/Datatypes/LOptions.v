@@ -4,7 +4,7 @@ From Undecidability.L Require Import Functions.EqBool.
 (** ** Encoding of option type *)
 Section Fix_X.
   Variable X:Type.
-  Context `{intX : registered X}.
+  Context {intX : registered X}.
 
 
   Run TemplateProgram (tmGenEncode "option_enc" (option X)).
@@ -80,17 +80,19 @@ Section int.
     intros ? ?. eapply option_eqb_spec. all:eauto using eqb_spec.
   Qed.
 
-  Global Instance eqbComp_Option `{eqbCompT X (R:=HX)}:
+  Global Instance eqbComp_Option `{H:eqbCompT X (R:=HX)}:
     eqbCompT (option X).
   Proof.
     evar (c:nat). exists c. unfold option_eqb. 
     unfold enc;cbn.
     change (eqb0) with (eqb (X:=X)).
-    extract. unfold eqb,eqbTime. fold @enc.
+    extract. unfold eqb,eqbTime. fold (enc (X:=X)).
     recRel_prettify2. easy.
     [c]:exact (c__eqbComp X + 6).
     all:unfold c. all:cbn iota beta delta [option_enc].
-    all:fold (@enc X _).
+    all:  change ((match HX with
+           | @mk_registered _ enc _ _ => enc
+           end)) with (enc (X:=X)).
     all:cbn [size]. all: nia.
   Qed.
 

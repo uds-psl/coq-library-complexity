@@ -2,7 +2,7 @@ From Undecidability.L Require Import L.
 From Undecidability.L.Datatypes Require Import LProd LTerm LBool.
 From Undecidability.L.Complexity Require Import NP Synthetic Monotonic.
 From Undecidability.L.Functions Require Import Size.
-
+Import Nat. 
 Definition GenNPBool : term*nat*nat -> Prop:=
   fun '(s', maxSize, steps (*in unary*)) =>
     (proc s'/\exists (c:term), size (enc c) <= maxSize
@@ -63,7 +63,7 @@ Import EvalForTime LargestVar.
 
 Lemma inNP_GenNPBool : inNP (unrestrictedP GenNPBool).
 Proof.
-  eexists (fun '(exist _ x _) (c:term) => exists (s':term) (maxSize steps :nat), 
+  eexists (fun '(exist x _) (c:term) => exists (s':term) (maxSize steps :nat), 
                x = (s',maxSize,steps) /\ proc s' /\ size (enc c) <= maxSize 
                /\ s' (enc c) ⇓(<=steps) (enc true)).
   {
@@ -74,7 +74,7 @@ Proof.
                then
                  evalForTimeBool true (N.of_nat steps) (s' (enc c))
                else false).
-    -extract. intros [[[s' maxSize] steps] c].
+    -Import N. Import L. Import Nat.  extract. intros [[[s' maxSize] steps] c].
      remember (size (enc (s', maxSize, steps, c))) as n.
      assert (H1 : ( size (enc s') <= n)) by (subst n;rewrite !size_prod;cbn;lia).
      assert (H2 : ( size (enc maxSize) <= n)) by (subst n;rewrite !size_prod;cbn;lia).

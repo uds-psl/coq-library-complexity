@@ -3,6 +3,8 @@ From Undecidability.L.Datatypes Require Import LProd LTerm LBool.
 From Undecidability.L.Complexity Require Import NP Synthetic Monotonic GenNP CanEnumTerm_def.
 From Undecidability.L.Functions Require Import Size.
 
+Import Nat.
+
 Lemma NPhard_GenNP X__cert `{R__cert : registered X__cert}:
   canEnumTerms X__cert->  NPhard (restrictBy (LHaltsOrDiverges X__cert) (GenNP X__cert)).
 Proof.
@@ -32,7 +34,7 @@ Proof.
     specialize inOPoly_computable with (1:=poly_t__R) as (time__R'&tt__R'&[]&poly_t__R'&leq_t__R'&?&?&?). *)
   evar (stepsInner : nat -> nat). [stepsInner]:intros n0.
   evar (mSize : nat -> nat). [mSize]:intros n0. evar (steps : nat -> nat). [steps]:intros n0.
-  pose (g:= fun x => (lam (trueOrDiverge (extT f (enc x) 0)), mSize (size (enc x))(*f__Rbal' (size (enc x))*)
+  pose (g:= fun (x:X) => (lam (trueOrDiverge (extT f (enc x) 0)), mSize (size (enc x))(*f__Rbal' (size (enc x))*)
                    ,steps (size (enc x))(*t__R' (size (enc x) + f__Rbal' (size (enc x))+4)+9*))).
   apply reducesPolyMO_intro with (f:= g);cbn [fst snd].
   2:{

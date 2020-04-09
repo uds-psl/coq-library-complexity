@@ -5,7 +5,6 @@ From Coq Require Import Setoid.
 From Coq Require Import CRelationClasses CMorphisms.
 From Undecidability Require Export UpToC.
 From Undecidability Require Export GenericNary.
-Import UnivPolyList.
 From PslBase Require FinTypes.
 
 Local Set Universe Polymorphism. 
@@ -45,9 +44,7 @@ Section workaround.
 
 End workaround.
 
-
-
-Lemma upToC_add_nary (domain : UPlist Type) F (f1 f2 : Rarrow domain nat) :
+Lemma upToC_add_nary (domain : list Set) F (f1 f2 : Rarrow domain nat) :
   Uncurry f1 <=c F
   -> Uncurry f2 <=c F
   -> Fun' (fun x => App f1 x + App f2 x) <=c F.
@@ -56,7 +53,7 @@ Proof.
 Qed.
 
 
-Lemma upToC_max_nary (domain : UPlist Type) F (f1 f2 : Rarrow domain nat) :
+Lemma upToC_max_nary (domain : list Set) F (f1 f2 : Rarrow domain nat) :
   Uncurry f1 <=c F
   -> Uncurry f2 <=c F
   -> Fun' (fun x => max (App f1 x) (App f2 x)) <=c F.
@@ -64,7 +61,7 @@ Proof.
   prove_nary upToC_max.
 Qed.
 
-Lemma upToC_min_nary (domain : UPlist Type) F (f1 f2 : Rarrow domain nat) :
+Lemma upToC_min_nary (domain : list Set) F (f1 f2 : Rarrow domain nat) :
   Uncurry f1 <=c F
   -> Uncurry f2 <=c F
   -> Fun' (fun x => min (App f1 x) (App f2 x)) <=c F.
@@ -73,20 +70,20 @@ Proof.
 Qed.
 
 
-Lemma upToC_mul_c_l_nary (domain : UPlist Type) c F  (f : Rarrow domain nat):
+Lemma upToC_mul_c_l_nary (domain : list Set)c F  (f : Rarrow domain nat):
   Uncurry f <=c F
   -> Fun' (fun x => c * App f x) <=c F.
 Proof.
   prove_nary upToC_mul_c_l.
 Qed.
 
-Lemma upToC_mul_c_r_nary (domain : UPlist Type)  c F (f : Rarrow domain nat):
+Lemma upToC_mul_c_r_nary (domain : list Set)  c F (f : Rarrow domain nat):
   Uncurry f <=c F -> Fun'(fun x => App f x * c) <=c F.
 Proof.
   prove_nary upToC_mul_c_r.
 Qed.
 
-Lemma upToC_c_nary (domain : UPlist Type) c F:
+Lemma upToC_c_nary (domain : list Set) c F:
   (fun _ => 1) <=c F ->  
   Const' domain c <=c F.
 Proof.
@@ -94,7 +91,7 @@ Proof.
 Qed.
 
 
-Lemma upToC_S_nary (domain : UPlist Type) F (f : Rarrow domain nat) :
+Lemma upToC_S_nary (domain : list Set) F (f : Rarrow domain nat) :
   Const' domain 1 <=c F
   -> Uncurry f <=c F
   -> Fun' (fun x => S (App f x)) <=c F.
@@ -109,7 +106,7 @@ Qed.
 Ltac domain_of_prod S :=
   let S := constr:(S) in   
   let S := eval simpl in S in
-  UPlist_of_tuple S.
+  list_of_tuple S.
 
 
 Ltac leUpToC_domain G :=

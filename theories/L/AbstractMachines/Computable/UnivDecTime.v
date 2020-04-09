@@ -15,7 +15,7 @@ Definition univStep '(T,V,H) : _ + bool :=
     | _,_ => inr false (* don't care *) 
     end
   end.
-
+Import Nat. Import ARS.
 Instance termT_univStep : computableTime' univStep (fun x _ => 
                                                      (let '(T,V,H):=x in
                                                       heapStep_time T H +
@@ -57,7 +57,7 @@ Proof.
   remember (4*k+2) as n0.
   erewrite uiterTime_bound_recRel with
       (iterT := fun n _ => n* (heapStep_timeBound (largestVar s) n0 + 9 + 33) + unfoldBool_time n0 (largestVar s))
-      (P:= fun i x => i <= n0 /\  pow AbstractHeapMachineDef.step i (init s) x)
+      (P:= fun i x => i <= n0 /\ ARS.pow AbstractHeapMachineDef.step i (init s) x)
       (2:=le_n _)
     in R'.
   2:{

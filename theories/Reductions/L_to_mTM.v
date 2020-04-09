@@ -22,7 +22,7 @@ Qed.
 
 Lemma LM_halting_LM_halting : HaltLclosed ⪯ eva_LM_lin.
 Proof.
-  eexists (fun '(exist _ s _ ) => _). intros [s].
+  eexists (fun '(exist s _ ) => _). intros [s].
   cbn; now eapply red_haltL_to_LM_Lin.
 Qed.
 

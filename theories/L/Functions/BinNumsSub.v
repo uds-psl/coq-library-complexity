@@ -4,7 +4,12 @@ Require Import Numbers.BinNums.
 From Undecidability.L.Datatypes Require Import LNat LBool LBinNums.
 (** *** Subtraction of binary Numbers *)
 
-Run TemplateProgram (tmGenEncode "mask_enc" Pos.mask).
+
+Section mask. (* Import is Workaround for https://github.com/MetaCoq/metacoq/issues/385  *)
+  Import Pos. 
+  Run TemplateProgram (tmGenEncode "mask_enc" Pos.mask).
+End mask.
+
 Hint Resolve mask_enc_correct : Lrewrite.
   
 Section pos_sub.
@@ -94,9 +99,10 @@ Section pos_sub.
   Qed.
 
 End pos_sub.
-
-
+Import Pos.
+Import N.
 Instance termT_N_sub: computableTime' N.sub (fun x _ => (1,fun y _ => (N.size_nat x*32 + 22 ,tt))).
+unfold N.sub.
 extract. solverec.
 Qed.
 

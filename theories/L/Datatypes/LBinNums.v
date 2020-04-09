@@ -14,10 +14,6 @@ Global Instance termT_Pos_xO : computableTime' xO (fun x _ => (1,tt)).
 extract constructor. solverec.
 Qed.
 
-Global Instance termT_Pos_succ : computableTime' Pos.succ (fun x _ => (Pos.size_nat x*11,tt)).
-extract. solverec.
-Qed.
-
 (** ** Encoding of natural binary numbers *)
 Run TemplateProgram (tmGenEncode "N_enc" N).
 Hint Resolve N_enc_correct : Lrewrite.
@@ -83,26 +79,40 @@ Definition time_N_of_nat n := n* 20 + n*Nat.log2 n*11.
 
 Local Arguments Nat.log2 : simpl never.
 
-Instance term_Pos_of_succ_nat : computableTime' Pos.of_succ_nat (fun n _ => (time_N_of_nat n +8,tt)).
+
+Section pos.
+  Import Pos.
+  Global Instance termT_Pos_succ : computableTime' Pos.succ (fun x _ => (Pos.size_nat x*11,tt)).
+  extract. solverec.
+  Qed.
+
+
+  Global Instance term_Pos_of_succ_nat : computableTime' Pos.of_succ_nat (fun n _ => (time_N_of_nat n +8,tt)).
   extract. solverec. fold Pos.of_succ_nat. unfold time_N_of_nat.
   rewrite pos_size_eq_log2,SuccNat2Pos.id_succ.
   change (1 + n) with (S n).
   rewrite (Nat.log2_le_mono n (S n)). all:Lia.nia.
-Qed.
+  Qed.
 
-Instance term_N_of_nat : computableTime' N.of_nat (fun n _ => (time_N_of_nat n+ 4,tt)).
-Proof.
-  extract. solverec. unfold time_N_of_nat.
-  rewrite (Nat.log2_le_mono n (S n)).
-  all:ring_simplify. all:Lia.nia.
-Qed.
 
-Arguments time_N_of_nat : simpl never.
+  Import N.
+  Global Instance term_N_of_nat : computableTime' N.of_nat (fun n _ => (time_N_of_nat n+ 4,tt)).
+  Proof.
+    extract. solverec. unfold time_N_of_nat.
+    rewrite (Nat.log2_le_mono n (S n)).
+    all:ring_simplify. all:Lia.nia.
+  Qed.
 
-Instance term_N_succ : computableTime' N.succ (fun x _ => (N.size_nat x * 11 + 6,tt)).
-Proof.
-  extract. solverec.
-Qed.
+  Arguments time_N_of_nat : simpl never.
+
+  Import Pos.
+  Global Instance term_N_succ : computableTime' N.succ (fun x _ => (N.size_nat x * 11 + 6,tt)).
+  Proof.
+    unfold N.succ.
+    extract. solverec.
+  Qed.
+
+End pos.
 
 Lemma N_size_nat_monotone n n' : (n <= n')%N -> N.size_nat n <= N.size_nat n'.
 Proof.

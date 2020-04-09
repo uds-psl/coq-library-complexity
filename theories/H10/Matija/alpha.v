@@ -11,7 +11,7 @@
 
 Require Import Arith Omega Eqdep_dec ZArith.
 
-From Undecidability.Shared.Libs.DLW.Utils Require Import utils_tac gcd prime binomial sums.
+From Undecidability.Shared.Libs.DLW.Utils Require Import utils_tac gcd prime crt binomial sums.
 From Undecidability.H10.ArithLibs Require Import matrix Zp.
 
 Set Implicit Arguments.
@@ -572,7 +572,7 @@ Section Pell.
 
     Notation Zm_ring := (Zp_is_ring Hm).
 
-    Local Add Ring m_ring : Zm_ring.
+    Add Ring m_ring : Zm_ring.
 
     Notation qz := (Z.of_nat q).
 
@@ -918,9 +918,6 @@ Proof.
   + apply alpha_nat_divides_k_ge_1; auto.
 Qed.
 
-Check alpha_nat_divisibility_1.
-Print Assumptions alpha_nat_divisibility_1.
-
 Section divisibility_2.
 
   Variable (b : nat) (Hb : 2 <= b) (k : nat) (Hk : k <> 0).
@@ -1045,7 +1042,7 @@ Section divisibility_2.
 
     End in_Zp.
 
-    Local Add Ring myring2 : (Zp_is_ring Hak2).
+    Add Ring myring2 : (Zp_is_ring Hak2).
 
     Corollary alpha_square_nat : exists q, Zp_invertible Hak2 q /\ nat2Zp Hak2 (alpha_nat b m) = q ⊗ nat2Zp Hak2 l  ⊗ nat2Zp Hak2 (alpha_nat b k).
     Proof.
@@ -1102,9 +1099,6 @@ Proof.
   * apply alpha_nat_divides_2_pos; omega.
 Qed.
 
-Check alpha_nat_divisibility_2.
-Print Assumptions alpha_nat_divisibility_2.
-
 Section congruence_1.
 
   Variable (b1 b2 : nat) (Hb1 : 2 <= b1) (Hb2 : 2 <= b2)
@@ -1150,9 +1144,6 @@ Proof.
   replace b with ((b-2)+2) at 1 by omega.
   apply rem_erase with 1; omega.
 Qed.
-
-Check alpha_nat_congruence_0.
-Check alpha_nat_congruence_1.
 
 Section congruence_2.
 
@@ -1361,11 +1352,14 @@ Section diophantine_necessity.
 End diophantine_necessity.
 
 Theorem alpha_diophantine a b c : 3 < b /\ a = alpha_nat b c 
-                              <-> exists u t r s v w x y, alpha_conditions a b c u t r s v w x y.
+                              <-> exists a' b' c', a' = a /\ b' = b /\ c' = c
+                               /\ exists u t r s v w x y, 
+                                    alpha_conditions a' b' c' u t r s v w x y.
 Proof.
   split.
-  + apply alpha_necessity.
-  + intros (u & t & r & s & v & w & x & y & H); revert H.
+  + exists a, b, c; msplit 3; auto; apply alpha_necessity; auto.
+  + intros (? & ? & ? & -> & -> & -> & H); revert H.
+    intros (u & t & r & s & v & w & x & y & H); revert H.
     apply alpha_sufficiency.
 Qed.
 

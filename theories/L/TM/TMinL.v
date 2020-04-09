@@ -1,5 +1,5 @@
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import LNat Lists LProd LFinType LVector.
+From Undecidability.L.Datatypes Require Import LNat Lists LProd LFinType LVector LOptions.
 From Undecidability.L Require Import Computability.MuRec Functions.FinTypeLookup Functions.EqBool.
 From Undecidability.L Require Export TM.TMEncoding.
 From Undecidability.L Require Import TM.TapeFuns.
@@ -11,7 +11,7 @@ Definition Halt' Sigma n (M: mTM Sigma n) (start: mconfig Sigma (states M) n) :=
   exists (f: mconfig _ (states M) _), halt (cstate f)=true /\ exists k, loopM start k = Some f.
 
 Definition Halt :{ '(Sigma, n) : _ & mTM Sigma n & tapes Sigma n} -> _ :=
-  fun '(existT2 _ _ (Sigma, n) M tp) =>
+  fun '(existT2 (Sigma, n) M tp) =>
     exists (f: mconfig _ (states M) _), halt (cstate f) = true
                                    /\ exists k, loopM (mk_mconfig (start M) tp) k = Some f.
 
@@ -41,7 +41,7 @@ Section loopM.
     pose (t:= (funTable (trans (m:=M)))).
     apply computableTimeExt with (x:= (fun c => lookup c t (start M,Vector.const (None , N) _ ) )).
     2:{ remember t as lock__t .
-        extract. solverec. subst lock__t .
+        Import Vector. extract. solverec. subst lock__t .
         rewrite lookupTime_leq.
                                         setoid_rewrite size_prod;cbn [fst snd].
          unfold reg_states;rewrite (size_finType_le a).
@@ -130,8 +130,8 @@ Section loopM.
   Proof.
     split; intros.
     - destruct H as (f & ? & k & ?).
-      edestruct (mu_complete).
-      + eapply term_test.
+      edestruct (mu_complete) with (P:= ext (fun k0 : nat => isSome (loopM cfg k0))) (n:=k).
+      + Lproc.
       + intros. eexists. rewrite !ext_is_enc. now Lsimpl.
       + Lsimpl. now rewrite H0.
       + exists (ext x). split. eauto. Lproc.

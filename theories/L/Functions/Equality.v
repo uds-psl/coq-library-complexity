@@ -1,7 +1,7 @@
 From Undecidability.L Require Export Datatypes.LBool Datatypes.LNat Datatypes.LTerm.
 Require Import Nat.
 From Undecidability.L Require Import Tactics.LTactics Functions.EqBool.
-
+Import EqBool.
 (** * Extracted Functions *)
 
 (** ** Extracted equality of encoded natural numbers *)
@@ -43,12 +43,13 @@ Proof.
   exact term_eqb_spec. 
 Qed.
 
+
 Instance eqbComp_nat : eqbCompT term.
 Proof.
   evar (c:nat). exists c. unfold term_eqb.
-  unfold enc;cbn. unfold term_enc. change (nat_enc) with (enc (X:=nat)).
-  extract. unfold eqb,eqbTime.
+  unfold enc;cbn. unfold term_enc.  set (WA:=Nat.eqb) (* Workaround for https://github.com/MetaCoq/metacoq/issues/385 *).
+  extract. unfold WA,eqb,eqbTime.
   [c]:exact (5 + c__eqbComp nat).
-  all:unfold c.
-  solverec. all:try nia.
+  all:unfold c. set (c__eqbComp nat). change (nat_enc) with (enc (X:=nat)).
+  solverec. all:try nia. 
 Qed.

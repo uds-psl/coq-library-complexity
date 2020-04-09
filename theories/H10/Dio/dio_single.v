@@ -384,13 +384,11 @@ Section dio_poly_pos.
 
 End dio_poly_pos.
 
-Check dio_poly_eq_pos.
-
 Section dio_poly_inst_par.
 
-  Variable (V P : Set) (σ : P -> nat).
+  Variable (V P E : Set) (σ : P -> nat). (** E is any empty type *)
 
-  Fixpoint dp_inst_par (p : dio_polynomial V P) : dio_polynomial V Empty_set :=
+  Fixpoint dp_inst_par (p : dio_polynomial V P) : dio_polynomial V E :=
     match p with
       | dp_nat c       => dp_nat c
       | dp_var v       => dp_var v

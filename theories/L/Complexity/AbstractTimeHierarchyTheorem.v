@@ -10,7 +10,7 @@ Tactic Notation "destruct" "*" "eqn" :=
 
 From Undecidability.L.AbstractMachines.Computable Require Import Shared HeapMachine.
 From Undecidability.L Require Import AbstractMachines.LargestVar.
-
+Import Nat.
 (*Proof inspired by CS 172 handout 8 from 4/21/2015 from Luca Trevisan and Sipser's book  *)
 
 
@@ -25,7 +25,7 @@ Proof.
   cbn [computesTime timeComplexity].
   intros (?&H') x.
   split. 2:Lproc.
-  specialize H' with (y:=x) (1:=eq_refl) (yTime:=tt) as (?&H'&->).
+  specialize H' with (y:=x) (1:=Logic.eq_refl) (yTime:=tt) as (?&H'&->).
   exact H'.
 Qed.
   
@@ -157,7 +157,7 @@ Section TimeHierarchy_Parametric.
     let '(s,padding):= w in
     let fuel := f' (size (enc (s,padding))) in
     match closedb_spec s with
-      ReflectT _ x =>
+      ReflectT x =>
       let (res,_):= @informative_eval2 (E (enc fuel) (enc (start (s,padding)))) (@U_spec_helper s fuel padding x) in
       term_eqb res (enc false)
     | _ => true

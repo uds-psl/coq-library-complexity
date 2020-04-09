@@ -7,7 +7,7 @@ Global Generalizable Variable vX.
 Definition restrictedP {X} vX := ({x:X | vX x} -> Prop).
 (* Notation "vX '@With' P" := (restrPWhere vX P) (at level 0, P at level 0). *)
 
-Definition restrictBy {X} vX (P:X->Prop) : restrictedP vX := fun '(exist _ x _) => P x.
+Definition restrictBy {X} vX (P:X->Prop) : restrictedP vX := fun '(exist x _) => P x.
 Arguments restrictBy : clear implicits.
 Arguments restrictBy {_} _ _ !_.
 
@@ -24,19 +24,19 @@ Record decInTime {X} `{R :registered X} `(P : restrictedP vX) (fT : nat -> nat) 
 
 Hint Extern 1 (computableTime (f__decInTime _) _) => solve [unshelve (simple apply @compIn__decInTime)] :typeclass_instances.
 
-Lemma complete__decInTime {X} `{R :registered X} `(P : restrictedP vX) (fT : nat -> nat) (P__dec:decInTime P fT) :
-  forall x (Hx : vX x), P (exist _ x Hx) -> f__decInTime P__dec x  = true.
+Lemma complete__decInTime {X} `{R :registered X} `{P : restrictedP vX} (fT : nat -> nat) (P__dec:decInTime P fT) :
+  forall (x:X) (Hx : vX x), P (exist _ x Hx) -> f__decInTime P__dec x  = true.
   apply correct__decInTime.
 Qed.
 
 Lemma sound__decInTime {X} `{R :registered X} `(P : restrictedP vX) (fT : nat -> nat) (P__dec:decInTime P fT) :
-  forall x, f__decInTime P__dec (proj1_sig x)  = true -> P x.
+  forall (x:sig (A:=X) vX), f__decInTime P__dec (proj1_sig x)  = true -> P x.
   intros []. apply correct__decInTime.
 Qed.
 
 
 Lemma decInTime_restriction_antimono X `{R :registered X} vP vQ (P : restrictedP vP) (Q:restrictedP vQ) (fT : nat -> nat) :
-  (forall x, vQ x -> vP x)
+  (forall (x:X), vQ x -> vP x)
   -> (forall x H__P H__Q, P (exist vP x H__P) <-> Q (exist vQ x H__Q))
   -> decInTime P fT
   -> decInTime Q fT.
@@ -53,12 +53,12 @@ Proof.
   intros ?. apply decInTime_restriction_antimono. easy. cbn. easy.
 Qed.
 
-Definition inTimeO {X} `{R :registered X} `(P:restrictedP vX) f :=
+Definition inTimeO {X} `{R :registered X} `(P:restrictedP (X:=X) vX) f :=
   exists f', inhabited (decInTime P f') /\ f' ∈O f.
 
 Notation "P ∈TimeO f" := (inTimeO P f) (at level 70).
 
-Definition inTimeo {X} `{R :registered X} `(P:restrictedP vX) f :=
+Definition inTimeo {X} `{R :registered X} `(P:restrictedP (X:=X) vX) f :=
   exists f', inhabited (decInTime P f') /\ f' ∈o f.
 
 Notation "P ∈Timeo f" := (inTimeo P f) (at level 70).
@@ -68,7 +68,7 @@ Notation "P ∈Timeo f" := (inTimeo P f) (at level 70).
 
 (** Inclusion *)
 Lemma inTime_mono f g X (_ : registered X):
-  f ∈O g -> forall `(P:restrictedP vX), P ∈TimeO f -> P ∈TimeO g.
+  f ∈O g -> forall `(P:restrictedP (X:=X) vX), P ∈TimeO f -> P ∈TimeO g.
 Proof.
   intros H P ? (?&?&?). unfold inTimeO.
   eexists _. split. eassumption. now rewrite H1.
@@ -145,6 +145,7 @@ Hint Extern 1 (computableTime _ _) => unshelve (simple apply @comp__polyTC);eass
 Smpl Add 10 (simple apply poly__polyTC) : inO.
 Smpl Add 10 (simple apply mono__polyTC) : inO.
 
+Import Nat.
 
 Lemma inOPoly_computable (f:nat -> nat):
   inOPoly f -> exists f':nat -> nat , inhabited (polyTimeComputable f') /\ (forall x, f x <= f' x) /\ inOPoly f' /\ monotonic f'.

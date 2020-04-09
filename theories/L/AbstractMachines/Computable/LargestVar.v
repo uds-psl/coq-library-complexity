@@ -6,6 +6,7 @@ From Undecidability.L.AbstractMachines Require Import FunctionalDefinitions Abst
 Require Import Undecidability.L.AbstractMachines.LargestVar.
 
 From Undecidability.L Require Import Prelim.LoopSum Functions.LoopSum Functions.UnboundIteration.
+Import Nat.
 
 Instance termT_max : computableTime' max (fun x _ => (5,fun y _ => (min x y * 15 + 8,tt))).
 Proof.

@@ -109,7 +109,7 @@ Proof.
   unfold unflatten_in.
   erewrite <- map_length.
   rewrite Vector_of_list_length_eq,VectorSpec.to_list_of_list_opp.
-  rewrite utils.map_map_compose.
+  rewrite MCList.map_map_compose.
   intros. 
   erewrite map_ext_in with (g:=fun x => x). now apply map_id.
   
@@ -173,7 +173,7 @@ Proof.
   unfold unflatten_acts,unflatten_acts'.
   erewrite <- map_length.
   rewrite Vector_of_list_length_eq,VectorSpec.to_list_of_list_opp.
-  rewrite utils.map_map_compose.
+  rewrite MCList.map_map_compose.
   intros. 
   erewrite map_ext_in with (g:=fun x => x). now apply map_id.
   
@@ -487,17 +487,17 @@ Proof.
   -exists (niltape _). easy.
   -eexists (leftof _ _). cbn. f_equal.
    +symmetry;eapply index_nth_elem. apply H. cbn;easy.
-   +erewrite utils.map_map_compose. erewrite map_ext_in. now rewrite map_id.
+   +erewrite MCList.map_map_compose. erewrite map_ext_in. now rewrite map_id.
     intros. cbn. unfold Basics.compose. eapply index_nth_elem. apply H. cbn;easy.
   -eexists (rightof _ _). cbn. f_equal.
    +symmetry;eapply index_nth_elem. apply H. cbn;easy.
-   +erewrite utils.map_map_compose. erewrite map_ext_in. now rewrite map_id.
+   +erewrite MCList.map_map_compose. erewrite map_ext_in. now rewrite map_id.
     intros. cbn. unfold Basics.compose. eapply index_nth_elem. apply H. cbn. rewrite in_app_iff, <- in_rev. eauto. 
   -eexists (midtape _ _ _). cbn. f_equal.
-   +erewrite utils.map_map_compose. erewrite map_ext_in. now rewrite map_id.
+   +erewrite MCList.map_map_compose. erewrite map_ext_in. now rewrite map_id.
     intros. cbn. unfold Basics.compose. eapply index_nth_elem. apply H. cbn. rewrite in_app_iff, <- in_rev. eauto. 
    +symmetry;eapply index_nth_elem. apply H. cbn;easy.
-   +erewrite utils.map_map_compose. erewrite map_ext_in. now rewrite map_id.
+   +erewrite MCList.map_map_compose. erewrite map_ext_in. now rewrite map_id.
     intros. cbn. unfold Basics.compose. eapply index_nth_elem. apply H. cbn. rewrite in_app_iff, <- in_rev. eauto.
     Unshelve.
     all:cbn in H.

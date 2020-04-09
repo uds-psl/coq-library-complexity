@@ -33,7 +33,7 @@ Qed.
 
 From Undecidability.L Require Import Functions.FinTypeLookup.
 Definition stepFlat_time (f : nat) (c:mconfigFlat) := 153 * (| snd c |) + f * size (enc (fst c, map (current (sig:=nat)) (snd c))) * c__eqbComp (nat * list (option nat)) + 24 * f + 89.
-
+Import Nat.
 Instance term_stepFlat : computableTime' stepFlat (fun f _ => (1, fun c _ => (stepFlat_time (length f) c,tt))).
 Proof.
   unfold stepFlat.

@@ -128,9 +128,23 @@ Proof.
   + intros x; rewrite Forall_cons_inv, <- IHl, Nat.max_lub_iff; tauto.
 Qed.
 
+Fact lmax_prop l x : In x l -> x <= lmax l.
+Proof.
+  generalize (lmax_spec l (lmax l)).
+  rewrite Forall_forall; intros (H & _).
+  apply H; auto.
+Qed.
+
 Fact lsum_app l r : lsum (l++r) = lsum l+lsum r.
 Proof.
   induction l as [ | x l IHl ]; simpl; auto; rewrite IHl; omega.
+Qed.
+
+Fact le_lsum l x : In x l -> x <= lsum l.
+Proof.
+  intros H; apply in_split in H.
+  destruct H as (l1 & l2 & ->).
+  rewrite lsum_app; simpl; omega.
 Qed.
 
 Section new.
@@ -467,7 +481,7 @@ Section nat_minimize.
   Variable P : nat -> Prop.
   Hypothesis HP : forall n, { P n } + { ~ P n }.
 
-  Local Inductive bar_min (n : nat) : Prop :=
+  Inductive bar_min (n : nat) : Prop :=
     | in_bar_min_0 : P n -> bar_min n
     | in_bar_min_1 : bar_min (S n) -> bar_min n.
 

@@ -1,5 +1,6 @@
 From Undecidability.L.Datatypes Require Import LOptions LBool LNat Lists.
 From Undecidability.L.Tactics Require Import LTactics ComputableTactics.
+Require Import Nat.
 
 Section demo.
 

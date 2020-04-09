@@ -80,7 +80,7 @@ Definition list_decode X `{decodable X} :=
 Arguments list_decode : clear implicits.
 Arguments list_decode _ {_ _} _.
 
-Instance decode_list X `{registered X} {H:decodable X}: decodable (list X).
+Instance decode_list X `{registered X} {Hdec:decodable X}: decodable (list X).
 Proof.
   exists (list_decode X).
   all:unfold enc at 1. all:cbn.
@@ -145,7 +145,7 @@ Definition option_decode X `{decodable X} (s : term) : option (option X) :=
 Arguments option_decode : clear implicits.
 Arguments option_decode _ {_ _} _.
 
-Instance decode_option X `{registered X} {H:decodable X}: decodable (option X).
+Instance decode_option X `{registered X} {Hdec:decodable X}: decodable (option X).
 Proof.
   exists (option_decode X).
   all:unfold enc at 1. all:cbn.

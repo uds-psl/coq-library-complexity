@@ -13,12 +13,12 @@ Section NP_certificate_fix.
   Variable X Y : Type.
 
   Definition curryRestrRel vX (R : {x : X | vX x} -> Y -> Prop) : restrictedP (fun '(x,_) => vX x) :=
-  (fun '(exist _ (x,y) Hx) => (R (exist vX x Hx) y)).
+  (fun '(exist (x,y) Hx) => (R (exist vX x Hx) y)).
   
   Context `{Reg__X : registered X}.
   Context `{RegY : registered Y}.
 
-  Definition inTimePoly {X} `{registered X} `(P:restrictedP vX):=
+  Definition inTimePoly {X} `{registered X} `(P:restrictedP (X:=X) vX):=
     exists f, inhabited (decInTime P f) /\ inOPoly f /\ monotonic f.
 
   Record polyCertRel {vX : X -> Prop} (P:restrictedP vX) (R: {x | vX x} -> Y -> Prop) : Type :=
@@ -169,7 +169,7 @@ Proof.
   intros H H'. econstructor. eassumption. Unshelve. all:intros ? ?. all:now edestruct H'. 
 Qed.
 
-Lemma reducesPolyMO_elim X Y `{RX: registered X} `{RY:registered Y} `(P : restrictedP vX) `(Q : restrictedP vY):
+Lemma reducesPolyMO_elim X Y `{RX: registered X} `{RY:registered Y} `(P : restrictedP (X:=X) vX) `(Q : restrictedP (X:=Y) vY):
   P ⪯p Q ->
   exists f, inhabited (polyTimeComputable f)
   /\ (forall x (Hx : vX x), {Hy : vY (f x) | (P (exist vX x Hx)) <-> (Q (exist vY (f x) Hy))}).
@@ -179,7 +179,7 @@ Proof.
 Qed.
 
 Lemma reducesPolyMO_restriction_antimonotone X `{R :registered X} {vP} (P:restrictedP vP) {vQ} (Q:restrictedP vQ):
-  (forall x Hx, {Hy | P (exist vP x Hx) <-> Q (exist vQ x Hy)})
+  (forall (x:X) Hx, {Hy | P (exist vP x Hx) <-> Q (exist vQ x Hy)})
   -> P ⪯p Q.
 Proof.
   intros f . 
@@ -190,7 +190,7 @@ Proof.
   -reflexivity.
 Qed.
 
-Lemma reducesPolyMO_reflexive X {regX : registered X} `(P : restrictedP vX) : P ⪯p P.
+Lemma reducesPolyMO_reflexive X {regX : registered X} `(P : restrictedP (X:=X) vX) : P ⪯p P.
 Proof.
   eapply reducesPolyMO_restriction_antimonotone. intros ? H. exists H. reflexivity. 
 Qed.
@@ -219,7 +219,7 @@ Lemma red_inNP X Y `{regX : registered X} `{regY : registered Y} `(P : restricte
   P ⪯p Q -> inNP Q -> inNP P.
 Proof.
   intros [f f__comp Hf] [R polyR certR]. 
-  unshelve eexists (fun '(exist _ x Hx) z => R (exist vY _ _) z). 1,2:easy. 
+  unshelve eexists (fun '(exist x Hx) z => R (exist vY _ _) z). 1,2:easy. 
   -(* destruct (polyRes__polyTC f__comp) as (size__f&Hsize__f&?&mono__sizef). *)
    destruct polyR as (time__R&[R__comp]&inO__timeR&mono__timeR).
    evar (time : nat -> nat). [time]:intros n.
@@ -248,7 +248,7 @@ Qed.
 
 
 (** ** NP Hardness and Completeness *)
-Definition NPhard X `{registered X} `(P:restrictedP vX) :=
+Definition NPhard X `{registered X} `(P:restrictedP (X:=X) vX) :=
   forall Y `{registeredP Y} vY (Q:restrictedP (X:=Y) vY),
     inNP Q -> Q ⪯p P.
 
@@ -278,7 +278,7 @@ Proof.
   all: cbn. all:easy.
 Qed.
 
-Definition NPcomplete X `{registered X} `(P : restrictedP vX) :=
+Definition NPcomplete X `{registered X} `(P : restrictedP (X:=X) vX) :=
   NPhard P /\ inNP P.
 
 Hint Unfold NPcomplete.

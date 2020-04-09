@@ -103,7 +103,7 @@ Section LMGenNP_to_TMGenNP_mTM.
          5:easy. 4:now cbn;intuition subst.
          2,3:intros _ (x&<-&Hinx)%in_map_iff. 2,3:eexists _,_;split;[reflexivity | ].
          2,3:now split;[easy | intros ? (y&<-&Hiny)%in_map_iff;easy].
-         destruct H' as [Hinit Hlast]. rewrite <- utils.map_skipn in Hlast.
+         destruct H' as [Hinit Hlast]. rewrite <- MCList.map_skipn in Hlast.
          destruct (split_vector v0 n) as (v'&vlst) eqn:Hsplit.
          unshelve eassert (H':=split_vector_correct _ _). 6:rewrite Hsplit in H'. clear. abstract nia. 
          cbn [fst snd] in H'.  apply (f_equal (@vector_to_list _ _ )) in H'. rewrite vector_to_list_cast in H'. clear Hsplit.
@@ -160,7 +160,7 @@ Section LMGenNP_to_TMGenNP_mTM.
     { 
       evar (time : nat -> nat). [time]:intros n0.
       eexists (fun x => time x).
-      { unfold f__nice. extract. solverec.
+      { unfold f__nice. Import Nat. extract. solverec.
         set (n0:=(L.size (enc (a0, b0, b)))).
         assert (a0+b0+b+1 <= n0). 1:{ unfold n0. rewrite !size_prod. cbn [fst snd]. rewrite !size_nat_enc. nia. }
         unshelve erewrite (_ : a0 <= n0). nia. unshelve erewrite (_ : b0 <= n0). nia. unshelve erewrite (_ : b <= n0). nia.
@@ -184,7 +184,8 @@ Section LMGenNP_to_TMGenNP_mTM.
     { 
       evar (c0 : nat).
       eexists (fun _ => c0).
-      { unfold t__size. extract. solverec. all:rewrite eqbTime_le_l.
+      { unfold t__size. Import Init.Nat. Import EqBool LNat Equality. Import Equality. Set Printing All. set (WorkAround := Nat.eqb).
+        extract. unfold WorkAround. solverec. all:rewrite eqbTime_le_l.
         all:set (c:=L.size (enc 0)). all:cbv in c;subst c. all:subst c0. 2:easy. nia. }
       1,2:smpl_inO.
       { evar (f__size : nat -> nat). [f__size]:intros n0. exists f__size.
@@ -213,7 +214,7 @@ Section LMGenNP_to_TMGenNP_mTM.
       
       evar (time : nat -> nat). [time]:intros n0.
       eexists (fun x => time x).
-      { unfold t__start. extract. solverec. rewrite (UpToC_le _).
+      { unfold t__start. Import Datatypes. set (WorkAround:=Vector.to_list). extract. solverec. rewrite (UpToC_le _).
         rewrite (correct__leUpToC (mapTime_upTo _)). 
         rewrite length_concat,map_map. subst g. cbn -[plus mult]. setoid_rewrite map_length. rewrite to_list_length.
         erewrite sumn_map_le_pointwise  with (f2:=fun _ => _).

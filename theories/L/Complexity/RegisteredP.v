@@ -16,7 +16,7 @@ Arguments c__regP _ {_ _} : simpl never.
 Hint Mode registeredP + + : typeclass_instances. (* treat argument as input and force evar-freeness*)
 
 Existing Instance comp_enc_lin.
-Global Typeclasses Opaque enc.
+Typeclasses Opaque enc.
 
 
 Instance regP_nat : registeredP nat.
@@ -84,6 +84,7 @@ Proof.
   now destruct l.
 Qed.
 
+Import LBool.
 Instance term_bool_enc
   :computableTime' (LBool.bool_enc) (fun x _ => (12,tt)).
 Proof.
