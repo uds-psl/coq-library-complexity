@@ -9,7 +9,7 @@ Require Export List PslBase.Lists.Filter Datatypes.
 Section Fix_X.
   Variable (X:Type).
   Context {intX : registered X}.
-
+  Import GenEncode.
   Run TemplateProgram (tmGenEncode "list_enc" (list X)).  
   Hint Resolve list_enc_correct : Lrewrite.
   
@@ -244,7 +244,7 @@ Section int.
   Proof.
     intros ? ?. eapply list_eqb_spec. all:eauto using eqb_spec.
   Qed.
-
+  Import EqBool.
   Global Instance eqbComp_List `{eqbCompT X (R:=HX)}:
     eqbCompT (list X).
   Proof.

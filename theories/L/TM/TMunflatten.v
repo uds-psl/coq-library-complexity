@@ -232,7 +232,7 @@ Proof.
    +erewrite lookup_sound. 3:eassumption. 2:eapply flatTrans_inj;eassumption.
     edestruct lookup as (st0,l__r). left.
     specialize (flatTrans_bound H H') as (?&?&?&?&?&?).
-    rewrite !index_nth_elem_fint. 2,3:easy. cbn in *.
+    rewrite !index_nth_elem_fint. 2:easy. cbn in *.
     replace ((index s0, map (option_map index) (Vector.to_list v0),
               (st0, map (map_fst (option_map index)) (Vector.to_list (unflatten_acts (finType_CS (Fin.t sig)) n l__r)))))
       with (index s0, map (option_map (fun x : Fin.t sig => index x)) (Vector.to_list v0), (st0, l__r)).

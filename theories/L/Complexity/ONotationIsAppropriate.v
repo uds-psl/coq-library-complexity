@@ -25,7 +25,7 @@ Proof.
   -exists c. intros. rewrite Hc. nia.
 Qed.
 
-
+Require ZArith.
 From Coq.QArith Require QArith Qabs Qround.
 Module smallo_equiv.
   Import QArith Qabs Qround ZArith.

@@ -1,4 +1,5 @@
 From Undecidability.L Require Import Datatypes.LNat Tactics.LTactics.
+Import Ring.
 
 (** ** Computability of Ackermann *)
 
@@ -36,8 +37,9 @@ Lemma termT_ackermann :
 Proof.
   extract.
   Import Ring Arith.
-  cbn. fold ackermann. 
-  repeat (cbn ;intros;intuition idtac;try destruct _;try ring_simplify;try lia).
+  cbn. fold ackermann. Import Lia.
+  repeat (cbn ;intros;intuition idtac;try destruct _).
+  all:ring_simplify. all:try nia.
   all:repeat change (fix ackermann_Sn (m : nat) : nat :=
     match m with
     | 0 => fun _ => ackermann x0 1

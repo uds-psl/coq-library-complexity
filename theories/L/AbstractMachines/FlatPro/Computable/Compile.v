@@ -24,7 +24,7 @@ Proof.
   all:repeat first[rewrite <- IHs1,<- IHs2 | rewrite <- IHs]. all:ring_simplify.
   all:unfold c__size;nia.
 Qed.
-
+Import L.
 Definition compileTR' '(stack,res) : (list (term + bool) * list Tok) + list Tok :=
   match stack with
     [] => inr res

@@ -83,6 +83,7 @@ Definition tmGenEncode' (n : ident) (A : Type) :=
   tmExistingInstance n3 ;;
   m <- tmMatchCorrect A ;; ret tt.
 
+(* TODO : use other methode instead, e.g. with typeclasses, as default obligation tactic is very fragile *)
 Global Obligation Tactic := try fold (injective (enc_f)); match goal with
                            | [ |- forall x : ?X, proc ?f ] => register_proc
                            | [ |- injective ?f ] => register_inj

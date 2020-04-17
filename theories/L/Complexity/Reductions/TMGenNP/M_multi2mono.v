@@ -153,8 +153,6 @@ Section putFirst.
             all:rewrite !Fin.to_nat_of_nat in Heq. 
             all:inversion Heq as [H2]. all:try rewrite ?Nat.sub_0_r in H2.
             all:try apply Fin.to_nat_inj in H2. all:try easy.
-      -clear - l H2.  nia.
-      -clear - l0 H2.  nia.
     Qed.
     
   End printFin.

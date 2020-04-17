@@ -215,10 +215,11 @@ Module CheckTapeContains.
       repeat (cbn [length] in *;autorewrite with list in * ). cbn - [mult plus] in *.
       rewrite Ht in Ht1.
       destruct t[@Fin0] as [ | | | ? ? t__R] eqn:Ht'. all:inv Hct. cbn - [mult plus] in *.
-      rewrite tape_local_move_right' in Ht1. subst t__R. autorewrite with list. cbn - [mult plus] in *. Lia.nia.
+      rewrite tape_local_move_right' in Ht1. subst t__R. autorewrite with list in *. cbn - [mult plus] in *.
+      instantiate (1 := k - k' - 15). Lia.nia.
       Unshelve.
       Import Ring Arith.
-      ring_simplify. rewrite <- H. cbn - [plus mult]. Lia.nia.
+      ring_simplify. Lia.nia.
     Qed.
 
   End fixx.

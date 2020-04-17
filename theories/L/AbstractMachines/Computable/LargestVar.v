@@ -12,7 +12,7 @@ Instance termT_max : computableTime' max (fun x _ => (5,fun y _ => (min x y * 15
 Proof.
   extract. fold max. solverec.
 Qed.
-
+Import L.
 Definition largestVarTR' '(stack,res) : (list term * nat) + nat :=
   match stack with
     [] => inr res

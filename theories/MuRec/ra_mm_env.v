@@ -10,7 +10,7 @@
 Require Import List Arith Omega.
 
 From Undecidability.Shared.Libs.DLW.Utils
-  Require Import utils.
+  Require Import utils finite.
 
 From Undecidability.Shared.Libs.DLW.Vec
   Require Import pos vec.
@@ -81,7 +81,7 @@ Section ra_compiler.
                  -> n+p <= m
                  -> @ra_compiler_spec n f i p o m.
 
-  Hint Resolve sss_progress_compute.
+  Hint Resolve sss_progress_compute : core.
 
   Fact ra_compiler_cst c : ra_compiler_stm (ra_cst c). 
   Proof.

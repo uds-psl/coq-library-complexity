@@ -1,10 +1,11 @@
 -Q . Undecidability
 
 -install none
--arg -w -arg -notation-overridden,-redundant-canonical-projection,-several-object-files,cannot-define-projection,records,unused-intro-pattern,tactics
+-arg -w -arg -notation-overridden,-redundant-canonical-projection,-several-object-files,-cannot-define-projection,-records,-unused-intro-pattern,-tactics,-implicit-core-hint-db,-ambiguous-paths
 COQDOCFLAGS = "--charset utf-8 -s --with-header ../website/resources/header.html --with-footer ../website/resources/footer.html --index indexpage"
 
 Shared/Prelim.v
+
 
 Shared/Libs/DLW/Utils/focus.v
 Shared/Libs/DLW/Utils/utils_tac.v
@@ -26,15 +27,64 @@ Shared/Libs/DLW/Utils/prime.v
 Shared/Libs/DLW/Utils/power_decomp.v
 Shared/Libs/DLW/Utils/bounded_quantification.v
 Shared/Libs/DLW/Utils/php.v
+Shared/Libs/DLW/Utils/seteq.v
 Shared/Libs/DLW/Utils/rel_iter.v
 Shared/Libs/DLW/Utils/crt.v
-
+Shared/Libs/DLW/Utils/fin_base.v
+Shared/Libs/DLW/Utils/fin_dec.v
+Shared/Libs/DLW/Utils/fin_choice.v
+Shared/Libs/DLW/Utils/fin_bij.v
+Shared/Libs/DLW/Utils/fin_upto.v
+Shared/Libs/DLW/Utils/fin_quotient.v
+Shared/Libs/DLW/Utils/finite.v
+Shared/Libs/DLW/Utils/quotient.v
 
 Shared/Libs/DLW/Vec/pos.v
 Shared/Libs/DLW/Vec/vec.v
 
+Shared/Libs/DLW/Wf/acc_irr.v
+Shared/Libs/DLW/Wf/measure_ind.v
+Shared/Libs/DLW/Wf/wf_chains.v
+Shared/Libs/DLW/Wf/wf_finite.v
+Shared/Libs/DLW/Wf/wf_incl.v
+
 Problems/Reduction.v
-Problems/PCP.v
+
+#Post correspondence problem
+PCP/PCP.v
+PCP/PCP_undec.v
+
+PCP/Util/Facts.v
+PCP/Util/PCP_facts.v
+PCP/Reductions/MPCP_to_PCP.v
+PCP/Reductions/PCPX_iff_dPCP.v
+PCP/Reductions/PCPb_iff_dPCPb.v
+PCP/Reductions/PCPb_iff_BPCP.v
+PCP/Reductions/PCP_to_PCPb.v
+PCP/Reductions/PCPb_iff_iPCPb.v
+PCP/Reductions/SR_to_MPCP.v
+PCP/Reductions/MPCP_to_MPCPb.v
+
+#String rewriting
+SR/SR.v
+SR/SR_undec.v
+
+SR/Util/Definitions.v
+SR/Util/singleTM.v
+SR/Reductions/SRH_to_SR.v
+SR/Reductions/TM_to_SRH.v
+
+#Context-free grammars
+CFG/CFP.v
+CFG/CFP_undec.v
+CFG/CFG.v
+CFG/CFG_undec.v
+
+CFG/Reductions/PCP_to_CFPP.v
+CFG/Reductions/PCP_to_CFPI.v
+CFG/Reductions/CFPP_to_CFP.v
+CFG/Reductions/CFPI_to_CFI.v
+
 
 FOL/DecidableEnumerable.v
 FOL/Reductions.v
@@ -50,20 +100,7 @@ FOL/BPCP_CND.v
 FOL/Weakening.v
 FOL/Infinite.v
 
-PCP/Definitions.v
-PCP/SRH_SR.v
-PCP/SR_MPCP.v
-PCP/MPCP_PCP.v
-PCP/PCP_CFP.v
-PCP/PCP_CFI.v
-PCP/singleTM.v
-PCP/TM_SRH.v
-PCP/Post_CFG.v
-PCP/CFP_CFI.v
-
 ILL/Definitions.v
-ILL/PCP_BPCP.v
-ILL/BPCP_iBPCP.v
 
 ILL/Code/subcode.v
 ILL/Code/sss.v
@@ -503,9 +540,67 @@ FOLP/FullFOL.v
 FOLP/FullTarski.v
 FOLP/Input.v
 
+#####
+# Full Trakhtenbrot with single binary rel
+#####
+
+TRAKHTENBROT/notations.v
+TRAKHTENBROT/bpcp.v
+TRAKHTENBROT/utils.v
+TRAKHTENBROT/decidable.v
+TRAKHTENBROT/enumerable.v
+TRAKHTENBROT/fol_ops.v
+
+TRAKHTENBROT/gfp.v
+TRAKHTENBROT/btree.v
+TRAKHTENBROT/hfs.v
+
+TRAKHTENBROT/fo_sig.v
+TRAKHTENBROT/fo_terms.v
+TRAKHTENBROT/fo_logic.v
+TRAKHTENBROT/fo_enum.v
+TRAKHTENBROT/fo_congruence.v
+TRAKHTENBROT/fo_sat.v
+TRAKHTENBROT/fo_definable.v
+TRAKHTENBROT/fo_sat_dec.v
+
+TRAKHTENBROT/discrete.v
+TRAKHTENBROT/membership.v
+TRAKHTENBROT/reln_hfs.v
+
+TRAKHTENBROT/Sig_discrete.v
+TRAKHTENBROT/Sig_noeq.v
+
+TRAKHTENBROT/BPCP_SigBPCP.v
+TRAKHTENBROT/Sign_Sig2.v
+TRAKHTENBROT/Sig2_Sign.v
+TRAKHTENBROT/Sign_Sig.v
+TRAKHTENBROT/Sign1_Sig.v
+TRAKHTENBROT/Sig_no_syms.v
+TRAKHTENBROT/Sig_rem_syms.v
+TRAKHTENBROT/Sig_uniform.v
+TRAKHTENBROT/Sig_rem_cst.v
+TRAKHTENBROT/Sig_one_rel.v
+TRAKHTENBROT/Sig_Sig_fin.v
+TRAKHTENBROT/Sig_rem_props.v
+TRAKHTENBROT/Sig_rem_constants.v
+
+TRAKHTENBROT/Sig0.v
+TRAKHTENBROT/Sig1.v
+TRAKHTENBROT/Sig1_1.v
+TRAKHTENBROT/Sig2_SigSSn1.v
+
+TRAKHTENBROT/red_utils.v
+TRAKHTENBROT/red_dec.v
+TRAKHTENBROT/red_enum.v
+TRAKHTENBROT/red_undec.v
+
+TRAKHTENBROT/summary.v
+
+##############################
+
 Problems/FOL.v
 Problems/TM.v
-Problems/SR.v
 Problems/MM.v
 Problems/MM2.v
 Problems/BSM.v
@@ -517,11 +612,6 @@ Problems/RA_UNIV.v
 Problems/cbvLambda.v
 Problems/FOLFS.v
 
-Reductions/TM_to_SRH.v  
-Reductions/SRH_to_SR.v  
-Reductions/SR_to_MPCP.v 
-Reductions/MPCP_to_PCP.v
-Reductions/PCP_to_BPCP.v
 Reductions/BPCP_to_BSM.v
 Reductions/BSM_to_MM.v  
 Reductions/MM_to_ILL.v  

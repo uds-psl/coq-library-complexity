@@ -198,7 +198,7 @@ Proof.
         pose proof (Z.square_nonneg (Φ' pos2)).
         pose proof (Z.square_nonneg (Φ' pos1)).
         pose proof (Z.square_nonneg (Φ' pos0)).
-        lia.
+        nia.
       * apply H.
 Qed.
 
@@ -248,4 +248,4 @@ Proof.
 Qed.
 
 Check H10_H10Z.
-Print Assumptions H10_H10Z.
+

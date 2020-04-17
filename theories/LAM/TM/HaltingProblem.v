@@ -33,6 +33,8 @@ Fixpoint Loop_size (T V : list HClos) (H : Heap) (k : nat) {struct k} : Vector.t
     end
   end.
 
+Import LM_heap_def.
+
 Lemma step_k_inv T V H T2 V2 H2 k :
   steps_k k (T, V, H) (T2, V2, H2) ->
   (k=0/\T=T2/\V=V2/\H=H2) \/
@@ -55,9 +57,8 @@ Proof.
   intros Hstep Hloop Hhalt. cbn. erewrite step_step_fun by eauto. cbn.
   pose proof (step_k_inv Hloop) as [(->&<-&<-&<-) | (k'&T1'&V1'&H1'&->&Hstep'&Hloop')].
   - rewrite halt_state_is_halt_state by auto. cbn. destruct_fin i; cbn; auto.
-  - erewrite step_is_halt_state by eauto. cbn. destruct_fin i; cbn; auto.
+  - erewrite step_is_halt_state by eauto. destruct_fin i; cbn [Vector.nth];eauto 1.
 Qed.
-(* This proof takes to long. It should be simpler *)
 
 
 Definition Loop_Rel : pRel sigStep^+ unit 11 :=

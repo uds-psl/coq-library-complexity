@@ -19,11 +19,14 @@
     The reduction goes via regular FRACTRAN termination *)
 
 Require Import Undecidability.ILL.Definitions.
+Require Import Undecidability.Shared.Prelim.
 
 From Undecidability.Shared.Libs.DLW Require Import Utils.utils Vec.pos Vec.vec.
 From Undecidability.ILL.Code Require Import sss.
 From Undecidability.H10 Require Import Fractran.fractran_defs MM_FRACTRAN.
 From Undecidability.MM Require Import mma_defs fractran_mma.
+
+
 
 Set Implicit Arguments.
 
@@ -58,4 +61,4 @@ Section FRACTRAN_REG_MMA2.
 End FRACTRAN_REG_MMA2.
 
 Check FRACTRAN_REG_MMA2_HALTING.
-Print Assumptions FRACTRAN_REG_MMA2_HALTING.
+

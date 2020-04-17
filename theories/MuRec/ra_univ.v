@@ -89,7 +89,7 @@ Definition nat_h10lc k :=
 
 Fact nat_h10lc_surj lc : { k | lc = nat_h10lc k }.
 Proof.
-  destruct (list_vec lc) as (v & <-).
+  destruct (list_vec_full lc) as (v & <-).
   generalize (length lc) v; clear lc v.
   intros n v.
   set (w := vec_map h10c_nat v).
@@ -257,7 +257,7 @@ Section ra_h10c.
 
 End ra_h10c.
 
-Hint Resolve ra_h10c_prim_rec ra_h10c_val.
+Hint Resolve ra_h10c_prim_rec ra_h10c_val : core.
 Opaque ra_h10c.
 
 Section iter_h10c.
@@ -341,7 +341,7 @@ Section iter_h10c.
 
 End iter_h10c.
 
-Hint Resolve ra_iter_h10c_prim_rec.
+Hint Resolve ra_iter_h10c_prim_rec : core.
 Opaque ra_iter_h10c.
 
 Section ra_univ.

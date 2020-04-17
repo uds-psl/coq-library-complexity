@@ -64,12 +64,12 @@ Proof.
 Defined.
 
 From Undecidability.L Require Import Datatypes.Lists.
-
+Import L. 
 Definition list_decode X `{decodable X} :=
   fix list_decode (s : term) : option (list X) :=
     match s with
     | lam (lam 1) => Some []
-    | lam (lam (app (app O x) xs)) =>
+    | lam (lam (L.app (L.app O x) xs)) =>
       match decode X x,list_decode xs with
         Some x, Some xs => Some (x::xs)
       | _,_ => None

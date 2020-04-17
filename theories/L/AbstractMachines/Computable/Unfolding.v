@@ -11,7 +11,7 @@ From Undecidability.L.AbstractMachines.Computable Require Import Shared Lookup.
 Import Nat.
 Import UnfoldTailRec.task.
 
-
+Import GenEncode.
 Run TemplateProgram (tmGenEncode "task_enc" task).
 Hint Resolve task_enc_correct : Lrewrite.
 

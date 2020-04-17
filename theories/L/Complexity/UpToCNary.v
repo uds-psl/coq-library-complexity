@@ -139,7 +139,7 @@ Ltac destruct_pair_rec p :=
 
 Ltac upToC_le_nary_solve :=
   let x := fresh "x" in
-  apply upToC_le;intros x;destruct_pair_rec x; nia.
+  apply upToC_le;intros x;destruct_pair_rec x; first [nia|lia].
 
 Smpl Add upToC_le_nary_solve : upToC_solve.
 

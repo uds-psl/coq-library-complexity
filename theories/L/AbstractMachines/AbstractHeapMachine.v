@@ -130,7 +130,7 @@ Lemma unfolds_extend H H' a s t k :
   unfolds H' a k s t.
 Proof.
   induction 2.
-  all:econstructor. 1-2,4-8:now eauto. erewrite lookup_extend;eauto.
+  all:econstructor. 1-2,4-7:now eauto. erewrite lookup_extend;eauto.
 Qed.
 
 Instance unfold_extend_Proper : Proper (extended ==> eq ==> eq ==> eq ==> eq ==>Basics.impl) unfolds.

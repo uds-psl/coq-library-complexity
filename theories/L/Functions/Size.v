@@ -7,7 +7,7 @@ From Undecidability.L.Datatypes Require Import Lists.
 Instance term_size' : computable size'.
 Proof.
   extract.
-Abort.
+Abort. (*possible, but teh run time of this implementation is not good enough *)
 
 Lemma size'_surj : surjective size'.
 Proof.
@@ -17,7 +17,7 @@ Proof.
    exists (lam x). cbn. easy. 
 Qed.
 
-
+Import L.
 Definition sizeTR' '(stack,res) : (list term * nat) + nat :=
   match stack with
     [] => inr res

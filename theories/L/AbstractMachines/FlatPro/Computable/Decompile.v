@@ -3,6 +3,7 @@ From Undecidability.L.Datatypes Require Import LSum LBool LNat Lists.
 
 From Undecidability.L.AbstractMachines  Require Import FlatPro.Programs Computable.LPro.
 
+Import L.
 Definition time_decompile :=
   fix f (l:nat) (P:list Tok) A :=
     match P with

@@ -42,7 +42,11 @@ Proof.
   -edestruct destruct_vector_cons with (v:=t') as (?&?&->).
    cbn - [mult]. fold (Vector.to_list (Vector.map (mapTape index) x0)).
    specialize (IHn x0).
-   rewrite size_flatTape. nia.
+   rewrite size_flatTape.
+   set (a := sumn _) in *. set (b := VectorDef.fold_right _ _ _) in *. set (c := Cardinality.Cardinality _) in *.
+   set (d:=sizeOfTape _).
+   enough (a <= n * b * (c * 4 + 9) + n * 22) as ->. 2: nia.
+   repeat eapply Nat.max_case_strong;intros ?. nia. Unset Simplex. rewrite H.  nia.
 Qed.
 
 

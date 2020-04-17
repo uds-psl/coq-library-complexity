@@ -117,8 +117,8 @@ Module BoollistToEnc.
     Lemma Realises__step : M__step ⊨ Rel__step .
     Proof.
       eapply Realise_monotone.
-      {unfold M__step. TM_Correct_noSwitchAuto. TM_Correct.
-       2,3: now (notypeclasses refine (@Reset_Realise _ _ _ _ _);shelve).
+      {unfold M__step. TM_Correct_noSwitchAuto. TM_Correct. 
+       2: now (notypeclasses refine (@Reset_Realise _ _ _ _ _);shelve).
        intros b. TM_Correct. 2:now (notypeclasses refine (@Reset_Realise _ _ _ _ _);shelve).
        now apply App'_Realise. }
       intros t (y,t') H. cbn. 
@@ -247,7 +247,7 @@ Module BoollistToEnc.
                 LiftTapes (Reset _) [|Fin2|];;(*2: empty*)
                 M__loop.
 
-    Lemma Realises : M ⊨ Rel .
+    Lemma Realises : M ⊨ M.Rel .
     Proof.
       eapply Realise_monotone.
       {unfold M. TM_Correct_noSwitchAuto. TM_Correct.

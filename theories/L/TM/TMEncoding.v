@@ -9,11 +9,11 @@ Require Import PslBase.FiniteTypes.FinTypes.
 
 (** ** Extraction of Turing Machine interpreter  *)
 
-
+Import GenEncode.
 Run TemplateProgram (tmGenEncode "move_enc" move).
 Hint Resolve move_enc_correct : Lrewrite.
 
-
+Import TM.
 Definition move_eqb (m n : move) : bool :=
   match m,n with
     N,N => true
@@ -75,7 +75,7 @@ Section reg_tapes.
 
   
   Implicit Type (t : TM.tape sig).
-
+  Import GenEncode.
   Run TemplateProgram (tmGenEncode "tape_enc" (TM.tape sig)).
   Hint Resolve tape_enc_correct : Lrewrite.
 
@@ -99,7 +99,7 @@ Section reg_tapes.
   
 End reg_tapes.
 
-
+Import L.
 Definition tape_decode X `{decodable X} (s : term) : option (tape X) :=
   match s with
   | lam (lam (lam (lam 3))) => Some (niltape _)

@@ -174,7 +174,7 @@ Proof.
   intros R__spec. destruct (inOPoly_computable (poly__rSP R__spec)) as (p'&[?]&Hbounds&?&?).
   unshelve eexists.
   exists p'.
-  2-5:now eauto using resSize__polyTC. intros. rewrite bounds__rSP. easy.
+  2-4:now eauto using resSize__polyTC. intros. rewrite bounds__rSP. easy.
 Qed.
 
 Lemma polyTimeComputable_compTime X Y `{registered X} `{registered Y} (f: X -> Y):

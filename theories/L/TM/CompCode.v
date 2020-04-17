@@ -8,7 +8,7 @@ Require Import PslBase.Vectors.Vectors.
      
 From Undecidability Require Import TMEncoding.
 
-  
+Import GenEncode.  
 Run TemplateProgram (tmGenEncode "boundary_enc" boundary).
 Hint Resolve boundary_enc_correct : Lrewrite.
 

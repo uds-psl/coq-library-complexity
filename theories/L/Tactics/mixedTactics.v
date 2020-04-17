@@ -1,4 +1,4 @@
-Require Import PslBase.Base Lia.
+Require Import PslBase.Base Lia Ring.
 
 Tactic Notation "destruct" "_":= 
   match goal with

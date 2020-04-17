@@ -28,7 +28,8 @@ Section LMGenNP_to_TMGenNP_mTM.
   Local Arguments Canonical_Rel : simpl never. 
   Local Arguments loopM : clear implicits.
   Local Arguments loopM {_ _ } _ _ _.
-
+  Import EqBool.
+  
   Lemma LMGenNP_to_TMGenNP_mTM :
     restrictBy (HaltsOrDiverges_fixed_mTM M) (TMGenNP_fixed_mTM M)
                ⪯p unrestrictedP (TMGenNP_fixed_singleTapeTM (projT1 M__mono)).
@@ -184,7 +185,7 @@ Section LMGenNP_to_TMGenNP_mTM.
     { 
       evar (c0 : nat).
       eexists (fun _ => c0).
-      { unfold t__size. Import Init.Nat. Import EqBool LNat Equality. Import Equality. Set Printing All. set (WorkAround := Nat.eqb).
+      { unfold t__size. Import Init.Nat. Import EqBool LNat Equality. Import Equality. Import EqBool. set (WorkAround := Nat.eqb).
         extract. unfold WorkAround. solverec. all:rewrite eqbTime_le_l.
         all:set (c:=L.size (enc 0)). all:cbv in c;subst c. all:subst c0. 2:easy. nia. }
       1,2:smpl_inO.
@@ -298,6 +299,6 @@ Section LMGenNP_to_TMGenNP_mTM.
         
   Qed.
 
-  Print Assumptions LMGenNP_to_TMGenNP_mTM. 
+  (* Print Assumptions LMGenNP_to_TMGenNP_mTM. *)
 
 End LMGenNP_to_TMGenNP_mTM.

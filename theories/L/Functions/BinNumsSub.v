@@ -6,7 +6,7 @@ From Undecidability.L.Datatypes Require Import LNat LBool LBinNums.
 
 
 Section mask. (* Import is Workaround for https://github.com/MetaCoq/metacoq/issues/385  *)
-  Import Pos. 
+  Import Pos GenEncode. 
   Run TemplateProgram (tmGenEncode "mask_enc" Pos.mask).
 End mask.
 

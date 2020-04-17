@@ -4,6 +4,7 @@ Require Import PslBase.Numbers.
 
 Require Import Nat.
 From Undecidability.L Require Import Datatypes.LBool Functions.EqBool.
+Import GenEncode. Import Nat.
 (** ** Encoding of natural numbers *)
 
 Run TemplateProgram (tmGenEncode "nat_enc" nat).
@@ -64,10 +65,9 @@ Instance termT_pow:
   computableTime' Init.Nat.pow   (fun (x : nat) _ => (5,fun (n : nat) _ => (n* (x*19+x^n*11+19) + 5, tt))).
 Proof.
   extract. fold Nat.pow. solverec.
-  decide (1<=x2).
-  1:Lia.nia. replace x2 with 0 by lia. ring_simplify.
-  decide (1<=n). now rewrite Nat.pow_0_l;Lia.nia.
-  Lia.nia.
+  replace (11 * n * x2 * x2 ^ n) with (11 * n * x2 ^ (1 + n)). 2:now cbn;nia.
+  decide (x2=0). { subst. ring_simplify. destruct n. now cbn;Lia.nia. now rewrite !pow_0_l. }
+                 rewrite <- pow_le_mono_r with (b:=n) (c:=S n). 2,3:Lia.nia. nia.
 Qed.
 
 (* now some more encoding-related properties:*)
@@ -87,8 +87,8 @@ Qed.
 Lemma unenc_correct2 t n : nat_unenc t = Some n -> nat_enc n = t.
 Proof with try solve [Coq.Init.Tactics.easy].
   revert n. eapply (size_induction (f := size) (p := (fun t => forall n, nat_unenc t = Some n -> nat_enc n = t))). clear t. intros t IHt n H.
-  destruct t. easy. easy.
-  destruct t. easy. easy.
+  destruct t as [ | | t]. easy. easy.
+  destruct t as [ | | t]. easy. easy.
   destruct t. 3:easy.
   -destruct n0. easy. destruct n0. 2:easy. inv H. easy.
   -destruct t1. 2-3:easy. destruct n0. 2:easy. simpl in H. destruct (nat_unenc t2) eqn:A.

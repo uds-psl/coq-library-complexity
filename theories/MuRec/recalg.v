@@ -9,8 +9,11 @@
 
 Require Import Arith Eqdep_dec Omega List Bool.
 
-From Undecidability.Shared.Libs.DLW 
-  Require Import Utils.utils_tac Utils.utils_nat Utils.utils_list Vec.pos Vec.vec.
+From Undecidability.Shared.Libs.DLW.Utils 
+  Require Import utils_tac utils_nat utils_list finite. 
+
+From Undecidability.Shared.Libs.DLW.Vec 
+  Require Import pos vec.
 
 Set Implicit Arguments.
 
@@ -339,18 +342,18 @@ Section relational_semantics.
     Lemma s_comp_fun f gj : functional f -> (forall p, functional (vec_pos gj p)) -> functional (s_comp f gj).   
     Proof.
       intros f_fun gj_fun v x y [ gx [ Hx1 Hx2 ] ] [ gy [ Hy1 Hy2 ] ].
-      cutrewrite (gx = gy) in Hx1.
-      apply (@f_fun gy); trivial.
-      apply vec_pos_ext.
-      intros p; apply (gj_fun p v); auto.
+      replace gx with gy in Hx1.
+      + apply (@f_fun gy); trivial.
+      + apply vec_pos_ext.
+        intros p; apply (gj_fun p v); auto.
     Qed.
 
     Lemma s_rec_fun f h : functional f -> functional h -> functional (s_rec f h).
     Proof.
       intros Hf Hh ? ? ?. 
       apply μ_rec_fun. 
-      * apply Hf.
-      * intros ? ? ? ? ?; apply Hh; auto.
+      + apply Hf.
+      + intros ? ? ? ? ?; apply Hh; auto.
     Qed.
 
     Lemma s_min_fun g : functional g -> functional (s_min g).
@@ -361,7 +364,7 @@ Section relational_semantics.
 
   End functional.
 
-  Hint Resolve s_cst_fun s_zero_fun s_succ_fun s_proj_fun s_rec_fun s_min_fun.
+  Hint Resolve s_cst_fun s_zero_fun s_succ_fun s_proj_fun s_rec_fun s_min_fun : core.
 
   (* [| f |] is a functional/deterministic relation *)
 
@@ -459,7 +462,7 @@ Section relational_semantics.
       + split; try tauto; discriminate.
     Qed.
 
-    Hint Resolve ra_cst_tot ra_zero_tot ra_succ_tot ra_proj_tot ra_rec_tot.
+    Hint Resolve ra_cst_tot ra_zero_tot ra_succ_tot ra_proj_tot ra_rec_tot : core.
 
     Fact prim_rec_tot k f : @prim_rec k f -> total [|f|].
     Proof.

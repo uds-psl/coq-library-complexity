@@ -8,6 +8,7 @@ From Undecidability.L.TM Require Import TMEncoding.
 
 Import Nat TM.
 Import TMflat.
+Import GenEncode.
 Run TemplateProgram (tmGenEncode "TM_enc" TM).
 Hint Resolve TM_enc_correct : Lrewrite.
 

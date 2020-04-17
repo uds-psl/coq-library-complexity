@@ -35,7 +35,7 @@ Section finType_eqb.
   Proof.
     intros ? ?. eapply finType_eqb_reflect. 
   Qed.
-
+  Import Nat.
   Global Instance eqbFinType (X:finType): eqbCompT X.
   Proof.
     evar (c:nat). exists c. unfold finType_eqb.

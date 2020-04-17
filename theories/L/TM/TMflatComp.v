@@ -78,8 +78,8 @@ Proof.
       rewrite Forall_forall in H. apply H in H1.
       destruct x;cbn. 1-3:lia. rewrite size_nat_enc. destruct (H1 n).
       cbn;eauto. all:nia. }
-  rewrite !map_length.
-  rewrite eqt. unfold stepFlat_timeNice. nia.
+  rewrite !map_length. rewrite <- eqt. 
+  unfold stepFlat_timeNice. enough (s + 1 <= states M) as <-. 2:lia. nia.
 Qed.
 
 Definition loopMflat_timeNice M k := 

@@ -316,7 +316,7 @@ Proof.
   -cbn in R. inversion Unf as [| | | tmp1 tmp2 tmp3 tmp4 tmp5 Unf1 Unf2]. subst tmp1 tmp2 tmp3 s.
    rewrite <- !app_assoc in R.
    pose (R':=R).
-   eapply IHs01 in R' as (k11&k12&[a' s1']&H'1&t1&n1&eq1&R11&[R12 _]&Ev1&Ext1&Rg1&eqn1). 2-4:eassumption.
+   eapply IHs01 in R' as (k11&k12&[a' s1']&H'1&t1&n1&eq1&R11&[R12 _]&Ev1&Ext1&Rg1&eqn1). 3:eassumption.
    rewrite tailRecursion_compile in R12.
    
    (*inv Rg1. inv H6. inv H8.*)

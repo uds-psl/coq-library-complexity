@@ -26,7 +26,7 @@ Inductive isFlatteningTransOf {st sig : finType} {n}
     (R_complete : (forall s0 v0, let (s0',v0') := f' (s0,v0)
                              in ((index s0,map (option_map index) (Vector.to_list v0))
                                  ,(index s0',map (map_fst (option_map index)) (Vector.to_list v0'))) el f
-                                \/ (s0=s0' /\ v0' = Vector.const (None,N) n)))
+                                \/ (s0=s0' /\ v0' = Vector.const (None,TM.N) n)))
   : isFlatteningTransOf f f'.
 
 Inductive isFlatteningHaltOf {st:finType} (f : list bool) (f' : st -> bool) : Prop :=
