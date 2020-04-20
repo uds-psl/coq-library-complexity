@@ -2,6 +2,9 @@ From Undecidability Require Import ProgrammingTools.
 
 From Undecidability Require Export PrettyBounds.SizeBounds.
 
+From Undecidability Require Import TM.VectorPrelim.
+
+
 Inductive sigTape (sig : Type) : Type :=
 | LeftBlank (marked : bool)
 | RightBlank (marked : bool)

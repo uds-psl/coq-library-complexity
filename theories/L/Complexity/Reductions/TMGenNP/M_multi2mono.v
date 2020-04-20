@@ -5,6 +5,8 @@ From Undecidability.TM Require Import TM SizeBounds.
 From Undecidability.L.Complexity  Require Import TMGenNP_fixed_mTM.
 From Undecidability.TM.Single Require EncodeTapes StepTM DecodeTapes.
 
+From Undecidability Require Import TM.VectorPrelim.
+
 Unset Printing Coercions.
 
 From Coq Require Import Lia Ring Arith.

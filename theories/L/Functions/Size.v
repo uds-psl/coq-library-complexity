@@ -7,7 +7,7 @@ From Undecidability.L.Datatypes Require Import Lists.
 Instance term_size' : computable size'.
 Proof.
   extract.
-Abort. (*possible, but teh run time of this implementation is not good enough *)
+Abort. (*possible, but the run time of this implementation is not good enough. *)
 
 Lemma size'_surj : surjective size'.
 Proof.

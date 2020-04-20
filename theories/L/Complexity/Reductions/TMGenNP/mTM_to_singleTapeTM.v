@@ -8,6 +8,7 @@ From Undecidability.TM Require Import TM CodeTM.
 From Undecidability.TM.Single Require Import EncodeTapes StepTM.
 
 From Undecidability.TM Require M2MBounds.
+From Undecidability Require Import TM.VectorPrelim.
 
 Unset Printing Coercions.
 

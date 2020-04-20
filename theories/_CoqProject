@@ -201,6 +201,8 @@ TM/Prelim.v
 TM/Relations.v
 TM/TM.v
 TM/ArithPrelim.v
+TM/VectorPrelim.v
+
 
 # Basic Machines
 TM/Basic/Basic.v
