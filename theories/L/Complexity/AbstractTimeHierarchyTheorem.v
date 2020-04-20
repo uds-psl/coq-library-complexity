@@ -13,7 +13,8 @@ From Undecidability.L Require Import AbstractMachines.LargestVar.
 Import Nat.
 (*Proof inspired by CS 172 handout 8 from 4/21/2015 from Luca Trevisan and Sipser's book  *)
 
-
+Import HOAS_Notations.
+Import L_Notations_app.
 
 
 (** * Time Hierarchy theorem *)

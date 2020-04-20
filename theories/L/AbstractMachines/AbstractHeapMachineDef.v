@@ -52,6 +52,8 @@ Section Lin.
   
   (** *** Unfolding *)
 
+  Import L_Notations_app.
+  
   Inductive unfolds H a: nat -> term -> term -> Prop :=
   | unfoldsUnbound k n :
       n < k ->

@@ -125,6 +125,8 @@ Section loopM.
     extract.
   Qed.
 
+
+  Import L_Notations.
   Lemma Halt_red cfg :
     Halt' cfg <-> converges (mu (ext ((fun k => LOptions.isSome (loopM (M := M) cfg k))))).
   Proof.

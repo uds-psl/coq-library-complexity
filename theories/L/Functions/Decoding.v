@@ -20,6 +20,7 @@ Proof.
   exists nat_unenc. all:eauto using LNat.unenc_correct, LNat.unenc_correct2.
 Defined.
 
+Import L_Notations.
 
 Fixpoint term_decode (s : term) :=
   match s with

@@ -4,6 +4,8 @@ From Undecidability.L.Complexity Require Import NP Synthetic Monotonic.
 From Undecidability.L.Functions Require Import Size.
 
 Local Unset Implicit Arguments.
+Import L_Notations.
+
 Section GenNP.
   Context (X__cert : Type) `{R__cert : registered X__cert}.
 

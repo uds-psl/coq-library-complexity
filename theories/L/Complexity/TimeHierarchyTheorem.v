@@ -34,7 +34,7 @@ Section TimeHierarchy.
 
   Definition t__E (largestVar size:nat) fuel := t__evalForTimeBool largestVar size fuel + 8.
 
-  
+  Import L_Notations. 
   
   Lemma E__spec (s:term) (fuel : N):
       closed s ->

@@ -49,6 +49,8 @@ Lemma OmegaLift_proc : proc OmegaLift.
 Proof.  unfold OmegaLift.  Lproc. Qed.
 Hint Resolve OmegaLift_proc : LProc.
 
+Import L_Notations.
+
 Definition trueOrDiverge := lam (var 0 I OmegaLift I).
 
 Lemma trueOrDiverge_proc : proc trueOrDiverge.

@@ -34,7 +34,7 @@ Qed.
 
 
 Definition unfoldBool_time lengthH largestVar :=
-  lookupTime lengthH largestVar * 7 + largestVar *196+ EqBool.c__eqbComp term * (size (enc (lam (lam 0))) + size (enc (lam (lam 1)))) + 1245.
+  lookupTime lengthH largestVar * 7 + largestVar *196+ EqBool.c__eqbComp term * (size (enc (lam (lam # 0))) + size (enc (lam (lam # 1)))) + 1245.
 
 Instance term_unfoldBool : computableTime' unfoldBoolean
                                           (fun H _ => (1,fun q _ => (unfoldBool_time (length H) (max (largestVarH H) (largestVarC q)),tt))).

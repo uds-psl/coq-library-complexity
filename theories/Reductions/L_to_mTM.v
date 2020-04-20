@@ -27,6 +27,7 @@ Proof.
 Qed.
 
 Require Import Undecidability.L.Functions.Encoding Undecidability.L.Functions.Eval Undecidability.L.Tactics.LTactics.
+Import L_Notations.
 
 Lemma HaltL_HaltLclosed :
   HaltL ⪯ HaltLclosed.

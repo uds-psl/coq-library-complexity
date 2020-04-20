@@ -1,4 +1,5 @@
 From Undecidability.L Require Export LTactics LTerm Functions.Encoding Tactics.Lbeta_nonrefl.
+Import L_Notations.
 
 (** * First Fixed Point Theorem *)
 

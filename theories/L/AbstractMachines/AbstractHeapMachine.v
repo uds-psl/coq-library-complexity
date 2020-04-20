@@ -4,6 +4,8 @@ Import AbstractHeapMachineDef.clos_notation.
 
 Require Import Lia.
 
+Import L_Notations.
+
 Lemma get_current H m H' alpha : put H m = (H', alpha) -> get H' alpha = Some m.
 Proof.
   unfold put, get. intros [= <- <-].

@@ -4,6 +4,7 @@ From Undecidability.L.Complexity Require Import NP Synthetic Monotonic GenNP Can
 From Undecidability.L.Functions Require Import Size.
 
 Import Nat.
+Import L_Notations.
 
 Lemma NPhard_GenNP X__cert `{R__cert : registered X__cert}:
   canEnumTerms X__cert->  NPhard (restrictBy (LHaltsOrDiverges X__cert) (GenNP X__cert)).

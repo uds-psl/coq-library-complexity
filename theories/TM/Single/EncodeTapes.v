@@ -80,10 +80,10 @@ Instance Encode_tape (sig : Type) : codable (sigTape sig) (tape sig) :=
   |}.
 
 
-Compute encode_tape (niltape nat).
-Compute encode_tape (midtape [3;2;1] 4 [5;6;7]).
-Compute encode_tape (leftof 1 [2;3]).
-Compute encode_tape (rightof 3 [2;1]).
+(* Compute encode_tape (niltape nat). *)
+(* Compute encode_tape (midtape [3;2;1] 4 [5;6;7]). *)
+(* Compute encode_tape (leftof 1 [2;3]). *)
+(* Compute encode_tape (rightof 3 [2;1]). *)
 
 
 (** Moving does not change the number of symbols. *)
@@ -98,8 +98,6 @@ Qed.
   
 
 
-(* We encode a vector of tapes simply as a list of tapes *)
- 
 
 Definition encode_tapes (sig : Type) (n : nat) (t : tapes sig n) :=
   encode_list (@Encode_tape sig) (vector_to_list t).
@@ -113,7 +111,7 @@ Instance Encode_tapes (sig : Type) (n : nat) : codable (sigList (sigTape sig)) (
   |}.
 
 
-Compute encode_tapes [| niltape nat; midtape [3;2;1] 4 [5;6;7]; leftof 1 [2;3];rightof 3 [2;1] |].
+(* Compute encode_tapes [| niltape nat; midtape [3;2;1] 4 [5;6;7]; leftof 1 [2;3];rightof 3 [2;1] |]. *)
 
 
 Fixpoint split_vector {X : Type} {n : nat} (v : Vector.t X n) (k : nat) : Vector.t X (min k n) * Vector.t X (n-k).
@@ -165,10 +163,10 @@ Proof.
   - omega.
   - destruct n; cbn; f_equal; auto.
 Qed.
+  
 
-
-Compute split_vector [| 1; 2; 3; 4 |] 1.
-Compute let (x,y) := split_vector [| 1; 2; 3; 4 |] 1 in Vector.append x y.
+(* Compute split_vector [| 1; 2; 3; 4 |] 1. *)
+(* Compute let (x,y) := split_vector [| 1; 2; 3; 4 |] 1 in Vector.append x y. *)
 
 
 Lemma sizeOfTape_encodeTape sig' (t : tape sig') :

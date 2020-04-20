@@ -101,12 +101,13 @@ Qed.
 (*   Unshelve. all:now try constructor;try exact _;try eauto;try exact 0. *)
 (* Qed. *)
 
+Import HOAS_Notations L_Notations_app.
 
 Instance term_iterupN X `{H:registered X} :
   computable (iterupN (X:=X)).
 Proof.
   Import N.
-  pose (s := rho (λ F i max x f, (!!(ext N.ltb) i max) (λ _ , F (!!(ext N.succ) i) max (f i x) f) (λ _ , x) I)).
+  pose (s := rho (λ F i max x f, (!!(ext N.ltb) i max) (λ _ , F (!!(ext N.succ) i) max (f i x) f) (λ _ , x) !!I)).
   cbv [convert TH minus] in s.
   
   exists s. unfold s. Intern.recRem P.

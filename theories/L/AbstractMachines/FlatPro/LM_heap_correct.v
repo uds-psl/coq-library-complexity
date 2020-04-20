@@ -45,7 +45,8 @@ Proof.
   -cbn. autorewrite with list. rewrite IHs1,IHs2. cbn. now autorewrite with list. 
   -cbn. autorewrite with list. rewrite IHs. cbn. now autorewrite with list.
 Qed.
-  
+
+Import L_Notations.
 (** *** Unfolding *)
 
 Inductive unfolds H a: nat -> term -> term -> Prop :=

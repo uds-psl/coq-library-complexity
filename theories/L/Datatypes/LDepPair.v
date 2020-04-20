@@ -7,7 +7,8 @@ Section sigT.
   Context `{reg_A : registered A}.
   Variable P : A -> Type.
   Context `{reg_P : forall x, registered (P x)}.
-
+  Import L_Notations.
+    
   Definition sigT_enc : encodable (sigT P) :=
     fun '@existT _ _ x y => lam (0 (enc x) (enc y)).
   

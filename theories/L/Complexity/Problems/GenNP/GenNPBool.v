@@ -2,7 +2,7 @@ From Undecidability.L Require Import L.
 From Undecidability.L.Datatypes Require Import LProd LTerm LBool.
 From Undecidability.L.Complexity Require Import NP Synthetic Monotonic.
 From Undecidability.L.Functions Require Import Size.
-Import Nat. 
+Import Nat L_Notations. 
 Definition GenNPBool : term*nat*nat -> Prop:=
   fun '(s', maxSize, steps (*in unary*)) =>
     (proc s'/\exists (c:term), size (enc c) <= maxSize

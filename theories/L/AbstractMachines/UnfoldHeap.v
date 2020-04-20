@@ -6,6 +6,8 @@ Section UnfoldPro.
 
   Variable H : list heapEntry.
 
+  Import L_Notations.
+
   Fixpoint unfoldC fuel (s:term) a k {struct fuel}: option term :=
     match fuel with
       0 => None

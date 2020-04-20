@@ -7,6 +7,8 @@ From Undecidability.L Require Import Functions.EqBool.
 From Undecidability Require Import TM.TM L.Functions.Decoding.
 Require Import PslBase.FiniteTypes.FinTypes.
 
+Import L_Notations.
+
 (** ** Extraction of Turing Machine interpreter  *)
 
 Import GenEncode.
