@@ -57,6 +57,8 @@ LAM/TM/JumpTargetTM.v
 #The following file takes very long, so we start it early for faster multi-core-compilation
 LAM/TM/StepTM.v
 LAM/TM/HaltingProblem.v
+LAM/TM/SizeAnalysis.v
+LAM/TM/LMBounds.v
 
 #Post correspondence problem
 PCP/PCP.v

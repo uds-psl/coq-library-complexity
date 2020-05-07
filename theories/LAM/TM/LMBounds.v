@@ -99,9 +99,7 @@ Qed.
 
 Module JumpTarget_steps_nice.
 
-  Check App_ACom_steps.
 
-  Print App_Commands_steps.
 
   Lemma App_Commands_steps_nice :
     { c | forall Q Q', App_Commands_steps Q Q' <=(c) size Q + size Q' }.
@@ -383,8 +381,6 @@ Module JumpTarget_steps_nice.
 
 End JumpTarget_steps_nice.
 
-Print Assumptions JumpTarget_steps_nice.JumpTarget_steps_nice.
-
 
 From Undecidability Require Import LAM.TM.LookupTM.
 
@@ -564,9 +560,9 @@ Module LM_Lookup_nice.
     intros. induction n as [ | n' IH] in H,a|-*.
     - rewrite Lookup_steps_eq. cbn.
       destruct (nth_error H a) as [ [ (g,b) | ] | ] eqn:E; cbn.
-      + hnf. rewrite Hc_step. ring_simplify. rewrite !Encode_nat_hasSize. nia.
-      + hnf. rewrite Hc_step. ring_simplify. rewrite !Encode_nat_hasSize. nia.
-      + hnf. rewrite Hc_step. ring_simplify. rewrite !Encode_nat_hasSize. nia.
+      + hnf. rewrite Hc_step. ring_simplify. rewrite !Encode_nat_hasSize. lia.
+      + hnf. rewrite Hc_step. ring_simplify. rewrite !Encode_nat_hasSize. lia.
+      + hnf. rewrite Hc_step. ring_simplify. rewrite !Encode_nat_hasSize. lia.
     - rewrite Lookup_steps_eq. cbn -[mult plus].
       destruct (nth_error H a) as [ [ (g,b) | ] | ] eqn:E.
       + (* Recursion case *)
@@ -574,8 +570,8 @@ Module LM_Lookup_nice.
         enough (1 + c_step * (size H + size a) + (1 + c_step) * (size n' * (size H + size (heap_greatest_address H b n'))) <=
                 (1 + c_step) * (size (S n') * (size H + size (Init.Nat.max a (heap_greatest_address H b n'))))) by auto.
         ring_simplify. rewrite !Encode_nat_hasSize. ring_simplify. nia.
-      + hnf. rewrite Hc_step. rewrite !Encode_nat_hasSize. nia.
-      + hnf. rewrite Hc_step. rewrite !Encode_nat_hasSize. nia.
+      + hnf. rewrite Hc_step. rewrite !Encode_nat_hasSize. lia.
+      + hnf. rewrite Hc_step. rewrite !Encode_nat_hasSize. lia.
   Qed.
 
   Lemma heap_greatest_address_invalid (H : Heap) (a : HAdd) (n : nat) :
@@ -661,9 +657,6 @@ Module LM_Lookup_nice.
 
 
 End LM_Lookup_nice.
-
-Print Assumptions LM_Lookup_nice.Lookup_steps_nice.
-
 
 From Undecidability Require Import LAM.TM.StepTM LAM.TM.HaltingProblem.
 From Undecidability Require Import LAM.TM.SizeAnalysis.
@@ -1020,6 +1013,7 @@ Module LM.
       setoid_rewrite Encode_list_hasSize. setoid_rewrite <- Encode_list_hasSize_ge1. lia.
     - eapply dominatedWith_trans. apply (proj2_sig Step_steps_CaseCom_nice). domWith_match.
       + subst. domWith_approx.
+        * specialize (Encode_Pro_hasSize_ge1 xs) as ?. domWith_approx.
         * apply dominatedWith_solve.
           rewrite size_length_heap. setoid_rewrite Encode_list_hasSize. nia.
       + subst. apply dominatedWith_solve. nia.
@@ -1081,5 +1075,3 @@ Module LM.
   (* TODO *)
 
 End LM.
-
-Print Assumptions LM.Step_steps_nice.

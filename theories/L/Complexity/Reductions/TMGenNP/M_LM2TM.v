@@ -13,8 +13,6 @@ From Undecidability.LAM Require Alphabets.
 From Coq Require Import Lia Ring Arith.
 
 From Undecidability.L.Complexity  Require Import GenNP_is_hard LMGenNP TMGenNP_fixed_mTM M_Boollist_to_Enc.
-Check fun M =>
-  restrictBy (LMHaltsOrDiverges _) (LMGenNP (list bool)) ⪯p (restrictBy (HaltsOrDiverges_fixed_mTM M) (TMGenNP_fixed_mTM M)).
 
 From Undecidability Require Import Code.ListTM_concat_repeat.
 
@@ -126,7 +124,7 @@ Module LMtoTM.
          exists (P:Pro) steps__LM,
            tin[@Fin1] ≃(retr__pro) P /\
            (forall i : Fin.t 9, isRight tin[@FinR 2 i])
-           /\ (((~exists bs, tin[@Fin0] ≃ bs) /\ steps__LM = 0)
+           /\ (((~exists (bs : list bool), tin[@Fin0] ≃ bs) /\ steps__LM = 0)
              \/
              exists (bs : list bool),
                tin[@Fin0] ≃ bs
@@ -154,6 +152,17 @@ Module LMtoTM.
       1:erewrite length_tape_local_right,right_sizeOfTape; rewrite <- Hk.
       2:{ intros tout b [[[Hb1] Hb2] Hrem']. fin_inst_all Hrem. TMSimp.
           destruct Hb1 as [(bs&Hbs) | ]. 2: now apply Nat.le_0_l.
+          destruct Hsteps as [ [[] _] | Hsteps].
+          { eexists. contains_ext. }
+          destruct Hsteps as (bs'&Hbs'&Hsteps).
+          replace bs' with bs in *.
+          2:{
+            destruct Hbs as [? Hbs]. destruct Hbs' as [? Hbs']. rewrite Hbs' in Hbs. inv Hbs.
+            rewrite !map_map in H1. eapply app_inv_tail, map_injective in H1.
+            2:{ intros ? ? [= ]. now eapply retract_f_injective. }
+            apply encode_list_injective in H1. easy. apply Encode_bool_injective.
+          }
+          clear bs' Hbs'.
           assert (Hlebs : length bs <= sizeOfmTapes tin).
           { clear - Hbs. rewrite <- sizeOfmTapes_upperBound with (t:=tin[@Fin0]). 2:now eapply vect_nth_In.
            destruct Hbs as (rem&->). cbn.  rewrite encode_list_concat. repeat (autorewrite with list;cbn).
@@ -164,40 +173,52 @@ Module LMtoTM.
            erewrite UpToC_le. rewrite Hlebs. reflexivity. }
           intros t1 _ (HP'&Hrem_1). specialize (HP' bs). TMSimp. modpon HP'.
           infTer 5. TMSimp_goal. intros t2 _ (Ht2&Ht2Rem). specialize (Ht2 [appT]). modpon Ht2.
+          (*unfold tapes in tin,tout,t1 |-. destruct_vector. cbn [Vector.nth Vector.caseS] in *. all:subst. *)
           TMSimp.
-          (** TODO: size of compile?*)
-          infTer 5. 
-          {hnf;cbn. eexists (compile (Computable.enc (rev bs))),[appT]. repeat simple apply conj. 1-2:simpl_surject;try contains_ext.
-            assert (H':=proj2_sig (BaseCode.App'_steps_nice _) (compile (Computable.enc (rev bs)))).
-              hnf in H'. rewrite H'. admit.
+          
+          infTer 5.
+          {hnf;cbn. eexists _ (*(compile (Computable.enc (rev bs)))*),[appT]. repeat simple apply conj. 1-2:now simpl_surject;try contains_ext.
+           setoid_rewrite ((proj2_sig (BaseCode.App'_steps_nice _) _) : _ <= _).
+           (*TODO: bound [size (compile (Computable.enc (rev bs)))] by [length bs]*)
+           admit. 
           }
-          intros t3 _ (Ht3&Ht3Rem). specialize (Ht3 (compile (Computable.enc (rev bs))) [appT]). modpon Ht3;[].
-          infTer 5. admit.
+          intros t3 _ (Ht3&Ht3Rem). specialize (Ht3 (compile (Computable.enc (rev bs))) [appT]). modpon Ht3;[]. TMSimp.
+          infTer 5.
+          { hnf;cbn. eexists _, _. repeat simple apply conj. 1-2:now simpl_surject;try contains_ext.
+            eassert (H':=proj2_sig (BaseCode.App'_steps_nice _) P).
+            hnf in H'. rewrite H'. reflexivity. }
           intros t4 _ (Ht4&Ht4Rem). specialize (Ht4 P (compile (Computable.enc (rev bs)) ++ [appT])). TMSimp.
           modpon Ht4; [].
           infTer 5. intros t5 _ (Ht5&Ht5Rem). specialize Ht5 with (x:=[]). modpon Ht5;[].
           infTer 5. intros t6 _ (Ht6&Ht6Rem). specialize (Ht6 0). TMSimp. modpon Ht6;[].
-          infTer 5. admit.
-          intros t7 _ (Ht7&Ht7Rem). modpon Ht7 . TMSimp.
-          (*
-
-             rewrite sze admit. } reflexivity. etransitivity. exact H'.  H'. cbn.  } intros t2 _ (Ht2&Ht2Rem). TMSimp. modpon Ht2;[].
-          unfold ConcatRepeat.Ter. cbn. 
-          infTer 5. 1:{ repeat simple apply conj. 1,2,3:now contains_ext.  rewrite UpToC_le. reflexivity. }
-          intros t3 _ (Ht3&Ht3Rem). TMSimp. modpon Ht3;[]. rewrite app_nil_r in Ht4. 
-          infTer 5. now contains_ext. intros t4 _ (Htp4&Ht4Rem). TMSimp. modpon Htp4;[].
-          infTer 5. intros t5 _ (Htp5&Ht5Rem). TMSimp. modpon Htp5;[].
-          infTer 5. 1:{unfold App'_T. cbn. eexists _,_.  repeat simple apply conj. 1,2:simpl_surject;now contains_ext.
-                       eassert (H':=proj2_sig (App'_steps_nice _) enc_bool_nil). hnf in H'. rewrite H'. reflexivity.
+          infTer 5.
+          { hnf;cbn. eexists _,_,_. repeat simple apply conj. 1-3:now simpl_surject;try contains_ext.
+            match goal with |- _ <= ?c' => set (c:=c') end.
+            unfold CaseList.Constr_cons_steps, Reset_steps. ring_simplify.
+            setoid_rewrite Encode_pair_hasSize. cbn - [plus mult].
+            repeat setoid_rewrite @BaseCode.encodeList_size_app.
+            unfold c. try reflexivity.             
+            admit.
           }
-          intros t6 _ Ht6. modpon Ht6;[]. TMSimp.
-          infTer 4. now contains_ext.
-          { eassert (H':=proj2_sig (Reset_steps_nice) _ _ _ enc_bool_nil). hnf in H'. erewrite H'. reflexivity. }
-          intros t7 _ Htp7. modpon Htp7;[]. hnf. TMSimp. 
-          do 2 eexists. repeat simple apply conj. 1,2:now contains_ext. now isRight_mono.
-          rewrite UpToC_le. reflexivity.
-      }
-      - rewrite <- Hl. set (l:=length bs). [time]:intros l.  unfold time. reflexivity.
+          intros t7 _ (Ht7&Ht7Rem). modpon Ht7 . progress TMSimp.
+          infTer 5. now contains_ext.
+          intros t8 _ (Ht8'&Ht8Rem). modpon Ht8'. TMSimp.
+          (*move Hsteps at bottom. destruct Hsteps as [ [H' ->] | H' ].
+          { edestruct move H' destruct H'. }*)
+          infTer 3. { split. now contains_ext. admit. } reflexivity.
+          intros t9 _ (Ht9'&Ht9Rem). modpon Ht9'.
+          infTer 4. intros t10 _ (Ht10&Ht10Rem). TMSimp.
+          specialize (Ht10 []). modpon Ht10.
+          infTer 4. intros t11 _ (Ht11&Ht11Rem). specialize (Ht11 []). modpon Ht11. TMSimp.
+          hnf. eexists [(0,_)],[],[],_. repeat eapply conj.
+          -eexists. eassumption.
+          -rewrite surjectTapes_nth. simpl_surject. TMSimp_goal. contains_ext. 
+          -rewrite surjectTapes_nth. simpl_surject. TMSimp_goal. contains_ext. 
+          -rewrite surjectTapes_nth. simpl_surject. TMSimp_goal. contains_ext.
+          -intros i. rewrite surjectTapes_nth. simpl_surject. destruct_fin i;cbn. all:TMSimp_goal. all:isRight_mono.
+          -admit. (* TODO: analyse Loop_steps*) 
+          } 
+      -(*rewrite <- Hl. set (l:=length bs). [time]:intros l.  unfold time. reflexivity.
       -unfold time. solve [smpl_upToC_solve].
     Qed. *)
     Abort.
