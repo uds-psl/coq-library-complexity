@@ -3,15 +3,6 @@ From Undecidability.L Require Import LM_heap_def.
 
 Require Import FunInd.
 
-Definition sizeT t := 
-    match t with
-      varT n => 1 + n
-    |  _ => 1
-    end.  
-
-Definition sizeP (P:Pro) := 1 + sumn (map sizeT P).
-Hint Unfold sizeP : core.
-
 Lemma lookup_el H alpha x c: lookup H alpha x = Some c -> exists beta, Some (c,beta) el H.
 Proof.
   induction x in alpha, c|-*.
