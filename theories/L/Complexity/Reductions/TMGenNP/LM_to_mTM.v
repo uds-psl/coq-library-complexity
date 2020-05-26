@@ -47,41 +47,61 @@ Proof.
   evar (tmp2:Type). evar (f__steps:tmp2).
   evar (tmp3:Type). evar (f__size:tmp3).
   eapply reducesPolyMO_intro_restrictBy with
-      (f:=fun '(P,maxSize,steps) => (ts__start P,f__size maxSize,f__steps steps));subst tmp2;subst tmp3.
+      (f:=fun '(P,maxSize,steps) => (ts__start P,f__size maxSize,f__steps steps P maxSize));subst tmp2;subst tmp3.
   2:{
     intros [[P maxSize] steps] H. split.
     { hnf in H|-*. destruct H as ((s&Hs&s__proc)&Hk).
       intros t__cert Hsize k conf__res HM.
       apply LMtoTM.Realises in HM as HM__sound. hnf in HM__sound. specialize (HM__sound P).
-      TODO.
-
-      (*TODO: HaltsOrDiverges_fixed_mTM must say that "if we do not hold in ''steps' step, we never hold." More explicitely, the problem was that loopM is monotonic. Alternatively, we could say "if we halt in k steps, we also hold in "steps" step", which is better *)
-      
-      (*TODO: "modus ponens" of the assumptions for HM__sound, as we need them later *)
-
-      TODO.
-      (* THEN: continue with proof, use combination *)
-      
-      ProgrammingTools.modpon HM__sound;[ | | ].
-      { cbn. unfold R__Pro. eapply CodeTM.initValue_contains. }
+      Tactic Notation "mp" hyp(L) "as" ident(H) :=
+        lazymatch type of L with
+          ?t -> _ => 
+          assert (H:t);[ |
+                         specialize (L H)]
+        end.
+      mp HM__sound as HMP.
+      { cbn. unfold R__Pro. apply initValue_contains. }
+      mp HM__sound as HMright.
       { intros. cbn - [Vector.const]. rewrite Vector.const_nth. apply initRight_isRight. }
+      
       specialize LMtoTM.Terminates with (sig:=_) (retr__LAM:=Retr1) (retr__list:=Retr2) as HM__terminate.
       set (M' := projT1 _) in HM__terminate at 1; replace M' with M in *;[ | unfold M,M';reflexivity];clear M'.
       hnf in HM__terminate.
-      (* Question: does termination/Realisation framework give me ability to say that every execution also terminates early? *)
-      
-       idtac. possibly_bracketed_ident+.
-      
-      rewrite Hk.
-        simpl_surject.
-        simpl_surject.
-      tape_surject. }
-      { }
-      specialize ()
-      specialize LMtoTM.Realises with (1:=H__loop). Realise
-        
+
+      specialize HM__terminate as (conf' & HM__terminate).
+      2:{ erewrite loop_injective with (b:=conf__res). 3:exact HM__terminate. 2:eassumption.
+          eassumption.
+      }
+      hnf.
+      exists P. 
+      set (t__M := f__UpToC _) at 1.
+      cut (forall steps__LM, steps__LM <= steps ->
+                      t__M (steps__LM, sizeOfmTapes (t__cert ::: ts__start P)) <= f__steps steps P maxSize).
+      {
+        intros Hmono.
+        destruct (projT2 _) eqn:Heqcase in HM__sound.
+        2:{ eexists 0. repeat simple apply conj.
+            -exact HMP.
+            -exact HMright.
+            -left. split. 2:easy. eassumption.
+            -apply Hmono. clear;nia. 
+        }
+        edestruct HM__sound as (bs&?&?&k'&?).
+        { eexists k'. repeat simple apply conj.
+          -exact HMP.
+          -exact HMright.
+          -right. eauto.
+          -apply Hmono. eapply Hk. 2:eassumption.
+           (*TODO: Why is bs small? is it small? *Or do we need to check smallness somewhere? *)
+           admit.
+        }
+      }
+      (* TODO: instantiate using monotonic property? *)
+      admit. 
     }
-    hnf. hnf. split. cbn.  fold HaltsOrDiverges_fixed_mTM. intros H_HaltOrDiv.
-  }
-  
-Qed.
+    (* TODO: We might canc opy some reasoning from the first part down here*)
+    admit.
+    (* (The hard hald) *)
+Admitted.
+
+Print Assumptions LMGenNP_to_TMGenNP_mTM.

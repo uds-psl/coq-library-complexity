@@ -137,9 +137,8 @@ Section LMGenNP_to_TMGenNP_mTM.
          unshelve eassert (Htmp := LiftTapes_lift _ _). 11:{ now rewrite Hout. } now apply putEndAtFirst_dupfree.
          cbn in Htmp. unfold selectConf in Htmp. cbn in Htmp.
 
-         erewrite putEndAtFirst_to_list in Htmp. 2:exact eq. 
-         eexists. setoid_rewrite loop_monotone. 2:eassumption. reflexivity. 
-         eapply H_HaltOrDiv. all:eassumption.
+         erewrite putEndAtFirst_to_list in Htmp. 2:exact eq.
+         eexists. eapply H_HaltOrDiv. easy. eapply Htmp.
     }
     2:{
       

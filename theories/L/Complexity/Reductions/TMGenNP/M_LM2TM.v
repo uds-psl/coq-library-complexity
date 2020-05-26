@@ -2,7 +2,7 @@ From Undecidability.L.Complexity Require Import NP.
 From Undecidability.TM Require TM ProgrammingTools CaseList CaseBool Code.Decode Code.DecodeList.
 From Undecidability.TM Require Import TM SizeBounds.
 
-From Undecidability.L.Complexity  Require Import TMGenNP_fixed_mTM UpToCNary.
+From Undecidability.L.Complexity  Require Import UpToCNary.
 
 From Undecidability.L.AbstractMachines Require Import FlatPro.Programs.
      

@@ -10,7 +10,7 @@ Given n tapes and a sizeBound and a step bound, does there exist a (small enough
 Definition HaltsOrDiverges_fixed_mTM (sig : finType) `{registered sig} n (M : mTM sig (S n)) : Vector.t (tape sig) n * nat * nat -> Prop :=
   fun '(ts, maxSize, steps) =>
     forall t1, sizeOfTape t1 <= maxSize ->
-          forall k f, loopM (initc M (t1:::ts)) k = Some f -> k <= steps.
+          forall k f, loopM (initc M (t1:::ts)) k = Some f -> loopM (initc M (t1:::ts)) steps = Some f.
 
 Definition TMGenNP_fixed_mTM (sig : finType) `{registered sig} n (M : mTM sig (S n))
   := (fun '(ts, maxSize, steps) =>
