@@ -59,6 +59,7 @@ LAM/TM/StepTM.v
 LAM/TM/HaltingProblem.v
 LAM/TM/SizeAnalysis.v
 LAM/TM/LMBounds.v
+LAM/TM/LMBounds_Loop.v
 
 #Post correspondence problem
 PCP/PCP.v

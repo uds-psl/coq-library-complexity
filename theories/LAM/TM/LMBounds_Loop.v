@@ -8,8 +8,6 @@ From Undecidability.LAM.TM Require Import CaseCom.
 From Undecidability.LAM.TM Require Import StepTM LMBounds HaltingProblem SizeAnalysis.
 
 From Undecidability Require Import UpToC UpToCNary.
-Print Loop_steps.
-Check LM.Step_steps_nice.
 
 
 
@@ -36,6 +34,24 @@ Proof.
   unfold sizeP;cbn. rewrite size_sizeT_le.
   specialize (sizeT_ge_1 t). nia.
 Qed.
+
+Lemma sizeT_le_size t:
+  sizeT t <= size t.
+Proof.
+  destruct t.
+  1:rewrite LMBounds.size_Var.
+  all:cbv - [plus mult]. all:nia.
+Qed.
+
+Lemma sizeP_le_size P:
+  sizeP P <= size P.
+Proof.
+  induction P as [ | t P].
+  {now cbv. }
+  setoid_rewrite BaseCode.encodeList_size_cons. rewrite <- IHP.
+  unfold sizeP;cbn. rewrite sizeT_le_size. nia.
+Qed.
+
 (*
 Lemma sizeH_le H:
   size H <= 

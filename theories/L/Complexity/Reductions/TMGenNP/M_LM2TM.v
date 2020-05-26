@@ -48,31 +48,6 @@ Module LMtoTM.
       eapply ComposeRetract. 2:apply JumpTargetTM.retr_nat_prog. apply retr__pro.
     Defined.
     
-
-     (*
-    Print HaltingProblem.Loop_Rel.
-    ignoreParam
-      (fun tin tout : Vector.t (tape (boundary + HaltingProblem.sigStep)) 11 =>
-         forall (T V : list LM_heap_def.HClos) (H : LM_heap_def.Heap) (s0 s1 s2 : nat) (sr : Vector.t nat 8),
-           tin[@Fin0] ≃(Retract_inl Alphabets.sigHeap (Retract_id (sigList Alphabets.sigHClos)); s0) T ->
-           tin[@Fin1] ≃(Retract_inl Alphabets.sigHeap (Retract_id (sigList Alphabets.sigHClos)); s1) V ->
-           tin[@Fin2] ≃(Retract_inr (sigList Alphabets.sigHClos) (Retract_id Alphabets.sigHeap); s2) H ->
-           (forall i : Fin.t 8, isRight_size tin[@FinR 3 i] sr[@i]) ->
-           exists (T' V' : list LM_heap_def.HClos) (H' : LM_heap_def.Heap) (k : nat),
-             let size := HaltingProblem.Loop_size T V H k in
-             LM_heap_def.steps_k k (T, V, H) (T', V', H') /\
-             LM_heap_def.halt_state (T', V', H') /\
-             match T' with
-             | [] =>
-               tout[@Fin0] ≃(Retract_inl Alphabets.sigHeap (Retract_id (sigList Alphabets.sigHClos)); size[@Fin0] s0) [] /\
-               tout[@Fin1] ≃(Retract_inl Alphabets.sigHeap (Retract_id (sigList Alphabets.sigHClos)); size[@Fin1] s1) V' /\
-               tout[@Fin2] ≃(Retract_inr (sigList Alphabets.sigHClos) (Retract_id Alphabets.sigHeap); size[@Fin2] s2) H' /\
-               (forall i : Fin.t 8, isRight_size tout[@FinR 3 i] (size[@FinR 3 i] sr[@i]))
-             | _ :: _ => True
-             end)
-      : pRel (HaltingProblem.sigStep) ^+ unit 11
-        *)
-    
     Definition Rel : pRel (sig ^+) bool 11 :=
       fun tin '(y,tout) =>
         forall (P:Pro),
@@ -102,8 +77,48 @@ Module LMtoTM.
                   LiftTapes (ChangeAlphabet (WriteValue (encode (@nil (LM_heap_def.HEntr)))) retr__Heap) [| Fin2|];; (*2:[]*)
                   ChangeAlphabet HaltingProblem.Loop retr__LAM )
                  true)
-         (Return Nop false)
-    .
+         (Return Nop false).
+ 
+    
+    Definition Ter time: tRel sig^+ 11 :=
+      (fun tin k =>
+         exists (P:Pro) steps__LM,
+           tin[@Fin1] ≃(retr__pro) P /\
+           (forall i : Fin.t 9, isRight tin[@FinR 2 i])
+           /\ (((~exists (bs : list bool), tin[@Fin0] ≃ bs) /\ steps__LM = 0)
+             \/
+             exists (bs : list bool),
+               tin[@Fin0] ≃ bs
+               /\ exists sigma', ARS.evaluatesIn LM_heap_def.step steps__LM (initLMGen P (compile (Computable.enc (rev bs)))) sigma')
+           /\ time (steps__LM,sizeOfmTapes tin) <= k).
+
+    Import MoreList.
+
+    
+    (* MOVE ? *)
+    Lemma sizeT_compile_list_bool:
+      (fun bs : list bool => sumn (map sizeT (compile (Computable.enc (rev bs))))) <=c (fun bs => length bs + 1).
+    Proof.
+      evar (c:nat). exists c. intros xs. transitivity (sizeP (compile (Computable.enc   (rev xs)))).
+      now unfold sizeP. unfold sizeP;rewrite sizeP_size,Lists.size_list.
+      rewrite map_rev,<-sumn_rev. rewrite MoreBase.sumn_le_bound.
+      2:{ intros ? ([]&<-&?)%in_map_iff. all:cbv. reflexivity. nia. }
+      rewrite map_length. ring_simplify. [c]:exact 18. nia.
+    Qed.
+
+
+    (* MOVE ? *)
+    Lemma size_compile_list_bool:
+      (fun bs : list bool => Code.size (compile (Computable.enc (rev bs)))) <=c (fun bs => length bs + 1).
+    Proof.
+      From Undecidability.LAM.TM Require Import SizeAnalysis LMBounds_Loop.
+      evar (c:nat). exists c. intros xs.
+      rewrite size_le_sizeP. unfold sizeP;rewrite sizeP_size,Lists.size_list.
+      rewrite map_rev,<-sumn_rev. rewrite MoreBase.sumn_le_bound.
+      2:{ intros ? ([]&<-&?)%in_map_iff. all:cbv. reflexivity. nia. }
+      rewrite map_length. ring_simplify. [c]:exact 54. nia.
+    Qed.
+
     
     (*MOVE*)
     Ltac fin_inst_all H :=
@@ -119,20 +134,9 @@ Module LMtoTM.
       end.
 
     
-    Definition Ter time: tRel sig^+ 11 :=
-      (fun tin k =>
-         exists (P:Pro) steps__LM,
-           tin[@Fin1] ≃(retr__pro) P /\
-           (forall i : Fin.t 9, isRight tin[@FinR 2 i])
-           /\ (((~exists (bs : list bool), tin[@Fin0] ≃ bs) /\ steps__LM = 0)
-             \/
-             exists (bs : list bool),
-               tin[@Fin0] ≃ bs
-               /\ exists sigma', ARS.evaluatesIn LM_heap_def.step steps__LM (initLMGen P (compile (Computable.enc (rev bs)))) sigma')
-           /\ time (steps__LM,sizeOfmTapes tin) <= k).
-    
+ 
     Definition _Terminates :
-      { time : UpToC (fun '(steps,size) => steps+size  + 1)
+      { time : UpToC ((fun '(steps, size) => (steps + 1) * (steps + size + 1) ^3 ))
                & projT1 M ↓ Ter time}.
     Proof.
       eexists_UpToC time.
@@ -144,7 +148,8 @@ Module LMtoTM.
         1:notypeclasses refine (CheckTapeContains.Realises _ _).
         3:notypeclasses refine (CheckTapeContains.Terminates _ _).
         4:apply CheckEncodeList.Terminates.
-        1,3:apply CheckEncodeList.Realises;now destruct x. now apply list_encode_prefixInjective,DecodeBool.bool_encode_prefixInjective.
+        1,3:apply CheckEncodeList.Realises;now destruct x.
+        now apply list_encode_prefixInjective,DecodeBool.bool_encode_prefixInjective.
         apply BoollistToEnc.Terminates. 
       }
       intros tin k H. hnf in H. destruct H as (P&steps__LM&HP&Hrem&Hsteps&Hk).
@@ -166,7 +171,6 @@ Module LMtoTM.
           assert (Hlebs : length bs <= sizeOfmTapes tin).
           { clear - Hbs. rewrite <- sizeOfmTapes_upperBound with (t:=tin[@Fin0]). 2:now eapply vect_nth_In.
            destruct Hbs as (rem&->). cbn.  rewrite encode_list_concat. repeat (autorewrite with list;cbn).
-           Import MoreList.
            rewrite length_concat. rewrite map_map;cbn. rewrite sumn_map_c. nia. } 
           modpon Hb2;[]. infTer 3. 2:easy.
           {hnf. cbn. TMSimp. exists bs. repeat simple apply conj. easy. 1-3:try isRight_mono. 
@@ -179,8 +183,9 @@ Module LMtoTM.
           infTer 5.
           {hnf;cbn. eexists _ (*(compile (Computable.enc (rev bs)))*),[appT]. repeat simple apply conj. 1-2:now simpl_surject;try contains_ext.
            setoid_rewrite ((proj2_sig (BaseCode.App'_steps_nice _) _) : _ <= _).
-           (*TODO: bound [size (compile (Computable.enc (rev bs)))] by [length bs]*)
-           admit. 
+           Set Nested Proofs Allowed.
+           
+           rewrite (correct__leUpToC size_compile_list_bool), Hlebs. reflexivity.
           }
           intros t3 _ (Ht3&Ht3Rem). specialize (Ht3 (compile (Computable.enc (rev bs))) [appT]). modpon Ht3;[]. TMSimp.
           infTer 5.
@@ -197,35 +202,60 @@ Module LMtoTM.
             unfold CaseList.Constr_cons_steps, Reset_steps. ring_simplify.
             setoid_rewrite Encode_pair_hasSize. cbn - [plus mult].
             repeat setoid_rewrite @BaseCode.encodeList_size_app.
-            unfold c. try reflexivity.             
-            admit.
+            unfold c.
+            rewrite (correct__leUpToC size_compile_list_bool), Hlebs. reflexivity.             
           }
           intros t7 _ (Ht7&Ht7Rem). modpon Ht7 . progress TMSimp.
           infTer 5. now contains_ext.
           intros t8 _ (Ht8'&Ht8Rem). modpon Ht8'. TMSimp.
           (*move Hsteps at bottom. destruct Hsteps as [ [H' ->] | H' ].
           { edestruct move H' destruct H'. }*)
-          infTer 3. { split. now contains_ext. admit. } reflexivity.
+          infTer 3.
+          { split. now contains_ext. unfold Reset_steps.
+            rewrite (correct__leUpToC size_compile_list_bool), Hlebs.  reflexivity. }
+          reflexivity. 
           intros t9 _ (Ht9'&Ht9Rem). modpon Ht9'.
           infTer 4. intros t10 _ (Ht10&Ht10Rem). TMSimp.
           specialize (Ht10 []). modpon Ht10.
           infTer 4. intros t11 _ (Ht11&Ht11Rem). specialize (Ht11 []). modpon Ht11. TMSimp.
-          hnf. eexists [(0,_)],[],[],_. repeat eapply conj.
+          hnf. eexists [(0,_)],[],[],_. repeat eapply conj. 
           -eexists. eassumption.
           -rewrite surjectTapes_nth. simpl_surject. TMSimp_goal. contains_ext. 
           -rewrite surjectTapes_nth. simpl_surject. TMSimp_goal. contains_ext. 
           -rewrite surjectTapes_nth. simpl_surject. TMSimp_goal. contains_ext.
           -intros i. rewrite surjectTapes_nth. simpl_surject. destruct_fin i;cbn. all:TMSimp_goal. all:isRight_mono.
-          -admit. (* TODO: analyse Loop_steps*) 
-          } 
-      -(*rewrite <- Hl. set (l:=length bs). [time]:intros l.  unfold time. reflexivity.
-      -unfold time. solve [smpl_upToC_solve].
-    Qed. *)
-    Abort.
-    (*)
+          -unshelve erewrite (correct__leUpToC (Loop_steps_nice _) (_,_)). easy. 
+           cbn [length]. unfold sizeP. rewrite !map_app,!sumn_app.
+         
+           rewrite (correct__leUpToC sizeT_compile_list_bool bs).
+           set (c:= sumn (map sizeT [appT])). cbv in c. subst c.
+           rewrite !Nat.add_assoc.  replace (0 + steps__LM + 1 + (sumn (map sizeT P))) with (steps__LM + sizeP P) by (unfold sizeP;lia).
+           rewrite Hlebs. reflexivity.
+      }
+      ring_simplify.
+      unfold Reset_steps.
+      setoid_rewrite (sizeP_le_size P).
+      repeat rewrite sizeOfTape_tape_contains_size with (1:=(tape_contains_contains_size HP)). 
+      repeat rewrite sizeOfmTapes_upperBound with (tps:=tin). 2-3:now eapply vect_nth_In. 
+      [time]:refine (fun '(steps__LM,sizeM) => _).
+      set (sizeM := sizeOfmTapes _). unfold time. reflexivity.
+      unfold time.
+      smpl_upToC.
+      1-15,18:cbn [Nat.pow];now smpl_upToC_solve.
+      2:{ transitivity (fun '(steps, size) => (steps + size + 1) ^ 3).
+          2:now smpl_upToC_solve.
+          
+      nary apply upToC_pow_le_compat_nary. 1-2:nia. smpl_upToC_solve.
+      }
+
+      nary apply upToC_mul_nary.
+      2:nary apply  upToC_pow_le_compat_nary. 2,3:easy.
+      all:try smpl_upToC_solve.
+    Qed.
+
     Definition Terminates := projT2 _Terminates.
-    *)
-    
+
+      
     Definition Realises : M ⊨ Rel.
     Proof.
       unfold M. eapply Realise_monotone.
