@@ -12,7 +12,7 @@ From Undecidability.LAM Require Alphabets.
 
 From Coq Require Import Lia Ring Arith.
 
-From Undecidability.L.Complexity  Require Import GenNP_is_hard LMGenNP TMGenNP_fixed_mTM M_Boollist_to_Enc.
+From Undecidability.L.Complexity  Require Import LMGenNP TMGenNP_fixed_mTM M_Boollist_to_Enc.
 
 From Undecidability Require Import Code.ListTM_concat_repeat.
 
@@ -44,7 +44,7 @@ Module LMtoTM.
     Defined.
 
     Definition retr__nat : Retract sigNat sig.
-    Proof. 
+    Proof.
       eapply ComposeRetract. 2:apply JumpTargetTM.retr_nat_prog. apply retr__pro.
     Defined.
     

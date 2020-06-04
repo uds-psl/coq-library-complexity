@@ -54,19 +54,52 @@ Proof.
      2:{ rewrite (mono__rSP enumTerm). all:rewrite Hc. all:reflexivity. }
      unfold stepsInner. subst maxSize0. fold n0. reflexivity.
     }
+    assert (Ht0' : forall c, t0 (enc c) >* trueOrDiverge (enc (f x c))).
+    {intros c. subst t0. eapply redLe_star_subrelation.
+     eapply le_redLe_proper. 2,3:reflexivity. 2:Lsimpl. reflexivity.
+    }
     split.
-    +split. now subst t0;Lproc.
-     intros c H' k t Ht. specialize (Ht0 c H') as (kt0&lt__j&Ht0).
-     unshelve eassert (eqb := trueOrDiverge_eval _).
-     3:{
-       eapply equiv_eval_proper. 
-       3:eapply evalIn_eval_subrelation;exact Ht. 2:reflexivity.
-       eapply pow_star in Ht0;rewrite Ht0. easy.
-     }
-     rewrite eqb in Ht0. 
-     edestruct evalIn_unique with (1:=Ht) as [eqk _].
-     {clear Ht. eapply evalIn_trans. exact Ht0. split. apply trueOrDiverge_true. Lproc. }
-     subst k steps0. rewrite lt__j. fold n0. unfold steps. reflexivity.
+    +repeat simple apply conj.
+     *now subst t0;Lproc.
+     *intros c k t Ht.
+      specialize (Ht0' c) as Ht0''.
+      unshelve eassert (eqb := trueOrDiverge_eval _).
+      3:{
+        eapply equiv_eval_proper. 
+        3:eapply evalIn_eval_subrelation;exact Ht. 2:reflexivity.
+        rewrite Ht0'. easy.
+      }
+      rewrite eqb in Ht0''.
+      assert (H:=eqb).
+      unfold f in H. unshelve rewrite <- correct__decInTime in H. now eassumption.
+      hnf in H.
+      replace t with I in *. clear t.
+      2:{eapply eval_unique. 2:now eapply evalIn_eval_subrelation.
+         split. 2:Lproc. rewrite Ht0''. rewrite trueOrDiverge_true. easy. }
+      edestruct complete__pCR with (p:=R__spec) as (tc'&HRc'&Hsizec').
+      { eapply sound__pCR in H. 2:easy. eassumption. }
+      (*eapply sound__pCR in HRc'. 2:easy. *) subst t0.  
+      cbn [proj1_sig] in Hsizec'.
+      specialize (complete__toTerm enumTerm tc') as (c'&<-&Hc').
+      eexists c';split.
+      2:{ split. 2:now Lproc. Lsimpl. rewrite <- trueOrDiverge_true. apply star_trans_r.
+          enough (H':f x c' = true) by (rewrite H';reflexivity ).
+          unfold f. rewrite <- correct__decInTime. hnf. easy.
+      }
+      subst steps0. rewrite Hc'.
+      etransitivity. 1:{eapply monoIn__toTerm. eassumption. }
+      subst maxSize0. subst mSize. set (size _). hnf. reflexivity.
+     *intros c H' k t Ht. specialize (Ht0 c H') as (kt0&lt__j&Ht0).
+      unshelve eassert (eqb := trueOrDiverge_eval _).
+      3:{
+        eapply equiv_eval_proper. 
+        3:eapply evalIn_eval_subrelation;exact Ht. 2:reflexivity.
+        eapply pow_star in Ht0;rewrite Ht0. easy.
+      }
+      rewrite eqb in Ht0. 
+      edestruct evalIn_unique with (1:=Ht) as [eqk _].
+      {clear Ht. eapply evalIn_trans. exact Ht0. split. apply trueOrDiverge_true. Lproc. }
+      subst k steps0. rewrite lt__j. fold n0. unfold steps. reflexivity.
     +split.
      *intros (c&?&H')%(complete__pCR R__spec). cbn [proj1_sig] in H'. (*specialize (spec_d__R (x,c) x__valid). cbn [fst snd] in *. cbn in *. *)
       destruct (complete__toTerm enumTerm c) as (c__X&eqf__term&le_c__X).

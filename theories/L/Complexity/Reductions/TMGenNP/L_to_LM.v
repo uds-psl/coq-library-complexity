@@ -12,12 +12,20 @@ Proof.
   eapply reducesPolyMO_intro_restrictBy with (f:=f).
   2:{
     intros [[s' maxSize] steps].
-    intros (cs&Hsize). assert (lambda s') as [s0 eq] by Lproc. set (s:=lam s0) in *. subst s'.
+    intros (cs&Hsmall&Hk). assert (lambda s') as [s0 eq] by Lproc. set (s:=lam s0) in *. subst s'.
     split.
-    -split. easy.
-     intros c H k sigma' R__M. unfold initLMGen in R__M.
-     eapply soundnessTime with (s:=(L.app s (@enc _ R__X c))) in R__M as (g&H'&t&n&eq__sigma&Rs%timeBS_evalIn&_&eq). 2:Lproc.
-     subst k. apply Hsize in Rs. rewrite Rs. unfold f__steps. reflexivity. easy. 
+    -hnf. repeat simple apply conj.
+     +easy.
+     +intros c k sigma R__M.
+      eapply soundnessTime with (s:=(L.app s (@enc _ R__X c))) in R__M as (g&H'&t&n&eq__sigma&Rs%timeBS_evalIn&_&eq). 2:Lproc.
+      subst k. apply Hsmall in Rs as (c'&k'&Hsize_c'&Hk').
+      edestruct completeness as (?&?&?&HM'). 1:{split. exact Hsize_c'. Lproc. }
+      1:now Lproc.
+      do 2 eexists. repeat simple apply conj.
+      all:eassumption. 
+     +intros c H k sigma' R__M. unfold initLMGen in R__M.
+      eapply soundnessTime with (s:=(L.app s (@enc _ R__X c))) in R__M as (g&H'&t&n&eq__sigma&Rs%timeBS_evalIn&_&eq). 2:Lproc.
+      subst k. apply Hk in Rs. rewrite Rs. unfold f__steps. reflexivity. easy. 
     -apply Morphisms_Prop.ex_iff_morphism. intros c.
      apply Morphisms_Prop.and_iff_morphism_obligation_1. easy.
      split.
