@@ -1,0 +1,118 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link href="coqdoc.css" rel="stylesheet" type="text/css" />
+<link href="coqdocjs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="config.js"></script>
+<script type="text/javascript" src="coqdocjs.js"></script>
+</head>
+
+<body onload="document.getElementById('content').focus()">
+  <div id="header">
+    <span class="left">
+      <span class="modulename"> <script> document.write(document.title) </script> </span>
+    </span>
+
+    <span class="button" id="toggle-proofs"></span>
+
+    <span class="right">
+      <a href="../">Project Page</a>
+      <a href="./indexpage.html"> Index </a>
+      <a href="./toc.html"> Table of Contents </a>
+    </span>
+</div>
+    <div id="content" tabindex="-1" onblur="document.getElementById('content').focus()">
+    <div id="main">
+<div class="code">
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability.L</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Export</span> <a class="idref" href="Undecidability.L.L.html#"><span class="id" title="library">L</span></a>.<br/>
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability.L.Tactics</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="Undecidability.L.Tactics.Reflection.html#"><span class="id" title="library">Reflection</span></a> <a class="idref" href="Undecidability.L.Tactics.ComputableTime.html#"><span class="id" title="library">ComputableTime</span></a> <a class="idref" href="Undecidability.L.Tactics.mixedTactics.html#"><span class="id" title="library">mixedTactics</span></a>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab421"></a><h2 class="section">Symbolic simplification for L</h2>
+
+<div class="paragraph"> </div>
+
+<a name="lab422"></a><h3 class="section">Lproc</h3>
+
+<div class="paragraph"> </div>
+
+ This module provides tactics fLproc and Lproc that solve goals of the form <span class="inlinecode"><span class="id" title="var">lambda</span></span> <span class="inlinecode"><span class="id" title="var">s</span></span> or <span class="inlinecode"><span class="id" title="var">proc</span></span> <span class="inlinecode"><span class="id" title="var">s</span></span> or <span class="inlinecode"><span class="id" title="var">closed</span></span> <span class="inlinecode"><span class="id" title="var">s</span></span> for L-terms <span class="inlinecode"><span class="id" title="var">s</span></span>. 
+</div>
+<div class="code">
+
+<br/>
+<span class="id" title="keyword">Hint Resolve</span> <span class="id" title="var">rho_lambda</span> <span class="id" title="var">rho_cls</span> : <span class="id" title="var">LProc</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <a name="proc_closed"><span class="id" title="lemma">proc_closed</span></a> <span class="id" title="var">p</span> : <a class="idref" href="Undecidability.L.L.html#proc"><span class="id" title="definition">proc</span></a> <a class="idref" href="Undecidability.L.Tactics.Lproc.html#p"><span class="id" title="variable">p</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <a class="idref" href="Undecidability.L.L.html#closed"><span class="id" title="definition">closed</span></a> <a class="idref" href="Undecidability.L.Tactics.Lproc.html#p"><span class="id" title="variable">p</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">firstorder</span> <span class="id" title="tactic">intuition</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <a name="proc_lambda"><span class="id" title="lemma">proc_lambda</span></a> <span class="id" title="var">p</span> : <a class="idref" href="Undecidability.L.L.html#proc"><span class="id" title="definition">proc</span></a> <a class="idref" href="Undecidability.L.Tactics.Lproc.html#p"><span class="id" title="variable">p</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <a class="idref" href="Undecidability.L.L.html#lambda"><span class="id" title="definition">lambda</span></a> <a class="idref" href="Undecidability.L.Tactics.Lproc.html#p"><span class="id" title="variable">p</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">firstorder</span> <span class="id" title="tactic">intuition</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Ltac</span> <span class="id" title="var">fLproc</span> :=<span class="id" title="tactic">intros</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">lazymatch</span> <span class="id" title="keyword">goal</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [ |- <a class="idref" href="Undecidability.L.L.html#proc"><span class="id" title="definition">proc</span></a> <span class="id" title="var">_</span> ] =&gt; <span class="id" title="tactic">split</span>;<span class="id" title="var">fLproc</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [ |- <a class="idref" href="Undecidability.L.L.html#lambda"><span class="id" title="definition">lambda</span></a> ?<span class="id" title="var">s</span> ] =&gt; <span class="id" title="tactic">eexists</span>; <span class="id" title="tactic">reflexivity</span> || <span class="id" title="tactic">fail</span> "Prooving 'lambda " <span class="id" title="var">s</span> " ' by computation failed. It is either not a fixed term, some used identifier is opaqie or the goal does not hold"<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [ |- <a class="idref" href="Undecidability.L.L.html#closed"><span class="id" title="definition">closed</span></a> ?<span class="id" title="var">s</span> ] =&gt; <span class="id" title="keyword">vm_compute</span>; <span class="id" title="tactic">reflexivity</span> || <span class="id" title="tactic">fail</span> "Prooving 'closed " <span class="id" title="var">s</span> " ' by computation failed. It is either not a fixed term, some used identifier is opaque or the goal does not hold"<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Ltac</span> <span class="id" title="var">Lproc'</span> :=<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">lazymatch</span> <span class="id" title="keyword">goal</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;| |- <a class="idref" href="Undecidability.L.L.html#lambda"><span class="id" title="definition">lambda</span></a> (<span class="id" title="keyword">match</span> ?<span class="id" title="var">c</span> <span class="id" title="keyword">with</span> <span class="id" title="var">_</span> =&gt; <span class="id" title="var">_</span> <span class="id" title="keyword">end</span>) =&gt; <span class="id" title="tactic">destruct</span> <span class="id" title="var">c</span>;<span class="id" title="var">now</span> <span class="id" title="tactic">repeat</span> <span class="id" title="var">Lproc'</span><br/>
+&nbsp;&nbsp;| |- <a class="idref" href="Undecidability.L.L.html#lambda"><span class="id" title="definition">lambda</span></a> (@<a class="idref" href="Undecidability.L.Tactics.Computable.html#enc"><span class="id" title="method">enc</span></a> ?<span class="id" title="var">t</span> ?<span class="id" title="var">H</span> ?<span class="id" title="var">x</span>) =&gt; <span class="id" title="tactic">exact</span> (<a class="idref" href="Undecidability.L.Tactics.Lproc.html#proc_lambda"><span class="id" title="lemma">proc_lambda</span></a> (@<a class="idref" href="Undecidability.L.Tactics.Computable.html#proc_enc"><span class="id" title="method">proc_enc</span></a> <span class="id" title="var">t</span> <span class="id" title="var">H</span> <span class="id" title="var">x</span>))<br/>
+&nbsp;&nbsp;| |- <a class="idref" href="Undecidability.L.L.html#lambda"><span class="id" title="definition">lambda</span></a> (@<a class="idref" href="Undecidability.L.Tactics.Computable.html#ext"><span class="id" title="method">ext</span></a> ?<span class="id" title="var">X</span> ?<span class="id" title="var">tt</span> ?<span class="id" title="var">x</span> ?<span class="id" title="var">H</span>) =&gt; <span class="id" title="tactic">exact</span> (<a class="idref" href="Undecidability.L.Tactics.Lproc.html#proc_lambda"><span class="id" title="lemma">proc_lambda</span></a> (@<a class="idref" href="Undecidability.L.Tactics.Computable.html#proc_ext"><span class="id" title="lemma">proc_ext</span></a> <span class="id" title="var">X</span> <span class="id" title="var">tt</span> <span class="id" title="var">x</span> <span class="id" title="var">H</span>))<br/>
+&nbsp;&nbsp;| |- <a class="idref" href="Undecidability.L.L.html#lambda"><span class="id" title="definition">lambda</span></a> (@<a class="idref" href="Undecidability.L.Tactics.ComputableTime.html#extT"><span class="id" title="method">extT</span></a> ?<span class="id" title="var">X</span> ?<span class="id" title="var">tt</span> ?<span class="id" title="var">x</span> <span class="id" title="var">_</span> ?<span class="id" title="var">H</span>) =&gt; <span class="id" title="tactic">exact</span> (<a class="idref" href="Undecidability.L.Tactics.Lproc.html#proc_lambda"><span class="id" title="lemma">proc_lambda</span></a> (@<a class="idref" href="Undecidability.L.Tactics.ComputableTime.html#proc_extT"><span class="id" title="lemma">proc_extT</span></a> <span class="id" title="var">X</span> <span class="id" title="var">tt</span> <span class="id" title="var">x</span> <span class="id" title="var">_</span> <span class="id" title="var">H</span>))<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;| |- <a class="idref" href="Undecidability.L.L.html#lambda"><span class="id" title="definition">lambda</span></a> <span class="id" title="var">_</span> =&gt; (<span class="id" title="tactic">apply</span> <a class="idref" href="Undecidability.L.Tactics.Lproc.html#proc_lambda"><span class="id" title="lemma">proc_lambda</span></a>;(<span class="id" title="tactic">trivial</span> <span class="id" title="keyword">with</span> <span class="id" title="var">nocore</span> <span class="id" title="var">LProc</span> || <span class="id" title="tactic">tauto</span>)) || <span class="id" title="tactic">tauto</span> || (<span class="id" title="tactic">eexists</span>;<span class="id" title="tactic">reflexivity</span>)<br/>
+&nbsp;&nbsp;| |- <a class="idref" href="Undecidability.L.Tactics.Reflection.html#rClosed"><span class="id" title="definition">rClosed</span></a> ?<span class="id" title="var">phi</span> <span class="id" title="var">_</span> =&gt; <span class="id" title="tactic">solve</span> [<span class="id" title="tactic">apply</span> <a class="idref" href="Undecidability.L.Tactics.Reflection.html#rClosed_decb_correct"><span class="id" title="lemma">rClosed_decb_correct</span></a>;[<span class="id" title="tactic">assumption</span>|<span class="id" title="keyword">vm_compute</span>;<span class="id" title="tactic">reflexivity</span>]]<br/>
+  | |- <a class="idref" href="Undecidability.L.L.html#closed"><span class="id" title="definition">L.closed</span></a> <span class="id" title="var">_</span> =&gt; <span class="id" title="tactic">apply</span> <a class="idref" href="Undecidability.L.L.html#closed_dcl"><span class="id" title="lemma">closed_dcl</span></a><br/>
+&nbsp;&nbsp;| |- <a class="idref" href="Undecidability.L.L.html#bound"><span class="id" title="inductive">bound</span></a> <span class="id" title="var">_</span>  (<span class="id" title="keyword">match</span> ?<span class="id" title="var">c</span> <span class="id" title="keyword">with</span> <span class="id" title="var">_</span> =&gt; <span class="id" title="var">_</span> <span class="id" title="keyword">end</span>) =&gt; <span class="id" title="tactic">destruct</span> <span class="id" title="var">c</span>;<span class="id" title="var">now</span> <span class="id" title="tactic">repeat</span> <span class="id" title="var">Lproc'</span><br/>
+&nbsp;&nbsp;| |- <a class="idref" href="Undecidability.L.L.html#bound"><span class="id" title="inductive">bound</span></a> <span class="id" title="var">_</span> (<a class="idref" href="Undecidability.L.L.html#var"><span class="id" title="constructor">L.var</span></a> <span class="id" title="var">_</span>) =&gt; <span class="id" title="tactic">solve</span> [<span class="id" title="tactic">constructor</span>;<span class="id" title="tactic">omega</span>]<br/>
+&nbsp;&nbsp;| |- <a class="idref" href="Undecidability.L.L.html#bound"><span class="id" title="inductive">bound</span></a> <span class="id" title="var">_</span> (<a class="idref" href="Undecidability.L.L.html#app"><span class="id" title="constructor">L.app</span></a> <span class="id" title="var">_</span> <span class="id" title="var">_</span>) =&gt; <span class="id" title="tactic">constructor</span><br/>
+&nbsp;&nbsp;| |- <a class="idref" href="Undecidability.L.L.html#bound"><span class="id" title="inductive">bound</span></a> <span class="id" title="var">_</span> (<a class="idref" href="Undecidability.L.L.html#lam"><span class="id" title="constructor">L.lam</span></a> <span class="id" title="var">_</span>) =&gt; <span class="id" title="tactic">constructor</span><br/>
+&nbsp;&nbsp;| |- <a class="idref" href="Undecidability.L.L.html#bound"><span class="id" title="inductive">bound</span></a> <span class="id" title="var">_</span> (<a class="idref" href="Undecidability.L.L.html#rho"><span class="id" title="definition">rho</span></a> ?<span class="id" title="var">s</span>) =&gt; <span class="id" title="tactic">apply</span> <a class="idref" href="Undecidability.L.L.html#rho_dcls"><span class="id" title="lemma">rho_dcls</span></a><br/>
+&nbsp;&nbsp;| |- <a class="idref" href="Undecidability.L.L.html#bound"><span class="id" title="inductive">bound</span></a> ?<span class="id" title="var">k</span> (@<a class="idref" href="Undecidability.L.Tactics.Computable.html#ext"><span class="id" title="method">ext</span></a> ?<span class="id" title="var">X</span> ?<span class="id" title="var">tt</span> ?<span class="id" title="var">x</span> ?<span class="id" title="var">H</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">exact</span> (<a class="idref" href="Undecidability.L.L.html#closed_dcl_x"><span class="id" title="lemma">closed_dcl_x</span></a> <span class="id" title="var">k</span> (<a class="idref" href="Undecidability.L.Tactics.Lproc.html#proc_closed"><span class="id" title="lemma">proc_closed</span></a> (@<a class="idref" href="Undecidability.L.Tactics.Computable.html#proc_ext"><span class="id" title="lemma">proc_ext</span></a> <span class="id" title="var">X</span> <span class="id" title="var">tt</span> <span class="id" title="var">x</span> <span class="id" title="var">H</span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| |- <a class="idref" href="Undecidability.L.L.html#bound"><span class="id" title="inductive">bound</span></a> ?<span class="id" title="var">k</span> (@<a class="idref" href="Undecidability.L.Tactics.ComputableTime.html#extT"><span class="id" title="method">extT</span></a> ?<span class="id" title="var">X</span> ?<span class="id" title="var">tt</span> ?<span class="id" title="var">x</span> <span class="id" title="var">_</span> ?<span class="id" title="var">H</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">exact</span> (<a class="idref" href="Undecidability.L.L.html#closed_dcl_x"><span class="id" title="lemma">closed_dcl_x</span></a> <span class="id" title="var">k</span> (<a class="idref" href="Undecidability.L.Tactics.Lproc.html#proc_closed"><span class="id" title="lemma">proc_closed</span></a> (@<a class="idref" href="Undecidability.L.Tactics.ComputableTime.html#proc_extT"><span class="id" title="lemma">proc_extT</span></a> <span class="id" title="var">X</span> <span class="id" title="var">tt</span> <span class="id" title="var">x</span> <span class="id" title="var">_</span> <span class="id" title="var">H</span>)))<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;| |- <a class="idref" href="Undecidability.L.L.html#bound"><span class="id" title="inductive">bound</span></a> ?<span class="id" title="var">k</span> (@<a class="idref" href="Undecidability.L.Tactics.Computable.html#enc"><span class="id" title="method">enc</span></a> ?<span class="id" title="var">t</span> ?<span class="id" title="var">H</span> ?<span class="id" title="var">x</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">exact</span> (<a class="idref" href="Undecidability.L.L.html#closed_dcl_x"><span class="id" title="lemma">closed_dcl_x</span></a> <span class="id" title="var">k</span> (<a class="idref" href="Undecidability.L.Tactics.Lproc.html#proc_closed"><span class="id" title="lemma">proc_closed</span></a> (@<a class="idref" href="Undecidability.L.Tactics.Computable.html#proc_enc"><span class="id" title="method">proc_enc</span></a> <span class="id" title="var">t</span> <span class="id" title="var">H</span> <span class="id" title="var">x</span>)))<br/>
+&nbsp;&nbsp;| |- <a class="idref" href="Undecidability.L.L.html#bound"><span class="id" title="inductive">bound</span></a> <span class="id" title="var">_</span> ?<span class="id" title="var">s</span> =&gt; <span class="id" title="tactic">refine</span> (<a class="idref" href="Undecidability.L.L.html#closed_dcl_x"><span class="id" title="lemma">closed_dcl_x</span></a> <span class="id" title="var">_</span> <span class="id" title="var">_</span>); (<span class="id" title="tactic">trivial</span> <span class="id" title="keyword">with</span> <span class="id" title="var">LProc</span> || (<span class="id" title="tactic">apply</span> <a class="idref" href="Undecidability.L.Tactics.Lproc.html#proc_closed"><span class="id" title="lemma">proc_closed</span></a>;<span class="id" title="tactic">trivial</span> <span class="id" title="keyword">with</span> <span class="id" title="var">LProc</span> || <span class="id" title="tactic">tauto</span>) || <span class="id" title="tactic">tauto</span> )<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Ltac</span> <span class="id" title="var">Lproc</span> :=<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">lazymatch</span> <span class="id" title="keyword">goal</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;| |- <a class="idref" href="Undecidability.L.L.html#proc"><span class="id" title="definition">proc</span></a> (<a class="idref" href="Undecidability.L.L.html#app"><span class="id" title="constructor">app</span></a> <span class="id" title="var">_</span> <span class="id" title="var">_</span>) =&gt; <span class="id" title="tactic">fail</span><br/>
+&nbsp;&nbsp;| |- <a class="idref" href="Undecidability.L.L.html#proc"><span class="id" title="definition">proc</span></a> <span class="id" title="var">_</span> =&gt; <span class="id" title="tactic">split</span>;[|<span class="id" title="var">now</span> <span class="id" title="var">Lproc</span>];<span class="id" title="var">Lproc</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;| |- <a class="idref" href="Undecidability.L.L.html#closed"><span class="id" title="definition">closed</span></a> <span class="id" title="var">_</span> =&gt; <span class="id" title="var">now</span> (<span class="id" title="tactic">repeat</span> <span class="id" title="var">Lproc'</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;| |- <a class="idref" href="Undecidability.L.L.html#lambda"><span class="id" title="definition">lambda</span></a> (<a class="idref" href="Undecidability.L.L.html#app"><span class="id" title="constructor">app</span></a> <span class="id" title="var">_</span> <span class="id" title="var">_</span>) =&gt; <span class="id" title="tactic">fail</span><br/>
+&nbsp;&nbsp;| |- <a class="idref" href="Undecidability.L.L.html#lambda"><span class="id" title="definition">lambda</span></a> <span class="id" title="var">_</span> =&gt; <span class="id" title="var">Lproc'</span><br/>
+&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+</div>
+</div>
+<div id="footer">
+  Generated by <a href="http://coq.inria.fr/">coqdoc</a> and improved with <a href="https://github.com/tebbi/coqdocjs">CoqdocJS</a>
+</div>
+</div>
+</body>
+
+</html>

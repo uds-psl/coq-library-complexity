@@ -1,5 +1,7 @@
 From Undecidability.L Require Import Tactics.LTactics Prelim.MoreList Prelim.MoreBase.
-From Undecidability.L.Complexity Require Import NP Synthetic Monotonic GenNP LMGenNP.
+From Undecidability.L.Complexity Require Import NP Synthetic Monotonic.
+From Undecidability.L.Complexity.Problems Require Import GenNP. 
+From Undecidability.L.Complexity.Reductions Require Import LMGenNP.
 
 From Undecidability.L Require Import LM_heap_def LM_heap_correct LBool ResourceMeasures Compile LNat LTerm Compile.
 

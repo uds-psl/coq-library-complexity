@@ -1,0 +1,24 @@
+\newlength{\blockindent}
+\setlength{\blockindent}{8mm}
+
+\theoremstyle{coqtheorem}
+
+\newtheorem{lemma}{Lemma}[chapter]
+\newtheorem{proposition}[lemma]{Proposition}
+\newtheorem{fact}[lemma]{Fact}
+\newtheorem{theorem}[lemma]{Theorem} %Uncomment this line if you want to use usual theorems from ntheorem
+\newtheorem{corollary}[lemma]{Corollary}
+\newtheorem{definition}[lemma]{Definition}
+\newtheorem{exercise}[lemma]{Exercise}
+\newtheorem{example}[lemma]{Example}
+\newtheorem{remark}[lemma]{Remark}
+\newtheorem{problem}[lemma]{Problem}
+\newtheorem{assumption}[lemma]{Assumption}
+
+%% Beweise
+\theoremstyle{nonumberplain}
+\theorembodyfont{\normalfont}
+\theoremsymbol{\qed}
+\newtheorem{proof}{Proof}
+\providecommand*{\toclevel@proof}{0}
+\theoremclass{LaTeX}

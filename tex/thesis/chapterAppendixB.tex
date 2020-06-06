@@ -1,0 +1,91 @@
+\chapter{Structure of the Mechanisation}\label{app:mecha}
+We give an overview of the structure of our mechanisation. Our development is based on the Coq library of undecidable problems~\cite{coq_undec}, which contains among other things a formalisation of L and Turing machines as well as the extraction framework. 
+The files we contribute mainly live in the \texttt{/L/Complexity} directory of the project.
+The project is hosted on \href{https://github.com/uds-psl/ba-gaeher}{GitHub}.
+
+\paragraph{Basic Definitions}
+For completeness, we start with an overview over the basic definitions for complexity theory which were developed by Fabian Kunze. 
+\begin{center}
+  \begin{tabular}{ccc}
+    Component & Spec & Proof \\
+    \midrule
+    $\mathcal{O}$-notation and monotonicity & 70 & 167  \\ %monotonic + ONotation
+    decidability \& computability in time & 118 & 182 \\ %Synthetic + registeredP + linTimeDecodable
+    \textsf{P}, \NP{} and reductions & 102 & 157 %NP 
+    %analysis up to constants & 340 & 126 
+  \end{tabular}
+\end{center}
+The basic definitions we need are quite compact. The files for $\mathcal{O}$ notation mostly contain automation, for instance for proving that a particular function is polynomial or monotonic.
+The file for \NP{} includes basic facts like properties of polynomial-time reductions and the inclusion $\textsf{P} \subseteq \NP{}$.
+
+Throughout the thesis, we use a small library of additional facts about lists and other things that are not yet present in the Coq standard library or the undecidability library. 
+Moreover, we have a shared file providing running time and size bounds for common functions.
+\begin{center}
+  \begin{tabular}{ccc}
+    Component & Spec & Proof \\
+    \midrule
+    preliminaries & 169 & 381 \\
+    polynomial bounds & 112 & 253
+  \end{tabular}
+\end{center}
+
+\paragraph{Problem Definitions}
+The definitions of the problems we use are contained in the subfolder \texttt{Problems}. 
+\begin{center}
+  \begin{tabular}{ccc}
+    Component & Spec & Proof \\
+    \midrule
+    \SAT{} & 201 & 446 \\
+    \fsat{} & 93 & 87 \\
+    $k$-\SAT{} & 26 & 42 \\
+    \Clique{} \& \FlatClique{} & 194 & 263 \\
+    variants of \textbf{Parallel Rewriting} & 551 & 1022 \\
+    \gennp{} & 28 & 50 \\
+    %297  /233
+  \end{tabular}
+\end{center}
+The files for extractable problems include the respective extraction to L.
+For example, the extraction of \SAT{} makes up 84 lines of specification and 247 lines of proof of the total number of lines.
+The definitions for flat problems include predicates connecting them to the corresponding non-flat version. 
+In total, we have five variants of Parallel Rewriting: \PR{}, \FlatPR{}, \textbf{3-PR}, \textbf{Flat-3-PR} and \BPR{}. As the \textbf{3-PR} variant fixes all definitions to the special case of the width being 3 and the offset being 1, most definitions and lemmas have to be stated again for the variant. 
+The file on generic problems for Turing machines explores different definitions and proves their equivalence. 
+
+\paragraph{Reduction to Clique}
+\begin{center}
+  \begin{tabular}{ccc}
+    Component & Spec & Proof \\
+    \midrule
+    pigeonhole principle & 64 & 150 \\
+    $k$-\SAT{} to \Clique{} & 140 & 249 \\
+    $k$-\SAT{} to \FlatClique{} & 176 & 333 \\
+    $k$-\SAT{} to \SAT{} & 6 & 41 
+    %74 /216
+  \end{tabular}
+\end{center}
+While the (not extractable) proof using the abstract representation of graphs is fairly compact, with a major part component being a proof of the pigeonhole principle adapted from the ICL 2019 course~\cite{icl_coq}, defining a computable variant and analysing its running time takes up some space. 
+For completeness, we include a reduction from $k$-\SAT{} to \SAT{} proving that it is contained in \NP{}. 
+
+\paragraph{Proof of the Cook-Levin-Theorem}
+Recall that our proof of the Cook-Levin Theorem consists of four main reductions and a minor embedding of \textbf{3-PR} into \PR{}.
+
+\begin{center}
+  \begin{tabular}{cccc}
+    \multicolumn{2}{c}{Component} & Spec & Proof \\
+    \midrule
+    \multirow{2}{*}{\gennp{} to \textbf{3-PR}} & reduction & 1843 & 2481 \\ % + TM_single + PTPR_Preludes
+                                               & time analysis & 838 & 1706 \\
+    \multicolumn{2}{c}{\textbf{3-PR} to \PR{}} & 37 & 174 \\ 
+    \multicolumn{2}{c}{\PR{} to \BPR{}} & 222 & 719 \\% + Uniform Hom + PR_hom 
+    \multicolumn{2}{c}{\BPR{} to \fsat{}} & 312 & 1078 \\
+    \multicolumn{2}{c}{\fsat{} to \SAT{}} & 213 & 605 
+    %1153 / 2479
+  \end{tabular}
+\end{center}
+
+The reduction of \gennp{} to \textbf{3-PR} includes the formalisation of preludes for \PR{} needed for guessing the certificate. 735 lines of specification of 909 lines of the reduction's correctness proof are for generating the list-based windows and proving their agreement with the inductive predicates. 
+The running-time analysis makes up a very significant part of the whole reduction. 
+
+The remaining reductions are much simpler, with the reduction to \BPR{} including a formalisation of uniform homomorphisms and their action on \PR{} instances.
+
+In total, we have contributed 5230 lines of specification and 10038 lines of proof, of which 1636 and 3181 lines are for the extraction/running-time analysis (not including the definition of the flat problems or the flat reductions). 
+If we additionally exclude the flat problems, flat reductions and any proofs of computability (i.e.\ also exclude the definition of the list-based rules), we are left with 2339 lines of specification and 4524 lines of proof. These numbers thus only capture the correctness of the construction, but do not even include what is needed for a reduction in synthetic computability theory (as it is not at all clear how one would, in general, translate inductive predicates to something which is computable).

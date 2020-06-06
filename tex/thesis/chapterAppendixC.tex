@@ -1,0 +1,167 @@
+\chapter{Full Rewrite Rules}\label{app:rewrite_rules}
+The following list contains the full set of rewrite rules as implemented by the Coq mechanisation.
+\setCoqFilename{Undecidability.L.Complexity.Reductions.Cook.SingleTMGenNP_to_TPR}
+
+\section{Tape Rules}
+\paragraph{Right Shifts}
+\begin{center}
+\trewwin{\sigma_1}{\sigma_2}{\sigma_3}{\polpos{\sigma_4}}{\polpos{\sigma_1}}{\polpos{\sigma_2}} 
+  \quad \trewwin{\blank}{\blank}{\blank}{\polpos{\blank}}{\polpos{\blank}}{\polpos{\blank}}
+\\ 
+\trewwin{\blank}{\blank}{\blank}{\polpos{\sigma_1}}{\polpos{\blank}}{\polpos{\blank}} 
+  \quad \trewwin{\sigma_1}{\blank}{\blank}{\polpos{\sigma_2}}{\polpos{\sigma_1}} {\polpos{\blank}}
+\quad \trewwin{\sigma_1}{\sigma_2}{\blank}{\polpos{\sigma_3}}{\polpos{\sigma_1}}{ \polpos{\sigma_2}}
+ \\
+\trewwin{\blank}{\blank}{\sigma_1}{\polpos{\blank}}{\polpos{\blank}}{\polpos{\blank}}
+  \quad \trewwin{\blank}{\sigma_1}{\sigma_2} {\polpos{\blank}}{\polpos{\blank}}{ \polpos{\sigma_1}} 
+\quad \trewwin{\sigma_1}{\sigma_2}{\sigma_3}{\polpos{\blank}}{\polpos{\sigma_1}}{ \polpos{\sigma_2}}
+\end{center}
+
+\paragraph{Left Shifts}
+The rules for left shifts are defined to be the polarity-reversion of the rules for shifting to the right, i.e. $\irewwin{\gamma_1}{\gamma_2}{\gamma_3}{\gamma_4}{\gamma_5}{\gamma_6}$ is a rule for shifting to the left if, and only if, $\irewwin{\pFlipi{\gamma_3}}{\pFlipi{\gamma_2}}{\pFlipi{\gamma_1}}{\pFlipi{\gamma_6}}{\pFlipi{\gamma_5}}{\pFlipi{\gamma_4}}$ is a rule for shifting to the right. 
+
+\paragraph{Identity Rules}
+\begin{center}
+  \trewwin{m_1}{m_2}{m_3}{\polneut{m_1}}{\polneut{m_2}}{\polneut{m_3}}\\
+  \trewwin{\#}{\blank}{\blank}{\#}{\blank}{\blank} 
+  \quad \trewwin{\blank}{\blank}{\#}{\blank}{\blank}{\#}
+\end{center}
+
+
+\section{Transition Rules}
+\paragraph{\bm{$\delta(q, \OSome{a}) = (p, \OSome{b}, \movel)$}:}
+\begin{center}
+  \tikzset{baseline={([yshift=-22pt]current bounding box.north)}}
+  \trewwin{m_1}{q^a}{m_2}{\polpos{m_3}}{p^{m_2}}{\polpos{b}} 
+  \quad \trewwin{m_1}{m_2}{q^a}{\polpos{m_3}}{\polpos{m_1}}{p^{m_2}}
+  \quad \trewwin{q^a}{m_1}{m_2}{p^{m_3}}{\polpos{a}}{\polpos{m_1}}. 
+\end{center}
+
+\paragraph{\bm{$\delta(q, \OSome{a}) = (p, \OSome{b}, \mover)$}:}
+\begin{center}
+  \trewwin{m_1}{q^a}{m_2}{\polneg{b}}{p^{m_2}}{\polneg{m_3}} 
+  \quad \trewwin{q^a}{m_1}{m_2}{p^{m_1}}{\polneg{m_2}}{\polneg{m_3}}
+  \quad \trewwin{m_1}{m_2}{q^a}{\polneg{m_2}}{\polneg{a}}{p^{m_3}}
+\end{center}
+
+\paragraph{\bm{$\delta(q, \OSome{a}) = (p, \OSome{b}, \moven)$}:}
+\begin{center}
+  \trewwin{m_1}{q^a}{m_2}{\polneut{m_1}}{p^b}{\polneut{m_2}} 
+  \quad \trewwin{q^a}{m_1}{m_2}{p^b}{\polneut{m_1}}{\polneut{m_2}}
+  \quad \trewwin{m_1}{m_2}{q^a}{\polneut{m_1}}{\polneut{m_2}}{p^b}
+\end{center}
+
+\paragraph{\bm{$\delta(q, \OSome{a}) = (p, \ONone, \movel)$}:}
+\begin{center}
+  \trewwin{m_1}{q^a}{m_2}{\polpos{m_3}}{p^{m_2}}{\polpos{a}} 
+  \quad \trewwin{m_1}{m_2}{q^a}{\polpos{m_3}}{\polpos{m_1}}{p^{m_2}}
+  \quad \trewwin{q^a}{m_1}{m_2}{p^{m_3}}{\polpos{a}}{\polpos{m_1}}
+\end{center}
+
+\paragraph{\bm{$\delta(q, \OSome{a}) = (p, \ONone, \mover)$}:}
+\begin{center}
+  \trewwin{m_1}{q^a}{m_2}{\polneg{a}}{p^{m_2}}{\polneg{m_3}} 
+  \quad \trewwin{q^a}{m_1}{m_2}{p^{m_1}}{\polneg{m_2}}{\polneg{m_3}}
+  \quad \trewwin{m_1}{m_2}{q^a}{\polneg{m_2}}{\polneg{a}}{p^{m_3}}
+\end{center}
+
+\paragraph{\bm{$\delta(q, \OSome{a}) = (p, \ONone, \moven)$}:}
+\begin{center}
+  \trewwin{m_1}{q^a}{m_2}{\polneut{m_1}}{p^a}{\polneut{m_2}} 
+  \quad \trewwin{q^a}{m_1}{m_2}{p^a}{\polneut{m_1}}{\polneut{m_2}}
+  \quad \trewwin{m_1}{m_2}{q^a}{\polneut{m_1}}{\polneut{m_2}}{p^a}
+\end{center}
+
+\paragraph{\bm{$\delta(q, \ONone) = (p, \OSome{b}, \movel)$}:}
+\begin{center}
+  \trewwin{m_1}{q^\blank}{m_2}{\polpos{m_3}}{p^{m_2}}{\polpos{b}} 
+  \quad \trewwin{m_1}{m_2}{q^\blank}{\polpos{m_3}}{\polpos{m_1}}{p^{m_2}}
+  \quad \trewwin{q^\blank}{m_1}{m_2}{p^{m_3}}{\polpos{a}}{\polpos{m_1}}
+\end{center}
+
+\paragraph{\bm{$\delta(q, \ONone) = (p, \OSome{b}, \mover)$}:}
+\begin{center}
+  \trewwin{m_1}{q^\blank}{m_2}{\polneg{b}}{p^{m_2}}{\polneg{m_3}} 
+  \quad \trewwin{q^\blank}{m_1}{m_2}{p^{m_1}}{\polneg{m_2}}{\polneg{m_3}}
+  \quad \trewwin{m_1}{m_2}{q^\blank}{\polneg{m_2}}{\polneg{a}}{p^{m_3}}
+\end{center}
+
+\paragraph{\bm{$\delta(q, \ONone) = (p, \OSome{b}, \moven)$}:}
+\begin{center}
+  \trewwin{m_1}{q^\blank}{m_2}{\polneut{m_1}}{p^b}{\polneut{m_2}} 
+  \quad \trewwin{q^\blank}{m_1}{m_2}{p^b}{\polneut{m_1}}{\polneut{m_2}}
+  \quad \trewwin{m_1}{m_2}{q^\blank}{\polneut{m_1}}{\polneut{m_2}}{p^b}
+\end{center}
+
+\paragraph{\bm{$\delta(q, \ONone) = (p, \ONone, \movel)$}:}
+\begin{center}
+  \trewwin{\blank}{q^\blank}{m_1}{\polneut{\blank}}{p^\blank}{\polneut{m_1}}
+  \quad \trewwin{\sigma_1}{q^\blank}{\blank}{\polpos{m_1}}{p^{\sigma_1}}{\blank}\\
+  \trewwin{\blank}{\blank}{q^\blank}{\polneut{\blank}}{\polneut{\blank}}{p^\blank} 
+  \quad \trewwin{\blank}{\sigma_1}{q^\blank}{\polpos{\blank}}{\polpos{\blank}}{p^{\sigma_1}} 
+  \quad \trewwin{\sigma_2}{\sigma_1}{q^\blank}{\polpos{m_1}}{\polpos{\sigma_2}}{p^{\sigma_1}} \\
+  \trewwin{q^\blank}{\blank}{\blank}{p^{m_1}}{\polpos{\blank}}{\polpos{\blank}}
+  \quad \trewwin{q^\blank}{\sigma_1}{m_1}{p^\blank}{\polneut{\sigma_1}}{\polneut{m_1}}
+\end{center}
+
+\paragraph{\bm{$\delta(q, \ONone) = (p, \ONone, \moven)$}:}
+\begin{center}
+  \trewwin{m}{q^\blank}{\blank}{\polneut{m}}{p^\blank}{\polneut{\blank}}
+  \quad \trewwin{\blank}{q^\blank}{m}{\polneut{\blank}}{p^\blank}{\polneut{m}}\\
+  \trewwin{\blank}{\blank}{q^\blank}{\polneut{\blank}}{\polneut{\blank}}{p^\blank}
+  \quad \trewwin{m_1}{\sigma_1}{q^\blank}{\polneut{m_1}}{\polneut{\sigma_1}}{p^\blank} \\
+  \trewwin{q^\blank}{\blank}{\blank}{p^\blank}{\polneut{\blank}}{\polneut{\blank}}
+  \quad \trewwin{q^\blank}{\sigma_1}{m_1}{p^\blank}{\polneut{\sigma_1}}{\polneut{m_1}}
+\end{center} 
+
+\paragraph{\bm{$\delta(q, \ONone) = (p, \ONone, \mover)$}:}
+\begin{center}
+  \trewwin{m_1}{q^\blank}{\blank}{\polneut{m_1}}{p^\blank}{\polneut{\blank}}
+  \quad \trewwin{\blank}{q^\blank}{\sigma_1}{\polneg{\blank}}{p^\sigma_1}{\polneg{m_1}}\\
+  \trewwin{q^\blank}{\blank}{\blank}{p^\blank}{\polneut{\blank}}{\polneut{\blank}} 
+  \quad \trewwin{q^\blank}{\sigma_1}{\blank}{p^{\sigma_1}}{\polneg{\blank}}{\polneg{\blank}}
+  \quad \trewwin{q^\blank}{\sigma_1}{\sigma_2}{p^{\sigma_1}}{\polneg{\sigma_2}}{\polneg{m_1}}\\
+  \trewwin{m_1}{\sigma_1}{q^\blank}{\polneut{m_1}}{\polneut{\sigma_1}}{p^\blank} 
+  \quad \trewwin{\blank}{\blank}{q^\blank}{\polneg{\blank}}{\polneg{\blank}}{p^{m_1}}
+\end{center}
+
+\section{Halting Rules}
+
+\begin{center}
+  \trewwin{m_1}{q^{m_2}}{m_3}{\polneut{m_1}}{q^{m_2}}{\polneut{m_3}}
+  \quad \trewwin{m_1}{m_2}{q^{m_3}}{\polneut{m_1}}{\polneut{m_2}}{q^{m_3}}
+  \quad \trewwin{q^{m_1}}{m_2}{m_3}{q^{m_1}}{\polneut{m_2}}{\polneut{m_3}}
+\end{center}
+
+\section{Prelude Rules}
+\begin{center}
+  \trewwin{\nblank}{\nblank}{\nblank}{\polneut\blank}{\polneut\blank}{\polneut\blank}
+  \quad \trewwin{\ndelim}{\nblank}{\nblank}{\#}{\polneut\blank}{\polneut\blank}
+  \quad \trewwin{\nblank}{\nblank}{\ndelim}{\polneut\blank}{\polneut\blank}{\#}\\
+  \trewwin{\nblank}{\nblank}{\ninit}{\polneut\blank}{\polneut\blank}{q_0^\blank}
+  \quad \trewwin{\nblank}{\ninit}{\nsig{\sigma_1}}{\polneut\blank}{q_0^\blank}{\sigma_1}
+  \quad \trewwin{\nblank}{\ninit}{\nstar}{\polneut\blank}{q_0^\blank}{\polneut{m_1}}
+  \quad \trewwin{\nblank}{\ninit}{\nblank}{\polneut\blank}{q_0^\blank}{\polneut\blank}\\
+  \trewwin{\ninit}{\nblank}{\nblank}{q_0^\blank}{\polneut\blank}{\polneut\blank}
+  \quad \trewwin{\ninit}{\nsig{\sigma_1}}{\nstar}{q_0^\blank}{\polneut{\sigma_1}}{\polneut{m_1}} 
+\quad \trewwin{\ninit}{\nsig{\sigma_1}}{\nblank}{q_0^\blank}{\polneut{\sigma_1}}{\polneut\blank}
+\quad \trewwin{\ninit}{\nsig{\sigma_1}}{\nsig{\sigma_2}}{q_0^\blank}{\polneut{\sigma_1}}{\polneut{\sigma_2}}\\
+  \trewwin{\ninit}{\nstar}{\nblank}{q_0^\blank}{\polneut{m_1}}{\polneut\blank}
+  \quad \trewwin{\ninit}{\nstar}{\nstar}{q_0^\blank}{\polneut{\sigma_1}}{\polneut{m_1}}
+  \quad \trewwin{\ninit}{\nstar}{\nstar}{q_0^\blank}{\polneut\blank}{\polneut\blank}\\
+  \trewwin{\nsig{\sigma_1}}{\nsig{\sigma_2}}{\nsig{\sigma_3}}{\polneut{\sigma_1}}{\polneut{\sigma_2}}{\polneut{\sigma_3}} 
+  \quad \trewwin{\nsig{\sigma_1}}{\nsig{\sigma_2}}{\nstar}{\polneut{\sigma_1}}{\polneut{\sigma_2}}{\polneut{m_1}} 
+  \quad \trewwin{\nsig{\sigma_1}}{\nstar}{\nstar}{\polneut{\sigma_1}}{\polneut{\sigma_2}}{\polneut{m_1}}
+  \quad \trewwin{\nsig{\sigma_1}}{\nstar}{\nstar}{\polneut{\sigma_1}}{\polneut\blank}{\polneut\blank} \\
+  \trewwin{\nsig{\sigma_1}}{\nstar}{\nblank}{\polneut{\sigma_1}}{\polneut{m_1}}{\polneut\blank} 
+  \quad \trewwin{\nsig{\sigma_1}}{\nsig{\sigma_2}}{\nblank}{\polneut{\sigma_1}}{\polneut{\sigma_2}}{\polneut\blank} 
+  \quad \trewwin{\nsig{\sigma_1}}{\nblank}{\nblank}{\polneut{\sigma_1}}{\polneut\blank}{\polneut\blank} \\
+  \trewwin{\nstar}{\nstar}{\nstar}{\polneut{\sigma_1}}{\polneut{\sigma_2}}{\polneut{m_1}}
+  \quad\trewwin{\nstar}{\nstar}{\nstar}{\polneut{\sigma_1}}{\polneut\blank}{\polneut\blank}
+  \quad\trewwin{\nstar}{\nstar}{\nstar}{\polneut\blank}{\polneut\blank}{\polneut\blank}\\
+  \hspace{0.10mm}\trewwin{\nstar}{\nstar}{\nblank}{\polneut{\sigma_1}}{\polneut{m_1}}{\polneut{\blank}}
+  \quad\trewwin{\nstar}{\nstar}{\nblank}{\polneut{\blank}}{\polneut{\blank}}{\polneut{\blank}}
+  \quad\trewwin{\nstar}{\nblank}{\nblank}{\polneut{m_1}}{\polneut{\blank}}{\polneut{\blank}}
+\end{center}
+
+

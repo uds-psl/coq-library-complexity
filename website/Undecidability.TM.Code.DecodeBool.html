@@ -1,0 +1,101 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link href="coqdoc.css" rel="stylesheet" type="text/css" />
+<link href="coqdocjs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="config.js"></script>
+<script type="text/javascript" src="coqdocjs.js"></script>
+</head>
+
+<body onload="document.getElementById('content').focus()">
+  <div id="header">
+    <span class="left">
+      <span class="modulename"> <script> document.write(document.title) </script> </span>
+    </span>
+
+    <span class="button" id="toggle-proofs"></span>
+
+    <span class="right">
+      <a href="../">Project Page</a>
+      <a href="./indexpage.html"> Index </a>
+      <a href="./toc.html"> Table of Contents </a>
+    </span>
+</div>
+    <div id="content" tabindex="-1" onblur="document.getElementById('content').focus()">
+    <div id="main">
+<div class="code">
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability.TM</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="Undecidability.TM.TM.html#"><span class="id" title="library">TM</span></a> <a class="idref" href="Undecidability.TM.Code.ProgrammingTools.html#"><span class="id" title="library">ProgrammingTools</span></a> <a class="idref" href="Undecidability.TM.Code.Decode.html#"><span class="id" title="library">Code.Decode</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.micromega.Lia.html#"><span class="id" title="library">Lia</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.setoid_ring.Ring.html#"><span class="id" title="library">Ring</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Arith.Arith.html#"><span class="id" title="library">Arith</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Program.Wf.html#"><span class="id" title="library">Program.Wf</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <a name="bool_encode_injective"><span class="id" title="lemma">bool_encode_injective</span></a> (<span class="id" title="var">t</span> <span class="id" title="var">t'</span> : <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#bool"><span class="id" title="inductive">bool</span></a>): <a class="idref" href="Undecidability.TM.Code.Code.html#encode"><span class="id" title="method">encode</span></a> <a class="idref" href="Undecidability.TM.Code.DecodeBool.html#t"><span class="id" title="variable">t</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> <a class="idref" href="Undecidability.TM.Code.Code.html#encode"><span class="id" title="method">encode</span></a> <a class="idref" href="Undecidability.TM.Code.DecodeBool.html#t'"><span class="id" title="variable">t'</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <a class="idref" href="Undecidability.TM.Code.DecodeBool.html#t"><span class="id" title="variable">t</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> <a class="idref" href="Undecidability.TM.Code.DecodeBool.html#t'"><span class="id" title="variable">t'</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">destruct</span> <span class="id" title="var">t</span>,<span class="id" title="var">t'</span>;<span class="id" title="var">cbn</span>. <span class="id" title="var">all</span>:<span class="id" title="var">easy</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <a name="bool_encode_prefixInjective"><span class="id" title="lemma">bool_encode_prefixInjective</span></a>: <a class="idref" href="Undecidability.TM.Code.Decode.html#prefixInjective"><span class="id" title="definition">prefixInjective</span></a> <a class="idref" href="Undecidability.TM.Code.Code.html#Encode_bool"><span class="id" title="instance">Encode_bool</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">unfold</span> <a class="idref" href="Undecidability.TM.Code.Code.html#encode"><span class="id" title="method">encode</span></a>;<span class="id" title="var">cbn</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">intros</span> [] [];<span class="id" title="var">cbn</span>. <span class="id" title="var">all</span>:<span class="id" title="tactic">congruence</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Module</span> <a name="CheckEncodesBool"><span class="id" title="module">CheckEncodesBool</span></a>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Section</span> <a name="CheckEncodesBool.checkEncodesBool"><span class="id" title="section">checkEncodesBool</span></a>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Import</span> <span class="id" title="var">Mono</span> <span class="id" title="var">Multi</span> <span class="id" title="var">Copy</span> <span class="id" title="var">Switch</span> <span class="id" title="var">If</span> <span class="id" title="var">Combinators</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Context</span> (<span class="id" title="var">sig</span> : <span class="id" title="keyword">Type</span>) (<span class="id" title="var">tau</span>:<span class="id" title="record">finType</span>) {<span class="id" title="var">I</span> : <span class="id" title="class">Retract</span> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#bool"><span class="id" title="inductive">bool</span></a> <a class="idref" href="Undecidability.TM.Code.DecodeBool.html#tau"><span class="id" title="variable">tau</span></a>}.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Local</span> <span class="id" title="var">Remove</span> <span class="id" title="var">Hints</span> <span class="id" title="var">Retract_id</span> : <span class="id" title="var">typeclass_instances</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Let</span> <a name="CheckEncodesBool.checkEncodesBool.Rel"><span class="id" title="variable">Rel</span></a> : <a class="idref" href="Undecidability.TM.TM.html#pRel"><span class="id" title="definition">pRel</span></a> <a class="idref" href="Undecidability.TM.Code.DecodeBool.html#CheckEncodesBool.checkEncodesBool.tau"><span class="id" title="variable">tau</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#bool"><span class="id" title="inductive">bool</span></a> 1 := <a class="idref" href="Undecidability.TM.Code.Decode.html#ContainsEncoding.Rel"><span class="id" title="definition">ContainsEncoding.Rel</span></a> (<a class="idref" href="Undecidability.TM.Code.Code.html#Encode_bool"><span class="id" title="instance">Encode_bool</span></a>) <span class="id" title="method">Retr_f</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <a name="CheckEncodesBool.M"><span class="id" title="definition">M</span></a> : <a class="idref" href="Undecidability.TM.TM.html#pTM"><span class="id" title="definition">pTM</span></a> <a class="idref" href="Undecidability.TM.Code.DecodeBool.html#CheckEncodesBool.checkEncodesBool.tau"><span class="id" title="variable">tau</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#bool"><span class="id" title="inductive">bool</span></a> 1:=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="Undecidability.TM.Combinators.Combinators.html#Relabel"><span class="id" title="definition">Relabel</span></a> <a class="idref" href="Undecidability.TM.Basic.Mono.html#ReadChar"><span class="id" title="definition">ReadChar</span></a> (<span class="id" title="keyword">fun</span> <span class="id" title="var">c</span> =&gt; <a class="idref" href="Undecidability.TM.Code.ProgrammingTools.html#Option.apply"><span class="id" title="definition">Option.apply</span></a> (<span class="id" title="keyword">fun</span> <span class="id" title="var">_</span> =&gt; <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#true"><span class="id" title="constructor">true</span></a>) <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#false"><span class="id" title="constructor">false</span></a> (<a class="idref" href="Undecidability.TM.Code.ProgrammingTools.html#Option.bind"><span class="id" title="definition">Option.bind</span></a> <span class="id" title="method">Retr_g</span> <a class="idref" href="Undecidability.TM.Code.DecodeBool.html#c"><span class="id" title="variable">c</span></a>)).<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Lemma</span> <a name="CheckEncodesBool.RealisesIn"><span class="id" title="lemma">RealisesIn</span></a> : <a class="idref" href="Undecidability.TM.Code.DecodeBool.html#CheckEncodesBool.M"><span class="id" title="definition">M</span></a> <a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">⊨</span></a><a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">c</span></a><a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">(</span></a>1<a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">)</span></a> <a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">(</span></a><span class="id" title="keyword">fun</span> <span class="id" title="var">tin</span> <span class="id" title="var">out</span> =&gt; <a class="idref" href="Undecidability.TM.Code.DecodeBool.html#CheckEncodesBool.checkEncodesBool.Rel"><span class="id" title="variable">Rel</span></a> <a class="idref" href="Undecidability.TM.Code.DecodeBool.html#tin"><span class="id" title="variable">tin</span></a> <a class="idref" href="Undecidability.TM.Code.DecodeBool.html#out"><span class="id" title="variable">out</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d82a7d96d3659d805ffe732283716822"><span class="id" title="notation">/\</span></a> <a class="idref" href="Undecidability.TM.Code.DecodeBool.html#tin"><span class="id" title="variable">tin</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#snd"><span class="id" title="definition">snd</span></a> <a class="idref" href="Undecidability.TM.Code.DecodeBool.html#out"><span class="id" title="variable">out</span></a><a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">)</span></a>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.TM.html#RealiseIn_monotone"><span class="id" title="lemma">RealiseIn_monotone</span></a>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id" title="tactic">unfold</span> <a class="idref" href="Undecidability.TM.Code.DecodeBool.html#CheckEncodesBool.M"><span class="id" title="definition">M</span></a>. <span class="id" title="var">TM_Correct</span>. } <span class="id" title="var">easy</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">hnf</span>;<span class="id" title="var">cbn</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">intros</span> <span class="id" title="var">t</span> (?&amp;?) (?&amp;-&gt;&amp;-&gt;&amp;-&gt;). <span class="id" title="tactic">hnf</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">split</span>. 2:<span class="id" title="var">easy</span>. <span class="id" title="tactic">split</span>. 2:<span class="id" title="var">now</span> <span class="id" title="tactic">eexists</span> 0.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">destruct</span> <a class="idref" href="Undecidability.TM.Code.ProgrammingTools.html#Option.bind"><span class="id" title="definition">Option.bind</span></a> <span class="id" title="keyword">as</span> [<span class="id" title="var">b</span> | ] <span class="id" title="var">eqn</span>:<span class="id" title="var">H</span>;<span class="id" title="var">cbn</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2:{ <span class="id" title="tactic">intros</span> ? ? ?. <span class="id" title="var">erewrite</span> <a class="idref" href="Undecidability.TM.TM.html#tape_local_current_cons"><span class="id" title="lemma">tape_local_current_cons</span></a> <span class="id" title="tactic">in</span> <span class="id" title="var">H</span>. 2:<span class="id" title="var">eassumption</span>. <span class="id" title="var">cbn</span> <span class="id" title="tactic">in</span> <span class="id" title="var">H</span>. <span class="id" title="var">now</span>  <span class="id" title="var">retract_adjoint</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">exists</span> <span class="id" title="var">b</span>. <span class="id" title="tactic">rewrite</span> <a class="idref" href="Undecidability.TM.TM.html#tape_local_cons_iff"><span class="id" title="lemma">tape_local_cons_iff</span></a>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">destruct</span> <a class="idref" href="Undecidability.TM.TM.html#current"><span class="id" title="definition">current</span></a> <span class="id" title="var">eqn</span>:<span class="id" title="var">H'</span>. <span class="id" title="var">all</span>:<span class="id" title="var">cbn</span> <span class="id" title="tactic">in</span> <span class="id" title="var">H</span>. 2:<span class="id" title="var">easy</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">apply</span> <span class="id" title="definition">retract_g_inv</span> <span class="id" title="tactic">in</span> <span class="id" title="var">H</span> <span class="id" title="keyword">as</span> -&gt;. <span class="id" title="tactic">rewrite</span> <a class="idref" href="Undecidability.TM.TM.html#tape_local_l_cons_iff"><span class="id" title="lemma">tape_local_l_cons_iff</span></a>. <span class="id" title="tactic">intuition</span> <span class="id" title="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Lemma</span> <a name="CheckEncodesBool.RealisesIn'"><span class="id" title="lemma">RealisesIn'</span></a> : <a class="idref" href="Undecidability.TM.Code.DecodeBool.html#CheckEncodesBool.M"><span class="id" title="definition">M</span></a> <a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">⊨</span></a><a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">c</span></a><a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">(</span></a>1<a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">)</span></a> <a class="idref" href="Undecidability.TM.Code.DecodeBool.html#CheckEncodesBool.checkEncodesBool.Rel"><span class="id" title="variable">Rel</span></a>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.TM.html#RealiseIn_monotone"><span class="id" title="lemma">RealiseIn_monotone</span></a>. <span class="id" title="tactic">apply</span> <a class="idref" href="Undecidability.TM.Code.DecodeBool.html#CheckEncodesBool.RealisesIn"><span class="id" title="lemma">RealisesIn</span></a>. <span class="id" title="var">easy</span>. <span class="id" title="tactic">firstorder</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">End</span> <a class="idref" href="Undecidability.TM.Code.DecodeBool.html#CheckEncodesBool.checkEncodesBool"><span class="id" title="section">checkEncodesBool</span></a>.<br/>
+<span class="id" title="keyword">End</span> <a class="idref" href="Undecidability.TM.Code.DecodeBool.html#CheckEncodesBool"><span class="id" title="module">CheckEncodesBool</span></a>.<br/>
+
+<br/>
+</div>
+</div>
+<div id="footer">
+  Generated by <a href="http://coq.inria.fr/">coqdoc</a> and improved with <a href="https://github.com/tebbi/coqdocjs">CoqdocJS</a>
+</div>
+</div>
+</body>
+
+</html>

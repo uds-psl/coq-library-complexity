@@ -1,0 +1,313 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link href="coqdoc.css" rel="stylesheet" type="text/css" />
+<link href="coqdocjs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="config.js"></script>
+<script type="text/javascript" src="coqdocjs.js"></script>
+</head>
+
+<body onload="document.getElementById('content').focus()">
+  <div id="header">
+    <span class="left">
+      <span class="modulename"> <script> document.write(document.title) </script> </span>
+    </span>
+
+    <span class="button" id="toggle-proofs"></span>
+
+    <span class="right">
+      <a href="../">Project Page</a>
+      <a href="./indexpage.html"> Index </a>
+      <a href="./toc.html"> Table of Contents </a>
+    </span>
+</div>
+    <div id="content" tabindex="-1" onblur="document.getElementById('content').focus()">
+    <div id="main">
+<div class="code">
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="Undecidability.TM.Prelim.html#"><span class="id" title="library">TM.Prelim</span></a>.<br/>
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="Undecidability.TM.TM.html#"><span class="id" title="library">TM.TM</span></a>.<br/>
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="Undecidability.TM.Basic.Basic.html#"><span class="id" title="library">TM.Basic.Basic</span></a>.<br/>
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="Undecidability.TM.Combinators.Combinators.html#"><span class="id" title="library">TM.Combinators.Combinators</span></a>.<br/>
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="Undecidability.TM.Lifting.Lifting.html#"><span class="id" title="library">TM.Lifting.Lifting</span></a>.<br/>
+
+<br/>
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="Undecidability.TM.Compound.TMTac.html#"><span class="id" title="library">TM.Compound.TMTac</span></a>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab289"></a><h1 class="section">Simple compound multi-tape Machines</h1>
+
+<div class="paragraph"> </div>
+
+<a name="lab290"></a><h2 class="section">Nop</h2>
+
+<div class="paragraph"> </div>
+
+ The n-tape Machine that does nothing 
+</div>
+<div class="code">
+<span class="id" title="keyword">Section</span> <a name="Nop"><span class="id" title="section">Nop</span></a>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Variable</span> <a name="Nop.sig"><span class="id" title="variable">sig</span></a> : <span class="id" title="record">finType</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Variable</span> <a name="Nop.n"><span class="id" title="variable">n</span></a> : <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#nat"><span class="id" title="inductive">nat</span></a>.<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <a name="Nop"><span class="id" title="definition">Nop</span></a> : <a class="idref" href="Undecidability.TM.TM.html#pTM"><span class="id" title="definition">pTM</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Nop.sig"><span class="id" title="variable">sig</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#unit"><span class="id" title="inductive">unit</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Nop.n"><span class="id" title="variable">n</span></a> := <a class="idref" href="Undecidability.TM.Lifting.LiftTapes.html#LiftTapes"><span class="id" title="definition">LiftTapes</span></a> <a class="idref" href="Undecidability.TM.Basic.Null.html#Null"><span class="id" title="definition">Null</span></a> (<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Vectors.Vector.html#nil"><span class="id" title="constructor">Vector.nil</span></a> <span class="id" title="var">_</span>).<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <a name="Nop_Rel"><span class="id" title="definition">Nop_Rel</span></a> : <a class="idref" href="Undecidability.TM.TM.html#pRel"><span class="id" title="definition">pRel</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Nop.sig"><span class="id" title="variable">sig</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#unit"><span class="id" title="inductive">unit</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Nop.n"><span class="id" title="variable">n</span></a> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="Undecidability.TM.Relations.html#ignoreParam"><span class="id" title="definition">ignoreParam</span></a> (<span class="id" title="keyword">fun</span> <span class="id" title="var">t</span> <span class="id" title="var">t'</span> =&gt; <a class="idref" href="Undecidability.TM.Compound.Multi.html#t'"><span class="id" title="variable">t'</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#t"><span class="id" title="variable">t</span></a>).<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Lemma</span> <a name="Nop_Sem"><span class="id" title="lemma">Nop_Sem</span></a> : <a class="idref" href="Undecidability.TM.Compound.Multi.html#Nop"><span class="id" title="definition">Nop</span></a> <a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">⊨</span></a><a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">c</span></a><a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">(</span></a>0<a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">)</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Nop_Rel"><span class="id" title="definition">Nop_Rel</span></a>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.TM.html#RealiseIn_monotone"><span class="id" title="lemma">RealiseIn_monotone</span></a>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id" title="tactic">unfold</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Nop"><span class="id" title="definition">Nop</span></a>. <span class="id" title="var">TM_Correct</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id" title="tactic">reflexivity</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">intros</span> <span class="id" title="var">tin</span> ((), <span class="id" title="var">tout</span>) (<span class="id" title="var">_</span>&amp;<span class="id" title="var">HInj</span>). <span class="id" title="var">cbn</span> <span class="id" title="tactic">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">apply</span> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Vectors.Vector.html#eq_nth_iff"><span class="id" title="lemma">Vector.eq_nth_iff</span></a>; <span class="id" title="tactic">intros</span> <span class="id" title="var">i</span> ? &lt;-. <span class="id" title="tactic">apply</span> <span class="id" title="var">HInj</span>. <span class="id" title="var">vector_not_in</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Qed</span>.<br/>
+<span class="id" title="keyword">End</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Nop"><span class="id" title="section">Nop</span></a>.<br/>
+
+<br/>
+<span class="id" title="var">Arguments</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Nop_Rel"><span class="id" title="definition">Nop_Rel</span></a> {<span class="id" title="var">sig</span> <span class="id" title="var">n</span>} <span class="id" title="var">x</span> <span class="id" title="var">y</span>/.<br/>
+<span class="id" title="var">Arguments</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Nop"><span class="id" title="definition">Nop</span></a> {<span class="id" title="var">sig</span> <span class="id" title="var">n</span>}.<br/>
+<span class="id" title="var">Arguments</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Nop"><span class="id" title="definition">Nop</span></a> : <span class="id" title="tactic">simpl</span> <span class="id" title="var">never</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab291"></a><h2 class="section">Diverge</h2>
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" title="keyword">Section</span> <a name="Diverge"><span class="id" title="section">Diverge</span></a>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Variable</span> <a name="Diverge.sig"><span class="id" title="variable">sig</span></a> : <span class="id" title="record">finType</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Variable</span> <a name="Diverge.n"><span class="id" title="variable">n</span></a> : <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#nat"><span class="id" title="inductive">nat</span></a>.<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <a name="Diverge"><span class="id" title="definition">Diverge</span></a> : <a class="idref" href="Undecidability.TM.TM.html#pTM"><span class="id" title="definition">pTM</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Diverge.sig"><span class="id" title="variable">sig</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#unit"><span class="id" title="inductive">unit</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Diverge.n"><span class="id" title="variable">n</span></a> := <a class="idref" href="Undecidability.TM.Combinators.While.html#While"><span class="id" title="definition">While</span></a> (<a class="idref" href="Undecidability.TM.Combinators.Combinators.html#Return"><span class="id" title="definition">Return</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Nop"><span class="id" title="definition">Nop</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#None"><span class="id" title="constructor">None</span></a>).<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <a name="Diverge_Rel"><span class="id" title="definition">Diverge_Rel</span></a> : <a class="idref" href="Undecidability.TM.TM.html#pRel"><span class="id" title="definition">pRel</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Diverge.sig"><span class="id" title="variable">sig</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#unit"><span class="id" title="inductive">unit</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Diverge.n"><span class="id" title="variable">n</span></a> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="Undecidability.TM.Relations.html#ignoreParam"><span class="id" title="definition">ignoreParam</span></a> (<span class="id" title="keyword">fun</span> <span class="id" title="var">t</span> <span class="id" title="var">t'</span> =&gt; <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#False"><span class="id" title="inductive">False</span></a>).<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Lemma</span> <a name="Diverge_Realise"><span class="id" title="lemma">Diverge_Realise</span></a> : <a class="idref" href="Undecidability.TM.Compound.Multi.html#Diverge"><span class="id" title="definition">Diverge</span></a> <a class="idref" href="Undecidability.TM.TM.html#b6a406be528b1317fb99ea446224ad7a"><span class="id" title="notation">⊨</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Diverge_Rel"><span class="id" title="definition">Diverge_Rel</span></a>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.TM.html#Realise_monotone"><span class="id" title="lemma">Realise_monotone</span></a>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id" title="tactic">unfold</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Diverge"><span class="id" title="definition">Diverge</span></a>. <span class="id" title="var">TM_Correct</span>. <span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.TM.html#RealiseIn_Realise"><span class="id" title="lemma">RealiseIn_Realise</span></a>. <span class="id" title="tactic">apply</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Nop_Sem"><span class="id" title="lemma">Nop_Sem</span></a>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.Combinators.While.html#WhileInduction"><span class="id" title="lemma">WhileInduction</span></a>; <span class="id" title="tactic">intros</span>; <span class="id" title="var">cbn</span> <span class="id" title="tactic">in</span> *; <span class="id" title="var">TMSimp</span>; <span class="id" title="tactic">auto</span>. }<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">End</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Diverge"><span class="id" title="section">Diverge</span></a>.<br/>
+
+<br/>
+<span class="id" title="var">Arguments</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Diverge_Rel"><span class="id" title="definition">Diverge_Rel</span></a> {<span class="id" title="var">sig</span> <span class="id" title="var">n</span>} <span class="id" title="var">x</span> <span class="id" title="var">y</span>/.<br/>
+<span class="id" title="var">Arguments</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Diverge"><span class="id" title="definition">Diverge</span></a> {<span class="id" title="var">sig</span> <span class="id" title="var">n</span>}.<br/>
+<span class="id" title="var">Arguments</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Diverge"><span class="id" title="definition">Diverge</span></a> : <span class="id" title="tactic">simpl</span> <span class="id" title="var">never</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab292"></a><h2 class="section">Move two tapes</h2>
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" title="keyword">Section</span> <a name="MovePar"><span class="id" title="section">MovePar</span></a>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Variable</span> <a name="MovePar.sig"><span class="id" title="variable">sig</span></a> : <span class="id" title="record">finType</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Variable</span> (<a name="MovePar.D1"><span class="id" title="variable">D1</span></a> <a name="MovePar.D2"><span class="id" title="variable">D2</span></a> : <a class="idref" href="Undecidability.TM.TM.html#move"><span class="id" title="inductive">move</span></a>).<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <a name="MovePar_R"><span class="id" title="definition">MovePar_R</span></a> : <a class="idref" href="Undecidability.TM.TM.html#pRel"><span class="id" title="definition">pRel</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#MovePar.sig"><span class="id" title="variable">sig</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#unit"><span class="id" title="inductive">unit</span></a> 2 :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="Undecidability.TM.Relations.html#ignoreParam"><span class="id" title="definition">ignoreParam</span></a>(<span class="id" title="keyword">fun</span> (<span class="id" title="var">t</span> <span class="id" title="var">t'</span> : <a class="idref" href="Undecidability.TM.TM.html#tapes"><span class="id" title="definition">tapes</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#MovePar.sig"><span class="id" title="variable">sig</span></a> 2) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="Undecidability.TM.Compound.Multi.html#t'"><span class="id" title="variable">t'</span></a><span class="id" title="notation">[@</span><span class="id" title="notation">Fin0</span><span class="id" title="notation">]</span> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> <a class="idref" href="Undecidability.TM.TM.html#tape_move"><span class="id" title="definition">tape_move</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#t"><span class="id" title="variable">t</span></a><span class="id" title="notation">[@</span><span class="id" title="notation">Fin0</span><span class="id" title="notation">]</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#MovePar.D1"><span class="id" title="variable">D1</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d82a7d96d3659d805ffe732283716822"><span class="id" title="notation">/\</span></a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="Undecidability.TM.Compound.Multi.html#t'"><span class="id" title="variable">t'</span></a><span class="id" title="notation">[@</span><span class="id" title="notation">Fin1</span><span class="id" title="notation">]</span> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> <a class="idref" href="Undecidability.TM.TM.html#tape_move"><span class="id" title="definition">tape_move</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#t"><span class="id" title="variable">t</span></a><span class="id" title="notation">[@</span><span class="id" title="notation">Fin1</span><span class="id" title="notation">]</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#MovePar.D2"><span class="id" title="variable">D2</span></a>).<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <a name="MovePar"><span class="id" title="definition">MovePar</span></a> : <a class="idref" href="Undecidability.TM.TM.html#pTM"><span class="id" title="definition">pTM</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#MovePar.sig"><span class="id" title="variable">sig</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#unit"><span class="id" title="inductive">unit</span></a> 2 :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="Undecidability.TM.Lifting.LiftTapes.html#LiftTapes"><span class="id" title="definition">LiftTapes</span></a> (<a class="idref" href="Undecidability.TM.Basic.Mono.html#Move"><span class="id" title="definition">Move</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#MovePar.D1"><span class="id" title="variable">D1</span></a>) <span class="id" title="notation">[|</span><span class="id" title="notation">Fin0</span><span class="id" title="notation">|]</span><a class="idref" href="Undecidability.TM.Combinators.SequentialComposition.html#c867beb4aa2ff73336c95a0d45cad704"><span class="id" title="notation">;;</span></a> <a class="idref" href="Undecidability.TM.Lifting.LiftTapes.html#LiftTapes"><span class="id" title="definition">LiftTapes</span></a> (<a class="idref" href="Undecidability.TM.Basic.Mono.html#Move"><span class="id" title="definition">Move</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#MovePar.D2"><span class="id" title="variable">D2</span></a>) <span class="id" title="notation">[|</span><span class="id" title="notation">Fin1</span><span class="id" title="notation">|]</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Lemma</span> <a name="MovePar_Sem"><span class="id" title="lemma">MovePar_Sem</span></a> : <a class="idref" href="Undecidability.TM.Compound.Multi.html#MovePar"><span class="id" title="definition">MovePar</span></a> <a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">⊨</span></a><a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">c</span></a><a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">(</span></a>3<a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">)</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#MovePar_R"><span class="id" title="definition">MovePar_R</span></a>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.TM.html#RealiseIn_monotone"><span class="id" title="lemma">RealiseIn_monotone</span></a>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id" title="tactic">unfold</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#MovePar"><span class="id" title="definition">MovePar</span></a>. <span class="id" title="var">TM_Correct</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id" title="tactic">reflexivity</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id" title="tactic">hnf</span> <span class="id" title="tactic">in</span> *. <span class="id" title="tactic">intros</span> <span class="id" title="var">tin</span> (<span class="id" title="var">yout</span>&amp;<span class="id" title="var">tout</span>) <span class="id" title="var">H</span>. <span class="id" title="var">now</span> <span class="id" title="var">TMSimp</span>. }<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">End</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#MovePar"><span class="id" title="section">MovePar</span></a>.<br/>
+
+<br/>
+<span class="id" title="var">Arguments</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#MovePar_R"><span class="id" title="definition">MovePar_R</span></a> { <span class="id" title="var">sig</span> } ( <span class="id" title="var">D1</span> <span class="id" title="var">D2</span> ) <span class="id" title="var">x</span> <span class="id" title="var">y</span> /.<br/>
+<span class="id" title="var">Arguments</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#MovePar"><span class="id" title="definition">MovePar</span></a> {<span class="id" title="var">sig</span>} (<span class="id" title="var">D1</span> <span class="id" title="var">D2</span>).<br/>
+<span class="id" title="var">Arguments</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#MovePar"><span class="id" title="definition">MovePar</span></a> : <span class="id" title="tactic">simpl</span> <span class="id" title="var">never</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab293"></a><h2 class="section">Copy Symbol</h2>
+
+<div class="paragraph"> </div>
+
+ Copy the current symbol from tape 0 to tape 1 
+</div>
+<div class="code">
+<span class="id" title="keyword">Section</span> <a name="Copy"><span class="id" title="section">Copy</span></a>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Variable</span> <a name="Copy.sig"><span class="id" title="variable">sig</span></a> : <span class="id" title="record">finType</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Variable</span> <a name="Copy.f"><span class="id" title="variable">f</span></a> : <a class="idref" href="Undecidability.TM.Compound.Multi.html#Copy.sig"><span class="id" title="variable">sig</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Copy.sig"><span class="id" title="variable">sig</span></a>.<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <a name="CopyChar"><span class="id" title="definition">CopyChar</span></a> : <a class="idref" href="Undecidability.TM.TM.html#pTM"><span class="id" title="definition">pTM</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Copy.sig"><span class="id" title="variable">sig</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#unit"><span class="id" title="inductive">unit</span></a> 2 :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="Undecidability.TM.Combinators.Switch.html#Switch"><span class="id" title="definition">Switch</span></a> (<a class="idref" href="Undecidability.TM.Lifting.LiftTapes.html#LiftTapes"><span class="id" title="definition">LiftTapes</span></a> <a class="idref" href="Undecidability.TM.Basic.Mono.html#ReadChar"><span class="id" title="definition">ReadChar</span></a> <span class="id" title="notation">[|</span><span class="id" title="notation">Fin0</span><span class="id" title="notation">|]</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="keyword">fun</span> <span class="id" title="var">s</span> : <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#option"><span class="id" title="inductive">option</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Copy.sig"><span class="id" title="variable">sig</span></a> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">match</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#s"><span class="id" title="variable">s</span></a> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#None"><span class="id" title="constructor">None</span></a> =&gt;  <a class="idref" href="Undecidability.TM.Compound.Multi.html#Nop"><span class="id" title="definition">Nop</span></a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#Some"><span class="id" title="constructor">Some</span></a> <span class="id" title="var">s</span> =&gt; <a class="idref" href="Undecidability.TM.Lifting.LiftTapes.html#LiftTapes"><span class="id" title="definition">LiftTapes</span></a> (<a class="idref" href="Undecidability.TM.Basic.Mono.html#Write"><span class="id" title="definition">Write</span></a> (<a class="idref" href="Undecidability.TM.Compound.Multi.html#Copy.f"><span class="id" title="variable">f</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#s"><span class="id" title="variable">s</span></a>)) <span class="id" title="notation">[|</span><span class="id" title="notation">Fin1</span><span class="id" title="notation">|]</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">end</span>).<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <a name="CopyChar_Rel"><span class="id" title="definition">CopyChar_Rel</span></a> : <a class="idref" href="Undecidability.TM.TM.html#pRel"><span class="id" title="definition">pRel</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Copy.sig"><span class="id" title="variable">sig</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#unit"><span class="id" title="inductive">unit</span></a> 2 :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="Undecidability.TM.Relations.html#ignoreParam"><span class="id" title="definition">ignoreParam</span></a> (<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">fun</span> <span class="id" title="var">tin</span> <span class="id" title="var">tout</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="Undecidability.TM.Compound.Multi.html#tout"><span class="id" title="variable">tout</span></a><span class="id" title="notation">[@</span><span class="id" title="notation">Fin0</span><span class="id" title="notation">]</span> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#tin"><span class="id" title="variable">tin</span></a><span class="id" title="notation">[@</span><span class="id" title="notation">Fin0</span><span class="id" title="notation">]</span> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d82a7d96d3659d805ffe732283716822"><span class="id" title="notation">/\</span></a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="Undecidability.TM.Compound.Multi.html#tout"><span class="id" title="variable">tout</span></a><span class="id" title="notation">[@</span><span class="id" title="notation">Fin1</span><span class="id" title="notation">]</span> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> <a class="idref" href="Undecidability.TM.TM.html#tape_write"><span class="id" title="definition">tape_write</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#tin"><span class="id" title="variable">tin</span></a><span class="id" title="notation">[@</span><span class="id" title="notation">Fin1</span><span class="id" title="notation">]</span> (<a class="idref" href="Undecidability.TM.Prelim.html#map_opt"><span class="id" title="definition">map_opt</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Copy.f"><span class="id" title="variable">f</span></a> (<a class="idref" href="Undecidability.TM.TM.html#current"><span class="id" title="definition">current</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#tin"><span class="id" title="variable">tin</span></a><span class="id" title="notation">[@</span><span class="id" title="notation">Fin0</span><span class="id" title="notation">]</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;).<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Lemma</span> <a name="CopyChar_Sem"><span class="id" title="lemma">CopyChar_Sem</span></a> : <a class="idref" href="Undecidability.TM.Compound.Multi.html#CopyChar"><span class="id" title="definition">CopyChar</span></a> <a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">⊨</span></a><a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">c</span></a><a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">(</span></a>3<a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">)</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#CopyChar_Rel"><span class="id" title="definition">CopyChar_Rel</span></a>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.TM.html#RealiseIn_monotone"><span class="id" title="lemma">RealiseIn_monotone</span></a>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">unfold</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#CopyChar"><span class="id" title="definition">CopyChar</span></a>. <span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.Combinators.Switch.html#Switch_RealiseIn"><span class="id" title="lemma">Switch_RealiseIn</span></a>; <span class="id" title="var">cbn</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id" title="tactic">apply</span> <a class="idref" href="Undecidability.TM.Lifting.LiftTapes.html#LiftTapes_RealiseIn"><span class="id" title="lemma">LiftTapes_RealiseIn</span></a>. <span class="id" title="var">vector_dupfree</span>. <span class="id" title="tactic">apply</span> <a class="idref" href="Undecidability.TM.Basic.Mono.html#ReadChar_Sem"><span class="id" title="definition">ReadChar_Sem</span></a>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id" title="tactic">instantiate</span> (2 := <span class="id" title="keyword">fun</span> <span class="id" title="var">o</span> : <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#option"><span class="id" title="inductive">option</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Copy.sig"><span class="id" title="variable">sig</span></a> =&gt; <span class="id" title="keyword">match</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#o"><span class="id" title="variable">o</span></a> <span class="id" title="keyword">with</span> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#Some"><span class="id" title="constructor">Some</span></a> <span class="id" title="var">s</span> =&gt; <span class="id" title="var">_</span> | <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#None"><span class="id" title="constructor">None</span></a> =&gt; <span class="id" title="var">_</span> <span class="id" title="keyword">end</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">intros</span> [ <span class="id" title="var">s</span> | ]; <span class="id" title="var">cbn</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.Lifting.LiftTapes.html#LiftTapes_RealiseIn"><span class="id" title="lemma">LiftTapes_RealiseIn</span></a>. <span class="id" title="var">vector_dupfree</span>. <span class="id" title="tactic">apply</span> <a class="idref" href="Undecidability.TM.Basic.Mono.html#Write_Sem"><span class="id" title="lemma">Write_Sem</span></a>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.TM.html#RealiseIn_monotone'"><span class="id" title="lemma">RealiseIn_monotone'</span></a>. <span class="id" title="tactic">apply</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Nop_Sem"><span class="id" title="lemma">Nop_Sem</span></a>. <span class="id" title="tactic">omega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id" title="tactic">omega</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">intros</span> <span class="id" title="var">tin</span> ((), <span class="id" title="var">tout</span>) <span class="id" title="var">H</span>. <span class="id" title="var">cbn</span> <span class="id" title="tactic">in</span> *. <span class="id" title="var">TMSimp</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">destruct</span> (<a class="idref" href="Undecidability.TM.TM.html#current"><span class="id" title="definition">current</span></a> <span class="id" title="var">tin</span><span class="id" title="notation">[@</span><span class="id" title="notation">Fin0</span><span class="id" title="notation">]</span>) <span class="id" title="var">eqn</span>:<span class="id" title="var">E</span>; <span class="id" title="var">TMSimp</span>; <span class="id" title="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">End</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Copy"><span class="id" title="section">Copy</span></a>.<br/>
+
+<br/>
+<span class="id" title="var">Arguments</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#CopyChar_Rel"><span class="id" title="definition">CopyChar_Rel</span></a> { <span class="id" title="var">sig</span> } ( <span class="id" title="var">f</span> ) <span class="id" title="var">x</span> <span class="id" title="var">y</span> /.<br/>
+<span class="id" title="var">Arguments</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#CopyChar"><span class="id" title="definition">CopyChar</span></a> { <span class="id" title="var">sig</span> }.<br/>
+<span class="id" title="var">Arguments</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#CopyChar"><span class="id" title="definition">CopyChar</span></a> : <span class="id" title="tactic">simpl</span> <span class="id" title="var">never</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab294"></a><h2 class="section">Read Char</h2>
+
+<div class="paragraph"> </div>
+
+ Read a char at an arbitrary tape 
+</div>
+<div class="code">
+<span class="id" title="keyword">Section</span> <a name="ReadChar"><span class="id" title="section">ReadChar</span></a>.<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Variable</span> <a name="ReadChar.sig"><span class="id" title="variable">sig</span></a> : <span class="id" title="record">finType</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Variable</span> (<a name="ReadChar.n"><span class="id" title="variable">n</span></a> : <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#nat"><span class="id" title="inductive">nat</span></a>) (<a name="ReadChar.k"><span class="id" title="variable">k</span></a> : <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Vectors.Fin.html#t"><span class="id" title="inductive">Fin.t</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#n"><span class="id" title="variable">n</span></a>).<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <a name="ReadChar_at"><span class="id" title="definition">ReadChar_at</span></a> : <a class="idref" href="Undecidability.TM.TM.html#pTM"><span class="id" title="definition">pTM</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#ReadChar.sig"><span class="id" title="variable">sig</span></a> (<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#option"><span class="id" title="inductive">option</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#ReadChar.sig"><span class="id" title="variable">sig</span></a>) <a class="idref" href="Undecidability.TM.Compound.Multi.html#ReadChar.n"><span class="id" title="variable">n</span></a> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="Undecidability.TM.Lifting.LiftTapes.html#LiftTapes"><span class="id" title="definition">LiftTapes</span></a> <a class="idref" href="Undecidability.TM.Basic.Mono.html#ReadChar"><span class="id" title="definition">ReadChar</span></a> <span class="id" title="notation">[|</span><a class="idref" href="Undecidability.TM.Compound.Multi.html#ReadChar.k"><span class="id" title="variable">k</span></a><span class="id" title="notation">|]</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <a name="ReadChar_at_Rel"><span class="id" title="definition">ReadChar_at_Rel</span></a> : <a class="idref" href="Undecidability.TM.TM.html#pRel"><span class="id" title="definition">pRel</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#ReadChar.sig"><span class="id" title="variable">sig</span></a> (<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#option"><span class="id" title="inductive">option</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#ReadChar.sig"><span class="id" title="variable">sig</span></a>) <a class="idref" href="Undecidability.TM.Compound.Multi.html#ReadChar.n"><span class="id" title="variable">n</span></a> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">fun</span> <span class="id" title="var">tin</span> '<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">(</span></a><span class="id" title="var">yout</span><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">,</span></a> <span class="id" title="var">tout</span><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#44400027531d4bc3f586a1997dc874c0"><span class="id" title="notation">)</span></a> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="Undecidability.TM.Compound.Multi.html#yout"><span class="id" title="variable">yout</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> <a class="idref" href="Undecidability.TM.TM.html#current"><span class="id" title="definition">current</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#tin"><span class="id" title="variable">tin</span></a><span class="id" title="notation">[@</span><a class="idref" href="Undecidability.TM.Compound.Multi.html#ReadChar.k"><span class="id" title="variable">k</span></a><span class="id" title="notation">]</span> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d82a7d96d3659d805ffe732283716822"><span class="id" title="notation">/\</span></a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="Undecidability.TM.Compound.Multi.html#tout"><span class="id" title="variable">tout</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#tin"><span class="id" title="variable">tin</span></a>.<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Lemma</span> <a name="ReadChar_at_Sem"><span class="id" title="lemma">ReadChar_at_Sem</span></a> :<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="Undecidability.TM.Compound.Multi.html#ReadChar_at"><span class="id" title="definition">ReadChar_at</span></a> <a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">⊨</span></a><a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">c</span></a><a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">(</span></a>1<a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">)</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#ReadChar_at_Rel"><span class="id" title="definition">ReadChar_at_Rel</span></a>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.TM.html#RealiseIn_monotone"><span class="id" title="lemma">RealiseIn_monotone</span></a>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id" title="tactic">unfold</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#ReadChar_at"><span class="id" title="definition">ReadChar_at</span></a>. <span class="id" title="var">TM_Correct</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id" title="var">cbn</span>. <span class="id" title="tactic">reflexivity</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">intros</span> <span class="id" title="var">tin</span> (<span class="id" title="var">yout</span>, <span class="id" title="var">tout</span>) <span class="id" title="var">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">hnf</span>. <span class="id" title="var">TMSimp</span>; <span class="id" title="var">clear_trivial_eqs</span>. <span class="id" title="tactic">split</span>; <span class="id" title="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">eapply</span> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Vectors.VectorSpec.html#eq_nth_iff"><span class="id" title="lemma">VectorSpec.eq_nth_iff</span></a>; <span class="id" title="tactic">intros</span> <span class="id" title="var">p</span> ? &lt;-.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">decide</span> (<span class="id" title="var">p</span> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> <a class="idref" href="Undecidability.TM.Compound.Multi.html#ReadChar.k"><span class="id" title="variable">k</span></a>) <span class="id" title="keyword">as</span> [-&gt;|<span class="id" title="var">HnEq</span>]; <span class="id" title="var">TMSimp</span>; <span class="id" title="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id" title="tactic">apply</span> <span class="id" title="var">H0</span>. <span class="id" title="var">vector_not_in</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">End</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#ReadChar"><span class="id" title="section">ReadChar</span></a>.<br/>
+
+<br/>
+<span class="id" title="var">Arguments</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#ReadChar_at"><span class="id" title="definition">ReadChar_at</span></a> : <span class="id" title="tactic">simpl</span> <span class="id" title="var">never</span>.<br/>
+<span class="id" title="var">Arguments</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#ReadChar_at"><span class="id" title="definition">ReadChar_at</span></a> {<span class="id" title="var">sig</span> <span class="id" title="var">n</span>} <span class="id" title="var">k</span>.<br/>
+<span class="id" title="var">Arguments</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#ReadChar_at_Rel"><span class="id" title="definition">ReadChar_at_Rel</span></a> { <span class="id" title="var">sig</span> <span class="id" title="var">n</span> } ( <span class="id" title="var">k</span> ) <span class="id" title="var">x</span> <span class="id" title="var">y</span> /.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab295"></a><h2 class="section">Tactic Support</h2>
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" title="keyword">Ltac</span> <span class="id" title="var">smpl_TM_Multi</span> :=<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">lazymatch</span> <span class="id" title="keyword">goal</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;| [ |- <a class="idref" href="Undecidability.TM.Compound.Multi.html#Nop"><span class="id" title="definition">Nop</span></a> <a class="idref" href="Undecidability.TM.TM.html#b6a406be528b1317fb99ea446224ad7a"><span class="id" title="notation">⊨</span></a> <span class="id" title="var">_</span> ] =&gt; <span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.TM.html#RealiseIn_Realise"><span class="id" title="lemma">RealiseIn_Realise</span></a>; <span class="id" title="tactic">apply</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Nop_Sem"><span class="id" title="lemma">Nop_Sem</span></a><br/>
+&nbsp;&nbsp;| [ |- <a class="idref" href="Undecidability.TM.Compound.Multi.html#Nop"><span class="id" title="definition">Nop</span></a> <a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">⊨</span></a><a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">c</span></a><a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">(</span></a><span class="id" title="var">_</span><a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">)</span></a> <span class="id" title="var">_</span> ] =&gt; <span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Nop_Sem"><span class="id" title="lemma">Nop_Sem</span></a><br/>
+&nbsp;&nbsp;| [ |- <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Specif.html#projT1"><span class="id" title="definition">projT1</span></a> (<a class="idref" href="Undecidability.TM.Compound.Multi.html#Nop"><span class="id" title="definition">Nop</span></a>) <a class="idref" href="Undecidability.TM.TM.html#1567b6035e32564f35b85dde67cc70e6"><span class="id" title="notation">↓</span></a> <span class="id" title="var">_</span> ] =&gt; <span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.TM.html#RealiseIn_TerminatesIn"><span class="id" title="lemma">RealiseIn_TerminatesIn</span></a>; <span class="id" title="tactic">apply</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Nop_Sem"><span class="id" title="lemma">Nop_Sem</span></a><br/>
+<br/>
+&nbsp;&nbsp;| [ |- <a class="idref" href="Undecidability.TM.Compound.Multi.html#Diverge"><span class="id" title="definition">Diverge</span></a> <a class="idref" href="Undecidability.TM.TM.html#b6a406be528b1317fb99ea446224ad7a"><span class="id" title="notation">⊨</span></a> <span class="id" title="var">_</span> ] =&gt; <span class="id" title="tactic">apply</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#Diverge_Realise"><span class="id" title="lemma">Diverge_Realise</span></a><br/>
+<br/>
+&nbsp;&nbsp;| [ |- <a class="idref" href="Undecidability.TM.Compound.Multi.html#MovePar"><span class="id" title="definition">MovePar</span></a> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <a class="idref" href="Undecidability.TM.TM.html#b6a406be528b1317fb99ea446224ad7a"><span class="id" title="notation">⊨</span></a> <span class="id" title="var">_</span> ] =&gt; <span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.TM.html#RealiseIn_Realise"><span class="id" title="lemma">RealiseIn_Realise</span></a>; <span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#MovePar_Sem"><span class="id" title="lemma">MovePar_Sem</span></a><br/>
+&nbsp;&nbsp;| [ |- <a class="idref" href="Undecidability.TM.Compound.Multi.html#MovePar"><span class="id" title="definition">MovePar</span></a> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">⊨</span></a><a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">c</span></a><a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">(</span></a><span class="id" title="var">_</span><a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">)</span></a> <span class="id" title="var">_</span> ] =&gt; <span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#MovePar_Sem"><span class="id" title="lemma">MovePar_Sem</span></a><br/>
+&nbsp;&nbsp;| [ |- <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Specif.html#projT1"><span class="id" title="definition">projT1</span></a> (<a class="idref" href="Undecidability.TM.Compound.Multi.html#MovePar"><span class="id" title="definition">MovePar</span></a> <span class="id" title="var">_</span> <span class="id" title="var">_</span>) <a class="idref" href="Undecidability.TM.TM.html#1567b6035e32564f35b85dde67cc70e6"><span class="id" title="notation">↓</span></a> <span class="id" title="var">_</span> ] =&gt; <span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.TM.html#RealiseIn_TerminatesIn"><span class="id" title="lemma">RealiseIn_TerminatesIn</span></a>; <span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#MovePar_Sem"><span class="id" title="lemma">MovePar_Sem</span></a><br/>
+<br/>
+&nbsp;&nbsp;| [ |- <a class="idref" href="Undecidability.TM.Compound.Multi.html#CopyChar"><span class="id" title="definition">CopyChar</span></a> <span class="id" title="var">_</span> <a class="idref" href="Undecidability.TM.TM.html#b6a406be528b1317fb99ea446224ad7a"><span class="id" title="notation">⊨</span></a> <span class="id" title="var">_</span> ] =&gt; <span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.TM.html#RealiseIn_Realise"><span class="id" title="lemma">RealiseIn_Realise</span></a>; <span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#CopyChar_Sem"><span class="id" title="lemma">CopyChar_Sem</span></a><br/>
+&nbsp;&nbsp;| [ |- <a class="idref" href="Undecidability.TM.Compound.Multi.html#CopyChar"><span class="id" title="definition">CopyChar</span></a> <span class="id" title="var">_</span> <a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">⊨</span></a><a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">c</span></a><a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">(</span></a><span class="id" title="var">_</span><a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">)</span></a> <span class="id" title="var">_</span> ] =&gt; <span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#CopyChar_Sem"><span class="id" title="lemma">CopyChar_Sem</span></a><br/>
+&nbsp;&nbsp;| [ |- <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Specif.html#projT1"><span class="id" title="definition">projT1</span></a> (<a class="idref" href="Undecidability.TM.Compound.Multi.html#CopyChar"><span class="id" title="definition">CopyChar</span></a> <span class="id" title="var">_</span>) <a class="idref" href="Undecidability.TM.TM.html#1567b6035e32564f35b85dde67cc70e6"><span class="id" title="notation">↓</span></a> <span class="id" title="var">_</span> ] =&gt; <span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.TM.html#RealiseIn_TerminatesIn"><span class="id" title="lemma">RealiseIn_TerminatesIn</span></a>; <span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#CopyChar_Sem"><span class="id" title="lemma">CopyChar_Sem</span></a><br/>
+<br/>
+&nbsp;&nbsp;| [ |- <a class="idref" href="Undecidability.TM.Compound.Multi.html#ReadChar_at"><span class="id" title="definition">ReadChar_at</span></a> <span class="id" title="var">_</span> <a class="idref" href="Undecidability.TM.TM.html#b6a406be528b1317fb99ea446224ad7a"><span class="id" title="notation">⊨</span></a> <span class="id" title="var">_</span> ] =&gt; <span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.TM.html#RealiseIn_Realise"><span class="id" title="lemma">RealiseIn_Realise</span></a>; <span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#ReadChar_at_Sem"><span class="id" title="lemma">ReadChar_at_Sem</span></a><br/>
+&nbsp;&nbsp;| [ |- <a class="idref" href="Undecidability.TM.Compound.Multi.html#ReadChar_at"><span class="id" title="definition">ReadChar_at</span></a> <span class="id" title="var">_</span> <a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">⊨</span></a><a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">c</span></a><a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">(</span></a><span class="id" title="var">_</span><a class="idref" href="Undecidability.TM.TM.html#6bf09b744bfb640e96ec09eeb8d366d4"><span class="id" title="notation">)</span></a> <span class="id" title="var">_</span> ] =&gt; <span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#ReadChar_at_Sem"><span class="id" title="lemma">ReadChar_at_Sem</span></a><br/>
+&nbsp;&nbsp;| [ |- <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Specif.html#projT1"><span class="id" title="definition">projT1</span></a> (<a class="idref" href="Undecidability.TM.Compound.Multi.html#ReadChar_at"><span class="id" title="definition">ReadChar_at</span></a> <span class="id" title="var">_</span>) <a class="idref" href="Undecidability.TM.TM.html#1567b6035e32564f35b85dde67cc70e6"><span class="id" title="notation">↓</span></a> <span class="id" title="var">_</span> ] =&gt; <span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.TM.html#RealiseIn_TerminatesIn"><span class="id" title="lemma">RealiseIn_TerminatesIn</span></a>; <span class="id" title="tactic">eapply</span> <a class="idref" href="Undecidability.TM.Compound.Multi.html#ReadChar_at_Sem"><span class="id" title="lemma">ReadChar_at_Sem</span></a><br/>
+&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+<span class="id" title="var">Smpl</span> <span class="id" title="keyword">Add</span> <span class="id" title="var">smpl_TM_Multi</span> : <span class="id" title="var">TM_Correct</span>.<br/>
+</div>
+</div>
+<div id="footer">
+  Generated by <a href="http://coq.inria.fr/">coqdoc</a> and improved with <a href="https://github.com/tebbi/coqdocjs">CoqdocJS</a>
+</div>
+</div>
+</body>
+
+</html>

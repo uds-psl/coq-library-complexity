@@ -1,0 +1,154 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link href="coqdoc.css" rel="stylesheet" type="text/css" />
+<link href="coqdocjs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="config.js"></script>
+<script type="text/javascript" src="coqdocjs.js"></script>
+</head>
+
+<body onload="document.getElementById('content').focus()">
+  <div id="header">
+    <span class="left">
+      <span class="modulename"> <script> document.write(document.title) </script> </span>
+    </span>
+
+    <span class="button" id="toggle-proofs"></span>
+
+    <span class="right">
+      <a href="../">Project Page</a>
+      <a href="./indexpage.html"> Index </a>
+      <a href="./toc.html"> Table of Contents </a>
+    </span>
+</div>
+    <div id="content" tabindex="-1" onblur="document.getElementById('content').focus()">
+    <div id="main">
+<div class="code">
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab232"></a><h2 class="section">Reflexive transitive closure is Diophantine</h2>
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Arith.Arith.html#"><span class="id" title="library">Arith</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Nat.html#"><span class="id" title="library">Nat</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.omega.Omega.html#"><span class="id" title="library">Omega</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Lists.List.html#"><span class="id" title="library">List</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Bool.Bool.html#"><span class="id" title="library">Bool</span></a>.<br/>
+
+<br/>
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability.Shared.Libs.DLW.Utils</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="Undecidability.Shared.Libs.DLW.Utils.utils_tac.html#"><span class="id" title="library">utils_tac</span></a> <a class="idref" href="Undecidability.Shared.Libs.DLW.Utils.utils_list.html#"><span class="id" title="library">utils_list</span></a> <a class="idref" href="Undecidability.Shared.Libs.DLW.Utils.rel_iter.html#"><span class="id" title="library">rel_iter</span></a> <a class="idref" href="Undecidability.Shared.Libs.DLW.Utils.sums.html#"><span class="id" title="library">sums</span></a>.<br/>
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability.H10.Dio</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="Undecidability.H10.Dio.dio_logic.html#"><span class="id" title="library">dio_logic</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_expo.html#"><span class="id" title="library">dio_expo</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_bounded.html#"><span class="id" title="library">dio_bounded</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Set Implicit Arguments</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Local</span> <span class="id" title="keyword">Notation</span> <a name="power"><span class="id" title="abbreviation">power</span></a> := (<a class="idref" href="Undecidability.Shared.Libs.DLW.Utils.sums.html#mscal"><span class="id" title="definition">mscal</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Peano.html#mult"><span class="id" title="abbreviation">mult</span></a> 1).<br/>
+
+<br/>
+<span class="id" title="keyword">Section</span> <a name="df_seq"><span class="id" title="section">df_seq</span></a>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+If R is a diophantine binary relation then the predicate 
+      fun c q n =&gt; is_seq R c q n is also diophantine. It states 
+      that the first (n+1) digits of c in base q say x0,...,xn 
+      form a R-sequence, ie x0 R x1 R ... R xn 
+</div>
+<div class="code">
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Variable</span> (<a name="df_seq.R"><span class="id" title="variable">R</span></a> : <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#nat"><span class="id" title="inductive">nat</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#nat"><span class="id" title="inductive">nat</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <span class="id" title="keyword">Prop</span>) (<a name="df_seq.HR"><span class="id" title="variable">HR</span></a> : <a class="idref" href="Undecidability.H10.Dio.dio_logic.html#184507d6b44f62d760b6481a1d4b1fc7"><span class="id" title="abbreviation">𝔻</span></a><a class="idref" href="Undecidability.H10.Dio.dio_logic.html#184507d6b44f62d760b6481a1d4b1fc7"><span class="id" title="abbreviation">R</span></a> (<span class="id" title="keyword">fun</span> <span class="id" title="var">ν</span> =&gt; <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#R"><span class="id" title="variable">R</span></a> (<a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#b05ca29dff7ed6531db35a7f2f1b3d64"><span class="id" title="variable">ν</span></a> 1) (<a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#b05ca29dff7ed6531db35a7f2f1b3d64"><span class="id" title="variable">ν</span></a> 0))).<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <a name="dio_rel_is_seq"><span class="id" title="lemma">dio_rel_is_seq</span></a> <span class="id" title="var">c</span> <span class="id" title="var">q</span> <span class="id" title="var">n</span> : <a class="idref" href="Undecidability.H10.Dio.dio_logic.html#937fd682a04f1fd09ab67b136b55502b"><span class="id" title="abbreviation">𝔻</span></a><a class="idref" href="Undecidability.H10.Dio.dio_logic.html#937fd682a04f1fd09ab67b136b55502b"><span class="id" title="abbreviation">P</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#c"><span class="id" title="variable">c</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_logic.html#937fd682a04f1fd09ab67b136b55502b"><span class="id" title="abbreviation">𝔻</span></a><a class="idref" href="Undecidability.H10.Dio.dio_logic.html#937fd682a04f1fd09ab67b136b55502b"><span class="id" title="abbreviation">P</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#q"><span class="id" title="variable">q</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_logic.html#937fd682a04f1fd09ab67b136b55502b"><span class="id" title="abbreviation">𝔻</span></a><a class="idref" href="Undecidability.H10.Dio.dio_logic.html#937fd682a04f1fd09ab67b136b55502b"><span class="id" title="abbreviation">P</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#n"><span class="id" title="variable">n</span></a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_logic.html#184507d6b44f62d760b6481a1d4b1fc7"><span class="id" title="abbreviation">𝔻</span></a><a class="idref" href="Undecidability.H10.Dio.dio_logic.html#184507d6b44f62d760b6481a1d4b1fc7"><span class="id" title="abbreviation">R</span></a> (<span class="id" title="keyword">fun</span> <span class="id" title="var">ν</span> =&gt; <a class="idref" href="Undecidability.Shared.Libs.DLW.Utils.rel_iter.html#is_seq"><span class="id" title="definition">is_seq</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#df_seq.R"><span class="id" title="variable">R</span></a> (<a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#c"><span class="id" title="variable">c</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#b05ca29dff7ed6531db35a7f2f1b3d64"><span class="id" title="variable">ν</span></a>) (<a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#q"><span class="id" title="variable">q</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#b05ca29dff7ed6531db35a7f2f1b3d64"><span class="id" title="variable">ν</span></a>) (<a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#n"><span class="id" title="variable">n</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#b05ca29dff7ed6531db35a7f2f1b3d64"><span class="id" title="variable">ν</span></a>)).<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">intros</span> <span class="id" title="var">H1</span> <span class="id" title="var">H2</span> <span class="id" title="var">H3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">unfold</span> <a class="idref" href="Undecidability.Shared.Libs.DLW.Utils.rel_iter.html#is_seq"><span class="id" title="definition">is_seq</span></a>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">apply</span> <a class="idref" href="Undecidability.H10.Dio.dio_bounded.html#dio_rel_fall_lt"><span class="id" title="lemma">dio_rel_fall_lt</span></a>; <span class="id" title="var">dio_rel_auto</span>; <span class="id" title="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Defined</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">End</span> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#df_seq"><span class="id" title="section">df_seq</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Hint Resolve</span> <span class="id" title="var">dio_rel_is_seq</span>.<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Fact</span> <a name="dio_rel_power_subst"><span class="id" title="lemma">dio_rel_power_subst</span></a> <span class="id" title="var">a</span> <span class="id" title="var">b</span> (<span class="id" title="var">R</span> : <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#nat"><span class="id" title="inductive">nat</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">(</span></a><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#nat"><span class="id" title="inductive">nat</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#nat"><span class="id" title="inductive">nat</span></a><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">)</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <span class="id" title="keyword">Prop</span>) : <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="Undecidability.H10.Dio.dio_logic.html#937fd682a04f1fd09ab67b136b55502b"><span class="id" title="abbreviation">𝔻</span></a><a class="idref" href="Undecidability.H10.Dio.dio_logic.html#937fd682a04f1fd09ab67b136b55502b"><span class="id" title="abbreviation">P</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#a"><span class="id" title="variable">a</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_logic.html#937fd682a04f1fd09ab67b136b55502b"><span class="id" title="abbreviation">𝔻</span></a><a class="idref" href="Undecidability.H10.Dio.dio_logic.html#937fd682a04f1fd09ab67b136b55502b"><span class="id" title="abbreviation">P</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#b"><span class="id" title="variable">b</span></a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_logic.html#184507d6b44f62d760b6481a1d4b1fc7"><span class="id" title="abbreviation">𝔻</span></a><a class="idref" href="Undecidability.H10.Dio.dio_logic.html#184507d6b44f62d760b6481a1d4b1fc7"><span class="id" title="abbreviation">R</span></a> (<span class="id" title="keyword">fun</span> <span class="id" title="var">ν</span> =&gt; <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#R"><span class="id" title="variable">R</span></a> (<a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#b05ca29dff7ed6531db35a7f2f1b3d64"><span class="id" title="variable">ν</span></a> 0) (<span class="id" title="keyword">fun</span> <span class="id" title="var">n</span> =&gt; <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#b05ca29dff7ed6531db35a7f2f1b3d64"><span class="id" title="variable">ν</span></a> (<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#S"><span class="id" title="constructor">S</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#n"><span class="id" title="variable">n</span></a>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_logic.html#184507d6b44f62d760b6481a1d4b1fc7"><span class="id" title="abbreviation">𝔻</span></a><a class="idref" href="Undecidability.H10.Dio.dio_logic.html#184507d6b44f62d760b6481a1d4b1fc7"><span class="id" title="abbreviation">R</span></a> (<span class="id" title="keyword">fun</span> <span class="id" title="var">ν</span> =&gt; <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#R"><span class="id" title="variable">R</span></a> (<a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#power"><span class="id" title="abbreviation">power</span></a> (<a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#a"><span class="id" title="variable">a</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#b05ca29dff7ed6531db35a7f2f1b3d64"><span class="id" title="variable">ν</span></a>) (<a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#b"><span class="id" title="variable">b</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#b05ca29dff7ed6531db35a7f2f1b3d64"><span class="id" title="variable">ν</span></a>)) <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#b05ca29dff7ed6531db35a7f2f1b3d64"><span class="id" title="variable">ν</span></a>).<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">intros</span> <span class="id" title="var">Ha</span> <span class="id" title="var">Hb</span> <span class="id" title="var">HR</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">apply</span> <a class="idref" href="Undecidability.H10.Dio.dio_logic.html#dio_rel_equiv"><span class="id" title="lemma">dio_rel_equiv</span></a> <span class="id" title="keyword">with</span> (<span class="id" title="keyword">fun</span> <span class="id" title="var">v</span> =&gt; <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#84eb6d2849dbf3581b1c0c05add5f2d8"><span class="id" title="notation">exists</span></a> <span class="id" title="var">p</span><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#84eb6d2849dbf3581b1c0c05add5f2d8"><span class="id" title="notation">,</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#p"><span class="id" title="variable">p</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#power"><span class="id" title="abbreviation">power</span></a> (<span class="id" title="var">a</span> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#v"><span class="id" title="variable">v</span></a>) (<span class="id" title="var">b</span> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#v"><span class="id" title="variable">v</span></a>) <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d82a7d96d3659d805ffe732283716822"><span class="id" title="notation">/\</span></a> <span class="id" title="var">R</span> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#p"><span class="id" title="variable">p</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#v"><span class="id" title="variable">v</span></a>).<br/>
+&nbsp;&nbsp;+ <span class="id" title="tactic">intros</span> <span class="id" title="var">v</span>; <span class="id" title="tactic">split</span>; <span class="id" title="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">intros</span> (? &amp; ? &amp; ?); <span class="id" title="tactic">subst</span>; <span class="id" title="tactic">auto</span>.<br/>
+&nbsp;&nbsp;+ <span class="id" title="var">dio_rel_auto</span>.<br/>
+<span class="id" title="keyword">Defined</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Section</span> <a name="df_rel_iter"><span class="id" title="section">df_rel_iter</span></a>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+we show that for a diophantine binary relation R,
+      the iterator fun n x y =&gt; rel_iter R n x y is also diophantine
+      using the rel_iter_bounded characterization as:
+
+<div class="paragraph"> </div>
+
+        rel_iter R n x y &lt;-&gt; exists q c, is_seq R c q n /\ is_digit c q 0 x /\ is_digit c q n y. 
+</div>
+<div class="code">
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Variable</span> (<a name="df_rel_iter.R"><span class="id" title="variable">R</span></a> : <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#nat"><span class="id" title="inductive">nat</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#nat"><span class="id" title="inductive">nat</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <span class="id" title="keyword">Prop</span>) (<a name="df_rel_iter.HR"><span class="id" title="variable">HR</span></a> : <a class="idref" href="Undecidability.H10.Dio.dio_logic.html#dio_rel"><span class="id" title="definition">dio_rel</span></a> (<span class="id" title="keyword">fun</span> <span class="id" title="var">ν</span> =&gt; <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#R"><span class="id" title="variable">R</span></a> (<a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#b05ca29dff7ed6531db35a7f2f1b3d64"><span class="id" title="variable">ν</span></a> 1) (<a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#b05ca29dff7ed6531db35a7f2f1b3d64"><span class="id" title="variable">ν</span></a> 0))).<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Lemma</span> <a name="dio_rel_rel_iter"><span class="id" title="lemma">dio_rel_rel_iter</span></a> <span class="id" title="var">n</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span> : <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="Undecidability.H10.Dio.dio_logic.html#937fd682a04f1fd09ab67b136b55502b"><span class="id" title="abbreviation">𝔻</span></a><a class="idref" href="Undecidability.H10.Dio.dio_logic.html#937fd682a04f1fd09ab67b136b55502b"><span class="id" title="abbreviation">P</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#n"><span class="id" title="variable">n</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_logic.html#937fd682a04f1fd09ab67b136b55502b"><span class="id" title="abbreviation">𝔻</span></a><a class="idref" href="Undecidability.H10.Dio.dio_logic.html#937fd682a04f1fd09ab67b136b55502b"><span class="id" title="abbreviation">P</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#x"><span class="id" title="variable">x</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_logic.html#937fd682a04f1fd09ab67b136b55502b"><span class="id" title="abbreviation">𝔻</span></a><a class="idref" href="Undecidability.H10.Dio.dio_logic.html#937fd682a04f1fd09ab67b136b55502b"><span class="id" title="abbreviation">P</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#y"><span class="id" title="variable">y</span></a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_logic.html#184507d6b44f62d760b6481a1d4b1fc7"><span class="id" title="abbreviation">𝔻</span></a><a class="idref" href="Undecidability.H10.Dio.dio_logic.html#184507d6b44f62d760b6481a1d4b1fc7"><span class="id" title="abbreviation">R</span></a> (<span class="id" title="keyword">fun</span> <span class="id" title="var">ν</span> =&gt; <a class="idref" href="Undecidability.Shared.Libs.DLW.Utils.rel_iter.html#rel_iter"><span class="id" title="definition">rel_iter</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#df_rel_iter.R"><span class="id" title="variable">R</span></a> (<a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#n"><span class="id" title="variable">n</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#b05ca29dff7ed6531db35a7f2f1b3d64"><span class="id" title="variable">ν</span></a>) (<a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#x"><span class="id" title="variable">x</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#b05ca29dff7ed6531db35a7f2f1b3d64"><span class="id" title="variable">ν</span></a>) (<a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#y"><span class="id" title="variable">y</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#b05ca29dff7ed6531db35a7f2f1b3d64"><span class="id" title="variable">ν</span></a>)).<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">intros</span> <span class="id" title="var">Hn</span> <span class="id" title="var">Hx</span> <span class="id" title="var">Hy</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">apply</span> <a class="idref" href="Undecidability.H10.Dio.dio_logic.html#dio_rel_equiv"><span class="id" title="lemma">dio_rel_equiv</span></a> <span class="id" title="keyword">with</span> (1 := <span class="id" title="keyword">fun</span> <span class="id" title="var">v</span> =&gt; <a class="idref" href="Undecidability.Shared.Libs.DLW.Utils.rel_iter.html#rel_iter_seq_equiv"><span class="id" title="lemma">rel_iter_seq_equiv</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#df_rel_iter.R"><span class="id" title="variable">R</span></a> (<span class="id" title="var">n</span> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#v"><span class="id" title="variable">v</span></a>) (<span class="id" title="var">x</span> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#v"><span class="id" title="variable">v</span></a>) (<span class="id" title="var">y</span> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#v"><span class="id" title="variable">v</span></a>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">dio_rel_auto</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Defined</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Hint Resolve</span> <span class="id" title="var">dio_rel_rel_iter</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Corollary</span> <a name="dio_rel_rt"><span class="id" title="lemma">dio_rel_rt</span></a> <span class="id" title="var">x</span> <span class="id" title="var">y</span> : <a class="idref" href="Undecidability.H10.Dio.dio_logic.html#937fd682a04f1fd09ab67b136b55502b"><span class="id" title="abbreviation">𝔻</span></a><a class="idref" href="Undecidability.H10.Dio.dio_logic.html#937fd682a04f1fd09ab67b136b55502b"><span class="id" title="abbreviation">P</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#x"><span class="id" title="variable">x</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_logic.html#937fd682a04f1fd09ab67b136b55502b"><span class="id" title="abbreviation">𝔻</span></a><a class="idref" href="Undecidability.H10.Dio.dio_logic.html#937fd682a04f1fd09ab67b136b55502b"><span class="id" title="abbreviation">P</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#y"><span class="id" title="variable">y</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="Undecidability.H10.Dio.dio_logic.html#184507d6b44f62d760b6481a1d4b1fc7"><span class="id" title="abbreviation">𝔻</span></a><a class="idref" href="Undecidability.H10.Dio.dio_logic.html#184507d6b44f62d760b6481a1d4b1fc7"><span class="id" title="abbreviation">R</span></a> (<span class="id" title="keyword">fun</span> <span class="id" title="var">ν</span> =&gt; <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#84eb6d2849dbf3581b1c0c05add5f2d8"><span class="id" title="notation">exists</span></a> <span class="id" title="var">i</span><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#84eb6d2849dbf3581b1c0c05add5f2d8"><span class="id" title="notation">,</span></a> <a class="idref" href="Undecidability.Shared.Libs.DLW.Utils.rel_iter.html#rel_iter"><span class="id" title="definition">rel_iter</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#df_rel_iter.R"><span class="id" title="variable">R</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#i"><span class="id" title="variable">i</span></a> (<a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#x"><span class="id" title="variable">x</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#b05ca29dff7ed6531db35a7f2f1b3d64"><span class="id" title="variable">ν</span></a>) (<a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#y"><span class="id" title="variable">y</span></a> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#b05ca29dff7ed6531db35a7f2f1b3d64"><span class="id" title="variable">ν</span></a>)).<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Proof</span>. <span class="id" title="tactic">intros</span>; <span class="id" title="var">dio_rel_auto</span>. <span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">End</span> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#df_rel_iter"><span class="id" title="section">df_rel_iter</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Hint Resolve</span> <span class="id" title="var">dio_rel_rel_iter</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Check</span> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#dio_rel_rt"><span class="id" title="lemma">dio_rel_rt</span></a>.<br/>
+<span class="id" title="keyword">Print</span> <span class="id" title="keyword">Assumptions</span> <a class="idref" href="Undecidability.H10.Dio.dio_rt_closure.html#dio_rel_rt"><span class="id" title="lemma">dio_rel_rt</span></a>.<br/>
+</div>
+</div>
+<div id="footer">
+  Generated by <a href="http://coq.inria.fr/">coqdoc</a> and improved with <a href="https://github.com/tebbi/coqdocjs">CoqdocJS</a>
+</div>
+</div>
+</body>
+
+</html>

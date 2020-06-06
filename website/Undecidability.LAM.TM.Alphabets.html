@@ -1,0 +1,131 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link href="coqdoc.css" rel="stylesheet" type="text/css" />
+<link href="coqdocjs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="config.js"></script>
+<script type="text/javascript" src="coqdocjs.js"></script>
+</head>
+
+<body onload="document.getElementById('content').focus()">
+  <div id="header">
+    <span class="left">
+      <span class="modulename"> <script> document.write(document.title) </script> </span>
+    </span>
+
+    <span class="button" id="toggle-proofs"></span>
+
+    <span class="right">
+      <a href="../">Project Page</a>
+      <a href="./indexpage.html"> Index </a>
+      <a href="./toc.html"> Table of Contents </a>
+    </span>
+</div>
+    <div id="content" tabindex="-1" onblur="document.getElementById('content').focus()">
+    <div id="main">
+<div class="code">
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="Undecidability.TM.Prelim.html#"><span class="id" title="library">TM.Prelim</span></a>.<br/>
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="Undecidability.TM.Code.Code.html#"><span class="id" title="library">TM.Code.Code</span></a>.<br/>
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="Undecidability.L.AbstractMachines.FlatPro.LM_heap_def.html#"><span class="id" title="library">LM_heap_def</span></a>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab519"></a><h1 class="section">Alphabets</h1>
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" title="keyword">Inductive</span> <a name="ACom"><span class="id" title="inductive">ACom</span></a> : <span class="id" title="keyword">Type</span> := <a name="retAT"><span class="id" title="constructor">retAT</span></a> | <a name="lamAT"><span class="id" title="constructor">lamAT</span></a> | <a name="appAT"><span class="id" title="constructor">appAT</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Coercion</span> <span class="id" title="var">ACom2Com</span> (<span class="id" title="var">a</span> : <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#ACom"><span class="id" title="inductive">ACom</span></a>) : <a class="idref" href="Undecidability.L.AbstractMachines.FlatPro.ProgramsDef.html#Tok"><span class="id" title="inductive">Tok</span></a> :=<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">match</span> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#a"><span class="id" title="variable">a</span></a> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;| <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#retAT"><span class="id" title="constructor">retAT</span></a> =&gt; <a class="idref" href="Undecidability.L.AbstractMachines.FlatPro.ProgramsDef.html#retT"><span class="id" title="constructor">retT</span></a><br/>
+&nbsp;&nbsp;| <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#lamAT"><span class="id" title="constructor">lamAT</span></a> =&gt; <a class="idref" href="Undecidability.L.AbstractMachines.FlatPro.ProgramsDef.html#lamT"><span class="id" title="constructor">lamT</span></a><br/>
+&nbsp;&nbsp;| <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#appAT"><span class="id" title="constructor">appAT</span></a> =&gt; <a class="idref" href="Undecidability.L.AbstractMachines.FlatPro.ProgramsDef.html#appT"><span class="id" title="constructor">appT</span></a><br/>
+&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <a name="ACom_eq_dec"><span class="id" title="instance">ACom_eq_dec</span></a> : <span class="id" title="notation">eq_dec</span> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#ACom"><span class="id" title="inductive">ACom</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>. <span class="id" title="tactic">intros</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span>; <span class="id" title="tactic">hnf</span>. <span class="id" title="var">decide</span> <span class="id" title="var">equality</span>. <span class="id" title="keyword">Defined</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <a name="ACom_finType"><span class="id" title="instance">ACom_finType</span></a> : <span class="id" title="class">finTypeC</span> (<span class="id" title="constructor">EqType</span> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#ACom"><span class="id" title="inductive">ACom</span></a>).<br/>
+<span class="id" title="keyword">Proof</span>. <span class="id" title="tactic">split</span> <span class="id" title="keyword">with</span> (<span class="id" title="var">enum</span> := <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Lists.List.html#f83abbde7679bdbfec6afddd39d41e15"><span class="id" title="notation">[</span></a><a class="idref" href="Undecidability.LAM.TM.Alphabets.html#retAT"><span class="id" title="constructor">retAT</span></a><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Lists.List.html#f83abbde7679bdbfec6afddd39d41e15"><span class="id" title="notation">;</span></a> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#lamAT"><span class="id" title="constructor">lamAT</span></a><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Lists.List.html#f83abbde7679bdbfec6afddd39d41e15"><span class="id" title="notation">;</span></a> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#appAT"><span class="id" title="constructor">appAT</span></a><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Lists.List.html#f83abbde7679bdbfec6afddd39d41e15"><span class="id" title="notation">]</span></a>). <span class="id" title="tactic">intros</span> [ | | ]; <span class="id" title="var">cbn</span>; <span class="id" title="tactic">reflexivity</span>. <span class="id" title="keyword">Defined</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <a name="ACom_inhab"><span class="id" title="instance">ACom_inhab</span></a> : <span class="id" title="class">inhabitedC</span> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#ACom"><span class="id" title="inductive">ACom</span></a> := <span class="id" title="keyword">ltac</span>:(<span class="id" title="tactic">repeat</span> <span class="id" title="tactic">constructor</span>).<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <a name="Encode_ACom"><span class="id" title="instance">Encode_ACom</span></a> : <a class="idref" href="Undecidability.TM.Code.Code.html#codable"><span class="id" title="class">codable</span></a> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#ACom"><span class="id" title="inductive">ACom</span></a> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#ACom"><span class="id" title="inductive">ACom</span></a> := <a class="idref" href="Undecidability.TM.Code.Code.html#Encode_Finite"><span class="id" title="instance">Encode_Finite</span></a> (<span class="id" title="constructor">FinType</span>(<span class="id" title="constructor">EqType</span> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#ACom"><span class="id" title="inductive">ACom</span></a>)).<br/>
+
+<br/>
+<span class="id" title="keyword">Coercion</span> <span class="id" title="var">Com_to_sum</span> (<span class="id" title="var">t</span> : <a class="idref" href="Undecidability.L.AbstractMachines.FlatPro.ProgramsDef.html#Tok"><span class="id" title="inductive">Tok</span></a>) : (<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#nat"><span class="id" title="inductive">nat</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#3dcaec3b772747610227247939f96b01"><span class="id" title="notation">+</span></a> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#ACom"><span class="id" title="inductive">ACom</span></a>) :=<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">match</span> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#t"><span class="id" title="variable">t</span></a> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;| <a class="idref" href="Undecidability.L.AbstractMachines.FlatPro.ProgramsDef.html#varT"><span class="id" title="constructor">varT</span></a> <span class="id" title="var">x</span> =&gt; <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#inl"><span class="id" title="constructor">inl</span></a> <span class="id" title="var">x</span><br/>
+&nbsp;&nbsp;| <a class="idref" href="Undecidability.L.AbstractMachines.FlatPro.ProgramsDef.html#appT"><span class="id" title="constructor">appT</span></a> =&gt; <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#inr"><span class="id" title="constructor">inr</span></a> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#appAT"><span class="id" title="constructor">appAT</span></a><br/>
+&nbsp;&nbsp;| <a class="idref" href="Undecidability.L.AbstractMachines.FlatPro.ProgramsDef.html#lamT"><span class="id" title="constructor">lamT</span></a> =&gt; <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#inr"><span class="id" title="constructor">inr</span></a> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#lamAT"><span class="id" title="constructor">lamAT</span></a><br/>
+&nbsp;&nbsp;| <a class="idref" href="Undecidability.L.AbstractMachines.FlatPro.ProgramsDef.html#retT"><span class="id" title="constructor">retT</span></a> =&gt; <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#inr"><span class="id" title="constructor">inr</span></a> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#retAT"><span class="id" title="constructor">retAT</span></a><br/>
+&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <a name="sigCom"><span class="id" title="definition">sigCom</span></a> := <a class="idref" href="Undecidability.TM.Code.Code.html#sigSum"><span class="id" title="inductive">sigSum</span></a> <a class="idref" href="Undecidability.TM.Code.Code.html#sigNat"><span class="id" title="inductive">sigNat</span></a> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#ACom"><span class="id" title="inductive">ACom</span></a>.<br/>
+<span class="id" title="keyword">Definition</span> <a name="sigCom_fin"><span class="id" title="definition">sigCom_fin</span></a> := <span class="id" title="constructor">FinType</span> (<span class="id" title="constructor">EqType</span> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#sigCom"><span class="id" title="definition">sigCom</span></a>).<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <a name="Encode_Com"><span class="id" title="instance">Encode_Com</span></a> : <a class="idref" href="Undecidability.TM.Code.Code.html#codable"><span class="id" title="class">codable</span></a> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#sigCom"><span class="id" title="definition">sigCom</span></a> <a class="idref" href="Undecidability.L.AbstractMachines.FlatPro.ProgramsDef.html#Tok"><span class="id" title="inductive">Tok</span></a> :=<br/>
+&nbsp;&nbsp;{|<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="Undecidability.TM.Code.Code.html#Build_codable"><span class="id" title="constructor">encode</span></a> <a class="idref" href="Undecidability.TM.Code.Code.html#Build_codable"><span class="id" title="constructor">x</span></a> <a class="idref" href="Undecidability.TM.Code.Code.html#Build_codable"><span class="id" title="constructor">:=</span></a> <a class="idref" href="Undecidability.TM.Code.Code.html#Build_codable"><span class="id" title="constructor">encode</span></a> <a class="idref" href="Undecidability.TM.Code.Code.html#Build_codable"><span class="id" title="constructor">(</span></a><a class="idref" href="Undecidability.TM.Code.Code.html#Build_codable"><span class="id" title="constructor">Com_to_sum</span></a> <a class="idref" href="Undecidability.TM.Code.Code.html#Build_codable"><span class="id" title="constructor">x</span></a><a class="idref" href="Undecidability.TM.Code.Code.html#Build_codable"><span class="id" title="constructor">)</span></a><br/>
+&nbsp;&nbsp;|}.<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <a name="Encode_Com_size"><span class="id" title="definition">Encode_Com_size</span></a> (<span class="id" title="var">t</span> : <a class="idref" href="Undecidability.L.AbstractMachines.FlatPro.ProgramsDef.html#Tok"><span class="id" title="inductive">Tok</span></a>) : <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#nat"><span class="id" title="inductive">nat</span></a> :=<br/>
+&nbsp;&nbsp;<a class="idref" href="Undecidability.TM.Code.Code.html#size"><span class="id" title="definition">size</span></a> <span class="id" title="var">_</span> (<a class="idref" href="Undecidability.LAM.TM.Alphabets.html#Com_to_sum"><span class="id" title="definition">Com_to_sum</span></a> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#t"><span class="id" title="variable">t</span></a>).<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <a name="Encode_Com_hasSize"><span class="id" title="lemma">Encode_Com_hasSize</span></a> (<span class="id" title="var">t</span> : <a class="idref" href="Undecidability.L.AbstractMachines.FlatPro.ProgramsDef.html#Tok"><span class="id" title="inductive">Tok</span></a>) :<br/>
+&nbsp;&nbsp;<a class="idref" href="Undecidability.TM.Code.Code.html#size"><span class="id" title="definition">size</span></a> <span class="id" title="var">_</span> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#t"><span class="id" title="variable">t</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#Encode_Com_size"><span class="id" title="definition">Encode_Com_size</span></a> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#t"><span class="id" title="variable">t</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>. <span class="id" title="tactic">reflexivity</span>. <span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <a name="sigHAdd"><span class="id" title="definition">sigHAdd</span></a> := <a class="idref" href="Undecidability.TM.Code.Code.html#sigNat"><span class="id" title="inductive">sigNat</span></a>.<br/>
+<span class="id" title="keyword">Definition</span> <a name="sigHAdd_fin"><span class="id" title="definition">sigHAdd_fin</span></a> := <span class="id" title="constructor">FinType</span>(<span class="id" title="constructor">EqType</span> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#sigHAdd"><span class="id" title="definition">sigHAdd</span></a>).<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <a name="sigPro"><span class="id" title="definition">sigPro</span></a> := <a class="idref" href="Undecidability.TM.Code.Code.html#sigList"><span class="id" title="inductive">sigList</span></a> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#sigCom"><span class="id" title="definition">sigCom</span></a>.<br/>
+<span class="id" title="keyword">Instance</span> <a name="Encode_Prog"><span class="id" title="instance">Encode_Prog</span></a> : <a class="idref" href="Undecidability.TM.Code.Code.html#codable"><span class="id" title="class">codable</span></a> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#sigPro"><span class="id" title="definition">sigPro</span></a> <a class="idref" href="Undecidability.L.AbstractMachines.FlatPro.ProgramsDef.html#Pro"><span class="id" title="abbreviation">Pro</span></a> := <span class="id" title="var">_</span>.<br/>
+<span class="id" title="keyword">Definition</span> <a name="sigPro_fin"><span class="id" title="definition">sigPro_fin</span></a> := <span class="id" title="constructor">FinType</span>(<span class="id" title="constructor">EqType</span> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#sigPro"><span class="id" title="definition">sigPro</span></a>).<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <a name="sigHClos"><span class="id" title="definition">sigHClos</span></a> := <a class="idref" href="Undecidability.TM.Code.Code.html#sigPair"><span class="id" title="inductive">sigPair</span></a> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#sigHAdd"><span class="id" title="definition">sigHAdd</span></a> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#sigPro"><span class="id" title="definition">sigPro</span></a>.<br/>
+<span class="id" title="keyword">Definition</span> <a name="sigHClos_fin"><span class="id" title="definition">sigHClos_fin</span></a> := <span class="id" title="constructor">FinType</span>(<span class="id" title="constructor">EqType</span> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#sigHClos"><span class="id" title="definition">sigHClos</span></a>).<br/>
+<span class="id" title="keyword">Instance</span> <a name="Encode_HClos"><span class="id" title="instance">Encode_HClos</span></a> : <a class="idref" href="Undecidability.TM.Code.Code.html#codable"><span class="id" title="class">codable</span></a> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#sigHClos"><span class="id" title="definition">sigHClos</span></a> <a class="idref" href="Undecidability.L.AbstractMachines.FlatPro.LM_heap_def.html#HClos"><span class="id" title="definition">HClos</span></a> := <span class="id" title="var">_</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <a name="sigHEntr'"><span class="id" title="definition">sigHEntr'</span></a> := <a class="idref" href="Undecidability.TM.Code.Code.html#sigPair"><span class="id" title="inductive">sigPair</span></a> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#sigHClos"><span class="id" title="definition">sigHClos</span></a> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#sigHAdd"><span class="id" title="definition">sigHAdd</span></a>.<br/>
+<span class="id" title="keyword">Instance</span> <a name="Encode_HEntr'"><span class="id" title="instance">Encode_HEntr'</span></a> : <a class="idref" href="Undecidability.TM.Code.Code.html#codable"><span class="id" title="class">codable</span></a> (<a class="idref" href="Undecidability.LAM.TM.Alphabets.html#sigHEntr'"><span class="id" title="definition">sigHEntr'</span></a>) (<a class="idref" href="Undecidability.L.AbstractMachines.FlatPro.LM_heap_def.html#HClos"><span class="id" title="definition">HClos</span></a><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#d19c7eafd0e2d195d10df94b392087b5"><span class="id" title="notation">*</span></a><a class="idref" href="Undecidability.L.AbstractMachines.FlatPro.LM_heap_def.html#HAdd"><span class="id" title="definition">HAdd</span></a>) := <span class="id" title="var">_</span>.<br/>
+<span class="id" title="keyword">Definition</span> <a name="sigHEntr'_fin"><span class="id" title="definition">sigHEntr'_fin</span></a> := <span class="id" title="constructor">FinType</span>(<span class="id" title="constructor">EqType</span> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#sigHEntr'"><span class="id" title="definition">sigHEntr'</span></a>).<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <a name="sigHEntr"><span class="id" title="definition">sigHEntr</span></a> := <a class="idref" href="Undecidability.TM.Code.Code.html#sigOption"><span class="id" title="inductive">sigOption</span></a> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#sigHEntr'"><span class="id" title="definition">sigHEntr'</span></a>.<br/>
+<span class="id" title="keyword">Instance</span> <a name="Encode_HEntr"><span class="id" title="instance">Encode_HEntr</span></a> : <a class="idref" href="Undecidability.TM.Code.Code.html#codable"><span class="id" title="class">codable</span></a> (<a class="idref" href="Undecidability.LAM.TM.Alphabets.html#sigHEntr"><span class="id" title="definition">sigHEntr</span></a>) <a class="idref" href="Undecidability.L.AbstractMachines.FlatPro.LM_heap_def.html#HEntr"><span class="id" title="definition">HEntr</span></a> := <span class="id" title="var">_</span>.<br/>
+<span class="id" title="keyword">Definition</span> <a name="sigHEntr_fin"><span class="id" title="definition">sigHEntr_fin</span></a> := <span class="id" title="constructor">FinType</span>(<span class="id" title="constructor">EqType</span> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#sigHEntr"><span class="id" title="definition">sigHEntr</span></a>).<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <a name="sigHeap"><span class="id" title="definition">sigHeap</span></a> := <a class="idref" href="Undecidability.TM.Code.Code.html#sigList"><span class="id" title="inductive">sigList</span></a> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#sigHEntr"><span class="id" title="definition">sigHEntr</span></a>.<br/>
+<span class="id" title="keyword">Instance</span> <a name="Encode_Heap"><span class="id" title="instance">Encode_Heap</span></a> : <a class="idref" href="Undecidability.TM.Code.Code.html#codable"><span class="id" title="class">codable</span></a> (<a class="idref" href="Undecidability.LAM.TM.Alphabets.html#sigHeap"><span class="id" title="definition">sigHeap</span></a>) <a class="idref" href="Undecidability.L.AbstractMachines.FlatPro.LM_heap_def.html#Heap"><span class="id" title="definition">Heap</span></a> := <span class="id" title="var">_</span>.<br/>
+<span class="id" title="keyword">Definition</span> <a name="sigHeap_fin"><span class="id" title="definition">sigHeap_fin</span></a> := <span class="id" title="constructor">FinType</span>(<span class="id" title="constructor">EqType</span> <a class="idref" href="Undecidability.LAM.TM.Alphabets.html#sigHeap"><span class="id" title="definition">sigHeap</span></a>).<br/>
+</div>
+</div>
+<div id="footer">
+  Generated by <a href="http://coq.inria.fr/">coqdoc</a> and improved with <a href="https://github.com/tebbi/coqdocjs">CoqdocJS</a>
+</div>
+</div>
+</body>
+
+</html>

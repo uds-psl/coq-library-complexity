@@ -3,7 +3,7 @@ From Undecidability.L.Tactics Require Export LTactics GenEncode.
 Require Import PslBase.Numbers.
 
 Require Import Nat.
-From Undecidability.L Require Import Datatypes.LBool Functions.EqBool.
+From Undecidability.L Require Import Datatypes.LBool Functions.EqBool Datatypes.LProd. 
 Import GenEncode. Import Nat.
 (** ** Encoding of natural numbers *)
 
@@ -45,7 +45,6 @@ Proof.
   solverec.
 Defined.
 
-
 Instance eqbNat_inst : eqbClass Nat.eqb.
 Proof.
   exact Nat.eqb_spec. 
@@ -60,6 +59,18 @@ Proof.
   [c]:exact 5.
   all:unfold c;try lia.
 Qed.
+(*Defined.*)
+
+Instance termT_nat_min : computableTime' Nat.min (fun x _ => (5, fun y _ => (8 + 15 * min x y, tt))).
+Proof. 
+  extract. solverec. 
+Qed. 
+
+Instance termT_nat_max :
+  computableTime' (Nat.max) (fun x _ => (5,fun y _ => (min x y * 15 + 8,tt))).
+Proof.
+  extract. solverec.
+Qed.
 
 Instance termT_pow:
   computableTime' Init.Nat.pow   (fun (x : nat) _ => (5,fun (n : nat) _ => (n* (x*19+x^n*11+19) + 5, tt))).
@@ -69,6 +80,22 @@ Proof.
   decide (x2=0). { subst. ring_simplify. destruct n. now cbn;Lia.nia. now rewrite !pow_0_l. }
                  rewrite <- pow_le_mono_r with (b:=n) (c:=S n). 2,3:Lia.nia. nia.
 Qed.
+
+Definition c__divmod := 20.
+Definition divmod_time (x: nat) := c__divmod * (1+x).
+Instance termT_divmod : 
+  computableTime' divmod (fun (x : nat) _ => (5, fun (y : nat) _ => (5, fun (q : nat) _ => (1, fun (u : nat) _ => (divmod_time x, tt))))). 
+Proof. 
+  extract. solverec. all: unfold divmod_time, c__divmod; solverec. 
+Defined. 
+
+Definition c__modulo := 34. 
+Definition modulo_time (x :nat) (y : nat) := divmod_time x + c__modulo * (1 + y).
+Instance termT_modulo : 
+  computableTime' Init.Nat.modulo (fun x _ => (1, fun y _ => (modulo_time x y, tt))). 
+Proof. 
+  extract. solverec; unfold modulo_time, divmod_time, c__divmod, c__modulo; solverec. 
+Defined. 
 
 (* now some more encoding-related properties:*)
 
@@ -115,12 +142,6 @@ Proof.
     induction n;cbv [enc registered_nat_enc] in *. all:cbn [size nat_enc] in *. all:solverec.
 Qed.
 
-
-Instance term_nat_max :
-  computableTime' (Nat.max) (fun x _ => (5,fun y _ => (min x y * 15 + 8,tt))).
-Proof.
-  extract. solverec.
-Qed.
 
 (* This is an example for an function in which the run-time of the fix itself is not constant (in add, the fix on the first argument always returns an function in ~5 steps)*)
 (* Instance termT_testId : computableTime' (fix f x := *)

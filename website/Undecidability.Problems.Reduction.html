@@ -1,0 +1,55 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link href="coqdoc.css" rel="stylesheet" type="text/css" />
+<link href="coqdocjs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="config.js"></script>
+<script type="text/javascript" src="coqdocjs.js"></script>
+</head>
+
+<body onload="document.getElementById('content').focus()">
+  <div id="header">
+    <span class="left">
+      <span class="modulename"> <script> document.write(document.title) </script> </span>
+    </span>
+
+    <span class="button" id="toggle-proofs"></span>
+
+    <span class="right">
+      <a href="../">Project Page</a>
+      <a href="./indexpage.html"> Index </a>
+      <a href="./toc.html"> Table of Contents </a>
+    </span>
+</div>
+    <div id="content" tabindex="-1" onblur="document.getElementById('content').focus()">
+    <div id="main">
+<div class="code">
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Export</span> <a class="idref" href="Undecidability.Shared.Prelim.html#"><span class="id" title="library">Undecidability.Shared.Prelim</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <a name="reduces"><span class="id" title="definition">reduces</span></a> <span class="id" title="var">X</span> <span class="id" title="var">Y</span> (<span class="id" title="var">p</span> : <a class="idref" href="Undecidability.Problems.Reduction.html#X"><span class="id" title="variable">X</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <span class="id" title="keyword">Prop</span>) (<span class="id" title="var">q</span> : <a class="idref" href="Undecidability.Problems.Reduction.html#Y"><span class="id" title="variable">Y</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <span class="id" title="keyword">Prop</span>) := <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#84eb6d2849dbf3581b1c0c05add5f2d8"><span class="id" title="notation">exists</span></a> <span class="id" title="var">f</span> : <a class="idref" href="Undecidability.Problems.Reduction.html#X"><span class="id" title="variable">X</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <a class="idref" href="Undecidability.Problems.Reduction.html#Y"><span class="id" title="variable">Y</span></a><a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#84eb6d2849dbf3581b1c0c05add5f2d8"><span class="id" title="notation">,</span></a> <span class="id" title="keyword">forall</span> <span class="id" title="var">x</span>, <a class="idref" href="Undecidability.Problems.Reduction.html#p"><span class="id" title="variable">p</span></a> <a class="idref" href="Undecidability.Problems.Reduction.html#x"><span class="id" title="variable">x</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#df1ced36fc33ce188051218bca314374"><span class="id" title="notation">&lt;-&gt;</span></a> <a class="idref" href="Undecidability.Problems.Reduction.html#q"><span class="id" title="variable">q</span></a> (<a class="idref" href="Undecidability.Problems.Reduction.html#f"><span class="id" title="variable">f</span></a> <a class="idref" href="Undecidability.Problems.Reduction.html#x"><span class="id" title="variable">x</span></a>).<br/>
+<span class="id" title="keyword">Notation</span> <a name="48635435e2c431f67742463783d46ac3"><span class="id" title="notation">&quot;</span></a>p ⪯ q" := (<a class="idref" href="Undecidability.Problems.Reduction.html#reduces"><span class="id" title="definition">reduces</span></a> <span class="id" title="var">p</span> <span class="id" title="var">q</span>) (<span class="id" title="tactic">at</span> <span class="id" title="keyword">level</span> 50).<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <a name="reduces_reflexive"><span class="id" title="lemma">reduces_reflexive</span></a> <span class="id" title="var">X</span> (<span class="id" title="var">p</span> : <a class="idref" href="Undecidability.Problems.Reduction.html#X"><span class="id" title="variable">X</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <span class="id" title="keyword">Prop</span>) : <a class="idref" href="Undecidability.Problems.Reduction.html#p"><span class="id" title="variable">p</span></a> <a class="idref" href="Undecidability.Problems.Reduction.html#48635435e2c431f67742463783d46ac3"><span class="id" title="notation">⪯</span></a> <a class="idref" href="Undecidability.Problems.Reduction.html#p"><span class="id" title="variable">p</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>. <span class="id" title="tactic">exists</span> (<span class="id" title="keyword">fun</span> <span class="id" title="var">x</span> =&gt; <a class="idref" href="Undecidability.Problems.Reduction.html#x"><span class="id" title="variable">x</span></a>); <span class="id" title="tactic">tauto</span>. <span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <a name="reduces_transitive"><span class="id" title="lemma">reduces_transitive</span></a> <span class="id" title="var">X</span> <span class="id" title="var">Y</span> <span class="id" title="var">Z</span> (<span class="id" title="var">p</span> : <a class="idref" href="Undecidability.Problems.Reduction.html#X"><span class="id" title="variable">X</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <span class="id" title="keyword">Prop</span>) (<span class="id" title="var">q</span> : <a class="idref" href="Undecidability.Problems.Reduction.html#Y"><span class="id" title="variable">Y</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <span class="id" title="keyword">Prop</span>) (<span class="id" title="var">r</span> : <a class="idref" href="Undecidability.Problems.Reduction.html#Z"><span class="id" title="variable">Z</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <span class="id" title="keyword">Prop</span>) :<br/>
+&nbsp;&nbsp;<a class="idref" href="Undecidability.Problems.Reduction.html#p"><span class="id" title="variable">p</span></a> <a class="idref" href="Undecidability.Problems.Reduction.html#48635435e2c431f67742463783d46ac3"><span class="id" title="notation">⪯</span></a> <a class="idref" href="Undecidability.Problems.Reduction.html#q"><span class="id" title="variable">q</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <a class="idref" href="Undecidability.Problems.Reduction.html#q"><span class="id" title="variable">q</span></a> <a class="idref" href="Undecidability.Problems.Reduction.html#48635435e2c431f67742463783d46ac3"><span class="id" title="notation">⪯</span></a> <a class="idref" href="Undecidability.Problems.Reduction.html#r"><span class="id" title="variable">r</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d43e996736952df71ebeeae74d10a287"><span class="id" title="notation">-&gt;</span></a> <a class="idref" href="Undecidability.Problems.Reduction.html#p"><span class="id" title="variable">p</span></a> <a class="idref" href="Undecidability.Problems.Reduction.html#48635435e2c431f67742463783d46ac3"><span class="id" title="notation">⪯</span></a> <a class="idref" href="Undecidability.Problems.Reduction.html#r"><span class="id" title="variable">r</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">intros</span> [<span class="id" title="var">f</span> ?] [<span class="id" title="var">g</span> ?]. <span class="id" title="tactic">exists</span> (<span class="id" title="keyword">fun</span> <span class="id" title="var">x</span> =&gt; <span class="id" title="var">g</span> (<span class="id" title="var">f</span> <a class="idref" href="Undecidability.Problems.Reduction.html#x"><span class="id" title="variable">x</span></a>)). <span class="id" title="tactic">firstorder</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+</div>
+</div>
+<div id="footer">
+  Generated by <a href="http://coq.inria.fr/">coqdoc</a> and improved with <a href="https://github.com/tebbi/coqdocjs">CoqdocJS</a>
+</div>
+</div>
+</body>
+
+</html>

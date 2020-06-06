@@ -1,0 +1,158 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link href="coqdoc.css" rel="stylesheet" type="text/css" />
+<link href="coqdocjs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="config.js"></script>
+<script type="text/javascript" src="coqdocjs.js"></script>
+</head>
+
+<body onload="document.getElementById('content').focus()">
+  <div id="header">
+    <span class="left">
+      <span class="modulename"> <script> document.write(document.title) </script> </span>
+    </span>
+
+    <span class="button" id="toggle-proofs"></span>
+
+    <span class="right">
+      <a href="../">Project Page</a>
+      <a href="./indexpage.html"> Index </a>
+      <a href="./toc.html"> Table of Contents </a>
+    </span>
+</div>
+    <div id="content" tabindex="-1" onblur="document.getElementById('content').focus()">
+    <div id="main">
+<div class="code">
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Export</span> <a class="idref" href="Undecidability.TM.PrettyBounds.PrettyBounds.html#"><span class="id" title="library">PrettyBounds</span></a>.<br/>
+
+<br/>
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Export</span> <a class="idref" href="Undecidability.TM.Code.CaseNat.html#"><span class="id" title="library">Code.CaseNat</span></a>.<br/>
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Export</span> <a class="idref" href="Undecidability.TM.Code.CasePair.html#"><span class="id" title="library">Code.CasePair</span></a>.<br/>
+
+<br/>
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Export</span> <a class="idref" href="Undecidability.TM.Code.CodeTM.html#"><span class="id" title="library">TM.Code.CodeTM</span></a> <a class="idref" href="Undecidability.TM.Code.Copy.html#"><span class="id" title="library">TM.Code.Copy</span></a>.<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="Undecidability.TM.Code.ListTM.html#"><span class="id" title="library">ListTM</span></a> <a class="idref" href="Undecidability.TM.Code.CaseList.html#"><span class="id" title="library">CaseList</span></a>.<br/>
+
+<br/>
+<span class="id" title="var">From</span> <span class="id" title="var">Undecidability</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Export</span> <a class="idref" href="Undecidability.TM.PrettyBounds.MaxList.html#"><span class="id" title="library">MaxList</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Fixpoint</span> <a name="sum_list_rec"><span class="id" title="definition">sum_list_rec</span></a> (<span class="id" title="var">s</span> : <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#nat"><span class="id" title="inductive">nat</span></a>) (<span class="id" title="var">xs</span> : <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#list"><span class="id" title="inductive">list</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#nat"><span class="id" title="inductive">nat</span></a>) :=<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">match</span> <a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#xs"><span class="id" title="variable">xs</span></a> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;| <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#nil"><span class="id" title="constructor">nil</span></a> =&gt; <a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#s"><span class="id" title="variable">s</span></a><br/>
+&nbsp;&nbsp;| <span class="id" title="var">x</span> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#0a8150c3c4df34d205c5ed9a427e2ed5"><span class="id" title="notation">::</span></a> <span class="id" title="var">xs'</span> =&gt; <a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#sum_list_rec"><span class="id" title="definition">sum_list_rec</span></a> (<a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#s"><span class="id" title="variable">s</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Peano.html#b3eea360671e1b32b18a26e15b3aace3"><span class="id" title="notation">+</span></a> <span class="id" title="var">x</span>) <span class="id" title="var">xs'</span><br/>
+&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <a name="sum_list_rec_plus"><span class="id" title="lemma">sum_list_rec_plus</span></a> (<span class="id" title="var">s1</span> <span class="id" title="var">s2</span> : <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#nat"><span class="id" title="inductive">nat</span></a>) (<span class="id" title="var">xs</span> : <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#list"><span class="id" title="inductive">list</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#nat"><span class="id" title="inductive">nat</span></a>) :<br/>
+&nbsp;&nbsp;<a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#sum_list_rec"><span class="id" title="definition">sum_list_rec</span></a> (<a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#s1"><span class="id" title="variable">s1</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Peano.html#b3eea360671e1b32b18a26e15b3aace3"><span class="id" title="notation">+</span></a> <a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#s2"><span class="id" title="variable">s2</span></a>) <a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#xs"><span class="id" title="variable">xs</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> <a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#s1"><span class="id" title="variable">s1</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Peano.html#b3eea360671e1b32b18a26e15b3aace3"><span class="id" title="notation">+</span></a> <a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#sum_list_rec"><span class="id" title="definition">sum_list_rec</span></a> <a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#s2"><span class="id" title="variable">s2</span></a> <a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#xs"><span class="id" title="variable">xs</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="var">revert</span> <span class="id" title="var">s1</span> <span class="id" title="var">s2</span>. <span class="id" title="tactic">induction</span> <span class="id" title="var">xs</span> <span class="id" title="keyword">as</span> [ | <span class="id" title="var">x</span> <span class="id" title="var">xs</span> <span class="id" title="var">IH</span>]; <span class="id" title="tactic">intros</span>; <span class="id" title="var">cbn</span> <span class="id" title="tactic">in</span> *.<br/>
+&nbsp;&nbsp;- <span class="id" title="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;- <span class="id" title="tactic">rewrite</span> <span class="id" title="var">IH</span>. <span class="id" title="tactic">rewrite</span> <span class="id" title="var">IH</span>. <span class="id" title="tactic">omega</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <a name="sum_list_rec_S"><span class="id" title="lemma">sum_list_rec_S</span></a> (<span class="id" title="var">s</span> : <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#nat"><span class="id" title="inductive">nat</span></a>) (<span class="id" title="var">xs</span> : <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#list"><span class="id" title="inductive">list</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#nat"><span class="id" title="inductive">nat</span></a>) :<br/>
+&nbsp;&nbsp;<a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#sum_list_rec"><span class="id" title="definition">sum_list_rec</span></a> (<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#S"><span class="id" title="constructor">S</span></a> <a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#s"><span class="id" title="variable">s</span></a>) <a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#xs"><span class="id" title="variable">xs</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#S"><span class="id" title="constructor">S</span></a> (<a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#sum_list_rec"><span class="id" title="definition">sum_list_rec</span></a> <a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#s"><span class="id" title="variable">s</span></a> <a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#xs"><span class="id" title="variable">xs</span></a>).<br/>
+<span class="id" title="keyword">Proof</span>. <span class="id" title="tactic">change</span> (<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#S"><span class="id" title="constructor">S</span></a> <span class="id" title="var">s</span>) <span class="id" title="keyword">with</span> (1 <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Peano.html#b3eea360671e1b32b18a26e15b3aace3"><span class="id" title="notation">+</span></a> <span class="id" title="var">s</span>). <span class="id" title="tactic">apply</span> <a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#sum_list_rec_plus"><span class="id" title="lemma">sum_list_rec_plus</span></a>. <span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <a name="sum_list_rec_ge"><span class="id" title="lemma">sum_list_rec_ge</span></a> (<span class="id" title="var">s</span> : <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#nat"><span class="id" title="inductive">nat</span></a>) (<span class="id" title="var">xs</span> : <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#list"><span class="id" title="inductive">list</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#nat"><span class="id" title="inductive">nat</span></a>) :<br/>
+&nbsp;&nbsp;<a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#s"><span class="id" title="variable">s</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Peano.html#9b077c369e19739ef880736ba34623ff"><span class="id" title="notation">&lt;=</span></a> <a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#sum_list_rec"><span class="id" title="definition">sum_list_rec</span></a> <a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#s"><span class="id" title="variable">s</span></a> <a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#xs"><span class="id" title="variable">xs</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">induction</span> <span class="id" title="var">xs</span> <span class="id" title="keyword">as</span> [ | <span class="id" title="var">x</span> <span class="id" title="var">xs</span>]; <span class="id" title="var">cbn</span> <span class="id" title="tactic">in</span> *.<br/>
+&nbsp;&nbsp;- <span class="id" title="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;- <span class="id" title="tactic">rewrite</span> <a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#sum_list_rec_plus"><span class="id" title="lemma">sum_list_rec_plus</span></a>. <span class="id" title="tactic">omega</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Global</span> <span class="id" title="var">Arguments</span> <a class="idref" href="Undecidability.TM.Code.Code.html#Encode_list_size"><span class="id" title="definition">Encode_list_size</span></a> {<span class="id" title="var">sigX</span> <span class="id" title="var">X</span> <span class="id" title="var">cX</span>}.<br/>
+<span class="id" title="keyword">Global</span> <span class="id" title="var">Arguments</span> <a class="idref" href="Undecidability.TM.Code.Code.html#size"><span class="id" title="definition">size</span></a> : <span class="id" title="tactic">simpl</span> <span class="id" title="var">never</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+Do something with the <span class="inlinecode"><span class="id" title="var">k</span></span>th element in a chain of conjunctions 
+</div>
+<div class="code">
+<span class="id" title="keyword">Ltac</span> <span class="id" title="var">projk_fix</span> <span class="id" title="var">C</span> <span class="id" title="var">H</span> <span class="id" title="var">k</span> :=<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">lazymatch</span> <span class="id" title="var">k</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;| 0 =&gt; <span class="id" title="var">C</span> (<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#proj1"><span class="id" title="lemma">proj1</span></a> <span class="id" title="var">H</span>) + <span class="id" title="var">C</span> <span class="id" title="var">H</span><br/>
+&nbsp;&nbsp;| 1 =&gt; <span class="id" title="var">projk_fix</span> <span class="id" title="var">C</span> (<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#proj2"><span class="id" title="lemma">proj2</span></a> <span class="id" title="var">H</span>) 0<br/>
+&nbsp;&nbsp;| <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Datatypes.html#S"><span class="id" title="constructor">S</span></a> ?<span class="id" title="var">k'</span> =&gt; <span class="id" title="var">projk_fix</span> <span class="id" title="var">C</span> (<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#proj2"><span class="id" title="lemma">proj2</span></a> <span class="id" title="var">H</span>) <span class="id" title="var">k'</span><br/>
+&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+Try to do something with every element in the chain of conjunctions 
+</div>
+<div class="code">
+<span class="id" title="keyword">Ltac</span> <span class="id" title="var">proj_fix</span> <span class="id" title="var">C</span> <span class="id" title="var">H</span> :=<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">lazymatch</span> <span class="id" title="keyword">type</span> <span class="id" title="keyword">of</span> <span class="id" title="var">H</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;| ?<span class="id" title="var">P1</span> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d82a7d96d3659d805ffe732283716822"><span class="id" title="notation">/\</span></a> ?<span class="id" title="var">P2</span> =&gt; <span class="id" title="var">C</span> (<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#proj1"><span class="id" title="lemma">proj1</span></a> <span class="id" title="var">H</span>) + <span class="id" title="var">proj_fix</span> <span class="id" title="var">C</span> (<a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#proj2"><span class="id" title="lemma">proj2</span></a> <span class="id" title="var">H</span>)<br/>
+&nbsp;&nbsp;| <span class="id" title="var">_</span> =&gt; <span class="id" title="var">C</span> <span class="id" title="var">H</span><br/>
+&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Tactic Notation</span> "projk_rewrite"     <span class="id" title="keyword">constr</span>(<span class="id" title="var">H</span>) <span class="id" title="keyword">constr</span>(<span class="id" title="var">k</span>) := <span class="id" title="var">projk_fix</span> <span class="id" title="keyword">ltac</span>:(<span class="id" title="keyword">fun</span> <span class="id" title="var">c</span> =&gt; <span class="id" title="var">erewrite</span>   <span class="id" title="var">c</span>) <span class="id" title="var">H</span> <span class="id" title="var">k</span>.<br/>
+<span class="id" title="keyword">Tactic Notation</span> "projk_rewrite" "-&gt;" <span class="id" title="keyword">constr</span>(<span class="id" title="var">H</span>) <span class="id" title="keyword">constr</span>(<span class="id" title="var">k</span>) := <span class="id" title="var">projk_fix</span> <span class="id" title="keyword">ltac</span>:(<span class="id" title="keyword">fun</span> <span class="id" title="var">c</span> =&gt; <span class="id" title="var">erewrite</span> &lt;- <span class="id" title="var">c</span>) <span class="id" title="var">H</span> <span class="id" title="var">k</span>.<br/>
+<span class="id" title="keyword">Tactic Notation</span> "projk_rewrite" "&lt;-" <span class="id" title="keyword">constr</span>(<span class="id" title="var">H</span>) <span class="id" title="keyword">constr</span>(<span class="id" title="var">k</span>) := <span class="id" title="var">projk_fix</span> <span class="id" title="keyword">ltac</span>:(<span class="id" title="keyword">fun</span> <span class="id" title="var">c</span> =&gt; <span class="id" title="var">erewrite</span> &lt;- <span class="id" title="var">c</span>) <span class="id" title="var">H</span> <span class="id" title="var">k</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+If we leave out the number, just try every proposition in the conjunction chain 
+</div>
+<div class="code">
+<span class="id" title="keyword">Tactic Notation</span> "projk_rewrite"     <span class="id" title="keyword">constr</span>(<span class="id" title="var">H</span>) := <span class="id" title="var">proj_fix</span> <span class="id" title="keyword">ltac</span>:(<span class="id" title="keyword">fun</span> <span class="id" title="var">c</span> =&gt; <span class="id" title="var">erewrite</span>   <span class="id" title="var">c</span>) <span class="id" title="var">H</span>.<br/>
+<span class="id" title="keyword">Tactic Notation</span> "projk_rewrite" "-&gt;" <span class="id" title="keyword">constr</span>(<span class="id" title="var">H</span>) := <span class="id" title="var">proj_fix</span> <span class="id" title="keyword">ltac</span>:(<span class="id" title="keyword">fun</span> <span class="id" title="var">c</span> =&gt; <span class="id" title="var">erewrite</span> -&gt; <span class="id" title="var">c</span>) <span class="id" title="var">H</span>.<br/>
+<span class="id" title="keyword">Tactic Notation</span> "projk_rewrite" "&lt;-" <span class="id" title="keyword">constr</span>(<span class="id" title="var">H</span>) := <span class="id" title="var">proj_fix</span> <span class="id" title="keyword">ltac</span>:(<span class="id" title="keyword">fun</span> <span class="id" title="var">c</span> =&gt; <span class="id" title="var">erewrite</span> &lt;- <span class="id" title="var">c</span>) <span class="id" title="var">H</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <a name="tam"><span class="id" title="lemma">tam</span></a> : 42 <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> 40 <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Peano.html#b3eea360671e1b32b18a26e15b3aace3"><span class="id" title="notation">+</span></a> 2 <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d82a7d96d3659d805ffe732283716822"><span class="id" title="notation">/\</span></a> 50 <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> 25 <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Peano.html#b3eea360671e1b32b18a26e15b3aace3"><span class="id" title="notation">+</span></a> 25.<br/>
+<span class="id" title="keyword">Proof</span>. <span class="id" title="tactic">omega</span>. <span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Goal</span> 42 <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> 40 <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Peano.html#b3eea360671e1b32b18a26e15b3aace3"><span class="id" title="notation">+</span></a> 2.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="var">projk_rewrite</span> -&gt; <a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#tam"><span class="id" title="lemma">tam</span></a> 0. <span class="id" title="tactic">reflexivity</span>.<br/>
+<span class="id" title="keyword">Restart</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="var">projk_rewrite</span> <a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#tam"><span class="id" title="lemma">tam</span></a>. <span class="id" title="tactic">reflexivity</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <a name="tam'"><span class="id" title="lemma">tam'</span></a> : <span class="id" title="keyword">forall</span> <span class="id" title="var">x</span>, <a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#x"><span class="id" title="variable">x</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Peano.html#9482aae3d3b06e249765c1225dbb8cbb"><span class="id" title="notation">-</span></a> <a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#x"><span class="id" title="variable">x</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> 0 <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#d82a7d96d3659d805ffe732283716822"><span class="id" title="notation">/\</span></a> <a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#x"><span class="id" title="variable">x</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Peano.html#b3eea360671e1b32b18a26e15b3aace3"><span class="id" title="notation">+</span></a> <a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#x"><span class="id" title="variable">x</span></a> <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> 2 <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Peano.html#697e4695610f677ae98a52af81f779d2"><span class="id" title="notation">*</span></a> <a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#x"><span class="id" title="variable">x</span></a>.<br/>
+<span class="id" title="keyword">Proof</span>. <span class="id" title="tactic">intros</span>. <span class="id" title="tactic">omega</span>. <span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Goal</span> 42 <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Peano.html#b3eea360671e1b32b18a26e15b3aace3"><span class="id" title="notation">+</span></a> 42 <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Logic.html#1c39bf18749e5cc609e83c0a0ba5a372"><span class="id" title="notation">=</span></a> 2 <a class="idref" href="http://coq.inria.fr/distrib/V8.8.2/stdlib//Coq.Init.Peano.html#697e4695610f677ae98a52af81f779d2"><span class="id" title="notation">*</span></a> 42.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="var">projk_rewrite</span> (<a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#tam'"><span class="id" title="lemma">tam'</span></a> 42) 1. <span class="id" title="tactic">reflexivity</span>.<br/>
+<span class="id" title="keyword">Restart</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="var">projk_rewrite</span> (<a class="idref" href="Undecidability.TM.PrettyBounds.SpaceBounds.html#tam'"><span class="id" title="lemma">tam'</span></a> 42). <span class="id" title="tactic">reflexivity</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+</div>
+</div>
+<div id="footer">
+  Generated by <a href="http://coq.inria.fr/">coqdoc</a> and improved with <a href="https://github.com/tebbi/coqdocjs">CoqdocJS</a>
+</div>
+</div>
+</body>
+
+</html>
