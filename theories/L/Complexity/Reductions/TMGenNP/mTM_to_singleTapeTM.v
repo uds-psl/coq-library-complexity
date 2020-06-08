@@ -130,15 +130,16 @@ Section LMGenNP_to_TMGenNP_mTM.
          clear Hinit v'.
          rewrite skipn_app in Hlast. 2:now rewrite to_list_length. cbn in Hlast.
          autorewrite with list in Hlast. cbn in Hlast. revert Hlast. intros [= ->].
-         exists ts. assert (Hts__size : sizeOfTape ts <= maxSize).
+         edestruct H_HaltOrDiv as (?&?&?&?).
+         2:now eauto.
+         assert (Hts__size : sizeOfTape ts <= maxSize).
          1:{ autorewrite with list in Hsize.  rewrite sizeOfTape_encodeTape in Hsize. unfold t__size in *.
              destruct (eqb_spec 0 maxSize);destruct sizeOfTape. all:cbn in Hsize;try nia. }
-         clear Hsize. split. easy. unfold initc in *. cbn in Hout.
+         clear Hsize. unfold initc in *. cbn in Hout.
          unshelve eassert (Htmp := LiftTapes_lift _ _). 11:{ now rewrite Hout. } now apply putEndAtFirst_dupfree.
          cbn in Htmp. unfold selectConf in Htmp. cbn in Htmp.
 
-         erewrite putEndAtFirst_to_list in Htmp. 2:exact eq.
-         eexists. eapply H_HaltOrDiv. easy. eapply Htmp.
+         erewrite putEndAtFirst_to_list in Htmp. 2:exact eq. eassumption.
     }
     2:{
       

@@ -21,8 +21,8 @@ Proof.
       subst k. apply Hsmall in Rs as (c'&k'&Hsize_c'&Hk').
       edestruct completeness as (?&?&?&HM'). 1:{split. exact Hsize_c'. Lproc. }
       1:now Lproc.
-      do 2 eexists. repeat simple apply conj.
-      all:eassumption. 
+      do 2 eexists. repeat simple apply conj. 2:split. 
+      1,2:eassumption.  inversion 1.
      +intros c H k sigma' R__M. unfold initLMGen in R__M.
       eapply soundnessTime with (s:=(L.app s (@enc _ R__X c))) in R__M as (g&H'&t&n&eq__sigma&Rs%timeBS_evalIn&_&eq). 2:Lproc.
       subst k. apply Hk in Rs. rewrite Rs. unfold f__steps. reflexivity. easy. 

@@ -9,8 +9,9 @@ Given n tapes and a sizeBound and a step bound, does there exist a (small enough
 (** We contain this on haltsOrDiverges as out MutiTape2SingleTape-translation probably only knows upper bounds of the step count.  *)
 Definition HaltsOrDiverges_fixed_mTM (sig : finType) `{registered sig} n (M : mTM sig (S n)) : Vector.t (tape sig) n * nat * nat -> Prop :=
   fun '(ts, maxSize, steps) =>
-    forall t1, sizeOfTape t1 <= maxSize ->
-          forall k f, loopM (initc M (t1:::ts)) k = Some f -> loopM (initc M (t1:::ts)) steps = Some f.
+    forall t__cert' k res', loopM (initc M (t__cert':::ts)) k = Some res'
+                     -> exists t__cert res, sizeOfTape t__cert <= maxSize
+                                    /\ loopM (initc M (t__cert:::ts)) steps = Some res.
 
 Definition TMGenNP_fixed_mTM (sig : finType) `{registered sig} n (M : mTM sig (S n))
   := (fun '(ts, maxSize, steps) =>
