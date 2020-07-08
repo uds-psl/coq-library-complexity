@@ -173,6 +173,239 @@ Proof.
   eassumption. exact Hy. exact Hy'. exists z. split;eapply pow_star. all:easy.
 Qed.
 
+From Undecidability Require Import PolyTimeComputable.
+
+(*MOVE*)
+Import GenericNary UpToCNary.
+From Coq Require Import CRelationClasses CMorphisms.
+
+(*MOVE *)
+Lemma computableTime_timeLeq X (tt : TT X) (x:X) fT fT':
+  timeComplexity_leq fT fT' -> computableTime x fT -> computableTime x fT'.
+Proof.
+  intros ? []. eexists. eapply computesTime_timeLeq. all:easy.
+Qed.
+
+Lemma pTC_length X `{registered X}: polyTimeComputable (@length X).
+Proof.
+  evar (time:nat -> nat).
+  eexists time.
+  { eapply computableTime_timeLeq. 2:exact _.
+    solverec. rewrite size_list_enc_r. set (n:=L.size _). [time]:refine (fun n => _). unfold time. reflexivity.
+  }
+  1,2:unfold time;now smpl_inO.
+  eexists (fun n => _). 
+  {intros. rewrite !LNat.size_nat_enc, size_list_enc_r. set (n:= L.size _). reflexivity. }
+    1,2:unfold time;now smpl_inO.
+Qed.
+
+Smpl Add 1 simple apply pTC_length : polyTimeComputable.
+
+
+Lemma pTC_Code_size X sig `{registered X} `{registered sig}  (cX : codable sig X):
+  polyTimeComputable cX -> polyTimeComputable (@Code.size sig X cX).
+Proof.
+  intros. 
+  unfold size. repeat smpl polyTimeComputable.
+Qed.
+Smpl Add 5 simple apply pTC_Code_size : polyTimeComputable.
+
+Section Vcons.
+  From PslBase Require Import Vectors.
+  Import Vector.
+  Local Arguments VectorDef.to_list : simpl never.
+  Global Instance termT_cons n X {regX : registered X} : computableTime' (fun x => @Vector.cons X x n) (fun a aT => (1,fun A AT => (4,tt))).
+  Proof. 
+    computable_casted_result.
+    change (fun (x : X) (x0 : Vector.t X n) => VectorDef.to_list (x ::: x0)) with (fun (x : X) (x0 : Vector.t X n) => x :: Vector.to_list x0).
+    extract. solverec.
+  Qed.
+
+  Lemma pTC_Vector_cons X Y `{regX:registered X} `{regY:registered Y} n f (g : X -> Vector.t Y n):
+    polyTimeComputable f -> polyTimeComputable g -> polyTimeComputable (fun (x:X) => f x ::: g x).
+  Proof.
+    intros. specialize termT_cons with (n:=n) (X:=Y) as H.
+    set (cons := (fun (x :Y) => @Vector.cons _ x n)) in H.
+    change (polyTimeComputable (fun x : X => cons (f x) (g x))).
+    eapply polyTimeComputable_composition2. 1,2:easy.
+    fold cons in H.
+    evar (c:nat).
+    eexists (fun _ => c).
+    { extract. solverec. now unfold c. }
+    1,2:now smpl_inO.
+    eexists (fun n => n + 1). 2,3:now smpl_inO.
+    {intros. unfold cons. rewrite enc_vector_eq.
+     change (to_list (fst x ::: snd x)) with (fst x :: to_list (snd x)).
+     rewrite size_list_cons. rewrite !LProd.size_prod.  rewrite <- enc_vector_eq.
+     set (L.size (enc (fst x))). set (L.size (enc (snd x))). nia.
+    }
+  Qed.
+End Vcons.
+Smpl Add 5 lazymatch goal with
+             |- polyTimeComputable (fun X => _ ::: _) => apply pTC_Vector_cons
+           end: polyTimeComputable.
+
+(*MOVE*)
+Lemma size_sumn_in n xs: n el xs -> n <= sumn xs.
+Proof.
+  induction xs. easy. intros [ | ]. now cbn;nia.
+  cbn;rewrite <- IHxs. all:easy.
+Qed.
+
+Lemma mono_map_time X `{registered X} (f: nat -> nat) (xs: list X):
+  monotonic f
+  -> sumn (map (fun x => f (L.size (enc x))) xs) <= length xs * f (L.size (enc xs)).
+Proof.
+  intros Hf. 
+  induction xs. reflexivity.
+  cbn. rewrite size_list_cons,IHxs. hnf in Hf.
+  rewrite (Hf (L.size (enc a)) (L.size (enc a) + L.size (enc xs) + 5)). 2:nia.
+  rewrite (Hf (L.size (enc xs)) (L.size (enc a) + L.size (enc xs) + 5)). 2:nia. reflexivity.
+Qed.
+
+Lemma pTC_map X Y `{registered X} `{registered Y} (f:X -> Y):
+  polyTimeComputable f -> polyTimeComputable (map f).
+Proof.
+  intros Hf.
+  evar (time:nat -> nat). exists time. set (map f). extract.
+  {solverec. rewrite (correct__leUpToC (mapTime_upTo _)).
+   rewrite mono_map_time. 2:now apply mono__polyTC. set (L.size _) as n.
+   unshelve erewrite (_ : length x <= n). now apply size_list_enc_r.
+   [time]:intro. unfold time. reflexivity.
+  }
+  1,2:now unfold time;smpl_inO.
+  evar (size:nat -> nat). exists size. 
+  {intros x. rewrite size_list,sumn_map_add,sumn_map_c,map_map,map_length.
+   rewrite sumn_map_le_pointwise.
+   2:{ intros ? _. apply (bounds__rSP Hf). }
+   rewrite mono_map_time. 2:eapply mono__rSP.
+   set (L.size _) as n.
+   unshelve erewrite (_ : length x <= n). now apply size_list_enc_r.
+   [size]:intro. unfold size. reflexivity.
+  }
+  1,2:now unfold size;smpl_inO.
+Qed.
+
+Lemma sumn_concat xs: sumn (concat xs) = sumn (map sumn xs).
+Proof.
+  induction xs;cbn. easy. now rewrite sumn_app.
+Qed.
+
+Lemma pTC_concat X Y `{registered X} `{registered Y} (f:X -> list (list Y)):
+  polyTimeComputable f -> polyTimeComputable (fun x => concat (f x)).
+Proof.
+  intros Hf.
+  evar (time:nat -> nat). exists time. extract.
+  {solverec. rewrite UpToC_le.
+   rewrite sumn_map_le_pointwise.
+   2:{ intros ? ?. apply size_list_enc_r. }
+   setoid_rewrite mono_map_time with (f:=fun x => x). 2:now hnf.
+   rewrite !size_list_enc_r.
+
+   rewrite ! (bounds__rSP Hf).
+   set (n:=L.size _).
+   [time]:intro. unfold time. reflexivity.
+  }
+  1,2:now unfold time;smpl_inO.
+  evar (size:nat -> nat). exists size. 
+  {intros x. admit.  }
+  all:admit.
+  (*rewrite !size_list, sumn_map_add,sumn_map_c.
+   rewrite concat_map,sumn_concat.
+   rewrite length_concat.
+   rewrite map_map.
+   erewrite sumn_map_le_pointwise with (f2:=fun x => _).
+   2:{ intros ? _. setoid_rewrite mono_map_time with (f:=fun x => x) at 1. 2:now hnf. reflexivity. }
+   rewrite mono_map_time. 
+   
+   setoid_rewrite sumn_map_le_pointwise at 2.
+   2:{ intros ? _. apply (bounds__rSP Hf). }
+   rewrite mono_map_time. 2:eapply mono__rSP.
+   set (L.size _) as n.
+   unshelve erewrite (_ : length x <= n). now apply size_list_enc_r.
+   [size]:intro. unfold size. reflexivity.
+  }
+  1,2:now unfold size;smpl_inO.
+            rewrite mono_map_time. 2:now apply mono__polyTC. set (L.size _) as n.
+   unshelve erewrite (_ : length x <= n). now apply size_list_enc_r.
+   [time]:intro. unfold time.} reflexivity.
+  
+  1,2:now unfold time;smpl_inO.
+  evar (size:nat -> nat). exists size. 
+  {intros x. rewrite size_list,sumn_map_add,sumn_map_c,map_map,map_length.
+   rewrite sumn_map_le_pointwise.
+   2:{ intros ? _. apply (bounds__rSP Hf). }
+   rewrite mono_map_time. 2:eapply mono__rSP.
+   set (L.size _) as n.
+   unshelve erewrite (_ : length x <= n). now apply size_list_enc_r.
+   [size]:intro. unfold size. reflexivity.
+  }
+  1,2:now unfold size;smpl_inO.
+Qed. *)
+Admitted.
+
+Lemma pTC_app X Y `{registered X} `{registered Y} (f1 f2:X -> list Y):
+  polyTimeComputable f1 -> polyTimeComputable f2 -> polyTimeComputable (fun x => f1 x ++ f2 x).
+Proof.
+  intros Hf1 Hf2.
+  eapply polyTimeComputable_composition2. 1,2:eauto.
+  evar (time : nat -> nat). exists time. extract.
+     {solverec.
+      unshelve erewrite (_: |a| <= L.size (enc (a,b))).
+      { rewrite LProd.size_prod,size_list_enc_r;cbn. nia. }
+      set (L.size _). [time]:intro. now unfold time.
+     }
+     1,2:now unfold time;smpl_inO.
+     { evar (size : nat -> nat). exists size.
+       {
+         intros [a b]. rewrite LProd.size_prod, !size_list,map_app,sumn_app,!sumn_map_add,!sumn_map_c.
+         cbn [fst snd].
+         [size]:exact (fun x => x + 4). unfold size. lia.
+       }
+       all:unfold size;smpl_inO.
+     }
+Qed.
+  
+
+Lemma pTC_initValue X  sig tau `{registered X} `{registered sig} `{registered tau} (cX : codable sig X) (r:Retract sig tau) :
+  polyTimeComputable cX -> polyTimeComputable (Retr_f (Retract:=r)) ->  polyTimeComputable (initValue cX r).
+Proof.
+  unfold initValue. intros cX_pTC r_pTC. 
+  eapply polyTimeComputable_composition.
+  2:{ refine (_ : polyTimeComputable (fun x => (midtape [] (inl START)) x)).
+      exists (fun _ => 5). extract.
+      Unshelve. solverec. 1,2:now smpl_inO.
+      evar (size : nat -> nat). exists size. unfold enc;cbn;intros x. refine (_:23 + _ <= _). set (n0:=L.size (list_enc x)). [size]: intros n0. unfold size;reflexivity.
+      all:unfold size. all:smpl_inO.
+  }
+  eapply pTC_app.
+  2:now apply pTC_cnst.
+  eapply polyTimeComputable_composition.
+  2:{ eapply pTC_map. exists (fun _ => 4). extract. solverec.  1,2:now smpl_inO.
+      exists (fun x => x+4).
+      {intros. now setoid_rewrite size_sum. }
+      all:smpl_inO.
+  }
+  unfold Encode_map. cbn.
+  eapply polyTimeComputable_composition. eassumption.
+  eapply pTC_map. eassumption.
+Qed.
+Smpl Add 5 unshelve simple eapply pTC_initValue : polyTimeComputable.
+
+
+Lemma pTC_Encode_Prog {H : registered Alphabets.sigPro} : polyTimeComputable (Alphabets.Encode_Prog).
+Proof.
+  unfold Alphabets.Encode_Prog,Encode_list. cbn.
+  eapply polyTimeComputable_proper_eq_flip. hnf. now setoid_rewrite encode_list_concat at 1.
+  eapply pTC_app. 2:now apply pTC_cnst.
+  eapply pTC_concat,pTC_map,polyTimeComputable_composition2.
+  now apply pTC_cnst. 2:admit.
+  eapply polyTimeComputable_composition.
+  2:eapply pTC_map.
+  (* TODO: abstract more? *)
+Admitted.
+
+Smpl Add 1 simple eapply pTC_Encode_Prog : polyTimeComputable.
 
 Lemma LMGenNP_to_TMGenNP_mTM (_ : registered M.sig):
   restrictBy (LMHaltsOrDiverges (list bool)) (LMGenNP (list bool)) ⪯p (restrictBy (HaltsOrDiverges_fixed_mTM (projT1 M.M)) (TMGenNP_fixed_mTM (projT1 M.M))).
@@ -257,13 +490,21 @@ Proof.
   }
   {
     clear Hf__steps Hcert_f__size.
-    enough (polyTimeComputable f__steps).
-    enough (polyTimeComputable f__size).
+    From Undecidability Require Import PolyTimeComputable.
 
-    - admit. (*TODO: Lemmas for PolyTimeComputable, See CanEnumTerm.v*)
-    - admit.
-    - admit.
+    nary apply pTC_destructuringToProj.
+
+    enough (polyTimeComputable f__size).
+    enough (polyTimeComputable f__steps).
+    repeat smpl polyTimeComputable.
+    -unfold M.ts__start. 
+
+    unfold Alphabets.Encode_Prog.
+    
+    repeat smpl polyTimeComputable. Set Printing All. apply LFinType.registered_finType.     
+    -unfold f__steps. nary apply pTC_destructuringToProj. repeat smpl polyTimeComputable.
+    -unfold f__size. repeat smpl polyTimeComputable. 
   }
-Admitted.
+Qed.
 
 Print Assumptions LMGenNP_to_TMGenNP_mTM.

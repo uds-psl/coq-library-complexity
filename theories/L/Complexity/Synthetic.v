@@ -88,37 +88,6 @@ Definition timeConstructible_computableTime' f (H:timeConstructible f) :
 Definition timeConstructible_inO f (H:timeConstructible f) :
   projT1 H ∈O f := fst (projT2 H).
 
-(*
-Record computableInO {X Y} `{registered X} `{registered Y} (f:X -> Y) (g: nat -> nat) : Type:=
-  {
-    time__cIO :> nat -> nat;
-    compO : computableTime' f (fun x _ => (time__cIO (size (enc x)),tt));
-    lin_t__enc : time__cIO ∈O g;
-    mono_t__enc : monotonic time__cIO;
-  }.
-
-Hint Extern 5 => simple apply @compO;[|eassumption] :typeclass_instances.
-Smpl Add (simple apply mono_t__enc) : monotonic.
-
-Lemma smpl_fT_inO X Y `{registered X} `{registered Y} (f: X -> Y) (g:nat -> nat) {cf:computableInO f g} h:
-  g ∈O h -> (cf ∈O h).
-Proof.
-  intros <-. apply lin_t__enc. 
-Qed.
-
-Smpl Add simple eapply smpl_fT_inO : inO.
-
-
-
-Lemma smpl_inOPoly_fT_inO X Y `{registered X} `{registered Y} (f: X -> Y) (g:nat -> nat) (cF :computableInO f g):
-  inOPoly g -> inOPoly (time__cIO cF).
-Proof.
-  intros. now rewrite lin_t__enc.
-Qed. 
-
-Smpl Add 12 simple eapply smpl_inOPoly_fT_inO : inO.
-*)
-
 Record resSizePoly X Y `{registered X} `{registered Y} (f : X -> Y) : Type :=
   {
     resSize__rSP : nat -> nat;
@@ -130,7 +99,7 @@ Record resSizePoly X Y `{registered X} `{registered Y} (f : X -> Y) : Type :=
 Smpl Add 10 (simple apply poly__rSP) : inO.
 Smpl Add 10 (simple apply mono__rSP) : inO.
 
-Record polyTimeComputable X Y `{registered X} `{registered Y} (f : X -> Y): Type :=
+Record polyTimeComputable X Y `{registered X} `{registered Y} (f : X -> Y) :=
   polyTimeComputable_intro
   {
     time__polyTC : nat -> nat;
@@ -178,7 +147,8 @@ Proof.
 Qed.
 
 Lemma polyTimeComputable_compTime X Y `{registered X} `{registered Y} (f: X -> Y):
-  polyTimeComputable f -> exists H : polyTimeComputable f, inhabited (polyTimeComputable (time__polyTC H)) /\ inhabited (polyTimeComputable (resSize__rSP H)).
+  polyTimeComputable f -> exists H : polyTimeComputable f, inhabited (polyTimeComputable (time__polyTC H))
+                                                     /\ inhabited (polyTimeComputable (resSize__rSP H)).
 Proof.
   intros R__spec. destruct (inOPoly_computable (poly__polyTC R__spec)) as (p'&[?]&Hbounds&?&?).
   destruct (resSizePoly_compSize R__spec) as (?&[]).

@@ -405,6 +405,7 @@ L/Complexity/GenericNary.v
 L/Complexity/ResourceMeasures.v
 L/Complexity/SpaceBoundsTime.v
 L/Complexity/Synthetic.v
+L/Complexity/PolyTimeComputable.v
 L/Complexity/AbstractTimeHierarchyTheorem.v
 L/Complexity/TimeHierarchyTheorem.v
 L/Complexity/Monotonic.v
