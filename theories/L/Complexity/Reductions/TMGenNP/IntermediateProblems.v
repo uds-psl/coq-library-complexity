@@ -1,4 +1,4 @@
-(*From Undecidability.L Require Import Tactics.LTactics Prelim.MoreList Prelim.MoreBase.
+From Undecidability.L Require Import Tactics.LTactics Prelim.MoreList Prelim.MoreBase.
 From Undecidability.L.Complexity Require Import NP Synthetic Monotonic GenNP.
 
 
@@ -17,14 +17,21 @@ Da der simulierte Term evtl aber mit groesserer Schranke haelt muesste man dann 
 
 (* Weitere Idee: Prädikat nutzen, um Probleminstanzen weiter einzuschränken? *)
 
+From Undecidability.TM Require Import TM CodeTM.
 
-Print GenNP'.
-Check NPhard_GenNP.
+From Undecidability Require Import NP L_to_LM LM_to_mTM mTM_to_singleTapeTM TMGenNP_fixed_mTM LFinType.
 
-From Undecidability Require Import LMGenNP.
+Import LNat.
+Lemma GenNP_to_TMGenNP:
+  restrictBy (LHaltsOrDiverges (list bool)) (GenNP (list bool))
+             ⪯p unrestrictedP (TMGenNP_fixed_singleTapeTM (projT1 (M_multi2mono.M__mono (projT1 M.M)))).
+Proof.
+  eapply reducesPolyMO_transitive. now apply GenNP_to_LMGenNP.
+  eapply reducesPolyMO_transitive. now apply LMGenNP_to_TMGenNP_mTM.
+  now apply TMGenNP_mTM_to_TMGenNP_singleTM.
+Qed.
 
-Print LMGenNP'.
-About GenNP_to_LMGenNP.*)
+Print Assumptions GenNP_to_TMGenNP.
 
 (** Not Complete: nice form of Time bound *)
 (*From Undecidability.LAM  Require TM.LMBounds. *)

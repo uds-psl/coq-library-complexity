@@ -31,7 +31,7 @@ Section LMGenNP_to_TMGenNP_mTM.
   Local Arguments loopM {_ _ } _ _ _.
   Import EqBool.
   
-  Lemma LMGenNP_to_TMGenNP_mTM :
+  Lemma TMGenNP_mTM_to_TMGenNP_singleTM :
     restrictBy (HaltsOrDiverges_fixed_mTM M) (TMGenNP_fixed_mTM M)
                ⪯p unrestrictedP (TMGenNP_fixed_singleTapeTM (projT1 M__mono)).
   Proof.
