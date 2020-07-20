@@ -254,3 +254,9 @@ Proof.
    +rewrite <- Hleq. eassumption.
    +eauto.
 Qed.
+
+Lemma computableTime_timeLeq X (tt : TT X) (x:X) fT fT':
+  timeComplexity_leq fT fT' -> computableTime x fT -> computableTime x fT'.
+Proof.
+  intros ? []. eexists. eapply computesTime_timeLeq. all:easy.
+Qed.

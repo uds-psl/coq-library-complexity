@@ -693,6 +693,33 @@ Section MatchTapes.
     mirror_tape (tape_move_right' rs x ls) = tape_move_left' ls x rs.
   Proof. now destruct ls; cbn. Qed.
 
+  
+  Lemma tape_move_niltape (m : move) :
+    tape_move (niltape sig) m = niltape sig.
+  Proof. now destruct m. Qed.
+
+  Lemma tape_write_left (t : tape sig) s :
+    left (tape_write t s) = left t.
+  Proof. destruct s; auto. Qed.
+
+  Lemma tape_write_right (t : tape sig) s :
+    right (tape_write t s) = right t.
+  Proof. destruct s; auto. Qed.
+
+
+  Lemma tape_write_current_Some (t : tape sig) s :
+    current (tape_write t (Some s)) = Some s.
+  Proof. auto. Qed.
+
+
+  Lemma tape_write_current_None (t : tape sig) :
+    current (tape_write t None) = current t.
+  Proof. auto. Qed.
+
+  Lemma tape_write_current (t : tape sig) s :
+    current (tape_write t s) = fold_opt (@Some _) (current t) s.
+  Proof. destruct s; auto. Qed.
+
 End MatchTapes.
 
 Hint Rewrite tape_left_move_left' : tape.
@@ -708,6 +735,8 @@ Hint Rewrite tape_right_move_left' : tape.
 Hint Rewrite tape_right_move_right' : tape.
 Hint Rewrite tape_local_move_right' : tape.
 Hint Rewrite mirror_tape_move_right' : tape.
+
+Hint Rewrite tape_move_niltape tape_write_left tape_write_right tape_write_current_Some tape_write_current_None tape_write_current : tape.
 
 
 

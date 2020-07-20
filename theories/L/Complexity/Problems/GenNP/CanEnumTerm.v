@@ -107,16 +107,6 @@ Module boollist_enum.
     specialize (boollist_term_inv' P [] []) as H. autorewrite with list in H. easy.
   Qed.
 
-  (*MOVE*)
-  Lemma sumn_concat l: sumn (concat l) = sumn (map sumn l).
-  Proof.
-    induction l;cbn. easy. now rewrite sumn_app.
-  Qed.
-  Lemma sumn_repeat c n: sumn (repeat c n) = c * n.
-  Proof.
-    induction n;cbn. all:easy.
-  Qed.
-
   Lemma pro_to_boollist_size : (fun P => L.size (enc (pro_to_boollist P))) <=c fun P => L.size (enc P).
   Proof.
     evar (c:nat). exists c. intros P. rewrite !size_list. induction P as [ | [] P].
@@ -130,19 +120,13 @@ Module boollist_enum.
   Qed.
 
   Import FunInd.
-
-  (* MOVE*)
   
-  Lemma size_bool_enc (b:bool): size (enc b) = if b then 4 else 3.
-  Proof.
-    now destruct b;cbv.
-  Qed.
   
   Lemma boollist_term_size bs A:  L.size (enc (boollist_term bs A)) <= L.size (enc bs) + L.size (enc A).
   Proof.
     rewrite !size_list. functional induction (boollist_term bs A).
     all:cbn.
-    all:autorewrite with list;cbn. all:try rewrite IHl. all:cbn; rewrite ?size_Tok_enc,?size_bool_enc.
+    all:autorewrite with list;cbn. all:try rewrite IHl. all:cbn; rewrite ?size_Tok_enc,?LBool.size_bool_enc.
     all:ring_simplify. all:nia.
   Qed.
 

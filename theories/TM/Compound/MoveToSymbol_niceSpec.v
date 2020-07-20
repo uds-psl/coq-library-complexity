@@ -3,15 +3,11 @@ From Undecidability Require Import TM TM.Compound.MoveToSymbol.
 
 Require Import ssrbool Lia.
 
-(* MOVE *)
 Lemma last_not_default X (d d':X) A :
   A <> [] -> last A d = last A d'.
 Proof. induction A. easy. destruct A;cbn. easy. intros ?. now apply IHA. Qed.
 
-(*MOVE *)
 
-
-(* MOVE *)
 Lemma removelast_as_tail X (x:list X): removelast x = rev (tail (rev x)).
 Proof.
   rewrite tl_rev. now autorewrite with list.

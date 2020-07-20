@@ -4,7 +4,7 @@ From Undecidability.TM Require Import TM SizeBounds.
 
 From Undecidability.L.Complexity  Require Import UpToCNary.
 
-From Undecidability.L.AbstractMachines Require Import FlatPro.Programs.
+From Undecidability.L.AbstractMachines Require Import FlatPro.Programs FlatPro.Computable.Compile.
      
 Unset Printing Coercions.
 
@@ -94,20 +94,6 @@ Module LMtoTM.
 
     Import MoreList.
 
-    
-    (* MOVE ? *)
-    Lemma sizeT_compile_list_bool:
-      (fun bs : list bool => sumn (map sizeT (compile (Computable.enc (rev bs))))) <=c (fun bs => length bs + 1).
-    Proof.
-      evar (c:nat). exists c. intros xs. transitivity (sizeP (compile (Computable.enc   (rev xs)))).
-      now unfold sizeP. unfold sizeP;rewrite sizeP_size,Lists.size_list.
-      rewrite map_rev,<-sumn_rev. rewrite MoreBase.sumn_le_bound.
-      2:{ intros ? ([]&<-&?)%in_map_iff. all:cbv. reflexivity. nia. }
-      rewrite map_length. ring_simplify. [c]:exact 18. nia.
-    Qed.
-
-
-    (* MOVE ? *)
     Lemma size_compile_list_bool:
       (fun bs : list bool => Code.size (compile (Computable.enc (rev bs)))) <=c (fun bs => length bs + 1).
     Proof.
@@ -120,7 +106,6 @@ Module LMtoTM.
     Qed.
 
     
-    (*MOVE*)
     Ltac fin_inst_all H :=
       match type of H with
         forall i : Fin.t 0 , _ => clear H

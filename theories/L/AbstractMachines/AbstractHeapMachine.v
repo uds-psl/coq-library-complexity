@@ -238,8 +238,6 @@ Proof.
 Qed.
 
 (** *** Soundness  *)
-(*MOVE*)
-Definition evaluatesIn (X : Type) (R : X -> X -> Prop) n (x y : X) := pow R n x y /\ terminal R y.
 
 Lemma soundness' s0 s a T V H k sigma:
   evaluatesIn step k (closT(s0,a)::T,V,H) sigma ->

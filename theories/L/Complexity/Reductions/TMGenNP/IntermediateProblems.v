@@ -31,8 +31,9 @@ Proof.
   now apply TMGenNP_mTM_to_TMGenNP_singleTM.
 Qed.
 
+(*
 Print Assumptions GenNP_to_TMGenNP.
-
+*)
 (** Not Complete: nice form of Time bound *)
 (*From Undecidability.LAM  Require TM.LMBounds. *)
 

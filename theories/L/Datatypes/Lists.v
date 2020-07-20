@@ -21,12 +21,6 @@ Section Fix_X.
     solverec.
   Qed.
 
-  (* Lemma list_enc_correct (A:list X) (s t:term): proc s -> proc t -> enc A s t >(2) match A with nil => s | cons a A' => t (enc a) (enc (A')) end. *)
-  (* Proof. *)
-  (*   extract match.  *)
-  (* Qed. *)
-  
-
   Global Instance termT_append : computableTime' (@List.app X) (fun A _ => (5,fun B _ => (length A * 16 +4,tt))).
   Proof using intX.
     extract.
@@ -335,6 +329,18 @@ Proof.
   rewrite !size_list. cbn. lia.
 Qed.
 
+
+Lemma size_rev X {_:registered X} (xs : list X): L.size (enc (rev xs)) = L.size (enc xs).
+Proof.
+  rewrite !size_list,map_rev,<- sumn_rev. easy.
+Qed.
+
+Lemma size_list_In X {R__X  :registered X} (x:X) xs:
+  x el xs -> L.size (enc x) <= L.size (enc xs).
+Proof.
+  intro H. rewrite !size_list,sumn_map_add. rewrite <- (sumn_le_in (in_map _ _ _ H)) at 1. nia.
+Qed.
+
 Lemma size_list_enc_r {X} `{registered X} (l:list X):
   length l <= size (enc l).
 Proof.
@@ -347,7 +353,6 @@ Proof.
 Qed.
 
 
-(*MOVE*)
 Definition lengthEq A :=
   fix f (t:list A) n :=
     match n,t with
@@ -365,7 +370,6 @@ Instance term_lengthEq A `{registered A} : computableTime' (lengthEq (A:=A)) (fu
 Proof.
   extract. unfold lengthEq_time. solverec.
 Qed.
-
 
 Section concat.
   Context X `{registered X}.

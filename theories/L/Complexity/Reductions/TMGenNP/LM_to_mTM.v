@@ -157,35 +157,14 @@ Module M.
     
 End M.
 
-(*move*)
-Lemma size_rev X {_:registered X} (xs : list X): L.size (enc (rev xs)) = L.size (enc xs).
-Proof.
-  rewrite !size_list,map_rev,<- sumn_rev. easy.
-Qed.
-
-
-(*move*)
-Lemma uniform_confluent_confluent (X : Type) (R : X -> X -> Prop):
-  uniform_confluent R -> confluent R.
-Proof.
-  intros H x y y' Hy Hy'. apply ARS.star_pow in Hy as (?&Hy). apply ARS.star_pow in Hy' as (?&Hy').
-  edestruct parametrized_confluence as (?&?&z&?&?&?&?&?).
-  eassumption. exact Hy. exact Hy'. exists z. split;eapply pow_star. all:easy.
-Qed.
 
 From Undecidability Require Import PolyTimeComputable.
 
-(*MOVE*)
+(*REMOVE?*)
 Import GenericNary UpToCNary.
 From Coq Require Import CRelationClasses CMorphisms.
 
-(*MOVE *)
-Lemma computableTime_timeLeq X (tt : TT X) (x:X) fT fT':
-  timeComplexity_leq fT fT' -> computableTime x fT -> computableTime x fT'.
-Proof.
-  intros ? []. eexists. eapply computesTime_timeLeq. all:easy.
-Qed.
-
+(* TODO MOVE :tidy up *)
 Lemma pTC_length X `{registered X}: polyTimeComputable (@length X).
 Proof.
   evar (time:nat -> nat).
@@ -266,12 +245,6 @@ Smpl Add 5 lazymatch goal with
              |- polyTimeComputable (fun X => _ ::: _) => apply pTC_Vector_cons
            end: polyTimeComputable.
 
-(*MOVE*)
-Lemma sumn_le_in n xs: n el xs -> n <= sumn xs.
-Proof.
-  induction xs. easy. intros [ | ]. now cbn;nia.
-  cbn;rewrite <- IHxs. all:easy.
-Qed.
 
 Lemma mono_map_time X `{registered X} (f: nat -> nat) (xs: list X):
   monotonic f
@@ -307,17 +280,6 @@ Proof.
   1,2:now unfold size;smpl_inO.
 Qed.
 
-Lemma sumn_concat xs: sumn (concat xs) = sumn (map sumn xs).
-Proof.
-  induction xs;cbn. easy. now rewrite sumn_app.
-Qed.
-
-
-Lemma size_list_In X {R__X  :registered X} (x:X) xs:
-  x el xs -> L.size (enc x) <= L.size (enc xs).
-Proof.
-  intro H. rewrite !size_list,sumn_map_add. rewrite <- (sumn_le_in (in_map _ _ _ H)) at 1. nia.
-Qed.
 
 Lemma pTC_concat X Y `{registered X} `{registered Y} (f:X -> list (list Y)):
   polyTimeComputable f -> polyTimeComputable (fun x => concat (f x)).
