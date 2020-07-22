@@ -5,7 +5,7 @@ From Undecidability.L Require Import Tactics.GenEncode.
 From Undecidability.L.Datatypes Require Import LNat.
 
 
-Run TemplateProgram (tmGenEncode "token_enc" Tok).
+MetaCoq Run (tmGenEncode "token_enc" Tok).
 Hint Resolve token_enc_correct : Lrewrite.
 
 Instance term_varT : computableTime' varT (fun _ _ => (1,tt)).

@@ -1,0 +1,4 @@
+-Checkout this: https://github.com/fakusb/template-coq/tree/v1.0-alpha2-uds-psl-8.11-2
+
+opam install ./coq-metacoq-template.opam
+opam install ./coq-metacoq-checker.opam 

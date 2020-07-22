@@ -383,18 +383,18 @@ Proof.
 (*MOVE to*)
 Check sigList_enc.
 Import GenEncode Alphabets.
-Run TemplateProgram (tmGenEncode "sigNat_enc" sigNat).
+MetaCoq Run (tmGenEncode "sigNat_enc" sigNat).
 Hint Resolve sigNat_enc_correct : Lrewrite.
 
 Import GenEncode.
-Run TemplateProgram (tmGenEncode "ACom_enc" ACom).
+MetaCoq Run (tmGenEncode "ACom_enc" ACom).
 Hint Resolve ACom_enc_correct : Lrewrite.
 
 Section sigSum.
   Context X Y {R__X:registered X} {R__Y:registered Y}.
-  Run TemplateProgram (tmGenEncode "sigSum_enc" (@sigSum X Y)).
-  Run TemplateProgram (tmGenEncode "sigPair_enc" (@sigPair X Y)).
-  Run TemplateProgram (tmGenEncode "sigOption_enc" (@sigOption X)).
+  MetaCoq Run (tmGenEncode "sigSum_enc" (@sigSum X Y)).
+  MetaCoq Run (tmGenEncode "sigPair_enc" (@sigPair X Y)).
+  MetaCoq Run (tmGenEncode "sigOption_enc" (@sigOption X)).
 
   Global Instance term_sigPair_Y : computableTime' (@sigPair_Y X Y) (fun _ _ => (1,tt)).
   Proof. extract constructor. solverec. Qed.

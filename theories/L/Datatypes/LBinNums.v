@@ -3,7 +3,7 @@ Require Import BinNums.
 Require Import Undecidability.L.Tactics.GenEncode.
 
 (** ** Encoding of positive binary numbers *)
-Run TemplateProgram (tmGenEncode "positive_enc" positive).
+MetaCoq Run (tmGenEncode "positive_enc" positive).
 Hint Resolve positive_enc_correct : Lrewrite.
 
 Global Instance termT_Pos_xI : computableTime' xI (fun x _ => (1,tt)).
@@ -15,7 +15,7 @@ extract constructor. solverec.
 Qed.
 
 (** ** Encoding of natural binary numbers *)
-Run TemplateProgram (tmGenEncode "N_enc" N).
+MetaCoq Run (tmGenEncode "N_enc" N).
 Hint Resolve N_enc_correct : Lrewrite.
 
 Instance termT_N_NPos : computableTime' Npos (fun x _ => (1,tt)).
