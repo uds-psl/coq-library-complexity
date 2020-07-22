@@ -318,4 +318,4 @@ Qed.
 Definition NPcomplete X `{registered X} `(P : restrictedP (X:=X) vX) :=
   NPhard P /\ inNP P.
 
-Hint Unfold NPcomplete.
+Hint Unfold NPcomplete : core.

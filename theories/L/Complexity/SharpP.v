@@ -58,7 +58,7 @@ Qed.
   Stating the correctness statement R_Sharp__correct in terms of a polynomial instead causes trouble (for instance in the proof of closure under multiplication) as the exact number of accepted certificates is important and over-approximations do not work. *)
 
 Definition restrictedF (X : Type) (vX : X -> Prop) := { x : X | vX x} -> nat. 
-Definition restrictByF {X} vX (f:X->nat) : restrictedF vX := fun '(exist _ x _) => f x.
+Definition restrictByF {X} vX (f:X->nat) : restrictedF vX := fun '(exist x _) => f x.
 Arguments restrictByF : clear implicits.
 Arguments restrictByF {_} _ _ !_.
 
@@ -146,7 +146,7 @@ Qed.
 
 (** #P is closed under multiplication and addition *)
 
-Hint Constructors dupfree. 
+Hint Constructors dupfree : core. 
 Fact dupfree_prod (X Y : eqType) (A : list X) (B : list Y): dupfree A -> dupfree B -> dupfree (list_prod A B).
 Proof. 
   intros HA HB. induction HA; cbn; [eauto | ].
@@ -288,8 +288,8 @@ Proof.
   - Unshelve. all: intros ? ?; now edestruct H'. 
 Qed.
 
-Lemma reducesParsimoniousMO_elim X Y `{RX : registered X} `{RY : registered Y} `(f : restrictedF vX) `(g : restrictedF vY) : 
-  f ≤p g 
+Lemma reducesParsimoniousMO_elim X Y {RX : registered X} `{RY : registered Y} `(f : restrictedF (X := X) vX) `(g : restrictedF (X := Y) vY) : 
+  f ≤p g  
   -> exists r, inhabited (polyTimeComputable r) 
     /\ (forall x (Hx : vX x), { Hy : vY (r x) | f (exist vX x Hx) = g (exist vY (r x) Hy)}). 
 Proof. 
@@ -298,7 +298,7 @@ Proof.
   - intros. eexists. easy.
 Qed.
 
-Lemma reducesParsimoniousMO_restriction_antimonotone X `{registered X} {vf} (f : restrictedF vf) {vg} (g : restrictedF vg) : 
+Lemma reducesParsimoniousMO_restriction_antimonotone X `{registered X} {vf : X -> Prop} (f : restrictedF vf) {vg} (g : restrictedF vg) : 
   (forall x Hx, {Hy | f (exist vf x Hx) = g (exist vg x Hy)})
   -> f ≤p g. 
 Proof. 
@@ -310,7 +310,7 @@ Proof.
   - reflexivity. 
 Qed.
 
-Lemma reducesParsimoniousMO_reflexive X `{RX : registered X} `(f : restrictedF vX) : f ≤p f.
+Lemma reducesParsimoniousMO_reflexive X `{RX : registered X} `(f : restrictedF (X := X) vX) : f ≤p f.
 Proof. 
   eapply reducesParsimoniousMO_restriction_antimonotone. intros ? H. exists H. easy. 
 Qed.
@@ -338,7 +338,7 @@ Lemma red_inSharpP X Y `{rX : registered X} `{rY : registered Y} `(f : restricte
   f ≤p g -> inSharpP g -> inSharpP f. 
 Proof. 
   intros [r r__comp r__condition r__parsimonious] [R R__poly R__bounded R__correct].
-  unshelve eexists (fun '(exist _ x Hx) z => R (exist vY (r x) (r__condition x Hx)) z). 
+  unshelve eexists (fun '(exist x Hx) z => R (exist vY (r x) (r__condition x Hx)) z). 
   - destruct R__poly as (R__time & [R__comp] & R__time_poly & R__time_mono). 
     evar (t : nat -> nat). [t]: intros n. exists t. split. 
     + constructor. exists (fun '(x, z) => f__decInTime R__comp (r x, z)). 
@@ -364,7 +364,7 @@ Qed.
 
 (** #P hardness and completeness *)
 
-Definition SharpPhard X `{registered X} `(f : restrictedF vX) :=
+Definition SharpPhard X `{registered X} `(f : restrictedF (X := X) vX) :=
   forall Y `{registeredP Y} vY (g : restrictedF (X:=Y) vY),
     inSharpP g -> g ≤p f.
 
@@ -376,7 +376,7 @@ Proof.
   eapply reducesParsimoniousMO_transitive  with (1:=H'). all:eassumption.
 Qed.
 
-Definition SharpPcomplete X `{registered X} `(f : restrictedF vX) :=
+Definition SharpPcomplete X `{registered X} `(f : restrictedF (X := X) vX) :=
   SharpPhard f /\ inSharpP f.
 
-Hint Unfold SharpPcomplete.
+Hint Unfold SharpPcomplete : core.

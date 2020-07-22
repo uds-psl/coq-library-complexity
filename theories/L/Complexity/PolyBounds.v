@@ -59,21 +59,21 @@ Proof.
   rewrite map_app. rewrite sumn_app. lia. 
 Qed. 
 
-Lemma list_size_at_least {X : Type} `{registered X} (l : list X) : size(enc l) >= c__listsizeNil. 
+Lemma list_size_at_least {X : Type} {H: registered X} (l : list X) : size(enc l) >= c__listsizeNil. 
 Proof. rewrite size_list. lia. Qed.
 
-Lemma list_app_size_l {X : Type} `{registered X} (l l' : list X) :
+Lemma list_app_size_l {X : Type} {H : registered X} (l l' : list X) :
   size(enc (l ++ l')) >= size (enc l). 
 Proof. 
   enough (size(enc (l++l')) + c__listsizeNil >= size(enc l) + c__listsizeNil) by lia. 
-  rewrite list_app_size.  specialize list_size_at_least with (l:= l'). lia. 
+  rewrite list_app_size. specialize (list_size_at_least l'). lia. 
 Qed. 
 
 Lemma list_app_size_r {X : Type} `{registered X} (l l' : list X) :
   size(enc (l ++ l')) >= size (enc l'). 
 Proof. 
   enough (size(enc (l++l')) + c__listsizeNil >= size(enc l') + c__listsizeNil) by lia. 
-  rewrite list_app_size.  specialize list_size_at_least with (l:= l). lia. 
+  rewrite list_app_size.  specialize (list_size_at_least l). lia. 
 Qed. 
 
 Lemma list_subsequence_size_bound {X : Type} `{registered X} (l l': list X) :
@@ -82,9 +82,9 @@ Proof.
   intros (C & D & ->). 
   enough (size(enc l) <= size(enc (l++D))). 
   {
-    rewrite H0. specialize list_app_size_r with (l:= C) (l' := l++D). lia. 
+    rewrite H0. specialize (list_app_size_r C (l++D)). lia. 
   }
-  specialize list_app_size_l with (l:= l) (l':=D). lia. 
+  specialize (list_app_size_l l D). lia. 
 Qed. 
 
 Lemma list_size_cons {X : Type} `{registered X} (l : list X) (a : X) : size(enc (a::l)) = size(enc a) + size(enc l) + c__listsizeCons.

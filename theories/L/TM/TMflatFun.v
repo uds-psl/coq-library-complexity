@@ -231,7 +231,7 @@ Proof.
   -apply unflattenTM_correct in v.
    pose (sig' := (finType_CS (Fin.t (sig M)))).
    pose (states' := states (unflattenTM M)). cbn [unflattenTM states] in states'.
-   rewrite <- Card_Fint with (n:=sig M) at 1. fold sig'.
+   rewrite <- Fin_cardinality with (n:=sig M) at 1. fold sig'.
    destruct isValidFlatTapes eqn:H';cbn [andb]. 2:easy. apply isUnflattableTapes in H' as (t'&Ht).
    cbn [negb]. 
    assert (def : states') by (eapply (@Fin.of_nat_lt 0) ;nia).

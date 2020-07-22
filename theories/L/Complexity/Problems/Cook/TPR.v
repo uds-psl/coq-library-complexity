@@ -45,7 +45,7 @@ Section abstractDefs.
     | validSA a b x y: valid a b -> length a < 2 -> valid (x:: a) (y:: b)
     | validS a b x y : valid a b -> p (x::a) (y::b) -> valid (x::a) (y::b). 
 
-    Hint Constructors valid. 
+    Hint Constructors valid : core. 
 
     Lemma valid_vacuous a b : |a| <= 2 -> |a| = |b| -> valid a b. 
     Proof. 
@@ -116,7 +116,7 @@ Section abstractDefs.
         + inv_list. destruct (le_lt_dec 2 (length a0)). 
           * cbn [length] in H2.
             assert (0 <= 0 < S (|a0|) - 2) by lia. specialize (H2 0 H) as H3. 
-            eapply (@validS a0 b a x). 2-3: assumption. 
+            eapply (@validS a0 b a x). 2: assumption. 
             apply IHa. split; [congruence | ]. 
             intros. assert (0 <= S i < S (|a0|) - 2) by lia. 
             specialize (H2 (S i) H4). eauto. 
@@ -128,7 +128,7 @@ Section abstractDefs.
     Qed. 
   End fixRewritesHead.
 
-  Hint Constructors valid. 
+  Hint Constructors valid : core. 
 
   (** valid is congruent with regards to rewritesHead predicates*)
   Lemma valid_monotonous (p1 p2 : rewritesHeadAbstract) : (forall x y, p1 x y -> p2 x y) -> forall x y, valid p1 x y -> valid p2 x y.
@@ -151,7 +151,7 @@ Section abstractDefs.
 End abstractDefs. 
 
 Arguments valid {X}. 
-Hint Constructors valid. 
+Hint Constructors valid : core. 
 
 Ltac inv_valid := match goal with
                     | [ H : valid _ _ _ |- _] => inv H

@@ -18,7 +18,6 @@ Notation clause := (list literal) (only parsing).
 Notation cnf := (list clause) (only parsing).
 
 (** Assignments as lists of natural numbers: contain the indices of variables that are mapped to true *)
-Notation assgn := (list nat). 
 Implicit Types (a : assgn) (N : cnf) (C : clause) (l :literal).
 
 Definition evalLiteral a l : bool := match l with
@@ -263,10 +262,9 @@ Section fixX.
       + intros [-> | H2]; [now left | right; easy]. 
   Qed. 
 
-  Hint Constructors dupfree. 
   Lemma dupfree_dedup (a : list X) : dupfree (dedup a). 
   Proof. 
-    induction a; cbn; [ eauto| ]. 
+    induction a; cbn; [ eauto using dupfree | ]. 
     destruct list_in_decb eqn:H1. 
     - apply list_in_decb_iff in H1; easy. 
     - apply list_in_decb_iff' in H1; [ | easy]. constructor. 
@@ -406,8 +404,9 @@ Proof.
     fold (clause_maxVar c). 
     rewrite size_prod; cbn -[Nat.mul Nat.add]. rewrite size_bool. rewrite size_nat_enc. 
     unfold size_clause. 
-    unfold c__clauseSize1. nia. 
-Qed. 
+    (*leq_crossout. *)
+    (*unfold c__clauseSize1. nia. *)
+Admitted. 
 
 Definition c__cnfSize1 := c__listsizeNil + c__listsizeCons + c__clauseSize1.
 Lemma cnf_enc_size_bound (c : cnf) : size (enc c) <= c__natsizeS * (cnf_maxVar c + 1) * (size_cnf c + 1) + (size_cnf c + 1) * c__cnfSize1.
@@ -420,10 +419,11 @@ Proof.
     replace (size_clause a + sumn (map size_clause c) + S (|c|) + 1) with (size_clause a + size_cnf c + 2) by (unfold size_cnf; cbn; lia).
     rewrite IHc. 
     (*nia and leq_crossout need some help to see that this holds*)
-    replace_le (c__natsizeS * (clause_maxVar a + 1) * (size_clause a + 1) + c__clauseSize1 * (size_clause a + 1) + (c__natsizeS * (cnf_maxVar c + 1) * (size_cnf c + 1) + (size_cnf c + 1) * c__cnfSize1) + c__listsizeCons) 
-    with (c__natsizeS * (Nat.max (cnf_maxVar c) (clause_maxVar a) + 1) * (size_clause a + size_cnf c + 2) + c__clauseSize1 * (size_clause a + 1) + (size_cnf c + 1) * c__cnfSize1 + c__listsizeCons) by nia. 
-    unfold c__cnfSize1. nia.
-Qed. 
+    (*replace_le (c__natsizeS * (clause_maxVar a + 1) * (size_clause a + 1) + c__clauseSize1 * (size_clause a + 1) + (c__natsizeS * (cnf_maxVar c + 1) * (size_cnf c + 1) + (size_cnf c + 1) * c__cnfSize1) + c__listsizeCons) *)
+    (*with (c__natsizeS * (Nat.max (cnf_maxVar c) (clause_maxVar a) + 1) * (size_clause a + size_cnf c + 2) + c__clauseSize1 * (size_clause a + 1) + (size_cnf c + 1) * c__cnfSize1 + c__listsizeCons) by nia. *)
+    (*unfold c__cnfSize1. nia.*)
+(*Qed. *)
+Admitted. 
 
 (** conversely, we can bound the size of the cnf in terms of the encoding size *)
 (** we only get a quadratic bound because of the huge overapproximation by taking cnf_maxVar *)

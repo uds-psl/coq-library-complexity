@@ -226,7 +226,7 @@ Lemma skipn_app3 (X : Type) i (a b : list X) : i <= |a| -> exists a', skipn i (a
 Proof. 
   intros. exists (skipn i a). split.
   + destruct (nat_eq_dec i (|a|)). 
-    - rewrite skipn_app. 2: apply e. rewrite Template.utils.skipn_all2. 2: lia. now cbn. 
+    - rewrite skipn_app. 2: apply e. rewrite skipn_all2. 2: lia. now cbn. 
     - apply skipn_app2.
       * enough (|skipn i a| <> 0) by (destruct skipn; cbn in *; congruence). rewrite skipn_length. lia. 
       * reflexivity. 
@@ -282,12 +282,12 @@ Qed.
 Inductive relpowerRev (X : Type) (R : X -> X -> Prop) : nat -> X -> X -> Prop :=
 | relpowerRevB x : relpowerRev R 0 x x
 | relpowerRevS x y y' n: relpowerRev R n x y -> R y y' -> relpowerRev R (S n) x y'. 
-Hint Constructors relpowerRev. 
+Hint Constructors relpowerRev : core. 
 
 Inductive relpower (A : Type) (R : A -> A -> Prop) : nat -> A -> A -> Prop :=
 | relpowerB (a : A) : relpower R 0 a a
 | relpowerS (a b c : A) n : R a b -> relpower R n b c -> relpower R (S n) a c. 
-Hint Constructors relpower.
+Hint Constructors relpower : core. 
 
 Lemma relpower_trans A R n m (x y z : A) : relpower R n x y -> relpower R m y z -> relpower R (n + m) x z.
 Proof. 
@@ -444,6 +444,16 @@ Proof.
   - destruct n; cbn in H.
     * congruence. 
     * now apply IHl. 
+Qed.
+
+Lemma nth_error_map (A B : Type) (f : A -> B) (n : nat) (l : list A) : nth_error (map f l) n = option_map f (nth_error l n). 
+Proof. 
+  induction n as [ | n] in l |-* ; destruct l as [ | x l]; cbn; congruence. 
+Qed.
+
+Lemma nth_error_Some_length (A : Type) (l : list A) (n : nat) (v : A) : nth_error l n = Some v -> n < |l|.
+Proof.
+  induction l as [ | x l IH] in n |-*; destruct n as [ | n]; cbn; try congruence. lia. intros H%IH; lia.
 Qed.
 
 Lemma In_explicit (X : Type) (x : X) (l : list X) :

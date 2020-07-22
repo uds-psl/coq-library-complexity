@@ -11,7 +11,7 @@ Definition isValidInput (sig : finType) s k' (inp : list sig) := exists c, isVal
 
 (** single-tape machine whose head will always start at the leftmost position (i.e. initial tapes are niltape or leftof) *)
 Definition SingleTMGenNP (i : { sig : finType & (mTM sig 1 * list sig * nat * nat)%type } ) : Prop := 
-  match i with existT _ sig (tm, s, k', t) => exists cert, |cert| <= k'
+  match i with existT sig (tm, s, k', t) => exists cert, |cert| <= k'
                                                       /\ exists f, loopM (initc tm ([|initTape_singleTapeTM (s ++ cert)|])) t = Some f
   end.
 

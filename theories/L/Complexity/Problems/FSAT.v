@@ -1,7 +1,7 @@
 From Undecidability.L Require Import L.
 From Undecidability.L.Datatypes Require Import LLists LLNat. 
 From Undecidability.L.Complexity.Problems Require Export SharedSAT.
-Require Import Lia. 
+Require Import Lia Nat. 
 
 (** * Formula Satisfiability: the satisfiability problem on arbitrary Boolean formulas *)
 
@@ -61,7 +61,7 @@ Inductive varInFormula (v : var) : formula -> Prop :=
   | varInFormulaOrL f1 f2 : varInFormula v f1 -> varInFormula v (f1 ∨ f2)
   | varInFormulaOrR f1 f2 : varInFormula v f2 -> varInFormula v (f1 ∨ f2)
   | varInFormulaNot f : varInFormula v f -> varInFormula v (¬ f).
-Hint Constructors varInFormula.
+Hint Constructors varInFormula : core.
 
 Definition formula_varsIn (p : nat -> Prop) f := forall v, varInFormula v f -> p v. 
 
@@ -109,7 +109,7 @@ Fixpoint formula_size (f : formula) := match f with
 end. 
 
 (** ** extraction *)
-From Undecidability.L.Datatypes Require Import LLNat.
+From Undecidability.L.Datatypes Require Import LNat LLNat.
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import  LProd LOptions LBool LLists LUnit.
 From Undecidability.L.Complexity Require Import PolyBounds. 

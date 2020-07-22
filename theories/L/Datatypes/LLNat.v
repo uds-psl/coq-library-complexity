@@ -1,8 +1,11 @@
-From Undecidability.L.Tactics Require Export LTactics GenEncode.
+From Undecidability.L Require Export L.
+From Undecidability.L Require Export LTactics GenEncode.
 Require Import PslBase.Numbers.
 
-Require Import Nat Undecidability.L.Datatypes.LBool Undecidability.L.Functions.EqBool Undecidability.L.Datatypes.LProd.
+Require Import Nat.
+From Undecidability.L Require Import Datatypes.LBool Functions.EqBool Datatypes.LProd.
 Require Undecidability.L.Datatypes.LNat. 
+Import GenEncode Nat. 
 
 (** ** Encoding of natural numbers *)
 

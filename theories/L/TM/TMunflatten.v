@@ -77,7 +77,7 @@ Lemma index_nth_elem_fint i n d:
 Proof.
   intros. 
   eapply index_nth_elem.
-  refine (_:_ < Cardinality _);setoid_rewrite Card_Fint at 1. easy.
+  refine (_:_ < Cardinality _);setoid_rewrite Fin_cardinality at 1. easy.
 Qed.
 
 Definition defFin (X:finType):
@@ -214,11 +214,11 @@ Proof.
    unfold unflatten_trans.
    specialize (flatTrans_bound H H') as (?&<-&?&?&?&?).
    rewrite !index_nth_elem_fint. 2,3:easy.
-   rewrite unflatten_in_correct. 2,3:now try rewrite Card_Fint;easy.
+   rewrite unflatten_in_correct. 2,3:now try rewrite Fin_cardinality;easy.
    erewrite lookup_sound. 2:eapply flatTrans_inj;eassumption. 2:easy.
    cbn -[finType_CS].
-   setoid_rewrite unflatten_in_correct. 2,3:now try rewrite Card_Fint;easy.
-   setoid_rewrite unflatten_acts_correct. 2,3:now try rewrite Card_Fint;easy.
+   setoid_rewrite unflatten_in_correct. 2,3:now try rewrite Fin_cardinality;easy.
+   setoid_rewrite unflatten_acts_correct. 2,3:now try rewrite Fin_cardinality;easy.
    repeat split.
   -intros s0 v0.
    unfold unflatten_trans.
@@ -226,11 +226,11 @@ Proof.
    +erewrite lookup_sound. 3:eassumption. 2:eapply flatTrans_inj;eassumption.
     edestruct lookup as (st0,l__r). left.
     specialize (flatTrans_bound H H') as (?&?&?&?&?&?).
-    rewrite !index_nth_elem_fint. 2,3:easy. cbn -[finType_CS] in *.
+    rewrite !index_nth_elem_fint. 2:easy. cbn -[finType_CS] in *.
     replace ((index s0, map (option_map index) (Vector.to_list v0),
               (st0, map (map_fst (option_map index)) (Vector.to_list (unflatten_acts (finType_CS (Fin.t sig)) n l__r)))))
       with (index s0, map (option_map (fun x : Fin.t sig => index x)) (Vector.to_list v0), (st0, l__r)).
-    2:{ repeat f_equal. symmetry. rewrite unflatten_acts_correct. 1,2:easy. rewrite Card_Fint. easy. }
+    2:{ repeat f_equal. symmetry. rewrite unflatten_acts_correct. 1,2:easy. rewrite Fin_cardinality. easy. }
     eassumption.
    +erewrite lookup_sound'. 2:eapply flatTrans_inj;eassumption.
     2:{right. easy. }
@@ -280,9 +280,9 @@ Proof.
   assert (H_st:(Init.Nat.max 1 states) = states) by now destruct states.
   econstructor; cbn - [finType_CS max].
   -easy.
-  -now rewrite Card_Fint.
+  -now rewrite Fin_cardinality.
   -rewrite H_st.
-   setoid_rewrite <- Card_Fint at 1. easy.
+   setoid_rewrite <- Fin_cardinality at 1. easy.
   -eapply unflatten_trans_correct. 
    rewrite H_st. easy.
   -generalize (def states).
@@ -290,7 +290,7 @@ Proof.
    unfold index. setoid_rewrite getPosition_nth. easy.
    +apply dupfree_elements.
    +refine (_:_ < Cardinality _).
-    setoid_rewrite Card_Fint at 1. easy.
+    setoid_rewrite Fin_cardinality at 1. easy.
   -cbn -[max]. rewrite H_st.
    econstructor. reflexivity.
 Qed.

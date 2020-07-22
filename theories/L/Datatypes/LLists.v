@@ -3,6 +3,9 @@ From Undecidability.L.Datatypes Require Import LBool LOptions LProd LLNat.
 Require Export List PslBase.Lists.Filter Datatypes.
 Require Undecidability.L.Datatypes.Lists. 
 From Undecidability.L Require Import Functions.EqBool.
+From Undecidability.L Require Import UpToC.
+
+
 
 
 (** ** Encoding of lists *)
@@ -22,10 +25,10 @@ Section Fix_X.
     solverec.
   Qed.
 
-   Lemma list_enc_correct (A:list X) (s t:term): proc s -> proc t -> enc A s t >(2) match A with nil => s | cons a A' => t (enc a) (enc (A')) end. 
-   Proof. 
-     extract match.  
-   Qed. 
+   (*Lemma list_enc_correct (A:list X) (s t:term): proc s -> proc t -> enc A s t >(2) match A with nil => s | cons a A' => t (enc a) (enc (A')) end. *)
+   (*Proof. *)
+     (*extract match.  *)
+   (*Qed. *)
   
 
    Definition c__app := 16.

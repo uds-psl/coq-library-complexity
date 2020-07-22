@@ -79,10 +79,10 @@ Section fixPTPRInstance.
   Inductive liftOrig : windowPred combSigma := 
     | liftOrigC (a b c d e f : Sigma) : p a b c d e f -> liftOrig (inl a) (inl b) (inl c) (inl d) (inl e) (inl f).  
 
-  Hint Constructors liftPrelude liftOrig.
+  Hint Constructors liftPrelude liftOrig : core. 
 
   Definition combP a b c d e f := liftPrelude a b c d e f \/ liftOrig a b c d e f.
-  Hint Unfold combP. 
+  Hint Unfold combP : core. 
 
   Definition validPreludeInitial s := length s = l /\ initialPred s. 
 
@@ -103,7 +103,7 @@ Section fixPTPRInstance.
     unfold windowPred_subs. intros. inv H. eauto. 
   Qed. 
 
-  Hint Constructors valid. 
+  Hint Constructors valid : core. 
 
   Ltac inv_eqn_map := repeat match goal with 
     | [H : _ :: ?a = map _ ?s |- _] => is_var s; destruct s; cbn in H; [congruence | inv H]
@@ -354,8 +354,8 @@ Section fixPrelude.
   Variable (initialString : list Sigma').
   Variable (t' : nat). 
 
-  Hint Constructors liftPrelude liftOrig.
-  Hint Unfold combP. 
+  Hint Constructors liftPrelude liftOrig : core. 
+  Hint Unfold combP : core. 
 
   Notation liftPrelude := (liftPrelude p').
   Notation combP := (combP p p').

@@ -155,10 +155,11 @@ Proof.
   unfold isFlatListOf. intros. easy.
 Qed. 
 
+
 Lemma isFlatListOf_Some1 (T : finType) (T' : nat) (a : list nat) (b : list T) (n : nat) (x : nat):
   finRepr T T' -> isFlatListOf a b -> nth_error a n = Some x -> exists x', nth_error b n = Some x' /\ finReprEl T' x x'.
 Proof. 
-  intros. rewrite H0 in H1. rewrite utils.nth_error_map in H1. 
+  intros. rewrite H0 in H1. SearchAbout nth_error. rewrite nth_error_map in H1. 
   destruct (nth_error b n); cbn in H1; [ | congruence ]. 
   inv H1. exists e.
   split; [reflexivity | repeat split]. apply H. 
@@ -254,7 +255,7 @@ Proof.
   unfold index. specialize (nth_error_nth H2) as <-.
   apply getPosition_nth. 
   + apply Cardinality.dupfree_elements. 
-  + eapply utils.nth_error_Some_length, H2. 
+  + eapply nth_error_Some_length, H2. 
 Qed.
 
 Lemma finReprElP_exists (X : finType) n : ofFlatType (Cardinality X) n -> { e:X | finReprEl' n e}.
@@ -263,7 +264,7 @@ Proof.
   exists e. unfold finReprEl'. clear H.
   specialize (nth_error_nth H1) as <-. apply getPosition_nth. 
   + apply Cardinality.dupfree_elements. 
-  + eapply utils.nth_error_Some_length, H1.
+  + eapply nth_error_Some_length, H1.
 Defined. 
 
 Lemma finRepr_exists_list (X : finType) (x : nat) (l : list nat) : 
@@ -300,7 +301,7 @@ Lemma unflattenString (f : list nat) k : list_ofFlatType k f -> {f' : list (finT
 Proof. 
   intros H. 
   eapply finRepr_exists_list with (X := finType_CS (Fin.t k)) in H as (a' & H). 
-  2: { unfold finRepr. specialize (Card_Fint k). unfold Cardinality. easy. }
+  2: { unfold finRepr. specialize (Fin_cardinality k). unfold Cardinality. easy. }
   eauto.
 Qed. 
 
@@ -309,6 +310,7 @@ From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import LProd LOptions LBool LLNat LLists LSum.
 From Undecidability.L.Complexity Require Import PolyBounds. 
 From Undecidability.L.Functions Require Import EqBool.
+Require Import Nat. 
 
 Instance term_id (X : Type) `{registered X}: computableTime' (@id X) (fun a _ => (1, tt)). 
 Proof. 
