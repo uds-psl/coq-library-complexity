@@ -10,7 +10,7 @@ From Undecidability.L Require Import Tactics.GenEncode.
 (** *** Encoding Heaps *)
 Import AbstractHeapMachineDef.
 
-Run TemplateProgram (tmGenEncode "heapEntry_enc" heapEntry).
+MetaCoq Run (tmGenEncode "heapEntry_enc" heapEntry).
 Hint Resolve heapEntry_enc_correct : Lrewrite.
 
 Instance term_heapEntryC : computableTime' heapEntryC (fun _ _ => (1,fun _ _ => (1,tt))).

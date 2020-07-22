@@ -49,6 +49,7 @@ Proof.
   induction 1 in fuel,stack,res|-*.
   -eexists 1. cbn [loopSum unfoldTailRecStep plus depth]. 
    destruct (Nat.leb_spec0 k n). now omega.
+   cbn.
    intuition.
   -edestruct IHunfolds as (n'&eq1&?).
    exists (S (n' + 1)). cbn.

@@ -1,6 +1,6 @@
 From Undecidability.L Require Import L.
 From Undecidability.L.Datatypes Require Import LTerm Lists.
-From Undecidability.L.Complexity Require Import NP Monotonic CanEnumTerm_def.
+From Undecidability.L.Complexity Require Import NP Monotonic CanEnumTerm_def PolyTimeComputable.
 From Undecidability.L.AbstractMachines Require Import FlatPro.Programs FlatPro.Computable.LPro Computable.Compile Computable.Decompile.
 
 From Undecidability Require Export CanEnumTerm_def.
@@ -107,16 +107,6 @@ Module boollist_enum.
     specialize (boollist_term_inv' P [] []) as H. autorewrite with list in H. easy.
   Qed.
 
-  (*MOVE*)
-  Lemma sumn_concat l: sumn (concat l) = sumn (map sumn l).
-  Proof.
-    induction l;cbn. easy. now rewrite sumn_app.
-  Qed.
-  Lemma sumn_repeat c n: sumn (repeat c n) = c * n.
-  Proof.
-    induction n;cbn. all:easy.
-  Qed.
-
   Lemma pro_to_boollist_size : (fun P => L.size (enc (pro_to_boollist P))) <=c fun P => L.size (enc P).
   Proof.
     evar (c:nat). exists c. intros P. rewrite !size_list. induction P as [ | [] P].
@@ -130,47 +120,14 @@ Module boollist_enum.
   Qed.
 
   Import FunInd.
-
-  (* MOVE*)
   
-  Lemma size_bool_enc (b:bool): size (enc b) = if b then 4 else 3.
-  Proof.
-    now destruct b;cbv.
-  Qed.
   
   Lemma boollist_term_size bs A:  L.size (enc (boollist_term bs A)) <= L.size (enc bs) + L.size (enc A).
   Proof.
     rewrite !size_list. functional induction (boollist_term bs A).
     all:cbn.
-    all:autorewrite with list;cbn. all:try rewrite IHl. all:cbn; rewrite ?size_Tok_enc,?size_bool_enc.
+    all:autorewrite with list;cbn. all:try rewrite IHl. all:cbn; rewrite ?size_Tok_enc,?LBool.size_bool_enc.
     all:ring_simplify. all:nia.
-  Qed.
-
-  (* MOVE*)
-  Lemma resSizePoly_composition X Y Z `{registered X} `{registered Y} `{registered Z} (f:X-> Y) (g : Y -> Z):
-      resSizePoly f -> resSizePoly g -> resSizePoly (fun x => g (f x)).
-  Proof.
-    intros Hf Hg.
-    evar (fsize : nat -> nat). [fsize]:intros n0.
-    exists fsize. 
-    {intros x. rewrite (bounds__rSP Hg). setoid_rewrite mono__rSP. 2:now apply (bounds__rSP Hf).
-     set (n0:=size _). unfold fsize. reflexivity.
-    }
-    1,2:now unfold fsize;smpl_inO;eapply inOPoly_comp;smpl_inO.
-  Qed.
-
-  (* MOVE*)
-  Lemma polyTimeComputable_composition X Y Z `{registered X} `{registered Y} `{registered Z} (f:X-> Y) (g : Y -> Z):
-    polyTimeComputable f -> polyTimeComputable g -> polyTimeComputable (fun x => g (f x)).
-  Proof.
-    intros Hf Hg. 
-    evar (time : nat -> nat). [time]:intros n0.
-    exists time.
-    {extract. solverec. 
-     setoid_rewrite mono__polyTC at 2. 2:now apply (bounds__rSP Hf). set (size (enc x)). unfold time. reflexivity. 
-    }
-    1,2:now unfold time;smpl_inO;eapply inOPoly_comp;smpl_inO.
-    eapply resSizePoly_composition. all:eauto using resSize__polyTC.
   Qed.
 
   Lemma boollists_enum_term : canEnumTerms (list bool).

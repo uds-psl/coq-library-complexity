@@ -9,7 +9,7 @@ Require Import PslBase.Vectors.Vectors.
 From Undecidability Require Import TMEncoding.
 
 Import GenEncode.  
-Run TemplateProgram (tmGenEncode "boundary_enc" boundary).
+MetaCoq Run (tmGenEncode "boundary_enc" boundary).
 Hint Resolve boundary_enc_correct : Lrewrite.
 
 Lemma size_boundary (l:boundary):
@@ -21,7 +21,7 @@ Qed.
 
 Section sigList.
   Context (sig : Type) `{H:registered sig}.
-  Run TemplateProgram (tmGenEncode "sigList_enc" (sigList sig)).
+  MetaCoq Run (tmGenEncode "sigList_enc" (sigList sig)).
 
   Global Instance term_sigList_X : computableTime' (@sigList_X sig) (fun _ _ => (1,tt)).
   Proof. extract constructor. solverec.
@@ -47,7 +47,7 @@ Hint Resolve sigList_enc_correct : Lrewrite.
 
 Section sigTape.
   Context (sig : Type) `{H:registered sig}.
-  Run TemplateProgram (tmGenEncode "sigTape_enc" (sigTape sig)).
+  MetaCoq Run (tmGenEncode "sigTape_enc" (sigTape sig)).
 
   Global Instance term_LeftBlank_X : computableTime' (@LeftBlank sig) (fun _ _ => (1,tt)).
   Proof. extract constructor. solverec. Qed.

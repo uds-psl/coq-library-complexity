@@ -25,7 +25,7 @@ Section fixX.
       (exists s, P = compile s /\ proc s)
       /\ (forall (c:X) k sigma, evaluatesIn step k (initLMGen P (compile (enc c))) sigma
                           -> exists (c':X)  sigma', size (enc c') <= maxSize
-                                            /\ star step (initLMGen P (compile (enc c'))) sigma')
+                                            /\ evaluates step (initLMGen P (compile (enc c'))) sigma')
       /\ forall (c : X), size (enc c) <= maxSize -> forall k sigma, evaluatesIn step k (initLMGen P (compile (enc c))) sigma -> k <= steps.
 
 End fixX.

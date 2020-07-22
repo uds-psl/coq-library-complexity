@@ -5,13 +5,6 @@
 COQDOCFLAGS = "--charset utf-8 -s --with-header ../website/resources/header.html --with-footer ../website/resources/footer.html --index indexpage"
 
 
-L/Complexity/Synthetic.v
-L/Complexity/Monotonic.v
-L/Complexity/ONotation.v
-L/Complexity/RegisteredP.v
-L/Complexity/LinTimeDecodable.v
-L/Complexity/NP.v
-
 L/Complexity/overview.v
 
 
@@ -60,31 +53,6 @@ L/Complexity/Reductions/Cook/FlatPR_to_BinaryPR.v
 L/Complexity/Problems/FSAT.v
 L/Complexity/Reductions/Cook/BinaryPR_to_FSAT.v
 L/Complexity/Reductions/FSAT_to_SAT.v
-
-
-L/Complexity/Problems/GenNP/CanEnumTerm_def.v
-L/Complexity/Problems/GenNP/CanEnumTerm.v
-L/Complexity/Problems/GenNP/GenNPBool.v
-L/Complexity/Problems/GenNP/GenNP.v
-#L/Complexity/Problems/GenNP/GenNP_is_hard.v
-L/Complexity/Problems/GenNP/TMGenNP_fixed_mTM.v
-L/Complexity/Problems/GenNP/TMGenNP.v
-#L/Complexity/Reductions/TMGenNP/L_to_LM.v
-#L/Complexity/Reductions/TMGenNP/LM_to_mTM.v
-#L/Complexity/Reductions/TMGenNP/mTM_to_singleTapeTM.v
-L/Complexity/Reductions/TMGenNP/M_multi2mono.v
-#L/Complexity/Reductions/TMGenNP/M_Boollist_to_Enc.v
-#L/Complexity/Reductions/TMGenNP/M_LM2TM.v
-#L/Complexity/Reductions/TMGenNP/IntermediateProblems.v
-#L/Complexity/Reductions/TMGenNP/LMGenNP.v
-L/Complexity/UpToC.v
-L/Complexity/UpToCNary.v
-L/Complexity/GenericNary.v
-L/Complexity/ResourceMeasures.v
-L/Complexity/SpaceBoundsTime.v
-L/Complexity/ONotationIsAppropriate.v
-L/Complexity/AbstractTimeHierarchyTheorem.v
-L/Complexity/TimeHierarchyTheorem.v
 
 Shared/Prelim.v
 
@@ -482,6 +450,38 @@ L/Reductions/TM_to_L.v
 # L/Reductions/PCP_CFG_computable.v
 L/Reductions/H10_to_L.v
 L/Reductions/MuRec.v
+
+L/Complexity/UpToC.v
+L/Complexity/UpToCNary.v
+L/Complexity/GenericNary.v
+L/Complexity/ResourceMeasures.v
+L/Complexity/SpaceBoundsTime.v
+L/Complexity/Synthetic.v
+L/Complexity/PolyTimeComputable.v
+L/Complexity/AbstractTimeHierarchyTheorem.v
+L/Complexity/TimeHierarchyTheorem.v
+L/Complexity/Monotonic.v
+L/Complexity/ONotation.v
+L/Complexity/ONotationIsAppropriate.v
+L/Complexity/RegisteredP.v
+L/Complexity/LinTimeDecodable.v
+L/Complexity/NP.v
+L/Complexity/Problems/GenNP/CanEnumTerm_def.v
+L/Complexity/Problems/GenNP/CanEnumTerm.v
+L/Complexity/Problems/GenNP/GenNPBool.v
+L/Complexity/Problems/GenNP/GenNP.v
+L/Complexity/Problems/GenNP/GenNP_is_hard.v
+L/Complexity/Problems/GenNP/TMGenNP_fixed_mTM.v
+L/Complexity/Problems/GenNP/TMGenNP.v
+L/Complexity/Reductions/TMGenNP/L_to_LM.v
+L/Complexity/Reductions/TMGenNP/LM_to_mTM.v
+L/Complexity/Reductions/TMGenNP/mTM_to_singleTapeTM.v
+L/Complexity/Reductions/TMGenNP/M_multi2mono.v
+L/Complexity/Reductions/TMGenNP/M_Boollist_to_Enc.v
+L/Complexity/Reductions/TMGenNP/M_LM2TM.v
+L/Complexity/Reductions/TMGenNP/IntermediateProblems.v
+L/Complexity/Reductions/TMGenNP/LMGenNP.v
+
 
 L/AbstractMachines/AbstractSubstMachine.v
 L/AbstractMachines/AbstractHeapMachine.v

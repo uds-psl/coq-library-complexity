@@ -66,7 +66,6 @@ Section fix_sig.
       extract. unfold sizeOfTape. solverec.
     Qed.
 
-    (*MOVE*)
     Lemma Vector_fold_right_to_list (A B : Type) (f : A -> B -> B) (n : nat) (v : Vector.t A n) (a : B):
       Vector.fold_right f v a = fold_right f a (Vector.to_list v).
     Proof. unfold Vector.to_list.

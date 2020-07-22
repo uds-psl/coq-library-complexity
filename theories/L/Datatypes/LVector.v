@@ -35,8 +35,7 @@ Instance term_vector_map X Y `{registered X} `{registered Y} n (f:X->Y) fT:
 Proof.
   intros ?.
   computable_casted_result.
-  set (WA:=@List.map X Y) (* Workaround for https://github.com/MetaCoq/metacoq/issues/385 *).
-  apply computableTimeExt with (x:= fun x => WA f (Vector.to_list x)).
+  apply computableTimeExt with (x:= fun x => List.map f (Vector.to_list x)).
   2:{
     extract.
     solverec.

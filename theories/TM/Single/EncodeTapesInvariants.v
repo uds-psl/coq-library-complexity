@@ -4,16 +4,12 @@ Import Lia.
 
 From Undecidability Require Shared.Prelim. 
 
-(* MOVE START *)
 Hint Rewrite filter_app : list.
 Lemma filter_rev (A : Type) (f : A -> bool) (l : list A): filter f (rev l) = rev (filter f l).
 Proof.
   induction l;cbn in *. easy. autorewrite with list. cbn;destruct f. all:cbn;now autorewrite with list;congruence.
 Qed.
 Hint Rewrite filter_rev : list. 
-(* MOVE END*)
-
-
 
 
 Lemma encode_tape_invariants sig t0 :

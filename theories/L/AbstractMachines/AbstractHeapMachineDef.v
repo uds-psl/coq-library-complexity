@@ -77,7 +77,7 @@ Section Lin.
       unfolds H a 1 s s' ->
       reprC H (s,a) (lam s').
 
-  Definition init s :state := ([closT (s,0)],[],[]).
+  Definition init s :state := ([closT (s,0 (*dont care*))],[],[]).
 
 End Lin.
 

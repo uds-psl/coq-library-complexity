@@ -122,3 +122,14 @@ Proof.
   ring_simplify. 
   unfold time_compile, c1,c2. (*ring_simplify*) nia.
 Qed.
+
+
+Lemma sizeT_compile_list_bool:
+  (fun bs : list bool => sumn (map sizeT (compile (Computable.enc (rev bs))))) <=c (fun bs => length bs + 1).
+Proof.
+  evar (c:nat). exists c. intros xs. transitivity (sizeP (compile (Computable.enc   (rev xs)))).
+  now unfold sizeP. unfold sizeP;rewrite sizeP_size,Lists.size_list.
+  rewrite map_rev,<-sumn_rev. rewrite MoreBase.sumn_le_bound.
+  2:{ intros ? ([]&<-&?)%in_map_iff. all:cbv. reflexivity. nia. }
+  rewrite map_length. ring_simplify. [c]:exact 18. nia.
+Qed.

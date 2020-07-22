@@ -78,13 +78,11 @@ Module CheckEncodesTapes.
     Definition Ter n : tRel tau 1:=
       fun t k => n * ((| right t[@Fin0] |) * 4 + 9 + 7) + 1 <= k.
     
-    (*MOVE*)
     Lemma iter_transitive X Y R (g:X -> Y) f s n: PreOrder R ->  (forall x, R (g (f x)) (g x)) -> R (g (nat_rect _ s (fun _ => f) n)) (g s).
     Proof.
       intros Ht HR. induction n;cbn. easy. now etransitivity.
     Qed.
 
-    (*MOVE*)
     Lemma length_right_tape_move_right sig' (t : tape sig'): | right (tape_move_right t) | <= | right t |.
     Proof.
       destruct t eqn:Ht;cbn. 1-3:nia. now destruct l0;cbn;nia.

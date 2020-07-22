@@ -12,7 +12,7 @@ Import Nat.
 Import UnfoldTailRec.task.
 
 Import GenEncode.
-Run TemplateProgram (tmGenEncode "task_enc" task).
+MetaCoq Run (tmGenEncode "task_enc" task).
 Hint Resolve task_enc_correct : Lrewrite.
 
 Instance termT_S : computableTime' closT (fun _ _ => (1,fun _ _ => (1,tt))).
