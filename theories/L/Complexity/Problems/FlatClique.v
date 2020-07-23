@@ -193,9 +193,8 @@ Proof.
  c__allPairsOfEdgesDecbStep + c__forallb) with (poly__listInDecb (X := nat * nat) (size (enc E) + size (enc (a::l))) + c__allPairsOfEdgesDecbBound1) by (unfold c__allPairsOfEdgesDecbBound1; lia). 
     unfold c__allPairsOfEdgesDecbBound2. 
     unfold c__listsizeCons. 
-    (*simp_comp_arith. cbn. solverec.*)
-    (*leq_crossout can solve it. *)
-Admitted.
+    lia. 
+Qed.
 Lemma allPairsOfEdges_decb_poly : monotonic poly__allPairsOfEdgesDecb /\ inOPoly poly__allPairsOfEdgesDecb. 
 Proof. 
   unfold poly__allPairsOfEdgesDecb; split; smpl_inO; apply list_in_decb_poly. 
