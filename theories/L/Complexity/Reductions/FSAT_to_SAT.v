@@ -16,7 +16,7 @@ Inductive orFree : formula -> Prop :=
   | orFreeAnd f1 f2 : orFree f1 -> orFree f2 -> orFree (f1 ∧ f2)
   | orFreeNot f : orFree f -> orFree (¬ f). 
 
-Hint Constructors orFree.
+Hint Constructors orFree : core. 
 
 Fixpoint eliminateOR f := match f with
   | Ftrue => Ftrue
@@ -318,7 +318,7 @@ Proof.
         -- eapply assgn_varsIn_monotonic, K1. cbn; intros; lia.
         -- eapply assgn_varsIn_monotonic, G1. cbn; intros; lia.
       * unfold join, satisfies. rewrite !evalCnf_app_iff. repeat split.
-        -- replace (([nfVar2] ++ a2' ++ a1') ++ a) with (join (join [nfVar2] a2') (join a1' a)) by (unfold join; firstorder). 
+        -- replace (([nfVar2] ++ a2' ++ a1') ++ a) with (join (join [nfVar2] a2') (join a1' a)) by (unfold join; now rewrite <- !app_assoc).
            erewrite <- join_extension_cnf_sat with (p2 := fun n => n = nfVar2 \/ (n >= nfVar1 /\ n < nfVar2)). 
            ++ apply G2. 
            ++ apply IH1.
@@ -456,7 +456,8 @@ Proof.
       * apply tseytinTrue_sat. cbn. now rewrite Nat.eqb_refl. 
     + intros a H%tseytinTrue_sat. rewrite H. unfold FSAT.satisfies; easy.
   - cbn in H1. symmetry in H1. inv H1. split. 
-    1: { eapply cnf_varsIn_monotonic, tseytinEquiv_cnf_varsIn. cbn; intros n0. specialize (H n ltac:(eauto)). lia. }
+    1: { eapply cnf_varsIn_monotonic, tseytinEquiv_cnf_varsIn. cbn; intros n0. 
+      specialize (H n ltac:(eauto)); cbn in H. lia. }
     split; [ lia | split; [lia | split ]].
     + intros a H1. unfold FSAT.satisfies. 
       exists (if evalVar a n then [nf] else []). split.
@@ -468,7 +469,7 @@ Proof.
            enough (not (nf el a)) by tauto. intros Hel. specialize (H1 nf Hel). cbn in H1; lia.
     + intros a H'. apply tseytinEquiv_sat in H'. rewrite <- H'.
       unfold FSAT.satisfies. cbn. unfold evalVar. rewrite !list_in_decb_iff.
-      2, 3: symmetry; apply Nat.eqb_eq. easy. 
+      2: symmetry; apply Nat.eqb_eq. easy. 
   - inv Hor. 
     assert (formula_varsIn (fun n => n < b) f1)as H6 by (intros v' H'; now apply H). 
     assert (formula_varsIn (fun n => n < b) f2) as H7 by (intros v' H'; now apply H). 
@@ -540,7 +541,7 @@ Proof.
 Qed.  
 
 (** The produced CNF is even a 3-CNF, so we directly get a reduction to 3-SAT, too. *)
-Hint Constructors kCNF. 
+Hint Constructors kCNF : core.
 Fact tseytinTrue_3CNF v : kCNF 3 (tseytinTrue v).
 Proof. 
   unfold tseytinTrue. eauto. 

@@ -1,4 +1,5 @@
 From PslBase Require Import Base. 
+Require Import Lia. 
 Require Import ssrbool. 
 
 Ltac simp_bool := repeat match goal with
@@ -51,3 +52,5 @@ Ltac dec_bool := repeat match goal with
                    | [  |- Nat.leb ?n ?n0 = true ] => apply leb_correct
                    | [  |- Nat.leb ?n ?n0 = false] => apply leb_correct_conv
                     end; try congruence; try tauto.
+
+Ltac simp_comp_arith := cbn -[Nat.add Nat.mul]; repeat change (fun x => ?h x) with h.

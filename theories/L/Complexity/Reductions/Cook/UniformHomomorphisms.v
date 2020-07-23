@@ -119,14 +119,14 @@ End fixX.
 Lemma h_length_multiply (X : finType) (Y : Type) (h : list X -> list Y) : uniform_homomorphism h -> { k : nat & forall x, |h x| = k * |x| }. 
 Proof. 
   intros (H1 & H2 & H3). 
-  destruct (elem X) eqn:H4. 
+  destruct (elem X) eqn:H4 . 
   - exists 42. intros []. 
     + rewrite homo_nil by auto. easy.
     + specialize (elem_spec e) as H5. rewrite H4 in H5. destruct H5. 
   - exists (|h [e]|).  
-    induction x. 
+    induction x as [ | a x IH]. 
     + rewrite homo_nil by auto; easy.
-    + rewrite homo_cons by auto. rewrite app_length, IHx. enough (|h[a]| = |h[e]|) by firstorder. 
+    + rewrite homo_cons by auto. rewrite app_length, IH. cbn. enough (|h[a]| = |h[e]|) as -> by lia.
       apply H2. 
 Defined. 
       

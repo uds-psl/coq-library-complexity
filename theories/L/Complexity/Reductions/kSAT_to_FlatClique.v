@@ -11,7 +11,6 @@ From Undecidability.L.Complexity Require Import FlatFinTypes MorePrelim.
 
 Section fixSAT. 
   Variable (k : nat).
-  Context (Hkgt : k > 0).
   Variable (N : cnf).
   Context (Hkcnf : kCNF k N). 
 
@@ -108,22 +107,22 @@ Section fixSAT.
   Proposition vertices_repr : finRepr (Vcnf k N) Vf. 
   Proof. 
     finRepr_simpl. 
-    - unfold finRepr. rewrite Card_Fint'. easy.
-    - unfold finRepr. rewrite Card_Fint'. easy.
+    - unfold finRepr. rewrite Fin_cardinality'. easy.
+    - unfold finRepr. rewrite Fin_cardinality'. easy.
   Qed.
 
   Proposition unflattenVertex ci li: ci < Ncl -> li < k -> { Va : Fin.t Ncl & { Vb : Fin.t k & finReprEl' ci Va /\ finReprEl' li Vb /\ finReprEl' (toVertex (ci, li)) (Va, Vb)}}. 
   Proof. 
     intros H1 H2. 
     fold (ofFlatType Ncl ci) in H1. fold (ofFlatType k li) in H2. 
-    rewrite <- Card_Fint in H1 at 1.
-    rewrite <- Card_Fint in H2 at 1.
+    rewrite <- Fin_cardinality in H1 at 1.
+    rewrite <- Fin_cardinality in H2 at 1.
     apply finReprElP_exists in H1 as (Va & H1). 
     apply finReprElP_exists in H2 as (Vb & H2). 
     exists Va, Vb. split; [apply H1 | split; [apply H2 | ]].
     finRepr_simpl.
-    - split; [now rewrite <- Card_Fint | apply H1].
-    - split; [now rewrite <- Card_Fint | apply H2].
+    - split; [now rewrite <- Fin_cardinality | apply H1].
+    - split; [now rewrite <- Fin_cardinality | apply H2].
   Defined. 
 
   Proposition index_pair (f1 f2 : finType) n1 n2 (v1 : f1) (v2 : f2) : finRepr f1 n1 -> finRepr f2 n2 -> index (v1, v2) = flatPair n1 n2 (index v1) (index v2).
@@ -155,12 +154,12 @@ Section fixSAT.
       apply in_makeEdges_iff. 
       exists (index Va1), (index Va2), (index Vb1), (index Vb2). 
       repeat split. 
-      + specialize (index_le Va1). now rewrite Card_Fint'. 
-      + specialize (index_le Va2). now rewrite Card_Fint'.
-      + specialize (index_le Vb1). now rewrite Card_Fint'. 
-      + specialize (index_le Vb2). now rewrite Card_Fint'.
-      + unfold toVertex. apply index_pair; now rewrite <- Card_Fint'. 
-      + setoid_rewrite index_pair; [reflexivity | rewrite <- Card_Fint'; reflexivity | rewrite <- Card_Fint'; reflexivity].
+      + specialize (index_le Va1). now rewrite Fin_cardinality'. 
+      + specialize (index_le Va2). now rewrite Fin_cardinality'.
+      + specialize (index_le Vb1). now rewrite Fin_cardinality'. 
+      + specialize (index_le Vb2). now rewrite Fin_cardinality'.
+      + unfold toVertex. apply index_pair; now rewrite <- Fin_cardinality'. 
+      + setoid_rewrite index_pair; [reflexivity | rewrite <- Fin_cardinality'; reflexivity | rewrite <- Fin_cardinality'; reflexivity].
       + contradict H2. now apply injective_index in H2. 
       + apply H1. 
   Qed. 
@@ -172,6 +171,8 @@ Section fixSAT.
     - apply flat_edges.
   Qed.
 
+
+  Context (Hkgt : k > 0).
   Lemma SAT_implies_FlatClique : SAT N -> FlatClique (Gflat, Ncl). 
   Proof. 
     intros (a & H).
@@ -218,8 +219,8 @@ Proof.
     + cbn -[trivialNoInstance]. unfold kSAT. 
       split; [lia | specialize trivialNoInstance_isNoInstance; tauto].
     + cbn. split; intros. 
-      * apply SAT_implies_FlatClique; [lia | apply H | apply H].
-      * apply kCNF_decb_iff in H1. apply FlatClique_implies_SAT in H; [ | lia | apply H1].
+      * apply SAT_implies_FlatClique; [apply H | lia | apply H].
+      * apply kCNF_decb_iff in H1. apply FlatClique_implies_SAT in H; [ | apply H1| lia ].
         split; [lia | split; auto]. 
   - cbn -[trivialNoInstance]. split.
     + intros (_ & H3 & _). apply kCNF_decb_iff in H3. congruence. 
@@ -408,7 +409,7 @@ Definition makeEdges_time (k : nat) (N : cnf) := 2 * allPositions_time k N + pro
 Instance term_makeEdges : computableTime' makeEdges (fun k _ => (1, fun N _ => (makeEdges_time k N, tt))). 
 Proof. 
   extract. solverec. 
-  unfold makeEdges_time, c__makeEdges; nia. 
+  unfold makeEdges_time, c__makeEdges; simp_comp_arith; nia. 
 Qed. 
 
 Definition poly__makeEdges n := 
@@ -559,7 +560,7 @@ Proof.
       cbn. intros N _. split; [ | easy]. unfold reduction_time. 
       rewrite kCNF_decb_time_bound, Gflat_time_bound.
       rewrite list_size_length. instantiate (f := fun n => poly__kCNFDecb (n + size (enc k)) + poly__Gflat (n + size (enc k)) + c__length * n + c__length + (c__leb * 2 + c__ltb) + c__reduction). 
-      subst f; nia.
+      subst f; simp_comp_arith; nia.
     + subst f; smpl_inO; apply inOPoly_comp; smpl_inO; first [apply kCNF_decb_poly  | apply Gflat_poly]. 
     + subst f; smpl_inO; first [apply kCNF_decb_poly  | apply Gflat_poly]. 
     + eexists (fun n => size (enc (trivialNoInstance)) + poly__GflatSize (n + size (enc k)) + n + 4). 

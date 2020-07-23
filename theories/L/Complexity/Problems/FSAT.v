@@ -1,4 +1,5 @@
-From Undecidability.L Require Import L.
+From Undecidability.L Require Import L .
+From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import LLists LLNat. 
 From Undecidability.L.Complexity.Problems Require Export SharedSAT.
 Require Import Lia Nat. 
@@ -114,7 +115,7 @@ From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import  LProd LOptions LBool LLists LUnit.
 From Undecidability.L.Complexity Require Import PolyBounds. 
 
-Run TemplateProgram (tmGenEncode "formula_enc" formula).
+MetaCoq Run (tmGenEncode "formula_enc" formula).
 Hint Resolve formula_enc_correct : Lrewrite.
 
 Lemma formula_enc_size f: size (enc f) = match f with 

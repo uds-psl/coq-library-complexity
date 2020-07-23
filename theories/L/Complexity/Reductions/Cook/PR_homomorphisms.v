@@ -39,7 +39,7 @@ Section fixInstance.
     - intros. cbn. rewrite app_nil_r. now rewrite A0. 
   Qed. 
 
-  Hint Extern 4 (uniform_homomorphism h) => apply h_unifHom. 
+  Hint Extern 4 (uniform_homomorphism h) => apply h_unifHom : core. 
   Lemma h_injective l1 l2 : h l1 = h l2 -> l1 = l2. 
   Proof. 
     revert l2. induction l1; intros l2 H0. 
@@ -158,7 +158,7 @@ Section fixInstance.
   Qed. 
 
   (** agreement for valid*)
-  Hint Constructors valid. 
+  Hint Constructors valid : core.
 
   Lemma valid_homomorphism1 a b : 
     |a| >= width 

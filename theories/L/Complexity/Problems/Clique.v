@@ -14,7 +14,7 @@ Section fixGraph.
   Inductive indKClique : nat -> list V -> Prop := 
     | indKCliqueNil : indKClique 0 []
     | indKCliqueS L v k : indKClique k L -> not (v el L) -> (forall v', v' el L -> E (v, v')) -> indKClique (S k) (v :: L). 
-  Hint Constructors indKClique.
+  Hint Constructors indKClique : core. 
 
   Lemma indKClique_iff k L: isKClique k L <-> indKClique k L. 
   Proof. 

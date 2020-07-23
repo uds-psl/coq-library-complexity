@@ -484,7 +484,7 @@ Section fixInstance.
         destruct offset as [ | offset]; [ lia | ].
         (* we use the IH for l - offset *)
  
-        assert (S l - S offset < S l) as H1 by lia. apply IH with (start := start + S offset) in H1. 2: nia. 
+        assert (S l - S offset < S l) as H1 by lia. apply IH with (start := start + S offset) in H1. 2: lia. 
         2: { destruct H as (k & H). destruct k; [ lia | ]. exists k. lia. }
         clear H IH. 
         assert (llength >= width) as H0 by lia.
@@ -509,7 +509,7 @@ Section fixInstance.
         * rewrite H0 in H1. clear H0. 
           rewrite !projVars_add in H1. inv H1.
           (*the first two cases are contradictory *)
-          2 : { exfalso. apply list_eq_length in H0. rewrite !app_length in H0. rewrite !projVars_length in H0; [ | easy | easy]. nia. }
+          2 : { exfalso. apply list_eq_length in H0. rewrite !app_length in H0. rewrite !projVars_length in H0; [ | easy | easy]. lia. }
           1: { exfalso. apply list_eq_length in H3. rewrite !app_length in H3. rewrite projVars_length in H3; [ | cbn; nia]. cbn in H3. lia. } 
 
           apply app_eq_length in H2 as (-> & ->); [ | rewrite projVars_length; [easy | nia] ].
@@ -1055,7 +1055,7 @@ Definition encodeWindowsAt_time (bpr : BinaryPR) (s1 s2 : nat) := map_time encod
 Instance term_encodeWindowsAt : computableTime' encodeWindowsAt (fun bpr _ => (1, fun s1 _ => (1, fun s2 _ => (encodeWindowsAt_time bpr s1 s2, tt)))). 
 Proof. 
   extract. solverec. 
-  unfold encodeWindowsAt_time, c__encodeWindowsAt; solverec. 
+  unfold encodeWindowsAt_time, c__encodeWindowsAt; simp_comp_arith; solverec. 
 Qed.
   
 Definition poly__encodeWindowsAt n := n * (poly__encodeWindowAt n + c__map) + c__map + (n + 1) * c__listOr + c__encodeWindowsAt.
@@ -1170,9 +1170,9 @@ Lemma encodeWindowsInLineP_varsIn bpr stepi l startA startB :
   -> formula_varsIn (fun n => (n >= startA /\ n < startA + l) \/ (n >= startB /\ n < startB + l)) (encodeWindowsInLine' bpr stepi l startA startB). 
 Proof. 
   intros H0. revert startA startB l. induction stepi; cbn; intros. 
-  - destruct width; [ | destruct Nat.leb]; cbn; intros a H1; inv H1. 
+  - destruct width; [ | destruct Nat.ltb]; cbn; intros a H1; inv H1. 
   - destruct width eqn:H1; [destruct H0; lia | ]. 
-    destruct leb eqn:H2. 
+    destruct Nat.ltb eqn:H2. 
     + apply Nat.leb_le in H2. intros a H. inv H. 
     + apply leb_complete_conv in H2. intros a H. inv H. 
       * apply encodeWindowsAt_varsIn in H4; [ | apply H0]. rewrite !H1 in H4. nia. 
@@ -1184,12 +1184,12 @@ Lemma encodeWindowsInLineP_size bpr stepi l startA startB :
   BinaryPR_wellformed bpr -> formula_size (encodeWindowsInLine' bpr stepi l startA startB) <= stepi * (|windows bpr| * (6 * width bpr + 4) + 3) + 1.
 Proof. 
   intros H0. revert l startA startB. induction stepi; cbn -[Nat.mul Nat.add]; intros. 
-  - destruct width; [ | destruct leb]; cbn; lia. 
+  - destruct width; [ | destruct Nat.ltb]; cbn; lia. 
   - destruct width eqn:H1; [ destruct H0; lia | ]. 
-    destruct leb eqn:H2. 
-    + cbn. nia. 
+    destruct Nat.ltb eqn:H2. 
+    + cbn. lia. 
     + apply leb_complete_conv in H2. cbn [formula_size]. rewrite IHstepi. clear IHstepi. 
-      rewrite encodeWindowsAt_size by apply H0. nia. 
+      rewrite encodeWindowsAt_size by apply H0. lia. 
 Qed. 
 
 (** encodeWindowsInLine *)
@@ -1247,7 +1247,7 @@ Definition encodeWindowsInAllLines_time (bpr : BinaryPR) := c__length * (|init b
 Instance term_encodeWindowsInAllLines : computableTime' encodeWindowsInAllLines (fun bpr _ => (encodeWindowsInAllLines_time bpr, tt)). 
 Proof. 
   extract. solverec. 
-  unfold encodeWindowsInAllLines_time, c__encodeWindowsInAllLines. nia.  
+  unfold encodeWindowsInAllLines_time, c__encodeWindowsInAllLines. simp_comp_arith; lia.  
 Qed.
 
 Fact nat_size_mul a b: size (enc (a * b)) <= size (enc a) * size (enc b). 
@@ -1295,7 +1295,7 @@ Proof.
   intros f H1. destruct steps; [now cbn in H1 | ]. 
   eapply tabulate_formula_varsIn in H1. 
   2: { intros s. eapply formula_varsIn_monotonic. 2: apply encodeWindowsInLine_varsIn, H. 
-       intros n'. cbn. lia. 
+       intros n'. cbn. intros [_ H2]. apply H2.
   } 
   2: smpl_inO. 
   cbn in H1. eapply formula_varsIn_monotonic. 2 : apply H1. intros n'. cbn. 
@@ -1438,7 +1438,7 @@ Proof.
   apply computableTimeExt with (x := fun bpr start => listOr (map (encodeFinalConstraint_step bpr start) (final bpr))). 
   1: easy.
   extract. solverec. 
-  unfold encodeFinalConstraint_time, c__encodeFinalConstraint; solverec. 
+  unfold encodeFinalConstraint_time, c__encodeFinalConstraint; simp_comp_arith; solverec. 
 Qed.
 
 Definition poly__encodeFinalConstraint n := n * (c__length * n + poly__encodeSubstringInLine' (2 * n) + c__encodeSubstringInLine + c__encodeFinalConstraintStep + c__map) + c__map + (n + 1) * c__listOr + c__encodeFinalConstraint. 
@@ -1577,7 +1577,7 @@ Instance term_BinaryPR_wf_dec : computableTime' BinaryPR_wf_dec (fun bpr _ => (B
 Proof. 
   extract. solverec. 
   unfold BinaryPR_wf_dec_time, c__BinaryPRWfDec, leb_time. rewrite !eqbTime_le_r. 
-  do 2 rewrite Nat.le_min_l. leq_crossout. 
+  do 2 rewrite Nat.le_min_l. simp_comp_arith. leq_crossout. 
 Qed. 
 
 Definition c__BinaryPRWfDecBound := 2*(2 * c__length + c__leb + FlatPR.c__prwinOfSizeDecBound + c__forallb + 2 * c__moduloBound + c__BinaryPRWfDec).
@@ -1592,7 +1592,7 @@ Proof.
   2: {
     split; [intros | ].
     - specialize (FlatPR.PRWin_of_size_dec_time_bound (X := bool) y a) as H1.
-      instantiate (2:= fun n => (n + 1) * FlatPR.c__prwinOfSizeDecBound). nia. 
+      instantiate (2:= fun n => (n + 1) * FlatPR.c__prwinOfSizeDecBound). simp_comp_arith; nia. 
     - smpl_inO. 
   }
   rewrite list_size_length. 

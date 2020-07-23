@@ -17,8 +17,8 @@ Section fixInstance.
 
   Definition PR_windows := map (@TPRWin_to_PRWin FSigma) Fwindows. 
 
-  Hint Constructors PR.valid. 
-  Hint Constructors TPR.valid.
+  Hint Constructors PR.valid : core.
+  Hint Constructors TPR.valid : core. 
 
   (*We show agreement for valid and satFinal *)
 

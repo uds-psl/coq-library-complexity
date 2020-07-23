@@ -2,7 +2,7 @@ Require Import PslBase.Base.
 Require Import Lia. 
 From Undecidability.L Require Import L.
 (*From Undecidability.Shared Require Import Prelim.*)
-From Undecidability.L.Complexity Require Import Tactics.
+From Undecidability.L.Complexity Require Export Tactics.
 
 (** Results regarding lists *)
 Section tabulate.
@@ -204,6 +204,10 @@ Ltac destruct_or H := match type of H with
                         end.
 
 
+Lemma map_skipn (A B : Type) (f : A -> B) (l : list A) (n : nat) : map f (skipn n l) = skipn n (map f l). 
+Proof. 
+  induction n as [ | n] in l |-*; cbn; [reflexivity | destruct l as [ | x l]]; cbn; firstorder. 
+Qed.
 
 Lemma skipn_add (X : Type) (xs vs: list X) (i j : nat) : length vs = j -> skipn (j + i) (vs ++ xs) = skipn i xs. 
 Proof. 
@@ -211,7 +215,6 @@ Proof.
   - inv_list. now cbn. 
   - inv_list. cbn. apply IHj. cbn in H; congruence.
 Qed. 
-
 
 Lemma skipn_app2 (X : Type) i (a b c : list X): c <> [] -> skipn i a = c -> skipn i (a ++ b) = c ++ b. 
 Proof.
@@ -261,12 +264,6 @@ Lemma map_firstn (X Y : Type) i (h : list X) (f : X -> Y) : map f (firstn i h) =
   - destruct i; cbn; [reflexivity | now rewrite IHh].
 Qed.
 
-Lemma map_skipn (X Y : Type) i (h : list X) (f : X -> Y) : map f (skipn i h) = skipn i (map f h). 
-  revert i; induction h; intros; cbn. 
-  - now rewrite !skipn_nil. 
-  - destruct i; cbn; [reflexivity | now rewrite IHh ]. 
-Qed.
-
 
 Lemma length_app_decompose (X : Type) (a : list X) i j : length a = i + j -> exists a1 a2, a = a1 ++ a2 /\ length a1 = i /\ length a2 = j. 
 Proof. 
@@ -275,7 +272,7 @@ Proof.
   - cbn. intros. now exists [], a. 
   - cbn. intros. 
 inv_list. assert (|a| = i + j) by lia. destruct (IHi a H0) as (a1 & a2 & H2 & H3). 
-    exists (x :: a1), a2. firstorder. 
+    exists (x :: a1), a2. rewrite H2; cbn. firstorder. 
 Qed. 
 
 
@@ -563,7 +560,7 @@ Lemma nth_error_firstn (X : Type) k m (l : list X): k < m -> nth_error (firstn m
 Proof. 
   revert k l. induction m; intros. 
   - lia.
-  - destruct k; cbn; destruct l; easy. 
+  - destruct k; cbn; destruct l; cbn; firstorder.
 Qed. 
 
 Lemma nth_error_skipn (X : Type) k m (l : list X) : nth_error (skipn m l) k = nth_error l (m + k). 

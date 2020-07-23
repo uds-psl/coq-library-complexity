@@ -159,7 +159,7 @@ Qed.
 Lemma isFlatListOf_Some1 (T : finType) (T' : nat) (a : list nat) (b : list T) (n : nat) (x : nat):
   finRepr T T' -> isFlatListOf a b -> nth_error a n = Some x -> exists x', nth_error b n = Some x' /\ finReprEl T' x x'.
 Proof. 
-  intros. rewrite H0 in H1. SearchAbout nth_error. rewrite nth_error_map in H1. 
+  intros. rewrite H0 in H1. rewrite nth_error_map in H1. 
   destruct (nth_error b n); cbn in H1; [ | congruence ]. 
   inv H1. exists e.
   split; [reflexivity | repeat split]. apply H. 

@@ -9,7 +9,7 @@ Inductive kCNF (k : nat) : cnf -> Prop :=
 | kCNFB : kCNF k []
 | kCNFS (N : cnf) (C : clause) : (|C|) = k -> kCNF k N -> kCNF k (C ::  N).               
 
-Hint Constructors kCNF.
+Hint Constructors kCNF : core.
 
 Lemma kCNF_clause_length (k : nat) (N : cnf) : kCNF k N <-> forall C, C el N -> |C| =k.
 Proof.
@@ -76,7 +76,7 @@ Proof.
     - smpl_inO. 
   } 
   rewrite list_size_length. 
-  unfold poly__kCNFDecb, c__kCNFDecbBound1, c__kCNFDecbBound2. nia. 
+  unfold poly__kCNFDecb, c__kCNFDecbBound1, c__kCNFDecbBound2. lia.
 Qed. 
 Lemma kCNF_decb_poly : monotonic poly__kCNFDecb /\ inOPoly poly__kCNFDecb. 
 Proof. 

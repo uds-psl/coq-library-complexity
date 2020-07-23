@@ -204,7 +204,7 @@ Proof.
     rewrite sub_time_bound_l.
     unfold hNat_time, c__hNat. cbn[Nat.add]. unfold c__sub1, c__sub. nia.
   - cbn[Nat.add]. unfold hNat_time, c__hNat. apply Nat.leb_gt in H. 
-    unfold repEl_time. nia. 
+    unfold repEl_time. lia.
 Qed. 
 
 Definition c__hNatBound := (c__leb + 1) * (c__hNat + 1).
@@ -213,7 +213,7 @@ Lemma hNat_time_bound sig n: hNat_time sig n <= poly__hNat (size (enc sig)).
 Proof. 
   unfold hNat_time. rewrite leb_time_bound_r. 
   unfold poly__hNat, c__hNatBound. rewrite repEl_time_bound. rewrite size_nat_enc_r with (n := sig) at 3.
-  leq_crossout. 
+  lia. 
 Qed. 
 Lemma hNat_poly : monotonic poly__hNat /\ inOPoly poly__hNat. 
 Proof.
@@ -342,7 +342,7 @@ Proof.
   replace_le (size (enc (windows fpr))) with (size (enc fpr)) by (rewrite FlatPR_enc_size; lia) at 1. 
   poly_mono hwindow_poly. 
   2: { replace_le (size (enc (windows fpr))) with (size (enc fpr)) by (rewrite FlatPR_enc_size; lia) at 1. reflexivity. }
-  unfold poly__hwindows, c__hwindowsBound. nia.
+  unfold poly__hwindows, c__hwindowsBound. lia.
 Qed. 
 Lemma hwindows_poly : monotonic poly__hwindows /\ inOPoly poly__hwindows. 
 Proof. 
@@ -361,7 +361,7 @@ Proof.
   2: { intros win (win' & <- & H2)%in_map_iff. rewrite hwindow_size_bound; [ reflexivity | easy | easy]. }
   rewrite map_length. 
   destruct wf as (H1 & _). unfold c__hwindowsSize1, c__hwindowsSize2. destruct (width fpr); [nia | ].
-  leq_crossout. 
+  lia. 
 Qed. 
 
 (*hfinal *)
@@ -382,7 +382,7 @@ Proof.
   replace_le (size (enc (final fpr))) with (size (enc fpr)) by (rewrite FlatPR_enc_size; lia) at 1. 
   poly_mono hflat_poly. 
   2: { replace_le (size (enc (final fpr))) with (size (enc fpr)) by (rewrite FlatPR_enc_size; lia) at 1. reflexivity. }
-  unfold poly__hfinal, c__hfinalBound. nia.
+  unfold poly__hfinal, c__hfinalBound. lia.
 Qed. 
 Lemma hfinal_poly : monotonic poly__hfinal /\ inOPoly poly__hfinal. 
 Proof. 
@@ -399,7 +399,7 @@ Proof.
   2: { intros l (l' & <- & H1)%in_map_iff. rewrite hflat_size_bound. 
        rewrite list_size_length. rewrite list_el_size_bound by apply H1. reflexivity. 
   }
-  rewrite map_length, list_size_length. unfold c__hfinalSize. cbn [Nat.pow]. nia. 
+  rewrite map_length, list_size_length. unfold c__hfinalSize. cbn [Nat.pow]. lia. 
 Qed. 
 
 (*hBinaryPR *)
@@ -410,7 +410,7 @@ Instance term_hBinaryPR : computableTime' hBinaryPR (fun fpr _ => (hBinaryPR_tim
 Proof. 
   unfold hBinaryPR. unfold hoffset, hwidth, hsteps, hinit.  
   extract. solverec. unfold mult_time. 
-  unfold hBinaryPR_time, c__hBinaryPR, c__hBinaryPR2. leq_crossout. 
+  unfold hBinaryPR_time, c__hBinaryPR, c__hBinaryPR2. lia. 
 Defined. 
 
 Definition poly__hBinaryPR n := c__hBinaryPR2 * (2 * n * n + n + poly__hflat (n +n) + poly__hwindows n + poly__hfinal n) + c__hBinaryPR. 
@@ -424,7 +424,7 @@ Proof.
   poly_mono hflat_poly. 
   2: { (replace_le (size (enc (init fpr))) with (size (enc fpr)) by (rewrite FlatPR_enc_size; lia)); reflexivity. }
   rewrite hfinal_time_bound. rewrite hwindows_time_bound. 
-  unfold poly__hBinaryPR. nia. 
+  unfold poly__hBinaryPR. lia. 
 Qed. 
 Lemma hBinaryPR_poly : monotonic poly__hBinaryPR /\ inOPoly poly__hBinaryPR. 
 Proof. 
@@ -434,7 +434,7 @@ Qed.
 
 Proposition nat_mul_size_bound n m : size (enc (n * m)) <= size (enc n) * size (enc m). 
 Proof. 
-  rewrite !size_nat_enc. unfold c__natsizeS, c__natsizeO; nia.
+  rewrite !size_nat_enc. unfold c__natsizeS, c__natsizeO; lia.
 Qed. 
 
 Definition c__hBinaryPRSize := c__hflatSize + c__hwindowsSize2 + c__hfinalSize + 1. 
@@ -447,22 +447,22 @@ Proof.
   unfold hinit. rewrite hflat_size_bound. 
   rewrite hwindows_size_bound, hfinal_size_bound by easy.
   rewrite !list_size_length. 
-  replace_le (Sigma fpr) with (size (enc (Sigma fpr))) by (rewrite size_nat_enc; unfold c__natsizeS; nia) at 4. 
-  replace_le (Sigma fpr) with (size (enc (Sigma fpr))) by (rewrite size_nat_enc; unfold c__natsizeS; nia) at 5.
-  replace_le (Sigma fpr) with (size (enc (Sigma fpr))) by (rewrite size_nat_enc; unfold c__natsizeS; nia) at 3.
-  replace_le (width fpr) with (size (enc (width fpr))) by (rewrite size_nat_enc; unfold c__natsizeS; nia) at 2. 
+  replace_le (Sigma fpr) with (size (enc (Sigma fpr))) by (rewrite size_nat_enc; unfold c__natsizeS; lia) at 4. 
+  replace_le (Sigma fpr) with (size (enc (Sigma fpr))) by (rewrite size_nat_enc; unfold c__natsizeS; lia) at 5.
+  replace_le (Sigma fpr) with (size (enc (Sigma fpr))) by (rewrite size_nat_enc; unfold c__natsizeS; lia) at 3.
+  replace_le (width fpr) with (size (enc (width fpr))) by (rewrite size_nat_enc; unfold c__natsizeS; lia) at 2. 
   
   specialize (FlatPR_enc_size fpr) as H. 
-  replace_le (size (enc (Sigma fpr))) with (size (enc fpr)) by (rewrite H; nia).  
-  replace_le (size (enc (offset fpr))) with (size (enc fpr)) by (rewrite H; nia).
-  replace_le (size (enc (width fpr))) with (size (enc fpr)) by (rewrite H; nia).
-  replace_le (size (enc (init fpr))) with (size (enc fpr)) by (rewrite H; nia). 
-  replace_le (size (enc (windows fpr))) with (size (enc fpr)) by (rewrite H; nia). 
-  replace_le (size (enc (steps fpr))) with (size (enc fpr)) by (rewrite H; nia). 
+  replace_le (size (enc (Sigma fpr))) with (size (enc fpr)) by (rewrite H; lia).  
+  replace_le (size (enc (offset fpr))) with (size (enc fpr)) by (rewrite H; lia).
+  replace_le (size (enc (width fpr))) with (size (enc fpr)) by (rewrite H; lia).
+  replace_le (size (enc (init fpr))) with (size (enc fpr)) by (rewrite H; lia). 
+  replace_le (size (enc (windows fpr))) with (size (enc fpr)) by (rewrite H; lia). 
+  replace_le (size (enc (steps fpr))) with (size (enc fpr)) by (rewrite H; lia). 
   cbn[Nat.pow].
-  replace_le (size (enc (final fpr))) with (size (enc fpr)) by (rewrite H; nia).
+  replace_le (size (enc (final fpr))) with (size (enc fpr)) by (rewrite H; lia).
 
-  unfold c__hBinaryPRSize, c__hBinaryPRSize2. cbn [Nat.pow]. leq_crossout. 
+  unfold c__hBinaryPRSize, c__hBinaryPRSize2. cbn [Nat.pow]. lia.
 Qed. 
 
 (*reduction *)
@@ -494,7 +494,7 @@ Proof.
     + apply andb_true_iff in H1 as (H1%FlatPR_wf_dec_correct & _). 
       rewrite hBinaryPR_size_bound by apply H1. easy. 
     + unfold trivialNoInstance. rewrite BinaryPR_enc_size. cbn -[Nat.mul Nat.add].
-      rewrite !size_nat_enc. rewrite !size_list. cbn. nia.
+      rewrite !size_nat_enc. rewrite !size_list. cbn. lia.
   - unfold Nat.pow. smpl_inO. 
   - smpl_inO. 
 Qed. 
@@ -504,7 +504,7 @@ Proof.
   apply reducesPolyMO_intro_unrestricted with (f := reduction).
   - exists poly__reduction. 
     + extract. solverec. 
-      all: specialize (reduction_time_bound x) as H1; unfold reduction_time, c__reduction in H1; nia.
+      all: specialize (reduction_time_bound x) as H1; unfold reduction_time, c__reduction in H1; lia.
     + apply reduction_poly.
     + apply reduction_poly. 
     + destruct (reduction_size_bound) as (f & H1 & H2 & H3). exists f; auto.

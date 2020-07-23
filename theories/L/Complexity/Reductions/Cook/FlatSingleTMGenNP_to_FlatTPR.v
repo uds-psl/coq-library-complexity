@@ -38,19 +38,19 @@ Smpl Add (apply inr_ofFlatType) : finRepr.
 
 (** * extraction of the reduction from FlatGenNP to FlatPR *)
 
-Run TemplateProgram (tmGenEncode "fstateSigma_enc" fstateSigma).
+MetaCoq Run (tmGenEncode "fstateSigma_enc" fstateSigma).
 Hint Resolve fstateSigma_enc_correct : Lrewrite.
 
-Run TemplateProgram (tmGenEncode "fpolarity_enc" fpolarity).
+MetaCoq Run (tmGenEncode "fpolarity_enc" fpolarity).
 Hint Resolve fpolarity_enc_correct : Lrewrite. 
 
-Run TemplateProgram (tmGenEncode "fpreludeSigP_enc" fpreludeSig').
+MetaCoq Run (tmGenEncode "fpreludeSigP_enc" fpreludeSig').
 Hint Resolve fpreludeSigP_enc_correct : Lrewrite. 
 
-Run TemplateProgram (tmGenEncode "delim_enc" delim). 
+MetaCoq Run (tmGenEncode "delim_enc" delim). 
 Hint Resolve delim_enc_correct : Lrewrite.
 
-Run TemplateProgram (tmGenEncode "evalEnv_enc" (evalEnv nat nat nat nat)).
+MetaCoq Run (tmGenEncode "evalEnv_enc" (evalEnv nat nat nat nat)).
 Hint Resolve evalEnv_enc_correct : Lrewrite. 
 
 Instance term_Build_evalEnv : computableTime' (@Build_evalEnv nat nat nat nat) (fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, tt))))). 
@@ -110,7 +110,7 @@ Proposition flatGamma_bound tm : flatGamma tm <= c__flatGammaS * (states tm + 1)
 Proof. 
   unfold flatGamma. unfold flatSum. 
   rewrite flatStates_bound, flatTapeSigma_bound. 
-  unfold c__flatGammaS. nia. 
+  unfold c__flatGammaS. lia. 
 Qed. 
 
 Definition c__flatPreludeSigPS := 4. 
@@ -124,7 +124,7 @@ Proposition flatAlphabet_bound tm : flatAlphabet tm <= c__flatAlphabetS * (state
 Proof. 
   unfold flatAlphabet, flatSum. 
   rewrite flatGamma_bound, flatPreludeSigP_bound. 
-  unfold c__flatAlphabetS. nia.  
+  unfold c__flatAlphabetS. lia.  
 Qed. 
 
 (**extraction of type constructors *)
@@ -407,9 +407,9 @@ Proof.
     + unfold flatPair_time, mult_time, add_time, flatOption. 
       apply (reifyPolarityFlat_ofFlatType H0) in H1. 
       rewrite H1. rewrite sig_TM_le.
-      unfold poly__reifyPolSigmaFlat. nia.
-    + unfold poly__reifyPolSigmaFlat. nia. 
-  - unfold poly__reifyPolSigmaFlat. nia. 
+      unfold poly__reifyPolSigmaFlat. lia.
+    + unfold poly__reifyPolSigmaFlat. lia. 
+  - unfold poly__reifyPolSigmaFlat. lia. 
 Qed. 
 Lemma reifyPolSigmaFlat_poly : monotonic poly__reifyPolSigmaFlat /\ inOPoly poly__reifyPolSigmaFlat. 
 Proof. 
@@ -507,7 +507,7 @@ Proof.
     replace_le (size (enc tm)) with (size (enc tm) + n) by lia at 6.
     replace_le (size (enc tm)) with (size (enc tm) + n) by lia at 7.
     unfold poly__reifyStatesFlat. generalize (size (enc tm) + n). intros n'. nia.
-  - unfold poly__reifyStatesFlat. nia.
+  - unfold poly__reifyStatesFlat. lia.
 Qed. 
 Lemma reifyStatesFlat_poly : monotonic poly__reifyStatesFlat /\ inOPoly poly__reifyStatesFlat. 
 Proof. 
@@ -551,13 +551,13 @@ Lemma reifyGammaFlat_time_bound n env tm c: envConst_bound n env -> envOfFlatTyp
 Proof. 
   intros H H0. 
   unfold reifyGammaFlat_time. destruct c. 
-  - rewrite reifyStatesFlat_time_bound by easy. unfold poly__reifyGammaFlat. nia. 
+  - rewrite reifyStatesFlat_time_bound by easy. unfold poly__reifyGammaFlat. lia. 
   - rewrite flatStates_time_bound, reifyTapeSigmaFlat_time_bound by easy.
     unfold add_time. rewrite flatStates_bound. 
     rewrite sig_TM_le, states_TM_le. 
     poly_mono flatStates_poly. 
     2: { replace_le (size (enc tm)) with (size (enc tm) + n) by lia at 1. reflexivity. }
-    unfold poly__reifyGammaFlat. leq_crossout.
+    unfold poly__reifyGammaFlat. lia. 
 Qed. 
 Lemma reifyGammaFlat_poly : monotonic poly__reifyGammaFlat /\ inOPoly poly__reifyGammaFlat. 
 Proof. 
@@ -718,8 +718,8 @@ Section fixListProd.
     solverec. 
     all: unfold list_prod_time. 
     2: rewrite map_time_const, map_length.
-    all: unfold c__listProd1, c__listProd2. nia. cbn [length]. leq_crossout.
-  Defined. 
+    all: unfold c__listProd1, c__listProd2. lia. cbn [length]. leq_crossout.
+  Qed. 
 
   Definition poly__listProd n := n * (n + 1) * c__listProd1 + c__listProd2. 
   Lemma list_prod_time_bound l1 l2: list_prod_time l1 l2 <= poly__listProd (size (enc l1) + size (enc l2)). 
@@ -1044,7 +1044,7 @@ Proof.
   apply computableTimeExt with (x := fun tm allEnv rules => concat (map (makeWindowsP_flat tm allEnv) rules)). 
   1: { unfold makeWindowsP_flat. easy. }
   extract. solverec. 
-  unfold makeWindowsFlat_time, c__makeWindowsFlat. solverec.  
+  unfold makeWindowsFlat_time, c__makeWindowsFlat. simp_comp_arith. solverec.  
 Defined. 
 
 Definition poly__makeWindowsFlat n := n * (poly__makeWindows' n + c__map) + c__map + n * (c__concat * n) + (n + 1) * c__concat + c__makeWindowsFlat.
@@ -1058,7 +1058,7 @@ Proof.
   rewrite sumn_map_mono with (f2 := fun _ => c__concat * |envs|). 2: { intros win _. rewrite makeWindowsP_length. unfold evalEnvFlat. lia. }
   rewrite sumn_map_const. 
   poly_mono makeWindowsP_poly. 2: { instantiate (1 := size (enc tm) + n + (|envs|) + (|windows|)). lia. }
-  unfold poly__makeWindowsFlat. nia.
+  unfold poly__makeWindowsFlat. lia.
 Qed. 
 Lemma makeWindowsFlat_poly : monotonic poly__makeWindowsFlat /\ inOPoly poly__makeWindowsFlat. 
 Proof. 
@@ -1562,8 +1562,8 @@ Proof.
   all: unfold isValidFlatStateSig, isValidFlatAct in *.
   all: unfold makeSomeRight, makeSomeLeft, makeSomeStay, makeNoneLeft, makeNoneStay, makeNoneRight.  
   all: unfold flat_baseEnv, flat_baseEnvNone.
-  1-9: apply makeSome_base_flat_ofFlatType; [apply makeAllEvalEnvFlat_envOfFlatTypes | easy | easy| finRepr_simpl; easy| finRepr_simpl; easy]. 
-  all: apply makeNone_base_flat_ofFlatType; [apply makeAllEvalEnvFlat_envOfFlatTypes | easy | easy ]. 
+  1-9: refine (makeSome_base_flat_ofFlatType _ _ _ _ _); [apply makeAllEvalEnvFlat_envOfFlatTypes | easy | easy| finRepr_simpl; easy| finRepr_simpl; easy]. 
+  all: refine (makeNone_base_flat_ofFlatType _ _ _); [apply makeAllEvalEnvFlat_envOfFlatTypes | easy | easy ]. 
 Qed.
 
 (** inp_eqb *)
@@ -2187,7 +2187,7 @@ Proof.
   { easy. }
   extract. solverec.
   rewrite rev_length, map_length, !repEl_length.
-  unfold flat_initial_string_time, c__flatInitialString. leq_crossout. 
+  unfold flat_initial_string_time, c__flatInitialString. simp_comp_arith. leq_crossout. 
 Qed.
 
 Definition poly__flatInitialString n := 
@@ -2225,7 +2225,7 @@ Proof.
   replace_le (size (enc t)) with m by (subst m; lia) at 1. 
   replace_le (size (enc t)) with m by (subst m; lia) at 1. 
   replace_le (size (enc t)) with m by (subst m; lia) at 1. 
-  replace_le (size (enc fixed)) with m by (subst m; lia) at 1. 
+  replace_le (size (enc fixed)) with m by (subst m; lia) at 1.
   replace_le (size (enc fixed)) with m by (subst m; lia) at 1. 
   replace_le (size (enc fixed)) with m by (subst m; lia) at 1. 
   fold m. generalize m. intros m'. 
@@ -2406,7 +2406,7 @@ Proof.
     fun tm => map (flat_finalSubstrings_step tm) (prodLists (flat_haltingStates tm) (seq 0 (flatStateSigma tm)))). 
   { easy. }
   extract. recRel_prettify2. 
-  unfold flat_finalSubstrings_time, c__finalSubstrings; solverec.
+  unfold flat_finalSubstrings_time, c__finalSubstrings; simp_comp_arith; solverec.
 Qed.
 
 Definition poly__finalSubstrings n := 
@@ -2578,7 +2578,7 @@ Section fixIsInjFinfuncTable.
     apply computableTimeExt with (x := fun (x : X) (y : Y) (l : list (X * Y)) => forallb (allSameEntry_step x y) l). 
     { easy. }
     extract. solverec. 
-    unfold allSameEntry_time, c__allSameEntry. lia.  
+    unfold allSameEntry_time, c__allSameEntry. simp_comp_arith; lia.  
   Qed.
 
   Definition poly__allSameEntry n := (c__eqbComp X + c__eqbComp Y) * n + n * (c__allSameEntryStep + c__forallb + c__allSameEntry).
@@ -2694,7 +2694,7 @@ Definition isBoundTrans_time (sig n states : nat) (t : nat * list (option nat) *
 Instance term_isBoundTrans : computableTime' isBoundTrans (fun sig _ => (1, fun n _ => (1, fun states _ => (1, fun t _ => (isBoundTrans_time sig n states t, tt))))). 
 Proof. 
   extract. solverec. 
-  unfold c__isBoundTrans. nia. 
+  unfold c__isBoundTrans. simp_comp_arith. lia.
 Qed.
 
 Lemma ltb_time_bound_l a b : ltb_time a b <= size (enc a) * c__leb + c__ltb. 
@@ -2740,7 +2740,7 @@ Instance term_isBoundTransTable : computableTime' isBoundTransTable (fun sig _ =
 Proof. 
   eapply computableTimeExt with (x := isBoundTransTable').  
   { easy. }
-  extract. solverec. unfold isBoundTransTable_time, c__isBoundTransTable; solverec. 
+  extract. solverec. unfold isBoundTransTable_time, c__isBoundTransTable; simp_comp_arith; solverec. 
 Qed.
   
 Definition poly__isBoundTransTable n := n * poly__isBoundTrans n + (c__forallb + c__isBoundTransTable) * n.

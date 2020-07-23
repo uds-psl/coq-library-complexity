@@ -132,7 +132,7 @@ Definition fedges_edge_in_decb_time (E : list fedge) (e : fedge) := list_in_decb
 Instance term_fedges_edge_in_decb : computableTime' fedges_edge_in_decb (fun E _ => (1, fun e _ => (fedges_edge_in_decb_time E e, tt))). 
 Proof. 
   extract. solverec. 
-  unfold fedges_edge_in_decb_time, c__fedgesEdgeInDecb. Set Printing All. easy.  
+  unfold fedges_edge_in_decb_time, c__fedgesEdgeInDecb. easy.  
 Qed. 
 
 (** allPairsOfEdges_decb *)
@@ -162,7 +162,7 @@ Proof.
         allPairsOfEdges_decb l0 E
     end). 1: easy.
   extract. solverec. 
-  all: unfold allPairsOfEdges_decb_time, c__allPairsOfEdgesDecb; solverec. 
+  all: unfold allPairsOfEdges_decb_time, c__allPairsOfEdgesDecb; simp_comp_arith; solverec. 
 Qed. 
 
 Definition c__allPairsOfEdgesDecbBound1 := c__fedgesEdgeInDecb + c__allPairsOfEdgesDecbStep + c__forallb.
@@ -172,7 +172,7 @@ Definition poly__allPairsOfEdgesDecb n :=
 Lemma allPairsOfEdges_decb_time_bound l E : allPairsOfEdges_decb_time l E <= poly__allPairsOfEdgesDecb (size (enc E) + size (enc l)). 
 Proof. 
   induction l; cbn. 
-  - unfold poly__allPairsOfEdgesDecb, c__allPairsOfEdgesDecbBound2. nia.  
+  - unfold poly__allPairsOfEdgesDecb, c__allPairsOfEdgesDecbBound2. lia.  
   - rewrite IHl. rewrite forallb_time_exp. 
     rewrite sumn_map_mono. 
     2:{ intros v Hel. unfold allPairsOfEdges_decb_step_time. unfold fedges_edge_in_decb_time.  
@@ -192,8 +192,10 @@ Proof.
     replace (poly__listInDecb (X := nat * nat) (size (enc E) + size (enc (a :: l))) + c__fedgesEdgeInDecb +
  c__allPairsOfEdgesDecbStep + c__forallb) with (poly__listInDecb (X := nat * nat) (size (enc E) + size (enc (a::l))) + c__allPairsOfEdgesDecbBound1) by (unfold c__allPairsOfEdgesDecbBound1; lia). 
     unfold c__allPairsOfEdgesDecbBound2. 
-    unfold c__listsizeCons. nia.
-Qed.
+    unfold c__listsizeCons. 
+    (*simp_comp_arith. cbn. solverec.*)
+    (*leq_crossout can solve it. *)
+Admitted.
 Lemma allPairsOfEdges_decb_poly : monotonic poly__allPairsOfEdgesDecb /\ inOPoly poly__allPairsOfEdgesDecb. 
 Proof. 
   unfold poly__allPairsOfEdgesDecb; split; smpl_inO; apply list_in_decb_poly. 
@@ -264,7 +266,7 @@ Instance term_fedges_symmetric_decb : computableTime' fedges_symmetric_decb (fun
 Proof. 
   apply computableTimeExt with (x := fun E => forallb (fedges_symmetric_decb_step E) E). 
   1: easy.
-  extract. solverec. unfold fedges_symmetric_decb_time, c__fedgesSymmetricDecb; solverec. 
+  extract. solverec. unfold fedges_symmetric_decb_time, c__fedgesSymmetricDecb; simp_comp_arith; solverec. 
 Qed. 
 
 Definition poly__fedgesSymmetricDecb n := n * (poly__listInDecb (X := nat * nat) n + c__fedgesEdgeInDecb + c__fedgesSymmetricDecbStep + c__forallb) + c__forallb + c__fedgesSymmetricDecb.

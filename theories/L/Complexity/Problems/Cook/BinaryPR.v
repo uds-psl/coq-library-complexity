@@ -35,7 +35,7 @@ Definition BinaryPRLang (C : BinaryPR) :=
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import  LProd LOptions LLNat LLists.
 
-Run TemplateProgram (tmGenEncode "BinaryPR_enc" (BinaryPR)).
+MetaCoq Run (tmGenEncode "BinaryPR_enc" (BinaryPR)).
 Hint Resolve BinaryPR_enc_correct : Lrewrite. 
 
 From Undecidability.L.Complexity Require Import PolyBounds. 

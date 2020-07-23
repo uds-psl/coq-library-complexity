@@ -283,7 +283,7 @@ Section fixRulePred.
   Inductive rewritesHeadInd: list X -> list X -> Prop :=
     | rewHead_indC (x1 x2 x3 x4 x5 x6 : X) s1 s2 : p x1 x2 x3 x4 x5 x6 -> rewritesHeadInd (x1 :: x2 :: x3 :: s1) (x4 :: x5 :: x6 :: s2). 
 
-  Hint Constructors rewritesHeadInd. 
+  Hint Constructors rewritesHeadInd : core. 
 
   (** a few facts which will be useful *)
   Lemma rewritesHeadInd_tail_invariant (γ1 γ2 γ3 γ4 γ5 γ6 : X) s1 s2 s1' s2' :
@@ -321,7 +321,7 @@ Section fixRulePred.
  
 End fixRulePred. 
 
-Hint Constructors rewritesHeadInd. 
+Hint Constructors rewritesHeadInd : core. 
 
 Definition windowPred_subs (X : Type) (p1 p2 : windowPred X) := forall x1 x2 x3 x4 x5 x6, p1 x1 x2 x3 x4 x5 x6 -> p2 x1 x2 x3 x4 x5 x6.
 
@@ -333,7 +333,7 @@ Qed.
 Lemma rewritesHeadInd_congruent (X : Type) (p1 p2 : windowPred X) : (forall x1 x2 x3 x4 x5 x6, p1 x1 x2 x3 x4 x5 x6 <-> p2 x1 x2 x3 x4 x5 x6) -> forall x y, rewritesHeadInd p1 x y <-> rewritesHeadInd p2 x y.
 Proof.  intros H; intros. split; apply rewritesHeadInd_monotonous; unfold windowPred_subs; apply H. Qed. 
 
-Hint Constructors rewritesHeadInd.
+Hint Constructors rewritesHeadInd : core.
 
 Definition PTPRLang (C : PTPR) :=  PTPR_wellformed C /\ exists (sf : list (PSigma C)), relpower (valid (rewritesHeadInd (@Pwindows C))) (Psteps C) (Pinit C) sf /\ satFinal (Pfinal C) sf. 
 

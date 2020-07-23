@@ -350,7 +350,7 @@ Section fixFPRInstance.
     - intros (subs & k & H1 & H2 & H3). apply H in H1 as (subs' & H4 & H5). 
       exists subs', k. split; [ apply H4 | split; [ apply H2 | ]]. 
       unfold isFlatListOf in H0. rewrite H0 in H3. rewrite H5 in H3.  
-      destruct H3 as (b & H3). rewrite <- utils.map_skipn in H3. 
+      destruct H3 as (b & H3). rewrite <- map_skipn in H3. 
       apply map_eq_app in H3 as (ls1 & ls2 & H3 & H6 & H7). 
       rewrite H3. 
       apply map_injective in H6; [ | apply injective_index]. 
@@ -358,7 +358,7 @@ Section fixFPRInstance.
     - intros (subs & k & H1 & H2 & H3). apply H in H1 as (subs' & H4 &H5). 
       exists subs', k. split; [ apply H4 | split; [ apply H2 | ]]. 
       rewrite H5, H0. destruct H3 as (b & H3). 
-      exists (map index b). rewrite <- utils.map_skipn. rewrite H3. 
+      exists (map index b). rewrite <- map_skipn. rewrite H3. 
       now rewrite !map_app.
   Qed. 
 End fixFPRInstance. 
@@ -430,7 +430,7 @@ Lemma unflattenString (f : list nat) k : list_ofFlatType k f -> {f' : list (finT
 Proof. 
   intros H. 
   eapply finRepr_exists_list with (X := finType_CS (Fin.t k)) in H as (a' & H). 
-  2: { unfold finRepr. specialize (Card_Fint k). unfold Cardinality. easy. }
+  2: { unfold finRepr. specialize (Fin_cardinality k). unfold Cardinality. easy. }
   eauto.
 Qed. 
 
@@ -471,7 +471,7 @@ Proof.
   apply unflattenString in H1 as (i' & H1). 
   exists (Build_PR (offset f) (width f) i' w' f' (steps f)). 
   constructor; eauto.
-  cbn. unfold finRepr. specialize (Card_Fint (Sigma f)). easy.  
+  cbn. unfold finRepr. specialize (Fin_cardinality (Sigma f)). easy.  
 Qed.
 
 (** ** extraction *)
@@ -483,7 +483,7 @@ Section fix_X.
   Variable (X:Type).
   Context `{X_registered : registered X}.
 
-  Run TemplateProgram (tmGenEncode "PRWin_enc" (PRWin X)).
+  MetaCoq Run (tmGenEncode "PRWin_enc" (PRWin X)).
   Hint Resolve PRWin_enc_correct : Lrewrite.
 
   Global Instance term_Build_PRWin : computableTime' (@Build_PRWin X) (fun _ _ => (1, fun _ _ => (1, tt))).
@@ -512,7 +512,7 @@ End fix_X.
 
 Hint Resolve PRWin_enc_correct : Lrewrite.
 
-Run TemplateProgram (tmGenEncode "FlatPR_enc" (FlatPR)).
+MetaCoq Run (tmGenEncode "FlatPR_enc" (FlatPR)).
 Hint Resolve FlatPR_enc_correct : Lrewrite. 
 
 From Undecidability.L.Complexity Require Import PolyBounds. 
@@ -593,11 +593,13 @@ End PRWin_of_size.
 Definition c__FlatPRWfDec := 3 * c__leb2 + 4 * c__width + 3 * c__offset + 2 * 5 + 2 * c__init + 2 * c__length + c__windows + 32 + 4 * c__leb + 2 * c__eqbComp nat * size (enc 0).
 Definition FlatPR_wf_dec_time x := 2 * c__length * (|init x|) + leb_time (width x) (|init x|) + forallb_time (@PRWin_of_size_dec_time nat (width x)) (windows x) + modulo_time (|init x|) (offset x) + modulo_time (width x) (offset x) + c__FlatPRWfDec.  
 
+
 Instance term_FlatPR_wf_dec : computableTime' FlatPR_wf_dec (fun fpr _ => (FlatPR_wf_dec_time fpr, tt)).
 Proof. 
   extract. solverec. unfold FlatPR_wf_dec_time, c__FlatPRWfDec, leb_time. rewrite !eqbTime_le_r. 
   (*ring_simplify.*)
   rewrite Nat.le_min_l. rewrite Nat.le_min_l. 
+  simp_comp_arith. 
   (*nia. *)
   leq_crossout.
 Defined.
@@ -618,7 +620,7 @@ Proof.
   2: {
     split; [intros | ].
     - specialize (PRWin_of_size_dec_time_bound (X := nat) y a) as H1.
-      instantiate (2:= fun n => (n + 1) * c__prwinOfSizeDecBound). nia. 
+      instantiate (2:= fun n => (n + 1) * c__prwinOfSizeDecBound). simp_comp_arith. nia. 
     - smpl_inO. 
   }
   rewrite list_size_length. 

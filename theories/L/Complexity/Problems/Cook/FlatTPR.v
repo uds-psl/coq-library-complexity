@@ -277,7 +277,7 @@ Lemma unflattenTPRWinP (w : TPRWinP nat) k : TPRWinP_ofFlatType w k -> sigT (fun
 Proof. 
   intros. destruct w. destruct H as (H1 & H2 & H3). cbn in *.
   assert (finRepr (finType_CS (Fin.t k)) k). 
-  { unfold finRepr. specialize (Card_Fint k) as H4. unfold Cardinality in H4. easy. }
+  { unfold finRepr. specialize (Fin_cardinality k) as H4. unfold Cardinality in H4. easy. }
   eapply (finRepr_exists H) in H1 as (a1 & H1).  
   eapply (finRepr_exists H) in H2 as (a2 & H2). 
   eapply (finRepr_exists H) in H3 as (a3 & H3). 
@@ -306,7 +306,7 @@ Lemma unflattenString (f : list nat) k : list_ofFlatType k f -> sigT (fun (f' : 
 Proof. 
   intros H. 
   eapply finRepr_exists_list with (X := finType_CS (Fin.t k)) in H as (a' & H). 
-  2: { unfold finRepr. specialize (Card_Fint k). easy. }
+  2: { unfold finRepr. specialize (Fin_cardinality k). easy. }
   eauto.
 Qed. 
 
@@ -329,7 +329,7 @@ Proof.
   apply unflattenString in H1 as (i' & H1). 
   exists (Build_TPR i' w' f' (steps f)). 
   constructor; eauto.
-  cbn. unfold finRepr. specialize (Card_Fint (Sigma f)). easy.
+  cbn. unfold finRepr. specialize (Fin_cardinality (Sigma f)). easy.
 Qed.
 
 (** ** extraction *)
@@ -342,7 +342,7 @@ Section fix_X.
   Context `{X_registered : registered X}.
 
   (*TPRWinP *)
-  Run TemplateProgram (tmGenEncode "TPRWinP_enc" (TPRWinP X)).
+  MetaCoq Run (tmGenEncode "TPRWinP_enc" (TPRWinP X)).
   Hint Resolve TPRWinP_enc_correct : Lrewrite.
 
   Global Instance term_Build_TPRWinP : computableTime' (@Build_TPRWinP X) (fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, tt)))). 
@@ -382,7 +382,7 @@ Section fix_X.
   Defined. 
 
   (*TPRWin*)
-  Run TemplateProgram (tmGenEncode "TPRWin_enc" (TPRWin X)). 
+  MetaCoq Run (tmGenEncode "TPRWin_enc" (TPRWin X)). 
   Hint Resolve TPRWin_enc_correct : Lrewrite.
 
   Global Instance term_Build_TPRWin : computableTime' (@Build_TPRWin X) (fun _ _ => (1, fun _ _ => (1, tt))).
@@ -412,7 +412,7 @@ End fix_X.
 Hint Resolve TPRWinP_enc_correct : Lrewrite.
 Hint Resolve TPRWin_enc_correct : Lrewrite.
 
-Run TemplateProgram (tmGenEncode "FlatTPR_enc" (FlatTPR)).
+MetaCoq Run (tmGenEncode "FlatTPR_enc" (FlatTPR)).
 Hint Resolve FlatTPR_enc_correct : Lrewrite. 
 
 From Undecidability.L.Complexity Require Import PolyBounds. 

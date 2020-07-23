@@ -404,9 +404,10 @@ Proof.
     fold (clause_maxVar c). 
     rewrite size_prod; cbn -[Nat.mul Nat.add]. rewrite size_bool. rewrite size_nat_enc. 
     unfold size_clause. 
-    (*leq_crossout. *)
-    (*unfold c__clauseSize1. nia. *)
-Admitted. 
+    rewrite (Nat.le_max_r (clause_maxVar c) n) at 1. 
+    rewrite (Nat.le_max_l (clause_maxVar c) n) at 2.  
+    unfold c__clauseSize1. nia. 
+Qed. 
 
 Definition c__cnfSize1 := c__listsizeNil + c__listsizeCons + c__clauseSize1.
 Lemma cnf_enc_size_bound (c : cnf) : size (enc c) <= c__natsizeS * (cnf_maxVar c + 1) * (size_cnf c + 1) + (size_cnf c + 1) * c__cnfSize1.
@@ -418,12 +419,10 @@ Proof.
     fold (cnf_maxVar c). 
     replace (size_clause a + sumn (map size_clause c) + S (|c|) + 1) with (size_clause a + size_cnf c + 2) by (unfold size_cnf; cbn; lia).
     rewrite IHc. 
-    (*nia and leq_crossout need some help to see that this holds*)
-    (*replace_le (c__natsizeS * (clause_maxVar a + 1) * (size_clause a + 1) + c__clauseSize1 * (size_clause a + 1) + (c__natsizeS * (cnf_maxVar c + 1) * (size_cnf c + 1) + (size_cnf c + 1) * c__cnfSize1) + c__listsizeCons) *)
-    (*with (c__natsizeS * (Nat.max (cnf_maxVar c) (clause_maxVar a) + 1) * (size_clause a + size_cnf c + 2) + c__clauseSize1 * (size_clause a + 1) + (size_cnf c + 1) * c__cnfSize1 + c__listsizeCons) by nia. *)
-    (*unfold c__cnfSize1. nia.*)
-(*Qed. *)
-Admitted. 
+    rewrite (Nat.le_max_l (cnf_maxVar c) (clause_maxVar a)) at 1. 
+    rewrite (Nat.le_max_r (cnf_maxVar c) (clause_maxVar a)) at 1. 
+    unfold c__cnfSize1. nia.
+Qed. 
 
 (** conversely, we can bound the size of the cnf in terms of the encoding size *)
 (** we only get a quadratic bound because of the huge overapproximation by taking cnf_maxVar *)
