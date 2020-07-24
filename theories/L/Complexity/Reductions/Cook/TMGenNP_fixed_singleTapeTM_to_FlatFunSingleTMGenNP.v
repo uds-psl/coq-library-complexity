@@ -19,26 +19,25 @@ Qed.
 
 Section fixTM. 
   Variable (sig : finType).
-  Variable (M : mTM sig 1). 
-
-  (*Variable (H : registered sig). *)
-  Let reg_sig := @registered_finType sig.
-  Existing Instance reg_sig.
+  Variable (M : mTM sig 1).
   
-  Let eqb_sig := eqbFinType_inst (X:=sig).
-  Existing Instance eqb_sig.
+  Variable (reg__sig : registered sig).
+  Variable (index__comp : {c & computableTime' (index (F:=sig)) (fun _ _ => (c,tt))}).
 
+  Definition index_const_Time : computableTime _ _:=  projT2 index__comp.
+  Existing Instance index_const_Time.
+  
   Definition flatM := flattenTM M. 
 
   Definition reduction (p : list sig * nat * nat) := 
     let '(ts, maxSize, steps) := p in (flatM, map index (ts : list sig), maxSize, steps). 
 
-  Definition c__reduction := (16 + 2 * c__map).
+  Definition c__reduction := (16 + c__map + projT1 index__comp).
   Definition reduction_time (ts : list sig) := (|ts| + 1) * c__reduction.
   Instance term_reduction : computableTime' reduction (fun p _ => (let '(ts, maxSize, steps) := p in reduction_time ts, tt)). 
   Proof. 
     extract. solverec. 
-    rewrite map_time_const. unfold reduction_time, c__reduction. nia. 
+    rewrite map_time_const. unfold reduction_time, c__reduction. ring_simplify.  nia. 
   Defined.  
 
   Lemma reduction_correct p : TMGenNP_fixed_singleTapeTM M p <-> FlatFunSingleTMGenNP (reduction p). 
