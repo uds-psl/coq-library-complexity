@@ -1,5 +1,5 @@
 From Undecidability.L.Complexity.Problems Require Export SAT.
-From Undecidability.L.Datatypes Require Import LProd LTerm LLNat LLists LOptions.
+From Undecidability.L.Datatypes Require Import LProd LTerm LNat Lists LOptions.
 From Undecidability.L.Functions Require Import EqBool.
 
 (** * k-SAT  *)

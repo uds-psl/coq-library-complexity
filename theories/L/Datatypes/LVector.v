@@ -147,9 +147,10 @@ Proof.
   setoid_rewrite size_list.
   induction l;intros l'.
   -cbn - [plus mult c max min] in *.
+    unfold c__listsizeNil, c__listsizeCons. 
    enough (10<= c). nia. shelve.
   -destruct l' as [ |? l'].
-   all:cbn - [plus mult c max min] in *.
+   all:cbn - [plus mult c max min] in *; unfold c__listsizeNil, c__listsizeCons in *. 
    1:{ enough (10<= c). nia. shelve. }
    specialize (IHl l').
    unfold eqbTime at 1.

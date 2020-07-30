@@ -21,9 +21,10 @@ Proof.
   
   2,4,6,7:now intros ? (?&<-&(?&<-&?)%in_map_iff)%in_map_iff;
     rewrite size_nat_enc,index_leq;
-    unfold Cardinality.Cardinality; easy.
+    unfold Cardinality.Cardinality, c__listsizeNil, c__listsizeCons, c__natsizeS, c__natsizeO; easy.
   all:rewrite !map_length.
   all:rewrite index_leq; unfold Cardinality.Cardinality.
+  all: unfold c__natsizeS, c__natsizeO, c__listsizeNil.
   all:nia.
 Qed.
 
@@ -45,8 +46,12 @@ Proof.
    rewrite size_flatTape.
    set (a := sumn _) in *. set (b := VectorDef.fold_right _ _ _) in *. set (c := Cardinality.Cardinality _) in *.
    set (d:=sizeOfTape _).
-   enough (a <= n * b * (c * 4 + 9) + n * 22) as ->. 2: nia.
-   repeat eapply Nat.max_case_strong;intros ?. nia. Unset Simplex. rewrite H.  nia.
+   enough (a <= n * b * (c * 4 + 9) + n * 22) as ->. 
+   2: { unfold c__listsizeCons, c__listsizeNil in *. nia. }
+   unfold c__listsizeNil, c__listsizeCons in *. 
+   repeat eapply Nat.max_case_strong;intros ?. 
+   + nia. 
+   + Unset Simplex. rewrite H.  nia.
 Qed.
 
 

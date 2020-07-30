@@ -96,12 +96,12 @@ Proof.
   intros decode__comp R__comp R__bound.
   eexists (fun x y => exists y', y = enc y' /\ R x y').
   2:{ 
-      exists (fun x => p__pCR R__bound x * 11).
+      exists (fun x => p__pCR R__bound x * c__termsize).
       3,4:solve [smpl_inO].
       -intros x y' (y&->&Hy). now eapply sound__pCR.
       -intros x ?. edestruct (complete__pCR R__bound) as (y&?&?). easy.
        exists (enc y);split. easy.
-       rewrite size_term_enc. lia.
+       rewrite size_term_enc. unfold c__termsize, c__natsizeS. lia.
   }
   { (*TODO: simplify*)
     destruct R__comp as (t__f&[R__comp]&?&mono_t__f).

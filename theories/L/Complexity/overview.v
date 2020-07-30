@@ -90,6 +90,9 @@ Lemma fixedTM_to_FlatSingleTMGenNP (sig : finType) (M : TM.mTM sig 1):
 Proof. 
   eapply reducesPolyMO_transitive with (Q := unrestrictedP (FlatFunSingleTMGenNP)). 
   apply (TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP M). 
+  { 
+    admit. 
+  } 
   eapply reducesPolyMO_intro_unrestricted with (f := id).
   - exists (fun _ => 1). 
     + extract. solverec. 
@@ -98,4 +101,4 @@ Proof.
     + exists (fun n => n). 2, 3: smpl_inO.  
       intros x. now cbn. 
   - intros (((? & ?) & ?) & ?). now setoid_rewrite FlatFunSingleTMGenNP_FlatSingleTMGenNP_equiv.
-Qed. 
+Admitted. 

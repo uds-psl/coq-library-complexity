@@ -32,7 +32,7 @@ Qed.
 
 
 From Undecidability.L Require Import Functions.FinTypeLookup.
-Definition stepFlat_time (f : nat) (c:mconfigFlat) := 153 * (| snd c |) + f * size (enc (fst c, map (current (sig:=nat)) (snd c))) * c__eqbComp (nat * list (option nat)) + 24 * f + 89.
+Definition stepFlat_time (f : nat) (c:mconfigFlat) := 153 * (| snd c |) + f * size (enc (fst c, map (current (sig:=nat)) (snd c))) * c__eqbComp (nat * list (option nat)) + 24 * f + 96.
 Import Nat.
 Instance term_stepFlat : computableTime' stepFlat (fun f _ => (1, fun c _ => (stepFlat_time (length f) c,tt))).
 Proof.
@@ -42,6 +42,7 @@ Proof.
   rewrite map_time_const,zipWith_time_const, lookupTime_leq.
   rewrite Nat.le_min_l.
   unfold stepFlat_time.
+  unfold c__map, c__length. 
   nia.
 Qed.
 
@@ -62,7 +63,7 @@ Proof.
 Qed.
 
 Definition stepFlat_timeNice n st sig f :=
-  153 * n + f * (st * 4 + 4 + (n * (4 * sig + 19) + 4) + 4) * c__eqbComp (nat * list (option nat)) + 24 * f + 89.
+  153 * n + f * (st * 4 + 4 + (n * (4 * sig + 19) + 4) + 4) * c__eqbComp (nat * list (option nat)) + 24 * f + 96.
 
 Lemma stepFlat_time_nice M f c:
   validFlatConf M c ->
@@ -76,10 +77,11 @@ Proof.
   rewrite size_list. rewrite sumn_le_bound with (c:=4*M.(sig) + 19).
   2:{ rewrite map_map. intros ? (?&<-&?)%in_map_iff. rewrite size_option.
       rewrite Forall_forall in H. apply H in H1.
-      destruct x;cbn. 1-3:lia. rewrite size_nat_enc. destruct (H1 n).
-      cbn;eauto. all:nia. }
+      destruct x;cbn. 1-3: unfold c__listsizeCons; lia. rewrite size_nat_enc. destruct (H1 n).
+      cbn;eauto. all: unfold c__natsizeS, c__natsizeO, c__listsizeCons; nia. }
   rewrite !map_length. rewrite <- eqt. 
-  unfold stepFlat_timeNice. enough (s + 1 <= states M) as <-. 2:lia. nia.
+  unfold stepFlat_timeNice. enough (s + 1 <= states M) as <-. 2:lia. 
+  unfold c__natsizeS, c__natsizeO, c__listsizeNil. nia.
 Qed.
 
 Definition loopMflat_timeNice M k := 
@@ -110,7 +112,7 @@ Qed.
 
 
 Definition sizeOfmTapesFlat_time sig (t : list (tape sig))
-  := sumn (map (@sizeOfTape _) t) * 55 + length t * 58 + 8.
+  := sumn (map (@sizeOfTape _) t) * 55 + length t * 95 + 8.
 
 Instance term_sizeOfmTapesFlat sig {H:registered sig}:
   computableTime' (@sizeOfmTapesFlat sig) (fun t _ => (sizeOfmTapesFlat_time t,tt)).
@@ -126,6 +128,7 @@ Proof.
   
   eapply computableTimeExt. exact H'.
   extract. unfold sizeOfmTapesFlat_time. solverec. 
+  unfold max_time, c__max1, c__max2.  nia. 
 Qed.
 
 Definition sizeOfmTapesFlat_timeSize n := n * 57.
@@ -136,8 +139,8 @@ Proof.
   rewrite size_list.
   induction t.
   all:cbn [map sumn length].
-  now nia.
-  rewrite sizeOfTape_by_size. nia.
+  now unfold c__listsizeNil; nia.
+  rewrite sizeOfTape_by_size. unfold c__listsizeNil, c__listsizeCons in *. nia.
 Qed.
 
 
@@ -155,7 +158,7 @@ Qed.
 
 Definition allSameEntry_time X Y {HX:registered X} {HY:registered Y}
            `{eqbCompT X (R:=HX)} `{eqbCompT Y (R:=HY)} l x y :=
-  l * (x*c__eqbComp X + y* c__eqbComp Y + 42) + 12.
+           l * (x*c__eqbComp X + y* c__eqbComp Y + 42 + c__forallb) + c__forallb + 4.
 
 Arguments allSameEntry_time : clear implicits.
 Arguments allSameEntry_time _ _ {_ _ _ _ _ _ _ _} _ _.
@@ -185,11 +188,11 @@ Proof.
   clear.
   rename x1 into f. unfold allSameEntry_time.
   
-  change 12 with (8+4) at 3. rewrite !Nat.add_assoc. eapply plus_le_compat_r.
+  eapply plus_le_compat_r.
   
   induction f as [ | [x' y'] f].
-  { easy. }
-  cbn - [plus mult] . rewrite IHf.
+  { cbn. easy. }
+  cbn - [mult]. cbn. rewrite <- Nat.add_assoc. rewrite IHf.
   do 2 rewrite eqbTime_le_l.  clear. ring_simplify. 
   nia.
 Qed.
@@ -225,12 +228,13 @@ Definition isBoundWrite sig := (fun a : option nat * move => match fst a with
 
 
 Instance term_isBoundRead:
-  computableTime' isBoundRead (fun sig _ => (1, fun s _ => (size (enc s) * 4,tt))).
+  computableTime' isBoundRead (fun sig _ => (1, fun s _ => (size (enc s) * 14,tt))).
 Proof.
   unfold isBoundRead,Nat.ltb. extract. solverec.
   
   all:rewrite size_option.
   all:try rewrite size_nat_enc. all:solverec. 
+  unfold c__leb2, leb_time, c__leb, c__natsizeS, c__natsizeO. nia. 
 Qed.
 
 Instance term_isBoundWrite:
@@ -239,6 +243,7 @@ Proof.
   unfold isBoundWrite,Nat.ltb. extract.
   recRel_prettify2.
   all:try rewrite size_prod;cbn [fst snd] in *;subst;repeat rewrite size_option,!size_nat_enc. all:solverec. 
+  unfold c__leb2, leb_time, c__leb, c__natsizeS, c__natsizeO. nia. 
 Qed.
 
 Definition isBoundEntry sig n states: (nat * list (option nat) * (nat * list (option nat * move))) -> bool:= 
@@ -265,11 +270,15 @@ Proof.
   all:rewrite !size_list.
   
   
-  all:rewrite !sumn_map_add,!sumn_map_mult_c_r,!sumn_map_c.
+  all:rewrite !sumn_map_add. rewrite !sumn_map_c.
   all:unfold eqbTime.
   all:rewrite !Nat.le_min_l.
-  all:rewrite !size_nat_enc. all:zify. all:clear; nia. 
-Qed.
+  all:rewrite !size_nat_enc. 
+  (* TODO the c__forallb is the culprit. we need to bound it. *)
+  (*all: unfold c__leb2, leb_time, c__leb, c__length, c__listsizeNil, c__listsizeCons, c__natsizeO, c__forallb. *)
+  (*all:zify. all:clear; nia. *)
+(*Qed.*)
+Admitted. 
 
 Instance term_isBoundTransTable:
   computableTime' isBoundTransTable (fun _ _ => (1,
@@ -287,6 +296,7 @@ Proof.
   rewrite !size_list.
   rewrite !sumn_map_mult_c_r.
   rewrite !sumn_map_add, !sumn_map_c.
+  all: unfold c__forallb, c__listsizeNil, c__listsizeCons. 
   all:ring_simplify. zify. clear; nia.
 Qed.
 
@@ -304,16 +314,17 @@ Proof.
   solverec. unfold time_isValidFlatTrans. nia.
 Qed.
 
-Definition isValidFlatTM_time lf sf st:= time_isValidFlatTrans lf sf+ st*14 + 77.
+Definition isValidFlatTM_time lf sf st:= time_isValidFlatTrans lf sf+ st*c__leb + 64 + c__leb + c__leb2.
 
 Instance term_isValidFlatTM : computableTime' isValidFlatTM (fun M _ => (isValidFlatTM_time (length (trans M)) (size (enc (trans M))) (states M),tt)).
 Proof.
   unfold isValidFlatTM. unfold Nat.ltb.
   extract. unfold isValidFlatTM_time. solverec.
+  unfold leb_time. nia. 
 Qed.
 
 Definition  isValidFlatTape_time (sig:nat) (t:nat) :=
-  t * (sig * 14 + 29 + 44) + 37.
+  t * (c__forallb + 29 + sig * c__leb + c__leb2 + 2 * (S c__leb)) + c__forallb + 56.
 
 Lemma isValidFlatTape_time_le sig t t' :
   t <= t' -> isValidFlatTape_time sig t <= isValidFlatTape_time sig t'.
@@ -327,8 +338,8 @@ Proof.
   unfold isValidFlatTape.
   refine (_:computableTime' (fun (sig : nat) (t : tape nat) => forallb (f sig) (tapeToList t)) _).
   
-  assert (computableTime' f (fun x _ =>(1, fun y _ => (Init.Nat.min y x * 14 + 29, tt)))).
-  { unfold f,Init.Nat.ltb. extract. solverec. }
+  assert (computableTime' f (fun x _ =>(1, fun y _ => (Init.Nat.min y x * c__leb + c__leb2 + 2* c__leb + 2, tt)))).
+  { unfold f,Init.Nat.ltb. extract. unfold leb_time. solverec. nia. }
 
   extract. solverec.
   evar (c:nat).
@@ -338,7 +349,7 @@ Proof.
   unfold isValidFlatTape_time,c. lia.
 Qed.
 
-Definition  isValidFlatTapes_time (sig lt mt :nat) := lt*(isValidFlatTape_time sig mt + 30) + 28.
+Definition  isValidFlatTapes_time (sig lt mt :nat) := lt*(isValidFlatTape_time sig mt + 15 + c__forallb) + 20 + c__forallb.
 
 
 Instance term_isValidFlatTapes : computableTime' isValidFlatTapes (fun sig _ => (1, fun n _ => (1,fun t _ => (isValidFlatTapes_time sig n (sizeOfmTapesFlat t),tt)))).

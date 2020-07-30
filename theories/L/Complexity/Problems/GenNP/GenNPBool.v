@@ -45,8 +45,8 @@ Proof.
    eexists (fun x => f' x). 
    +extract.
     recRel_prettify2. cbn [size]. set (size (enc x)). unfold f'. reflexivity. 
-   +subst f'. cbn beta. smpl_inO. all:eapply inOPoly_comp. all:try setoid_rewrite size_nat_enc. all:smpl_inO.
-   +subst f'. cbn beta. smpl_inO. all:try setoid_rewrite size_nat_enc. all:smpl_inO.
+   +subst f'. cbn beta. unfold add_time. smpl_inO. all:eapply inOPoly_comp. all:try setoid_rewrite size_nat_enc. all:smpl_inO.
+   +subst f'. cbn beta. unfold add_time. smpl_inO. all:try setoid_rewrite size_nat_enc. all:smpl_inO.
    + eexists (fun x => _);repeat split.
     *intros. 
      repeat (setoid_rewrite -> size_prod;cbn[fst snd]).
@@ -81,6 +81,7 @@ Proof.
      assert (H3 : ( size (enc steps) <= n)) by (subst n;rewrite !size_prod;cbn;lia).
      assert (H4 : ( size (enc c) <= n)) by (subst n;rewrite !size_prod;cbn;lia).
      solverec.
+     all: unfold leb_time. 
      unfold t__evalForTimeBool,t__evalForTime,HeapMachine.heapStep_timeBound,Unfolding.unfoldBool_time,Lookup.lookupTime.
      all:rewrite <- size_term_enc_r in H1.
      all:rewrite <- size_nat_enc_r in H2.

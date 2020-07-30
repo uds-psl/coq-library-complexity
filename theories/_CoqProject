@@ -12,8 +12,6 @@ L/Complexity/PolyBounds.v
 L/Complexity/Tactics.v
 L/Complexity/MorePrelim.v
 L/Complexity/FlatFinTypes.v
-L/Datatypes/LLists.v
-L/Datatypes/LLNat.v
 
 L/Complexity/Problems/SharedSAT.v
 L/Complexity/Problems/SAT.v

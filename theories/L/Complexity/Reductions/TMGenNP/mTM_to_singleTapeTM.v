@@ -164,14 +164,17 @@ Section LMGenNP_to_TMGenNP_mTM.
       eexists (fun x => time x).
       { unfold f__nice. Import Nat. extract. solverec.
         set (n0:=(L.size (enc (a0, b0, b)))).
-        assert (a0+b0+b+1 <= n0). 1:{ unfold n0. rewrite !size_prod. cbn [fst snd]. rewrite !size_nat_enc. nia. }
+        assert (a0+b0+b+1 <= n0). 1:{ unfold n0. rewrite !size_prod. cbn [fst snd]. rewrite !size_nat_enc. 
+          unfold c__natsizeS, c__natsizeO; nia. }
+        unfold add_time, mult_time. 
         unshelve erewrite (_ : a0 <= n0). nia. unshelve erewrite (_ : b0 <= n0). nia. unshelve erewrite (_ : b <= n0). nia.
         unfold time. reflexivity. }
       1,2:unfold time;smpl_inO.
       { evar (f__size : nat -> nat). [f__size]:intros n0. exists f__size.
         { intros [[a0 b0] b]. unfold f__nice.
           set (n0:=(L.size (enc (a0, b0, b)))).
-          assert (a0+b0+b+1 <= n0). 1:{ unfold n0. rewrite !size_prod. cbn [fst snd]. rewrite !size_nat_enc. nia. }
+          assert (a0+b0+b+1 <= n0). 1:{ unfold n0. rewrite !size_prod. cbn [fst snd]. rewrite !size_nat_enc. 
+            unfold c__natsizeS, c__natsizeO; nia. }
           rewrite size_nat_enc. 
           unshelve erewrite (_ : a0 <= n0). nia. unshelve erewrite (_ : b0 <= n0). nia. unshelve erewrite (_ : b <= n0). nia.
           change S with (plus 1).
@@ -239,8 +242,8 @@ Section LMGenNP_to_TMGenNP_mTM.
           setoid_rewrite size_sum. rewrite size_boundary. setoid_rewrite size_sigList.
           repeat setoid_rewrite <- plus_assoc.  ring_simplify. ring_simplify (7 + (4 + 5)).
           repeat setoid_rewrite sumn_map_add. repeat setoid_rewrite sumn_map_c. setoid_rewrite sumn_map_mult_c_r.
-          setoid_rewrite sumn_map_le_pointwise with (f2:=fun x => _)at 2.
-          2:{ setoid_rewrite sizeOfTape_encodeTape_le at 1;intros;rewrite sizeOfmTapes_upperBound at 1. 2:now apply tolist_In. reflexivity. }
+          setoid_rewrite sumn_map_le_pointwise with (f2:=fun x => _)at 2 3 4.
+          2,3,4: (setoid_rewrite sizeOfTape_encodeTape_le at 1;intros;rewrite sizeOfmTapes_upperBound at 1; [ | now apply tolist_In]; reflexivity).
           rewrite sumn_map_c.
           setoid_rewrite sumn_map_le_pointwise with (f2:=fun x => _).
           2:{ intros. setoid_rewrite sumn_map_le_pointwise with (f2:=fun x => _).
@@ -263,13 +266,15 @@ Section LMGenNP_to_TMGenNP_mTM.
         rewrite !size_prod in Hn0. cbn [fst snd] in Hn0.
         erewrite (mono__polyTC _ (x':=n0)). 2:{ subst n0. repeat set (L.size _). nia. }
         setoid_rewrite (mono__polyTC _ (x':=n0)) at 2. 2:{ subst n0. repeat set (L.size _). nia. } 
-        assert (H'' : L.size (enc (b, sizeOfmTapes a0, b0)) <= n0*5).
+        set (c0 := 5+c__natsizeO +c__natsizeS). 
+        assert (H'' : L.size (enc (b, sizeOfmTapes a0, b0)) <= n0*c0).
         {  rewrite !size_prod. cbn [fst snd]. setoid_rewrite size_nat_enc at 2.
             rewrite TMEncoding.sizeOfmTapes_by_size. subst n0. repeat set (L.size _). nia. }
-        setoid_rewrite (mono__polyTC _ (x':=n0*5)) at 3. 2:exact H''. 
+        setoid_rewrite (mono__polyTC _ (x':=n0*c0)) at 3. 2:exact H''. 
         specialize (bounds__rSP (f:=f__nice)) as H'. setoid_rewrite <- size_nat_enc_r in H'.
+        unfold mult_time, add_time. 
         unshelve rewrite H'. now apply resSize__polyTC.
-        setoid_rewrite mono__rSP. 2:exact H''.
+        setoid_rewrite mono__rSP. 2,3:exact H''.
         rewrite TMEncoding.sizeOfmTapes_by_size at 1. unshelve erewrite (_ : L.size (enc a0) <= n0). now (subst n0;clear;repeat set (L.size _);nia).
         unfold time. reflexivity.
       }
@@ -277,7 +282,7 @@ Section LMGenNP_to_TMGenNP_mTM.
       { evar (f__size : nat -> nat). [f__size]:intros n0. exists f__size.
         { intros [[a0 b0] b]. remember (L.size (enc (a0, b0, b))) as n0 eqn:Hn0.
           rewrite !size_prod in Hn0|-*. cbn [fst snd] in Hn0|-*. rewrite !size_nat_enc.
-          assert (H'' : L.size (enc (b, sizeOfmTapes a0, b0)) <= n0*5).
+          assert (H'' : L.size (enc (b, sizeOfmTapes a0, b0)) <= n0*(5 + c__natsizeS + c__natsizeO)).
         {  rewrite !size_prod. cbn [fst snd]. setoid_rewrite size_nat_enc at 2.
            rewrite TMEncoding.sizeOfmTapes_by_size. subst n0. repeat set (L.size _). nia. }
         specialize (bounds__rSP (f:=f__nice)) as H'. setoid_rewrite <- size_nat_enc_r in H'.

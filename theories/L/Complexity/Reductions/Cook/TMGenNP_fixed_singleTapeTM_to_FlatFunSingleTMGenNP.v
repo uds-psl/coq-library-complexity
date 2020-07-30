@@ -5,7 +5,7 @@ From Undecidability.L.Functions Require Import EqBool.
 
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Complexity Require Import PolyBounds FlatFinTypes MorePrelim.
-From Undecidability.L.Datatypes Require Import LProd LOptions LBool LSum LLNat LLists LFinType.
+From Undecidability.L.Datatypes Require Import LProd LOptions LBool LSum LNat Lists LFinType.
 
 (** * Reduction of GenNP with fixed TM to GenNP with variable TM *)
 

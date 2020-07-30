@@ -1,9 +1,8 @@
 From Undecidability.L.Complexity.Problems Require Export SharedSAT.
 Require Import Lia. 
-From Undecidability.L.Datatypes Require Import LLists. 
 
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import  LProd LOptions LBool LLNat LLists LUnit.
+From Undecidability.L.Datatypes Require Import  LProd LOptions LBool LNat Lists LUnit.
 From Undecidability.L.Functions Require Import EqBool. 
 From Undecidability.L.Complexity Require Import PolyBounds MorePrelim. 
 

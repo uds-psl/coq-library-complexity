@@ -1,6 +1,6 @@
 From Undecidability.L Require Import L .
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import LLists LLNat. 
+From Undecidability.L.Datatypes Require Import Lists LNat. 
 From Undecidability.L.Complexity.Problems Require Export SharedSAT.
 Require Import Lia Nat. 
 
@@ -110,9 +110,9 @@ Fixpoint formula_size (f : formula) := match f with
 end. 
 
 (** ** extraction *)
-From Undecidability.L.Datatypes Require Import LNat LLNat.
+From Undecidability.L.Datatypes Require Import LNat.
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import  LProd LOptions LBool LLists LUnit.
+From Undecidability.L.Datatypes Require Import  LProd LOptions LBool LUnit.
 From Undecidability.L.Complexity Require Import PolyBounds. 
 
 MetaCoq Run (tmGenEncode "formula_enc" formula).

@@ -44,12 +44,12 @@ Proof.
   { unfold f. extract.
     solverec.
     set (n0:=(size (enc (a0, b0, b)))).
-    eassert (b <= n0) as ->.
+    eassert (b <= n0) as H.
     {subst n0. rewrite !LProd.size_prod;cbn [fst snd]. now rewrite size_nat_enc_r at 1. }
     unfold time_compile.
     eassert (size a0 <= n0) as ->.
     {subst n0. rewrite !LProd.size_prod;cbn [fst snd]. now rewrite LTerm.size_term_enc_r at 1. }
-    unfold time. reflexivity.
+    unfold time. unfold add_time, mult_time. rewrite H . reflexivity.
   }
   1,2:now unfold time;smpl_inO.
   {unfold f. evar (resSize : nat -> nat). [resSize]:intros n0. eexists resSize.

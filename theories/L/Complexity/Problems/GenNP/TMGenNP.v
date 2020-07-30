@@ -69,7 +69,7 @@ Proof.
      intros [[[M maxSize] steps] t] [].
      split;[ |now repeat destruct _].
      rewrite sizeOfmTapesFlat_timeBySize.
-     rewrite Nat.le_min_r.
+     unfold leb_time. rewrite Nat.le_min_r.
      unfold sizeOfmTapesFlat_timeSize.
      remember (size (enc (M, maxSize, steps, t))) as x.
 

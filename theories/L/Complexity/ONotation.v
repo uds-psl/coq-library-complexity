@@ -206,6 +206,12 @@ Proof.
   rewrite Nat.pow_mul_l,Nat.pow_mul_r. reflexivity.
 Qed.
 
+Lemma inOPoly_S f : inOPoly f -> inOPoly (fun x => S (f x)). 
+Proof. 
+  intros H. eapply (@inOPoly_add (fun _ => 1) f). 2: apply H. 
+  apply inOPoly_c. 
+Qed.
+
 Lemma inOPoly_comp f1 f2: monotonic f1 -> inOPoly f1 -> inOPoly f2 -> inOPoly (fun x => f1 (f2 x)).
 Proof.
   intros ? (n1&?) (n2&?).
@@ -227,7 +233,7 @@ Proof.
   rewrite Nat.pow_mul_r. reflexivity.
 Qed.
 
-Smpl Add 10 (first [ simple eapply inOPoly_add | simple eapply inOPoly_mul | simple eapply inOPoly_c | simple eapply inOPoly_pow | simple eapply inOPoly_x | eassumption])  : inO.
+Smpl Add 10 (first [ simple eapply inOPoly_add | simple eapply inOPoly_S | simple eapply inOPoly_mul | simple eapply inOPoly_c | simple eapply inOPoly_pow | simple eapply inOPoly_x | eassumption])  : inO.
 
 
 Instance inO_inOPoly_trans : Proper (Basics.flip inO ==> Basics.impl) inOPoly.

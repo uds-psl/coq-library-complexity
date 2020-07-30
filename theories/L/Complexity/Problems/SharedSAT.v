@@ -1,5 +1,5 @@
 From Undecidability.L Require Import L.
-From Undecidability.L.Datatypes Require Import LLists LLNat. 
+From Undecidability.L.Datatypes Require Import Lists LNat. 
 Require Import Lia. 
 
 (** * Shared Definitions for SAT and FSAT *)
