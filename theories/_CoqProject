@@ -8,10 +8,10 @@ COQDOCFLAGS = "--charset utf-8 -s --with-header ../website/resources/header.html
 L/Complexity/overview.v
 
 
-L/Complexity/PolyBounds.v
-L/Complexity/Tactics.v
-L/Complexity/MorePrelim.v
-L/Complexity/FlatFinTypes.v
+L/Complexity/CookPrelim/PolyBounds.v
+L/Complexity/CookPrelim/Tactics.v
+L/Complexity/CookPrelim/MorePrelim.v
+L/Complexity/CookPrelim/FlatFinTypes.v
 
 L/Complexity/Problems/SharedSAT.v
 L/Complexity/Problems/SAT.v
