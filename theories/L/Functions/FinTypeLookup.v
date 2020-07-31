@@ -1,6 +1,6 @@
 From Undecidability.L.Tactics Require Import LTactics.
 From Undecidability.L.Datatypes Require Import LFinType LBool LProd Lists.
-From Undecidability.L.Functions Require Export EqBool.
+From Undecidability.L.Functions Require Import EqBool.
 
 Section Lookup.
   Variable X Y : Type.
@@ -47,10 +47,12 @@ Section funTable.
   Definition funTable :=
     map (fun x => (x,f x)) (elem X).
 
+
   Variable (eqbX : X -> X -> bool).
   Context `{eqbClass X eqbX}.
 
-  Lemma lookup_funTable x d: lookup x funTable d = f x.
+  Lemma lookup_funTable x d:
+    lookup x funTable d = f x.
   Proof.
     unfold funTable.
     specialize (elem_spec x).
@@ -107,3 +109,20 @@ Proof.
    +split. 2:easy.
     now intros (?&[]). 
 Qed.
+
+
+Section finFun.
+  Context (X : finType) Y {reg__X:registered X} {reg__Y:registered Y}.
+  Context {eqbX : X -> X -> bool} `{eqbClass X eqbX} `{@eqbCompT X _ eqbX _}.
+    
+  Lemma finFun_computableTime_const (f:X -> Y) (d:Y):
+    {c & computableTime' f (fun _ _ => (c,tt))}.
+  Proof.
+    evar (c:nat). exists c.
+    apply computableTimeExt with (x:= (fun c => lookup c (funTable f) d )).
+    { cbn. intros ?. now rewrite lookup_funTable. }
+    extract.
+    solverec. rewrite lookupTime_leq.
+    unfold funTable. rewrite map_length,size_finType_any_le. unfold c. reflexivity.
+  Qed.
+End finFun.

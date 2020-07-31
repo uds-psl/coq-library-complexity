@@ -13,7 +13,7 @@ From Undecidability Require Import TMGenNP.M_LM2TM.
 
 Check LMtoTM.M.
 
-From Undecidability Require Import LSum.
+From Undecidability Require Import LSum L.TM.CompCode.
 
 From Undecidability Require Import CompCode.
 
@@ -373,46 +373,6 @@ Proof.
 Qed.
 Smpl Add 5 unshelve simple eapply pTC_initValue : polyTimeComputable.
 
-
-(* 
-Local Lemma reg_M_sig : registered M.sig.
-Proof.
-  unfold M.sig. cbn. unfold HaltingProblem.sigStep,Alphabets.sigHeap,Alphabets.sigHEntr,Alphabets.sigHEntr',Alphabets.sigHClos.
-  exact _. 
- *)
-(*MOVE to*)
-Check sigList_enc.
-Import GenEncode Alphabets.
-MetaCoq Run (tmGenEncode "sigNat_enc" sigNat).
-Hint Resolve sigNat_enc_correct : Lrewrite.
-
-Import GenEncode.
-MetaCoq Run (tmGenEncode "ACom_enc" ACom).
-Hint Resolve ACom_enc_correct : Lrewrite.
-
-Section sigSum.
-  Context X Y {R__X:registered X} {R__Y:registered Y}.
-  MetaCoq Run (tmGenEncode "sigSum_enc" (@sigSum X Y)).
-  MetaCoq Run (tmGenEncode "sigPair_enc" (@sigPair X Y)).
-  MetaCoq Run (tmGenEncode "sigOption_enc" (@sigOption X)).
-
-  Global Instance term_sigPair_Y : computableTime' (@sigPair_Y X Y) (fun _ _ => (1,tt)).
-  Proof. extract constructor. solverec. Qed.
-  
-  Global Instance term_sigPair_X : computableTime' (@sigPair_X X Y) (fun _ _ => (1,tt)).
-  Proof. extract constructor. solverec. Qed.
-  
-  Global Instance term_sigSum_Y : computableTime' (@sigSum_Y X Y) (fun _ _ => (1,tt)).
-  Proof. extract constructor. solverec. Qed.
-  
-  Global Instance term_sigSum_X : computableTime' (@sigSum_X X Y) (fun _ _ => (1,tt)).
-  Proof. extract constructor. solverec. Qed.
-  
-End sigSum.
-
-Hint Resolve sigSum_enc_correct : Lrewrite.
-Hint Resolve sigPair_enc_correct : Lrewrite.
-Hint Resolve sigOption_enc_correct : Lrewrite.
 
 
 Import HaltingProblem.

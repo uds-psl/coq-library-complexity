@@ -376,7 +376,7 @@ Section fixTM.
 
   (**try to maximally invert the representation relation of tapes (hypothesis H) to derive equalities between the symbols of the represented tape and the representing string *)
   (**this tactic can be expensive to call as it goes into recursion after having eliminated the head of the strings *)
-  Ltac inv_tape' H := repeat match type of H with
+  Ltac inv_tape' H := repeat once match type of H with
                         | _ ≃t(?p, ?w) ?x :: ?h => is_var x; destruct x; [discr_tape | ]     
                         | _ ≃t(?p, ?w) (inr ?e) :: ?h => is_var e; destruct e; [discr_tape | ]
                         | _ ≃t(?p, ?w) (inr (inr ?e)) :: ?h => is_var e; destruct e
