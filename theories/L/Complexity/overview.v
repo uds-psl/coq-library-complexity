@@ -78,27 +78,3 @@ Lemma FlatSingleTMGenNP_in_NP : inNP (unrestrictedP FlatSingleTMGenNP).
 Proof. 
   eapply red_inNP; [apply FlatSingleTMGenNP_to_SAT | apply sat_NP]. 
 Qed. 
-
-(** We also have a variant of GenNP with a fixed Turing machine that will be used for the reduction from L.*)
-Require Import Undecidability.L.Tactics.Computable. 
-Require Import Undecidability.L.Complexity.Reductions.Cook.TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP.
-Require Import Undecidability.L.Datatypes.LFinType.
-From Undecidability.L.Tactics Require Import LTactics GenEncode.
-Lemma fixedTM_to_FlatSingleTMGenNP (sig : finType) (M : TM.mTM sig 1): 
-  let _ := @registered_finType sig in 
-  (unrestrictedP (TMGenNP_fixed_singleTapeTM M)) ⪯p (unrestrictedP FlatSingleTMGenNP). 
-Proof. 
-  eapply reducesPolyMO_transitive with (Q := unrestrictedP (FlatFunSingleTMGenNP)). 
-  apply (TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP M). 
-  { 
-    admit. 
-  } 
-  eapply reducesPolyMO_intro_unrestricted with (f := id).
-  - exists (fun _ => 1). 
-    + extract. solverec. 
-    + smpl_inO.  
-    + smpl_inO. 
-    + exists (fun n => n). 2, 3: smpl_inO.  
-      intros x. now cbn. 
-  - intros (((? & ?) & ?) & ?). now setoid_rewrite FlatFunSingleTMGenNP_FlatSingleTMGenNP_equiv.
-Admitted. 
