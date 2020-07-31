@@ -1,16 +1,17 @@
 From Undecidability.L.Complexity.Reductions.Cook Require Import FlatSingleTMGenNP_to_FlatTPR FlatTPR_to_FlatPR FlatPR_to_BinaryPR BinaryPR_to_FSAT. 
 From Undecidability.L.Complexity.Reductions Require Import FSAT_to_SAT kSAT_to_SAT kSAT_to_FlatClique. 
-From Undecidability.L.Complexity.Problems.Cook Require Import FlatPR FlatTPR GenNP BinaryPR. 
+From Undecidability.L.Complexity.Problems.Cook Require Import FlatPR GenNP BinaryPR.
+From Undecidability.L.Complexity.Problems.Cook Require FlatTPR. 
 From Undecidability.L.Complexity.Problems Require Import SAT FSAT kSAT FlatClique. 
 From Undecidability.L.Complexity Require Import NP. 
 
 (** * Overview over the results proved in the thesis *)
 
-Lemma FlatSingleTMGenNP_to_FlatTPR : (unrestrictedP FlatSingleTMGenNP) ⪯p (unrestrictedP FlatTPRLang). 
+Lemma FlatSingleTMGenNP_to_FlatTPR : (unrestrictedP FlatSingleTMGenNP) ⪯p (unrestrictedP FlatTPR.FlatTPRLang). 
 exact FlatSingleTMGenNP_to_FlatTPRLang_poly. 
 Qed. 
 
-Lemma FlatTPR_to_FlatPR : (unrestrictedP FlatTPRLang) ⪯p (unrestrictedP FlatPRLang). 
+Lemma FlatTPR_to_FlatPR : (unrestrictedP FlatTPR.FlatTPRLang) ⪯p (unrestrictedP FlatPRLang). 
 exact FlatTPR_to_FlatPR_poly. 
 Qed. 
 
@@ -84,12 +85,13 @@ Require Import Undecidability.L.Tactics.Computable.
 Require Import Undecidability.L.Complexity.Reductions.Cook.TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP.
 Require Import Undecidability.L.Datatypes.LFinType.
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
-Lemma fixedTM_to_FlatSingleTMGenNP (sig : finType) (M : TM.mTM sig 1): 
-  let _ := @registered_finType sig in 
+Import Specif.
+Lemma fixedTM_to_FlatSingleTMGenNP (sig : finType) (M : TM.mTM sig 1)
+      (reg__sig : registered sig) (index__comp : {c & computableTime' (index (F:=sig)) (fun _ _ => (c,tt))}):
   (unrestrictedP (TMGenNP_fixed_singleTapeTM M)) ⪯p (unrestrictedP FlatSingleTMGenNP). 
 Proof. 
   eapply reducesPolyMO_transitive with (Q := unrestrictedP (FlatFunSingleTMGenNP)). 
-  apply (TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP M). 
+  apply (TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP M).  eassumption.
   eapply reducesPolyMO_intro_unrestricted with (f := id).
   - exists (fun _ => 1). 
     + extract. solverec. 

@@ -393,7 +393,7 @@ Section fixTM.
                                                                   specialize (tape_repr_inv13 H) as (Heqn & (? & ->)); inv Heqn
                         end;
                         (*if we can, we go into recursion after applying tape_repr_step *)
-                        match type of H with
+                        once match type of H with
                         |  ?u1 :: _ ≃t(?p, S ?w) ?e :: _  => let H' := fresh in specialize (tape_repr_step H) as H'; inv_tape' H'; clear H' 
                          | _ => idtac
                         end.
@@ -414,14 +414,14 @@ Section fixTM.
                                  | ?u ≃t(?p, ?w) inr _ :: ?h  => is_var u; destruct u; try discr_tape
                                  end;
                              inv_tape' H;
-                             repeat match goal with [H : ?h = ?h |- _] => clear H end.
+                             repeat once match goal with [H : ?h = ?h |- _] => clear H end.
 
   (**a variant of destruct_tape_in that takes care of z constant for the inversion and later tries to substitute the z again *)
   Ltac destruct_tape_in_tidy H := unfold reprTape in H;
-                             try match type of H with
+                             try once match type of H with
                                  | _ ≃t(_, z) _ => let H' := fresh "n" in let H'' := fresh H' "Zeqn" in
                                                     remember z as H' eqn:H'' in H; destruct_tape_in H;
-                                                    repeat match goal with [H2 : context[wo + H'] |- _]=> cbn [wo Nat.add] in H2 end; rewrite !H'' in *; try clear H' H'' 
+                                                    repeat once match goal with [H2 : context[wo + H'] |- _]=> cbn [wo Nat.add] in H2 end; rewrite !H'' in *; try clear H' H'' 
                                  | _ => destruct_tape_in H
                              end. 
  
@@ -436,7 +436,7 @@ Section fixTM.
                         | [H: ?u ≃t(?p, ?w) inr _ :: ?h |- _] => is_var u; destruct u; try discr_tape
                             end;
                         inv_tape;
-                        repeat match goal with [H : ?h = ?h |- _] => clear H end.
+                        repeat once match goal with [H : ?h = ?h |- _] => clear H end.
 
 
   (** ** Inductive rules for tape rewrites *)
@@ -446,7 +446,7 @@ Section fixTM.
 
   (** unfold the three symbols at the head of premise and conclusion of a rewrite window *)
   Ltac rewritesHeadInd_inv := 
-    repeat match goal with
+    repeat once match goal with
     | [H : rewritesHeadInd _ ?a _ |- _] => is_var a; destruct a; try (inv H; fail)
     | [H : rewritesHeadInd _ (_ :: ?a) _ |- _] => is_var a; destruct a; try (inv H; fail)
     | [H : rewritesHeadInd _ (_ :: _ :: ?a) _ |- _] => is_var a; destruct a; try (inv H; fail)
@@ -502,7 +502,7 @@ Section fixTM.
   cbn [polarityFlipGamma polarityFlipTapeSigma polarityFlipSigma polarityFlip] : core.
 
   Ltac rewHeadTape_inv1 :=
-    repeat match goal with
+    repeat once match goal with
     | [H : rewHeadTape _ _ |- _] => inv H
     | [H : tapeRules _ _ _ _ _ _ |- _] => inv H
     end.
@@ -511,7 +511,7 @@ Section fixTM.
   Lemma identityWindow_revp (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) : identityRules γ1 γ2 γ3 γ4 γ5 γ6 <-> identityRules (~γ3) (~γ2) (~γ1) (~γ6) (~γ5) (~γ4).
   Proof.
     split; intros; inv H; cbn.
-    all: repeat match goal with
+    all: repeat once match goal with
            | [H : delim |- _] => destruct H
            | [H : inr _ = (~ _) |- _] => symmetry in H
            | [H : inr _ = inr _ |- _] => inv H
@@ -542,7 +542,7 @@ Section fixTM.
 
   (** inversion of the tape rules *)
   Ltac rewHeadTape_inv2 :=
-    repeat match goal with
+    repeat once match goal with
       | [H : rewHeadTape _ _ |- _ ] => inv H
       | [H : tapeRules _ _ _ _ _ _ |- _] => inv H
       | [H : shiftRightRules _ _ _ _ _ _ |- _ ] => inv H
@@ -903,7 +903,7 @@ Section fixTM.
   Proposition Some_injective (A : Type) : forall (x y : A), Some x = Some y -> x = y. 
   Proof. intros; congruence. Qed. 
 
-  Ltac simp_eqn := repeat match goal with
+  Ltac simp_eqn := repeat once match goal with
                           | [H : trans (?a, ?b) = ?h1, H1 : trans (?a, ?b) = ?h2 |- _] => assert (h1 = h2) by congruence; clear H1
                           | [H : (?a, ?b) = (?c, ?d) |- _] => specialize (prod_eq H) as (? & ?); clear H
                           | [H : ?a = ?a |- _] => clear H
@@ -1327,7 +1327,7 @@ Section fixTM.
                     end.  
 
   (** inversions for the second level of the hierarchy of predicates *) 
-  Ltac inv_trans_prim := repeat match goal with 
+  Ltac inv_trans_prim := repeat once match goal with 
         | [H : transSomeSome _ _ _ (inl (_, _)) _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transSomeSome_inv3 in H as (<- & (? & Heqn') & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn' 
         | [H : transSomeSome _ (inl (_, _)) _ _ _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transSomeSome_inv1 in H as (<- & (? & Heqn') & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn' 
         | [H : transSomeSome _ _ (inl (_, _)) _ _ _ _ |- _] => let Heqn := fresh "eqn" in let Heqn' := fresh "eqn" in apply transSomeSome_inv2 in H as (<- & (? & Heqn') & (? & ? & Heqn & ?)); inv_eqn Heqn; inv_eqn Heqn' 
@@ -1458,7 +1458,7 @@ Section fixTM.
   Ltac inv_trans_sec := 
   match goal with 
   | [H : trans (_, _) = (_, (_, neutral)) |- _] => 
-    repeat match goal with 
+    repeat once match goal with 
             | [H2 : context[transSomeSomeLeft] |- _] => first [eapply transSomeSomeLeft_inv3 in H2; [ | apply H] | inv H2; now simp_eqn]  
             | [H2 : context[transSomeSomeRight] |- _] => first [eapply transSomeSomeRight_inv3 in H2; [ | apply H] | inv H2; now simp_eqn] 
             | [H2 : context[transSomeSomeCenter] |- _] => first [eapply transSomeSomeCenter_inv3 in H2; [ | apply H] | inv H2; now simp_eqn] 
@@ -1473,7 +1473,7 @@ Section fixTM.
             | [H2 : context[transNoneNoneCenter] |- _] => first [eapply transNoneNoneCenter_inv3 in H2; [ | apply H] | inv H2; now simp_eqn] 
     end 
   | [H : trans (_, _) = (_, (_, negative)) |- _] => 
-    repeat match goal with 
+    repeat once match goal with 
             | [H2 : context[transSomeSomeLeft] |- _] => first [eapply transSomeSomeLeft_inv2 in H2; [ | apply H] | inv H2; now simp_eqn]  
             | [H2 : context[transSomeSomeRight] |- _] => first [eapply transSomeSomeRight_inv2 in H2; [ | apply H] | inv H2; now simp_eqn] 
             | [H2 : context[transSomeSomeCenter] |- _] => first [eapply transSomeSomeCenter_inv2 in H2; [ | apply H] | inv H2; now simp_eqn] 
@@ -1488,7 +1488,7 @@ Section fixTM.
             | [H2 : context[transNoneNoneCenter] |- _] => first [eapply transNoneNoneCenter_inv2 in H2; [ | apply H] | inv H2; now simp_eqn] 
     end 
   | [H : trans (_, _) = (_, (_, positive)) |- _] => 
-    repeat match goal with 
+    repeat once match goal with 
             | [H2 : context[transSomeSomeLeft] |- _] => first [eapply transSomeSomeLeft_inv1 in H2; [ | apply H] | inv H2; now simp_eqn]  
             | [H2 : context[transSomeSomeRight] |- _] => first [eapply transSomeSomeRight_inv1 in H2; [ | apply H] | inv H2; now simp_eqn] 
             | [H2 : context[transSomeSomeCenter] |- _] => first [eapply transSomeSomeCenter_inv1 in H2; [ | apply H] | inv H2; now simp_eqn] 
@@ -1527,7 +1527,7 @@ Section fixTM.
 
   Notation rewHeadSim := (rewritesHeadInd simRules). 
   Ltac rewHeadSim_inv1 :=
-    repeat match goal with
+    repeat once match goal with
     | [H : rewHeadSim _ _ |- _] => inv H
     | [H : simRules _ _ _ _ _ _ |- _] => destruct H as [H | [H | H]]
     | [H : transRules _ _ _ _ _ _ |- _] => inv H
@@ -1870,7 +1870,7 @@ Section fixTM.
     end.  
 
   (*try to eliminate variables from the goal in the context of niltapes, i.e. substitute eqns such as S n = z so that we have a z in the goal again *) 
-  Ltac clear_niltape_eqns := repeat match goal with 
+  Ltac clear_niltape_eqns := repeat once match goal with 
     | [ H : ?n = z |- context[?n]] => rewrite !H 
     | [ H : S ?n = z |- context[inr(inr (?p, |_|)) :: E ?p ?n]] => 
       replace (inr (inr (p, |_|)) :: E p n) with (E p (S n)) by (now cbn); rewrite !H 
@@ -1945,7 +1945,7 @@ Section fixTM.
     normalise_conf_strings; apply valid_rewritesHeadInd_center; repeat split; 
     [solve_stepsim_rewrite_valid Z1 | solve_stepsim_rewrite_valid W1 | | | ]; 
     match goal with 
-    | [_ :  _ |- simRules _ _ _ _ _ _ ] => eauto 10 with trans 
+    | [_ :  _ |- simRules _ _ _ _ _ _ ] => solve [eauto 10 with trans]
     end.  
 
   Ltac solve_stepsim_repr shiftdir Z2 W2 := exists shiftdir; cbn; (split; [now cbn | split; [apply Z2 | apply W2]]). 
