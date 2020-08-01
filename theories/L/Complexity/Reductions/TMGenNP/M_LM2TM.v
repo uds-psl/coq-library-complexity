@@ -102,7 +102,7 @@ Module LMtoTM.
       rewrite size_le_sizeP. unfold sizeP;rewrite sizeP_size,Lists.size_list.
       rewrite map_rev,<-sumn_rev. rewrite MoreBase.sumn_le_bound.
       2:{ intros ? ([]&<-&?)%in_map_iff. all:cbv. reflexivity. nia. }
-      rewrite map_length. ring_simplify. [c]:exact 54. nia.
+      rewrite map_length. ring_simplify. [c]:exact 54. unfold Lists.c__listsizeNil. nia.
     Qed.
 
     
@@ -168,7 +168,6 @@ Module LMtoTM.
           infTer 5.
           {hnf;cbn. eexists _ (*(compile (Computable.enc (rev bs)))*),[appT]. repeat simple apply conj. 1-2:now simpl_surject;try contains_ext.
            setoid_rewrite ((proj2_sig (BaseCode.App'_steps_nice _) _) : _ <= _).
-           Set Nested Proofs Allowed.
            
            rewrite (correct__leUpToC size_compile_list_bool), Hlebs. reflexivity.
           }

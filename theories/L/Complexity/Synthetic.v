@@ -1,4 +1,4 @@
-From Undecidability.L Require Import Tactics.LTactics Prelim.MoreList Prelim.MoreBase Datatypes.LBinNums.
+From Undecidability.L Require Import Tactics.LTactics Prelim.MoreList Prelim.MoreBase Datatypes.LBinNums Datatypes.LNat.
 From Undecidability.L.Complexity Require Export Monotonic ONotation LinTimeDecodable.
 
 Global Generalizable Variable vX.
@@ -118,6 +118,17 @@ Smpl Add 10 (simple apply mono__polyTC) : inO.
 
 Import Nat.
 
+Definition c__powBound := c__pow2 + c__mult. 
+Lemma pow_time_bound x y : pow_time x y <= (S y) * x^y * c__powBound + y * S x * 2 * c__powBound.
+Proof. 
+  induction y as [ | y IH]; cbn -[Nat.add Nat.mul].
+  - unfold c__powBound. lia. 
+  - rewrite IH. 
+    destruct x; cbn -[Nat.add Nat.mul]. 
+    + unfold mult_time, c__powBound. destruct y; cbn -[c__pow2 c__mult]; nia. 
+    + unfold mult_time, c__powBound. cbn [pow]. lia. 
+Qed.
+
 Lemma inOPoly_computable (f:nat -> nat):
   inOPoly f -> exists f':nat -> nat , inhabited (polyTimeComputable f') /\ (forall x, f x <= f' x) /\ inOPoly f' /\ monotonic f'.
 Proof.
@@ -126,9 +137,10 @@ Proof.
   exists (fun n => c + c*n^i). split.
   -evar (time : nat -> nat). [time]:intros n0.
    split. exists time.
-   {extract. solverec.
+   {extract. solverec. rewrite pow_time_bound. 
+     unfold mult_time. 
     rewrite Nat.pow_le_mono_l. 2:now apply LNat.size_nat_enc_r.
-    rewrite (LNat.size_nat_enc_r x) at 1.
+    rewrite (LNat.size_nat_enc_r x) at 2.
     set (n0:= (size (enc x))). unfold time. reflexivity.
    }
    3:eexists.

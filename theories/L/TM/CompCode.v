@@ -555,7 +555,8 @@ Section encTape.
     exists_UpToC (fun l => c1 * sizeOfTape l + c1).
     {  extract. recRel_prettify. solverec.
        all:try rewrite !map_time_const. all:autorewrite with list. all:cbn [length].
-       all: ring_simplify. [c1]:exact 42. all:subst c1;nia. }
+       all: ring_simplify. [c1]:exact (c__map + c__app + c__rev + 30). 
+       all:subst c1;nia. }
     smpl_upToC_solve.
   Qed.
 

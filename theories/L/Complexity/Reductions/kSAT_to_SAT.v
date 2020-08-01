@@ -1,7 +1,7 @@
 From Undecidability.L.Complexity Require Import NP Synthetic Problems.SAT Problems.Clique. 
 From Undecidability.L Require Import Tactics.LTactics.
 From Undecidability.L.Complexity Require Import Problems.kSAT PolyBounds NP Synthetic. 
-From Undecidability.L.Datatypes Require Import LBool LLNat LLists LProd. 
+From Undecidability.L.Datatypes Require Import LBool LNat Lists LProd. 
 
 Lemma kSAT_to_SAT (k : nat): reducesPolyMO (unrestrictedP (kSAT k)) (unrestrictedP SAT). 
 Proof. 

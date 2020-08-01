@@ -1,6 +1,6 @@
 From Undecidability.L Require Import L.
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import LLists LLNat LProd.
+From Undecidability.L.Datatypes Require Import Lists LNat LProd.
 From PslBase.FiniteTypes Require Import FinTypes Cardinality VectorFin.
 From Undecidability.L.Complexity.Problems Require Import FlatUGraph kSAT FlatClique.
 From Undecidability.L.Complexity.Reductions Require Import kSAT_to_Clique.
@@ -231,7 +231,7 @@ Qed.
 From Undecidability.L.Complexity Require Import NP Synthetic UpToCNary.
 From Undecidability.L Require Import Tactics.LTactics.
 From Undecidability.L.Complexity Require Import Problems.kSAT PolyBounds NP Synthetic. 
-From Undecidability.L.Datatypes Require Import LBool LLNat LLists LProd LOptions. 
+From Undecidability.L.Datatypes Require Import LBool Lists LNat LProd LOptions. 
 
 (** allPositions *)
 Definition c__allPositions := c__length + 16.

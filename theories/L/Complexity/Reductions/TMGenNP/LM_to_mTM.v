@@ -15,7 +15,7 @@ Check LMtoTM.M.
 
 From Undecidability Require Import LSum L.TM.CompCode.
 
-From Undecidability Require Import CompCode.
+From Undecidability Require Import CompCode Alphabets.
 
 Import ProgrammingTools.
 
@@ -201,7 +201,7 @@ Section cons.
     { extract. solverec. now unfold c. }
     1,2:now smpl_inO.
     eexists (fun n => n + 1). 2,3:now smpl_inO.
-    {intros. rewrite size_list_cons. rewrite !LProd.size_prod. nia. 
+    {intros. rewrite size_list_cons. rewrite !LProd.size_prod. unfold c__listsizeCons. nia. 
     }
   Qed.
 End cons.
@@ -237,7 +237,7 @@ Section Vcons.
     {intros. unfold cons. rewrite enc_vector_eq.
      change (to_list (fst x ::: snd x)) with (fst x :: to_list (snd x)).
      rewrite size_list_cons. rewrite !LProd.size_prod.  rewrite <- enc_vector_eq.
-     set (L.size (enc (fst x))). set (L.size (enc (snd x))). nia.
+     set (L.size (enc (fst x))). set (L.size (enc (snd x))). unfold c__listsizeCons. nia.
     }
   Qed.
 End Vcons.
@@ -318,7 +318,7 @@ Proof.
      2: now intros; rewrite <- size_list_enc_r. nia.
    }
     unshelve erewrite (_ : length (f x) <= resSize__rSP Hf (L.size (enc x))).
-   { rewrite <- bounds__rSP,size_list. rewrite sumn_map_add,sumn_map_c. nia.
+   { rewrite <- bounds__rSP,size_list. rewrite sumn_map_add,sumn_map_c. unfold c__listsizeNil, c__listsizeCons. nia.
    }
    set (L.size _). [size]:intros n. unfold size. reflexivity.
   }
@@ -387,15 +387,16 @@ Lemma pTC_Encode_Com : polyTimeComputable (Encode_Com).
 Proof.
   unfold Encode_Com;cbn. unfold Com_to_sum.
   change (fun x1 : sigNat => sigSum_X x1) with (@sigSum_X sigNat ACom).
-  eexists (fun x => x*11 + 16).
-  {extract. solverec. rewrite map_time_const,app_length,!repeat_length,size_Tok_enc. cbn [length]. nia. }
+  eexists (fun x => x*(11 + c__app + c__map) + 16 + c__app + c__map).
+  {extract. solverec. rewrite map_time_const,app_length,!repeat_length,size_Tok_enc. cbn [length]. 
+    nia. }
   1,2:now smpl_inO.
   eexists (fun x => x*5 + 33).
   { intros [];cbn. all:rewrite size_list.
-    2-4:now unfold enc;cbn.
+    2-4:now unfold enc, c__listsizeCons, c__listsizeNil;cbn.
     cbn.
     rewrite map_app,map_repeat,sumn_map_add,sumn_map_c,map_app,sumn_app,map_repeat, map_map,app_length,repeat_length,map_length,sumn_repeat.
-    unfold enc. cbn;ring_simplify. rewrite LNat.size_nat_enc. nia.
+    unfold enc. cbn;ring_simplify. rewrite LNat.size_nat_enc. unfold LNat.c__natsizeS, LNat.c__natsizeO, c__listsizeNil, c__listsizeCons. nia.
   }
   1,2:now smpl_inO.
 Qed.

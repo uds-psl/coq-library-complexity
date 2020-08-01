@@ -62,7 +62,7 @@ Qed.
 
 (** *extraction *)
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import  LProd LOptions LLNat LLists.
+From Undecidability.L.Datatypes Require Import  LProd LOptions.
 From Undecidability.L.Complexity Require Import PolyBounds. 
 
 

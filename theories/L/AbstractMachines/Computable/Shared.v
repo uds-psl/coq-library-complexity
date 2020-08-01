@@ -19,11 +19,11 @@ Qed.
 
 (** *** Primitive functions with Heaps*)
 
-Instance term_get : computableTime' get (fun A _ => (1,fun n _ => (min n (length A)*15+16,tt))).
-extract. solverec.
+Instance term_get : computableTime' get (fun A _ => (1,fun n _ => (min n (length A)*15+21,tt))).
+extract. solverec. unfold nth_error_time, c__ntherror. solverec.
 Qed.
 
 Import Datatypes.
-Instance put_get : computableTime' put (fun A _ => (1,fun _ _ => (length A * 27 + 22,tt))).
-extract. solverec.
+Instance put_get : computableTime' put (fun A _ => (1,fun _ _ => (length A * 27 + 37,tt))).
+extract. solverec. unfold c__app, c__length. lia. 
 Qed.

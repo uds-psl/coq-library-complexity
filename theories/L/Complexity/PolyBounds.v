@@ -2,7 +2,7 @@
 From Undecidability.L.Complexity Require Export NP ONotation. 
 From Undecidability.L.Tactics Require Import LTactics.
 From Undecidability.L.Complexity Require Import MorePrelim.
-From Undecidability.L Require Export Datatypes.LLists Datatypes.LLNat.
+From Undecidability.L Require Export Datatypes.Lists Datatypes.LNat.
 From Undecidability.L.Functions Require Import EqBool. 
 
 (** why the heck isn't this in the standard library? no one knows... *)
@@ -127,6 +127,20 @@ Proof.
   rewrite IHl, H by easy. lia. 
 Qed.
 
+(*concat *)
+Section concat_fixX. 
+  Context {X : Type}.
+  Context `{registered X}.
+  
+  Definition c__concat := c__app + 15.
+  Definition concat_time (l : list (list X)) := fold_right (fun l acc => c__concat * (|l|) + acc + c__concat) c__concat l.
+  Global Instance term_concat : computableTime' (@concat X) (fun l _ => (concat_time l, tt)). 
+  Proof. 
+    extract. unfold concat_time, c__concat. solverec. 
+  Qed. 
+  
+End concat_fixX. 
+
 Lemma concat_time_exp (X : Type) (l : list (list X)): concat_time l = sumn (map (fun l' => c__concat * length l') l) + (|l| + 1) * c__concat. 
 Proof. 
   induction l; cbn -[Nat.add Nat.mul]. 
@@ -194,12 +208,6 @@ Qed.
 Lemma leb_time_bound_r a b : leb_time a b <= (size(enc b) + 1) * c__leb. 
 Proof. 
   unfold leb_time. rewrite Nat.le_min_r. rewrite size_nat_enc_r with (n:= b) at 1. lia. 
-Qed. 
-
-Lemma forallb_time_exp (X : Type) (f : X -> nat) l: forallb_time f l = sumn (map (fun x => f x + c__forallb) l) + c__forallb. 
-Proof. 
-  unfold forallb_time; induction l; cbn; [lia | ].
-  rewrite IHl. easy.
 Qed. 
 
 Section fixXEq. 
@@ -271,7 +279,7 @@ Section fixX.
   Proof. 
     intros [H1 H2]. intros. induction l. 
     - cbn. lia.   
-    - cbn. rewrite IHl, H1. unfold monotonic in H2. 
+    - cbn. rewrite <- Nat.add_assoc, IHl, H1. unfold monotonic in H2. 
       rewrite H2 with (x' := size (enc (a :: l)) + size(enc y)). 2: rewrite list_size_cons; nia. 
       setoid_rewrite H2 with (x' := size(enc (a::l)) + size(enc y)) at 2. 2: rewrite list_size_cons; nia. 
       nia.

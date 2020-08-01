@@ -1,5 +1,5 @@
 From PslBase Require Import Base. 
-From Undecidability.L.Datatypes Require Import LLists.
+From Undecidability.L.Datatypes Require Import Lists.
 From Undecidability.L.Complexity Require Import MorePrelim.
 From Undecidability.L.Complexity.Problems Require Import FSAT SAT kSAT.
 Require Import Lia. 
@@ -722,7 +722,7 @@ Qed.
 
 (** Now we have all the ingredients to show that the encoding size only blows up polynomially.*)
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import  LProd LOptions LBool LLists LUnit LLNat.
+From Undecidability.L.Datatypes Require Import  LProd LOptions LBool LUnit.
 From Undecidability.L.Complexity Require Import PolyBounds.
 
 Lemma reduction_poly_size: 

@@ -1,6 +1,6 @@
 From Undecidability.L Require Import L.
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import LLists LLNat LProd.
+From Undecidability.L.Datatypes Require Import Lists LNat LProd.
 From PslBase Require Import FinTypes. 
 From Undecidability.L.Complexity.Problems Require Import FlatUGraph Clique UGraph.
 From Undecidability.L.Complexity Require Import FlatFinTypes.
@@ -123,7 +123,7 @@ End fixGraph.
 (** ** extraction *)
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Complexity Require Import PolyBounds FlatFinTypes. 
-From Undecidability.L.Datatypes Require Import LProd LOptions LBool LSum LLNat LLists. 
+From Undecidability.L.Datatypes Require Import LProd LOptions LBool LSum. 
 From Undecidability.L.Functions Require Import EqBool.
 
 (** fedges_edge_in_decb *)
@@ -173,7 +173,7 @@ Lemma allPairsOfEdges_decb_time_bound l E : allPairsOfEdges_decb_time l E <= pol
 Proof. 
   induction l; cbn. 
   - unfold poly__allPairsOfEdgesDecb, c__allPairsOfEdgesDecbBound2. lia.  
-  - rewrite IHl. rewrite forallb_time_exp. 
+  - rewrite IHl. unfold forallb_time. 
     rewrite sumn_map_mono. 
     2:{ intros v Hel. unfold allPairsOfEdges_decb_step_time. unfold fedges_edge_in_decb_time.  
         rewrite list_in_decb_time_bound at 1. instantiate (1 := fun _ => _). cbn. reflexivity. 
@@ -271,7 +271,7 @@ Qed.
 Definition poly__fedgesSymmetricDecb n := n * (poly__listInDecb (X := nat * nat) n + c__fedgesEdgeInDecb + c__fedgesSymmetricDecbStep + c__forallb) + c__forallb + c__fedgesSymmetricDecb.
 Lemma fedges_symmetric_decb_time_bound E : fedges_symmetric_decb_time E <= poly__fedgesSymmetricDecb (size (enc E)). 
 Proof. 
-  unfold fedges_symmetric_decb_time. rewrite forallb_time_exp. 
+  unfold fedges_symmetric_decb_time. unfold forallb_time. 
   rewrite sumn_map_mono. 
   2: { intros (v1 & v2) Hel. unfold fedges_symmetric_decb_step_time. 
        unfold fedges_edge_in_decb_time. rewrite list_in_decb_time_bound. 
@@ -301,7 +301,7 @@ Definition fedges_wf_decb_time (V : nat) (E : list fedge) := (|E|) * (fedge_wf_d
 Instance term_fedges_wf : computableTime' fedges_wf_decb (fun V _ => (1, fun E _ => (fedges_wf_decb_time V E, tt))). 
 Proof. 
   extract. solverec. 
-  rewrite forallb_time_exp. rewrite sumn_map_const. 
+  unfold forallb_time. rewrite sumn_map_const. 
   unfold fedges_wf_decb_time, c__fedgesWfDecb. solverec.  
 Qed.
 

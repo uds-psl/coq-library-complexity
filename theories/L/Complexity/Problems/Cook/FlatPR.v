@@ -477,7 +477,7 @@ Qed.
 (** ** extraction *)
 
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import  LProd LOptions LLNat LLists.
+From Undecidability.L.Datatypes Require Import  LProd LOptions.
 
 Section fix_X.
   Variable (X:Type).

@@ -30,11 +30,11 @@ Definition heapStep_time (T:list task) (H: list heapEntry) :=
     closT (var n,_)::_ => lookupTime (length H) n
   | appT::_ => length H*27 
   | _ => 0
-  end + 84.
+  end + 85.
 
 
 Definition heapStep_timeBound maxVar k :=
-  lookupTime k maxVar + k * 27 + 84.
+  lookupTime k maxVar + k * 27 + 85.
 
 Lemma heapStep_timeBound_le s k T V H:
   pow step k (init s) (T,V,H) ->

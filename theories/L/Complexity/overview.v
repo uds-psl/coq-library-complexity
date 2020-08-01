@@ -1,17 +1,16 @@
 From Undecidability.L.Complexity.Reductions.Cook Require Import FlatSingleTMGenNP_to_FlatTPR FlatTPR_to_FlatPR FlatPR_to_BinaryPR BinaryPR_to_FSAT. 
 From Undecidability.L.Complexity.Reductions Require Import FSAT_to_SAT kSAT_to_SAT kSAT_to_FlatClique. 
-From Undecidability.L.Complexity.Problems.Cook Require Import FlatPR GenNP BinaryPR.
-From Undecidability.L.Complexity.Problems.Cook Require FlatTPR. 
+From Undecidability.L.Complexity.Problems.Cook Require Import FlatPR FlatTPR GenNP BinaryPR. 
 From Undecidability.L.Complexity.Problems Require Import SAT FSAT kSAT FlatClique. 
 From Undecidability.L.Complexity Require Import NP. 
 
 (** * Overview over the results proved in the thesis *)
 
-Lemma FlatSingleTMGenNP_to_FlatTPR : (unrestrictedP FlatSingleTMGenNP) ⪯p (unrestrictedP FlatTPR.FlatTPRLang). 
+Lemma FlatSingleTMGenNP_to_FlatTPR : (unrestrictedP FlatSingleTMGenNP) ⪯p (unrestrictedP FlatTPRLang). 
 exact FlatSingleTMGenNP_to_FlatTPRLang_poly. 
 Qed. 
 
-Lemma FlatTPR_to_FlatPR : (unrestrictedP FlatTPR.FlatTPRLang) ⪯p (unrestrictedP FlatPRLang). 
+Lemma FlatTPR_to_FlatPR : (unrestrictedP FlatTPRLang) ⪯p (unrestrictedP FlatPRLang). 
 exact FlatTPR_to_FlatPR_poly. 
 Qed. 
 

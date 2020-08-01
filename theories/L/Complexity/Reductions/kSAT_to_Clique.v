@@ -1,6 +1,6 @@
 From Undecidability.L Require Import L.
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import LLists LLNat LProd.
+From Undecidability.L.Datatypes Require Import Lists LNat LProd.
 From PslBase.FiniteTypes Require Import FinTypes Cardinality VectorFin.
 From Undecidability.L.Complexity Require Import MorePrelim.
 From Undecidability.L.Complexity.Problems Require Import Clique UGraph SAT kSAT.

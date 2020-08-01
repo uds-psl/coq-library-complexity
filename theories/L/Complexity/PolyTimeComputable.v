@@ -229,7 +229,7 @@ Smpl Add 0 simple apply pTC_id : polyTimeComputable.
 Lemma pTC_S : polyTimeComputable S.
 Proof.
   eexists (fun _ => _). exact _. 1,2:now smpl_inO.
-  eexists (fun x => x + 4). 2,3:now smpl_inO. intros. rewrite !LNat.size_nat_enc. lia.
+  eexists (fun x => x + LNat.c__natsizeS + LNat.c__natsizeO). 2,3:now smpl_inO. intros. rewrite !LNat.size_nat_enc. lia.
 Qed.
 Smpl Add 0 simple apply pTC_S : polyTimeComputable.
 
@@ -241,11 +241,12 @@ Proof.
   intros. eapply polyTimeComputable_composition2. 1,2:easy. 
   evar (time:nat -> nat).
   eexists time.
-  {extract. solverec. rewrite LProd.size_prod. cbn - [mult].
-   rewrite !LNat.size_nat_enc. [time]:exact (fun n => n*n). unfold time. cbn. nia. }
+  {extract. solverec. rewrite LProd.size_prod. cbn - [mult c__mult1].
+   rewrite !LNat.size_nat_enc. [time]:exact (fun n => n*n). unfold time, c__mult1, mult_time, c__mult, c__natsizeO, c__natsizeS, c__add1, c__add. nia. }
   1,2:unfold time;now smpl_inO.
   eexists (fun n => n*n). all:unfold time. 2,3:now smpl_inO.
-  intros []. rewrite LProd.size_prod,!LNat.size_nat_enc. cbn. lia.
+  intros []. rewrite LProd.size_prod,!LNat.size_nat_enc. cbn. 
+  unfold c__natsizeS, c__natsizeO. lia.
 Qed.
 Smpl Add 5 simple apply pTC_mult : polyTimeComputable.
 
@@ -256,7 +257,8 @@ Proof.
   evar (time:nat -> nat).
   eexists time.
   {extract. solverec. rewrite LProd.size_prod. cbn - [mult].
-   rewrite !LNat.size_nat_enc. [time]:exact (fun n => 3*n). unfold time. cbn. nia. }
+   rewrite !LNat.size_nat_enc. [time]:exact (fun n => 3*n). unfold time. cbn. 
+   unfold add_time, c__add, c__natsizeS, c__natsizeO. nia. }
   1,2:unfold time;now smpl_inO.
   eexists (fun n => n+n). all:unfold time. 2,3:now smpl_inO.
   intros []. rewrite LProd.size_prod,!LNat.size_nat_enc. cbn. lia.
@@ -270,7 +272,9 @@ Proof.
   evar (time:nat -> nat).
   eexists time.
   {extract. solverec. rewrite LProd.size_prod. cbn - [mult].
-   rewrite !LNat.size_nat_enc. [time]:exact (fun n => n*n). unfold time. cbn. nia. }
+   rewrite !LNat.size_nat_enc. [time]:exact (fun n => n*n). unfold time. cbn. 
+   unfold max_time, c__max2, c__natsizeS, c__natsizeO. 
+   nia. }
   1,2:unfold time;now smpl_inO.
   eexists (fun n => n*n). all:unfold time. 2,3:now smpl_inO.
   intros []. rewrite LProd.size_prod,!LNat.size_nat_enc. cbn. lia.

@@ -22,7 +22,7 @@ Proof.
   all:ring_simplify.
   rewrite size_nat_enc.
   all:repeat first[rewrite <- IHs1,<- IHs2 | rewrite <- IHs]. all:ring_simplify.
-  all:unfold c__size;nia.
+  all:unfold c__size, c__natsizeS, c__natsizeO, c__listsizeCons, c__listsizeNil;nia.
 Qed.
 Import L.
 Definition compileTR' '(stack,res) : (list (term + bool) * list Tok) + list Tok :=
@@ -79,8 +79,8 @@ Qed.
 From Undecidability Require Import Functions.UnboundIteration.
 
 
-Local Definition c1 := (c__compileTR' * 2 + 44).
-Local Definition c2 := 59.
+Local Definition c1 := (c__compileTR' * 2 + 44 + 2 * c__rev).
+Local Definition c2 := 59 + c__rev.
 Definition time_compile x := c1*x +c2.
 
 Instance termT_compile : computableTime' compile (fun s _ => (time_compile (size s),tt)).
@@ -120,7 +120,7 @@ Proof.
   1:{ cbn;unfold f;intro. now autorewrite with list. }
   extract. solverec. unfold f, time. rewrite rev_length, length_compile_leq.
   ring_simplify. 
-  unfold time_compile, c1,c2. (*ring_simplify*) nia.
+  unfold time_compile, c1,c2.   (*ring_simplify*) nia.
 Qed.
 
 
@@ -131,5 +131,5 @@ Proof.
   now unfold sizeP. unfold sizeP;rewrite sizeP_size,Lists.size_list.
   rewrite map_rev,<-sumn_rev. rewrite MoreBase.sumn_le_bound.
   2:{ intros ? ([]&<-&?)%in_map_iff. all:cbv. reflexivity. nia. }
-  rewrite map_length. ring_simplify. [c]:exact 18. nia.
+  rewrite map_length. ring_simplify. [c]:exact (18 + 2 * c__listsizeNil). nia.
 Qed.

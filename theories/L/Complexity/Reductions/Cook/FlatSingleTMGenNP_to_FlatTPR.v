@@ -1,7 +1,7 @@
 From Undecidability.L.TM Require Import TMflatEnc TMflat TMEncoding. 
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Complexity Require Import MorePrelim PolyBounds FlatFinTypes. 
-From Undecidability.L.Datatypes Require Import LProd LOptions LBool LSum LLNat LLists. 
+From Undecidability.L.Datatypes Require Import LProd LOptions LBool LSum LNat Lists. 
 From Undecidability.L.Functions Require Import EqBool.
 From Undecidability.L.Complexity Require Import Reductions.Cook.SingleTMGenNP_to_TPR Problems.Cook.FlatTPR. 
 
@@ -2584,7 +2584,7 @@ Section fixIsInjFinfuncTable.
   Definition poly__allSameEntry n := (c__eqbComp X + c__eqbComp Y) * n + n * (c__allSameEntryStep + c__forallb + c__allSameEntry).
   Lemma allSameEntry_time_bound a b l: allSameEntry_time a b l <= poly__allSameEntry (size (enc l)). 
   Proof. 
-    unfold allSameEntry_time. rewrite forallb_time_exp. unfold allSameEntry_step_time. 
+    unfold allSameEntry_time. unfold forallb_time. unfold allSameEntry_step_time. 
     induction l; cbn -[poly__allSameEntry Nat.mul Nat.add]. 
     - unfold poly__allSameEntry. rewrite size_list; cbn -[Nat.add Nat.mul]. unfold c__listsizeNil. leq_crossout. 
     - destruct a0 as (a' & b'). rewrite !eqb_time_bound_r. 
@@ -2710,11 +2710,11 @@ Proof.
   unfold isBoundTrans_time. destruct t as ((s & v) & (s' & v')). 
   rewrite !eqbTime_le_l. rewrite !ltb_time_bound_l. 
   rewrite !list_size_enc_length. rewrite !list_size_length. 
-  rewrite forallb_time_exp.
+  unfold forallb_time. 
   rewrite sumn_map_mono. 2: {instantiate (1 := fun _ => _).  intros x _. cbn. rewrite optBound_time_bound. reflexivity. }
   rewrite sumn_map_const. 
   
-  rewrite forallb_time_exp.
+  unfold forallb_time. 
   rewrite sumn_map_mono. 2: {instantiate (1 := fun _ => _).  intros x _. cbn. unfold fst_optBound_time. rewrite optBound_time_bound. reflexivity. }
   rewrite sumn_map_const. 
   rewrite !list_size_length. 
@@ -2747,7 +2747,7 @@ Definition poly__isBoundTransTable n := n * poly__isBoundTrans n + (c__forallb +
 Lemma isBoundTransTable_time_bound sig n states l : isBoundTransTable_time sig n states l <= poly__isBoundTransTable (size (enc l) + size (enc sig)). 
 Proof. 
   unfold isBoundTransTable_time. 
-  rewrite forallb_time_exp. induction l.  
+  unfold forallb_time. induction l.  
   - cbn -[Nat.add Nat.mul]. unfold poly__isBoundTransTable. rewrite size_list. cbn- [Nat.add Nat.mul]. unfold c__listsizeNil. nia. 
   - cbn -[Nat.add Nat.mul]. 
     match goal with [ |- ?a + ?b + ?c + ?d + ?e <= _] => replace (a + b + c + d + e) with (a + b + (c + d + e)) by lia end. rewrite IHl. 
