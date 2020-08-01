@@ -1,5 +1,7 @@
 From Undecidability.L Require Import Tactics.LTactics Prelim.MoreList Prelim.MoreBase.
-From Undecidability.L.Complexity Require Import NP Synthetic Monotonic GenNP LMGenNP.
+From Undecidability.L.Complexity Require Import NP Synthetic Monotonic.
+From Undecidability.L.Complexity.Problems.GenNP Require Import GenNP. 
+From Undecidability.L.Complexity.Reductions Require Import LMGenNP.
 
 From Undecidability.L Require Import LM_heap_def LM_heap_correct LBool ResourceMeasures Compile LNat LTerm Compile.
 
@@ -42,12 +44,12 @@ Proof.
   { unfold f. extract.
     solverec.
     set (n0:=(size (enc (a0, b0, b)))).
-    eassert (b <= n0) as ->.
+    eassert (b <= n0) as H.
     {subst n0. rewrite !LProd.size_prod;cbn [fst snd]. now rewrite size_nat_enc_r at 1. }
     unfold time_compile.
     eassert (size a0 <= n0) as ->.
     {subst n0. rewrite !LProd.size_prod;cbn [fst snd]. now rewrite LTerm.size_term_enc_r at 1. }
-    unfold time. reflexivity.
+    unfold time. unfold add_time, mult_time. rewrite H . reflexivity.
   }
   1,2:now unfold time;smpl_inO.
   {unfold f. evar (resSize : nat -> nat). [resSize]:intros n0. eexists resSize.

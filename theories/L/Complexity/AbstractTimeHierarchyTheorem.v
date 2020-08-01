@@ -55,7 +55,8 @@ Section TimeHierarchy_Parametric.
       cbn [fst].
       eapply Nat.lt_le_incl,Hn0.
 
-      rewrite size_prod. unfold w;cbn [fst snd]. rewrite size_nat_enc. lia.
+      rewrite size_prod. unfold w;cbn [fst snd]. rewrite size_nat_enc. 
+      unfold c__natsizeS, c__natsizeO. lia.
     }
     clear Hn0.
     specialize (Hf w Logic.I) as f_dec_spec. cbn in f_dec_spec.
@@ -134,6 +135,7 @@ Section TimeHierarchy_Parametric.
     2:rewrite (size_nat_enc_r b) at 1.
     2:change (@enc term _) with term_enc.
     2:change (@enc nat _) with nat_enc.
+    all: unfold add_time, c__add, c__add1. 
     all:try lia.
   Qed.
   

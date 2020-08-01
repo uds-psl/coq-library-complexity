@@ -17,6 +17,11 @@ Proof.
   rewrite H1,H2. reflexivity. all:eassumption.
 Qed.
 
+Lemma monotonic_S f : monotonic f -> monotonic (fun x => S (f x)). 
+Proof. 
+  intros H. eapply (@monotonic_add (fun _ => 1) f); [apply monotonic_c | apply H]. 
+Qed. 
+
 Lemma monotonic_mul f1 f2: monotonic f1 -> monotonic f2 -> monotonic (fun x => f1 x * f2 x).
 Proof.
   unfold monotonic.
@@ -45,7 +50,7 @@ Proof.
 Qed.
 
 Smpl Create monotonic.
-Smpl Add 10 (first [ simple eapply monotonic_add | simple eapply monotonic_mul | simple eapply monotonic_c | simple eapply monotonic_x | simple eapply monotonic_pow_c] )  : monotonic.
+Smpl Add 10 (first [ simple eapply monotonic_add | simple eapply monotonic_S | simple eapply monotonic_mul | simple eapply monotonic_c | simple eapply monotonic_x | simple eapply monotonic_pow_c] )  : monotonic.
 
 Smpl Add 20 (lazymatch goal with
                |- monotonic (fun x => ?f (@?g x)) =>

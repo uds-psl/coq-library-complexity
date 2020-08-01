@@ -27,7 +27,7 @@ Proof.
   eapply computesTime_timeLeq.
   2:now apply term_nat_enc.
   repeat intro. split. 2:easy.
-  cbn [fst]. rewrite -> size_nat_enc. [c]:exact 4. unfold c. nia.
+  cbn [fst]. rewrite -> size_nat_enc. [c]:exact 14. unfold c, c__natsizeS, c__natsizeO. nia.
 Qed.
 
 
@@ -65,7 +65,7 @@ Proof.
   2:now apply term_list_enc.
   intros l _. split. 2:easy.
   cbn [fst]. rewrite -> size_list.
-  cbn. [c]:exact (c__regP X + 4). unfold c.
+  cbn. [c]:exact (c__regP X + 17). unfold c, c__listsizeCons, c__listsizeNil.
   induction l;cbn. all:nia.
 Qed.
 

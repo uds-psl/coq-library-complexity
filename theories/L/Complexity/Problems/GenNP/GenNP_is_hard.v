@@ -1,6 +1,7 @@
 From Undecidability.L Require Import L.
 From Undecidability.L.Datatypes Require Import LProd LTerm LBool.
-From Undecidability.L.Complexity Require Import NP Synthetic Monotonic GenNP CanEnumTerm_def.
+From Undecidability.L.Complexity Require Import NP Synthetic Monotonic CanEnumTerm_def. 
+From Undecidability.L.Complexity.Problems.GenNP Require Import GenNP.
 From Undecidability.L.Functions Require Import Size.
 
 Import Nat.
@@ -127,8 +128,10 @@ Proof.
    eexists (fun x => f' x). 
    +unfold mSize, steps, stepsInner. extract.
     recRel_prettify2. generalize (size (enc x)). intro. unfold f'. reflexivity.
-   +subst f'. cbn beta. setoid_rewrite size_nat_enc. all:smpl_inO. all:eapply inOPoly_comp. all:smpl_inO. all:eapply inOPoly_comp. all:smpl_inO. all:eapply inOPoly_comp. all:smpl_inO.
-   +subst f'. cbn beta. setoid_rewrite size_nat_enc. all:smpl_inO.
+   +subst f'. cbn beta. setoid_rewrite size_nat_enc. all:smpl_inO. all:eapply inOPoly_comp. 
+     all:unfold add_time; smpl_inO. all:eapply inOPoly_comp. all:smpl_inO. all:eapply inOPoly_comp. all:smpl_inO.
+    all:eapply inOPoly_comp. all:smpl_inO.
+   +subst f'. cbn beta. setoid_rewrite size_nat_enc. all:unfold add_time; smpl_inO.
    +unfold mSize,steps,stepsInner. eexists (fun x => _).
     *intros. 
      repeat (setoid_rewrite -> size_prod;cbn[fst snd]).

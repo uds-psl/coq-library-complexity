@@ -47,7 +47,7 @@ Proof.
      subst n0. rewrite size_list. rewrite <- Nat.le_add_r.
      apply sumn_map_le_pointwise. intros;now rewrite size_Tok_enc_r.
    }
-   all:unfold enc;cbn. all: change (list_enc (X:=Tok)) with (@enc (list Tok) _). all:now rewrite (size_list x).
+   all:unfold enc;cbn. all: change (list_enc (X:=Tok)) with (@enc (list Tok) _). all:rewrite (size_list x); now unfold c__listsizeNil.
   }
   all:unfold fsize;smpl_inO.
 Qed.
@@ -116,7 +116,7 @@ Module boollist_enum.
     all:set (et:=size (enc true));cbv in et;subst et. all:set (et:=size (enc false));cbv in et;subst et.
     2:cbn [sumn];rewrite sumn_repeat. all:try rewrite size_Tok_enc.
     all:ring_simplify.
-    [c]:exact 5. all:subst c;lia.
+    [c]:exact 5. all:subst c; unfold c__listsizeNil, c__listsizeCons in *; lia.
   Qed.
 
   Import FunInd.
@@ -127,7 +127,7 @@ Module boollist_enum.
     rewrite !size_list. functional induction (boollist_term bs A).
     all:cbn.
     all:autorewrite with list;cbn. all:try rewrite IHl. all:cbn; rewrite ?size_Tok_enc,?LBool.size_bool_enc.
-    all:ring_simplify. all:nia.
+    all:ring_simplify. all: unfold c__listsizeNil, c__listsizeCons in *; nia.
   Qed.
 
   Lemma boollists_enum_term : canEnumTerms (list bool).

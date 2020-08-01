@@ -9,5 +9,6 @@ Proof.
   extract. unfold eqbTime.
   recRel_prettify2. all:unfold eqbTime; cbn [fst snd size].
   all:try rewrite !size_nat_enc.
+  all: unfold c__natsizeS, c__natsizeO in *. 
   all:try nia.
 Qed.

@@ -97,7 +97,7 @@ Section Fix_Sigma.
   Proof.
     apply (FinTypeC (enum := [L; R; N])).
     intros []; now cbv.
-  Qed.
+  Defined.
 
 
   (** We outsource the second [match] of [tape_move_right] in the [midtape] case to another named definition. This has the advantage that the [cbn] tactic will not reduce [tape_move_left (midtape ls m rs)] to a long term that contains [match]. It reduces to [tape_move_left' ls m rs] instead. Furthermore, there are rewrite lemmas available for [tape_move_left']. *)

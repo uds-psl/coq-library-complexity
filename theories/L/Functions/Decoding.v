@@ -130,6 +130,36 @@ Proof.
    setoid_rewrite decode_correct2;[|eassumption..]. easy.
 Defined.
 
+From Undecidability.L Require Import Datatypes.LSum. 
+Definition sum_decode X Y `{decodable X} `{decodable Y} (s : term) : option (X + Y) := 
+  match s with 
+  | lam (lam (app 1 x)) => 
+      match decode X x with 
+      | Some x => Some (inl x)
+      | _ => None
+      end
+  | lam (lam (app 0 y)) => 
+      match decode Y y with 
+      | Some y => Some (inr y)
+      | _ => None
+      end
+  | _ => None
+  end. 
+
+Arguments sum_decode : clear implicits.
+Arguments sum_decode _ _ {_ _ _ _}.
+
+Instance decode_sum X Y `{decodable X} `{decodable Y} : decodable (X + Y). 
+Proof. 
+  exists (sum_decode X Y). 
+  all:unfold enc at 1; cbn.
+  -intros [];cbn; repeat setoid_rewrite decode_correct; easy.
+  -destruct t eqn:eq. all:cbn.
+   all:repeat let eq := fresh in destruct _ eqn:eq. all:try congruence.
+   all:intros ? [= <-]; cbn.
+   all: setoid_rewrite decode_correct2;[|eassumption..]; easy.
+Defined. 
+
 From Undecidability.L Require Import Datatypes.LOptions.
 
 Definition option_decode X `{decodable X} (s : term) : option (option X) :=
@@ -179,3 +209,21 @@ Proof.
    all:repeat let eq := fresh in destruct _ eqn:eq. all:try congruence.
    all:intros ? [= <-]. all:easy.
 Defined.
+
+From Undecidability.L Require Import Datatypes.LUnit. 
+
+Definition unit_decode (s : term) : option unit := 
+  match s with
+  | lam 0 => Some tt
+  | _ => None
+  end. 
+
+Instance decode_unit : decodable unit. 
+Proof. 
+  exists unit_decode. 
+  - intros []. cbn. easy.
+  - destruct t eqn:Heq; cbn. 
+    all:repeat let eq := fresh in destruct _ eqn:eq. all:try congruence.
+    intros ? [= <-]. easy.
+Defined. 
+

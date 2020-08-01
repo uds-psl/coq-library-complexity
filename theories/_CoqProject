@@ -1,7 +1,56 @@
 -Q . Undecidability
 
--arg -w -arg -notation-overridden
+-install none
+-arg -w -arg -notation-overridden,-redundant-canonical-projection,-several-object-files,cannot-define-projection,records,unused-intro-pattern,tactics
 COQDOCFLAGS = "--charset utf-8 -s --with-header ../website/resources/header.html --with-footer ../website/resources/footer.html --index indexpage"
+
+
+L/Complexity/overview.v
+L/Complexity/CookLevin.v
+
+
+L/Complexity/CookPrelim/PolyBounds.v
+L/Complexity/CookPrelim/Tactics.v
+L/Complexity/CookPrelim/MorePrelim.v
+L/Complexity/CookPrelim/FlatFinTypes.v
+
+L/Complexity/Problems/SharedSAT.v
+L/Complexity/Problems/SAT.v
+L/Complexity/Problems/kSAT.v
+L/Complexity/Reductions/kSAT_to_SAT.v
+L/Complexity/Problems/UGraph.v
+L/Complexity/Problems/Clique.v
+L/Complexity/Problems/FlatUGraph.v
+L/Complexity/Problems/FlatClique.v
+L/Complexity/Reductions/Pigeonhole.v
+L/Complexity/Reductions/kSAT_to_Clique.v
+L/Complexity/Reductions/kSAT_to_FlatClique.v
+
+
+
+L/Complexity/Problems/Cook/GenNP.v
+L/Complexity/Reductions/Cook/TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP.v
+L/Complexity/Reductions/Cook/TM_single.v
+L/Complexity/Problems/Cook/PR.v
+L/Complexity/Problems/Cook/TPR.v
+L/Complexity/Reductions/Cook/PTPR_Preludes.v
+L/Complexity/Reductions/Cook/SingleTMGenNP_to_TPR.v
+L/Complexity/Problems/Cook/FlatPR.v
+L/Complexity/Problems/Cook/FlatTPR.v
+L/Complexity/Reductions/Cook/FlatSingleTMGenNP_to_FlatTPR.v
+L/Complexity/Reductions/Cook/TPR_to_PR.v
+L/Complexity/Reductions/Cook/FlatTPR_to_FlatPR.v
+
+L/Complexity/Reductions/Cook/UniformHomomorphisms.v
+L/Complexity/Reductions/Cook/PR_homomorphisms.v
+L/Complexity/Problems/Cook/BinaryPR.v
+L/Complexity/Reductions/Cook/PR_to_BinaryPR.v
+L/Complexity/Reductions/Cook/FlatPR_to_BinaryPR.v
+
+
+L/Complexity/Problems/FSAT.v
+L/Complexity/Reductions/Cook/BinaryPR_to_FSAT.v
+L/Complexity/Reductions/FSAT_to_SAT.v
 
 Shared/Prelim.v
 
@@ -390,6 +439,7 @@ L/TM/TMflatComp.v
 L/TM/TMinL.v
 L/TM/TapeFuns.v
 L/TM/TapeDecode.v
+L/TM/TMflatten.v
 L/Reductions/TM_to_L.v
 
 # L/Reductions/SRH_SR_computable.v

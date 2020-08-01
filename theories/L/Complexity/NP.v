@@ -2,7 +2,7 @@ From Undecidability.L.Complexity Require Export Synthetic RegisteredP LinTimeDec
 From Undecidability.L.Tactics Require Import LTactics.
 
 
-From Undecidability.L.Datatypes Require Import LProd LOptions LTerm.
+From Undecidability.L.Datatypes Require Import LProd LOptions LTerm LUnit.
 From Undecidability.L Require Export Functions.Decoding.
 
 (** inspired by Papadimitriou *)
@@ -96,12 +96,12 @@ Proof.
   intros decode__comp R__comp R__bound.
   eexists (fun x y => exists y', y = enc y' /\ R x y').
   2:{ 
-      exists (fun x => p__pCR R__bound x * 11).
+      exists (fun x => p__pCR R__bound x * c__termsize).
       3,4:solve [smpl_inO].
       -intros x y' (y&->&Hy). now eapply sound__pCR.
       -intros x ?. edestruct (complete__pCR R__bound) as (y&?&?). easy.
        exists (enc y);split. easy.
-       rewrite size_term_enc. lia.
+       rewrite size_term_enc. unfold c__termsize, c__natsizeS. lia.
   }
   { (*TODO: simplify*)
     destruct R__comp as (t__f&[R__comp]&?&mono_t__f).
@@ -138,6 +138,34 @@ Proof.
   }
 Qed.
 
+(** P *)
+Definition inP (X : Type) `{_: registered X} (vX : X -> Prop) (P : restrictedP vX) := inTimePoly P. 
+
+(** P <<= NP *)
+
+Lemma P_NP_incl (X : Type) `{registered X} (vX : X -> Prop) (P : restrictedP vX) : 
+  inP P -> inNP P. 
+Proof. 
+  intros H1. unfold inP in H1. 
+  eapply (inNP_intro (Y:= unit)) with (R := fun x _ => P x). 
+  - apply linDec_polyTimeComputable.
+  - destruct H1 as (f & H1 & H2 & H3). evar (f' : nat -> nat). exists f'. 
+    split. 
+    { destruct H1 as [H1]. destruct H1. 
+      constructor. exists (fun (p : X * unit) => let (x , _) := p in f__decInTime x).
+      + extract. solverec. unfold monotonic in H3. 
+        rewrite H3 with (x' := size (enc (a, tt))). 2: { rewrite size_prod; cbn; lia. }  
+        [f']: intros n. subst f'. cbn. 
+        generalize (size (enc (a, tt))). intros; reflexivity.
+      + intros [x ?] Hx. cbn. apply correct__decInTime. 
+    } 
+    split; subst f'; smpl_inO. 
+  - exists (fun n => size (enc tt)). 
+    3, 4: smpl_inO. 
+    + intros [x Hx] _. easy.
+    + intros [x Hx] H2. exists tt. easy. 
+Qed. 
+
 (** ** Poly Time Reduction s*)
 
 Generalizable Variable vY.
@@ -160,6 +188,15 @@ Proof.
   intros H H'. econstructor. eassumption. all:intros ? ?. apply (proj2_sig (H' _ Hx)).
 Qed.
 
+Lemma reducesPolyMO_intro_unrestricted X Y `{RX: registered X} `{RY:registered Y} (P : X -> Prop) (Q : Y -> Prop) (f:X -> Y):
+  polyTimeComputable f
+  -> (forall x , P x <-> Q (f x))
+  -> (unrestrictedP P) ⪯p (unrestrictedP Q).
+Proof.
+  intros H H'. 
+  eapply reducesPolyMO_intro; [apply H | ].  
+  cbn. intros x _. exists Logic.I. apply H'. 
+Qed.
 
 Lemma reducesPolyMO_intro_restrictBy X Y `{RX: registered X} `{RY:registered Y} (vP P : X -> Prop) (vQ Q:Y->Prop) (f:X -> Y):
   polyTimeComputable f
@@ -281,4 +318,4 @@ Qed.
 Definition NPcomplete X `{registered X} `(P : restrictedP (X:=X) vX) :=
   NPhard P /\ inNP P.
 
-Hint Unfold NPcomplete.
+Hint Unfold NPcomplete : core.

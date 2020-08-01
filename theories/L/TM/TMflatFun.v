@@ -21,9 +21,10 @@ Proof.
   
   2,4,6,7:now intros ? (?&<-&(?&<-&?)%in_map_iff)%in_map_iff;
     rewrite size_nat_enc,index_leq;
-    unfold Cardinality.Cardinality; easy.
+    unfold Cardinality.Cardinality, c__listsizeNil, c__listsizeCons, c__natsizeS, c__natsizeO; easy.
   all:rewrite !map_length.
   all:rewrite index_leq; unfold Cardinality.Cardinality.
+  all: unfold c__natsizeS, c__natsizeO, c__listsizeNil.
   all:nia.
 Qed.
 
@@ -45,8 +46,12 @@ Proof.
    rewrite size_flatTape.
    set (a := sumn _) in *. set (b := VectorDef.fold_right _ _ _) in *. set (c := Cardinality.Cardinality _) in *.
    set (d:=sizeOfTape _).
-   enough (a <= n * b * (c * 4 + 9) + n * 22) as ->. 2: nia.
-   repeat eapply Nat.max_case_strong;intros ?. nia. Unset Simplex. rewrite H.  nia.
+   enough (a <= n * b * (c * 4 + 9) + n * 22) as ->. 
+   2: { unfold c__listsizeCons, c__listsizeNil in *. nia. }
+   unfold c__listsizeNil, c__listsizeCons in *. 
+   repeat eapply Nat.max_case_strong;intros ?. 
+   + nia. 
+   + Unset Simplex. rewrite H.  nia.
 Qed.
 
 
@@ -231,7 +236,7 @@ Proof.
   -apply unflattenTM_correct in v.
    pose (sig' := (finType_CS (Fin.t (sig M)))).
    pose (states' := states (unflattenTM M)). cbn [unflattenTM states] in states'.
-   rewrite <- Card_Fint with (n:=sig M) at 1. fold sig'.
+   rewrite <- Fin_cardinality with (n:=sig M) at 1. fold sig'.
    destruct isValidFlatTapes eqn:H';cbn [andb]. 2:easy. apply isUnflattableTapes in H' as (t'&Ht).
    cbn [negb]. 
    assert (def : states') by (eapply (@Fin.of_nat_lt 0) ;nia).
@@ -254,5 +259,3 @@ Proof.
    inv H''. inv H. do 2 f_equal. 
    inv Ht0. inv Ht. easy.
 Qed.
-
-
