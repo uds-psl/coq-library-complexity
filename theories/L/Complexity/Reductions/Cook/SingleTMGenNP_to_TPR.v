@@ -357,36 +357,45 @@ Section fixTM.
     intros H%string_reprTapeP_length. now cbn in H.
   Qed. 
 
+  Lemma tape_repr_inv17 x u p l : x :: u ≃t(p, 0) l -> False. 
+  Proof. 
+    destruct 1; cbn in *; lia. 
+  Qed.
+
   Ltac destruct_tape1 := repeat match goal with [H : delim |- _ ] => destruct H end.
 
   (** try to apply the inversion lemmas from above to derive a contradiction*)
-  Ltac discr_tape := destruct_tape1; match goal with
-                     | [H : ?u ≃t(?p, ?w) [] |- _] => now apply tape_repr_inv15 in H
-                     | [ H : ?u ≃t(?p, ?w) (inl ?e) :: ?a |- _] => now apply tape_repr_inv in H
-                     | [ H : [] ≃t(?p, ?w) (inr (inr (_, Some ?e))) :: ?a |- _] => now apply tape_repr_inv2 in H
-                     | [ H : ?u :: ?us ≃t(?p, ?w) inr (inr (_, |_|)):: ?a |- _] => now apply tape_repr_inv3 in H
-                     | [H : _ ≃t(_, _) _ :: inr # :: _ |- _ ] => now apply tape_repr_inv14 in H
-                     | [ H : ?us ≃t(?p, ?w) inr # :: ?a |- _] => now apply tape_repr_inv4 in H
-                     | [H : _ ≃t(?p, ?w) inr # :: ?e :: ?a |- _] => now apply tape_repr_inv5 in H
-                     | [H : ?u :: ?us ≃t(?p, 0) _ |- _] => destruct H; cbn in *; lia
-                     | [H : ?u :: ?us ≃t(?p, ?w) E _ ?n |- _] => now apply tape_repr_inv7 in H
-                     | [H : ?us ≃t(?p, ?w) ?a |- _] => let H1 := fresh in apply tape_repr_inv11 in H as H1; unfold wo in H1; cbn [length] in H1; lia (*this is really expensive, but in some cases desirable to have *)
+  Ltac discr_tape_in H := destruct_tape1; match type of H with
+                     | ?u ≃t(?p, ?w) [] => apply tape_repr_inv15 in H as []
+                     | ?u ≃t(?p, ?w) (inl ?e) :: ?a => apply tape_repr_inv in H as []
+                     | [] ≃t(?p, ?w) (inr (inr (_, Some ?e))) :: ?a => apply tape_repr_inv2 in H as []
+                     | ?u :: ?us ≃t(?p, ?w) inr (inr (_, |_|)):: ?a => apply tape_repr_inv3 in H as []
+                     | _ ≃t(_, _) _ :: inr # :: _ => apply tape_repr_inv14 in H as []
+                     | ?us ≃t(?p, ?w) inr # :: ?a => apply tape_repr_inv4 in H as []
+                     | _ ≃t(?p, ?w) inr # :: ?e :: ?a => apply tape_repr_inv5 in H as []
+                     | ?u :: ?us ≃t(?p, 0) _ => exfalso; apply tape_repr_inv17 in H as [] 
+                     | ?u :: ?us ≃t(?p, ?w) E _ ?n => apply tape_repr_inv7 in H as []
+                     
                      (* | [H : ?us ≃t(?p, ?w) _ |- _] => try (apply tape_repr_inv10 in H; cbn in H; lia) *)
                       end. 
+  Ltac discr_tape_in_exp H := first [discr_tape_in H | 
+      match type of H with 
+      | ?us ≃t(?p, ?w) ?a => let H1 := fresh in apply tape_repr_inv11 in H as H1; unfold wo in H1; cbn [length] in H1; lia
+      end]. 
 
   (**try to maximally invert the representation relation of tapes (hypothesis H) to derive equalities between the symbols of the represented tape and the representing string *)
   (**this tactic can be expensive to call as it goes into recursion after having eliminated the head of the strings *)
-  Ltac inv_tape' H := repeat once match type of H with
-                        | _ ≃t(?p, ?w) ?x :: ?h => is_var x; destruct x; [discr_tape | ]     
-                        | _ ≃t(?p, ?w) (inr ?e) :: ?h => is_var e; destruct e; [discr_tape | ]
+  Ltac inv_tape_with H discr := repeat once match type of H with
+                        | _ ≃t(?p, ?w) ?x :: ?h => is_var x; destruct x; [discr H | ]     
+                        | _ ≃t(?p, ?w) (inr ?e) :: ?h => is_var e; destruct e; [discr H | ]
                         | _ ≃t(?p, ?w) (inr (inr ?e)) :: ?h => is_var e; destruct e
                         | _ ≃t(?p, ?w) (inr (inr (?p', _))) :: ?h => is_var p'; specialize (tape_repr_inv16 H) as -> 
-                        | [] ≃t(?p, ?w) (inr (inr (_, ?e))) :: ?h => is_var e; destruct e; [ discr_tape | ]
-                        | ?u ≃t(?p, ?w) inr (inr (_, |_|)) :: ?h => is_var u; destruct u; [ | discr_tape] 
-                        | ?u :: ?us ≃t(?p, ?w) ?h => is_var h; destruct h; [ discr_tape | ]
-                        | ?u :: ?us ≃t(?p, ?w) ?h' ++ ?h'' => is_var h'; destruct h'; cbn in H; try discr_tape
+                        | [] ≃t(?p, ?w) (inr (inr (_, ?e))) :: ?h => is_var e; destruct e; [ discr H | ]
+                        | ?u ≃t(?p, ?w) inr (inr (_, |_|)) :: ?h => is_var u; destruct u; [ | discr H] 
+                        | ?u :: ?us ≃t(?p, ?w) ?h => is_var h; destruct h; [ discr H | ]
+                        | ?u :: ?us ≃t(?p, ?w) ?h' ++ ?h'' => is_var h'; destruct h'; cbn in H; try discr H
                         | ?u :: ?us ≃t(?p, ?w) inr(inr (_, ?m)) :: _ => is_var m; specialize (tape_repr_inv8 H) as ->  
-                        | ?u1 :: _ ≃t(?p, ?w) _  => is_var w; destruct w; [ discr_tape | ]
+                        | ?u1 :: _ ≃t(?p, ?w) _  => is_var w; destruct w; [ discr H | ]
                         | ?u1 :: [] ≃t(_, S ?w) _ :: ?h  => specialize (tape_repr_inv9 H) as ->
                         | ?u ≃t(_, _) inr (inr (_, Some _)) :: _ => is_var u;
                                                                   let Heqn := fresh "Hpeqn" in
@@ -394,9 +403,10 @@ Section fixTM.
                         end;
                         (*if we can, we go into recursion after applying tape_repr_step *)
                         once match type of H with
-                        |  ?u1 :: _ ≃t(?p, S ?w) ?e :: _  => let H' := fresh in specialize (tape_repr_step H) as H'; inv_tape' H'; clear H' 
+                        |  ?u1 :: _ ≃t(?p, S ?w) ?e :: _  => let H' := fresh in specialize (tape_repr_step H) as H'; inv_tape_with H' discr; clear H' 
                          | _ => idtac
                         end.
+  Ltac inv_tape H := inv_tape_with H discr_tape_in. 
 
   (**the destruct_tape_in tactic generates equations for subtapes which are equal to E _. *)
   (**We do not want to call inv on those equations since they might contain non-trivial equalities which cannot be resolved with a rewrite/subst and would thus be lost with inv*)
@@ -408,12 +418,12 @@ Section fixTM.
 
   (**invert the tape relation given by hypothesis H and destruct up to one head symbol *)
   Ltac destruct_tape_in H := unfold reprTape in H;
-                             inv_tape' H;
+                             inv_tape H;
                              try match type of H with
                                  | [] ≃t(_, _) ?h => let H' := fresh in specialize (proj2 (niltape_repr _ _ ) _ H) as H'; clear_trivial_niltape H'
-                                 | ?u ≃t(?p, ?w) inr _ :: ?h  => is_var u; destruct u; try discr_tape
+                                 | ?u ≃t(?p, ?w) inr _ :: ?h  => is_var u; destruct u; try discr_tape_in H
                                  end;
-                             inv_tape' H;
+                             inv_tape H;
                              repeat once match goal with [H : ?h = ?h |- _] => clear H end.
 
   (**a variant of destruct_tape_in that takes care of z constant for the inversion and later tries to substitute the z again *)
@@ -425,20 +435,6 @@ Section fixTM.
                                  | _ => destruct_tape_in H
                              end. 
  
-  Ltac inv_tape := match goal with
-                        | [H : _ ≃t(_, _) _ |- _] => inv_tape' H
-                   end. 
-
-  Ltac unfold_tape := unfold reprTape in *. 
-                        
-  Ltac destruct_tape := unfold_tape; inv_tape;
-                        try match goal with
-                        | [H: ?u ≃t(?p, ?w) inr _ :: ?h |- _] => is_var u; destruct u; try discr_tape
-                            end;
-                        inv_tape;
-                        repeat once match goal with [H : ?h = ?h |- _] => clear H end.
-
-
   (** ** Inductive rules for tape rewrites *)
   (*For easier automation, we define the rewrite rules using inductive predicates *)
 
@@ -759,7 +755,7 @@ Section fixTM.
       + econstructor 3; [ apply H1 | ]. 
         destruct rs; destruct_tape_in H3; [ | destruct rs; destruct_tape_in H3]; destruct_tape_in H; cbn; eauto. 
       + intros. inv H4. 
-        { destruct h; [ discr_tape| destruct h; [discr_tape | now cbn in H10]]. }
+        { destruct h; [ discr_tape_in_exp H | destruct h; [discr_tape_in_exp H | now cbn in H10]].  }
         rewHeadTape_inv2; apply H2 in H8; now inv H8. 
       + now apply tape_repr_step'.
   Qed.
@@ -800,7 +796,7 @@ Section fixTM.
         * intros. now apply E_rewrite_sym_rem in H0.
       + repeat split; now cbn.
     - intros. destruct_tape_in H.
-      destruct h; [discr_tape | ]; destruct_tape_in H. 
+      destruct h; [discr_tape_in_exp H | ]; destruct_tape_in H. 
       edestruct IHrs as (h' & H1 & H2 & H3). 1: apply tape_repr_step in H; apply H. 
       exists (inr (inr (↓ o)) :: h'). split; [ | split]. 
       + constructor 3; [apply H1 | ]. 
@@ -844,12 +840,12 @@ Section fixTM.
       + intros. now apply E_rewrite_blank in H0.
       + repeat split; cbn in *; easy. 
     - intros. destruct_tape_in H.
-      destruct h; [ discr_tape | ]. destruct_tape_in H. 
+      destruct h; [ discr_tape_in_exp H | ]. destruct_tape_in H. 
       edestruct IHrs as (h' & H1 & H2 & H3). { apply tape_repr_step in H. apply H. }
       exists (inr (inr (∘ o)) :: h'). split; [ | split]. 
       + econstructor 3; [ apply H1 | ].
         destruct rs; destruct_tape_in H3; [ | destruct rs; destruct_tape_in H3]; destruct_tape_in H; cbn; eauto. 
-      + intros. inv_valid. { destruct h; [discr_tape | now cbn in H9]. }
+      + intros. inv_valid. { destruct h; [discr_tape_in_exp H | now cbn in H9]. }
         rewHeadTape_inv2. apply H2 in H7; now inv H7. 
       + now apply tape_repr_step'.
    Qed. 
@@ -2173,14 +2169,14 @@ Section fixTM.
  
   Lemma E_alphabet a p w : a el (E p w) -> a = inr (inr (p, |_|)) \/ a = inr #. 
   Proof. 
-    intros. induction w.  
+    intros H. induction w.  
     - cbn in H. firstorder. 
     - cbn in H. destruct H as [H | H]; firstorder.
   Qed.
 
   Lemma reprTape_no_isStateSym u p w h e : e el h -> u ≃t(p, w) h -> not (isStateSym e). 
   Proof. 
-    intros. destruct H0 as (_ & ->). 
+    intros H H0. destruct H0 as (_ & ->). 
     apply in_app_or in H. destruct H as [H | H]. 
     - unfold mapPolarity in H. apply in_map_iff in H as (m & H & _). intros (? & ->). congruence. 
     - apply E_alphabet in H. intros (? & ->). destruct H; congruence. 
@@ -2192,22 +2188,22 @@ Section fixTM.
 
   (** exactly one of the symbols for transitions or halting rewrites is a state symbol *) 
   Lemma transRules_statesym1 γ1 γ2 γ3 γ4 γ5 γ6 : transRules γ1 γ2 γ3 γ4 γ5 γ6 -> isStateSym γ1 -> not (isStateSym γ2) /\ not (isStateSym γ3). 
-  Proof. unfold isStateSym. intros. destruct H0; split; intros []; transRules_inv2;congruence. Qed.  
+  Proof. unfold isStateSym. intros H H0. destruct H0; split; intros []; transRules_inv2;congruence. Qed.  
 
   Lemma transRules_statesym2 γ1 γ2 γ3 γ4 γ5 γ6 : transRules γ1 γ2 γ3 γ4 γ5 γ6 -> isStateSym γ2 -> not (isStateSym γ1) /\ not (isStateSym γ3). 
-  Proof. unfold isStateSym. intros. destruct H0; split; intros []; transRules_inv2; congruence. Qed. 
+  Proof. unfold isStateSym. intros H H0. destruct H0; split; intros []; transRules_inv2; congruence. Qed. 
 
   Lemma transRules_statesym3 γ1 γ2 γ3 γ4 γ5 γ6 : transRules γ1 γ2 γ3 γ4 γ5 γ6 -> isStateSym γ3 -> not (isStateSym γ1) /\ not (isStateSym γ2). 
-  Proof. unfold isStateSym. intros. destruct H0; split; intros []; transRules_inv2; congruence. Qed. 
+  Proof. unfold isStateSym. intros H H0. destruct H0; split; intros []; transRules_inv2; congruence. Qed. 
 
   Lemma haltRules_statesym1 γ1 γ2 γ3 γ4 γ5 γ6 : haltRules γ1 γ2 γ3 γ4 γ5 γ6 -> isStateSym γ1 -> not (isStateSym γ2) /\ not (isStateSym γ3). 
-  Proof. unfold isStateSym. intros. destruct H0; split; intros []; haltRules_inv1; congruence. Qed. 
+  Proof. unfold isStateSym. intros H H0. destruct H0; split; intros []; haltRules_inv1; congruence. Qed. 
 
   Lemma haltRules_statesym2 γ1 γ2 γ3 γ4 γ5 γ6 : haltRules γ1 γ2 γ3 γ4 γ5 γ6 -> isStateSym γ2 -> not (isStateSym γ1) /\ not (isStateSym γ3). 
-  Proof. unfold isStateSym. intros. destruct H0; split; intros []; haltRules_inv1; congruence. Qed. 
+  Proof. unfold isStateSym. intros H H0. destruct H0; split; intros []; haltRules_inv1; congruence. Qed. 
 
   Lemma haltRules_statesym3 γ1 γ2 γ3 γ4 γ5 γ6 : haltRules γ1 γ2 γ3 γ4 γ5 γ6 -> isStateSym γ3 -> not (isStateSym γ1) /\ not (isStateSym γ2). 
-  Proof. unfold isStateSym. intros. destruct H0; split; intros []; haltRules_inv1; congruence. Qed. 
+  Proof. unfold isStateSym. intros H H0. destruct H0; split; intros []; haltRules_inv1; congruence. Qed. 
 
   Lemma transRules_statesym γ1 γ2 γ3 γ4 γ5 γ6 : transRules γ1 γ2 γ3 γ4 γ5 γ6 -> exists q, halt q = false /\ (isSpecStateSym q γ1 \/ isSpecStateSym q γ2 \/ isSpecStateSym q γ3).  
   Proof. unfold isSpecStateSym. intros. transRules_inv2; exists q; eauto. Qed.  
@@ -2218,7 +2214,7 @@ Section fixTM.
   (** A string representing a tape half can only be rewritten using the tape rules *) 
   Lemma rewHeadTrans_tape' u h h' p w: u ≃t(p, w) h -> rewHeadSim h h' -> rewHeadTape h h'.  
   Proof.  
-    intros. inv H0.  
+    intros H H0. inv H0.  
     specialize (tape_repr_inv12 H) as H2. 
     destruct H1 as [ H1 | H1 ]; [ | destruct H1].  
     + apply transRules_statesym in H1. 
@@ -2232,7 +2228,7 @@ Section fixTM.
 
   Lemma rewHeadSim_tape u h h' p w : u ≃t(p, w) h -> valid rewHeadSim h h' -> valid rewHeadTape h h'.  
   Proof.  
-    intros. revert u w H. induction H0; intros.  
+    intros H H0. revert u w H. induction H0; intros.  
     - eauto with trans.  
     - constructor 2. 2: assumption. clear IHvalid. 
       do 2 (destruct a; destruct b; try now cbn in H; try now inv H0; eauto with trans). 
@@ -2711,11 +2707,10 @@ Section fixTM.
     
     (*solve the uniqueness obligations - this is very expensive because of the needed inversions *)
     (*therefore abstract into opaque lemmas *)
-    idtac "solving uniqueness - this may take a while (25-30 minutes)".
+    idtac "solving uniqueness - this may take a few minutes".
     unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1.
     par:abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
   Qed. 
-    (*Admitted. *)
 
   (** if we are in a halting state, we can only rewrite to the same string (identity), except for setting the polarity to neutral *)
   Lemma haltsim q tp s :
@@ -4485,47 +4480,51 @@ Section fixTM.
   (** bundling predicates *)
   (**we first group together according to the shift direction: left/right/stay *)
 
+  Create HintDb etrans discriminated. 
+  Hint Variables Opaque : etrans.
+  Hint Constants Opaque : etrans.
   Inductive etransSomeLeft : states -> states -> stateSigma -> stateSigma -> transRule :=
   | etransSomeLeftLeftC q q' (a b : stateSigma)  γ1 γ2 γ3 γ4 γ5 γ6: transSomeLeftLeft q q' a γ1 γ2 γ3 γ4 γ5 γ6 -> etransSomeLeft q q' a b γ1 γ2 γ3 γ4 γ5 γ6
   | etransSomeLeftRightC q q' (a b : stateSigma)  γ1 γ2 γ3 γ4 γ5 γ6 : transSomeLeftRight q q' a b γ1 γ2 γ3 γ4 γ5 γ6 -> etransSomeLeft q q' a b γ1 γ2 γ3 γ4 γ5 γ6
   | etransSomeLeftCenterC q q' (a b : stateSigma)  γ1 γ2 γ3 γ4 γ5 γ6 : transSomeLeftCenter q q' a b γ1 γ2 γ3 γ4 γ5 γ6 -> etransSomeLeft q q' a b γ1 γ2 γ3 γ4 γ5 γ6. 
 
-  Hint Constructors etransSomeLeft : trans. 
+  Hint Constructors etransSomeLeft : etrans. 
 
   Inductive etransSomeRight : states -> states -> stateSigma -> stateSigma -> transRule :=
   | etransSomeRightLeftC q q' (a b: stateSigma)  γ1 γ2 γ3 γ4 γ5 γ6: transSomeRightLeft q q' a b γ1 γ2 γ3 γ4 γ5 γ6 -> etransSomeRight q q' a b γ1 γ2 γ3 γ4 γ5 γ6
   | etransSomeRightRightC q q' (a b : stateSigma)  γ1 γ2 γ3 γ4 γ5 γ6 : transSomeRightRight q q' a γ1 γ2 γ3 γ4 γ5 γ6 -> etransSomeRight q q' a b γ1 γ2 γ3 γ4 γ5 γ6
   | etransSomeRightCenterC q q' (a b : stateSigma)  γ1 γ2 γ3 γ4 γ5 γ6 : transSomeRightCenter q q' a b γ1 γ2 γ3 γ4 γ5 γ6 -> etransSomeRight q q' a b γ1 γ2 γ3 γ4 γ5 γ6. 
 
-  Hint Constructors etransSomeRight : trans. 
+  Hint Constructors etransSomeRight : etrans. 
 
   Inductive etransSomeStay : states -> states -> stateSigma -> stateSigma -> transRule :=
   | etransSomeStayLeftC q q' (a b: stateSigma) γ1 γ2 γ3 γ4 γ5 γ6: transSomeStayLeft q q' a b γ1 γ2 γ3 γ4 γ5 γ6 -> etransSomeStay q q' a b γ1 γ2 γ3 γ4 γ5 γ6
   | etransSomeStayRightC q q' (a b: stateSigma) γ1 γ2 γ3 γ4 γ5 γ6 : transSomeStayRight q q' a b γ1 γ2 γ3 γ4 γ5 γ6 -> etransSomeStay q q' a b γ1 γ2 γ3 γ4 γ5 γ6
   | etransSomeStayCenterC q q' (a b: stateSigma) γ1 γ2 γ3 γ4 γ5 γ6 : transSomeStayCenter q q' a b γ1 γ2 γ3 γ4 γ5 γ6 -> etransSomeStay q q' a b γ1 γ2 γ3 γ4 γ5 γ6. 
 
-  Hint Constructors etransSomeStay : trans.
+  Hint Constructors etransSomeStay : etrans.
+
 
   Inductive etransNoneLeft : states -> states -> transRule :=
   | etransNoneLeftLeftC q q' γ1 γ2 γ3 γ4 γ5 γ6: transNoneLeftLeft q q' γ1 γ2 γ3 γ4 γ5 γ6 -> etransNoneLeft q q' γ1 γ2 γ3 γ4 γ5 γ6
   | etransNoneLeftRightC q q' γ1 γ2 γ3 γ4 γ5 γ6 : transNoneLeftRight q q' γ1 γ2 γ3 γ4 γ5 γ6 -> etransNoneLeft q q' γ1 γ2 γ3 γ4 γ5 γ6
   | etransNoneLeftCenterC q q' γ1 γ2 γ3 γ4 γ5 γ6 : transNoneLeftCenter q q' γ1 γ2 γ3 γ4 γ5 γ6 -> etransNoneLeft q q' γ1 γ2 γ3 γ4 γ5 γ6. 
 
-  Hint Constructors etransNoneLeft : trans. 
+  Hint Constructors etransNoneLeft : etrans. 
 
   Inductive etransNoneRight : states -> states -> transRule :=
   | etransNoneRightLeftC q q' γ1 γ2 γ3 γ4 γ5 γ6: transNoneRightLeft q q' γ1 γ2 γ3 γ4 γ5 γ6 -> etransNoneRight q q' γ1 γ2 γ3 γ4 γ5 γ6
   | etransNoneRightRightC q q' γ1 γ2 γ3 γ4 γ5 γ6 : transNoneRightRight q q' γ1 γ2 γ3 γ4 γ5 γ6 -> etransNoneRight q q' γ1 γ2 γ3 γ4 γ5 γ6
   | etransNoneRightCenterC q q' γ1 γ2 γ3 γ4 γ5 γ6 : transNoneRightCenter q q' γ1 γ2 γ3 γ4 γ5 γ6 -> etransNoneRight q q' γ1 γ2 γ3 γ4 γ5 γ6. 
 
-  Hint Constructors etransNoneRight : trans. 
+  Hint Constructors etransNoneRight : etrans. 
 
   Inductive etransNoneStay : states -> states -> transRule :=
   | etransNoneStayLeftC q q'  γ1 γ2 γ3 γ4 γ5 γ6: transNoneStayLeft q q' γ1 γ2 γ3 γ4 γ5 γ6 -> etransNoneStay q q' γ1 γ2 γ3 γ4 γ5 γ6
   | etransNoneStayRightC q q' γ1 γ2 γ3 γ4 γ5 γ6 : transNoneStayRight q q' γ1 γ2 γ3 γ4 γ5 γ6 -> etransNoneStay q q' γ1 γ2 γ3 γ4 γ5 γ6
   | etransNoneStayCenterC q q' γ1 γ2 γ3 γ4 γ5 γ6 : transNoneStayCenter q q' γ1 γ2 γ3 γ4 γ5 γ6 -> etransNoneStay q q' γ1 γ2 γ3 γ4 γ5 γ6.
 
-  Hint Constructors etransNoneStay : trans. 
+  Hint Constructors etransNoneStay : etrans. 
 
   Inductive etransRules : states -> stateSigma -> transRule :=
   | etransXSomeStay q m σ q' γ1 γ2 γ3 γ4 γ5 γ6: trans (q, m) = (q', (Some σ, N)) -> etransSomeStay q q' m (Some σ) γ1 γ2 γ3 γ4 γ5 γ6 -> etransRules q m γ1 γ2 γ3 γ4 γ5 γ6
@@ -4538,22 +4537,31 @@ Section fixTM.
   | etransNoneNoneLeft q q' γ1 γ2 γ3 γ4 γ5 γ6: trans (q, None) = (q', (None, R)) -> etransNoneLeft q q' γ1 γ2 γ3 γ4 γ5 γ6 -> etransRules q None γ1 γ2 γ3 γ4 γ5 γ6
   | etransNoneNoneRight q q' γ1 γ2 γ3 γ4 γ5 γ6: trans (q, None) = (q', (None, L)) -> etransNoneRight q q' γ1 γ2 γ3 γ4 γ5 γ6 -> etransRules q None γ1 γ2 γ3 γ4 γ5 γ6.
 
-  Hint Constructors etransRules : trans.
+  Hint Constructors etransRules : etrans.
 
   Inductive ehaltRules : states -> transRule :=
   | ehaltCenter q (m1 m2 : stateSigma) m p : ehaltRules q (inr (inr (p, m1))) (inl (q, m)) (inr (inr (p, m2))) (inr (inr (neutral, m1))) (inl (q, m)) (inr (inr (neutral, m2)))
   | ehaltRight q (m1 m2 m : stateSigma) p : ehaltRules q (inr (inr (p, m1))) (inr (inr (p, m2))) (inl (q, m)) (inr (inr (neutral, m1))) (inr (inr (neutral, m2))) (inl (q, m)) 
   | ehaltLeft q (m1 m2 m : stateSigma) p : ehaltRules q (inl (q, m)) (inr (inr (p, m1))) (inr (inr (p, m2))) (inl (q, m)) (inr (inr (neutral, m1))) (inr (inr (neutral, m2))).
-  Hint Constructors ehaltRules : trans. 
+  Hint Constructors ehaltRules : etrans. 
 
   Inductive estateRules : transRule :=
   | etransNonHaltC q m γ1 γ2 γ3 γ4 γ5 γ6 : halt q = false -> etransRules q m γ1 γ2 γ3 γ4 γ5 γ6 -> estateRules γ1 γ2 γ3 γ4 γ5 γ6
   | etransHaltC q γ1 γ2 γ3 γ4 γ5 γ6 : halt q = true -> ehaltRules q γ1 γ2 γ3 γ4 γ5 γ6 -> estateRules γ1 γ2 γ3 γ4 γ5 γ6. 
 
-  Hint Constructors estateRules : trans. 
+  Hint Constructors estateRules : etrans. 
 
   Definition esimRules γ1 γ2 γ3 γ4 γ5 γ6 := estateRules γ1 γ2 γ3 γ4 γ5 γ6 \/ tapeRules γ1 γ2 γ3 γ4 γ5 γ6. 
-  Hint Unfold esimRules : trans. 
+  Hint Unfold esimRules : etrans. 
+
+  Hint Constructors transSomeStayLeft transSomeStayRight transSomeStayCenter 
+    transSomeRightLeft transSomeRightRight transSomeRightCenter
+    transSomeLeftLeft transSomeLeftRight transSomeLeftCenter
+    : etrans. 
+  Hint Constructors transNoneStayLeft transNoneStayRight transNoneStayCenter 
+    transNoneRightLeft transNoneRightRight transNoneRightCenter
+    transNoneLeftLeft transNoneLeftRight transNoneLeftCenter
+    : etrans. 
 
   Notation erewHeadSim := (rewritesHeadInd esimRules).   
 
@@ -4576,10 +4584,10 @@ Section fixTM.
   Proof. 
      split. 
      - intros. destruct H as [H | [H | H]].  
-       + transRules_inv2; eauto 7 with trans.  
-       + haltRules_inv1; eauto 7 with trans. 
-       + eauto with trans.
-     - intros. erewHeadSim_inv; try destruct m; eauto 7 with trans. 
+       + transRules_inv2; eauto 7 with etrans nocore tmp.  
+       + haltRules_inv1; eauto 7 with etrans nocore tmp. 
+       + eauto 3 with etrans nocore tmp.
+     - intros. erewHeadSim_inv; try destruct m; eauto 7 with trans nocore tmp. 
    Qed.   
 
   Section listDestructLength.
@@ -4630,6 +4638,15 @@ Section fixTM.
       | [ |- ex (fun x => (x el ?h /\ _))] => rec_exists h ltac:(split; [ force_In | split; [ | cbn; reflexivity]])
     end;
     apply in_makeAllEvalEnv_iff; repeat split; cbn; solve_agreement_incl.
+
+  Lemma TPRWin_inj sig (p1 p2 c1 c2 : TPRWinP sig) : p1 / c1 = p2 / c2 -> p1 = p2 /\ c1 = c2. 
+  Proof. 
+    intros H. inv H. tauto. 
+  Qed.
+  Lemma TPRWinP_inj sig (s1 s2 s3 t1 t2 t3 : sig) : {s1, s2, s3} = {t1, t2, t3} -> s1 = t1 /\ s2 = t2 /\ s3 = t3. 
+  Proof. 
+    intros H. inv H. tauto. 
+  Qed.
 
   Lemma agreement_nonhalt q m: windows_list_ind_agree (@liftOrig Gamma (etransRules q m) preludeSig') (generateWindowsForFinNonHalt q m).
   Proof. 
@@ -4692,12 +4709,13 @@ Section fixTM.
       apply in_map_iff in H2 as ([] & <- & H2);
       apply in_makeAllEvalEnv_iff in H2 as ((F1 & _) & (F2 & _) & (F3 & _) & (F4 & _));
       cbn in H1; destruct_or H1; try rewrite <- H1 in *; 
-      list_destruct_length; cbn in *;
-      match goal with
-      | [H : Some _ = None |- _] => congruence
-      | [H : Some _ = optReturn _ |- _] => inv H
-      | _ => idtac
-      end; eauto 7 with trans.
+      list_destruct_length; cbn in *.
+      all: try match goal with
+      | [H : Some _ = None |- _] => discriminate H
+      | [H : Some _ = optReturn _ |- _] => apply Some_injective in H; apply TPRWin_inj in H as [(?&?&?)%TPRWinP_inj (?&?&?)%TPRWinP_inj]; subst
+      | [H : False |- _] => destruct H
+      end. 
+      par: eauto 7 using liftOrig with etrans nocore tmp.
    Qed.  
           
   Lemma agreement_halt q: windows_list_ind_agree (@liftOrig Gamma (ehaltRules q) preludeSig') (generateWindowsForFinHalt q). 
@@ -4713,16 +4731,15 @@ Section fixTM.
       apply in_map_iff in H2 as ([] & <- & H2);
       apply in_makeAllEvalEnv_iff in H2 as ((F1 & _) & (F2 & _) & (F3 & _) & (F4 & _));
       cbn in H1; destruct_or H1; try rewrite <- H1 in *; 
-      list_destruct_length; cbn in *;
-      match goal with
-      | [H : Some _ = None |- _] => congruence
-      | [H : Some _ = optReturn _ |- _] => inv H
-      | _ => idtac
-      end; eauto 7 with trans.
+      list_destruct_length; cbn in *. 
+      all: try match goal with
+      | [H : Some _ = None |- _] => discriminate H
+      | [H : Some _ = optReturn _ |- _] => apply Some_injective in H; apply TPRWin_inj in H as [(?&?&?)%TPRWinP_inj (?&?&?)%TPRWinP_inj]; subst
+      | [H : False |- _] => destruct H
+      end. 
+      par: eauto 7 using liftOrig with etrans nocore tmp.
   Qed. 
 
-  Hint Constructors liftOrig : core. 
-  Hint Constructors estateRules : core. 
   Lemma agreement_transition: windows_list_ind_agree (@liftOrig Gamma estateRules preludeSig') finStateWindows. 
   Proof. 
     split. 
@@ -4739,15 +4756,13 @@ Section fixTM.
       apply in_concat_map_iff in H as (q & _ & H). 
       unfold generateWindowsForFin in H.
       destruct halt eqn:H1. 
-      + apply agreement_halt in H. inv H. eauto.  
+      + apply agreement_halt in H. inv H. eauto using liftOrig with etrans. 
       + apply in_concat_map_iff in H as (m & _ & H).
-        apply agreement_nonhalt in H. inv H. eauto.
+        apply agreement_nonhalt in H. inv H. eauto using liftOrig with etrans.
   Qed. 
 
   Definition allFinSimWindows := finTapeWindows ++ finStateWindows.
 
-  Hint Unfold simRules : core. 
-  Hint Unfold esimRules : core. 
   Lemma agreement_sim: windows_list_ind_agree (@liftOrig Gamma simRules preludeSig') allFinSimWindows. 
   Proof. 
     unfold windows_list_ind_agree. intros. split; intros. 
@@ -4756,8 +4771,8 @@ Section fixTM.
       + right. apply agreement_transition. eauto. 
       + left. apply agreement_tape. eauto.
     - unfold allFinSimWindows in H; apply in_app_iff in H. inv H. 
-      + apply agreement_tape in H0. inv H0. eauto.  
-      + apply agreement_transition in H0. inv H0. constructor. apply esim_sim_agree. eauto. 
+      + apply agreement_tape in H0. inv H0. eauto using liftOrig with trans.  
+      + apply agreement_transition in H0. inv H0. constructor. apply esim_sim_agree. eauto using liftOrig with etrans. 
   Qed. 
 
   (**now the agreement of the prelude windows *)
@@ -4813,8 +4828,8 @@ Section fixTM.
   Proof with abstract solve_agreement_prelude. 
     split; intros. 
     - inv H. inv H0. 
-      all: apply in_makeWindows_iff, agreement_trans_unfold_env; unfold listPreludeRules;
-      try abstract (solve [exists (Build_evalEnv [] [] [] []); solve_agreement_prelude]). 
+      all: apply in_makeWindows_iff, agreement_trans_unfold_env; unfold listPreludeRules.
+      1-4,7-8,14,24,26: abstract (solve [exists (Build_evalEnv [] [] [] []); solve_agreement_prelude]). 
       + exists (Build_evalEnv [] [σ] [] [])... 
       + exists (Build_evalEnv [] [] [m] [])... 
       + exists (Build_evalEnv [] [σ1] [m1] [])... 
@@ -4838,18 +4853,17 @@ Section fixTM.
       apply in_map_iff in H2 as ([] & <- & H2);
       apply in_makeAllEvalEnv_iff in H2 as ((F1 & _) & (F2 & _) & (F3 & _) & (F4 & _));
       cbn in H1; destruct_or H1; try rewrite <- H1 in *; 
-      list_destruct_length; cbn in *;
-      match goal with
-      | [H : Some _ = None |- _] => congruence
-      | [H : Some _ = optReturn _ |- _] => inv H
-      | _ => idtac
-      end; eauto 7 with trans.
+      list_destruct_length; cbn in *. 
+      all: try match goal with
+      | [H : Some _ = None |- _] => discriminate H
+      | [H : Some _ = optReturn _ |- _] => apply Some_injective in H; apply TPRWin_inj in H as [(?&?&?)%TPRWinP_inj (?&?&?)%TPRWinP_inj]; subst
+      | [H : False |- _] => destruct H
+      end. 
+      par: eauto 7 using liftPrelude with core.
   Qed. 
 
   Definition allFinWindows := finPreludeWindows ++ allFinSimWindows. 
 
-  Hint Unfold combP : core.
-  Hint Unfold allRules : core.
   Lemma fin_agreement : windows_list_ind_agree allRules allFinWindows. 
   Proof. 
     split; intros. 
@@ -4857,8 +4871,8 @@ Section fixTM.
       * apply agreement_prelude in H0. unfold allFinWindows. eauto.  
       * apply agreement_sim in H0. unfold allFinWindows. eauto. 
     + unfold allFinWindows in H. apply in_app_iff in H. destruct_or H. 
-      * apply agreement_prelude in H. eauto.  
-      * apply agreement_sim in H. eauto. 
+      * apply agreement_prelude in H. constructor. assumption.
+      * apply agreement_sim in H. constructor 2. assumption. 
   Qed. 
 
   (** the reduction using the list-based windows *)
