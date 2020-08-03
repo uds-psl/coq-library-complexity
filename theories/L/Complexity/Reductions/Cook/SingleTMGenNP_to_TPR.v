@@ -2709,15 +2709,15 @@ Section fixTM.
     (*therefore abstract into opaque lemmas *)
     idtac "solving uniqueness - this may take a few minutes".
     unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1.
-    par:abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
-  Qed. 
+    all:abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
+  Qed.
 
   (** if we are in a halting state, we can only rewrite to the same string (identity), except for setting the polarity to neutral *)
   Lemma haltsim q tp s :
     (q, tp) ≃c s
     -> halt q = true
     -> exists s', s ⇝ s' /\ (forall s'', s ⇝ s'' -> s'' = s') /\ (q, tp) ≃c s'.
-  Proof. 
+  Proof.
     Set Default Goal Selector "all". 
     intros. apply valid_reprConfig_unfold. 
     destruct H as (ls & qm & rs & H1 & H2). 
@@ -4230,10 +4230,17 @@ Section fixTM.
   Qed. 
 
   (*various tactics used for the proof of agreement *)
+  Ltac force_In := lazymatch goal with
+                  | [ |- ?a el ?a :: ?h] => left; reflexivity
+                  | [ |- ?a el ?b :: ?h] => right; force_In
+                  | [ |- [?a] <<= ?h] => apply singleton_incl; force_In
+                  end. 
+
+
   Ltac solve_agreement_incl :=
     match goal with
-      | [ |- [] <<= _] => eauto
-      | [ |- ?a <<= elem Sigma] => eauto
+      | [ |- [] <<= _] => intros ? [] 
+      | [ |- ?a <<= elem Sigma] => intros ? ?; solve [apply elem_spec]
       | [ |- [?p] <<= [negative; positive; neutral]] => destruct p; force_In
       | [ |- ?p el [negative; positive; neutral]] => destruct p; force_In
       | [ |- [?a; ?b] <<= ?h] => apply duoton_incl; split; solve_agreement_incl 
@@ -4265,11 +4272,12 @@ Section fixTM.
         | [ |- ex (fun r => r el ?h /\ _) ] => rec_exists h ltac:(solve_agreement_in_env)
         end.
 
+  Hint Extern 2 => exfalso; assumption : tmp.
   Lemma agreement_mtr: windows_list_ind_agree (@liftOrig Gamma shiftRightRules preludeSig') finMTRWindows. 
   Proof.
     unfold windows_list_ind_agree; intros; split. 
     - intros. inv H. rewHeadTape_inv2; apply in_makeWindows_iff. 
-      + exists (Build_evalEnv [p] [σ1; σ2; σ3; σ4] [] []). abstract solve_agreement_tape. 
+      + exists (Build_evalEnv [p] [σ1; σ2; σ3; σ4] [] []). abstract solve_agreement_tape.
       + exists (Build_evalEnv [p] [σ1; σ1; σ1; σ1] [] []). abstract solve_agreement_tape. 
       + exists (Build_evalEnv [p] [] [] []). abstract solve_agreement_tape. 
       + exists (Build_evalEnv [p] [σ1; σ2] [] []). abstract solve_agreement_tape. 
@@ -4281,7 +4289,7 @@ Section fixTM.
       destruct env. apply in_makeAllEvalEnv_iff in H2. 
       destruct H2 as ((F1 & _) & (F2 & _) & (F3 & _) & (F4 & _)). 
       destruct_var_env F1; destruct_var_env F3; destruct_var_env F4; destruct_var_env F2.  
-      all: cbn in H1; destruct_or H1; subst; cbn in H3; inv H3; eauto. 
+      all: cbn in H1; destruct_or H1; subst; cbn in H3; inv H3; eauto using liftOrig with tmp nocore.
   Qed. 
 
   Definition pFlipAlphabet (a : Alphabet) := 
@@ -4315,7 +4323,7 @@ Section fixTM.
       destruct env. apply in_makeAllEvalEnv_iff in H2. 
       destruct H2 as ((F1 & _) & (F2 & _) & (F3 & _) & (F4 & _)). 
       destruct_var_env F1; destruct_var_env F3; destruct_var_env F4; destruct_var_env F2.  
-      all: try (now (cbn in H1; destruct_or H1; subst; cbn in H3; inv H3; cbn; eauto)).
+      all: cbn in H1; destruct_or H1; subst; cbn in H3; inv H3; cbn; eauto using liftOrig with tmp nocore. 
   Qed. 
 
   Lemma agreement_mti: windows_list_ind_agree (@liftOrig Gamma identityRules preludeSig') finMTIWindows. 
@@ -4329,7 +4337,7 @@ Section fixTM.
       destruct env. apply in_makeAllEvalEnv_iff in H2. 
       destruct H2 as ((F1 & _) & (F2 & _) & (F3 & _) & (F4 & _)). 
       destruct_var_env F1; destruct_var_env F3; destruct_var_env F4; destruct_var_env F2.  
-      all: cbn in H1; destruct_or H1; subst; cbn in H3; inv H3; eauto.
+      all: cbn in H1; destruct_or H1; subst; cbn in H3; inv H3; eauto using liftOrig with tmp nocore.
   Qed. 
 
   Lemma agreement_tape : windows_list_ind_agree (@liftOrig Gamma tapeRules preludeSig') finTapeWindows.  
@@ -4715,6 +4723,7 @@ Section fixTM.
       | [H : Some _ = optReturn _ |- _] => apply Some_injective in H; apply TPRWin_inj in H as [(?&?&?)%TPRWinP_inj (?&?&?)%TPRWinP_inj]; subst
       | [H : False |- _] => destruct H
       end. 
+      Optimize Proof. 
       par: eauto 7 using liftOrig with etrans nocore tmp.
    Qed.  
           

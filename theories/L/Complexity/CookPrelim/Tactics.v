@@ -53,4 +53,52 @@ Ltac dec_bool := repeat match goal with
                    | [  |- Nat.leb ?n ?n0 = false] => apply leb_correct_conv
                     end; try congruence; try tauto.
 
+Lemma singleton_incl (X : Type) (a : X) (h : list X) :
+  [a] <<= h <-> a el h. 
+Proof. 
+  split; intros. 
+  - now apply H. 
+  - now intros a' [-> | []]. 
+Qed. 
+
+Ltac force_In := match goal with
+                  | [ |- ?a el ?a :: ?h] => left; reflexivity
+                  | [ |- ?a el ?b :: ?h] => right; force_In
+                  | [ |- [?a] <<= ?h] => apply singleton_incl; force_In
+                  end. 
+
+Ltac destruct_or H := match type of H with
+                      | ?a \/ ?b => destruct H as [H | H]; try destruct_or H
+                        end.
+Lemma S_injective a b : S a = S b -> a = b. 
+Proof. congruence. Qed. 
+
+Ltac list_length_inv := repeat match goal with 
+    | [H : S _ = |?a| |- _] => is_var a; destruct a; cbn in H; [ congruence | apply S_injective in H]
+    | [H : 0 = |?a| |- _] => is_var a; destruct a; cbn in H; [ clear H| congruence]
+    | [H : |?a| = _ |- _] => symmetry in H
+    | [H : S _ >= S _ |- _] => apply Peano.le_S_n in H
+    | [H : S _ <= S _ |- _] => apply Peano.le_S_n in H
+    | [H :  |?a| >= S _ |- _] => is_var a; destruct a; cbn in H; [lia | ]
+    | [H : S _ <= |?a| |- _] => is_var a; destruct a; cbn in H; [lia | ]
+end.
+
+Ltac discr_list := repeat match goal with
+                    | [ H : |[]| = |?x :: ?xs| |- _] => cbn in H; discriminate H
+                    | [ H : |?x :: ?xs| = |[]| |- _] => cbn in H; discriminate H
+                    | [H : |?x :: ?xs| = 0 |- _] => cbn in H; discriminate H
+                    | [H : 0 = |?x :: ?xs| |- _] => cbn in H; discriminate H
+                    | [H : |[]| = S ?z |- _] => cbn in H; discriminate H
+                    | [H : S ?z = |[]| |- _] => cbn in H; discriminate H
+                    end. 
+Ltac inv_list := repeat match goal with
+                  | [H : |[]| = |?xs| |- _] => destruct xs; [ | discr_list]; cbn in H
+                  | [H : |?x :: ?xs| = |?ys| |- _] => destruct ys; [ discr_list  | ]; cbn in H
+                  | [H : |?xs| = 0 |- _] => destruct xs; [ | discr_list ]; cbn in H
+                  | [H : 0 = |?xs| |- _] => destruct xs; [ | discr_list ]; cbn in H
+                  | [H : |?xs| = S ?z |- _] => destruct xs ; [ discr_list | ]; cbn in H
+                  | [H : S ?z = |?xs| |- _] => destruct xs; [ discr_list | ]; cbn in H
+                  end. 
+
+
 Ltac simp_comp_arith := cbn -[Nat.add Nat.mul]; repeat change (fun x => ?h x) with h.
