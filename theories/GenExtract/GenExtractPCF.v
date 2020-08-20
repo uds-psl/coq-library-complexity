@@ -91,7 +91,9 @@ Inductive isPCF : forall n (Γ : typeContext n) (A: anyTT), (valueContext Γ -> 
 
 (* Missing: Fixes, match nat*)
 
-Lemma isPCF_plus : isPCF 0 tt (existT _ _ (TyArr _ _)) (fun _ => plus).
+(*Lemma isPCF_mono : isPCF n Γ tt f *)
+
+Lemma isPCF_plus n Γ: isPCF n Γ (existT _ _ (TyArr _ _)) (fun _ => plus).
 Proof.
   unfold Init.Nat.add.
   simple eapply isPCF_Fix_unaryNat with (f:= fun ctx=> fun m => match fst ctx with
@@ -101,12 +103,14 @@ Proof.
   now intros arg [].
   simple eapply isPCF_Lambda.
   simple eapply isPCF_Case_nat.
-  -eapply (isPCF_Rel 3) with (x:=Some None).
-  -eapply (isPCF_Rel 3) with (x:=None).
+  -eapply (isPCF_Rel (3+_)) with (x:=Some None).
+  -eapply (isPCF_Rel (3+_)) with (x:=None).
   -eapply isPCF_App. now econstructor. cbn. 
    eapply isPCF_App with (f:= fun ctx => fst (snd (snd (snd ctx))) (fst ctx));cbn.
-   2:now eapply (isPCF_Rel 4) with (x:=Some None).
+   2:now eapply (isPCF_Rel (4+_)) with (x:=Some None).
    eapply isPCF_App with (f:= fun ctx => fst (snd (snd (snd ctx))));cbn.
-   now eapply (isPCF_Rel 4) with (x:=Some (Some (Some None))).
-   now eapply (isPCF_Rel 4) with (x:=None).
+   now eapply (isPCF_Rel (4+_)) with (x:=Some (Some (Some None))).
+   now eapply (isPCF_Rel (4+_)) with (x:=None).
 Qed.
+
+     
