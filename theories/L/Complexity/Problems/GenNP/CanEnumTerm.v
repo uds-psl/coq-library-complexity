@@ -5,7 +5,7 @@ From Undecidability.L.AbstractMachines Require Import FlatPro.Programs FlatPro.C
 
 From Undecidability Require Export CanEnumTerm_def.
 
-Lemma terms_enum_themself : canEnumTerms term.
+Lemma terms_enum_themselves : canEnumTerms term.
 Proof with try eauto;smpl_inO.
   exists id id. 2-4:unfold id... 
   evar (time : nat -> nat). [time]:intros n.
