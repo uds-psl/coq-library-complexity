@@ -4,9 +4,9 @@ From Undecidability.L.Complexity Require Import NP.
 From Undecidability.L Require Import Tactics.LTactics.
 
 (** For each Machine M (with n+1 tapes), we define this problem:
-Given n tapes and a sizeBound and a step bound, does there exist a (small enough) first tape such that the machine halts on the resulting n+1 tapes in fewer? *)
+Given n tapes and a sizeBound and a step bound, does there exist a (small enough) first tape such that the machine halts on the resulting n+1 tapes in fewer steps than the step bound? *)
 
-(** We contain this on haltsOrDiverges as out MutiTape2SingleTape-translation probably only knows upper bounds of the step count.  *)
+(** We contain this on haltsOrDiverges as our MutiTape2SingleTape-translation probably only knows upper bounds of the step count.  *)
 Definition HaltsOrDiverges_fixed_mTM (sig : finType) `{registered sig} n (M : mTM sig (S n)) : Vector.t (tape sig) n * nat * nat -> Prop :=
   fun '(ts, maxSize, steps) =>
     forall t__cert' k res', loopM (initc M (t__cert':::ts)) k = Some res'

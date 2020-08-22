@@ -25,5 +25,5 @@ Proof.
   eapply boollist_enum.boollists_enum_term.
 Qed.
 
-(* Print Assumptions CookLevin. *)
+(*Print Assumptions CookLevin. *)
 (* Closed under the global context *)
