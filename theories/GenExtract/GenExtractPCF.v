@@ -255,6 +255,12 @@ Proof.
   reflexivity.
 Qed.
 
+Lemma subst_rho s k t:
+  subst (rho s) k t = rho (subst s (S k) t).
+Proof.
+  reflexivity.
+Qed.
+
 Lemma validEnv'_vec_to_list {n} (env__L : vec _ n):
   hvec proc env__L -> LClos.validEnv' (vec_to_list env__L).
 Proof. intros proc__env. intros ? (i&<-)%vec_to_list_In. now destruct (nth__HV i proc__env). Qed.
@@ -280,9 +286,73 @@ Proof.
   -eapply rho_dcls. apply IHisPCF with (k:= S k). rewrite hvec_map. eapply hvec_impl with (2:=Hlt). nia.
 Qed.
 
+Lemma PCFtoL_unused_vars {n} {Γ : typeContext n} {A:anyTT} {f:valueContext Γ -> A.(aTy)}
+      (H : isPCF Γ A f) (ren : vec nat n) x s:
+  hvec (fun y => y <> x) ren
+  -> subst (PCFtoL H ren) x s = PCFtoL H ren.
+Proof.
+  induction H in ren,x |- *;intros Hneq;cbn - [rho].
+  1,6:now apply bound_closed,closed_dcl_x; Lproc.
+  2,4:now repeat f_equal;eauto.
+  -rewrite (proj2 (Nat.eqb_neq _ _ )). easy. now eapply nth__HV in Hneq.
+  -rewrite IHisPCF. easy. unfold up;split;cbn. easy. rewrite hvec_map. eapply hvec_impl with (2:=Hneq). nia.
+  -rewrite subst_rho, IHisPCF. easy. rewrite hvec_map. eapply hvec_impl with (2:=Hneq). nia.
+Qed.
+
+
+Lemma subst_substList_swap s k A x u:
+  bound k u
+  -> x < k
+  -> LClos.validEnv' A
+  -> subst (LClos.substList s k A) x u = LClos.substList (subst s x u) k A.
+Proof.
+  intros Hu Hlt H__A.
+  induction s in k,A,x,Hu,Hlt,H__A|-*.
+  -cbn. decide _;cbn;destruct (Nat.eqb_spec n x);cbn. 2,4:(decide _;try nia);[].
+   now rewrite LClos.substList_bound. easy. 2:exfalso;nia. 
+   edestruct nth_in_or_default as [ ? | ->];cbn. 2:now destruct (Nat.eqb_spec n x).
+   eapply bound_closed_k, closed_dcl_x. eauto.
+  -cbn. now repeat f_equal.
+  -cbn. f_equal. apply IHs. now eapply bound_ge. all:easy.
+Qed.
+
+Lemma subst_substList_unused_var s k A x u:
+  subst s x u = s
+  -> LClos.validEnv' A
+  -> subst (LClos.substList s k A) x u = LClos.substList s k A.
+Proof.
+  intros Hu H__A.
+  induction s in k,A,x,Hu,H__A|-*.
+  -cbn in *. decide _;cbn in *. easy.
+   edestruct nth_in_or_default as [ ? | ->];cbn.
+   +now eapply bound_closed_k, closed_dcl_x; eauto.
+   +easy.  
+  -cbn in *. revert Hu. intros [= H1 H2]. now rewrite IHs1,IHs2.
+  -cbn in *. revert Hu. intros [= Hu]. now rewrite IHs.
+Qed.
+
+Lemma bound_shift n d (ren : vec nat n) :
+         hvec (fun x => x < d) ren -> hvec (fun x : nat => x < S d) (map__V S ren).
+Proof. intros H. rewrite hvec_map. eapply hvec_impl with (2:=H). nia. Qed.
+
 Lemma bound_up n d (ren : vec nat n) :
   hvec (fun x => x < d) ren -> hvec (n:=S n) (fun x : nat => x < S d) (up ren).
-Proof. intros H. cbn. split. easy. rewrite hvec_map. eapply hvec_impl with (2:=H). nia. Qed. 
+Proof. intros H. cbn. split. easy. now apply bound_shift. Qed.
+
+(*
+Lemma PCFtoL_shift n (Γ : typeContext n) A f (H:isPCF Γ A f) (ren : vec nat n) E k (bound__ren : hvec (fun x => x < k + length E) ren):
+  bound (k + length E) (PCFtoL H (map__V S ren))
+  -> LClos.substList (PCFtoL H (map__V S ren)) (S k) E = LClos.substList (PCFtoL H ren) k E.
+Proof.
+  induction H in bound__ren,E,ren,k |-*.
+  -cbn. rewrite !LClos.substList_closed. easy. all:Lproc.
+  -cbn. rewrite !nthV_mapV. do 2 decide _. all:try nia.
+   all:intros H;inv H. 
+   +exfalso. eapply nth__HV with (n0:=x) in bound__ren. exfalso;nia.  rewrite Nat.sub_1_r;cbn. rewrite Nat.sub_0_r.
+   apply nth_indep. now eapply nth__HV in bound__ren.
+  -cbn;now  f_equal.
+  -cbn. unfold up. cneauto. 
+*)
 
 Lemma isPCF_L_computable {n} {Γ : typeContext n} {A:anyTT} {f:valueContext Γ -> A.(aTy)}
       (H : isPCF Γ A f) (vs : valueContext Γ) k (env__L : vec term k) (ren : vec nat n) 
@@ -346,14 +416,60 @@ Proof.
   }
   1:{(* Succ *) eexists;split. reflexivity. cbn - [computes]. rewrite LClos.substList_closed. 2:now Lproc. apply extCorrect. }
   1:{(* Fix_unaryNat *) cbn - [rho].
-     eexists. split. reflexivity. split. split. 2:cbn;easy.
-     { (*PCFtoL is closed *) apply closed_dcl. rewrite substList_rho. apply rho_dcls, LClos.substList_is_bound.
+     rewrite substList_rho.
+     set (REC' := LClos.substList _ _ _).  set (REC := rho REC').
+     assert (cls__REC' : proc REC).
+     {
+       split. 2:unfold REC;cbn;now eexists.
+       unfold REC, REC'. apply closed_dcl. apply rho_dcls, LClos.substList_is_bound. 
        1:now apply validEnv'_vec_to_list. rewrite vec_to_list_length.
-       eapply bound_PCFtoL. rewrite hvec_map. eapply hvec_impl with (2:=bound__ren). nia.
-     } 
-     intros x ? ->. eexists. split.
+       eapply bound_PCFtoL. now eapply bound_shift.
+     }
+     eexists. split. reflexivity. split. easy. 
      
-     set (REC := PCFtoL _ _).
-     rewrite substList_rho. rewrite rho_correct. 2:  (*PCFtoL is closed *) admit. 2:Lproc. all:admit (*TODO: recursion *). 
+     intros x ? ->.
+     (* TODO: understand how to match 0 in IisPCF with 1 in REC'. I trued k = S k below, but that seeemed srange  *)
+     (*
+     Set Nested Proofs Allowed.
+     Goal forall s t u, app (rho (lam s)) (lam t) >* u.
+     Proof.
+       intros ? ? ?.
+       unfold rho. repeat (econstructor;[now repeat constructor|cbn ] ).
+       assert (H:=eq_refl (rho (lam s))). unfold rho in H at 2. cbv - [rho] in H. rewrite <- H. eqn:H. 
+       fold (rho (lam s)).
+       refine (_ : (app _ (rho (lam s))) >* _).
+       fold subst.
+      *)
+     unshelve specialize IHisPCF with (k:=k) (vs := vs) (env__L := env__L) (ren:= map__V S ren) as (v__f&R__f&proc__f&IH__f).
+     (*1,2,3:easy. *)(*now apply bound_shift.
+     1:now split;cbn.
+     1:{ intros i. erewrite nat_to_fin_unique. apply H__env. eassumption. re cbn. } *)
+     (*
+     fold REC in R__f. rewrite substList_rho.
+     cbn in R__f. rewrite <- LClos.subst_substList in R__f. 2:now apply validEnv'_vec_to_list.
+     rewrite subst_substList_unused_var in R__f. 3:now eapply validEnv'_vec_to_list.
+     2:{ apply PCFtoL_unused_vars. rewrite hvec_map. eapply hvec_impl with (2:=bound__ren). nia. } *)
+
+     
+     (* TODO: incorperate "recursion" into isPCF_Fix_unaryNat  *)
+     specialize IH__f with (a:= F vs) (t_a := REC).
+     admit.
+     
+         hnf in IH__f. 
+         eexists;split. 
+         rewrite PCFtoL_unused_vars in R__f.
+         2:{ apply LClos.substList_is_bound.  }
+         
+
+         eexists. split. rewrite rho_correct. 3:Lproc. 2:admit.
+
+         Lemma substList_
+         rewrite LClos.substList_bound.
+     2:{ eapply bound_PCFtoL. }
+     ).
+     rewrite LClos
+     setoid_rewrite substList_rho. rewrite rho_correct.
+     2:{ }
+     2:  (*PCFtoL is closed *) admit. 2:Lproc. all:admit (*TODO: recursion *). 
   }
 Admitted.
