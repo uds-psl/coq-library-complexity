@@ -4,12 +4,9 @@
 -arg -w -arg -notation-overridden,-redundant-canonical-projection,-several-object-files,cannot-define-projection,records,unused-intro-pattern,tactics
 COQDOCFLAGS = "--charset utf-8 -s --with-header ../website/resources/header.html --with-footer ../website/resources/footer.html --index indexpage"
 
-L/TM/TMinL.v
 
-L/Computability/Seval.v
-L/Computability/Computability.v
-L/Computability/MuRec.v
-
+#this file takes long to compile, so it should be early in the list
+L/Complexity/Reductions/Cook/SingleTMGenNP_to_TPR.v
 L/Complexity/overview.v
 L/Complexity/CookLevin.v
 
@@ -39,7 +36,6 @@ L/Complexity/Reductions/Cook/TM_single.v
 L/Complexity/Problems/Cook/PR.v
 L/Complexity/Problems/Cook/TPR.v
 L/Complexity/Reductions/Cook/PTPR_Preludes.v
-L/Complexity/Reductions/Cook/SingleTMGenNP_to_TPR.v
 L/Complexity/Problems/Cook/FlatPR.v
 L/Complexity/Problems/Cook/FlatTPR.v
 L/Complexity/Reductions/Cook/FlatSingleTMGenNP_to_FlatTPR.v
@@ -169,7 +165,6 @@ TM/PrettyBounds/MaxList.v
 TM/PrettyBounds/BaseCode.v
 TM/PrettyBounds/UnivBounds.v
 TM/PrettyBounds/M2MBounds.v
-
 TM/PrettyBounds/SpaceBounds.v
 TM/PrettyBounds/BaseCodeSpace.v
 TM/PrettyBounds/UnivSpaceBounds.v
@@ -244,7 +239,7 @@ L/Functions/FinTypeLookup.v
 
 #L/Functions/EnumInt.v
 L/Functions/Unenc.v
-L/Functions/Ackermann.v
+#L/Functions/Ackermann.v
 
 L/TM/TMEncoding.v
 L/TM/TMflat.v
@@ -253,11 +248,10 @@ L/TM/TMunflatten.v
 L/TM/TMflatEnc.v
 L/TM/TMflatFun.v
 L/TM/TMflatComp.v
-
+L/TM/TMinL.v
 L/TM/TapeFuns.v
 L/TM/TapeDecode.v
 L/TM/TMflatten.v
-#L/Reductions/TM_to_L.v
 
 L/Complexity/UpToC.v
 L/Complexity/UpToCNary.v
@@ -317,31 +311,13 @@ L/AbstractMachines/FlatPro/ProgramsDef.v
 L/AbstractMachines/FlatPro/LM_heap_def.v
 L/AbstractMachines/FlatPro/LM_heap_correct.v
 
-#L/Computability/Acceptability.v
-#L/Computability/AD.v
-
-#L/Computability/DA.v
+L/Computability/Seval.v
+L/Computability/Computability.v
+L/Computability/MuRec.v
 L/Computability/Decidability.v
-#L/Computability/Enum.v
-#L/Computability/Fixpoints.v
-#L/Computability/MoreAcc.v
 
-#L/Computability/Partial.v
-#L/Computability/Por.v
-#L/Computability/RE.v
-#L/Computability/Rice.v
-#L/Computability/Scott.v
-
-
-
-#L/Computability/Synthetic.v
 
 #Reduction L to TM with abstract Heap Machine
 LAM/BaseExtension.v
 
-
 Problems/TM.v
-#Problems/cbvLambda.v
-
-#Reductions/L_to_mTM.v
-#Reductions/mTM_to_TM.v
