@@ -215,8 +215,8 @@ Section fixTM.
   Definition reprConfig' c ls qm rs := match c with (q, tape) => exists p, qm = embedState q (current tape) /\ reprTape (left tape) ls p /\ reprTape (right tape) rs p end. 
   Definition reprConfig c (s : list Gamma) := exists ls qm rs, s = rev ls ++ [qm] ++ rs /\ reprConfig' c ls qm rs. 
 
-  Notation "c '≃c' '(' ls ',' q ',' rs ')'" := (reprConfig' c ls q rs) (at level 80). 
-  Notation "c '≃c' s" := (reprConfig c s) (at level 80). 
+  Notation "c '≃c' '(' ls ',' q ',' rs ')'" := (reprConfig' c ls q rs) (at level 80) : pr_scope.
+  Notation "c '≃c' s" := (reprConfig c s) (at level 80) : pr_scope. 
 
   Lemma string_reprConfig_length q tp s: (q, tp) ≃c s -> |s| = l. 
   Proof. 
@@ -1821,7 +1821,7 @@ Section fixTM.
 
 
 
-  (** full inverions - very (!) costly *)
+  (** full inversions - very (!) costly *)
   Ltac transRules_inv2_once :=
     once
       match goal with
