@@ -10,6 +10,7 @@ L/Complexity/Reductions/Cook/SingleTMGenNP_to_TPR.v
 L/Complexity/overview.v
 L/Complexity/CookLevin.v
 
+#L/Complexity/UpToCNaryPoly.v
 
 L/Complexity/CookPrelim/PolyBounds.v
 L/Complexity/CookPrelim/Tactics.v
@@ -20,6 +21,7 @@ L/Complexity/Problems/SharedSAT.v
 L/Complexity/Problems/SAT.v
 L/Complexity/Problems/kSAT.v
 L/Complexity/Reductions/kSAT_to_SAT.v
+
 L/Complexity/Problems/UGraph.v
 L/Complexity/Problems/Clique.v
 L/Complexity/Problems/FlatUGraph.v
@@ -170,7 +172,7 @@ TM/PrettyBounds/BaseCodeSpace.v
 TM/PrettyBounds/UnivSpaceBounds.v
 
 # Multi-Univ Simulation Theorem
-TM/MultiUnivTimeSpaceSimulation.v
+#TM/MultiUnivTimeSpaceSimulation.v
 
 TM/Hyperlinked.v
 
@@ -200,7 +202,7 @@ L/Tactics/Lrewrite.v
 L/Tactics/Lsimpl.v
 
 L/Tactics/ComputableTactics.v
-L/Tactics/ComputableDemo.v
+#L/Tactics/ComputableDemo.v
 
 L/Tactics/mixedTactics.v
 
@@ -260,8 +262,8 @@ L/Complexity/ResourceMeasures.v
 L/Complexity/SpaceBoundsTime.v
 L/Complexity/Synthetic.v
 L/Complexity/PolyTimeComputable.v
-L/Complexity/AbstractTimeHierarchyTheorem.v
-L/Complexity/TimeHierarchyTheorem.v
+#L/Complexity/AbstractTimeHierarchyTheorem.v
+#L/Complexity/TimeHierarchyTheorem.v
 L/Complexity/Monotonic.v
 L/Complexity/ONotation.v
 L/Complexity/ONotationIsAppropriate.v
