@@ -168,42 +168,6 @@ Smpl Add (apply rev_involution) : involution.
 Definition prefix (X : Type) (a b : list X) := exists b', b = a ++ b'.
 Definition substring (X : Type) (a b : list X) := exists b1 b2, b = b1 ++ a ++ b2. 
 
-Ltac discr_list := repeat match goal with
-                    | [ H : |[]| = |?x :: ?xs| |- _] => cbn in H; congruence
-                    | [ H : |?x :: ?xs| = |[]| |- _] => cbn in H; congruence
-                    | [H : |?x :: ?xs| = 0 |- _] => cbn in H; congruence
-                    | [H : 0 = |?x :: ?xs| |- _] => cbn in H; congruence
-                    | [H : |[]| = S ?z |- _] => cbn in H; congruence
-                    | [H : S ?z = |[]| |- _] => cbn in H; congruence
-                    end. 
-Ltac inv_list := repeat match goal with
-                  | [H : |[]| = |?xs| |- _] => destruct xs; [ | discr_list]; cbn in H
-                  | [H : |?x :: ?xs| = |?ys| |- _] => destruct ys; [ discr_list  | ]; cbn in H
-                  | [H : |?xs| = 0 |- _] => destruct xs; [ | discr_list ]; cbn in H
-                  | [H : 0 = |?xs| |- _] => destruct xs; [ | discr_list ]; cbn in H
-                  | [H : |?xs| = S ?z |- _] => destruct xs ; [ discr_list | ]; cbn in H
-                  | [H : S ?z = |?xs| |- _] => destruct xs; [ discr_list | ]; cbn in H
-                  end. 
-
-Lemma singleton_incl (X : Type) (a : X) (h : list X) :
-  [a] <<= h <-> a el h. 
-Proof. 
-  split; intros. 
-  - now apply H. 
-  - now intros a' [-> | []]. 
-Qed. 
-
-Ltac force_In := match goal with
-                  | [ |- ?a el ?a :: ?h] => now left
-                  | [ |- ?a el ?b :: ?h] => right; force_In
-                  | [ |- [?a] <<= ?h] => apply singleton_incl; force_In
-                  end. 
-
-Ltac destruct_or H := match type of H with
-                      | ?a \/ ?b => destruct H as [H | H]; try destruct_or H
-                        end.
-
-
 Lemma map_skipn (A B : Type) (f : A -> B) (l : list A) (n : nat) : map f (skipn n l) = skipn n (map f l). 
 Proof. 
   induction n as [ | n] in l |-*; cbn; [reflexivity | destruct l as [ | x l]]; cbn; firstorder. 
@@ -514,20 +478,6 @@ Proof.
   - destruct w1; cbn in *; [congruence | ]. inv H0. inv H. 
     specialize (IHs1 w1 H1 H3) as (-> & ->). eauto. 
 Qed. 
-
-
-Lemma S_injective a b : S a = S b -> a = b. 
-Proof. congruence. Qed. 
-
-Ltac list_length_inv := repeat match goal with 
-    | [H : S _ = |?a| |- _] => is_var a; destruct a; cbn in H; [ congruence | apply S_injective in H]
-    | [H : 0 = |?a| |- _] => is_var a; destruct a; cbn in H; [ clear H| congruence]
-    | [H : |?a| = _ |- _] => symmetry in H
-    | [H : S _ >= S _ |- _] => apply Peano.le_S_n in H
-    | [H : S _ <= S _ |- _] => apply Peano.le_S_n in H
-    | [H :  |?a| >= S _ |- _] => is_var a; destruct a; cbn in H; [lia | ]
-    | [H : S _ <= |?a| |- _] => is_var a; destruct a; cbn in H; [lia | ]
-end.
 
 Lemma list_eq_length (X : Type) (l1 l2 : list X) : l1 = l2 -> |l1| = |l2|. 
 Proof. 

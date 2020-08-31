@@ -418,6 +418,14 @@ Qed.
 
 Smpl Add 1 simple eapply pTC_Encode_Prog : polyTimeComputable.
 
+Lemma pTC_inl X Y `{registered X} `{registered Y} : polyTimeComputable (@inl X Y). 
+Proof. 
+  eexists (fun x => _). eapply term_inl. 1, 2: smpl_inO. 
+  eexists (fun x => _). intros x. rewrite size_sum. set (L.size (enc x)). reflexivity. 
+  all: smpl_inO. 
+Qed.
+Smpl Add 1 eapply pTC_inl : polyTimeComputable. 
+
 
 Lemma LMGenNP_to_TMGenNP_mTM:
   restrictBy (LMHaltsOrDiverges (list bool)) (LMGenNP (list bool)) ⪯p (restrictBy (HaltsOrDiverges_fixed_mTM (projT1 M.M)) (TMGenNP_fixed_mTM (projT1 M.M))).
@@ -519,15 +527,9 @@ Proof.
       eapply polyTimeComputable_composition.
       eapply polyTimeComputable_composition.
       
-      now eapply pTC_id.
+      now eapply pTC_id. 3, 4: smpl polyTimeComputable. 
       2:{ eexists (fun x => _). eapply term_sigList_X. 1,2:now smpl_inO.
           eexists (fun x => _). intros x. rewrite size_sigList. set (size _). reflexivity. all:smpl_inO.
-      }
-      2:{ eexists (fun x => _). eapply term_inl. 1,2:now smpl_inO.
-          eexists (fun x => _). intros x. unfold sigStep. rewrite size_sum. set (size _). reflexivity. all:smpl_inO.
-      }
-      2:{ unfold sigStep. eexists (fun x' => 1). cbn. refine (term_inl _ _). 1,2:now smpl_inO.
-          eexists (fun x => _). intros x. unfold sigStep. rewrite size_sum. set (size _). reflexivity. all:smpl_inO.
       }
       { eexists (fun x' => _). now apply (term_sigPair_Y).  1,2:now smpl_inO.
         eexists (fun x => 4 + _). intros x. unfold enc,sigPair_enc;cbn. set (size _). reflexivity. all:smpl_inO.

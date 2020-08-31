@@ -128,18 +128,12 @@ Section fixX.
   Lemma valid_vacuous (a b : list X) m: |a| = |b| -> |a| < width -> |a| = m * offset -> valid a b.
   Proof. 
     clear G0. 
-    revert a b. induction m; intros.  
+    revert a b. induction m as [ | m IHm]; intros.  
     - cbn in H1. destruct a; [ | cbn in H1; congruence]. destruct b; [ | cbn in H; congruence ].  constructor. 
     - cbn in H1. assert (offset <= |a|) by lia. apply list_length_split1 in H2 as (s1 & s2 & H3 & H4 & H5).  
-      assert (offset <= |b|) by lia. apply list_length_split1 in H2 as (s3 & s4 & H6 & H7 & H8). 
-      rewrite H5, H8. constructor 2. 
-      + subst. apply IHm. 
-        * rewrite !app_length in H. lia. 
-        * rewrite app_length in H0. lia. 
-        * rewrite app_length in *. lia. 
-      + lia. 
-      + lia. 
-      + lia.  
+      assert (offset <= |b|) as H2 by lia. apply list_length_split1 in H2 as (s3 & s4 & H6 & H7 & H8). 
+      rewrite H5, H8. constructor 2. 2-4: lia. 
+      subst. apply IHm; rewrite !app_length in *; lia. 
   Qed. 
 
   Lemma valid_multiple_of_offset a b : valid a b -> exists k, |a| = k * offset.
@@ -244,7 +238,7 @@ Section fixX.
   (** In order to reason about a sequence of rewrites, we use relational powers *)
   Lemma relpower_valid_length_inv k a b : relpower valid k a b -> length a = length b. 
   Proof. 
-    induction 1; [ auto | rewrite <- IHrelpower; now apply valid_length_inv]. 
+    induction 1 as [ | ? ? ? ? ? ? IH]; [ auto | rewrite <- IH; now apply valid_length_inv]. 
   Qed. 
 End fixX. 
 
@@ -261,13 +255,10 @@ Section fixValid.
   Variable (X : Type).
   Variable (offset width l : nat). 
 
-  Hint Constructors valid. 
+  Hint Constructors valid : core. 
   Lemma valid_windows_monotonous (a b : list X) (w1 w2 : list (PRWin X)) : w1 <<= w2 -> valid offset width w1 a b -> valid offset width w2 a b.
   Proof. 
-    intros. induction H0. 
-    - eauto. 
-    - eauto. 
-    - apply H in H3. eauto. 
+    intros. induction H0; eauto. 
   Qed. 
 
   Lemma valid_windows_equivalent (a b : list X) (w1 w2 : list (PRWin X)) : w1 === w2 -> valid offset width w1 a b <-> valid offset width w2 a b.
@@ -291,8 +282,6 @@ Section fixInstance.
   (** Results specific to PR instances *)
   Variable (c : PR). 
   Context (wf : PR_wellformed c). 
-
-  Notation string := (list (Sigma c)).
 
   Definition isRule r := r el windows c.
   Lemma isRule_length r : isRule r -> length (prem r) = width c /\ length (conc r) = width c.
