@@ -5,6 +5,11 @@
 COQDOCFLAGS = "--charset utf-8 -s --with-header ../website/resources/header.html --with-footer ../website/resources/footer.html --index indexpage"
 
 
+GenExtract/axioms.v
+GenExtract/header_extensible.v
+GenExtract/fintype.v
+GenExtract/utlc_syntax.v
+
 L/Complexity/overview.v
 L/Complexity/CookLevin.v
 

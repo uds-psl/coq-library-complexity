@@ -1,16 +1,14 @@
-From Undecidability Require Import L.Tactics.ComputableTime.
+From Undecidability Require Import L.Tactics.ComputableTime GenExtract.utlc_syntax.
+From Undecidability Require Import LNat.
 
+Import fintype.
 Set Universe Polymorphism.
 Local Unset Implicit Arguments.
 (*Set Printing Universes. *)
 
 Module Env.
-  Fixpoint fin (n : nat) : Type :=
-    match n with
-    | 0 => False
-    | S m => option (fin m)
-    end.
 
+  
   Fixpoint fin_to_nat {n:nat} : fin n -> nat :=
     match n with
       0 => @False_rect _
@@ -19,7 +17,21 @@ Module Env.
                   | Some i => S (fin_to_nat i)
                   end
     end.
-  
+
+  Lemma fin_to_nat_lt {n} (f:fin n) :
+    fin_to_nat f < n.
+  Proof. induction n in f|-*;cbn in *. easy. destruct f. specialize (IHn f).  all:nia. Qed.
+
+  Fixpoint nat_to_fin n k : k < n -> fin n :=
+    match n with
+      0 => fun H => @False_rect _ (Nat.nle_succ_0 _ H)
+    | S n => match k with
+              0 => fun _ => None
+            | S k => fun H => Some (nat_to_fin n k (Peano.le_S_n _ _ H))
+            end
+    end.
+
+  (*
   Fixpoint vec (X:Type) n : Type :=
     match n with
       0 => unit
@@ -50,7 +62,7 @@ Module Env.
     induction n;cbn in *. easy.
     destruct i;cbn in *. all:easy.
   Qed.
-
+   *)
   
 End Env.
 Import Env.
@@ -78,27 +90,16 @@ Coercion Build_anyTT : TT >-> anyTT.
 Existing Class anyTT.
 Existing Instance Build_anyTT.
 
+Notation vec := (fun X n => (fin n -> X)).
 
-Fixpoint hvec {X} (F: X -> Type) {n} : forall (Γ : vec X n) , Type :=
-  match n with
-    0 => fun _ => unit
-  | S n' => fun Γ => (F (fst Γ) * hvec F (snd Γ))%type
-  end.
 
-Fixpoint nth__HV {X} {F} {m} : forall {Γ : vec X m} (n : fin m) (vs: hvec F Γ) , F (nth__V n Γ) :=
-  match m with
-  | 0 => fun _ f => False_rect _ f
-  | S m => (fun Γ n vs =>
-           match n with
-           | None => fst vs
-           | Some n => nth__HV n (snd vs)
-           end)
-  end.
+
+Definition hvec {X} (F: X -> Type) {n} : (fin n -> X) -> Type :=
+  fun sigma => forall i, F (sigma i).
 
 Notation typeContext := (vec anyTT).
 Notation valueContext := (hvec aTy).
 
-From Undecidability Require Import LNat.
 Local Unset Implicit Arguments.
 
 
@@ -107,14 +108,14 @@ Notation TyNat := (@TyB _ registered_nat_enc).
 Inductive isPCF : forall n (Γ : typeContext n) (A: anyTT), (valueContext Γ -> A.(aTy)) -> Type :=
   isPCF_Const n Γ (c:nat) :
     isPCF n Γ TyNat (fun _ => c)
-| isPCF_Rel n Γ x : isPCF n Γ (nth__V x Γ) (nth__HV x)
+| isPCF_Rel n Γ x : isPCF n Γ (Γ x ) (fun sigma => sigma x)
 | isPCF_App n Γ (A B : anyTT)
             (f:valueContext Γ -> A.(aTy) -> B.(aTy)) (arg: valueContext Γ -> A.(aTy)):
     isPCF n Γ (TyArr A B) f
     -> isPCF n Γ A arg
     -> isPCF n Γ B (fun ctx => (f ctx) (arg ctx))
 | isPCF_Lambda n (Γ : typeContext n) A B (f:valueContext Γ -> _):
-    isPCF (S n) (A,Γ) B (fun ctx => f (snd ctx) (fst ctx))
+    isPCF (S n) (A.:Γ) B (fun ctx => f (fun x => ctx (Some x)) (ctx None))
     -> @isPCF n Γ (TyArr A B) f
              
 | isPCF_Case_nat n Γ A x (f__O : valueContext Γ -> A.(aTy)) (f__S: valueContext Γ -> nat -> A.(aTy)):
@@ -160,31 +161,48 @@ Proof.
   -eapply @isPCF_Rel with (x:=Some None).
   -eapply @isPCF_Rel with (x:=None).
   -eapply @isPCF_Lambda with (A := TyNat) (B := TyNat).
-   eapply @isPCF_App with (A := TyNat). now econstructor. cbn. 
-   eapply @isPCF_App with (A := TyNat) (f:= fun ctx => fst (snd (snd (snd ctx))) (fst ctx));cbn.
+   eapply @isPCF_App with (A := TyNat). now econstructor. 
+   eapply @isPCF_App with (f:= fun (ctx : valueContext (Build_anyTT _ TyNat .: (Build_anyTT _ TyNat .: (Build_anyTT _ TyNat .: (Build_anyTT _ (TyNat ~> TyNat ~> TyNat) .: Γ))))) => (ctx (Some (Some (Some None))) (ctx None)));cbn.
    2:now eapply @isPCF_Rel with (x:=Some None).
-   eapply @isPCF_App with (A := TyNat) (f:= fun ctx => fst (snd (snd (snd ctx))));cbn.
+   eapply @isPCF_App with (f:= fun (ctx : valueContext ((Build_anyTT _ TyNat .: (Build_anyTT _ TyNat .: (Build_anyTT _ TyNat .: (Build_anyTT _ (TyNat ~> TyNat ~> TyNat) .: Γ)))))) => ctx (Some (Some (Some None))));cbn.
    now eapply @isPCF_Rel with (x:=Some (Some (Some None))).
    now eapply @isPCF_Rel with (x:=None).
 Defined.
 
-From Undecidability Require Import LNat.
+Import utlc_syntax.
+Section scopedSyntax.
+  Fixpoint tm_to_term {n} (s:tm n) : term :=
+    match s with
+      var_tm x => var (fin_to_nat x)
+    | app s t=> L.app (tm_to_term s) (tm_to_term t)
+    | lam s => L.lam (tm_to_term s)
+    end.
+  
+  Lemma tm_to_term_bound n (s: tm n) :
+    bound n (tm_to_term s).
+  Proof. induction s;cbn. 1:specialize (fin_to_nat_lt f). all:eauto using bound. Qed.
+
+  Definition term_to_tm : forall s n, bound n s -> tm n.
+  Proof.
+    refine (fix term_to_tm s n H =>
+            match s with
+              L.var x => var_tm 
+  
 
 
-Definition up {n} (env : vec nat n) := (0,map__V S env).
 
-Fixpoint PCFtoL {n} {Γ : typeContext n} {A:anyTT} {f:valueContext Γ -> A.(aTy)} (H : isPCF Γ A f): vec nat n -> term :=
+Fixpoint PCFtoL {n} {Γ : typeContext n} {A:anyTT} {f:valueContext Γ -> A.(aTy)} (H : isPCF Γ A f): vec nat n -> tm n :=
   match H with
   | @isPCF_Const n Γ c => fun ren => enc c
-  | @isPCF_Rel n Γ x =>  fun ren => var (nth__V x ren)
+  | @isPCF_Rel n Γ x =>  fun ren => var (ren x)
   | @isPCF_App n Γ A B f arg H__f H__arg =>  fun ren => app (PCFtoL H__f ren) (PCFtoL H__arg ren)
-  | @isPCF_Lambda n Γ A B f H__f =>  fun ren => lam (PCFtoL H__f (up ren))
+  | @isPCF_Lambda n Γ A B f H__f =>  fun ren => lam (PCFtoL H__f (shift ren))
 
   (* TODO: lambda-lift for "lazy" evaluation?*)
   | @isPCF_Case_nat n Γ A x f__O f__S H__x H__O H__S =>  fun ren => app (app (PCFtoL H__x ren) (PCFtoL H__O ren)) (PCFtoL H__S ren)
                                                   
   | @isPCF_Succ n Γ =>  fun ren => ext S
-  | @isPCF_Fix_unaryNat n Γ A f F H__Fix H__F =>  fun ren => rho ((PCFtoL H__F (map__V S ren)))
+  | @isPCF_Fix_unaryNat n Γ A f F H__Fix H__F =>  fun ren => rho ((PCFtoL H__F (Some >> ren)))
   end.
 
 Fixpoint vec_to_list {n X} : vec X n -> list X :=
@@ -338,6 +356,9 @@ Proof. intros H. rewrite hvec_map. eapply hvec_impl with (2:=H). nia. Qed.
 Lemma bound_up n d (ren : vec nat n) :
   hvec (fun x => x < d) ren -> hvec (n:=S n) (fun x : nat => x < S d) (up ren).
 Proof. intros H. cbn. split. easy. now apply bound_shift. Qed.
+
+TODO. 
+(* I might should use autosubst and dunext during "development" *)
 
 (*
 Lemma PCFtoL_shift n (Γ : typeContext n) A f (H:isPCF Γ A f) (ren : vec nat n) E k (bound__ren : hvec (fun x => x < k + length E) ren):
