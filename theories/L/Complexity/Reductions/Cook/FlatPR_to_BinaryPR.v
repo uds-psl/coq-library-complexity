@@ -264,11 +264,10 @@ Proof.
   } 
   unfold poly__concat. 
   rewrite list_size_length.
-  replace_le (size (enc l)) with (size (enc fpr) + size (enc l)) by lia at 1. 
-  replace_le (size (enc l)) with (size (enc fpr) + size (enc l)) by lia at 3.
+  replace_le (size (enc l)) with (size (enc fpr) + size (enc l)) by lia at 1 3. 
   replace_le (size (enc fpr)) with (size (enc fpr) + size (enc l)) by lia at 4.
   replace_le (size (enc l)) with (size (enc fpr) + size (enc l)) by lia at 5.   
-  generalize (size (enc fpr) + size (enc l)). intros n. 
+  set (size (enc fpr) + size (enc l)). 
   unfold poly__hflat. nia. 
 Qed. 
 Lemma hflat_poly : monotonic poly__hflat /\ inOPoly poly__hflat.    
@@ -447,9 +446,7 @@ Proof.
   unfold hinit. rewrite hflat_size_bound. 
   rewrite hwindows_size_bound, hfinal_size_bound by easy.
   rewrite !list_size_length. 
-  replace_le (Sigma fpr) with (size (enc (Sigma fpr))) by (rewrite size_nat_enc; unfold c__natsizeS; lia) at 4. 
-  replace_le (Sigma fpr) with (size (enc (Sigma fpr))) by (rewrite size_nat_enc; unfold c__natsizeS; lia) at 5.
-  replace_le (Sigma fpr) with (size (enc (Sigma fpr))) by (rewrite size_nat_enc; unfold c__natsizeS; lia) at 3.
+  replace_le (Sigma fpr) with (size (enc (Sigma fpr))) by (rewrite size_nat_enc; unfold c__natsizeS; lia) at 4 5 3. 
   replace_le (width fpr) with (size (enc (width fpr))) by (rewrite size_nat_enc; unfold c__natsizeS; lia) at 2. 
   
   specialize (FlatPR_enc_size fpr) as H. 
@@ -499,7 +496,10 @@ Proof.
   - smpl_inO. 
 Qed. 
 
-Lemma FlatPR_to_BinaryPR_poly : reducesPolyMO (unrestrictedP FlatPRLang) (unrestrictedP BinaryPRLang).
+(** This is the polynomial-time result of the reduction. 
+For the proof of correctness, see the lemma [PR_to_BinaryPR] and the lemma [FlatPR_to_BinaryPR] for the flat version.
+*)
+Lemma FlatPR_to_BinaryPR_poly : (unrestrictedP FlatPRLang) ⪯p (unrestrictedP BinaryPRLang).
 Proof. 
   apply reducesPolyMO_intro_unrestricted with (f := reduction).
   - exists poly__reduction. 

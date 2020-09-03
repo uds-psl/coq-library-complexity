@@ -2,7 +2,7 @@ From PslBase Require Import Base FinTypes.
 From Undecidability.L.Complexity Require Import MorePrelim Problems.Cook.TPR Problems.Cook.PR.
 Require Import Lia.
 
-(** *Reduction of 3-PR to PR. *)
+(** * Reduction of 3-PR to PR. *)
 (*Apart from syntactical differences, this is just a simple embedding. *)
 
 Section fixInstance. 
@@ -26,28 +26,28 @@ Section fixInstance.
     |s1| >= 3 -> TPR.valid (rewritesHeadList Fwindows) s1 s2 <-> PR.valid 1 3 PR_windows s1 s2. 
   Proof. 
     intros; split. 
-    - induction 1. 
+    - induction 1 as [ | a b x y H0 IH H1 | a b x y H0 IH H1].
       + eauto. 
       + cbn in H; lia. 
       + replace (x :: a) with ([x] ++ a) by now cbn. replace (y :: b) with ([y] ++ b) by now cbn. 
         destruct H1 as (win & H3 & H4). 
         destruct (le_lt_dec 3 (|a|)) as [H2 | H2]. 
-        * econstructor 3; [apply IHvalid; lia | easy | easy | apply in_map_iff | ]. 
+        * econstructor 3; [apply IH; lia | easy | easy | apply in_map_iff | ]. 
           -- exists win. split; [reflexivity | easy]. 
           -- unfold rewritesHead. cbn. easy. 
-        * assert (|a| = 2) as H1 by now cbn in H. clear H2 H IHvalid. 
+        * assert (|a| = 2) as H1 by now cbn in H. clear H2 H IH. 
           apply TPR.valid_length_inv in H0. rewrite H1 in H0. 
           list_length_inv. econstructor 3; [ eapply valid_vacuous with (m := 2); cbn; eauto | easy | easy | | ].  
           -- apply in_map_iff. exists win; split; [ reflexivity | easy]. 
           -- destruct H4. cbn; split; eauto. 
-    - induction 1. 
+    - induction 1 as [ | a b u v H0 IH H1 H2 H3 | a b u v win H0 IH H1 H2 H3 H4].
       + eauto. 
       + rewrite app_length in H; lia. 
       + list_length_inv. cbn in *. unfold PR_windows in H3. apply in_map_iff in H3 as (win' & <- & H3). 
         destruct (le_lt_dec 3 (|a|)) as [H1 | H1].  
-        * econstructor 3; [ apply IHvalid; lia | exists win'; split; [ apply H3 | ]]. 
+        * econstructor 3; [ apply IH; lia | exists win'; split; [ apply H3 | ]]. 
           destruct H4; split; eauto. 
-        * assert (|a| = 2) by lia. clear IHvalid H1 H. apply valid_length_inv in H0. rewrite H2 in H0.
+        * assert (|a| = 2) by lia. clear IH H1 H. apply valid_length_inv in H0. rewrite H2 in H0.
           list_length_inv. constructor 3; [ apply TPR.valid_vacuous; cbn; eauto| ]. 
           exists win'; split; [apply H3 | ]. destruct H4; split; eauto. 
   Qed. 

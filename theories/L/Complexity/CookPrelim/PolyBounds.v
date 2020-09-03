@@ -177,7 +177,7 @@ Tactic Notation "replace_le" constr(s) "with" constr(r) "by" tactic(tac) "at" ne
 Tactic Notation "replace_le" constr(s) "with" constr(r) :=
   let H := fresh in assert (s <= r) as H; [ | rewrite !H; clear H]. 
 
-Tactic Notation "poly_mono" constr(H) "at" integer(occ) :=
+Tactic Notation "poly_mono" constr(H) "at" ne_integer_list(occ) :=
   let He := fresh in specialize H as He; match type of He with
                     | _ /\ monotonic _ => unfold monotonic in He; setoid_rewrite (proj2 He) at occ
                     | monotonic _ /\ _ => unfold monotonic in He; setoid_rewrite (proj1 He) at occ

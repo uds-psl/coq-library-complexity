@@ -132,7 +132,7 @@ Proof.
   extract. solverec. unfold FPR_instance_time, c__FPR_instance. solverec. 
 Defined. 
 
-Lemma FlatTPR_to_FlatPR_poly : reducesPolyMO (unrestrictedP FlatTPRLang) (unrestrictedP FlatPRLang).
+Lemma FlatTPR_to_FlatPR_poly : (unrestrictedP FlatTPRLang) ⪯p (unrestrictedP FlatPRLang).
 Proof. 
   apply reducesPolyMO_intro_unrestricted with (f := FPR_instance).
   - exists (fun n => c__FPR_instance + poly__PRWindows n).  

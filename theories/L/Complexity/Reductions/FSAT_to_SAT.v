@@ -915,7 +915,7 @@ Qed.
   
   
 (** ** full reduction *)
-Theorem FSAT_to_SAT_poly : reducesPolyMO (unrestrictedP FSAT) (unrestrictedP SAT). 
+Theorem FSAT_to_SAT_poly : (unrestrictedP FSAT) ⪯p (unrestrictedP SAT). 
 Proof. 
   apply reducesPolyMO_intro_unrestricted with (f := reduction). 
   - exists poly__reduction. 
@@ -927,7 +927,7 @@ Proof.
   - apply FSAT_to_SAT. 
 Qed. 
 
-Theorem FSAT_to_3SAT_poly : reducesPolyMO (unrestrictedP FSAT) (unrestrictedP (kSAT 3)). 
+Theorem FSAT_to_3SAT_poly : (unrestrictedP FSAT) ⪯p (unrestrictedP (kSAT 3)). 
 Proof. 
   apply reducesPolyMO_intro_unrestricted with (f := reduction). 
   - exists poly__reduction. 

@@ -552,7 +552,9 @@ Proof.
 Qed.
 
 (** full reduction statement *)
-Lemma kSAT_to_FlatClique_poly k: reducesPolyMO (unrestrictedP (kSAT k)) (unrestrictedP FlatClique). 
+(** This is the flat version of the statement, including the polynomial running time. 
+The correctness statement is Lemma [kSAT_reduces_to_Clique] *) 
+Lemma kSAT_to_FlatClique_poly k: (unrestrictedP (kSAT k)) ⪯p (unrestrictedP FlatClique). 
 Proof. 
   eapply reducesPolyMO_intro_unrestricted with (f := (reduction k)). 
   - evar (f : nat -> nat). exists f. 
