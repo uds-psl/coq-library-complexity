@@ -49,9 +49,7 @@ Section TM_single.
   Proof.
     destruct c. cbn. unfold step. cbn. unfold current_chars.
     assert ([| current ctapes[@Fin0]|] = Vector.map (current (sig := Sigma)) ctapes). 
-    {
-      specialize (vec_case1 ctapes) as (? & ->). easy. 
-    }
+    { specialize (vec_case1 ctapes) as (? & ->). easy.  }
     rewrite H. destruct mtrans eqn:H1. 
     cbn. 
     specialize (vec_case1 t) as (? & ->). 

@@ -49,6 +49,7 @@ L/Complexity/Reductions/Cook/FlatPR_to_BinaryPR.v
 
 
 L/Complexity/Problems/FSAT.v
+L/Complexity/Reductions/Cook/FormulaEncoding.v
 L/Complexity/Reductions/Cook/BinaryPR_to_FSAT.v
 L/Complexity/Reductions/FSAT_to_SAT.v
 

@@ -2866,7 +2866,10 @@ Qed.
 
 (** full reduction statement *)
 From Undecidability.L.Complexity.Problems.Cook Require Import GenNP. 
-Theorem FlatSingleTMGenNP_to_FlatTPRLang_poly : reducesPolyMO (unrestrictedP FlatSingleTMGenNP) (unrestrictedP FlatTPRLang). 
+(** This is the polynomial-time analysis of the reduction. 
+  For the proof of correctness, see [SingleTMGenNP_to_TPR]. For the proof of correctness using the flattened problems, see [FlatSingleTMGenNP_to_FlatTPR]. 
+*)
+Theorem FlatSingleTMGenNP_to_FlatTPRLang_poly : (unrestrictedP FlatSingleTMGenNP) ⪯p (unrestrictedP FlatTPRLang). 
 Proof. 
   apply reducesPolyMO_intro_unrestricted with (f := reduction). 
   - exists poly__reduction.

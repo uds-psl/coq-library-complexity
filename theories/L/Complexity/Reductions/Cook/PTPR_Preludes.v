@@ -6,7 +6,7 @@ Require Import Lia.
 (** * Adding preludes to P-3-PR instances *)
 (**We introduce preludes for TPR instances (for simplicity, we restrict ourselves to the propositional variant PTPR) *)
 
-(* Preludes allow us to reduce the problem "∃ init, P init /\ PTPRLang (instance(init))" to "PTPRLang (instance')", where 
+(** Preludes allow us to reduce the problem "∃ init, P init ∧ PTPRLang (instance(init))" to "PTPRLang (instance')", where 
   instance is a PTPR instance which lacks an initial string and P is an arbitrary predicate on initial strings. 
   A prelude is a set of rewrite windows together with a new initial string which generates a new string.
   

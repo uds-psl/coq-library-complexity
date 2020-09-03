@@ -1,4 +1,5 @@
 (* -*- company-coq-local-symbols: (("|_|" .?␣)); -*- *)
+(** printing  *|_|* %\textvisiblespace% #␣# *)
 From Undecidability.L.Complexity.Problems.Cook Require Import GenNP TPR FlatTPR . 
 From Undecidability.L.Complexity.Reductions.Cook Require Import PTPR_Preludes TM_single.
 From Undecidability.L.Complexity Require Import FlatFinTypes MorePrelim. 

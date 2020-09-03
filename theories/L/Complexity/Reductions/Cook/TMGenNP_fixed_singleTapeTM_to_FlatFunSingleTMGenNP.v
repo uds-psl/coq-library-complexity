@@ -81,15 +81,13 @@ Section fixTM.
   Proposition size_input_index (ts : list sig) : size (enc (map index ts)) <= c__sizeInputIndex * size (enc ts) + c__listsizeNil.
   Proof. 
     rewrite list_size_of_el. 
-    2: { 
-      intros a (a' & <- & H)%in_map_iff. rewrite size_nat_enc. rewrite index_leq. reflexivity. 
-    }
+    2: { intros a (a' & <- & H)%in_map_iff. rewrite size_nat_enc. rewrite index_leq. reflexivity.  }
     rewrite map_length. setoid_rewrite list_size_length at 2. setoid_rewrite list_size_length at 2. 
     unfold c__sizeInputIndex. nia.  
   Qed. 
 
   Lemma TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP : 
-    reducesPolyMO (unrestrictedP (TMGenNP_fixed_singleTapeTM M)) (unrestrictedP FlatFunSingleTMGenNP). 
+    (unrestrictedP (TMGenNP_fixed_singleTapeTM M)) ⪯p (unrestrictedP FlatFunSingleTMGenNP). 
   Proof. 
     apply reducesPolyMO_intro_unrestricted with (f := reduction). 
     - evar (f : nat -> nat). exists f. 
