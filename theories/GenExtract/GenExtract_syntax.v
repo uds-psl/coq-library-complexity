@@ -526,7 +526,7 @@ Global Instance Up_pcf_pcf { m : nat } { npcf : nat } : Up_pcf (_) (_) := @up_pc
 
 Notation "s [ sigmautlc ]" := (subst_utlc sigmautlc s) (at level 7, left associativity, only printing) : subst_scope.
 
-Notation "[ sigmautlc ]" := (subst_utlc sigmautlc) (at level 1, left associativity, only printing) : fscope.
+Notation "[ sigmautlc ]" := (subst_utlc sigmautlc) (at level 0, left associativity, only printing) : fscope.
 
 Notation "s ⟨ xiutlc ⟩" := (ren_utlc xiutlc s) (at level 7, left associativity, only printing) : subst_scope.
 
@@ -534,7 +534,7 @@ Notation "⟨ xiutlc ⟩" := (ren_utlc xiutlc) (at level 1, left associativity, 
 
 Notation "s [ sigmapcf ]" := (subst_pcf sigmapcf s) (at level 7, left associativity, only printing) : subst_scope.
 
-Notation "[ sigmapcf ]" := (subst_pcf sigmapcf) (at level 1, left associativity, only printing) : fscope.
+Notation "[ sigmapcf ]" := (subst_pcf sigmapcf) (at level 0, left associativity, only printing) : fscope.
 
 Notation "s ⟨ xipcf ⟩" := (ren_pcf xipcf s) (at level 7, left associativity, only printing) : subst_scope.
 

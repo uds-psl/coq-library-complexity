@@ -333,7 +333,7 @@ Definition tmExtractConstr (def : ident) {A : Type} (a : A) :=
 
 (** *** Extracting terms from Coq to L *)
 
-Notation "↑ env" := (fun n => match n with 0 => 0 | S n => S (env n) end) (at level 10).
+Local Notation "↑ env" := (fun n => match n with 0 => 0 | S n => S (env n) end) (at level 10).
 (*
 Local Definition error {A} (a:A) := 1000.
 Opaque error.
