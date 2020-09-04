@@ -8,7 +8,7 @@ COQDOCFLAGS = "--charset utf-8 -s --with-header ../website/resources/header.html
 GenExtract/axioms.v
 GenExtract/header_extensible.v
 GenExtract/fintype.v
-GenExtract/utlc_syntax.v
+GenExtract/GenExtract_syntax.v
 
 L/Complexity/overview.v
 L/Complexity/CookLevin.v
