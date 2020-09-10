@@ -1,6 +1,6 @@
 From Undecidability.TM Require Import TM.
 From Undecidability.L.TM Require Import TMflat TMflatEnc TMflatFun TMEncoding TapeDecode TMunflatten TMflatten.
-From Undecidability.L.Complexity.Problems Require Import TMGenNP_fixed_mTM Cook.GenNP.
+From Undecidability.L.Complexity.Problems Require Import TMGenNP_fixed_mTM Cook.SingleTMGenNP.
 From Undecidability.L.Functions Require Import EqBool.
 
 From Undecidability.L.Tactics Require Import LTactics GenEncode.

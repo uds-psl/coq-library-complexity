@@ -20,7 +20,7 @@ Section fixInstance.
   Notation steps := (steps pr). 
 
   Context (A : PR_wellformed pr). 
-  Context (A1 : |elem Sigma| > 0). (*instances without this property are trivial no instances *)
+  Context (A1 : |elem Sigma| > 0). (*instances without this property are trivial no-instances *)
   
   (*we fix the homomorphism on natural numbers *)
   (*it just encodes the alphabet using a unary encoding: there is one indicator bit for each element of the alphabet*)

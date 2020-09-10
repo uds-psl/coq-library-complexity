@@ -2,7 +2,7 @@ From Undecidability.L.Complexity Require Import Tactics MorePrelim.
 From Undecidability.L.Datatypes Require Import Lists LNat LBool LProd LOptions. 
 From Undecidability.L.Complexity.Problems Require Import FSAT.
 
-(** Some generic tools for encoding things as Boolean formulas *)
+(** * Some generic tools for encoding things as Boolean formulas *)
 
 Section encodings. 
   Implicit Types (a : assgn) (v : var). 

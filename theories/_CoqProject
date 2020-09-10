@@ -7,10 +7,7 @@ COQDOCFLAGS = "--charset utf-8 -s --with-header ../website/resources/header.html
 
 #this file takes long to compile, so it should be early in the list
 L/Complexity/Reductions/Cook/SingleTMGenNP_to_TPR.v
-L/Complexity/overview.v
 L/Complexity/CookLevin.v
-
-#L/Complexity/UpToCNaryPoly.v
 
 L/Complexity/UpToCPoly.v
 L/Complexity/CookPrelim/PolyBounds.v
@@ -33,8 +30,8 @@ L/Complexity/Reductions/kSAT_to_FlatClique.v
 
 
 
-L/Complexity/Problems/Cook/GenNP.v
-L/Complexity/Reductions/Cook/TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP.v
+L/Complexity/Problems/Cook/SingleTMGenNP.v
+L/Complexity/Reductions/TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP.v
 L/Complexity/Reductions/Cook/TM_single.v
 L/Complexity/Problems/Cook/PR.v
 L/Complexity/Problems/Cook/TPR.v

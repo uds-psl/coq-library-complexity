@@ -1,6 +1,6 @@
 (* -*- company-coq-local-symbols: (("|_|" .?␣)); -*- *)
 (** printing  *|_|* %\textvisiblespace% #␣# *)
-From Undecidability.L.Complexity.Problems.Cook Require Import GenNP TPR FlatTPR . 
+From Undecidability.L.Complexity.Problems.Cook Require Import SingleTMGenNP TPR FlatTPR . 
 From Undecidability.L.Complexity.Reductions.Cook Require Import PTPR_Preludes TM_single.
 From Undecidability.L.Complexity Require Import FlatFinTypes MorePrelim. 
 From PslBase Require Import FiniteTypes. 
@@ -730,7 +730,7 @@ Section fixTM.
       apply E_polarityFlip. 
   Qed. 
 
-  (** ** The following results generalise Lemma 16 -17 to arbitrary tapes *)
+  (** ** Changing tape representations by one symbol *)
 
   (** We can add a symbol to an arbitrary tape string if there is enough space left *)
   Lemma tape_repr_add_right rs σ h p w:
@@ -873,7 +873,7 @@ Section fixTM.
    - apply tape_repr_polarityFlip in H2. destruct e; cbn in H2; easy. 
   Qed. 
 
-  (** ** Transitions *)
+  (** ** Transition rules *)
   (** preliminaries *)
 
   Notation "s '≻' s'" := (halt (configState s) = false /\ sstep s = s') (at level 50). 
@@ -2122,7 +2122,7 @@ Section fixTM.
   end;try (transRules_inv2_once;try congruence; solve [simp_eqn]).  
 
 
-  (** ** Predicate for halting extensions *)
+  (** ** Halting rules*)
 
   (** these are the rules that leave the configuration unchanged in a halting configuration *)
   Inductive haltRules : transRule := 
@@ -3720,7 +3720,7 @@ Section fixTM.
       end; eauto; try congruence. 
   Qed.
 
-  (** *** Proof that the outputs of both reification procedures are related via finReprEl *)
+  (** *** Proof that the outputs of both generation procedures are related via finReprEl *)
 
   Lemma flattenPolarity_reprEl p : finReprEl flatPolarity (flattenPolarity p) p. 
   Proof. 
@@ -3841,7 +3841,7 @@ Section fixTM.
     all: try finRepr_simpl; eauto.
   Qed. 
 
-  (** *** Reification of rewrite windows *)
+  (** *** Generation of rewrite windows *)
 
   Definition reifyWindow (X Y Z W M: Type) (r : evalEnv X Y Z W -> fAlphabet -> option M) (env : evalEnv X Y Z W) rule :=
     match rule with {a, b, c} / {d, e, f} =>
@@ -4896,7 +4896,7 @@ Section fixTM.
     * apply fin_agreement. 
   Qed.
 
-  (** *** Flat windows *)
+  (** *** Generation of flat list-based windows *)
   (*tape windows *)
   Definition flatMTRWindows := makeWindowsFlat (makeAllEvalEnvFlat 1 4 0 0) mtrRules.
   Definition flatMTIWindows := makeWindowsFlat (makeAllEvalEnvFlat 2 0 4 0) mtiRules.

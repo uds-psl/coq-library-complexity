@@ -2865,7 +2865,7 @@ Proof.
 Qed.
 
 (** full reduction statement *)
-From Undecidability.L.Complexity.Problems.Cook Require Import GenNP. 
+From Undecidability.L.Complexity.Problems.Cook Require Import SingleTMGenNP. 
 (** This is the polynomial-time analysis of the reduction. 
   For the proof of correctness, see [SingleTMGenNP_to_TPR]. For the proof of correctness using the flattened problems, see [FlatSingleTMGenNP_to_FlatTPR]. 
 *)
