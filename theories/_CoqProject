@@ -20,16 +20,6 @@ L/Complexity/Problems/SAT.v
 L/Complexity/Problems/kSAT.v
 L/Complexity/Reductions/kSAT_to_SAT.v
 
-L/Complexity/Problems/UGraph.v
-L/Complexity/Problems/Clique.v
-L/Complexity/Problems/FlatUGraph.v
-L/Complexity/Problems/FlatClique.v
-L/Complexity/Reductions/Pigeonhole.v
-L/Complexity/Reductions/kSAT_to_Clique.v
-L/Complexity/Reductions/kSAT_to_FlatClique.v
-
-
-
 L/Complexity/Problems/Cook/SingleTMGenNP.v
 L/Complexity/Reductions/TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP.v
 L/Complexity/Reductions/Cook/TM_single.v

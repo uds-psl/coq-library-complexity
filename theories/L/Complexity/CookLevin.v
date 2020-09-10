@@ -2,12 +2,11 @@ From Undecidability.L.Tactics Require Import LTactics GenEncode Computable.
 From Undecidability.L Require Import  FinTypeLookup LFinType LSum.
 From PslBase Require Import FinTypes.
 
-From Undecidability.L.Complexity.Reductions Require Import FSAT_to_SAT kSAT_to_SAT kSAT_to_FlatClique. 
+From Undecidability.L.Complexity.Reductions Require Import FSAT_to_SAT kSAT_to_SAT. 
 From Undecidability.L.Complexity.Problems.Cook Require Import FlatPR SingleTMGenNP BinaryPR.
 From Undecidability.L.Complexity.Problems.Cook Require FlatTPR. 
-From Undecidability.L.Complexity.Problems Require Import SAT FSAT kSAT FlatClique. 
-From Undecidability.L.Complexity.Reductions Require Import FlatSingleTMGenNP_to_FlatTPR
-  FlatTPR_to_FlatPR FlatPR_to_BinaryPR BinaryPR_to_FSAT. 
+From Undecidability.L.Complexity.Problems Require Import SAT FSAT kSAT. 
+From Undecidability.L.Complexity.Reductions Require Import FlatSingleTMGenNP_to_FlatTPR FlatTPR_to_FlatPR FlatPR_to_BinaryPR BinaryPR_to_FSAT. 
 Require Import Undecidability.L.Complexity.Reductions.TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP.
 From Undecidability.L.Complexity.Reductions Require Import TMGenNP.IntermediateProblems.
 
@@ -97,10 +96,6 @@ Lemma FSAT_to_3SAT : (unrestrictedP FSAT) ⪯p (unrestrictedP (kSAT 3)).
 exact FSAT_to_3SAT_poly. 
 Qed. 
 
-Lemma kSAT_to_FlatClique k: (unrestrictedP (kSAT k)) ⪯p (unrestrictedP FlatClique).
-apply kSAT_to_FlatClique_poly. 
-Qed.
-
 Corollary FlatSingleTMGenNP_to_3SAT : (unrestrictedP FlatSingleTMGenNP) ⪯p (unrestrictedP (kSAT 3)). 
 Proof. 
   eapply reducesPolyMO_transitive. 
@@ -138,13 +133,6 @@ Proof.
   eapply red_NPhard. eapply kSAT_to_SAT. apply CookLevin0. 
 Qed.
 
-(** The Clique problem is also NP-complete *)
-Lemma Clique_complete : NPcomplete (unrestrictedP FlatClique). 
-Proof. 
-  split. 
-  - eapply red_NPhard; [apply kSAT_to_FlatClique | apply CookLevin0]. 
-  - apply FlatClique_in_NP. 
-Qed.
 
 
 (*Print Assumptions CookLevin. *)
