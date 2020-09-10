@@ -722,8 +722,9 @@ Qed.
 
 (** Now we have all the ingredients to show that the encoding size only blows up polynomially.*)
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import  LProd LOptions LBool LUnit.
-From Undecidability.L.Complexity Require Import PolyBounds.
+From Undecidability.L.Datatypes Require Import LProd LOptions LBool LUnit.
+From Undecidability.L.Complexity Require Import UpToCPoly.
+Require Import Undecidability.L.Complexity.CookPrelim.PolyBounds. 
 
 Lemma reduction_poly_size: 
   { p: nat -> nat & (forall f, size (enc (reduction f)) <= p (size (enc f))) /\ monotonic p /\ inOPoly p }.
@@ -778,35 +779,35 @@ Definition c__tseytinAnd := 43.
 Instance term_tseytinAnd : computableTime' tseytinAnd (fun v _ => (1, fun v1 _ => (1, fun v2 _ => (c__tseytinAnd, tt)))). 
 Proof. 
   extract. solverec. unfold c__tseytinAnd; solverec. 
-Defined. 
+Qed. 
 
 (** tseytinOr *)
 Definition c__tseytinOr := 43.
 Instance term_tseytinOr : computableTime' tseytinOr (fun v _ => (1, fun v1 _ => (1, fun v2 _ => (c__tseytinOr, tt)))). 
 Proof. 
   extract. solverec. unfold c__tseytinOr; solverec. 
-Defined. 
+Qed. 
 
 (** tseytinNot *)
 Definition c__tseytinNot := 29.
 Instance term_tseytinNot : computableTime' tseytinNot (fun v _ => (1, fun v' _ => (c__tseytinNot, tt))). 
 Proof. 
   extract. solverec. unfold c__tseytinNot; solverec. 
-Defined. 
+Qed. 
 
 (** tseytinEquiv *)
 Definition c__tseytinEquiv := 29.
 Instance term_tseytinEquiv : computableTime' tseytinEquiv (fun v _ => (1, fun v' _ => (c__tseytinEquiv, tt))). 
 Proof. 
   extract. solverec. unfold c__tseytinEquiv; solverec. 
-Defined.
+Qed.
 
 (** tseytinTrue *)
 Definition c__tseytinTrue := 15.
 Instance term_tseytinTrue : computableTime' tseytinTrue (fun v _ => (c__tseytinTrue, tt)). 
 Proof. 
   extract. solverec. unfold c__tseytinTrue. solverec. 
-Defined. 
+Qed. 
 
 (** tseytin' *)
 Definition c__tseytinP1 := c__app * c__tseytinSize. 
@@ -838,7 +839,7 @@ Proof.
     rewrite !size_cnf_ge_length, H0, H2. unfold c__tseytinP1, c__tseytinP2. solverec. 
   - fold tseytin' in H0. apply tseytinP_size in H0.
     rewrite size_cnf_ge_length, H0. unfold c__tseytinP1, c__tseytinP2. solverec. 
-Defined.  
+Qed.  
 
 Definition c__tseytinPBound1 := c__tseytinTrue + c__tseytinEquiv + c__tseytinAnd + c__tseytinOr + c__tseytinNot + c__tseytinP2.
 Definition poly__tseytin' n := c__tseytinP1 * n * n + c__tseytinPBound1 * n. 
@@ -869,7 +870,7 @@ Instance term_tseytin : computableTime' tseytin (fun f _ => (tseytin_time f, tt)
 Proof. 
   extract. solverec. 
   unfold tseytin_time, c__tseytin. solverec. 
-Defined. 
+Qed. 
 
 Definition poly__tseytin n := poly__formulaMaxVar n + poly__tseytin' n + c__tseytin. 
 Lemma tseytin_time_bound f : tseytin_time f <= poly__tseytin (size (enc f)). 
@@ -899,7 +900,7 @@ Definition reduction_time (f : formula) := eliminateOR_time f + tseytin_time (el
 Instance term_reduction : computableTime' reduction (fun f _ => (reduction_time f, tt)). 
 Proof. 
   extract. solverec. unfold reduction_time, c__reduction. solverec. 
-Defined. 
+Qed. 
 
 Definition poly__reduction n := poly__eliminateOR n + poly__tseytin (c__eliminateOrSize * n) + c__reduction.
 Lemma reduction_time_bound f : reduction_time f <= poly__reduction (size (enc f)). 

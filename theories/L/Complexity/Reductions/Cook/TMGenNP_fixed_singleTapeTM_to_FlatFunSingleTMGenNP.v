@@ -7,9 +7,10 @@ From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Complexity Require Import PolyBounds FlatFinTypes MorePrelim.
 From Undecidability.L.Datatypes Require Import LProd LOptions LBool LSum LNat Lists LFinType.
 
-(** * Reduction of GenNP with fixed TM to GenNP with variable TM *)
+(** * Reduction of TMGenNP with fixed TM to TMGenNP with variable TM *)
 
-Lemma execFlatTM_isValidFlatTapes M tp steps c' tp' : execFlatTM M tp steps = Some (c', tp') -> isValidFlatTapes (sig M) (tapes M) tp' = true.
+Lemma execFlatTM_isValidFlatTapes M tp steps c' tp' : 
+  execFlatTM M tp steps = Some (c', tp') -> isValidFlatTapes (sig M) (tapes M) tp' = true.
 Proof. 
   intros H%execFlatTM_correct.
   destruct H as (sig & n & M' & c0 & c0' & H0 & H1 & H2 & H). 
