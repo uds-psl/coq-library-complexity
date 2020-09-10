@@ -3,18 +3,19 @@ From Undecidability.L.TM Require Import TMflat TMflatEnc TMflatFun TMEncoding Ta
 From Undecidability.L.Complexity Require Import FlatFinTypes MorePrelim.
 From Undecidability.L.Complexity.Problems Require Export TMGenNP_fixed_mTM. 
 
-(** * Definition of a generic NP-hard problem *)
-(** (at least it is NP-hard if one accepts Turing machines)*)
+(** * Definition of a generic problem for single-tape Turing machines *)
 
 Definition isValidCert (sig : finType) k' (c : list sig) := |c| <= k'.
 Definition isValidInput (sig : finType) s k' (inp : list sig) := exists c, isValidCert k' c /\ inp = s ++ c. 
 
-(** single-tape machine whose head will always start at the leftmost position (i.e. initial tapes are niltape or leftof) *)
+(** generic problem for single-tape machine whose head will always start at the leftmost position (i.e. initial tapes are niltape or leftof) *)
+(** the alphabet is part of the instance, not a parameter *)
 Definition SingleTMGenNP (i : { sig : finType & (mTM sig 1 * list sig * nat * nat)%type } ) : Prop := 
   match i with existT sig (tm, s, k', t) => exists cert, |cert| <= k'
                                                       /\ exists f, loopM (initc tm ([|initTape_singleTapeTM (s ++ cert)|])) t = Some f
   end.
 
+(** a flat version defined via the non-flat one *)
 Definition FlatSingleTMGenNP : TM * list nat * nat * nat -> Prop :=
   fun '(M,s,maxSize, steps (*in unary*)) =>
     exists sig (M':mTM sig 1) sfin, isFlatteningTMOf M M' /\ isFlatListOf s sfin /\ SingleTMGenNP (existT _ _ (M', sfin, maxSize, steps)). 
@@ -34,14 +35,18 @@ Proof.
   intros. revert t. apply Vector.case0. easy.
 Qed. 
 
-Proposition initTape_mapTape_index (sig : finType) (tp : tape sig) s: mapTape index tp = initTape_singleTapeTM s -> exists s', tp = initTape_singleTapeTM s' /\ isFlatListOf s s'.
+Proposition initTape_mapTape_index (sig : finType) (tp : tape sig) s: 
+  mapTape index tp = initTape_singleTapeTM s 
+  -> exists s', tp = initTape_singleTapeTM s' /\ isFlatListOf s s'.
 Proof. 
   intros H. destruct s; cbn in H.
   - destruct tp; cbn in H; inv H. now exists []. 
   - destruct tp; cbn in H; inv H. now exists (e :: l).
 Qed. 
 
-Lemma initTape_isFlatteningConfigOf (sig states : finType) (s : list nat) s0 (c0 : mconfig sig states 1): isFlatteningConfigOf (s0, [initTape_singleTapeTM s]) c0 -> exists s0' s', index s0' = s0 /\ isFlatListOf s s' /\ c0 = mk_mconfig s0' [|initTape_singleTapeTM s'|].
+Lemma initTape_isFlatteningConfigOf (sig states : finType) (s : list nat) s0 (c0 : mconfig sig states 1): 
+  isFlatteningConfigOf (s0, [initTape_singleTapeTM s]) c0 
+  -> exists s0' s', index s0' = s0 /\ isFlatListOf s s' /\ c0 = mk_mconfig s0' [|initTape_singleTapeTM s'|].
 Proof. 
   intros H. inv H. inv Ht. destruct c0. cbn -[mapTapes] in H0. 
   specialize (vec_case1 ctapes) as (tp & ->). cbn in H0.
@@ -49,7 +54,9 @@ Proof.
   cbn. exists cstate, s'. easy.
 Qed.  
 
-Fact isFlatListOf_app_inv (f : finType) s1 s2 (s : list f): isFlatListOf (s1 ++ s2) s -> exists s1' s2', s = s1' ++ s2' /\ isFlatListOf s1 s1' /\ isFlatListOf s2 s2'.
+Fact isFlatListOf_app_inv (f : finType) s1 s2 (s : list f): 
+  isFlatListOf (s1 ++ s2) s 
+  -> exists s1' s2', s = s1' ++ s2' /\ isFlatListOf s1 s1' /\ isFlatListOf s2 s2'.
 Proof. 
   unfold isFlatListOf. 
   intros H. 

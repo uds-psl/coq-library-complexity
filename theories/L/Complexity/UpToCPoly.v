@@ -1,5 +1,5 @@
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Complexity Require Export Synthetic. 
+From Undecidability.L.Complexity Require Export Synthetic UpToC UpToCNary.
 From Undecidability.L.Complexity.CookPrelim Require Import Tactics. 
 
 (* Coq 8.11 or 8.10 changed lia so that it isn't able to deal with η conversion anymore; use this tactic to fix *)

@@ -44,7 +44,7 @@ Proof.
   intros ? ? H. exists 1. hnf in H. setoid_rewrite H. intros;nia.
 Qed.
 
-(* A record for easily expressing the subtype of functions up to come multiplicative conctant. *)
+(* A record for easily expressing the subtype of functions up to some multiplicative constant. *)
 Record UpToC {X} (F : X -> nat) : Type :=
   mkUpToC
   {
