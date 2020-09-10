@@ -161,7 +161,7 @@ Ltac inv_valid := match goal with
                   end.
 
 
-(** ** TPR using list-based windows *)
+(** ** 3-PR using list-based windows *)
 
 (** use an explicit representation instead of vectors of size 3 since this will make the problem closer to the flattened extractable problem *)
 Inductive TPRWinP (Sigma : Type) := {
@@ -261,7 +261,7 @@ Definition TPRLang (C : TPR) :=
   /\ exists (sf : list (Sigma C)), relpower (valid (rewritesHeadList (windows C))) (steps C) (init C) sf 
     /\ satFinal (final C) sf. 
 
-(** ** variant PTPR using propositional rules *)
+(** ** variant P-3-PR using propositional rules (defined via inductive predicates) *)
 
 Record PTPR := {
              PSigma : finType;
@@ -337,7 +337,7 @@ Hint Constructors rewritesHeadInd : core.
 
 Definition PTPRLang (C : PTPR) :=  PTPR_wellformed C /\ exists (sf : list (PSigma C)), relpower (valid (rewritesHeadInd (@Pwindows C))) (Psteps C) (Pinit C) sf /\ satFinal (Pfinal C) sf. 
 
-(** *results for agreement of PTPR and TPR *)
+(** ** results for agreement of P-3-PR and 3-PR *)
 Definition windows_list_ind_agree {X : Type} (p : X -> X -> X -> X -> X -> X -> Prop) (l : list (TPRWin X)) :=
   forall x1 x2 x3 x4 x5 x6, p x1 x2 x3 x4 x5 x6 <-> {x1, x2, x3} / {x4, x5, x6} el l. 
 

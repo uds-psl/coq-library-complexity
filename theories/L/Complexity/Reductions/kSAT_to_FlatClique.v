@@ -9,6 +9,7 @@ From Undecidability.L.Complexity Require Import FlatFinTypes MorePrelim.
 (** * k-SAT to FlatClique *)
 (** We compute a flat graph corresponding to the graph of the k-SAT to Clique reduction and then use the correctness of that reduction to derive the correctness of the flat reduction. *)
 
+(** ** correctness *)
 Section fixSAT. 
   Variable (k : nat).
   Variable (N : cnf).
@@ -409,7 +410,7 @@ Definition makeEdges_time (k : nat) (N : cnf) := 2 * allPositions_time k N + pro
 Instance term_makeEdges : computableTime' makeEdges (fun k _ => (1, fun N _ => (makeEdges_time k N, tt))). 
 Proof. 
   extract. solverec. 
-  unfold makeEdges_time, c__makeEdges; simp_comp_arith; nia. 
+  unfold makeEdges_time, c__makeEdges. simp_comp_arith. nia. 
 Qed. 
 
 Definition poly__makeEdges n := 

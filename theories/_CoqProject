@@ -29,8 +29,8 @@ L/Complexity/Reductions/kSAT_to_FlatClique.v
 
 
 
-L/Complexity/Problems/Cook/GenNP.v
-L/Complexity/Reductions/Cook/TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP.v
+L/Complexity/Problems/Cook/SingleTMGenNP.v
+L/Complexity/Reductions/TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP.v
 L/Complexity/Reductions/Cook/TM_single.v
 L/Complexity/Problems/Cook/PR.v
 L/Complexity/Problems/Cook/TPR.v
