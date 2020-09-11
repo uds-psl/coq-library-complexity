@@ -46,8 +46,6 @@ L/Complexity/Reductions/FSAT_to_SAT.v
 
 Shared/Prelim.v
 
-Problems/Reduction.v
-
 # Abstract L simulator as Turing Machine
 LAM/TM/Alphabets.v
 LAM/TM/CaseCom.v
@@ -307,8 +305,5 @@ L/Computability/Computability.v
 L/Computability/MuRec.v
 L/Computability/Decidability.v
 
-
-#Reduction L to TM with abstract Heap Machine
-LAM/BaseExtension.v
 
 Problems/TM.v
