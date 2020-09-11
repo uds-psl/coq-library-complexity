@@ -6,8 +6,7 @@ From Undecidability.L.AbstractMachines Require Import FlatPro.Programs FlatPro.C
 
 From Undecidability.L.Complexity Require Import LMGenNP TMGenNP_fixed_mTM.
 
-Require Undecidability.LAM.TM.HaltingProblem.
-Module LAM := Undecidability.LAM.TM.HaltingProblem.
+Require Undecidability.L.AbstractMachines.TM_LHeapInterpreter.M_LHeapInterpreter.
 
 From Undecidability Require Import TMGenNP.M_LM2TM.
 
@@ -73,7 +72,7 @@ Qed.
 Module M.
   Section M.
     Arguments LMtoTM.M : clear implicits.
-    Definition sig := (finType_CS (HaltingProblem.sigStep + sigList bool)).
+    Definition sig := (finType_CS (M_LHeapInterpreter.sigStep + sigList bool)).
 
     Definition sig__reg : registered sig := LFinType.registered_finType.
 
@@ -375,7 +374,7 @@ Smpl Add 5 unshelve simple eapply pTC_initValue : polyTimeComputable.
 
 
 
-Import HaltingProblem.
+Import M_LHeapInterpreter.
 
 From Undecidability Require Import PolyTimeComputable.
 
