@@ -8,7 +8,7 @@ From Undecidability.L.AbstractMachines Require Import FlatPro.Programs FlatPro.C
      
 Unset Printing Coercions.
 
-From Undecidability.LAM Require Alphabets.
+From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require Alphabets.
 
 From Coq Require Import Lia Ring Arith.
 
@@ -16,12 +16,12 @@ From Undecidability.L.Complexity  Require Import LMGenNP TMGenNP_fixed_mTM M_Boo
 
 From Undecidability Require Import Code.ListTM_concat_repeat.
 
-From Undecidability.LAM Require HaltingProblem.
+From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require M_LHeapInterpreter.
 
 Import DecodeList Decode.
 Module LMtoTM.
   Section sec.
-    Import ProgrammingTools Combinators HaltingProblem.
+    Import ProgrammingTools Combinators M_LHeapInterpreter.
 
     Variable (sig : finType).
     
@@ -75,7 +75,7 @@ Module LMtoTM.
 (*1,2: empty*)
                   LiftTapes (ChangeAlphabet (WriteValue (encode (@nil (LM_heap_def.HClos)))) retr__listHClos) [| Fin1|];; (*1:[]*)
                   LiftTapes (ChangeAlphabet (WriteValue (encode (@nil (LM_heap_def.HEntr)))) retr__Heap) [| Fin2|];; (*2:[]*)
-                  ChangeAlphabet HaltingProblem.Loop retr__LAM )
+                  ChangeAlphabet M_LHeapInterpreter.Loop retr__LAM )
                  true)
          (Return Nop false).
  
@@ -97,7 +97,7 @@ Module LMtoTM.
     Lemma size_compile_list_bool:
       (fun bs : list bool => Code.size (compile (Computable.enc (rev bs)))) <=c (fun bs => length bs + 1).
     Proof.
-      From Undecidability.LAM.TM Require Import SizeAnalysis LMBounds_Loop.
+      From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require Import SizeAnalysis LMBounds_Loop.
       evar (c:nat). exists c. intros xs.
       rewrite size_le_sizeP. unfold sizeP;rewrite sizeP_size,Lists.size_list.
       rewrite map_rev,<-sumn_rev. rewrite MoreBase.sumn_le_bound.

@@ -1,6 +1,6 @@
 From Coq Require Import Extraction.
 From Undecidability Require Import TM.Code.ProgrammingTools.
-From Undecidability Require Import TM.LM.HaltingProblem.
+From Undecidability Require Import Undecidability.L.AbstractMachines.TM_LHeapInterpreter.HaltingProblem.M_LHeapInterpreter.
 
 
 (* The number of symbols in the alphabet *)

@@ -101,16 +101,16 @@ Shared/Libs/DLW/Wf/wf_incl.v
 Problems/Reduction.v
 
 # Abstract L simulator as Turing Machine
-LAM/TM/Alphabets.v
-LAM/TM/CaseCom.v
-LAM/TM/LookupTM.v
-LAM/TM/JumpTargetTM.v
+L/AbstractMachines/TM_LHeapInterpreter/Alphabets.v
+L/AbstractMachines/TM_LHeapInterpreter/CaseCom.v
+L/AbstractMachines/TM_LHeapInterpreter/LookupTM.v
+L/AbstractMachines/TM_LHeapInterpreter/JumpTargetTM.v
 #The following file takes very long, so we start it early for faster multi-core-compilation
-LAM/TM/StepTM.v
-LAM/TM/HaltingProblem.v
-LAM/TM/SizeAnalysis.v
-LAM/TM/LMBounds.v
-LAM/TM/LMBounds_Loop.v
+L/AbstractMachines/TM_LHeapInterpreter/StepTM.v
+L/AbstractMachines/TM_LHeapInterpreter/M_LHeapInterpreter.v
+L/AbstractMachines/TM_LHeapInterpreter/SizeAnalysis.v
+L/AbstractMachines/TM_LHeapInterpreter/LMBounds.v
+L/AbstractMachines/TM_LHeapInterpreter/LMBounds_Loop.v
 
 #Post correspondence problem
 PCP/PCP.v
@@ -526,8 +526,6 @@ L/Computability/Scott.v
 L/Computability/Seval.v
 L/Computability/Synthetic.v
 
-#Reduction L to TM with abstract Heap Machine
-LAM/BaseExtension.v
 
 ## Higher order unficiation
 
