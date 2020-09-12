@@ -1,20 +1,20 @@
 From PslBase Require Import Base FiniteTypes. 
-From Undecidability.L.Complexity Require Import MorePrelim Problems.Cook.PR Reductions.Cook.UniformHomomorphisms.
-From Undecidability.L.Complexity.Problems.Cook Require BinaryPR .
+From Undecidability.L.Complexity Require Import MorePrelim Problems.Cook.CC Reductions.Cook.UniformHomomorphisms.
+From Undecidability.L.Complexity.Problems.Cook Require BinaryCC .
 Require Import Lia.
 
-(** * Results on the behaviour of PR under string homomorphisms *)
-(** Specifically, we show that we can obtain equivalent PR instances by applying injective uniform homomorphisms. *)
+(** * Results on the behaviour of CC under string homomorphisms *)
+(** Specifically, we show that we can obtain equivalent CC instances by applying injective uniform homomorphisms. *)
 
 Section fixInstance.  
   Variable (Y : finType). (*target alphabet of the homomorphism *)
-  Variable (fpr : PR). 
+  Variable (fpr : CC). 
 
   Notation Sigma := (Sigma fpr).
   Notation offset := (offset fpr).
   Notation width := (width fpr).
   Notation init := (init fpr).
-  Notation windows := (windows fpr).
+  Notation cards := (cards fpr).
   Notation final := (final fpr).
   Notation steps := (steps fpr). 
 
@@ -85,41 +85,41 @@ Section fixInstance.
       + apply H6. 
   Qed. 
 
-  (** the transformed PR instance *)
+  (** the transformed CC instance *)
   Definition hoffset := k * offset. 
   Definition hwidth := k * width. 
   Definition hinit := h init. 
-  Definition hwindow win := match win with Build_PRWin prem conc => Build_PRWin (h prem) (h conc) end.
-  Definition hwindows := map hwindow windows. 
+  Definition hcard card := match card with Build_CCCard prem conc => Build_CCCard (h prem) (h conc) end.
+  Definition hcards := map hcard cards. 
   Definition hfinal := map h final. 
   Definition hsteps := steps. 
 
-  Definition hPR := Build_PR hoffset hwidth hinit hwindows hfinal hsteps.
+  Definition hCC := Build_CC hoffset hwidth hinit hcards hfinal hsteps.
 
   (** from now on, we assume a well-formed instance for the main results *)
-  Context (A : PR_wellformed fpr). 
+  Context (A : CC_wellformed fpr). 
 
-  Lemma hPR_wf : PR_wellformed hPR. 
+  Lemma hCC_wf : CC_wellformed hCC. 
   Proof. 
     destruct A as (F1 & F2 & F3 & F4 & F5 & F6). 
-    unfold PR_wellformed. cbn. unfold hwidth, hoffset, hinit, hwindows, hsteps. repeat match goal with [ |- _ /\ _] => split end; try nia.
+    unfold CC_wellformed. cbn. unfold hwidth, hoffset, hinit, hcards, hsteps. repeat match goal with [ |- _ /\ _] => split end; try nia.
     - destruct F3 as (k0 & F3 & F3'). exists k0; split; [easy | nia].
     - rewrite h_multiplier. nia.
-    - intros win H. apply in_map_iff in H as (win' & <- & H). apply F5 in H. 
-      destruct win'; destruct H as [H1 H2]. cbn in *. split; unfold hwindow; cbn; rewrite h_multiplier; nia. 
+    - intros card H. apply in_map_iff in H as (card' & <- & H). apply F5 in H. 
+      destruct card'; destruct H as [H1 H2]. cbn in *. split; unfold hcard; cbn; rewrite h_multiplier; nia. 
     - destruct F6 as (k0 & F6). exists k0. rewrite h_multiplier. nia. 
   Qed. 
 
   (** we show equivalence of the original instance and the transformed instance*)
 
-  (** agreement of rewritesHead *)
-  Lemma rewritesHead_homomorphism_iff win a b : 
-    rewritesHead win a b <-> rewritesHead (hwindow win) (h a) (h b). 
+  (** agreement of coversHead *)
+  Lemma coversHead_homomorphism_iff card a b : 
+    coversHead card a b <-> coversHead (hcard card) (h a) (h b). 
   Proof. 
     split.
-    - unfold hwindow. destruct win. intros ((c1 & H1) & (c2 & H2)). 
+    - unfold hcard. destruct card. intros ((c1 & H1) & (c2 & H2)). 
       subst. split; cbn -[canonicalHom]; rewrite (proj1 h_unifHom); unfold prefix; eauto.
-    - intros. unfold hwindow in H. destruct win. destruct H as ((c1 & H1) & (c2 & H2)). 
+    - intros. unfold hcard in H. destruct card. destruct H as ((c1 & H1) & (c2 & H2)). 
       cbn in *. destruct A as (_ & _ & _ & _ & A4 & _ ). 
       eapply h_app_inv in H1 as (a1 & a2 & -> & H1 & <-); [ | rewrite Nat.mul_comm; apply h_multiplier].  
       eapply h_app_inv in H2 as (b1 & b2 & -> & H2 & <-); [ | rewrite Nat.mul_comm; apply h_multiplier]. 
@@ -131,17 +131,17 @@ Section fixInstance.
   (** For the direction from homomorphisms to the original instance, we actually need a stronger result telling us that 
     the conclusion is again in the image of the homomorphism
     *)
-  Lemma rewritesHead_homomorphism2 win a1 a2 u v: 
-    win el hwindows 
+  Lemma coversHead_homomorphism2 card a1 a2 u v: 
+    card el hcards 
     -> |a1| = offset 
     -> |u| = k * offset 
-    -> rewritesHead win (h a1 ++ h a2) (u ++ v) 
+    -> coversHead card (h a1 ++ h a2) (u ++ v) 
     -> exists b1, u = h b1 /\ |b1| = offset 
-        /\ rewritesHead win (h a1 ++ h a2) (h b1 ++ v). 
+        /\ coversHead card (h a1 ++ h a2) (h b1 ++ v). 
   Proof. 
     intros. destruct H2 as ((c1 & H3) & (c2 & H4)). 
-    unfold hwindows in H; apply in_map_iff in H as (win' & <- & H).  
-    destruct win'; cbn in *. 
+    unfold hcards in H; apply in_map_iff in H as (card' & <- & H).  
+    destruct card'; cbn in *. 
     destruct A as (_ & _ & (ak & A5 & ->) & _ & A4 & _). 
     apply A4 in H as (H & H'). cbn in *. 
     assert (|u| <= |h conc|) by (rewrite h_multiplier; nia). 
@@ -162,19 +162,19 @@ Section fixInstance.
 
   Lemma valid_homomorphism1 a b : 
     |a| >= width 
-    -> valid offset width windows a b 
-    -> valid hoffset hwidth hwindows (h a) (h b).
+    -> valid offset width cards a b 
+    -> valid hoffset hwidth hcards (h a) (h b).
   Proof. 
     intros H0. unfold hwidth, hoffset.
-    induction 1. 
+    induction 1 as [ | ? ? ? ? H IH H1 H2 H3 | ? ? ? ? card H IH H1 H2 H3 H4]. 
     + rewrite homo_nil; [eauto | apply h_unifHom]. 
     + rewrite app_length in H0. nia. 
-    + rewrite !(proj1 h_unifHom). destruct win as [prem conc]. 
+    + rewrite !(proj1 h_unifHom). destruct card as [prem conc]. 
       econstructor 3. 
       * destruct (le_lt_dec width (|a|)). 
-        -- apply IHvalid. nia. 
+        -- apply IH. nia. 
         --(*we show that for this case, the whole string is covered by the rule *)
-          clear IHvalid H2 H3. 
+          clear IH H2 H3. 
           specialize (valid_multiple_of_offset H) as (m & H').
           eapply valid_vacuous with (m := m). 
           ++ rewrite !h_multiplier. apply valid_length_inv in H. nia. 
@@ -182,64 +182,66 @@ Section fixInstance.
           ++ rewrite h_multiplier. nia. 
       * rewrite h_multiplier. nia. 
       * rewrite h_multiplier. nia. 
-      * unfold hwindows. apply in_map_iff. exists (Build_PRWin prem conc). split; [ | apply H3]. reflexivity. 
-      * rewrite <- !(proj1 h_unifHom). apply rewritesHead_homomorphism_iff; assumption.
+      * unfold hcards. apply in_map_iff. exists (Build_CCCard prem conc). split; [ | apply H3]. reflexivity. 
+      * rewrite <- !(proj1 h_unifHom). apply coversHead_homomorphism_iff; assumption.
   Qed. 
 
   (** For the other direction, we again prove a stronger result saying that the conclusion is in the image of the homomorphism. 
     The lemma decomposes to two interesting cases: 
-    - the case where a single rewrite window covers the whole string
-    - the case where a part of the string is already covered by some windows and we add a new window at the front
+    - the case where a single rewrite card covers the whole string
+    - the case where a part of the string is already covered by some cards and we add a new card at the front
   *)
   Lemma valid_homomorphism2 a b' : 
     |a| >= width 
-    -> valid hoffset hwidth hwindows (h a) b' 
-    -> exists b, b' = h b /\ valid offset width windows a b.
+    -> valid hoffset hwidth hcards (h a) b' 
+    -> exists b, b' = h b /\ valid offset width cards a b.
   Proof. 
     (*we switch to the validDirect characterisation *)
-    intros H H0. assert (valid hoffset hwidth hwindows (h a) b' /\ |h a| >= hwidth) as H1%validDirect_valid. 
+    intros H H0. assert (valid hoffset hwidth hcards (h a) b' /\ |h a| >= hwidth) as H1%validDirect_valid. 
     { split; [easy | ]. unfold hwidth; rewrite h_multiplier. nia. }
     all: unfold hoffset, hwidth. 
     4: { destruct A as (_ & H5 & _). nia. }
     3: { destruct A as (_ & _ & (k0 & H5 & H6) &_). exists k0. nia. }
     2: { destruct A as (H5 & _). nia. }
-    enough (exists b, b' = h b /\ validDirect offset width windows a b).
+    enough (exists b, b' = h b /\ validDirect offset width cards a b).
     { destruct H2 as (b & -> & H2). apply validDirect_valid in H2. 2-4: apply A. easy. }
     clear H0 H. 
-    remember (h a). revert a Heql. induction H1; intros. 
+    remember (h a). revert a Heql. 
+    induction H1 as [? ? card H H0 H1 H2 H3 | ? ? ? ? card H IH H0 H1 H2 H3 H4]; intros a0 Heql. 
     - subst. 
-      destruct A as (_ & _ & _ & _ & H5 & _). unfold hwindows in H1. apply in_map_iff in H1 as (win' & <- & H1).
+      destruct A as (_ & _ & _ & _ & H5 & _). unfold hcards in H1. apply in_map_iff in H1 as (card' & <- & H1).
       specialize (H5 _ H1) as (H1' & H1''). 
-      exists (conc win'). remember H2 as H20. clear HeqH20. (*we'll need the hypothesis later *)
+      exists (conc card'). remember H2 as H20. clear HeqH20. (*we'll need the hypothesis later *)
       destruct H2 as ((a1 & H2) & (b1 & H3)). (*we show b1 = a1 = []*)
       assert (b1 = []). 
       { 
-        rewrite H2, H3, !app_length in H. destruct win'. cbn in *. 
+        rewrite H2, H3, !app_length in H. destruct card'. cbn in *. 
         rewrite !h_multiplier in H. enough (a1 = []) as -> by (destruct b1; [easy | cbn in H; nia]). 
         rewrite H2, app_length, h_multiplier in H0. unfold hwidth in H0. destruct a1; [easy | cbn in H0; nia].
       } 
-      rewrite H3, H4, app_nil_r. destruct win'. cbn in *. split; [easy | ]. 
+      rewrite H3, H4, app_nil_r. destruct card'. cbn in *. split; [easy | ]. 
       eapply h_app_inv in H2 as (b1' & b2 & -> & H2 & <-); [ | rewrite h_multiplier, Nat.mul_comm; reflexivity]. 
       apply h_injective in H2 as ->. 
       assert (b2 = []) as ->.
       { rewrite h_multiplier, app_length in H0. unfold hwidth in H0. destruct b2; [easy | cbn in H0; nia]. }
       rewrite app_nil_r. econstructor; [lia | lia | apply H1 | ].
-      apply rewritesHead_homomorphism_iff.
+      apply coversHead_homomorphism_iff.
       rewrite H3, H4, !app_nil_r in H20. apply H20.
-    - unfold hoffset, hwidth in *. unfold hwindows in H2. apply in_map_iff in H2 as (rule' & <- & H10). 
-      symmetry in Heql. eapply h_app_inv in Heql as (a1 & a2 & -> & F1 & F2); [ | rewrite Nat.mul_comm; apply H]. 
-      subst. apply rewritesHead_homomorphism2 in H3 as (b1 & -> & H7 & H3); [ |now apply in_map_iff | rewrite h_multiplier in H; nia | easy ]. 
-       specialize (IHvalidDirect a2 eq_refl) as (b0 & -> & IH). 
+    - unfold hoffset, hwidth in *. unfold hcards in H2. apply in_map_iff in H2 as (rule' & <- & H10). 
+      symmetry in Heql. eapply h_app_inv in Heql as (a1 & a2 & -> & F1 & F2); [ | rewrite Nat.mul_comm; apply H0]. 
+      subst. apply coversHead_homomorphism2 in H3 as (b1 & -> & H7 & H3); 
+        [ |now apply in_map_iff | rewrite h_multiplier in H0; nia | easy ]. 
+       specialize (IH a2 eq_refl) as (b0 & -> & IH). 
         exists (b1 ++ b0). repeat split.
         * now rewrite (proj1 h_unifHom). 
-        * econstructor; [ easy | rewrite h_multiplier in H; nia | easy | apply H10 | ]. 
-          rewrite <- !(proj1 h_unifHom) in H3. apply rewritesHead_homomorphism_iff in H3; eauto.
+        * econstructor; [ easy | rewrite h_multiplier in H0; nia | easy | apply H10 | ]. 
+          rewrite <- !(proj1 h_unifHom) in H3. apply coversHead_homomorphism_iff in H3; eauto.
   Qed. 
 
   (** we can obtain an equivalence, but its second direction is significantly weaker than the direction which we've just shown *)
   Lemma valid_homomorphism_iff a b : 
     |a| >= width 
-    -> valid offset width windows a b <-> valid hoffset hwidth hwindows (h a) (h b).
+    -> valid offset width cards a b <-> valid hoffset hwidth hcards (h a) (h b).
   Proof. 
     intros H0; split. unfold hwidth, hoffset. 
     - apply valid_homomorphism1; easy.  
@@ -251,31 +253,31 @@ Section fixInstance.
   (** this lifts to powers of valid*)
   Lemma valid_relpower_homomorphism1 a b steps : 
     |a| >= width 
-    -> relpower (valid offset width windows) steps a b 
-    -> relpower (valid (k * offset) (k * width) hwindows) steps (h a) (h b).
+    -> relpower (valid offset width cards) steps a b 
+    -> relpower (valid (k * offset) (k * width) hcards) steps (h a) (h b).
   Proof. 
-    intros H. induction 1; [ eauto | ]. econstructor. 
+    intros H. induction 1 as [ | ? ? ? ? H0 ? IH]; [ eauto | ]. econstructor. 
     + apply valid_homomorphism_iff; [ apply H | easy ]. 
-    + apply IHrelpower.  apply valid_length_inv in H0. lia. 
+    + apply IH.  apply valid_length_inv in H0. lia. 
   Qed. 
 
   Lemma valid_relpower_homomorphism2 a b' steps: 
     |a| >= width 
-    -> relpower (valid (k * offset) (k * width) hwindows) steps (h a) b' 
-    -> exists b, b' = h b /\ relpower (valid offset width windows) steps a b. 
+    -> relpower (valid (k * offset) (k * width) hcards) steps (h a) b' 
+    -> exists b, b' = h b /\ relpower (valid offset width cards) steps a b. 
   Proof. 
-    intros. remember (h a). revert a Heql H. induction H0; intros. 
+    intros H H0. remember (h a). revert a Heql H. induction H0 as [ | ? ? ? ? H0 H1 IH]; intros. 
     - exists a0. split; eauto. 
-    - subst. apply valid_homomorphism2 in H as (b' & -> & H); [ | easy ]. 
-      edestruct (IHrelpower b' eq_refl) as (c' & -> & IH). 
-      + apply valid_length_inv in H; lia. 
+    - subst. apply valid_homomorphism2 in H0 as (b' & -> & H0); [ | easy ]. 
+      edestruct (IH b' eq_refl) as (c' & -> & IH'). 
+      + apply valid_length_inv in H0; lia. 
       + exists c'; split; [ easy | ]. econstructor; easy. 
   Qed. 
 
   (** again a slightly weaker equivalence *)
   Lemma valid_relpower_homomorphism_iff a b steps : 
     |a| >= width 
-    -> relpower (valid offset width windows) steps a b <-> relpower (valid (k * offset) (k * width) hwindows) steps (h a) (h b).
+    -> relpower (valid offset width cards) steps a b <-> relpower (valid (k * offset) (k * width) hcards) steps (h a) (h b).
   Proof. 
     intros. split. 
     - now apply valid_relpower_homomorphism1.  
@@ -315,9 +317,9 @@ Section fixInstance.
   Qed. 
       
   (** the transformed instance is a YES-instance iff the original instance is a YES-instance *)
-  Lemma PR_homomorphism_iff : 
-    (exists sf, relpower (valid offset width windows) steps init sf /\ satFinal offset (|init|) final sf) 
-    <-> (exists sf, relpower (valid hoffset hwidth hwindows) hsteps hinit sf /\ satFinal hoffset (|hinit|) hfinal sf). 
+  Lemma CC_homomorphism_iff : 
+    (exists sf, relpower (valid offset width cards) steps init sf /\ satFinal offset (|init|) final sf) 
+    <-> (exists sf, relpower (valid hoffset hwidth hcards) hsteps hinit sf /\ satFinal hoffset (|hinit|) hfinal sf). 
   Proof. 
     unfold hsteps, hinit, hoffset, hwidth. 
     destruct A as (_ & _ & _  & A4 &_). 
@@ -337,11 +339,11 @@ Section fixInstance.
       + apply A4. 
   Qed. 
 
-  Corollary PR_homomorphism_inst_iff : 
-    PRLang fpr <-> PRLang hPR. 
+  Corollary CC_homomorphism_inst_iff : 
+    CCLang fpr <-> CCLang hCC. 
   Proof. 
-    split; intros [H1 H2%PR_homomorphism_iff].
-    - split; [apply hPR_wf | apply H2].
+    split; intros [H1 H2%CC_homomorphism_iff].
+    - split; [apply hCC_wf | apply H2].
     - split; [apply A | apply H2]. 
   Qed. 
 End fixInstance. 

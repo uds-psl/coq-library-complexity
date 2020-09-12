@@ -1,106 +1,106 @@
 From PslBase Require Import Base. 
 From Undecidability.L.Complexity Require Import Tactics MorePrelim. 
 From Undecidability.L.Datatypes Require Import Lists LNat LBool LProd LOptions. 
-From Undecidability.L.Complexity.Problems Require Import FSAT Cook.BinaryPR.
+From Undecidability.L.Complexity.Problems Require Import FSAT Cook.BinaryCC.
 From Undecidability.L.Complexity.Reductions.Cook Require Import FormulaEncoding.
 Require Import Lia. 
 
-(** * Reduction of BinaryPR to FSAT *)
+(** * Reduction of BinaryCC to FSAT *)
 (** High-level overview:
-We lay out the BinaryPR computation in a tableau which has (steps + 1) lines, where steps is the number of steps of the BPR instance, 
-and each line has a length which is equal to the length of the BPR strings.
-Each cell of the tableau corresponds to one symbol of a BPR string and is encoded using a single Boolean variable in the FSAT instance.
+We lay out the BinaryCC computation in a tableau which has (steps + 1) lines, where steps is the number of steps of the BCC instance, 
+and each line has a length which is equal to the length of the BCC strings.
+Each cell of the tableau corresponds to one symbol of a BCC string and is encoded using a single Boolean variable in the FSAT instance.
 
 The FSAT formula consists of three gadgets, encoding:
 - the constraint on the initial string
-- the validity of rewrites 
+- the validity of CC-steps 
 - the final constraints.
 
 The constraint on the initial string is straightforward to encode: We just have a big AND over the positions of the string.
 
-For the validity of rewrites, we have a AND consisting of a subformula for each of the rewrites.
-Each rewrite in turn forces that the successor string evolves validly from the current string - we have an AND over the offsets of the string
-at which rewrite windows have to hold. 
-For each of the offsets, we then have a disjunction over all rewrite windows. 
-That a rewrite window holds at a position is encoded similarly to the initial string.
+For the validity of coverings, we have a AND consisting of a subformula for each of the steps.
+Each step in turn forces that the successor string evolves validly from the current string - we have an AND over the offsets of the string
+at which covering cards have to hold. 
+For each of the offsets, we then have a disjunction over all covering cards. 
+That a card is covering at a position is encoded similarly to the initial string.
 
 For the final constraint, we have a disjunction over the final strings and a nested disjunction over all positions at which a string can be a substring.
 *)
 
 Section fixInstance. 
-  Variable (bpr : BinaryPR). 
+  Variable (bpr : BinaryCC). 
   
   Notation offset := (offset bpr). 
   Notation width := (width bpr). 
   Notation init := (init bpr). 
-  Notation windows := (windows bpr).
+  Notation cards := (cards bpr).
   Notation final := (final bpr).
   Notation steps := (steps bpr). 
 
-  Context (A : BinaryPR_wellformed bpr). 
+  Context (A : BinaryCC_wellformed bpr). 
   Notation llength := (length init). 
   Implicit Types (a : assgn) (v : var). 
   Notation Ffalse := (¬ Ftrue). 
 
 
-  (** encoding of windows *)
+  (** encoding of cards *)
   (** startA is the position at which the premise is placed, startB the position at which the conclusion is placed *)
-  Definition encodeWindowAt (startA startB : nat) (win : PRWin bool) := encodeListAt startA (prem win) ∧ encodeListAt startB (conc win). 
+  Definition encodeCardAt (startA startB : nat) (card : CCCard bool) := encodeListAt startA (prem card) ∧ encodeListAt startB (conc card). 
 
-  Lemma encodeWindowAt_encodesPredicate start len win : 
-    win el windows -> encodesPredicateAt start (len + width) (encodeWindowAt start (start + len) win) (fun m => projVars 0 width m = prem win /\ projVars len width m = conc win). 
+  Lemma encodeCardAt_encodesPredicate start len card : 
+    card el cards -> encodesPredicateAt start (len + width) (encodeCardAt start (start + len) card) (fun m => projVars 0 width m = prem card /\ projVars len width m = conc card). 
   Proof. 
     intros H0. 
-    specialize (encodesPredicate_and (encodeListAt_encodesPredicate start (prem win)) (encodeListAt_encodesPredicate (start + len) (conc win))) as H. 
+    specialize (encodesPredicate_and (encodeListAt_encodesPredicate start (prem card)) (encodeListAt_encodesPredicate (start + len) (conc card))) as H. 
     destruct A as (_ & _ & _ & A0 & A1 & _). apply A1 in H0 as (H0 & H0').
     encodesPredicateAt_comp_simp H. 
     rewrite !H0 in H. rewrite !H0' in H.
     replace (start + len + width - start) with (len + width) in H by lia. 
     replace (start + len - start) with len in H by lia.
-    unfold encodeWindowAt. eapply encodesPredicateAt_extensional; [ | apply H].
+    unfold encodeCardAt. eapply encodesPredicateAt_extensional; [ | apply H].
     tauto.
   Qed.
 
-  (** encoding of the disjunction of all windows of the BinaryPR instance  *)
-  Definition encodeWindowsAt (startA startB : nat) := listOr (map (encodeWindowAt startA startB) windows). 
+  (** encoding of the disjunction of all cards of the BinaryCC instance  *)
+  Definition encodeCardsAt (startA startB : nat) := listOr (map (encodeCardAt startA startB) cards). 
 
-  Lemma encodeWindowsAt_encodesPredicate len start : len >= width -> encodesPredicateAt start (len + width) (encodeWindowsAt start (start + len)) (fun m => exists win, win el windows /\ projVars 0 width m = prem win /\ projVars len width m = conc win). 
+  Lemma encodeCardsAt_encodesPredicate len start : len >= width -> encodesPredicateAt start (len + width) (encodeCardsAt start (start + len)) (fun m => exists card, card el cards /\ projVars 0 width m = prem card /\ projVars len width m = conc card). 
   Proof. 
     intros F0. apply encodesPredicate_listOr_map. 
-    intros win Hel. apply encodeWindowAt_encodesPredicate, Hel. 
+    intros card Hel. apply encodeCardAt_encodesPredicate, Hel. 
   Qed.
 
-  (*encoding of all windows of one line of the tableau *)
-  (*we only need to place a window every offset fields, but subtracting offset isn't structurally recursive *)
+  (*encoding of all cards of one line of the tableau *)
+  (*we only need to place a card every offset fields, but subtracting offset isn't structurally recursive *)
   (*therefore we use a stepindex (initalise to the same value as l) *)
-  Fixpoint encodeWindowsInLine' (stepindex l : nat) (startA startB : nat) := 
+  Fixpoint encodeCardsInLine' (stepindex l : nat) (startA startB : nat) := 
     if l <? width then Ftrue 
                   else match stepindex with 
                     | 0 => Ftrue
-                    | S stepindex => encodeWindowsAt startA startB ∧ encodeWindowsInLine' stepindex (l - offset) (startA + offset) (startB + offset)
+                    | S stepindex => encodeCardsAt startA startB ∧ encodeCardsInLine' stepindex (l - offset) (startA + offset) (startB + offset)
                     end.
 
-  Lemma encodeWindowsInLineP_stepindex_monotone' index startA startB : forall n, n <= index -> encodeWindowsInLine' index n startA startB = encodeWindowsInLine' (S index) n startA startB. 
+  Lemma encodeCardsInLineP_stepindex_monotone' index startA startB : forall n, n <= index -> encodeCardsInLine' index n startA startB = encodeCardsInLine' (S index) n startA startB. 
   Proof. 
     destruct A as (A1 & A2 & _).
     revert startA startB.
-    induction index; intros. 
-    - unfold encodeWindowsInLine'. assert (n = 0) as -> by lia. cbn; destruct width; [ lia | easy ].
-    - unfold encodeWindowsInLine'. destruct (Nat.ltb n width); [ easy | ]. fold encodeWindowsInLine'. 
-      erewrite IHindex by lia. easy. 
+    induction index as [ | index IH]; intros. 
+    - unfold encodeCardsInLine'. assert (n = 0) as -> by lia. cbn; destruct width; [ lia | easy ].
+    - unfold encodeCardsInLine'. destruct (Nat.ltb n width); [ easy | ]. fold encodeCardsInLine'. 
+      erewrite IH by lia. easy. 
   Qed. 
 
-  Lemma encodeWindowsInLineP_stepindex_monotone index index' startA startB : index' >= index -> encodeWindowsInLine' index index startA startB = encodeWindowsInLine' index' index startA startB. 
+  Lemma encodeCardsInLineP_stepindex_monotone index index' startA startB : index' >= index -> encodeCardsInLine' index index startA startB = encodeCardsInLine' index' index startA startB. 
   Proof. 
     intros. revert index H.
-    induction index'; intros. 
+    induction index' as [ | index' IH]; intros. 
     - assert (index = 0) as -> by lia. easy.
     - destruct (nat_eq_dec (S index') index). 
       + now rewrite e.
-      + assert (index' >= index) as H1 by lia. rewrite <- encodeWindowsInLineP_stepindex_monotone' by lia. now apply IHindex'.
+      + assert (index' >= index) as H1 by lia. rewrite <- encodeCardsInLineP_stepindex_monotone' by lia. now apply IH.
   Qed.
 
-  Lemma encodeWindowsInLineP_encodesPredicate start l : l <= llength -> (exists k, l = k * offset) -> encodesPredicateAt start (l + llength) (encodeWindowsInLine' l l start (start + llength)) (fun m => valid offset width windows (projVars 0 l m) (projVars llength l m)). 
+  Lemma encodeCardsInLineP_encodesPredicate start l : l <= llength -> (exists k, l = k * offset) -> encodesPredicateAt start (l + llength) (encodeCardsInLine' l l start (start + llength)) (fun m => valid offset width cards (projVars 0 l m) (projVars llength l m)). 
   Proof. 
     intros A0.
     (*need strong induction *)
@@ -111,7 +111,7 @@ Section fixInstance.
     (*case analysis on the stepindex *)
     destruct l.
     - (*we use that width > 0 *)
-      unfold encodeWindowsInLine'. rewrite (proj2 (Nat.ltb_lt _ _) A1). 
+      unfold encodeCardsInLine'. rewrite (proj2 (Nat.ltb_lt _ _) A1). 
       intros a. split; [ intros; constructor | intros _; unfold satisfies; eauto].  
     - destruct (le_lt_dec width (S l)). 
       + assert (~ (S l) < width) as H3%Nat.ltb_nlt by lia. cbn -[projVars]; setoid_rewrite H3. 
@@ -122,7 +122,7 @@ Section fixInstance.
         2: { destruct H as (k & H). destruct k; [ lia | ]. exists k. lia. }
         clear H IH. 
         assert (llength >= width) as H0 by lia.
-        apply (encodeWindowsAt_encodesPredicate start) in H0. 
+        apply (encodeCardsAt_encodesPredicate start) in H0. 
 
         specialize (encodesPredicate_and H0 H1) as H2. clear H1 H0.
         encodesPredicateAt_comp_simp H2. 
@@ -131,7 +131,7 @@ Section fixInstance.
         replace (start + S offset + (S l - S offset + llength) - start) with (S (l + llength)) in H2. 
         2: { destruct A2 as (? & A2 & A6). nia. }
         
-        rewrite encodeWindowsInLineP_stepindex_monotone with (index' := l) in H2; [ | lia].
+        rewrite encodeCardsInLineP_stepindex_monotone with (index' := l) in H2; [ | lia].
         eapply encodesPredicateAt_extensional; [ | apply H2].
 
         clear H2 H3. 
@@ -149,7 +149,7 @@ Section fixInstance.
           apply app_eq_length in H2 as (-> & ->); [ | rewrite projVars_length; [easy | nia] ].
           apply app_eq_length in H0 as (-> & ->); [ | rewrite projVars_length; [easy | nia]]. 
           split.
-          -- exists win. rewrite !projVars_comp; cbn. rewrite !Nat.min_l by lia. 
+          -- exists card. rewrite !projVars_comp; cbn. rewrite !Nat.min_l by lia. 
              rewrite !Nat.add_0_r.
              clear H3 H4 H5. rewrite <- !projVars_add in H7. 
              replace (S offset + (l - offset)) with (width + (S l - width)) in H7 by nia. 
@@ -163,7 +163,7 @@ Section fixInstance.
         * (*other direction of the equivalence *)
           destruct H1 as (H1 & H2).  
           rewrite H0, !projVars_add. 
-          destruct H1 as (win & H1 & F1 & F2). 
+          destruct H1 as (card & H1 & F1 & F2). 
           econstructor 3. 
           -- rewrite !projVars_comp in H2. rewrite !Nat.min_l in H2 by lia.
              replace (start + S offset - start) with (S offset) in H2 by lia. 
@@ -177,7 +177,7 @@ Section fixInstance.
              rewrite projVars_comp in F1, F2. rewrite !Nat.min_l in F1, F2 by lia. 
              rewrite Nat.add_0_r in F2; cbn in F1, F2.
              rewrite F1, F2. split; unfold prefix; eauto. 
-    + (*the case where the remaining string is too short for a rewrite window to hold - validity holds vacuously *)
+    + (*the case where the remaining string is too short for a rewrite card to hold - validity holds vacuously *)
       clear IH. assert ( (S l) < width) as H3%Nat.ltb_lt by lia. cbn -[projVars]; setoid_rewrite H3.
       intros a; split; [intros _ | ]. 
       * destruct H as (k & H). eapply valid_vacuous. 
@@ -189,23 +189,23 @@ Section fixInstance.
       * intros _; easy. 
   Qed.
 
-  (** the above construction specialized to the setting we need: the conclusion starts exactly one line after the premise *)
-  Definition encodeWindowsInLine start := encodeWindowsInLine' llength llength start (start + llength). 
-  Lemma encodeWindowsInLine_encodesPredicate start : encodesPredicateAt start (llength + llength) (encodeWindowsInLine start) (fun m => valid offset width windows (projVars 0 llength m) (projVars llength llength m)). 
+  (** the above construction specialised to the setting we need: the conclusion starts exactly one line after the premise *)
+  Definition encodeCardsInLine start := encodeCardsInLine' llength llength start (start + llength). 
+  Lemma encodeCardsInLine_encodesPredicate start : encodesPredicateAt start (llength + llength) (encodeCardsInLine start) (fun m => valid offset width cards (projVars 0 llength m) (projVars llength llength m)). 
   Proof. 
-    unfold encodeWindowsInLine.
-    apply (@encodeWindowsInLineP_encodesPredicate start llength); [easy | apply A].
+    unfold encodeCardsInLine.
+    apply (@encodeCardsInLineP_encodesPredicate start llength); [easy | apply A].
   Qed. 
 
-  (*encoding of windows in all lines of the tableau *)
-  Definition encodeWindowsInAllLines := listAnd (tabulate_formula 0 llength steps encodeWindowsInLine). 
-  Lemma encodeWindowsInAllLines_encodesPredicate : encodesPredicateAt 0 ((S steps) * llength) encodeWindowsInAllLines 
-    (fun m => (forall i, 0 <= i < steps -> valid offset width windows (projVars (i * llength) llength m) (projVars (S i * llength) llength m))). 
+  (** encoding of cards in all lines of the tableau *)
+  Definition encodeCardsInAllLines := listAnd (tabulate_formula 0 llength steps encodeCardsInLine). 
+  Lemma encodeCardsInAllLines_encodesPredicate : encodesPredicateAt 0 ((S steps) * llength) encodeCardsInAllLines 
+    (fun m => (forall i, 0 <= i < steps -> valid offset width cards (projVars (i * llength) llength m) (projVars (S i * llength) llength m))). 
   Proof. 
     eapply encodesPredicateAt_extensional. 
-    2: { unfold encodeWindowsInAllLines. 
+    2: { unfold encodeCardsInAllLines. 
          replace (S steps * llength) with (llength * steps + ((llength + llength) -llength)) by lia. 
-         apply encodesPredicate_listAnd_tabulate. intros s. apply encodeWindowsInLine_encodesPredicate. 
+         apply encodesPredicate_listAnd_tabulate. intros s. apply encodeCardsInLine_encodesPredicate. 
     } 
     intros m Hlen. split. 
     - intros H i H1. specialize (H i ltac:(lia)). 
@@ -215,9 +215,9 @@ Section fixInstance.
       cbn in H. cbn. rewrite Nat.mul_comm. apply H. 
   Qed.
 
-  (*encode the substring constraint for a single string s *)
-  (*should only be called for s satisfying |s| > 0; for s = nil, the breaking condition does not work as intended*)
-  (*in principle, this is not a problem as the resulting formula is still equivalent to the desired formula, but this breaks monotonicity*)
+  (** encode the substring constraint for a single string s *)
+  (** should only be called for s satisfying |s| > 0; for s = nil, the breaking condition does not work as intended*)
+  (** in principle, this is not a problem as the resulting formula is still equivalent to the desired formula, but this breaks monotonicity*)
   Fixpoint encodeSubstringInLine' (s : list bool) (stepindex l : nat) (start : nat) := 
     if l <? |s| then Ffalse
                   else match stepindex with 
@@ -225,26 +225,26 @@ Section fixInstance.
                     | S stepindex => encodeListAt start s ∨ encodeSubstringInLine' s stepindex (l - offset) (start + offset) 
                     end.
 
-  (*the requirement |s| > 0 is needed for monotonicity *)
+  (** the requirement |s| > 0 is needed for monotonicity *)
   Lemma encodeSubstringInLineP_stepindex_monotone' s index start : forall n, |s| > 0 -> n <= index -> encodeSubstringInLine' s index n start = encodeSubstringInLine' s (S index) n start. 
   Proof. 
     destruct A as (A1 & A2 & _).
     revert start.
-    induction index; intros. 
+    induction index as [ | index IH]; intros. 
     - unfold encodeSubstringInLine'. assert (n = 0) as -> by lia. cbn; destruct s; [ cbn in *; lia | easy ]. 
     - unfold encodeSubstringInLine'. destruct (Nat.ltb n (|s|)); [ easy | ]. fold encodeSubstringInLine'. 
-      erewrite IHindex by lia. easy. 
+      erewrite IH by lia. easy. 
   Qed. 
 
   Lemma encodeSubstringInLineP_stepindex_monotone s index1 index2 start : 
     |s| > 0 -> index2 >= index1 -> encodeSubstringInLine' s index1 index1 start = encodeSubstringInLine' s index2 index1 start.
   Proof. 
     intros. revert index1 H0. 
-    induction index2; intros.
+    induction index2 as [ | index2 IH]; intros.
     - assert (index1 = 0) as -> by lia. easy.
     - destruct (nat_eq_dec (S index2) index1). 
       + now rewrite e.
-      + assert (index2 >= index1) as H1 by lia. rewrite <- encodeSubstringInLineP_stepindex_monotone' by lia. now apply IHindex2.
+      + assert (index2 >= index1) as H1 by lia. rewrite <- encodeSubstringInLineP_stepindex_monotone' by lia. now apply IH.
   Qed. 
 
   Lemma encodeSubstringInLineP_encodesPredicate s start l : |s| > 0 -> l <= llength 
@@ -277,7 +277,7 @@ Section fixInstance.
 
         encodesPredicateAt_comp_simp H.
         destruct H0 as (k & H0).
-        assert (k > 0) by nia. (*a hint for nia - without it, the following replace will not work *)
+        assert (k > 0) by nia. (*a hint for nia - without it, the follocardg replace will not work *)
         replace (start + S offset + (S l - S offset) - start) with (S l) in H by nia.
         replace (start + S offset - start) with (S offset) in H by lia.
 
@@ -310,8 +310,8 @@ Section fixInstance.
       rewrite explicitAssignment_length in H4. lia. 
   Qed.
 
-  (*we now have to do a case analysis: if the substring which has to be checked is non-empty, we use the function defined above *)
-  (*otherwise, the empty string is trivially a substring *)
+  (** we now have to do a case analysis: if the substring which has to be checked is non-empty, we use the function defined above *)
+  (** otherwise, the empty string is trivially a substring *)
   Definition encodeSubstringInLine s start l := match s with [] => Ftrue | _ => encodeSubstringInLine' s l l start end.
 
   Lemma encodeSubstringInLine_encodesPredicate s start l : l <= llength -> (exists k, l = k * offset) -> encodesPredicateAt start l (encodeSubstringInLine s start l) (fun m => (exists k, k * offset <= l /\ projVars (k * offset) (|s|) m = s)). 
@@ -350,15 +350,15 @@ Section fixInstance.
     apply encodeFinalConstraint_encodesPredicate. 
   Qed.
 
-  (*encoding of the whole tableau: the initial constraint, window constraints and the final constraint are combined conjunctively *)
-  Definition encodeTableau := encodeListAt 0 init ∧ encodeWindowsInAllLines ∧ encodeFinalConstraint'.
+  (** encoding of the whole tableau: the initial constraint, card constraints and the final constraint are combined conjunctively *)
+  Definition encodeTableau := encodeListAt 0 init ∧ encodeCardsInAllLines ∧ encodeFinalConstraint'.
   Lemma encodeTableau_encodesPredicate : 
     encodesPredicateAt 0 (S steps * llength) encodeTableau 
     (fun m => projVars 0 llength m = init 
-      /\ (forall i, 0 <= i < steps -> valid offset width windows (projVars (i * llength) llength m) (projVars (S i * llength) llength m)) 
+      /\ (forall i, 0 <= i < steps -> valid offset width cards (projVars (i * llength) llength m) (projVars (S i * llength) llength m)) 
       /\ satFinal offset llength final (projVars (steps * llength) llength m)). 
   Proof. 
-    specialize (encodesPredicate_and (encodeListAt_encodesPredicate 0 init) encodeWindowsInAllLines_encodesPredicate) as H. 
+    specialize (encodesPredicate_and (encodeListAt_encodesPredicate 0 init) encodeCardsInAllLines_encodesPredicate) as H. 
     encodesPredicateAt_comp_simp H.  
     specialize (encodesPredicate_and H encodeFinalConstraint_encodesPredicate') as H1.
     clear H. 
@@ -381,16 +381,16 @@ Section fixInstance.
       rewrite !Nat.add_0_r in H2. apply H2.
   Qed. 
  
-  (*from a proof that a sequence of rewrites is valid, we can restore a satisfying assignment for the encoded windows of the tableau (by concatenating the strings encountered during the sequence of rewrites)*)
+  (** from a proof that a sequence of rewrites is valid, we can restore a satisfying assignment for the encoded cards of the tableau (by concatenating the strings encountered during the sequence of rewrites)*)
   Lemma relpower_valid_to_assignment n x y: 
-    relpower (valid offset width windows) n x y -> |x| = llength 
+    relpower (valid offset width cards) n x y -> |x| = llength 
     -> exists m, |m| = (S n * llength) /\ projVars 0 llength m = x /\ projVars (n * llength) llength m = y 
-      /\ (forall i, 0 <= i < n -> valid offset width windows (projVars (i * llength) llength m) (projVars (S i * llength) llength m)). 
+      /\ (forall i, 0 <= i < n -> valid offset width cards (projVars (i * llength) llength m) (projVars (S i * llength) llength m)). 
   Proof. 
-    induction 1. 
+    induction 1 as [ ? | ? ? ? ? H H0 IH]. 
     - cbn. exists a. rewrite projVars_all; [ | lia]. easy.
     - intros. specialize (valid_length_inv H) as H2. rewrite H1 in H2; symmetry in H2. 
-      apply IHrelpower in H2 as (m & H2 & H3 & H4 & H5). clear IHrelpower. 
+      apply IH in H2 as (m & H2 & H3 & H4 & H5). clear IH. 
       exists (a ++ m). repeat split. 
       + rewrite app_length. lia. 
       + rewrite projVars_app1; easy. 
@@ -402,8 +402,8 @@ Section fixInstance.
           cbn. rewrite !projVars_app3; [ | easy | easy].  apply H7.
   Qed. 
   
-  (*the reduction equivalence for the wellformed BinaryPR instance *)
-  Lemma reduction_wf : FSAT encodeTableau <-> exists sf, relpower (valid offset width windows) steps init sf /\ satFinal offset llength final sf. 
+  (*the reduction equivalence for the wellformed BinaryCC instance *)
+  Lemma reduction_wf : FSAT encodeTableau <-> exists sf, relpower (valid offset width cards) steps init sf /\ satFinal offset llength final sf. 
   Proof with (try (solve [rewrite explicitAssignment_length; cbn; nia | cbn; lia])). 
     specialize (encodeTableau_encodesPredicate) as H1. split; intros. 
     - destruct H as (a & H). apply H1 in H as (H3 & H4 & H5). 
@@ -414,10 +414,10 @@ Section fixInstance.
       rewrite Nat.add_comm. rewrite explicitAssignment_app, projVars_app2, projVars_all... 
 
       (*as the assignment is constructed by appending new lines, we use the reversed version of relpower *)
-      apply relpower_relpowerRev. induction steps. 
+      apply relpower_relpowerRev. induction steps as [ | n IH]. 
       + cbn. constructor. 
       + econstructor. 
-        * apply IHn. intros. specialize (H4 i). clear IHn. 
+        * apply IH. intros. specialize (H4 i). clear IH. 
           replace (S (S n) * llength) with (i * llength + (llength + (S n - i) * llength)) in H4 at 1 by nia. 
           replace (S (S n) * llength) with (S i * llength + (llength + (n - i) * llength)) in H4 by nia. 
           rewrite explicitAssignment_app, projVars_app2 in H4...
@@ -432,7 +432,7 @@ Section fixInstance.
           rewrite explicitAssignment_app, projVars_app2...
           rewrite explicitAssignment_app, projVars_app1...
           now apply H4. 
-        * specialize (H4 n). clear IHn. 
+        * specialize (H4 n). clear IH. 
           cbn in H4. rewrite Nat.add_comm in H4. setoid_rewrite Nat.add_comm in H4 at 2. setoid_rewrite <- Nat.add_assoc in H4 at 1.
           rewrite explicitAssignment_app, projVars_app2 in H4... cbn in H4. 
           rewrite explicitAssignment_app, projVars_app1 in H4... 
@@ -445,21 +445,21 @@ Section fixInstance.
   Qed. 
 End fixInstance.
 
-(*now the whole reduction including non-wellformed instances *)
-Definition BinaryPR_wf_dec (bpr : BinaryPR) := 
+(** now the whole reduction including non-wellformed instances *)
+Definition BinaryCC_wf_dec (bpr : BinaryCC) := 
   leb 1 (width bpr) 
   && leb 1 (offset bpr)
   && Nat.eqb (Nat.modulo (width bpr) (offset bpr)) 0
   && leb (width bpr) (|init bpr|)
-  && forallb (PRWin_of_size_dec (width bpr)) (windows bpr)
+  && forallb (CCCard_of_size_dec (width bpr)) (cards bpr)
   && Nat.eqb (Nat.modulo (|init bpr|) (offset bpr)) 0. 
 
-Lemma BinaryPR_wf_dec_correct (bpr : BinaryPR) : BinaryPR_wf_dec bpr = true <-> BinaryPR_wellformed bpr. 
+Lemma BinaryCC_wf_dec_correct (bpr : BinaryCC) : BinaryCC_wf_dec bpr = true <-> BinaryCC_wellformed bpr. 
 Proof. 
-  unfold BinaryPR_wf_dec, BinaryPR_wellformed. rewrite !andb_true_iff, !and_assoc.
+  unfold BinaryCC_wf_dec, BinaryCC_wellformed. rewrite !andb_true_iff, !and_assoc.
   rewrite !leb_iff. rewrite <- !(reflect_iff _ _ (Nat.eqb_spec _ _ )).  
   rewrite !forallb_forall. 
-  setoid_rewrite PRWin_of_size_dec_correct. 
+  setoid_rewrite CCCard_of_size_dec_correct. 
   split; intros; repeat match goal with [H : _ /\ _ |- _] => destruct H end; 
   repeat match goal with [ |- _ /\ _ ] => split end; try easy. 
   - apply Nat.mod_divide in H1 as (k & H1); [ | lia]. 
@@ -469,7 +469,7 @@ Proof.
   - apply Nat.mod_divide; [ lia | ]. apply H4. 
 Qed. 
 
-(*non-wellformed instances are mapped to a trivial no-instance *)
+(** non-wellformed instances are mapped to a trivial no-instance *)
 Definition trivialNoInstance := 0 ∧ ¬0. 
 Lemma trivialNoInstance_isNoInstance : not (FSAT trivialNoInstance). 
 Proof. 
@@ -477,177 +477,177 @@ Proof.
   destruct (evalVar a 0); cbn in H; congruence. 
 Qed. 
 
-Definition reduction (bpr : BinaryPR) := if BinaryPR_wf_dec bpr then encodeTableau bpr else trivialNoInstance. 
+Definition reduction (bpr : BinaryCC) := if BinaryCC_wf_dec bpr then encodeTableau bpr else trivialNoInstance. 
 
-Lemma BinaryPR_to_FSAT (bpr : BinaryPR) : BinaryPRLang bpr <-> FSAT (reduction bpr). 
+Lemma BinaryCC_to_FSAT (bpr : BinaryCC) : BinaryCCLang bpr <-> FSAT (reduction bpr). 
 Proof. 
   split. 
-  - intros (H1 & H2). unfold reduction. rewrite (proj2 (BinaryPR_wf_dec_correct _) H1).
+  - intros (H1 & H2). unfold reduction. rewrite (proj2 (BinaryCC_wf_dec_correct _) H1).
     now apply reduction_wf.
-  - intros H. unfold reduction in H. destruct (BinaryPR_wf_dec) eqn:H1. 
-    + apply BinaryPR_wf_dec_correct in H1. apply reduction_wf in H; easy. 
+  - intros H. unfold reduction in H. destruct (BinaryCC_wf_dec) eqn:H1. 
+    + apply BinaryCC_wf_dec_correct in H1. apply reduction_wf in H; easy. 
     + now apply trivialNoInstance_isNoInstance in H. 
 Qed. 
 
-(** *** extraction *)
+(** ** extraction *)
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Complexity Require Import PolyBounds. 
 From Undecidability.L.Datatypes Require Import LProd LOptions LBool LSum. 
 From Undecidability.L.Functions Require Import EqBool.
 
  
-(** encodeWindowAt *)
-Definition c__encodeWindowAt := FlatPR.cnst_prem + FlatPR.cnst_conc + 13.
-Definition encodeWindowAt_time (win : PRWin bool) := encodeListAt_time (prem win) + encodeListAt_time (conc win) + c__encodeWindowAt.
-Instance term_encodeWindowAt : computableTime' encodeWindowAt (fun s1 _ => (1, fun s2 _ => (1, fun win _ => (encodeWindowAt_time win, tt)))). 
+(** encodeCardAt *)
+Definition c__encodeCardAt := FlatCC.cnst_prem + FlatCC.cnst_conc + 13.
+Definition encodeCardAt_time (card : CCCard bool) := encodeListAt_time (prem card) + encodeListAt_time (conc card) + c__encodeCardAt.
+Instance term_encodeCardAt : computableTime' encodeCardAt (fun s1 _ => (1, fun s2 _ => (1, fun card _ => (encodeCardAt_time card, tt)))). 
 Proof. 
   extract. solverec. 
-  unfold encodeWindowAt_time, c__encodeWindowAt; solverec. 
+  unfold encodeCardAt_time, c__encodeCardAt; solverec. 
 Qed.
 
-Definition poly__encodeWindowAt k := (k + 1) * c__encodeListAt * 2 + c__encodeWindowAt.
-Lemma encodeWindowAt_time_bound win k: PRWin_of_size win k -> encodeWindowAt_time win <= poly__encodeWindowAt k. 
+Definition poly__encodeCardAt k := (k + 1) * c__encodeListAt * 2 + c__encodeCardAt.
+Lemma encodeCardAt_time_bound card k: CCCard_of_size card k -> encodeCardAt_time card <= poly__encodeCardAt k. 
 Proof. 
-  unfold PRWin_of_size. intros [H1 H2]. 
-  unfold encodeWindowAt_time. unfold encodeListAt_time. rewrite H1, H2. 
-  unfold poly__encodeWindowAt; solverec.
+  unfold CCCard_of_size. intros [H1 H2]. 
+  unfold encodeCardAt_time. unfold encodeListAt_time. rewrite H1, H2. 
+  unfold poly__encodeCardAt; solverec.
 Qed. 
-Lemma encodeWindowAt_poly : monotonic poly__encodeWindowAt /\ inOPoly poly__encodeWindowAt. 
+Lemma encodeCardAt_poly : monotonic poly__encodeCardAt /\ inOPoly poly__encodeCardAt. 
 Proof. 
-  unfold poly__encodeWindowAt; split; smpl_inO. 
+  unfold poly__encodeCardAt; split; smpl_inO. 
 Qed. 
 
-Lemma encodeWindowAt_varsIn s1 s2 k win : PRWin_of_size win k -> formula_varsIn (fun n => (n >= s1 /\ n < s1 + k) \/ (n >= s2 /\ n < s2 + k)) (encodeWindowAt s1 s2 win). 
+Lemma encodeCardAt_varsIn s1 s2 k card : CCCard_of_size card k -> formula_varsIn (fun n => (n >= s1 /\ n < s1 + k) \/ (n >= s2 /\ n < s2 + k)) (encodeCardAt s1 s2 card). 
 Proof. 
-  intros [H1 H2]. unfold encodeWindowAt. intros v H. inv H.  
+  intros [H1 H2]. unfold encodeCardAt. intros v H. inv H.  
   - apply encodeListAt_varsIn in H3. lia. 
   - apply encodeListAt_varsIn in H3. lia. 
 Qed. 
 
-Lemma encodeWindowAt_size s1 s2 k win : PRWin_of_size win k -> formula_size (encodeWindowAt s1 s2 win) <= 6 * k + 3. 
+Lemma encodeCardAt_size s1 s2 k card : CCCard_of_size card k -> formula_size (encodeCardAt s1 s2 card) <= 6 * k + 3. 
 Proof. 
-  intros [H1 H2]. unfold encodeWindowAt. cbn -[Nat.mul]. rewrite !encodeListAt_size. rewrite H1, H2. nia. 
+  intros [H1 H2]. unfold encodeCardAt. cbn -[Nat.mul]. rewrite !encodeListAt_size. rewrite H1, H2. nia. 
 Qed. 
 
-(** encodeWindowsAt *)
-Definition c__encodeWindowsAt := 4 + c__windows.
-Definition encodeWindowsAt_time (bpr : BinaryPR) (s1 s2 : nat) := map_time encodeWindowAt_time (windows bpr) + listOr_time (map (encodeWindowAt s1 s2) (windows bpr)) + c__encodeWindowsAt.
-Instance term_encodeWindowsAt : computableTime' encodeWindowsAt (fun bpr _ => (1, fun s1 _ => (1, fun s2 _ => (encodeWindowsAt_time bpr s1 s2, tt)))). 
+(** encodeCardsAt *)
+Definition c__encodeCardsAt := 4 + c__cards.
+Definition encodeCardsAt_time (bpr : BinaryCC) (s1 s2 : nat) := map_time encodeCardAt_time (cards bpr) + listOr_time (map (encodeCardAt s1 s2) (cards bpr)) + c__encodeCardsAt.
+Instance term_encodeCardsAt : computableTime' encodeCardsAt (fun bpr _ => (1, fun s1 _ => (1, fun s2 _ => (encodeCardsAt_time bpr s1 s2, tt)))). 
 Proof. 
   extract. solverec. 
-  unfold encodeWindowsAt_time, c__encodeWindowsAt; simp_comp_arith; solverec. 
+  unfold encodeCardsAt_time, c__encodeCardsAt; simp_comp_arith; solverec. 
 Qed.
   
-Definition poly__encodeWindowsAt n := n * (poly__encodeWindowAt n + c__map) + c__map + (n + 1) * c__listOr + c__encodeWindowsAt.
-Lemma encodeWindowsAt_time_bound bpr s1 s2: 
-  BinaryPR_wellformed bpr 
-  -> encodeWindowsAt_time bpr s1 s2 <= poly__encodeWindowsAt (size (enc bpr)). 
+Definition poly__encodeCardsAt n := n * (poly__encodeCardAt n + c__map) + c__map + (n + 1) * c__listOr + c__encodeCardsAt.
+Lemma encodeCardsAt_time_bound bpr s1 s2: 
+  BinaryCC_wellformed bpr 
+  -> encodeCardsAt_time bpr s1 s2 <= poly__encodeCardsAt (size (enc bpr)). 
 Proof. 
-  intros H. unfold encodeWindowsAt_time. 
-  rewrite map_time_mono. 2: { intros win H1. apply H in H1. instantiate (1 := fun _ => _). cbn. 
-    rewrite encodeWindowAt_time_bound by apply H1. reflexivity. 
+  intros H. unfold encodeCardsAt_time. 
+  rewrite map_time_mono. 2: { intros card H1. apply H in H1. instantiate (1 := fun _ => _). cbn. 
+    rewrite encodeCardAt_time_bound by apply H1. reflexivity. 
   } 
   rewrite map_time_const.
   unfold listOr_time. rewrite map_length. 
-  poly_mono encodeWindowAt_poly. 2: { rewrite size_nat_enc_r. instantiate (1 := size (enc bpr)). rewrite BinaryPR_enc_size. lia. }
-  rewrite list_size_length. replace_le (size (enc (windows bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
-  unfold poly__encodeWindowsAt. solverec.   
+  poly_mono encodeCardAt_poly. 2: { rewrite size_nat_enc_r. instantiate (1 := size (enc bpr)). rewrite BinaryCC_enc_size. lia. }
+  rewrite list_size_length. replace_le (size (enc (cards bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
+  unfold poly__encodeCardsAt. solverec.   
 Qed.
-Lemma encodeWindowsAt_poly : monotonic poly__encodeWindowsAt /\ inOPoly poly__encodeWindowsAt. 
+Lemma encodeCardsAt_poly : monotonic poly__encodeCardsAt /\ inOPoly poly__encodeCardsAt. 
 Proof. 
-  unfold poly__encodeWindowsAt; split; smpl_inO; apply encodeWindowAt_poly. 
+  unfold poly__encodeCardsAt; split; smpl_inO; apply encodeCardAt_poly. 
 Qed.
 
-Lemma encodeWindowsAt_varsIn s1 s2 bpr : 
-  BinaryPR_wellformed bpr
-  -> formula_varsIn (fun n => (n >= s1 /\ n < s1 + width bpr) \/ (n >= s2 /\ n < s2 + width bpr)) (encodeWindowsAt bpr s1 s2). 
+Lemma encodeCardsAt_varsIn s1 s2 bpr : 
+  BinaryCC_wellformed bpr
+  -> formula_varsIn (fun n => (n >= s1 /\ n < s1 + width bpr) \/ (n >= s2 /\ n < s2 + width bpr)) (encodeCardsAt bpr s1 s2). 
 Proof. 
   intros (_ & _ & _ & _ & H1 & _). 
-  unfold encodeWindowsAt. apply listOr_varsIn. 
-  intros f (win & <- & Hel)%in_map_iff. apply encodeWindowAt_varsIn, H1, Hel. 
+  unfold encodeCardsAt. apply listOr_varsIn. 
+  intros f (card & <- & Hel)%in_map_iff. apply encodeCardAt_varsIn, H1, Hel. 
 Qed. 
 
-Lemma encodeWindowsAt_size s1 s2 bpr : 
-  BinaryPR_wellformed bpr
-  -> formula_size (encodeWindowsAt bpr s1 s2) <= |windows bpr| * (6 * width bpr + 4) + 2. 
+Lemma encodeCardsAt_size s1 s2 bpr : 
+  BinaryCC_wellformed bpr
+  -> formula_size (encodeCardsAt bpr s1 s2) <= |cards bpr| * (6 * width bpr + 4) + 2. 
 Proof. 
   intros (_ &_  & _ & _ & H1 & _). 
-  unfold encodeWindowsAt. rewrite listOr_size. 
-  rewrite sumn_map_mono. 2: { intros f (win & <- & Hel)%in_map_iff. instantiate (1 := fun _ => _); cbn -[formula_size].
-    rewrite encodeWindowAt_size by apply H1, Hel. reflexivity. 
+  unfold encodeCardsAt. rewrite listOr_size. 
+  rewrite sumn_map_mono. 2: { intros f (card & <- & Hel)%in_map_iff. instantiate (1 := fun _ => _); cbn -[formula_size].
+    rewrite encodeCardAt_size by apply H1, Hel. reflexivity. 
   } 
   rewrite sumn_map_const, !map_length. nia. 
 Qed. 
 
-(** encodeWindowsInLine' *)
-Definition c__encodeWindowsInLineP := c__width + c__sub1 + 3 * c__offset + 2 * c__add1 + 24.
-Fixpoint encodeWindowsInLineP_time (bpr : BinaryPR) (stepindex l startA startB : nat) := 
+(** encodeCardsInLine' *)
+Definition c__encodeCardsInLineP := c__width + c__sub1 + 3 * c__offset + 2 * c__add1 + 24.
+Fixpoint encodeCardsInLineP_time (bpr : BinaryCC) (stepindex l startA startB : nat) := 
   match stepindex with 
   | 0 => 0 
-  | S stepi => encodeWindowsAt_time bpr startA startB + sub_time l (offset bpr) + add_time startA + add_time startB + encodeWindowsInLineP_time bpr stepi (l - offset bpr) (startA + offset bpr) (startB + offset bpr)
-  end + ltb_time l (width bpr) + c__encodeWindowsInLineP.
-Instance term_encodeWindowsInLine': computableTime' encodeWindowsInLine' (fun bpr _ => (1, fun stepi _ => (5, fun l _ => (1, fun s1 _ => (5, fun s2 _ => (encodeWindowsInLineP_time bpr stepi l s1 s2, tt)))))). 
+  | S stepi => encodeCardsAt_time bpr startA startB + sub_time l (offset bpr) + add_time startA + add_time startB + encodeCardsInLineP_time bpr stepi (l - offset bpr) (startA + offset bpr) (startB + offset bpr)
+  end + ltb_time l (width bpr) + c__encodeCardsInLineP.
+Instance term_encodeCardsInLine': computableTime' encodeCardsInLine' (fun bpr _ => (1, fun stepi _ => (5, fun l _ => (1, fun s1 _ => (5, fun s2 _ => (encodeCardsInLineP_time bpr stepi l s1 s2, tt)))))). 
 Proof. 
   extract. 
-  solverec. all: unfold c__encodeWindowsInLineP; solverec. 
+  solverec. all: unfold c__encodeCardsInLineP; solverec. 
 Qed.
 
 (** we first bound the components that can be accounted for by the pr instance and bound the start indices inductively; 
     we have the invariant that start' <= start + stepindex * offset for every start' obtained by recursion*)
-Definition poly__encodeWindowsInLineP1 n := poly__encodeWindowsAt n + (n + 1) * c__sub + (c__leb * (1 + n) + c__ltb) + c__encodeWindowsInLineP.
-Lemma encodeWindowsInLineP_time_bound1 bpr stepindex l startA startB : 
-  BinaryPR_wellformed bpr 
-  -> encodeWindowsInLineP_time bpr stepindex l startA startB <= (stepindex + 1) * poly__encodeWindowsInLineP1 (size (enc bpr)) 
+Definition poly__encodeCardsInLineP1 n := poly__encodeCardsAt n + (n + 1) * c__sub + (c__leb * (1 + n) + c__ltb) + c__encodeCardsInLineP.
+Lemma encodeCardsInLineP_time_bound1 bpr stepindex l startA startB : 
+  BinaryCC_wellformed bpr 
+  -> encodeCardsInLineP_time bpr stepindex l startA startB <= (stepindex + 1) * poly__encodeCardsInLineP1 (size (enc bpr)) 
     + stepindex * (stepindex * (offset bpr) + startA + stepindex * (offset bpr) + startB + 2) * c__add. 
 Proof. 
   intros H.
-  revert l startA startB. unfold encodeWindowsInLineP_time. induction stepindex; intros.
+  revert l startA startB. unfold encodeCardsInLineP_time. induction stepindex; intros.
   - unfold ltb_time, leb_time. rewrite Nat.le_min_r. 
     rewrite size_nat_enc_r with (n := width bpr) at 1. 
-    replace_le (size (enc (width bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; cbn; lia). 
-    unfold poly__encodeWindowsInLineP1. leq_crossout. 
+    replace_le (size (enc (width bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; cbn; lia). 
+    unfold poly__encodeCardsInLineP1. leq_crossout. 
   - rewrite IHstepindex. clear IHstepindex. 
-    rewrite encodeWindowsAt_time_bound by apply H. 
+    rewrite encodeCardsAt_time_bound by apply H. 
     unfold sub_time. rewrite Nat.le_min_r. 
     unfold ltb_time, leb_time. rewrite Nat.le_min_r. 
     rewrite size_nat_enc_r with (n := offset bpr) at 1. 
-    replace_le (size (enc (offset bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; cbn; lia). 
+    replace_le (size (enc (offset bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; cbn; lia). 
     rewrite size_nat_enc_r with (n := width bpr) at 1. 
-    replace_le (size (enc (width bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; cbn; lia). 
-    unfold poly__encodeWindowsInLineP1. unfold add_time. nia.  
+    replace_le (size (enc (width bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; cbn; lia). 
+    unfold poly__encodeCardsInLineP1. unfold add_time. nia.  
 Qed.
-Lemma encodeWindowsInLineP1_poly : monotonic poly__encodeWindowsInLineP1 /\ inOPoly poly__encodeWindowsInLineP1. 
+Lemma encodeCardsInLineP1_poly : monotonic poly__encodeCardsInLineP1 /\ inOPoly poly__encodeCardsInLineP1. 
 Proof. 
-  unfold poly__encodeWindowsInLineP1; split; smpl_inO; apply encodeWindowsAt_poly. 
+  unfold poly__encodeCardsInLineP1; split; smpl_inO; apply encodeCardsAt_poly. 
 Qed.
 
 (** in a second step, we also bound the numbers by their encoding size *)
-Definition poly__encodeWindowsInLine' n := (n + 1) * poly__encodeWindowsInLineP1 n + n * (n * n + n + 1) * c__add * 2.
-Lemma encodeWindowsInLineP_time_bound bpr stepindex l startA startB : 
-  BinaryPR_wellformed bpr -> encodeWindowsInLineP_time bpr stepindex l startA startB <= poly__encodeWindowsInLine' (size (enc bpr) + size (enc stepindex) + size (enc startA) + size (enc startB)). 
+Definition poly__encodeCardsInLine' n := (n + 1) * poly__encodeCardsInLineP1 n + n * (n * n + n + 1) * c__add * 2.
+Lemma encodeCardsInLineP_time_bound bpr stepindex l startA startB : 
+  BinaryCC_wellformed bpr -> encodeCardsInLineP_time bpr stepindex l startA startB <= poly__encodeCardsInLine' (size (enc bpr) + size (enc stepindex) + size (enc startA) + size (enc startB)). 
 Proof. 
-  intros H. rewrite encodeWindowsInLineP_time_bound1 by easy.
+  intros H. rewrite encodeCardsInLineP_time_bound1 by easy.
   rewrite size_nat_enc_r with (n := stepindex) at 1 2 3 4. 
   rewrite size_nat_enc_r with (n := offset bpr) at 1 2. 
-  replace_le (size (enc (offset bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
+  replace_le (size (enc (offset bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
   rewrite size_nat_enc_r with (n := startA) at 1. 
   rewrite size_nat_enc_r with (n := startB) at 1. 
   pose (g := size (enc bpr) + size (enc stepindex) + size (enc startA) + size (enc startB)). 
-  poly_mono encodeWindowsInLineP1_poly. 2: { instantiate (1 := g). subst g; lia. }
+  poly_mono encodeCardsInLineP1_poly. 2: { instantiate (1 := g). subst g; lia. }
   replace_le (size (enc stepindex)) with g by (subst g; lia) at 1 2 3 4. 
   replace_le (size (enc bpr)) with g by (subst g; lia) at 1 2. 
   replace_le (size (enc startA)) with g by (subst g; lia) at 1. replace_le (size (enc startB)) with g by (subst g; lia) at 1. 
   fold g. 
-  unfold poly__encodeWindowsInLine'. nia. 
+  unfold poly__encodeCardsInLine'. nia. 
 Qed.
-Lemma encodeWindowsInLineP_poly : monotonic poly__encodeWindowsInLine' /\ inOPoly poly__encodeWindowsInLine'. 
+Lemma encodeCardsInLineP_poly : monotonic poly__encodeCardsInLine' /\ inOPoly poly__encodeCardsInLine'. 
 Proof. 
-  unfold poly__encodeWindowsInLine'; split; smpl_inO; apply encodeWindowsInLineP1_poly. 
+  unfold poly__encodeCardsInLine'; split; smpl_inO; apply encodeCardsInLineP1_poly. 
 Qed. 
 
-Lemma encodeWindowsInLineP_varsIn bpr stepi l startA startB : 
-  BinaryPR_wellformed bpr
-  -> formula_varsIn (fun n => (n >= startA /\ n < startA + l) \/ (n >= startB /\ n < startB + l)) (encodeWindowsInLine' bpr stepi l startA startB). 
+Lemma encodeCardsInLineP_varsIn bpr stepi l startA startB : 
+  BinaryCC_wellformed bpr
+  -> formula_varsIn (fun n => (n >= startA /\ n < startA + l) \/ (n >= startB /\ n < startB + l)) (encodeCardsInLine' bpr stepi l startA startB). 
 Proof. 
   intros H0. revert startA startB l. induction stepi; cbn; intros. 
   - destruct width; [ | destruct Nat.ltb]; cbn; intros a H1; inv H1. 
@@ -655,13 +655,13 @@ Proof.
     destruct Nat.ltb eqn:H2. 
     + apply Nat.leb_le in H2. intros a H. inv H. 
     + apply leb_complete_conv in H2. intros a H. inv H. 
-      * apply encodeWindowsAt_varsIn in H4; [ | apply H0]. rewrite !H1 in H4. nia. 
+      * apply encodeCardsAt_varsIn in H4; [ | apply H0]. rewrite !H1 in H4. nia. 
       * apply IHstepi in H4. nia.  
 Qed. 
 
-(* a more precise bound could be obtained by replacing stepi with div l (offset bpr) *)
-Lemma encodeWindowsInLineP_size bpr stepi l startA startB : 
-  BinaryPR_wellformed bpr -> formula_size (encodeWindowsInLine' bpr stepi l startA startB) <= stepi * (|windows bpr| * (6 * width bpr + 4) + 3) + 1.
+(** a more precise bound could be obtained by replacing stepi with div l (offset bpr) *)
+Lemma encodeCardsInLineP_size bpr stepi l startA startB : 
+  BinaryCC_wellformed bpr -> formula_size (encodeCardsInLine' bpr stepi l startA startB) <= stepi * (|cards bpr| * (6 * width bpr + 4) + 3) + 1.
 Proof. 
   intros H0. revert l startA startB. induction stepi; cbn -[Nat.mul Nat.add]; intros. 
   - destruct width; [ | destruct Nat.ltb]; cbn; lia. 
@@ -669,65 +669,65 @@ Proof.
     destruct Nat.ltb eqn:H2. 
     + cbn. lia. 
     + apply leb_complete_conv in H2. cbn [formula_size]. rewrite IHstepi. clear IHstepi. 
-      rewrite encodeWindowsAt_size by apply H0. lia. 
+      rewrite encodeCardsAt_size by apply H0. lia. 
 Qed. 
 
-(** encodeWindowsInLine *)
-Definition c__encodeWindowsInLine := 3 * c__init + 3 * c__length + c__add1 + 13.
-Definition encodeWindowsInLine_time (bpr : BinaryPR) (s : nat) := 
+(** encodeCardsInLine *)
+Definition c__encodeCardsInLine := 3 * c__init + 3 * c__length + c__add1 + 13.
+Definition encodeCardsInLine_time (bpr : BinaryCC) (s : nat) := 
   3 * c__length * (| init bpr |) + add_time s +
-  encodeWindowsInLineP_time bpr (| init bpr |) (| init bpr |) s (s + (| init bpr |)) + c__encodeWindowsInLine.
-Instance term_encodeWindowsInLine :computableTime' encodeWindowsInLine (fun bpr _ => (1, fun s _ => (encodeWindowsInLine_time bpr s, tt))). 
+  encodeCardsInLineP_time bpr (| init bpr |) (| init bpr |) s (s + (| init bpr |)) + c__encodeCardsInLine.
+Instance term_encodeCardsInLine :computableTime' encodeCardsInLine (fun bpr _ => (1, fun s _ => (encodeCardsInLine_time bpr s, tt))). 
 Proof. 
   extract. solverec. 
-  unfold encodeWindowsInLine_time, c__encodeWindowsInLine. solverec. 
+  unfold encodeCardsInLine_time, c__encodeCardsInLine. solverec. 
 Qed.
 
-Definition poly__encodeWindowsInLine n := 3 * c__length * n + (n + 1) * c__add + poly__encodeWindowsInLine' (n * (c__natsizeS + 2) + c__natsizeO) + c__encodeWindowsInLine. 
-Lemma encodeWindowsInLine_time_bound bpr s : 
-  BinaryPR_wellformed bpr
-  -> encodeWindowsInLine_time bpr s <= poly__encodeWindowsInLine (size (enc bpr) + size (enc s)). 
+Definition poly__encodeCardsInLine n := 3 * c__length * n + (n + 1) * c__add + poly__encodeCardsInLine' (n * (c__natsizeS + 2) + c__natsizeO) + c__encodeCardsInLine. 
+Lemma encodeCardsInLine_time_bound bpr s : 
+  BinaryCC_wellformed bpr
+  -> encodeCardsInLine_time bpr s <= poly__encodeCardsInLine (size (enc bpr) + size (enc s)). 
 Proof. 
-  intros H. unfold encodeWindowsInLine_time. 
-  rewrite encodeWindowsInLineP_time_bound by easy.
-  poly_mono encodeWindowsInLineP_poly. 
+  intros H. unfold encodeCardsInLine_time. 
+  rewrite encodeCardsInLineP_time_bound by easy.
+  poly_mono encodeCardsInLineP_poly. 
   2: { setoid_rewrite size_nat_enc at 3. rewrite list_size_enc_length, list_size_length. 
        rewrite size_nat_enc_r with (n := s) at 2. 
-       replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
+       replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
        instantiate (1 := (size (enc bpr) + size (enc s)) * ( c__natsizeS + 2) + c__natsizeO). lia. 
   } 
-  rewrite list_size_length. replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
+  rewrite list_size_length. replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
   unfold add_time. rewrite size_nat_enc_r with (n := s) at 1. 
-  unfold poly__encodeWindowsInLine; solverec.  
+  unfold poly__encodeCardsInLine; solverec.  
 Qed.
-Lemma encodeWindowsInLine_poly : monotonic poly__encodeWindowsInLine /\ inOPoly poly__encodeWindowsInLine. 
+Lemma encodeCardsInLine_poly : monotonic poly__encodeCardsInLine /\ inOPoly poly__encodeCardsInLine. 
 Proof. 
-  unfold poly__encodeWindowsInLine; split; smpl_inO.
-  - apply encodeWindowsInLineP_poly.
-  - apply inOPoly_comp; smpl_inO; apply encodeWindowsInLineP_poly. 
+  unfold poly__encodeCardsInLine; split; smpl_inO.
+  - apply encodeCardsInLineP_poly.
+  - apply inOPoly_comp; smpl_inO; apply encodeCardsInLineP_poly. 
 Qed. 
 
-Lemma encodeWindowsInLine_varsIn bpr s : 
-  BinaryPR_wellformed bpr
-  -> formula_varsIn (fun n => (n >= s /\ n < s + 2 * (|init bpr|))) (encodeWindowsInLine bpr s). 
+Lemma encodeCardsInLine_varsIn bpr s : 
+  BinaryCC_wellformed bpr
+  -> formula_varsIn (fun n => (n >= s /\ n < s + 2 * (|init bpr|))) (encodeCardsInLine bpr s). 
 Proof. 
   intros H. eapply formula_varsIn_monotonic. 
-  2: { unfold encodeWindowsInLine. apply encodeWindowsInLineP_varsIn, H. }
+  2: { unfold encodeCardsInLine. apply encodeCardsInLineP_varsIn, H. }
   cbn. intros n. lia. 
 Qed. 
 
-Lemma encodeWindowsInLine_size bpr s: 
-  BinaryPR_wellformed bpr
-  -> formula_size (encodeWindowsInLine bpr s) <= (|init bpr|) * (|windows bpr| * (6 * width bpr + 4) + 3) +1. 
-Proof.  apply encodeWindowsInLineP_size.  Qed. 
+Lemma encodeCardsInLine_size bpr s: 
+  BinaryCC_wellformed bpr
+  -> formula_size (encodeCardsInLine bpr s) <= (|init bpr|) * (|cards bpr| * (6 * width bpr + 4) + 3) +1. 
+Proof.  apply encodeCardsInLineP_size.  Qed. 
   
-(** encodeWindowsInAllLines *)
-Definition c__encodeWindowsInAllLines := c__init + c__length + c__steps + 5.
-Definition encodeWindowsInAllLines_time (bpr : BinaryPR) := c__length * (|init bpr|) + tabulate_formula_time 0 (|init bpr|) (steps bpr) (encodeWindowsInLine_time bpr) + listAnd_time (tabulate_formula 0 (|init bpr|) (steps bpr) (encodeWindowsInLine bpr)) + c__encodeWindowsInAllLines.
-Instance term_encodeWindowsInAllLines : computableTime' encodeWindowsInAllLines (fun bpr _ => (encodeWindowsInAllLines_time bpr, tt)). 
+(** encodeCardsInAllLines *)
+Definition c__encodeCardsInAllLines := c__init + c__length + c__steps + 5.
+Definition encodeCardsInAllLines_time (bpr : BinaryCC) := c__length * (|init bpr|) + tabulate_formula_time 0 (|init bpr|) (steps bpr) (encodeCardsInLine_time bpr) + listAnd_time (tabulate_formula 0 (|init bpr|) (steps bpr) (encodeCardsInLine bpr)) + c__encodeCardsInAllLines.
+Instance term_encodeCardsInAllLines : computableTime' encodeCardsInAllLines (fun bpr _ => (encodeCardsInAllLines_time bpr, tt)). 
 Proof. 
   extract. solverec. 
-  unfold encodeWindowsInAllLines_time, c__encodeWindowsInAllLines. simp_comp_arith; lia.  
+  unfold encodeCardsInAllLines_time, c__encodeCardsInAllLines. simp_comp_arith; lia.  
 Qed.
 
 Fact nat_size_mul a b: size (enc (a * b)) <= size (enc a) * size (enc b). 
@@ -735,23 +735,23 @@ Proof.
   rewrite !size_nat_enc. unfold c__natsizeS. nia. 
 Qed.
 
-Definition poly__encodeWindowsInAllLines n := 
-  c__length * n + (poly__tabulateStep n + (n * (poly__encodeWindowsInLine (n + n * n) + c__map) + c__map)) + c__tabulateFormula + (n + 1) * c__listAnd + c__encodeWindowsInAllLines. 
-Lemma encodeWindowsInAllLines_time_bound bpr : BinaryPR_wellformed bpr -> encodeWindowsInAllLines_time bpr <= poly__encodeWindowsInAllLines (size (enc bpr)). 
+Definition poly__encodeCardsInAllLines n := 
+  c__length * n + (poly__tabulateStep n + (n * (poly__encodeCardsInLine (n + n * n) + c__map) + c__map)) + c__tabulateFormula + (n + 1) * c__listAnd + c__encodeCardsInAllLines. 
+Lemma encodeCardsInAllLines_time_bound bpr : BinaryCC_wellformed bpr -> encodeCardsInAllLines_time bpr <= poly__encodeCardsInAllLines (size (enc bpr)). 
 Proof. 
-  intros H. unfold encodeWindowsInAllLines_time. 
-  rewrite list_size_length at 1. replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
+  intros H. unfold encodeCardsInAllLines_time. 
+  rewrite list_size_length at 1. replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
   unfold tabulate_formula_time. rewrite tabulate_step_time_bound. 
-  poly_mono tabulate_step_poly. 2: { rewrite list_size_enc_length. instantiate (1 := size (enc bpr)). rewrite BinaryPR_enc_size; lia. }
+  poly_mono tabulate_step_poly. 2: { rewrite list_size_enc_length. instantiate (1 := size (enc bpr)). rewrite BinaryCC_enc_size; lia. }
   rewrite map_time_mono. 
   2: { intros start Hel. instantiate (1 := fun _ => _). cbn -[Nat.add Nat.mul]. 
-       rewrite encodeWindowsInLine_time_bound by apply H. 
+       rewrite encodeCardsInLine_time_bound by apply H. 
        apply in_tabulate_step_iff in Hel as (i & H1 & ->). 
-       poly_mono encodeWindowsInLine_poly. 
+       poly_mono encodeCardsInLine_poly. 
        2: { rewrite nat_size_le with (a := 0 + (|init bpr|) * i). 2: { instantiate (1 := (|init bpr|) * steps bpr). nia. }
             rewrite nat_size_mul. rewrite list_size_enc_length. 
-            replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
-            replace_le (size (enc (steps bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
+            replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
+            replace_le (size (enc (steps bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
             reflexivity. 
        } 
        reflexivity. 
@@ -759,22 +759,22 @@ Proof.
   rewrite map_time_const. 
   rewrite tabulate_step_length. 
   unfold listAnd_time, tabulate_formula. rewrite map_length, tabulate_step_length. 
-  rewrite size_nat_enc_r with (n := steps bpr) at 1 2. replace_le (size (enc (steps bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia).
-  unfold poly__encodeWindowsInAllLines. nia.
+  rewrite size_nat_enc_r with (n := steps bpr) at 1 2. replace_le (size (enc (steps bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia).
+  unfold poly__encodeCardsInAllLines. nia.
 Qed. 
-Lemma encodeWindowsInAllLines_poly : monotonic poly__encodeWindowsInAllLines /\ inOPoly poly__encodeWindowsInAllLines. 
+Lemma encodeCardsInAllLines_poly : monotonic poly__encodeCardsInAllLines /\ inOPoly poly__encodeCardsInAllLines. 
 Proof. 
-  unfold poly__encodeWindowsInAllLines; split; smpl_inO; try apply inOPoly_comp; smpl_inO; first [apply tabulate_step_poly | apply encodeWindowsInLine_poly]. 
+  unfold poly__encodeCardsInAllLines; split; smpl_inO; try apply inOPoly_comp; smpl_inO; first [apply tabulate_step_poly | apply encodeCardsInLine_poly]. 
 Qed. 
 
-Lemma encodeWindowsInAllLines_varsIn bpr :
-  BinaryPR_wellformed bpr 
-  -> formula_varsIn (fun n => n < (1 + steps bpr) * (|init bpr|)) (encodeWindowsInAllLines bpr). 
+Lemma encodeCardsInAllLines_varsIn bpr :
+  BinaryCC_wellformed bpr 
+  -> formula_varsIn (fun n => n < (1 + steps bpr) * (|init bpr|)) (encodeCardsInAllLines bpr). 
 Proof. 
-  intros H. unfold encodeWindowsInAllLines. apply listAnd_varsIn. 
+  intros H. unfold encodeCardsInAllLines. apply listAnd_varsIn. 
   intros f H1. destruct steps; [now cbn in H1 | ]. 
   eapply tabulate_formula_varsIn in H1. 
-  2: { intros s. eapply formula_varsIn_monotonic. 2: apply encodeWindowsInLine_varsIn, H. 
+  2: { intros s. eapply formula_varsIn_monotonic. 2: apply encodeCardsInLine_varsIn, H. 
        intros n'. cbn. intros [_ H2]. apply H2.
   } 
   2: smpl_inO. 
@@ -782,21 +782,21 @@ Proof.
   nia. 
 Qed. 
 
-Lemma encodeWindowsInAllLines_size bpr : 
-  BinaryPR_wellformed bpr
-  -> formula_size (encodeWindowsInAllLines bpr) <= ((steps bpr) * ((|init bpr|) * (|windows bpr| * (6 * width bpr + 4) + 3) +2)) + 1.
+Lemma encodeCardsInAllLines_size bpr : 
+  BinaryCC_wellformed bpr
+  -> formula_size (encodeCardsInAllLines bpr) <= ((steps bpr) * ((|init bpr|) * (|cards bpr| * (6 * width bpr + 4) + 3) +2)) + 1.
 Proof. 
-  intros H. unfold encodeWindowsInAllLines. rewrite listAnd_size. 
+  intros H. unfold encodeCardsInAllLines. rewrite listAnd_size. 
   rewrite tabulate_formula_length. 
   rewrite sumn_map_mono. 2: { intros f H1. unfold tabulate_formula in H1. apply in_map_iff in H1 as (i & <- & H1). 
-    instantiate (1 := fun _ => _). cbn. rewrite encodeWindowsInLine_size by apply H. reflexivity. 
+    instantiate (1 := fun _ => _). cbn. rewrite encodeCardsInLine_size by apply H. reflexivity. 
   } 
   rewrite sumn_map_const, tabulate_formula_length. nia. 
 Qed. 
 
 (** encodeSubstringInLine' *)
 Definition c__encodeSubstringInLine' := c__length +  23 + c__sub1 + 2 * c__offset.
-Fixpoint encodeSubstringInLineP_time (bpr : BinaryPR) (s : list bool) (stepindex l start : nat) := 
+Fixpoint encodeSubstringInLineP_time (bpr : BinaryCC) (s : list bool) (stepindex l start : nat) := 
  match stepindex with 
   | 0 => 0 
   | S stepi => encodeListAt_time s +  sub_time l (offset bpr) + c__add1 + add_time start + encodeSubstringInLineP_time bpr s stepi (l - offset bpr) (start + offset bpr)
@@ -809,7 +809,7 @@ Qed.
 
 Definition poly__encodeSubstringInLineP1 n := poly__encodeListAt n + (n + 1) * c__sub + c__add1 + c__length * n + (c__leb * (1 + n) + c__ltb) + c__encodeSubstringInLine'.
 Lemma encodeSubstringInLineP_time_bound1 bpr s stepindex l start : 
-  BinaryPR_wellformed bpr 
+  BinaryCC_wellformed bpr 
   -> encodeSubstringInLineP_time bpr s stepindex l start <= (stepindex + 1) * poly__encodeSubstringInLineP1 (size (enc bpr) + size (enc s)) + stepindex * (stepindex * (offset bpr) + start + 1) * c__add.
 Proof. 
   intros H.
@@ -823,7 +823,7 @@ Proof.
     unfold ltb_time, leb_time. rewrite Nat.le_min_r. 
     rewrite list_size_length. 
     rewrite size_nat_enc_r with (n := offset bpr) at 1. 
-    replace_le (size (enc (offset bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; cbn; lia). 
+    replace_le (size (enc (offset bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; cbn; lia). 
     poly_mono encodeListAt_poly. 2: { instantiate (1 := size (enc bpr) + size (enc s)). lia. }
     unfold poly__encodeSubstringInLineP1. unfold add_time. nia.  
 Qed.
@@ -834,13 +834,13 @@ Qed.
 
 Definition poly__encodeSubstringInLine' n := (n + 1) * poly__encodeSubstringInLineP1 n + n * (n * n + n + 1) * c__add. 
 Lemma encodeSubstringInLineP_time_bound bpr s stepindex l start : 
-  BinaryPR_wellformed bpr -> encodeSubstringInLineP_time bpr s stepindex l start <= poly__encodeSubstringInLine' (size (enc bpr) + size (enc s) + size (enc stepindex) + size (enc start)). 
+  BinaryCC_wellformed bpr -> encodeSubstringInLineP_time bpr s stepindex l start <= poly__encodeSubstringInLine' (size (enc bpr) + size (enc s) + size (enc stepindex) + size (enc start)). 
 Proof. 
   intros H. rewrite encodeSubstringInLineP_time_bound1 by apply H. 
   pose (g := size (enc bpr) + size (enc s) + size (enc stepindex) + size (enc start)).
   poly_mono encodeSubstringInLineP_poly1. 2 : { instantiate (1 := g). subst g; lia. }
   rewrite size_nat_enc_r with (n := stepindex) at 1 2 3. 
-  rewrite size_nat_enc_r with (n := offset bpr). replace_le (size (enc (offset bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
+  rewrite size_nat_enc_r with (n := offset bpr). replace_le (size (enc (offset bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
   rewrite size_nat_enc_r with (n := start) at 1. 
   replace_le (size (enc stepindex)) with g by (unfold g; lia) at 1 2 3.  
   replace_le (size (enc bpr)) with g by (unfold g; lia) at 1. 
@@ -880,7 +880,7 @@ Qed.
 
 (** encodeSubstringInLine *)
 Definition c__encodeSubstringInLine := 14. 
-Definition encodeSubstringInLine_time (bpr : BinaryPR) (s : list bool) (start l : nat) := encodeSubstringInLineP_time bpr s l l start + c__encodeSubstringInLine. 
+Definition encodeSubstringInLine_time (bpr : BinaryCC) (s : list bool) (start l : nat) := encodeSubstringInLineP_time bpr s l l start + c__encodeSubstringInLine. 
 Instance term_encodeSubstringInLine : computableTime' encodeSubstringInLine (fun bpr _ => (1, fun s _ => (1, fun start _ => (1, fun l _ => (encodeSubstringInLine_time bpr s start l, tt))))). 
 Proof. 
   extract. solverec. all: unfold encodeSubstringInLine_time, c__encodeSubstringInLine; solverec. 
@@ -901,10 +901,10 @@ Proof.
 Qed. 
 
 (** encodeFinalConstraint *)
-Definition encodeFinalConstraint_step (bpr : BinaryPR) (start : nat) (s : list bool) := encodeSubstringInLine bpr s start (|init bpr|). 
+Definition encodeFinalConstraint_step (bpr : BinaryCC) (start : nat) (s : list bool) := encodeSubstringInLine bpr s start (|init bpr|). 
 
 Definition c__encodeFinalConstraintStep := c__init + c__length + 4.
-Definition encodeFinalConstraint_step_time (bpr : BinaryPR) (start : nat) (s : list bool) := c__length * (|init bpr|) + encodeSubstringInLine_time bpr s start (|init bpr|) + c__encodeFinalConstraintStep.
+Definition encodeFinalConstraint_step_time (bpr : BinaryCC) (start : nat) (s : list bool) := c__length * (|init bpr|) + encodeSubstringInLine_time bpr s start (|init bpr|) + c__encodeFinalConstraintStep.
 Instance term_encodeFinalConstraint_step : computableTime' encodeFinalConstraint_step (fun bpr _ => (1, fun start _ => (1, fun s _ => (encodeFinalConstraint_step_time bpr start s, tt)))). 
 Proof. 
   extract. solverec. 
@@ -912,7 +912,7 @@ Proof.
 Qed. 
 
 Definition c__encodeFinalConstraint := c__final + 4. 
-Definition encodeFinalConstraint_time (bpr : BinaryPR) (start : nat) :=  map_time (encodeFinalConstraint_step_time bpr start) (final bpr) + listOr_time (map (encodeFinalConstraint_step bpr start) (final bpr)) + c__encodeFinalConstraint.
+Definition encodeFinalConstraint_time (bpr : BinaryCC) (start : nat) :=  map_time (encodeFinalConstraint_step_time bpr start) (final bpr) + listOr_time (map (encodeFinalConstraint_step bpr start) (final bpr)) + c__encodeFinalConstraint.
 Instance term_encodeFinalConstraint : computableTime' encodeFinalConstraint (fun bpr _ => (1, fun start _ => (encodeFinalConstraint_time bpr start, tt))). 
 Proof. 
   apply computableTimeExt with (x := fun bpr start => listOr (map (encodeFinalConstraint_step bpr start) (final bpr))). 
@@ -923,7 +923,7 @@ Qed.
 
 Definition poly__encodeFinalConstraint n := n * (c__length * n + poly__encodeSubstringInLine' (2 * n) + c__encodeSubstringInLine + c__encodeFinalConstraintStep + c__map) + c__map + (n + 1) * c__listOr + c__encodeFinalConstraint. 
 Lemma encodeFinalConstraint_time_bound bpr start : 
-  BinaryPR_wellformed bpr 
+  BinaryCC_wellformed bpr 
   -> encodeFinalConstraint_time bpr start <= poly__encodeFinalConstraint (size (enc bpr) + size (enc start)). 
 Proof. 
   intros H. unfold encodeFinalConstraint_time. 
@@ -931,16 +931,16 @@ Proof.
   2: { intros l Hel. unfold encodeFinalConstraint_step_time, encodeSubstringInLine_time.  
        instantiate (1 := fun _ => _). cbn -[Nat.mul Nat.add]. 
        rewrite encodeSubstringInLineP_time_bound by apply H.
-       rewrite list_size_length at 1. replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
+       rewrite list_size_length at 1. replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
        poly_mono encodeSubstringInLineP_poly. 
        2: { instantiate (1 := 2 * (size (enc bpr) + size (enc start))). 
             rewrite (list_el_size_bound Hel), list_size_enc_length. 
-            cbn. rewrite BinaryPR_enc_size at 2. lia. 
+            cbn. rewrite BinaryCC_enc_size at 2. lia. 
        } 
        reflexivity. 
   }
   rewrite map_time_const, list_size_length. unfold listOr_time. rewrite map_length, list_size_length. 
-  replace_le (size (enc (final bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia).
+  replace_le (size (enc (final bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia).
   unfold poly__encodeFinalConstraint; nia.  
 Qed. 
 Lemma encodeFinalConstraint_poly : monotonic poly__encodeFinalConstraint /\ inOPoly poly__encodeFinalConstraint. 
@@ -967,74 +967,74 @@ Qed.
 
 (**encodeTableau *)
 Definition c__encodeTableau := 2 * c__init + c__steps + c__mult1 + c__length + 11.
-Definition encodeTableau_time (bpr : BinaryPR) := encodeListAt_time (init bpr) + encodeWindowsInAllLines_time bpr + c__length * (|init bpr|) + mult_time (steps bpr) (|init bpr|) + encodeFinalConstraint_time bpr (steps bpr * (|init bpr|)) + c__encodeTableau. 
+Definition encodeTableau_time (bpr : BinaryCC) := encodeListAt_time (init bpr) + encodeCardsInAllLines_time bpr + c__length * (|init bpr|) + mult_time (steps bpr) (|init bpr|) + encodeFinalConstraint_time bpr (steps bpr * (|init bpr|)) + c__encodeTableau. 
 Instance term_encodeTableau : computableTime' encodeTableau (fun bpr _ => (encodeTableau_time bpr, tt)). 
 Proof. 
   unfold encodeTableau, encodeFinalConstraint'. extract. solverec. 
   unfold encodeTableau_time, c__encodeTableau. solverec. 
 Qed. 
 
-Definition poly__encodeTableau n := poly__encodeListAt n + poly__encodeWindowsInAllLines n + c__length * n + (n * n * c__mult + c__mult * (n + 1)) + poly__encodeFinalConstraint (n + n * n) + c__encodeTableau.
-Lemma encodeTableau_time_bound bpr : BinaryPR_wellformed bpr -> encodeTableau_time bpr <= poly__encodeTableau (size (enc bpr)). 
+Definition poly__encodeTableau n := poly__encodeListAt n + poly__encodeCardsInAllLines n + c__length * n + (n * n * c__mult + c__mult * (n + 1)) + poly__encodeFinalConstraint (n + n * n) + c__encodeTableau.
+Lemma encodeTableau_time_bound bpr : BinaryCC_wellformed bpr -> encodeTableau_time bpr <= poly__encodeTableau (size (enc bpr)). 
 Proof. 
   intros H. unfold encodeTableau_time. 
-  rewrite encodeListAt_time_bound. poly_mono encodeListAt_poly. 2: { instantiate (1:= size (enc bpr)). rewrite BinaryPR_enc_size; lia. }
-  rewrite encodeWindowsInAllLines_time_bound by apply H.     
+  rewrite encodeListAt_time_bound. poly_mono encodeListAt_poly. 2: { instantiate (1:= size (enc bpr)). rewrite BinaryCC_enc_size; lia. }
+  rewrite encodeCardsInAllLines_time_bound by apply H.     
   rewrite encodeFinalConstraint_time_bound by apply H. 
   poly_mono encodeFinalConstraint_poly. 
   2: { rewrite nat_size_mul. rewrite list_size_enc_length. 
-       replace_le (size (enc (steps bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
-       replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
+       replace_le (size (enc (steps bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
+       replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
        reflexivity. 
   } 
   unfold mult_time. rewrite list_size_length at 1 2. rewrite size_nat_enc_r with (n := steps bpr). 
-  replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia) at 1 2. 
-  replace_le (size (enc (steps bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia) at 1 2.
+  replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia) at 1 2. 
+  replace_le (size (enc (steps bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia) at 1 2.
   unfold poly__encodeTableau; nia. 
 Qed.
 Lemma encodeTableau_poly : monotonic poly__encodeTableau /\ inOPoly poly__encodeTableau. 
 Proof. 
-  unfold poly__encodeTableau; split; smpl_inO; try apply inOPoly_comp; smpl_inO; first [apply encodeListAt_poly | apply encodeWindowsInAllLines_poly | apply encodeFinalConstraint_poly]. 
+  unfold poly__encodeTableau; split; smpl_inO; try apply inOPoly_comp; smpl_inO; first [apply encodeListAt_poly | apply encodeCardsInAllLines_poly | apply encodeFinalConstraint_poly]. 
 Qed. 
 
-Lemma encodeTableau_varsIn bpr: BinaryPR_wellformed bpr -> formula_varsIn (fun n => n < (1 + steps bpr) * (|init bpr|)) (encodeTableau bpr). 
+Lemma encodeTableau_varsIn bpr: BinaryCC_wellformed bpr -> formula_varsIn (fun n => n < (1 + steps bpr) * (|init bpr|)) (encodeTableau bpr). 
 Proof. 
   intros H. 
-  unfold encodeWindowsInAllLines. intros a H1. inv H1. 
+  unfold encodeCardsInAllLines. intros a H1. inv H1. 
   - inv H2. 
     + apply encodeListAt_varsIn in H1. nia. 
-    + apply encodeWindowsInAllLines_varsIn in H1; [ | apply H]. nia. 
+    + apply encodeCardsInAllLines_varsIn in H1; [ | apply H]. nia. 
   - unfold encodeFinalConstraint' in H2. apply encodeFinalConstraint_varsIn in H2. nia. 
 Qed. 
 
-Lemma encodeTableau_size : {f : nat -> nat & (forall bpr, BinaryPR_wellformed bpr -> formula_size (encodeTableau bpr) <= f (size (enc bpr))) /\ monotonic f /\ inOPoly f}. 
+Lemma encodeTableau_size : {f : nat -> nat & (forall bpr, BinaryCC_wellformed bpr -> formula_size (encodeTableau bpr) <= f (size (enc bpr))) /\ monotonic f /\ inOPoly f}. 
 Proof. 
   eexists. split; [ | split]. 
   - intros bpr H. unfold encodeTableau. cbn. 
-    rewrite encodeListAt_size. rewrite encodeWindowsInAllLines_size by apply H. 
+    rewrite encodeListAt_size. rewrite encodeCardsInAllLines_size by apply H. 
     unfold encodeFinalConstraint'. rewrite encodeFinalConstraint_size. 
     rewrite !list_size_length. rewrite sumn_map_mono. 
     2: { intros s Hel. instantiate (1 := fun _ => _). cbn -[Nat.mul Nat.add]. 
          rewrite list_size_length with (l := s). rewrite list_size_length. 
-         replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
+         replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
          erewrite list_el_size_bound with (a := s) by apply Hel.
-         replace_le (size (enc (final bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
+         replace_le (size (enc (final bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
          reflexivity. 
     } 
     rewrite sumn_map_const. rewrite list_size_length. 
-    replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
-    replace_le (size (enc (final bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia).
-    replace_le (size (enc (windows bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia).
+    replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
+    replace_le (size (enc (final bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia).
+    replace_le (size (enc (cards bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia).
     rewrite size_nat_enc_r with (n := width bpr). 
-    replace_le (size (enc (width bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia).
+    replace_le (size (enc (width bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia).
     rewrite size_nat_enc_r with (n := steps bpr). 
-    replace_le (size (enc (steps bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia).
+    replace_le (size (enc (steps bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia).
     instantiate (1 := fun n => _). cbn -[Nat.add Nat.mul]. generalize (size (enc bpr)). reflexivity. 
   - smpl_inO. 
   - smpl_inO. 
 Defined. 
 
-Lemma encodeTableau_enc_size : {f : nat -> nat & (forall bpr, BinaryPR_wellformed bpr -> size (enc (encodeTableau bpr)) <= f (size (enc bpr))) /\ inOPoly f /\ monotonic f}.
+Lemma encodeTableau_enc_size : {f : nat -> nat & (forall bpr, BinaryCC_wellformed bpr -> size (enc (encodeTableau bpr)) <= f (size (enc bpr))) /\ inOPoly f /\ monotonic f}.
 Proof. 
   destruct encodeTableau_size as (f' & H1 & H2 & H3). 
   eexists. split; [ | split]. 
@@ -1042,79 +1042,79 @@ Proof.
         rewrite H1 by apply H. erewrite formula_varsIn_bound. 
     2: { eapply formula_varsIn_monotonic. 2: apply encodeTableau_varsIn, H. intros n. cbn. apply Nat.lt_le_incl. }
     instantiate (1 := fun n => _). cbn -[Nat.add Nat.mul]. 
-    rewrite list_size_length. replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia). 
-    rewrite size_nat_enc_r with (n := steps bpr). replace_le (size (enc (steps bpr))) with (size (enc bpr)) by (rewrite BinaryPR_enc_size; lia).
+    rewrite list_size_length. replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
+    rewrite size_nat_enc_r with (n := steps bpr). replace_le (size (enc (steps bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia).
     generalize (size (enc bpr)). reflexivity. 
   - smpl_inO. 
   - smpl_inO. 
 Qed. 
 
-(** BinaryPR_wf_dec *)
+(** BinaryCC_wf_dec *)
 
-Definition c__BinaryPRWfDec := 3 * c__leb2 + 4 * c__width + 3 * c__offset + 2 * 5 + 2 * c__init + 2 * c__length + c__windows + 32 + 4 * c__leb + 2 * c__eqbComp nat * size (enc 0).
-Definition BinaryPR_wf_dec_time x := 2 * c__length * (|init x|) + leb_time (width x) (|init x|) + forallb_time (@FlatPR.PRWin_of_size_dec_time bool (width x)) (windows x) + modulo_time (|init x|) (offset x) + modulo_time (width x) (offset x) + c__BinaryPRWfDec.  
-Instance term_BinaryPR_wf_dec : computableTime' BinaryPR_wf_dec (fun bpr _ => (BinaryPR_wf_dec_time bpr, tt)). 
+Definition c__BinaryCCWfDec := 3 * c__leb2 + 4 * c__width + 3 * c__offset + 2 * 5 + 2 * c__init + 2 * c__length + c__cards + 32 + 4 * c__leb + 2 * c__eqbComp nat * size (enc 0).
+Definition BinaryCC_wf_dec_time x := 2 * c__length * (|init x|) + leb_time (width x) (|init x|) + forallb_time (@FlatCC.CCCard_of_size_dec_time bool (width x)) (cards x) + modulo_time (|init x|) (offset x) + modulo_time (width x) (offset x) + c__BinaryCCWfDec.  
+Instance term_BinaryCC_wf_dec : computableTime' BinaryCC_wf_dec (fun bpr _ => (BinaryCC_wf_dec_time bpr, tt)). 
 Proof. 
   extract. solverec. 
-  unfold BinaryPR_wf_dec_time, c__BinaryPRWfDec, leb_time. rewrite !eqbTime_le_r. 
+  unfold BinaryCC_wf_dec_time, c__BinaryCCWfDec, leb_time. rewrite !eqbTime_le_r. 
   do 2 rewrite Nat.le_min_l. simp_comp_arith. leq_crossout. 
 Qed. 
 
-Definition c__BinaryPRWfDecBound := 2*(2 * c__length + c__leb + FlatPR.c__prwinOfSizeDecBound + c__forallb + 2 * c__moduloBound + c__BinaryPRWfDec).
-Definition poly__BinaryPRWfDec n := (n*n + 2* n + 1) * c__BinaryPRWfDecBound.
-Lemma BinaryPR_wf_dec_time_bound fpr : 
-  BinaryPR_wf_dec_time fpr <= poly__BinaryPRWfDec (size (enc fpr)). 
+Definition c__BinaryCCWfDecBound := 2*(2 * c__length + c__leb + FlatCC.c__prcardOfSizeDecBound + c__forallb + 2 * c__moduloBound + c__BinaryCCWfDec).
+Definition poly__BinaryCCWfDec n := (n*n + 2* n + 1) * c__BinaryCCWfDecBound.
+Lemma BinaryCC_wf_dec_time_bound fpr : 
+  BinaryCC_wf_dec_time fpr <= poly__BinaryCCWfDec (size (enc fpr)). 
 Proof. 
-  unfold BinaryPR_wf_dec_time. rewrite leb_time_bound_l. 
+  unfold BinaryCC_wf_dec_time. rewrite leb_time_bound_l. 
   rewrite !modulo_time_bound. rewrite list_size_enc_length.
   rewrite list_size_length.
   erewrite forallb_time_bound_env.
   2: {
     split; [intros | ].
-    - specialize (FlatPR.PRWin_of_size_dec_time_bound (X := bool) y a) as H1.
-      instantiate (2:= fun n => (n + 1) * FlatPR.c__prwinOfSizeDecBound). simp_comp_arith; nia. 
+    - specialize (FlatCC.CCCard_of_size_dec_time_bound (X := bool) y a) as H1.
+      instantiate (2:= fun n => (n + 1) * FlatCC.c__prcardOfSizeDecBound). simp_comp_arith; nia. 
     - smpl_inO. 
   }
   rewrite list_size_length. 
-  replace_le (size(enc (windows fpr))) with (size (enc fpr)) by (rewrite BinaryPR_enc_size; lia). 
-  replace_le (size(enc (init fpr))) with (size (enc fpr)) by (rewrite BinaryPR_enc_size; lia). 
-  replace_le (size(enc (width fpr))) with (size (enc fpr)) by (rewrite BinaryPR_enc_size; lia). 
-  replace_le (size(enc(offset fpr))) with (size (enc fpr)) by (rewrite BinaryPR_enc_size; lia). 
-  unfold poly__BinaryPRWfDec, c__BinaryPRWfDecBound. nia.
+  replace_le (size(enc (cards fpr))) with (size (enc fpr)) by (rewrite BinaryCC_enc_size; lia). 
+  replace_le (size(enc (init fpr))) with (size (enc fpr)) by (rewrite BinaryCC_enc_size; lia). 
+  replace_le (size(enc (width fpr))) with (size (enc fpr)) by (rewrite BinaryCC_enc_size; lia). 
+  replace_le (size(enc(offset fpr))) with (size (enc fpr)) by (rewrite BinaryCC_enc_size; lia). 
+  unfold poly__BinaryCCWfDec, c__BinaryCCWfDecBound. nia.
 Qed. 
-Lemma BinaryPR_wf_dec_poly : monotonic poly__BinaryPRWfDec /\ inOPoly poly__BinaryPRWfDec.
+Lemma BinaryCC_wf_dec_poly : monotonic poly__BinaryCCWfDec /\ inOPoly poly__BinaryCCWfDec.
 Proof. 
-  unfold poly__BinaryPRWfDec; split; smpl_inO. 
+  unfold poly__BinaryCCWfDec; split; smpl_inO. 
 Qed. 
 
 (** reduction *)
 Definition c__reduction := 4. 
-Definition reduction_time (bpr : BinaryPR) := (if BinaryPR_wf_dec bpr then  encodeTableau_time bpr else 0) +BinaryPR_wf_dec_time bpr + c__reduction. 
+Definition reduction_time (bpr : BinaryCC) := (if BinaryCC_wf_dec bpr then  encodeTableau_time bpr else 0) +BinaryCC_wf_dec_time bpr + c__reduction. 
 Instance term_reduction : computableTime' reduction (fun bpr _ => (reduction_time bpr, tt)). 
 Proof. 
   extract. unfold reduction_time, c__reduction; solverec. 
 Qed. 
 
 (** full reduction statement *)
-Theorem BinaryPR_to_FSAT_poly : (unrestrictedP BinaryPRLang) ⪯p (unrestrictedP FSAT). 
+Theorem BinaryCC_to_FSAT_poly : (unrestrictedP BinaryCCLang) ⪯p (unrestrictedP FSAT). 
 Proof. 
   eapply reducesPolyMO_intro_unrestricted with (f := reduction). 
-  - exists (fun n => poly__encodeTableau n + poly__BinaryPRWfDec n + c__reduction). 
+  - exists (fun n => poly__encodeTableau n + poly__BinaryCCWfDec n + c__reduction). 
     + eexists. 
       eapply computesTime_timeLeq. 2: { apply term_reduction. }
       intros bpr _. cbn -[Nat.add Nat.mul]. split; [ | easy]. 
-      unfold reduction_time. destruct BinaryPR_wf_dec eqn:H1. 
-      * apply BinaryPR_wf_dec_correct in H1. rewrite encodeTableau_time_bound, BinaryPR_wf_dec_time_bound by easy. 
+      unfold reduction_time. destruct BinaryCC_wf_dec eqn:H1. 
+      * apply BinaryCC_wf_dec_correct in H1. rewrite encodeTableau_time_bound, BinaryCC_wf_dec_time_bound by easy. 
         generalize (size (enc bpr)). reflexivity. 
-      * rewrite BinaryPR_wf_dec_time_bound. lia. 
-    + smpl_inO; first [apply encodeTableau_poly | apply BinaryPR_wf_dec_poly]. 
-    + smpl_inO; first [apply encodeTableau_poly | apply BinaryPR_wf_dec_poly]. 
+      * rewrite BinaryCC_wf_dec_time_bound. lia. 
+    + smpl_inO; first [apply encodeTableau_poly | apply BinaryCC_wf_dec_poly]. 
+    + smpl_inO; first [apply encodeTableau_poly | apply BinaryCC_wf_dec_poly]. 
     + destruct encodeTableau_enc_size as (f & H1 & H2 & H3). 
       exists (fun n => f n + size (enc trivialNoInstance)). 
-      * intros bpr. unfold reduction. destruct BinaryPR_wf_dec eqn:H4. 
-        -- apply BinaryPR_wf_dec_correct in H4. rewrite H1 by apply H4. lia. 
+      * intros bpr. unfold reduction. destruct BinaryCC_wf_dec eqn:H4. 
+        -- apply BinaryCC_wf_dec_correct in H4. rewrite H1 by apply H4. lia. 
         -- lia. 
       * smpl_inO. 
       * smpl_inO. 
-  - apply BinaryPR_to_FSAT. 
+  - apply BinaryCC_to_FSAT. 
 Qed. 

@@ -3,11 +3,11 @@ From Undecidability.L Require Import  FinTypeLookup LFinType LSum.
 From PslBase Require Import FinTypes.
 
 From Undecidability.L.Complexity.Reductions Require Import FSAT_to_SAT kSAT_to_SAT kSAT_to_FlatClique. 
-From Undecidability.L.Complexity.Problems.Cook Require Import FlatPR SingleTMGenNP BinaryPR.
-From Undecidability.L.Complexity.Problems.Cook Require FlatTPR. 
+From Undecidability.L.Complexity.Problems.Cook Require Import FlatCC SingleTMGenNP BinaryCC.
+From Undecidability.L.Complexity.Problems.Cook Require FlatTCC. 
 From Undecidability.L.Complexity.Problems Require Import SAT FSAT kSAT FlatClique. 
-From Undecidability.L.Complexity.Reductions Require Import FlatSingleTMGenNP_to_FlatTPR
-  FlatTPR_to_FlatPR FlatPR_to_BinaryPR BinaryPR_to_FSAT. 
+From Undecidability.L.Complexity.Reductions Require Import FlatSingleTMGenNP_to_FlatTCC FlatTCC_to_FlatCC FlatCC_to_BinaryCC BinaryCC_to_FSAT. 
+
 Require Import Undecidability.L.Complexity.Reductions.TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP.
 From Undecidability.L.Complexity.Reductions Require Import TMGenNP.IntermediateProblems.
 
@@ -54,7 +54,7 @@ Proof.
     + smpl_inO. 
     + exists (fun n => n). 2, 3: smpl_inO.  
       intros x. now cbn. 
-  - intros (((? & ?) & ?) & ?). now setoid_rewrite FlatFunSingleTMGenNP_FlatSingleTMGenNP_equiv.
+  - intros (((? & ?) & ?) & ?). apply FlatFunSingleTMGenNP_FlatSingleTMGenNP_equiv.
 Qed. 
 
 Corollary GenNP_to_SingleTMGenNP : 
@@ -73,20 +73,20 @@ Qed.
 
 
 (** reduction from TM to SAT *)
-Lemma FlatSingleTMGenNP_to_FlatTPR : (unrestrictedP FlatSingleTMGenNP) ⪯p (unrestrictedP FlatTPR.FlatTPRLang). 
-exact FlatSingleTMGenNP_to_FlatTPRLang_poly. 
+Lemma FlatSingleTMGenNP_to_FlatTCC : (unrestrictedP FlatSingleTMGenNP) ⪯p (unrestrictedP FlatTCC.FlatTCCLang). 
+exact FlatSingleTMGenNP_to_FlatTCCLang_poly. 
 Qed. 
 
-Lemma FlatTPR_to_FlatPR : (unrestrictedP FlatTPR.FlatTPRLang) ⪯p (unrestrictedP FlatPRLang). 
-exact FlatTPR_to_FlatPR_poly. 
+Lemma FlatTCC_to_FlatCC : (unrestrictedP FlatTCC.FlatTCCLang) ⪯p (unrestrictedP FlatCCLang). 
+exact FlatTCC_to_FlatCC_poly. 
 Qed. 
 
-Lemma FlatPR_to_BinaryPR : (unrestrictedP FlatPRLang) ⪯p (unrestrictedP BinaryPRLang). 
-exact FlatPR_to_BinaryPR_poly.
+Lemma FlatCC_to_BinaryCC : (unrestrictedP FlatCCLang) ⪯p (unrestrictedP BinaryCCLang). 
+exact FlatCC_to_BinaryCC_poly.
 Qed.
 
-Lemma BinaryPR_to_FSAT : (unrestrictedP BinaryPRLang) ⪯p (unrestrictedP FSAT). 
-exact BinaryPR_to_FSAT_poly. 
+Lemma BinaryCC_to_FSAT : (unrestrictedP BinaryCCLang) ⪯p (unrestrictedP FSAT). 
+exact BinaryCC_to_FSAT_poly. 
 Qed.
 
 Lemma FSAT_to_SAT : (unrestrictedP FSAT) ⪯p (unrestrictedP SAT). 
@@ -106,12 +106,12 @@ Proof.
   eapply reducesPolyMO_transitive. 
   2: apply FSAT_to_3SAT. 
   eapply reducesPolyMO_transitive.
-  2: apply BinaryPR_to_FSAT. 
+  2: apply BinaryCC_to_FSAT. 
   eapply reducesPolyMO_transitive. 
-  2: apply FlatPR_to_BinaryPR. 
+  2: apply FlatCC_to_BinaryCC. 
   eapply reducesPolyMO_transitive. 
-  2: apply FlatTPR_to_FlatPR. 
-  apply FlatSingleTMGenNP_to_FlatTPR. 
+  2: apply FlatTCC_to_FlatCC. 
+  apply FlatSingleTMGenNP_to_FlatTCC. 
 Qed. 
 
 Corollary GenNP_to_3SAT : restrictBy (LHaltsOrDiverges (list bool)) (GenNP (list bool)) ⪯p (unrestrictedP (kSAT 3)).

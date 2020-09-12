@@ -5,10 +5,12 @@
 COQDOCFLAGS = "--charset utf-8 -s --with-header ../website/resources/header.html --with-footer ../website/resources/footer.html --index indexpage"
 
 
-L/Complexity/overview.v
+#this file takes long to compile, so it should be early in the list
+L/Complexity/Reductions/Cook/SingleTMGenNP_to_TCC.v
 L/Complexity/CookLevin.v
 
 
+L/Complexity/Problems/Cook/SingleTMGenNP.v
 L/Complexity/UpToCPoly.v
 L/Complexity/CookPrelim/PolyBounds.v
 L/Complexity/CookPrelim/Tactics.v
@@ -19,6 +21,7 @@ L/Complexity/Problems/SharedSAT.v
 L/Complexity/Problems/SAT.v
 L/Complexity/Problems/kSAT.v
 L/Complexity/Reductions/kSAT_to_SAT.v
+
 L/Complexity/Problems/UGraph.v
 L/Complexity/Problems/Clique.v
 L/Complexity/Problems/FlatUGraph.v
@@ -29,29 +32,27 @@ L/Complexity/Reductions/kSAT_to_FlatClique.v
 
 
 
-L/Complexity/Problems/Cook/SingleTMGenNP.v
 L/Complexity/Reductions/TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP.v
 L/Complexity/Reductions/Cook/TM_single.v
-L/Complexity/Problems/Cook/PR.v
-L/Complexity/Problems/Cook/TPR.v
-L/Complexity/Reductions/Cook/PTPR_Preludes.v
-L/Complexity/Reductions/Cook/SingleTMGenNP_to_TPR.v
-L/Complexity/Problems/Cook/FlatPR.v
-L/Complexity/Problems/Cook/FlatTPR.v
-L/Complexity/Reductions/Cook/FlatSingleTMGenNP_to_FlatTPR.v
-L/Complexity/Reductions/Cook/TPR_to_PR.v
-L/Complexity/Reductions/Cook/FlatTPR_to_FlatPR.v
+L/Complexity/Problems/Cook/CC.v
+L/Complexity/Problems/Cook/TCC.v
+L/Complexity/Reductions/Cook/PTCC_Preludes.v
+L/Complexity/Problems/Cook/FlatCC.v
+L/Complexity/Problems/Cook/FlatTCC.v
+L/Complexity/Problems/Cook/BinaryCC.v
+L/Complexity/Reductions/Cook/FlatSingleTMGenNP_to_FlatTCC.v
+L/Complexity/Reductions/Cook/TCC_to_CC.v
+L/Complexity/Reductions/Cook/FlatTCC_to_FlatCC.v
 
 L/Complexity/Reductions/Cook/UniformHomomorphisms.v
-L/Complexity/Reductions/Cook/PR_homomorphisms.v
-L/Complexity/Problems/Cook/BinaryPR.v
-L/Complexity/Reductions/Cook/PR_to_BinaryPR.v
-L/Complexity/Reductions/Cook/FlatPR_to_BinaryPR.v
+L/Complexity/Reductions/Cook/CC_homomorphisms.v
+L/Complexity/Reductions/Cook/CC_to_BinaryCC.v
+L/Complexity/Reductions/Cook/FlatCC_to_BinaryCC.v
 
 
 L/Complexity/Problems/FSAT.v
 L/Complexity/Reductions/Cook/FormulaEncoding.v
-L/Complexity/Reductions/Cook/BinaryPR_to_FSAT.v
+L/Complexity/Reductions/Cook/BinaryCC_to_FSAT.v
 L/Complexity/Reductions/FSAT_to_SAT.v
 
 Shared/Prelim.v
