@@ -35,7 +35,7 @@ Qed.
 Print Assumptions GenNP_to_TMGenNP.
 *)
 (** Not Complete: nice form of Time bound *)
-(*From Undecidability.LAM  Require TM.LMBounds. *)
+(*From Undecidability.L.AbstractMachines.TM_LHeapInterpreter  Require TM.LMBounds. *)
 
 
 (** Approach: simulate step-indexed L interpreter inside TM *)

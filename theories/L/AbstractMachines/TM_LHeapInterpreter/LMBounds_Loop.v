@@ -3,9 +3,9 @@ From Undecidability Require Import TM.PrettyBounds.PrettyBounds.
 From Undecidability Require Import TM.PrettyBounds.BaseCode.
 From Undecidability Require Import LM_heap_def TM.PrettyBounds.MaxList.
 
-From Undecidability.LAM Require Import TM.Alphabets.
-From Undecidability.LAM.TM Require Import CaseCom.
-From Undecidability.LAM.TM Require Import StepTM LMBounds HaltingProblem SizeAnalysis.
+From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require Import Alphabets.
+From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require Import CaseCom.
+From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require Import StepTM LMBounds M_LHeapInterpreter SizeAnalysis.
 
 From Undecidability Require Import UpToC UpToCNary.
 

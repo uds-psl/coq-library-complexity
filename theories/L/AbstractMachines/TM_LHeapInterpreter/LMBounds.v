@@ -4,9 +4,7 @@ From Undecidability Require Import TM.PrettyBounds.PrettyBounds.
 From Undecidability Require Import TM.PrettyBounds.BaseCode.
 From Undecidability Require Import LM_heap_def TM.PrettyBounds.MaxList.
 
-From Undecidability.LAM Require Import TM.Alphabets.
-From Undecidability.LAM.TM Require Import CaseCom.
-From Undecidability.LAM.TM Require Import JumpTargetTM.
+From Undecidability.L.AbstractMachines.TM_LHeapInterpreter  Require Import CaseCom Alphabets JumpTargetTM.
 
 
 
@@ -382,7 +380,7 @@ Module JumpTarget_steps_nice.
 End JumpTarget_steps_nice.
 
 
-From Undecidability Require Import LAM.TM.LookupTM.
+From Undecidability Require Import L.AbstractMachines.TM_LHeapInterpreter.LookupTM.
 
 
 (** ** LM Lookup *)
@@ -658,8 +656,7 @@ Module LM_Lookup_nice.
 
 End LM_Lookup_nice.
 
-From Undecidability Require Import LAM.TM.StepTM LAM.TM.HaltingProblem.
-From Undecidability Require Import LAM.TM.SizeAnalysis.
+From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require Import StepTM M_LHeapInterpreter SizeAnalysis.
 
 Module LM.
   Import JumpTarget_steps_nice LM_Lookup_nice.

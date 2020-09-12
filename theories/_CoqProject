@@ -47,19 +47,17 @@ L/Complexity/Reductions/FSAT_to_SAT.v
 
 Shared/Prelim.v
 
-Problems/Reduction.v
-
 # Abstract L simulator as Turing Machine
-LAM/TM/Alphabets.v
-LAM/TM/CaseCom.v
-LAM/TM/LookupTM.v
-LAM/TM/JumpTargetTM.v
+L/AbstractMachines/TM_LHeapInterpreter/Alphabets.v
+L/AbstractMachines/TM_LHeapInterpreter/CaseCom.v
+L/AbstractMachines/TM_LHeapInterpreter/LookupTM.v
+L/AbstractMachines/TM_LHeapInterpreter/JumpTargetTM.v
 #The following file takes very long, so we start it early for faster multi-core-compilation
-LAM/TM/StepTM.v
-LAM/TM/HaltingProblem.v
-LAM/TM/SizeAnalysis.v
-LAM/TM/LMBounds.v
-LAM/TM/LMBounds_Loop.v
+L/AbstractMachines/TM_LHeapInterpreter/StepTM.v
+L/AbstractMachines/TM_LHeapInterpreter/M_LHeapInterpreter.v
+L/AbstractMachines/TM_LHeapInterpreter/SizeAnalysis.v
+L/AbstractMachines/TM_LHeapInterpreter/LMBounds.v
+L/AbstractMachines/TM_LHeapInterpreter/LMBounds_Loop.v
 
 
 # Basics
@@ -308,8 +306,5 @@ L/Computability/Computability.v
 L/Computability/MuRec.v
 L/Computability/Decidability.v
 
-
-#Reduction L to TM with abstract Heap Machine
-LAM/BaseExtension.v
 
 Problems/TM.v
