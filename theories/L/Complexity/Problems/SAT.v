@@ -221,7 +221,7 @@ Qed.
 
 (** SAT verifier *)
 Definition sat_verifier N (a : assgn) :=
-  evalCnf a N = true /\ assignment_small N a. 
+  evalCnf a N = true. 
 
 (** We need to show that, given a satisfying assignment for a CNF, we can obtain a small assignment that still satisfies the CNF*)
 Section fixX. 
@@ -319,25 +319,11 @@ Proof.
 Qed. 
 
 (** Now that we've got the tools to verify the verifier, let's build a boolean verifier and prove its correctness*)
-Definition assignment_small_decb N a := list_incl_decb Nat.eqb a (varsOfCnf N) && dupfreeb Nat.eqb a. 
 Definition sat_verifierb (input : cnf * assgn) :=
-  let (N, a) := input in assignment_small_decb N a && evalCnf a N.
-
-Lemma assignment_small_decb_iff N a : assignment_small_decb N a = true <-> assignment_small N a. 
-Proof. 
-  unfold assignment_small_decb, assignment_small. 
-  rewrite andb_true_iff. 
-  rewrite list_incl_decb_iff; [ | symmetry; apply Nat.eqb_eq]. 
-  rewrite dupfreeb_iff; [ | symmetry; apply Nat.eqb_eq]. 
-  easy.
-Qed. 
+  let (N, a) := input in evalCnf a N.
 
 Lemma sat_verifierb_correct N a : sat_verifier N a <-> sat_verifierb (N, a) = true.
-Proof. 
-  unfold sat_verifier, sat_verifierb. rewrite and_comm. 
-  rewrite andb_true_iff. rewrite assignment_small_decb_iff. 
-  tauto. 
-Qed. 
+Proof. reflexivity. Qed.
 
 (** A computable notion of boundedness: calculate the maximum variable used by a CNF*)
 Definition clause_maxVar C := fold_right (fun '(_, v) acc => Nat.max acc v) 0 C. 
@@ -621,155 +607,13 @@ Section extraction.
     all: subst p; smpl_inO. 
   Qed.
 
-  (** varsOfLiteral *)
-  Fact _term_varsOfLiteral : {time : UpToC (fun _ => 1) & computableTime' varsOfLiteral (fun l _ => (time l, tt))}. 
-  Proof. 
-    exists_const c1. { extract. solverec. subst c1. reflexivity. } 
-    smpl_upToC_solve. 
-  Qed.
-  Instance term_varsOfLiteral : computableTime' varsOfLiteral _ := projT2 _term_varsOfLiteral. 
-
-  Definition concat_time {X : Type} L := sumn (map (@length X) L) + |L| + 1. 
-  Fact _term_concat (X : Type) `{registered X}: {time : UpToC (concat_time) & computableTime' (@concat X) (fun L _ => (time L, tt)) }. 
-  Proof. 
-    exists_const c1. 
-    { extract. solverec; first last. 
-      { unfold concat_time. cbn. set (sumn _). instantiate (c1 := c__app + 15). subst c1. lia. }
-      cbn. lia. 
-    } 
-    smpl_upToC_solve. 
-  Qed.
-  Instance term_concat (X : Type) `{registered X}: computableTime' (@concat X) _ := projT2 (@_term_concat X _).
-
-  Lemma varsOfLiteral_length l : |varsOfLiteral l| = 1. 
-  Proof. now destruct l. Qed.
-
-
-  (** varsOfClause *)
-  Definition varsOfClause_time C := |C| + 1. 
-  Fact _term_varsOfClause : { time : UpToC varsOfClause_time & computableTime' varsOfClause (fun C _ => (time C, tt))}. 
-  Proof. 
-    exists_const c1. 
-    { extract. solverec. rewrite map_time_mono. 2: { intros ? _. rewrite UpToC_le at 1.  rewrite Nat.mul_1_r. inst_const. } 
-      rewrite map_time_const. rewrite !UpToC_le. 
-      unfold concat_time. rewrite (sumn_map_mono). 
-      2: { intros v H. apply in_map_iff in H as (l & <- & _). rewrite varsOfLiteral_length. inst_const. } 
-      rewrite sumn_map_const. 
-      rewrite map_length. 
-
-      set_consts. set (c1' :=  2 * (C + c__map + C0) + 2).  
-      inst_with c1 c1'.
-      unfold varsOfClause_time. leq_crossout.
-    }
-    smpl_upToC_solve. 
-  Qed. 
-  Instance term_varsOfClause : computableTime' varsOfClause _ := projT2 _term_varsOfClause. 
-      
-  Lemma map_time_explicit (X : Type) (f : X -> nat) L: map_time f L <= c__map * (sumn(map f L) + |L| +1). 
-  Proof. 
-    induction L as [ | x L IH]; cbn -[Nat.add Nat.mul]; first last. 
-    - rewrite IH. unfold c__map. nia. 
-    - lia. 
-  Qed.
-
-  Lemma sumn_map_mult_c_l X f c (l:list X) :
-    sumn (map (fun x => c * f x) l) = c * sumn (map f l). 
-  Proof.
-    induction l;cbn;nia.
-  Qed.
-
-
-  Definition varsOfCnf_time N := sumn (map (length (A := literal)) N) + |N| +1. 
-  Fact _term_varsOfCnf : { time : UpToC varsOfCnf_time & computableTime' varsOfCnf (fun N _ => (time N, tt))}. 
-  Proof. 
-    exists_const c1. 
-    { extract. solverec. erewrite !UpToC_le. unfold concat_time.
-      rewrite map_time_mono. 
-      2: { intros x0 H. rewrite UpToC_le at 1. unfold varsOfClause_time. 
-        instantiate (1 := fun n => _). cbn. reflexivity. } 
-      rewrite map_time_explicit. rewrite sumn_map_mult_c_l. 
-      rewrite sumn_map_add. rewrite sumn_map_const. 
-      rewrite map_map. 
-      setoid_rewrite sumn_map_mono at 2. 2: { intros C _. 
-        instantiate (1 := fun C => |C|). induction C as [ | l C IH]; cbn. lia. autorewrite with list.
-        rewrite varsOfLiteral_length. now rewrite IH. } 
-      simp_comp_arith. rewrite map_length. 
-      unfold varsOfCnf_time. set (sumn _).  
-
-      set_consts. 
-      set (c1' := 2 * c__map * C + c__map + C0 + 10). inst_with c1 c1'. 
-      lia. 
-    } 
-    smpl_upToC_solve. 
-  Qed.
-  Instance term_varsOfCnf : computableTime' varsOfCnf _ := projT2 _term_varsOfCnf. 
-
-  Lemma maxSize_step (X : Type) `{registered X} (x : X) L : maxSize (x :: L) = Nat.max (size (enc x)) (maxSize L). 
-  Proof. unfold maxSize. cbn. reflexivity. Qed.
-
-  Section dupfreeb. 
-    Context (X : Type) `{registered X} (eqbX : X -> X -> bool) {Xeq : eqbClass eqbX} {XeqbComp : eqbCompT X}.
-
-    Definition dupfreeb_time (l : list X):= (|l| + 1)^2 * (1 + maxSize l) + 1. 
-    Fact _term_dupfreeb : { time : UpToC dupfreeb_time & computableTime' (@dupfreeb X eqbX) (fun L _ => (time L, tt))}. 
-    Proof. 
-      exists_const c1. 
-      { extract. solverec; cycle 1. rewrite UpToC_le.
-        - unfold list_in_decb_time. unfold dupfreeb_time. cbn -[maxSize]. 
-          replace_le (maxSize l) with (maxSize (x :: l)). { rewrite maxSize_step. lia. } 
-          set (maxSize _). set_consts.
-          set (c1' := 24 + C). inst_with c1 c1'. leq_crossout. 
-        - unfold dupfreeb_time. subst c1. lia. 
-      } 
-      smpl_upToC_solve. 
-    Qed.
-    Global Instance term_dupfreeb : computableTime' (@dupfreeb X eqbX) _ := projT2 _term_dupfreeb. 
-  End dupfreeb.
-
-  Definition assignment_small_decb_time : cnf * assgn -> nat := fun '(N, a) =>
-    sumn (map (length (A := literal)) N) 
-    + (|N| + 1) 
-    + (|a| + 1) * (|varsOfCnf N| + 1) * (maxSize (varsOfCnf N) + 1) 
-    + (|a| + 1) * (|a| + 1) * (maxSize a + 1) 
-    + 1.  
-  Arguments assignment_small_decb_time : simpl never. 
-  Fact _term_assignment_small_decb : { time : UpToC assignment_small_decb_time & computableTime' assignment_small_decb (fun N _ => (1, fun a _ => (time (N, a), tt)))}. 
-  Proof. 
-    exists_const c1. 
-    { extract. solverec.  
-      rename x0 into a. rename x into N. 
-      erewrite !UpToC_le. set_consts. 
-      unfold varsOfCnf_time, list_incl_decb_time, list_in_decb_time, dupfreeb_time. 
-      set (c1' := C + C0 + C1 + 10). inst_with c1 c1'. 
-      unfold assignment_small_decb_time. cbn [Nat.pow]. lia. 
-    } 
-    smpl_upToC_solve. 
-  Qed.
-  Instance term_assignment_small_decb : computableTime' assignment_small_decb _ := projT2 _term_assignment_small_decb. 
-
-  (* ugly bound above, so polytime bound *)
-  Fact assignment_small_decb_poly : isPoly assignment_small_decb_time. 
-  Proof. 
-    exists_poly p. 
-    { intros (c & a). unfold assignment_small_decb_time. 
-      rewrite sumn_map_mono. 2: { intros. rewrite list_size_length, list_el_size_bound at 1.  2: apply H. inst_const. } 
-      rewrite sumn_map_const. rewrite !maxSize_enc_size. 
-      rewrite !list_size_length. 
-      rewrite varsOfCnf_size. set (c0 := 1 + (c__listsizeCons + c__listsizeNil)). 
-      rewrite size_prod. cbn [fst snd]. set (L.size _). set (L.size _). 
-      set (p' := fun n => n * n + n + c0 * c0 *  n * n * n + n * n * n). inst_with p p'. fold c0. 
-      cbn-[c0]. lia. 
-    } 
-    all: subst p; smpl_inO. 
-  Qed.
-
   (** sat_verifierb *)
-  Definition sat_verifierb_time (p : cnf * assgn) : nat := let '(N, a) := p in assignment_small_decb_time (N, a) + evalCnf_time (a, N) + 1. 
+  Definition sat_verifierb_time (p : cnf * assgn) : nat := let '(N, a) := p in evalCnf_time (a, N) + 1. 
   Fact _term_sat_verifierb : { time : UpToC sat_verifierb_time & computableTime' sat_verifierb (fun p _ => (time p, tt))}. 
   Proof. 
     exists_const c1. 
     { extract. solverec. 
-      rewrite !UpToC_le. set_consts. set (c1' := C + C0 + 16). inst_with c1 c1'. lia. 
+      rewrite !UpToC_le. set_consts. set (c1' := C + 10). inst_with c1 c1'. lia. 
     } 
     smpl_upToC_solve. 
   Qed.
@@ -786,9 +630,9 @@ Proof.
     exists (fun n => n * (1 + c__listsizeCons + c__listsizeNil)). 
     3, 4: smpl_inO.
     - unfold SAT, sat_verifier.
-      intros (cn & ?) a (H1 & H2). cbn. exists a; tauto.  
+      intros (cn & ?) a H.  cbn. exists a; tauto.  
     - unfold SAT, sat_verifier. intros (cn & ?) [a H]. exists (compressAssignment a cn). split. 
-      + apply compressAssignment_cnf_equiv in H. cbn. split; [apply H | apply compressAssignment_small]. 
+      + apply compressAssignment_cnf_equiv in H. cbn. apply H.
       + apply assignment_small_size. cbn. apply compressAssignment_small. 
   }
 
@@ -796,8 +640,7 @@ Proof.
   { exists (sat_verifierb). 
     + eexists. eapply computesTime_timeLeq. 2: apply term_sat_verifierb.
       cbn. intros [N a] _. split; [ | easy]. rewrite !UpToC_le. unfold sat_verifierb_time. 
-      rewpoly assignment_small_decb_poly. rewpoly evalCnf_poly. 
-      monopoly (evalCnf_poly). 2: { instantiate (1 := size (enc (N, a))). rewrite !size_prod. cbn; lia. }
+      rewpoly evalCnf_poly. monopoly (evalCnf_poly). 2: { instantiate (1 := size (enc (N, a))). rewrite !size_prod. cbn; lia. }
       set (L.size _). [p]: intros n. and_solve p.
     + intros [N a] ?. cbn. apply sat_verifierb_correct.
   } 
