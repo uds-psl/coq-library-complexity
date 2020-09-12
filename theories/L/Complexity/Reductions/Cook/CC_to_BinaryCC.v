@@ -1,25 +1,25 @@
 From PslBase Require Import Base FinTypes.
 From PslBase Require Import Vectors.Vectors. 
 From Undecidability.L.Complexity Require Import MorePrelim.
-From Undecidability.L.Complexity Require Import Problems.Cook.BinaryPR Problems.Cook.PR Reductions.Cook.PR_homomorphisms. 
+From Undecidability.L.Complexity Require Import Problems.Cook.BinaryCC Problems.Cook.CC Reductions.Cook.CC_homomorphisms. 
 Require Import Lia.
 
-(** * PR to BinaryPR *)
-(** We reduce arbitrary PR instances to a binary alphabet by using the results on uniform homomorphisms. *)
+(** * CC to BinaryCC *)
+(** We reduce arbitrary CC instances to a binary alphabet by using the results on uniform homomorphisms. *)
 
 Section fixInstance. 
   (** we first do the reduction for wellformed instances, satisfying the syntactic requirements *)
-  Variable (pr : PR). 
+  Variable (pr : CC). 
 
   Notation Sigma := (Sigma pr).
   Notation offset := (offset pr).
   Notation width := (width pr).
   Notation init := (init pr).
-  Notation windows := (windows pr).
+  Notation cards := (cards pr).
   Notation final := (final pr).
   Notation steps := (steps pr). 
 
-  Context (A : PR_wellformed pr). 
+  Context (A : CC_wellformed pr). 
   Context (A1 : |elem Sigma| > 0). (*instances without this property are trivial no-instances *)
   
   (*we fix the homomorphism on natural numbers *)
@@ -53,7 +53,7 @@ Section fixInstance.
         rewrite !app_length, !repEl_length in H0. cbn in H0. lia. 
   Qed. 
 
-  (*now, the homomorphism for finite types is defined by composing hNat and index *)
+  (** now, the homomorphism for finite types is defined by composing hNat and index *)
   Definition h' (x : Sigma) := hNat (|elem Sigma|) (index x). 
 
   Lemma hP_injective : injective h'. 
@@ -73,64 +73,64 @@ Section fixInstance.
   Notation hoffset := (@hoffset pr (|elem Sigma|)).
   Notation hwidth := (@hwidth pr (|elem Sigma|)). 
   Notation hinit := (@hinit (FinType (EqType bool)) pr h'). 
-  Notation hwindows := (@hwindows (FinType (EqType bool)) pr h'). 
+  Notation hcards := (@hcards (FinType (EqType bool)) pr h'). 
   Notation hfinal := (@hfinal (FinType (EqType bool)) pr h'). 
   Notation hsteps := (@hsteps pr). 
 
-  Definition hBinaryPR := @BinaryPR.Build_BinaryPR hoffset hwidth hinit hwindows hfinal hsteps. 
+  Definition hBinaryCC := @BinaryCC.Build_BinaryCC hoffset hwidth hinit hcards hfinal hsteps. 
 
   Lemma h_multiplier_sp x : |h x| = (|elem Sigma|) * |x|. 
   Proof. 
     unfold h. erewrite h_multiplier. 2: apply hP_length. easy.
   Qed. 
 
-  Lemma PR_homomorphism_wf : PR_wellformed pr -> BinaryPR.BinaryPR_wellformed hBinaryPR. 
+  Lemma CC_homomorphism_wf : CC_wellformed pr -> BinaryCC.BinaryCC_wellformed hBinaryCC. 
   Proof. 
     intros (H1 & H2 & H3 & H4 & H5 & H6). 
-    unfold BinaryPR_wellformed; repeat match goal with [ |- _ /\ _] => split end; cbn. 
+    unfold BinaryCC_wellformed; repeat match goal with [ |- _ /\ _] => split end; cbn. 
     + unfold hwidth. nia. 
     + unfold hoffset. nia. 
     + unfold hwidth, hoffset. destruct H3 as (k' & H3 & H3'). exists k'. split; nia.  
     + unfold hinit, hwidth. rewrite h_multiplier_sp. nia. 
-    + unfold hwidth. intros [] H. unfold hwindows in H. apply in_map_iff in H as (win' & <- & H). 
-      destruct win'. apply H5 in H. destruct H as (H & H0); cbn in *. 
+    + unfold hwidth. intros [] H. unfold hcards in H. apply in_map_iff in H as (card' & <- & H). 
+      destruct card'. apply H5 in H. destruct H as (H & H0); cbn in *. 
       split; cbn; now rewrite h_multiplier_sp. 
     + destruct H6 as (k' & H6). unfold hinit, hoffset. exists k'. 
       rewrite h_multiplier_sp, H6. nia. 
   Qed. 
 
-  (*we now get the reduction for the case that the instance we reduce from is wellformed *)
-  Lemma reduction_wf : PRLang pr <-> BinaryPRLang hBinaryPR. 
+  (** we now get the reduction for the case that the instance we reduce from is wellformed *)
+  Lemma reduction_wf : CCLang pr <-> BinaryCCLang hBinaryCC. 
   Proof. 
     split; intros. 
     - destruct H as (_ & sf & H1 & H2).
-      split; [ apply PR_homomorphism_wf; auto | ]. 
-      apply PR_homomorphism_iff; eauto; [ apply hP_length | apply hP_injective].
+      split; [ apply CC_homomorphism_wf; auto | ]. 
+      apply CC_homomorphism_iff; eauto; [ apply hP_length | apply hP_injective].
     - destruct H as (_ & H1).
       split; [ apply A | ]. 
-      apply (PR_homomorphism_iff hP_length A1 hP_injective) in H1; [apply H1 | apply A]. 
+      apply (CC_homomorphism_iff hP_length A1 hP_injective) in H1; [apply H1 | apply A]. 
   Qed. 
 End fixInstance. 
 
-(*for non-wellformed instances, we map to a trivial no-instance *)
-Definition trivialNoInstance := Build_BinaryPR 0 0 [] [] [] 0. 
-Lemma trivialNoInstance_isNoInstance : not (BinaryPRLang trivialNoInstance). 
+(** for non-wellformed instances, we map to a trivial no-instance *)
+Definition trivialNoInstance := Build_BinaryCC 0 0 [] [] [] 0. 
+Lemma trivialNoInstance_isNoInstance : not (BinaryCCLang trivialNoInstance). 
 Proof. 
   intros (H & _). destruct H as (H & _). cbn in H. lia. 
 Qed. 
 
-Definition reduction (pr : PR) := if PR_wf_dec pr then hBinaryPR pr else trivialNoInstance. 
+Definition reduction (pr : CC) := if CC_wf_dec pr then hBinaryCC pr else trivialNoInstance. 
 
-Lemma PR_to_BinaryPR (pr : PR) : PRLang pr <-> BinaryPRLang (reduction pr).  
+Lemma CC_to_BinaryCC (pr : CC) : CCLang pr <-> BinaryCCLang (reduction pr).  
 Proof. 
   unfold reduction. 
-  destruct (PR_wf_dec pr) eqn:H1. 
-  - apply PR_wf_dec_correct in H1. remember H1 as H0. clear HeqH0. destruct H1 as (H1 & _ & _ & H2 & _). 
+  destruct (CC_wf_dec pr) eqn:H1. 
+  - apply CC_wf_dec_correct in H1. remember H1 as H0. clear HeqH0. destruct H1 as (H1 & _ & _ & H2 & _). 
     destruct init; cbn in H2; [ lia | ]. 
     assert (|elem (Sigma pr)| > 0). 
     { specialize (@elem_spec _ e). destruct elem; cbn; [eauto | lia]. }
     apply reduction_wf; easy. 
-  - assert (not (PR_wf_dec pr = true)) as H by eauto. rewrite PR_wf_dec_correct in H. 
+  - assert (not (CC_wf_dec pr = true)) as H by eauto. rewrite CC_wf_dec_correct in H. 
     split; intros. 
     + destruct H0; tauto. 
     + exfalso; apply trivialNoInstance_isNoInstance, H0. 
