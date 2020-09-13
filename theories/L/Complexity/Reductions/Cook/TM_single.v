@@ -24,7 +24,8 @@ Section TM_single.
                                                                                             
   Definition sconfig := (mstates * tape Sigma)%type. (* single-tape configuration*)
   Implicit Type (c : sconfig). 
-  Definition sstep  (trans : mstates * option Sigma -> mstates * (option Sigma * move)) c : sconfig := let (q, tp) := c in let (q', act) := trans (q, current tp) in (q', doAct tp act).
+  Definition sstep  (trans : mstates * option Sigma -> mstates * (option Sigma * move)) c : sconfig := 
+    let (q, tp) := c in let (q', act) := trans (q, current tp) in (q', doAct tp act).
 
   Definition mconfig_for_sconfig c := let (q, tp) := c in mk_mconfig q [| tp |].
   Definition sconfig_for_mconfig (c : mconfig Sigma mstates 1) := let (q, tps) := c in (q, Vector.nth tps Fin.F1).

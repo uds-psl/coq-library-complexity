@@ -207,7 +207,7 @@ Section fixInstance.
     { destruct H2 as (b & -> & H2). apply validDirect_valid in H2. 2-4: apply A. easy. }
     clear H0 H. 
     remember (h a). revert a Heql. 
-    induction H1 as [? ? card H H0 H1 H2 H3 | ? ? ? ? card H IH H0 H1 H2 H3 H4]; intros a0 Heql. 
+    induction H1 as [? ? card H H0 H1 H2  | ? ? ? ? card H IH H0 H1 H2 H3 ]; intros a0 Heql. 
     - subst. 
       destruct A as (_ & _ & _ & _ & H5 & _). unfold hcards in H1. apply in_map_iff in H1 as (card' & <- & H1).
       specialize (H5 _ H1) as (H1' & H1''). 

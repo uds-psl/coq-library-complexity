@@ -19,36 +19,31 @@ Notation cnf := (list clause) (only parsing).
 (** Assignments as lists of natural numbers: contain the indices of variables that are mapped to true *)
 Implicit Types (a : assgn) (N : cnf) (C : clause) (l :literal).
 
+(** just a notation here; the definition is shared with FSAT *)
+Notation evalVar := evalVar. 
+
 Definition evalLiteral a l : bool := match l with
   | (s, v) => Bool.eqb (evalVar a v) s 
 end. 
 
 (**Empty disjunction evaluates to false*)
-Fixpoint evalClause a C := 
-  match C with 
-  | [] => false
-  | (l :: C) => evalClause a C || evalLiteral a l
-  end. 
+Definition evalClause a C := existsb (evalLiteral a) C. 
 
 (**Empty conjunction evaluates to true *)
-Fixpoint evalCnf a N := 
-  match N with 
-  | [] => true
-  | (C :: N) => evalCnf a N && evalClause a C
-  end. 
+Definition evalCnf a N := forallb (evalClause a) N. 
 
 (** Some helpful properties *)
 (** A characterisation of one processing step of evaluation *)
 Lemma evalClause_step_inv a C l b : 
-  evalClause a (l::C) = b <-> exists b1 b2, evalClause a C = b1 /\ evalLiteral a l = b2 /\ b = b1 || b2.
+  evalClause a (l::C) = b <-> exists b1 b2, evalClause a C = b2 /\ evalLiteral a l = b1 /\ b = b1 || b2.
 Proof.
   cbn. split; intros. 
-  - rewrite <- H. eauto. 
+  - rewrite <- H. eauto.
   - destruct H as (b1 & b2 & <- & <- & ->). eauto.
 Qed. 
 
 Lemma evalCnf_step_inv a N C b : 
-  evalCnf a (C :: N) = b <-> exists b1 b2, evalCnf a N = b1 /\ evalClause a C = b2 /\ b = b1 && b2. 
+  evalCnf a (C :: N) = b <-> exists b1 b2, evalCnf a N = b2 /\ evalClause a C = b1 /\ b = b1 && b2. 
 Proof. 
   cbn. split; intros. 
   - rewrite <- H. eauto. 
@@ -63,17 +58,7 @@ Qed.
 
 Lemma evalClause_literal_iff a C : 
   evalClause a C = true <-> (exists l, l el C /\ evalLiteral a l = true). 
-Proof.
-  induction C; cbn. 
-  - split; [ congruence | firstorder].
-  - split. 
-    + intros [H1 | H2]%orb_true_iff.
-      * apply IHC in H1 as (l & H1 & H2). eauto.
-      * exists a0; eauto.
-    + intros (l & [-> | H1] & H2). 
-      * now rewrite H2, orb_true_r. 
-      * fold (evalClause a C). erewrite (proj2 IHC); [easy | eauto].
-Qed. 
+Proof. apply existsb_exists. Qed.
 
 Corollary evalClause_app a C1 C2 : 
   evalClause a (C1 ++ C2) = true <-> (evalClause a C1 = true \/ evalClause a C2 = true). 
@@ -83,15 +68,7 @@ Qed.
 
 Lemma evalCnf_clause_iff a N : 
   evalCnf a N = true <-> (forall C, C el N -> evalClause a C = true). 
-Proof. 
-  induction N; cbn. 
-  - firstorder. 
-  - split. 
-    + intros (H1 & H2)%andb_true_iff. intros C [-> | H3]; [easy | ].
-      fold (evalCnf a N) in H1. eapply (proj1 IHN) in H1; eauto.
-    + intros H. rewrite (H a0 (or_introl eq_refl)), andb_true_r. 
-      apply IHN; eauto.
-Qed. 
+Proof. apply forallb_forall. Qed.
 
 Corollary evalCnf_app_iff a N1 N2 : 
   evalCnf a (N1 ++ N2) = true <-> (evalCnf a N1 = true /\ evalCnf a N2 = true). 
@@ -211,7 +188,8 @@ Proof.
 Qed. 
 
 
-Lemma assignment_small_size N a : assignment_small N a -> size (enc a) <= size (enc N) * (1 + c__listsizeCons + c__listsizeNil). 
+Lemma assignment_small_size N a : 
+  assignment_small N a -> size (enc a) <= size (enc N) * (1 + c__listsizeCons + c__listsizeNil). 
 Proof. 
   intros [H1 H2].
   enough (size (enc a) <= size (enc (varsOfCnf N))) as H.
@@ -381,31 +359,31 @@ Qed.
 
 (** size of encoding in terms of size of the cnf  *)
 Definition c__clauseSize1 := c__listsizeCons + c__sizeBool + c__natsizeO + 4 + c__listsizeNil.
-Lemma clause_enc_size_bound (c : clause) : size (enc c) <= c__natsizeS * (clause_maxVar c + 1) * (size_clause c + 1) + c__clauseSize1 * (size_clause c + 1). 
+Lemma clause_enc_size_bound C : size (enc C) <= c__natsizeS * (clause_maxVar C + 1) * (size_clause C + 1) + c__clauseSize1 * (size_clause C + 1). 
 Proof. 
-  induction c.
+  induction C as [ | l C IH].
   - rewrite size_list; cbn -[Nat.mul Nat.add]. unfold c__clauseSize1. lia. 
-  - rewrite list_size_cons. rewrite IHc. cbn -[Nat.mul Nat.add]. destruct a. 
-    fold (clause_maxVar c). 
+  - rewrite list_size_cons. rewrite IH. cbn -[Nat.mul Nat.add]. destruct l as [s v]. 
+    fold (clause_maxVar C). 
     rewrite size_prod; cbn -[Nat.mul Nat.add]. rewrite size_bool. rewrite size_nat_enc. 
     unfold size_clause. 
-    rewrite (Nat.le_max_r (clause_maxVar c) n) at 1. 
-    rewrite (Nat.le_max_l (clause_maxVar c) n) at 2.  
+    rewrite (Nat.le_max_r (clause_maxVar C) v) at 1. 
+    rewrite (Nat.le_max_l (clause_maxVar C) v) at 2.  
     unfold c__clauseSize1. nia. 
 Qed. 
 
 Definition c__cnfSize1 := c__listsizeNil + c__listsizeCons + c__clauseSize1.
-Lemma cnf_enc_size_bound (c : cnf) : size (enc c) <= c__natsizeS * (cnf_maxVar c + 1) * (size_cnf c + 1) + (size_cnf c + 1) * c__cnfSize1.
+Lemma cnf_enc_size_bound N : size (enc N) <= c__natsizeS * (cnf_maxVar N + 1) * (size_cnf N + 1) + (size_cnf N + 1) * c__cnfSize1.
 Proof. 
-  induction c. 
+  induction N as [ | C N IH]. 
   - rewrite size_list. cbn -[Nat.mul Nat.add]. unfold c__cnfSize1. nia.
   - rewrite list_size_cons. rewrite clause_enc_size_bound. 
     cbn -[c__clauseSize1 c__cnfSize1 c__listsizeCons c__natsizeS].
-    fold (cnf_maxVar c). 
-    replace (size_clause a + sumn (map size_clause c) + S (|c|) + 1) with (size_clause a + size_cnf c + 2) by (unfold size_cnf; cbn; lia).
-    rewrite IHc. 
-    rewrite (Nat.le_max_l (cnf_maxVar c) (clause_maxVar a)) at 1. 
-    rewrite (Nat.le_max_r (cnf_maxVar c) (clause_maxVar a)) at 1. 
+    fold (cnf_maxVar N). 
+    replace (size_clause C + sumn (map size_clause N) + S (|N|) + 1) with (size_clause C + size_cnf N + 2) by (unfold size_cnf; cbn; lia).
+    rewrite IH. 
+    rewrite (Nat.le_max_l (cnf_maxVar N) (clause_maxVar C)) at 1. 
+    rewrite (Nat.le_max_r (cnf_maxVar N) (clause_maxVar C)) at 1. 
     unfold c__cnfSize1. nia.
 Qed. 
 
@@ -490,45 +468,6 @@ Section extraction.
       smpl_upToC_solve. 
     Qed.
     Global Instance term_list_in_decb : computableTime' (@list_in_decb X eqbX) _ := projT2 _term_list_in_decb. 
-
-    Lemma list_in_decb_poly: isPoly list_in_decb_time. 
-    Proof. 
-      evar (p : nat -> nat). [p] : intros n. exists p.
-      { intros L. unfold list_in_decb_time. rewrite list_size_length, maxSize_enc_size.
-        set (size _). subst p; hnf. reflexivity. } 
-      all: subst p; smpl_inO. 
-    Qed.
-
-    Definition list_incl_decb_time (p :list X * list X) := let (L1, L2) := p in (|L1| + 1) * (((|L2| + 1) * (maxSize L2 + 1) + 1)) + 1. 
-    Arguments list_incl_decb_time : simpl never. 
-    Fact _term_list_incl_decb : { time : UpToC list_incl_decb_time & computableTime' (@list_incl_decb X eqbX) (fun L1 _ => (5, fun L2 _ => (time (L1, L2), tt))) }. 
-    Proof. 
-      exists_const c1. 
-      { extract. solverec; cycle 1. 
-        + rewrite !UpToC_le. 
-          unfold list_incl_decb_time. cbn -[Nat.mul Nat.add]. 
-          unfold list_in_decb_time. set (((|x2| + 1) * (maxSize x2 + 1) + 1)). 
-          (* note that 
-          instantiate (c1 := 21 + c_of _term_list_in_decb); subst c1; nia.
-          does not work due to weird implicit argument inference in c_of *)
-          set_consts. set (c1' := 21 + C). inst_with c1 c1'. nia.  
-        + subst c1. unfold list_incl_decb_time. lia.
-      } 
-      smpl_upToC_solve. 
-    Qed.
-    Global Instance term_list_incl_decb : computableTime' (@list_incl_decb X eqbX) _ := projT2 _term_list_incl_decb. 
-
-
-    Lemma list_incl_decb_poly : isPoly list_incl_decb_time. 
-    Proof. 
-      evar (p : nat -> nat). [p]: intros n. exists p. 
-      { intros (L1 & L2). unfold list_incl_decb_time. 
-        rewrite !list_size_length. rewrite maxSize_enc_size. 
-        rewrite size_prod. cbn. set (L.size _). set (L.size _). 
-        [p] : exact ((n + 1)^3). 
-        subst p. cbn. lia. }
-      all: subst p; smpl_inO. 
-    Qed.
   End fixXeq. 
 
   (** extraction of evalVar *)
@@ -555,15 +494,38 @@ Section extraction.
   Qed.
   Instance term_evalLiteral : computableTime' evalLiteral _ := projT2 _term_evalLiteral. 
 
+  (* existsb *)
+  Definition existsb_time {X : Type} `{registered X} (p : (X -> nat) * list X) := let '(fT, l) := p in 
+    sumn (map fT l) + |l| + 1. 
+  Fact _term_existsb (X : Type) `{registered X} : { time : UpToC existsb_time & computableTime' (existsb (A := X)) (fun f fT => (1, fun L _ => (time (callTime fT, L), tt)))}. 
+  Proof. 
+    exists_const c1. 
+    { extract. solverec; cycle 1. instantiate (c1 := 15). all: lia. } 
+    smpl_upToC_solve. 
+  Qed.
+  Instance term_existsb (X : Type) `{registered X} : computableTime' (@existsb X) _ := projT2 _term_existsb. 
+
+  (* forallb *)
+  Definition forallb_time {X : Type} `{registered X} (p : (X -> nat) * list X) := let '(fT, l) := p in 
+    sumn (map fT l) + |l| + 1. 
+  Fact _term_forallb (X : Type) `{registered X} : { time : UpToC forallb_time & computableTime' (forallb (A := X)) (fun f fT => (1, fun L _ => (time (callTime fT, L), tt)))}. 
+  Proof. 
+    exists_const c1. 
+    { extract. solverec; cycle 1. instantiate (c1 := 15). all: lia. } 
+    smpl_upToC_solve. 
+  Qed.
+  Instance term_forallb (X : Type) `{registered X} : computableTime' (@forallb X) _ := projT2 _term_forallb. 
+
   (* evalClause *)
   Definition evalClause_time (p : assgn * clause) := let (a, C) := p in (|C| + 1) * (((|a|) + 1) * (maxSize a + 1)) + 1. 
   Fact _term_evalClause : { time : UpToC evalClause_time & computableTime' evalClause (fun a _ => (5, fun C _ => (time (a, C), tt))) }. 
   Proof. 
     exists_const c1. 
-    { extract. recRel_prettify2; cycle 1.
-      + rewrite !UpToC_le. unfold evalLiteral_time, evalClause_time. 
-        cbn [length]. set_consts. set (c1' := 2*2*C + 22). inst_with c1 c1'. lia.
-      + subst c1; solverec. } 
+    { extract. recRel_prettify2; cycle 1. cbn. 2: lia. 
+      rewrite !UpToC_le. unfold existsb_time. 
+      setoid_rewrite sumn_map_mono. 2: { intros. rewrite !UpToC_le at 1. inst_const. } 
+      unfold evalLiteral_time. rewrite sumn_map_const. set_consts. 
+      set (c1' := C + 2*C * C0 + 3). inst_with c1 c1'. lia. } 
     smpl_upToC_solve. 
   Qed.
   Instance term_evalClause : computableTime' evalClause _ := projT2 _term_evalClause.
@@ -579,15 +541,20 @@ Section extraction.
   Qed.
   Arguments evalClause_time: simpl never. 
 
+  Lemma sumn_map_mult_c_l (X : Type) (f : X -> nat) (c : nat) (l : list X): 
+    sumn (map (fun x : X => c * f x) l) = c * sumn (map f l).
+  Proof. induction l; cbn; lia. Qed.
+
   (* evalCnf *)
   Definition evalCnf_time (p : assgn * cnf) := let (a, N) := p in sumn (map (fun C => evalClause_time (a, C)) N) + (|N|) + 1. 
   Fact _term_evalCnf : { time : UpToC evalCnf_time & computableTime' evalCnf (fun a _ => (5, fun N _ => (time (a, N), tt)))}. 
   Proof. 
     exists_const c1. 
-    { extract. solverec; cycle 1. 
-      + set (sumn _). rewrite UpToC_le.
-        instantiate (c1 := c_of _term_evalClause + 21). subst c1. lia. 
-      + subst c1. leq_crossout. 
+    { extract. solverec. 
+      rewrite UpToC_le.
+      unfold forallb_time. rewrite sumn_map_mono. 2: { intros. rewrite UpToC_le at 1. inst_const. } 
+      rewrite sumn_map_mult_c_l. set (sumn _). 
+      set_consts. set (c1' := (C+1) * (C0 +1) +7). inst_with c1 c1'. lia. 
     } 
     smpl_upToC_solve. 
   Qed.

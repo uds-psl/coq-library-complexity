@@ -4,6 +4,8 @@ From Undecidability.L Require Import L.
 (*From Undecidability.Shared Require Import Prelim.*)
 From Undecidability.L.Complexity Require Export Tactics.
 
+(** * Various preliminaries for the TM -> SAT part of the Cook-Levin Theorem *)
+
 (** Results regarding lists *)
 Section tabulate.
   Variable (A : Type).

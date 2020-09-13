@@ -498,7 +498,8 @@ Proof.
     + cbn. apply F2. 
   - intros (a & H). 
     rewrite app_singleton in H. unfold satisfies in H. apply evalCnf_app_iff in H as (H6 & H7). 
-    apply H2 in H7. cbn in H6. apply eqb_prop in H6. apply H7 in H6.
+    apply H2 in H7. cbn in H6. 
+    rewrite andb_true_r in H6. rewrite orb_false_r in H6.  apply eqb_prop in H6. apply H7 in H6.
     exists a. apply H6. 
 Qed. 
 
@@ -731,7 +732,7 @@ Lemma reduction_poly_size:
 Proof. 
   evar (p : nat -> nat). exists p. split. 
   - intros f. 
-    rewrite cnf_enc_size_bound with (c := reduction f).
+    rewrite cnf_enc_size_bound with (N := reduction f).
     rewrite cnf_varsIn_bound. 
     2: { eapply cnf_varsIn_monotonic. 2: apply reduction_varBound. 
          intros n. cbn-[Nat.mul]. apply Nat.lt_le_incl. }
