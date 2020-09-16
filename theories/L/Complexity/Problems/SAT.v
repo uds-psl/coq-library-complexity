@@ -467,8 +467,9 @@ Section extraction.
         + subst c. unfold list_in_decb_time. cbn. lia. }
       smpl_upToC_solve. 
     Qed.
-    Global Instance term_list_in_decb : computableTime' (@list_in_decb X eqbX) _ := projT2 _term_list_in_decb. 
+    Instance term_list_in_decb : computableTime' (@list_in_decb X eqbX) _ := projT2 _term_list_in_decb. 
   End fixXeq. 
+  Existing Instance term_list_in_decb. 
 
   (** extraction of evalVar *)
   (* evalVar *)
@@ -517,7 +518,7 @@ Section extraction.
   Instance term_forallb (X : Type) `{registered X} : computableTime' (@forallb X) _ := projT2 _term_forallb. 
 
   (* evalClause *)
-  Definition evalClause_time (p : assgn * clause) := let (a, C) := p in (|C| + 1) * (((|a|) + 1) * (maxSize a + 1)) + 1. 
+  Definition evalClause_time (p : assgn * clause) := let (a, C) := p in (|C| + 1) * ((|a|) + 1) * (maxSize a + 1). 
   Fact _term_evalClause : { time : UpToC evalClause_time & computableTime' evalClause (fun a _ => (5, fun C _ => (time (a, C), tt))) }. 
   Proof. 
     exists_const c1. 
