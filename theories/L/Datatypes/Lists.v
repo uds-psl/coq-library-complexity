@@ -507,7 +507,6 @@ Section list_in_time.
     all: unfold c__listInDecb; solverec.
   Qed. 
 
-
   Definition c__list_incl_decb := 22.
   Fixpoint list_incl_decb_time (a b : list X) := 
     match a with 
