@@ -9,6 +9,8 @@ COQDOCFLAGS = "--charset utf-8 -s --with-header ../website/resources/header.html
 L/Complexity/Reductions/Cook/SingleTMGenNP_to_TCC.v
 L/Complexity/CookLevin.v
 
+L/Complexity/bench.v
+
 
 L/Complexity/Problems/Cook/SingleTMGenNP.v
 L/Complexity/UpToCPoly.v
