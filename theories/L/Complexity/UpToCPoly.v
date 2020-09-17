@@ -39,7 +39,7 @@ Ltac inst_with c c' :=
   | c0 := _ |- _ => try fold c0 in c 
   end; 
   subst c.
-
+Tactic Notation "inst" ident(c) "with" constr(t) := let c' := fresh "c" in set (c' := t); inst_with c c'.
 
 Record isPoly (X : Type) `{registered X} (f : X -> nat) : Set := 
   { 
