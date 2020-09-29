@@ -7,19 +7,16 @@
 (*         CeCILL v2 FREE SOFTWARE LICENSE AGREEMENT          *)
 (**************************************************************)
 
-Require Import List Arith Lia Omega.
+Require Import List Arith Lia.
 
-From Undecidability.Shared.Libs.DLW.Utils 
-  Require Import utils_tac utils_nat utils_list crt.
-
-From Undecidability.Shared.Libs.DLW.Vec 
-  Require Import pos vec.
+From Undecidability.Shared.Libs.DLW
+  Require Import utils_tac utils_nat utils_list crt pos vec.
 
 From Undecidability.MuRec 
   Require Import recalg ra_utils ra_enum recomp ra_recomp beta ra_godel_beta.
 
-From Undecidability.H10C 
-  Require Import h10c_defs h10c_utils.
+From Undecidability.DiophantineConstraints 
+  Require Import H10C Util.h10c_utils.
 
 Set Implicit Arguments.
 
@@ -74,7 +71,7 @@ Proof.
   2: apply pos2nat_prop.
   unfold f, n.
   destruct (le_lt_dec (length lc) (pos2nat p)) as [ H | H ].
-  + generalize (pos2nat_prop p); try omega.
+  + generalize (pos2nat_prop p); lia.
   + rewrite nat2pos_pos2nat; auto.
 Qed. 
 
@@ -134,7 +131,7 @@ Section ra_h10uc.
       intros H; eq goal H; f_equal.
       unfold ite_rel, h10uc_test.
       fold vx; fold vy; fold vz.
-      case_eq (1 + vx + vy * vy - vz); destruct (eq_nat_dec (1+vx+vy*vy) vz); intros; omega. }
+      case_eq (1 + vx + vy * vy - vz); destruct (eq_nat_dec (1+vx+vy*vy) vz); intros; lia. }
     pos split; simpl.
     exists (ite_rel (1+vx+vy*vy-vz) (vz-(1+vx+vy*vy)) 1##vec_nil); split.
     { apply ra_not_val. }
@@ -339,7 +336,7 @@ Section ra_univ_ad.
             (Hlc : lc = nat_h10luc k).
 
   Let Hf_val_0 v : 
-        (forall c, In c lc -> h10uc_sem c (godel_beta (decomp_l v) (decomp_r v)))
+        (forall c, In c lc -> h10uc_sem (godel_beta (decomp_l v) (decomp_r v)) c)
      -> ⟦f⟧ (v##k##vec_nil) 0.
   Proof.
     intros H2.
@@ -371,7 +368,7 @@ Section ra_univ_ad.
   Qed.
  
   Let Hf_val_1 v : 
-        (exists c, In c lc /\ ~ h10uc_sem c (godel_beta (decomp_l v) (decomp_r v)))
+        (exists c, In c lc /\ ~ h10uc_sem (godel_beta (decomp_l v) (decomp_r v)) c)
      -> ⟦f⟧ (v##k##vec_nil) 1.
   Proof.
     intros H2.
@@ -417,7 +414,7 @@ Section ra_univ_ad.
   Opaque f.
 
   Theorem ra_univ_ad_spec : ex (⟦ra_univ_ad⟧ (k##vec_nil)) 
-                     <-> exists φ, forall c, In c lc -> h10uc_sem c φ.
+                     <-> exists φ, forall c, In c lc -> h10uc_sem φ c.
   Proof.
     split.
     + intros (v & Hv).
@@ -440,5 +437,3 @@ Section ra_univ_ad.
   Qed.
 
 End ra_univ_ad.
-
-

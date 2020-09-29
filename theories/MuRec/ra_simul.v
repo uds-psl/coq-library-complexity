@@ -7,22 +7,16 @@
 (*         CeCILL v2 FREE SOFTWARE LICENSE AGREEMENT          *)
 (**************************************************************)
 
-Require Import List Arith Omega.
+Require Import List Arith Lia.
 
-From Undecidability.Shared.Libs.DLW.Utils
-  Require Import utils_tac utils_nat.
+From Undecidability.Shared.Libs.DLW
+  Require Import utils_tac utils_nat pos vec sss.
 
-From Undecidability.Shared.Libs.DLW.Vec
-  Require Import pos vec.
-
-From Undecidability.ILL.Code
-  Require Import sss subcode.
-
-From Undecidability.ILL.Mm
+From Undecidability.MinskyMachines 
   Require Import mm_defs.
 
 From Undecidability.MuRec 
-  Require Import recalg ra_mm. 
+  Require Import recalg ra_mm.
 
 Set Implicit Arguments.
 
@@ -40,7 +34,7 @@ Proof.
   exists m, P; split.
   + intros (x & Hx).
     exists (1+length P,vec_app v (x##vec_zero)); split; auto.
-    simpl; omega.
+    simpl; lia.
   + intros H; apply H2; eq goal H; do 2 f_equal.
 Qed.
 

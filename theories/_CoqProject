@@ -83,6 +83,8 @@ Shared/Libs/DLW/Utils/sorting.v
 Shared/Libs/DLW/Utils/utils_decidable.v
 Shared/Libs/DLW/Utils/interval.v
 
+Shared/Libs/DLW/Utils/list_bool.v       # used in iBPCP to BSM reduction
+
 Shared/Libs/DLW/Utils/sums.v
 Shared/Libs/DLW/Utils/binomial.v
 Shared/Libs/DLW/Utils/bool_list.v
@@ -113,6 +115,12 @@ Shared/Libs/DLW/Wf/wf_chains.v
 Shared/Libs/DLW/Wf/wf_finite.v
 Shared/Libs/DLW/Wf/wf_incl.v
 
+Shared/Libs/DLW/Code/subcode.v
+Shared/Libs/DLW/Code/sss.v
+Shared/Libs/DLW/Code/compiler.v
+Shared/Libs/DLW/Code/compiler_correction.v
+
+
 Problems/Reduction.v
 
 # Abstract L simulator as Turing Machine
@@ -141,15 +149,19 @@ PCP/Reductions/PCP_to_PCPb.v
 PCP/Reductions/PCPb_iff_iPCPb.v
 PCP/Reductions/SR_to_MPCP.v
 PCP/Reductions/MPCP_to_MPCPb.v
+PCP/Reductions/HaltTM_to_PCP.v
+PCP/Reductions/HaltTM_to_iPCPb.v
+PCP/Reductions/HALT_TM1_to_PCPb.v
 
 #String rewriting
-SR/SR.v
-SR/SR_undec.v
+StringRewriting/SR.v
+StringRewriting/SR_undec.v
 
-SR/Util/Definitions.v
-SR/Util/singleTM.v
-SR/Reductions/SRH_to_SR.v
-SR/Reductions/TM_to_SRH.v
+StringRewriting/Util/Definitions.v
+StringRewriting/Util/singleTM.v
+StringRewriting/Reductions/SRH_to_SR.v
+StringRewriting/Reductions/TM_to_SRH.v
+StringRewriting/Reductions/HaltTM_to_SR.v
 
 #Context-free grammars
 CFG/CFP.v
@@ -162,7 +174,7 @@ CFG/Reductions/PCP_to_CFPI.v
 CFG/Reductions/CFPP_to_CFP.v
 CFG/Reductions/CFPI_to_CFI.v
 
-
+# First order logic
 FOL/DecidableEnumerable.v
 FOL/Reductions.v
 FOL/MarkovPost.v
@@ -177,47 +189,54 @@ FOL/BPCP_CND.v
 FOL/Weakening.v
 FOL/Infinite.v
 
-ILL/Definitions.v
+# Minsky machines with n counter (2 different semantics) and with 2 counters 
+MinskyMachines/MM.v             # generic X-bounded MM (X=pos n or X=nat is type of registers) 
+                                # with CPP19 semantics (MM) and alternate semantics (MMA)
+MinskyMachines/MMA.v            # simply exports MM.v
+MinskyMachines/MM2.v            # self contained two counter MM with alternate semantics
+MinskyMachines/MM_undec.v       # undec for MM(n), CPP2019
+MinskyMachines/MMA2_undec.v     # undec for MMA(2)
+MinskyMachines/MM2_undec.v      # undec for MM2
 
-ILL/Code/subcode.v
-ILL/Code/sss.v
-ILL/Code/compiler.v
-#ILL/Code/compiler_new.v
+MinskyMachines/Reductions/BSM_MM.v
+MinskyMachines/Reductions/PCPb_to_MM.v
+MinskyMachines/Reductions/HaltTM_to_MM.v
+MinskyMachines/Reductions/FRACTRAN_to_MMA2.v
+MinskyMachines/Reductions/MMA2_to_MM2.v
+MinskyMachines/Reductions/MMA2_to_MMA2_zero.v
+MinskyMachines/Reductions/MM_to_MMA2.v
+MinskyMachines/Reductions/MUREC_MM.v
 
-ILL/Bsm/list_bool.v
-ILL/Bsm/tiles_solvable.v
-ILL/Bsm/bsm_defs.v
-ILL/Bsm/bsm_utils.v
-ILL/Bsm/bsm_pcp.v
+MinskyMachines/MM/mm_defs.v         # (pos n)-bounded MM
+MinskyMachines/MM/mm_utils.v        # utilities
+MinskyMachines/MM/mm_comp.v         # the CPP19 compiler
+#MinskyMachines/MM/mm_comp_old.v     # older compiler (not that modular)
+MinskyMachines/MM/mm_no_self.v      # Removal of self loops, ie i: DEC x i
 
-ILL/Code/compiler_correction.v
+MinskyMachines/MMA/mma_defs.v       # (pos n)-bounded MM with alternate semantics
+MinskyMachines/MMA/mma_utils.v      # utilities
+MinskyMachines/MMA/mma_simul.v      # simulation for HALTING HALTS_ON_ZERO reduction
+MinskyMachines/MMA/fractran_mma.v   # FRACTRAN to MMA2 compiler
 
-ILL/iBPCP_BSM.v
+MinskyMachines/MMenv/env.v          # environments for nat-bounded MM
+MinskyMachines/MMenv/mme_defs.v     # X-bounded MM definitions      
+MinskyMachines/MMenv/mme_utils.v    # nat-bounded MM utils for MuRec ~~> MM(nat) compiler
 
-ILL/Mm/mm_defs.v
-ILL/Mm/mm_utils.v
-ILL/Mm/mm_comp.v
-#ILL/Mm/mm_no_self.v
-#ILL/Mm/mm_comp_old.v
+# Intuitionistic Linear Logic (cf CPP'19 YF&DLW)
+ILL/EILL.v
+ILL/ILL.v
+ILL/ILL_undec.v
 
-ILL/BSM_MM.v
+ILL/Reductions/PCP_iBPCP.v
+ILL/Reductions/iBPCP_MM.v
+ILL/Reductions/MM_EILL.v
+ILL/Reductions/EILL_ILL.v
 
 ILL/Ll/ill.v
 ILL/Ll/eill.v
 ILL/Ll/eill_mm.v
 
-ILL/EILL_ILL.v
-ILL/MM_EILL.v
-
-ILL/UNDEC.v
-
-MM/mma_defs.v
-MM/mma_utils.v
-MM/fractran_mma.v
-MM/env.v
-MM/mm_instr.v
-MM/mm_env_utils.v
-
+# µ-recursive algorithms
 MuRec/recalg.v
 MuRec/ra_utils.v
 MuRec/beta.v
@@ -239,11 +258,16 @@ MuRec/recursor.v
 MuRec/ra_sem_eq.v
 MuRec/ra_ca.v
 
-H10/Fractran/mm_no_self.v
-H10/Fractran/prime_seq.v
-H10/Fractran/fractran_defs.v
-H10/Fractran/mm_fractran.v
-H10/Fractran/fractran_dio.v
+# FRACTRAN (from H10 FSCD'19, DLW & YF)
+FRACTRAN/FRACTRAN.v
+FRACTRAN/FRACTRAN_undec.v
+FRACTRAN/Reductions/MM_FRACTRAN.v
+FRACTRAN/Reductions/HaltTM_to_FRACTRAN_HALTING.v
+FRACTRAN/Utils/prime_seq.v
+FRACTRAN/FRACTRAN/fractran_utils.v
+FRACTRAN/FRACTRAN/mm_fractran.v
+
+# Hilbert Tenth problem (FSCD'19, DLW & YF)
 
 H10/ArithLibs/Zp.v
 H10/ArithLibs/matrix.v
@@ -254,7 +278,6 @@ H10/Matija/alpha.v
 H10/Matija/expo_diophantine.v
 H10/Matija/cipher.v
 
-
 H10/Dio/dio_logic.v
 H10/Dio/dio_elem.v
 H10/Dio/dio_single.v
@@ -264,15 +287,15 @@ H10/Dio/dio_cipher.v
 H10/Dio/dio_bounded.v
 H10/Dio/dio_rt_closure.v
 
-H10/HALT_MM.v
-H10/MM_FRACTRAN.v
-H10/FRACTRAN_DIO.v
-H10/H10.v
-H10/DPRM.v
-H10/H10Z.v
+H10/Fractran/fractran_dio.v
 
-H10C/h10c_defs.v
-H10C/h10c_utils.v
+H10/FRACTRAN_DIO.v
+H10/DPRM.v
+H10/H10.v
+H10/H10Z.v
+H10/H10_undec.v
+H10/H10Z_undec.v
+
 
 # Basics
 TM/Prelim.v
@@ -671,6 +694,94 @@ TRAKHTENBROT/red_undec.v
 
 # TRAKHTENBROT/summary.v
 
+#Counter Machines
+CounterMachines/CM1.v
+CounterMachines/CM1_undec.v
+CounterMachines/CM2.v
+CounterMachines/CM2_undec.v
+
+CounterMachines/Util/Nat_facts.v
+CounterMachines/Util/List_facts.v
+CounterMachines/Util/CM1_facts.v
+CounterMachines/Util/MM2_facts.v
+CounterMachines/Reductions/MM2_HALTING_to_CM1c4_HALT.v
+CounterMachines/Reductions/MM2_HALTING_to_CM2_HALT.v
+CounterMachines/Reductions/HaltTM_to_CM1c4_HALT.v
+
+#Stack Machines
+StackMachines/BSM.v
+StackMachines/BSM_undec.v
+StackMachines/SMN.v
+StackMachines/SMN_undec.v
+StackMachines/SSM.v
+StackMachines/SSM_undec.v
+
+StackMachines/BSM/bsm_defs.v
+StackMachines/BSM/bsm_utils.v
+StackMachines/BSM/bsm_pcp.v
+StackMachines/BSM/tiles_solvable.v
+
+StackMachines/Util/Facts.v
+StackMachines/Util/Nat_facts.v
+StackMachines/Util/List_facts.v
+StackMachines/Util/Enumerable.v
+StackMachines/Util/SMX.v
+StackMachines/Util/SMX_facts.v
+StackMachines/Util/SMN_facts.v
+StackMachines/Util/CSSM_facts.v
+
+StackMachines/Reductions/CM1_to_SMX.v
+StackMachines/Reductions/CM1c4_HALT_to_SMNdl_UB.v
+StackMachines/Reductions/SMN_transform.v
+StackMachines/Reductions/SMNdl_UB_to_CSSM_UB.v
+StackMachines/Reductions/HaltTM_to_CSSM_UB.v
+StackMachines/Reductions/iPCPb_to_BSM_HALTING.v
+
+#Semi-unification
+SemiUnification/SemiU.v
+SemiUnification/SemiU_undec.v
+
+SemiUnification/Util/Facts.v
+SemiUnification/Util/Enumerable.v
+SemiUnification/Reductions/CSSM_UB_to_SSemiU.v
+SemiUnification/Reductions/SSemiU_to_SemiU.v
+SemiUnification/Reductions/HaltTM_to_SemiU.v
+
+#Diophantine Constraints
+DiophantineConstraints/H10C.v
+DiophantineConstraints/H10C_undec.v
+
+DiophantineConstraints/Util/h10c_utils.v
+DiophantineConstraints/Reductions/H10C_SAT_to_H10UC_SAT.v
+DiophantineConstraints/Reductions/FRACTRAN_to_H10C_SAT.v
+
+#Set Constraints
+SetConstraints/FMsetC.v
+SetConstraints/FMsetC_undec.v
+
+SetConstraints/Util/Facts.v
+SetConstraints/Util/mset_eq_utils.v
+SetConstraints/Util/mset_poly_utils.v
+SetConstraints/Reductions/H10UC_SAT_to_FMsetC_SAT.v
+
+#Polynomial Constraints
+PolynomialConstraints/LPolyNC.v
+PolynomialConstraints/LPolyNC_undec.v
+
+PolynomialConstraints/Util/Facts.v
+PolynomialConstraints/Util/PolyFacts.v
+PolynomialConstraints/Reductions/FMsetC_SAT_to_LPolyNC_SAT.v
+
+#Hilbert-style Calculi
+HilbertCalculi/HSC.v
+HilbertCalculi/HSC_undec.v
+
+HilbertCalculi/Util/Facts.v
+HilbertCalculi/Util/HSCFacts.v
+HilbertCalculi/Reductions/MPCPb_to_HSC_PRV.v
+HilbertCalculi/Reductions/MPCPb_to_HSC_AX.v
+
+#Legacy Problems
 Problems/FOL.v
 Problems/TM.v
 Problems/MM.v
@@ -679,23 +790,23 @@ Problems/BSM.v
 Problems/ILL.v
 Problems/FRACTRAN.v
 Problems/DIOPHANTINE.v
-Problems/H10C.v
 Problems/RA_UNIV.v
 Problems/cbvLambda.v
 Problems/FOLFS.v
 
+#Legacy Reductions
 Reductions/BPCP_to_BSM.v
 Reductions/BSM_to_MM.v  
+Reductions/PCPb_to_MM.v  
 Reductions/MM_to_ILL.v  
 Reductions/BPCP_to_FOL.v
 Reductions/DIO_MUREC.v
 Reductions/H10C_RA_UNIV.v
 Reductions/MUREC_MM.v
-Reductions/MMA2_to_MM2.v
-Reductions/MM_to_MMA2.v
 Reductions/MM_to_FRACTRAN.v
 Reductions/FRACTRAN_to_MMA2.v
-Reductions/FRACTRAN_to_H10C.v
+Reductions/MM_to_MMA2.v
+Reductions/MMA2_to_MM2.v
 Reductions/L_to_mTM.v
 Reductions/mTM_to_TM.v
 Reductions/BPCP_to_FOLFS.v

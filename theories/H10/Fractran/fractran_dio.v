@@ -11,16 +11,13 @@
 
 (* Require Import dio_expr dio_logic dio_elem dio_poly. *)
 
-Require Import List Arith Omega.
+Require Import List Arith.
 
-From Undecidability.Shared.Libs.DLW.Utils 
-  Require Import utils_tac utils_list sums rel_iter gcd.
+From Undecidability.Shared.Libs 
+  Require Import utils_tac utils_list sums rel_iter gcd pos vec.
 
-From Undecidability.Shared.Libs.DLW.Vec 
-  Require Import pos vec.
-
-From Undecidability.H10.Fractran 
-  Require Import fractran_defs prime_seq.
+From Undecidability.FRACTRAN 
+  Require Import FRACTRAN fractran_utils prime_seq.
 
 From Undecidability.H10.Dio 
   Require Import dio_logic dio_bounded dio_rt_closure dio_single.
