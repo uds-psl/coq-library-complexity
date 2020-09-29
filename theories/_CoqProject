@@ -58,7 +58,19 @@ L/Complexity/Reductions/Cook/BinaryCC_to_FSAT.v
 L/Complexity/Reductions/FSAT_to_SAT.v
 
 Shared/Prelim.v
+Shared/Dec.v
+Shared/ListAutomation.v
+Shared/FilterFacts.v
+Shared/embed_nat.v
 
+Synthetic/Definitions.v
+Synthetic/Undecidability.v
+Synthetic/DecidabilityFacts.v
+Synthetic/SemiDecidabilityFacts.v
+Synthetic/EnumerabilityFacts.v
+Synthetic/ListEnumerabilityFacts.v
+Synthetic/MoreEnumerabilityFacts.v
+Synthetic/ReducibilityFacts.v
 
 Shared/Libs/DLW/Utils/focus.v
 Shared/Libs/DLW/Utils/utils_tac.v
@@ -266,6 +278,7 @@ H10C/h10c_utils.v
 TM/Prelim.v
 TM/Relations.v
 TM/TM.v
+TM/Halting.v
 TM/ArithPrelim.v
 TM/VectorPrelim.v
 
