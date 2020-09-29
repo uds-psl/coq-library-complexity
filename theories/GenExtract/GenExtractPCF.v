@@ -93,6 +93,27 @@ Module Env.
 End Env.
 Import Env.
 
+Inductive eval__pcf : pcf 0 -> pcf 0 -> Prop :=
+evalConstPcf c: eval__pcf (constPcf c) (constPcf c)
+| evalBetaPcf s s' t t' u :
+    eval__pcf s (lamPcf s')
+    -> eval__pcf t t'
+    -> eval__pcf (subst_pcf (u.:ids) s') u
+    -> eval__pcf (appPcf s t) u
+| evalAbsPcf s : eval__pcf (lamPcf s) (lamPcf s)
+| evalFixBetaPcf s s' t u:
+    eval__pcf s (fixPcf s')
+    -> eval__pcf (appPcf (appPcf s' (fixPcf s')) t) u
+    -> eval__pcf (appPcf s t) u
+| evalFixAbsPcf s:
+    eval__pcf (fixPcf s) (fixPcf s)
+| evalCaseNatPcf s__c m s__O s__S u : 
+    eval__pcf s__c (constPcf m)
+    -> eval__pcf (match m with 0 => s__O | S m => appPcf s__S (constPcf m) end) u
+    -> eval__pcf (caseNatPcf s__c s__O s__S) u
+| evalSuccPcf s m:
+    eval__pcf s (constPcf m)
+    -> eval__pcf (appPcf succPcf s) (constPcf (S m)).
 
 Section scopedSyntax.
   
@@ -240,6 +261,48 @@ Inductive isPCF : forall n (Γ : typeContext n) (A: anyTT), (valueContext Γ -> 
 | isPCF_Succ n Γ:
     @isPCF n Γ (TyArr _ _) (fun _ => S) (succPcf)
 | isPCF_Fix_unaryNat n Γ s (A:anyTT)
+                      (f : valueContext Γ -> (nat -> aTy A) -> nat -> aTy A)
+                      (F : valueContext Γ -> nat -> A.(aTy))
+                      (R : forall (ctx : valueContext Γ), nat -> nat -> Prop )
+                      (f__R : forall (ctx : valueContext Γ) x, (forall y, R ctx y x -> aTy A) -> aTy A)
+                      (WF__R : forall ctx, well_founded (R ctx))
+                      (eq__fun : forall (ctx : valueContext Γ) (x:nat),
+                         F ctx x = Fix (WF__R ctx) (fun _ => aTy A) (fun y F' => f__R ctx _ F') x)
+                         (eq__ext : forall ctx F' x, f ctx F' x = f__R ctx x (fun y _ => F' y)):
+    (*TODO: how exactly does recursion work in general: how is the functional recurrsor connected to functional recursion principle? *)
+
+    (* Note: I expect that P must be extensional in the first argument. *)
+    isPCF n Γ (TyArr (TyArr TyNat A) (TyArr TyNat A)) f s
+    -> isPCF n Γ {|aTT := TyArr TyNat A|} (fun ctx x => F ctx x) (fixPcf s).
+
+Arguments isPCF {_} _ _ _.
+
+(*
+(** * Guess:
+ This is just the combination of a typing judgement, extensional equality and the denotational semantics for PCF*)
+Inductive logRel : forall n (Γ : typeContext n) (A: anyTT), (valueContext Γ -> A.(aTy) -> Prop) -> (pcf n) -> Type :=
+  logRel_Const n Γ (c:nat) :
+    logRel n Γ TyNat (fun _ res => res = c) (constPcf c)
+| logRel_Rel n Γ x : logRel n Γ (Γ x) (fun ctx res => res = ctx x) (var_pcf x)
+| logRel_App n Γ s t (A B : anyTT)
+            (R__f:valueContext Γ -> (A.(aTy) -> B.(aTy)) -> Prop) (R__x: valueContext Γ -> A.(aTy) -> Prop):
+    logRel n Γ (TyArr A B) R__f s
+    -> logRel n Γ A R__x t
+    -> logRel n Γ B (fun ctx res => forall x f, R__x ctx x -> R__f ctx (f x)) (appPcf s t)
+| logRel_Lambda n (Γ : typeContext n) s A B (R__f:valueContext Γ -> (A.(aTy) -> B.(aTy)) -> Prop):
+    logRel (S n) (A.:Γ) B (fun ctx res => forall f, R__f (fun x => ctx (Some x)) f -> res = f (ctx None)) s
+    -> @logRel n Γ (TyArr A B) R__f (lamPcf s).
+| logRel_Case_nat n Γ s__x s__O s__S A x
+                  (f__O : valueContext Γ -> A.(aTy) -> Prop)
+                  (f__S: valueContext Γ -> (nat -> A.(aTy)) -> Prop):
+    logRel n Γ TyNat R__x s__x
+    -> logRel n Γ A R__O s__O
+    -> logRel n Γ (TyArr TyNat A) R__S s__S (* "inlining" means that we can reuse the Lambda-part of proofs *)
+    -> logRel n Γ A (fun ctx => match x ctx with 0 => f__O ctx | S n => f__S ctx n end) (caseNatPcf s__x s__O s__S)
+             
+| logRel_Succ n Γ:
+    @logRel n Γ (TyArr _ _) (fun _ => S) (succPcf)
+| logRel_Fix_unaryNat n Γ s (A:anyTT)
                      (f : valueContext Γ -> (nat -> aTy A) -> nat -> aTy A)
                      (F : valueContext Γ -> nat -> A.(aTy))
                      (eq__fun : forall (ctx : valueContext Γ) (x:nat), F ctx x = f ctx (F ctx) x)
@@ -250,33 +313,37 @@ Inductive isPCF : forall n (Γ : typeContext n) (A: anyTT), (valueContext Γ -> 
     (*TODO: how exactly does recursion work in general: how is the functional recurrsor connected to functional recursion principle? *)
 
     (* Note: I expect that P must be extensional in the first argument. *)
-    isPCF n Γ (TyArr (TyArr TyNat A) (TyArr TyNat A)) f s
-    -> isPCF n Γ {|aTT := TyArr TyNat A|} (fun ctx x => F ctx x) (fixPcf s).
-
-
-Arguments isPCF {_} _ _ _.
-
-(* Missing: Fixes, match nat*)
-
+    logRel n Γ (TyArr (TyArr TyNat A) (TyArr TyNat A)) f s
+    -> logRel n Γ {|aTT := TyArr TyNat A|} (fun ctx x => F ctx x) (fixPcf s).
+*)
 (*Lemma isPCF_mono : isPCF n Γ tt f *)
 
 Lemma isPCF_plus n (Γ: typeContext n): { s & isPCF Γ (TyArr _ (TyArr _ _)) (fun _ => plus) s}.
 Proof.
   unfold Init.Nat.add. eexists.
-  apply @isPCF_Fix_unaryNat with (A := {| aTT := (TyArr TyNat TyNat) |} )
+  unshelve eapply @isPCF_Fix_unaryNat with (A := {| aTT := (TyArr TyNat TyNat) |} )
                                  (f:= fun ctx=> fun F n m => match n  with
                                                    | 0 => m
                                                    | S p => S (F p m)
-                                                   end).
-  now intros arg [].
-  (*
-  {fold plus. intros P IH ctx. specialize (IH ctx). cbn in *. change (fun x : nat => Init.Nat.add x) with plus in *.
-   specialize IH with (f':=plus) as IH'.
-   fix REC 1. intros [|n']. all:cbn.
-   -clear REC. specialize (IH 0). cbn in IH. apply IH. refine (IH _ _). cbn in IH. eapply IH. eassumption. specialize (REC 0). cbn in REC. exact REC. Guarded. destruct x.
-   -refine (f' := )
-   induction x. eapply IH. 
-   change (fun x y : nat => Init.Nat.add x y) with plus in *.  cbn in P. *)
+                                                   end)
+                                                   (R:= fun ctx x y => S x = y)
+                                 (f__R:= fun ctx=> fun n F m => match n  with
+                                                   | 0 => fun _ => m
+                                                   | S p => fun H => S (F p H m)
+                                                   end eq_refl)
+                                 .
+  1:shelve.
+  1:abstract (intros ?; hnf; fix IH 1; intros [];constructor;[lia |intros ? [= ->];now hnf]).
+  all:fold plus.
+  1:{ intros ctx. unfold Fix. generalize (isPCF_plus_subproof n Γ ctx) as H. intros H.
+     fix IH 1.
+    intros [|x'];rewrite <- Fix_F_eq. reflexivity. cbn.
+     eapply FunctionalExtensionality.functional_extensionality. intros x. f_equal.
+     specialize (IH x'). cbn in *. rewrite IH.
+     erewrite Fix_F_inv. reflexivity. easy. intros [] f g F; cbn. easy.
+     eapply FunctionalExtensionality.functional_extensionality. now rewrite F. 
+    }
+    1:intros ? F [];reflexivity.
   eapply @isPCF_Lambda with (A := (TyNat ~> TyNat ~> TyNat)) (B := (TyNat ~> TyNat ~> TyNat)).
   eapply @isPCF_Lambda with (A := TyNat) (B := (TyNat ~> TyNat)).
   eapply @isPCF_Lambda with (A := TyNat) (B := TyNat).
