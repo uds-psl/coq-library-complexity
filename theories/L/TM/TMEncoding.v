@@ -2,13 +2,12 @@ From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import LNat Lists LProd LFinType LVector.
 From Undecidability.L Require Import Functions.EqBool.
 
-From Undecidability Require Import TM.VectorPrelim.
+From Undecidability Require Import TM.Util.VectorPrelim.
 
 
-From Undecidability Require Import TM.VectorPrelim.
 
-
-From Undecidability Require Import TM.TM L.Functions.Decoding.
+From Undecidability Require Import TM.Util.VectorPrelim.
+From Undecidability Require Import TM.Util.TM_facts L.Functions.Decoding.
 Require Import PslBase.FiniteTypes.FinTypes.
 
 Import L_Notations.
@@ -20,6 +19,10 @@ MetaCoq Run (tmGenEncode "move_enc" move).
 Hint Resolve move_enc_correct : Lrewrite.
 
 Import TM.
+Local Notation L := TM.Lmove.
+Local Notation R := TM.Rmove.
+Local Notation N := TM.Nmove.
+
 Definition move_eqb (m n : move) : bool :=
   match m,n with
     N,N => true

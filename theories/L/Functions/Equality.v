@@ -50,6 +50,6 @@ Proof.
   unfold enc;cbn. unfold term_enc.
   extract. unfold eqb,eqbTime.
   [c]:exact (5 + c__eqbComp nat).
-  all:unfold c. set (c__eqbComp nat). change (nat_enc) with (enc (X:=nat)).
+  all:unfold c. set (c__eqbComp nat). change (LNat.nat_enc) with (enc (X:=nat)).
   solverec. all:try nia. 
 Qed.

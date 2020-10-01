@@ -1,4 +1,4 @@
-From Undecidability.L Require Import L Prelim.LoopSum Functions.UnboundIteration AbstractMachines.LargestVar.
+From Undecidability.L Require Import L_facts Prelim.LoopSum Functions.UnboundIteration AbstractMachines.LargestVar.
 From Undecidability.L.AbstractMachines Require Import AbstractHeapMachine UnfoldHeap.
 Import AbstractHeapMachineDef.clos_notation.
 

@@ -657,7 +657,7 @@ Section uptoc_mixed.
       + eexists. eapply computesTime_timeLeq. 2: apply term_sat_verifierb.
         cbn. intros [N a] _. split; [ | easy]. rewrite !UpToC_le. unfold sat_verifierb_time.
         rewpoly evalCnf_poly. monopoly (evalCnf_poly). 2: { instantiate (1 := size (enc (N, a))). rewrite !size_prod. cbn; lia. }
-        set (L.size _). [p]: intros n. and_solve p.
+        set (L_facts.size _). [p]: intros n. and_solve p.
       + intros [N a] ?. cbn. apply sat_verifierb_correct.
     }
     all: subst p; smpl_inO.
@@ -714,11 +714,11 @@ Proof.
   evar (time:nat -> nat).
   eexists time.
   { eapply computableTime_timeLeq. 2:exact _.
-    solverec. rewrite size_list_enc_r. set (n:=L.size _). [time]:refine (fun n => _). unfold time. reflexivity.
+    solverec. rewrite size_list_enc_r. set (n:=L_facts.size _). [time]:refine (fun n => _). unfold time. reflexivity.
   }
   1,2:unfold time;now smpl_inO.
   eexists (fun n => _).
-  {intros. rewrite !LNat.size_nat_enc, size_list_enc_r. set (n:= L.size _). reflexivity. }
+  {intros. rewrite !LNat.size_nat_enc, size_list_enc_r. set (n:= L_facts.size _). reflexivity. }
     1,2:unfold time;now smpl_inO.
 Qed.
 
@@ -747,13 +747,13 @@ Smpl Add 5 lazymatch goal with
 
 Lemma mono_map_time X `{registered X} (f: nat -> nat) (xs: list X):
   monotonic f
-  -> sumn (map (fun x => f (L.size (enc x))) xs) <= length xs * f (L.size (enc xs)).
+  -> sumn (map (fun x => f (L_facts.size (enc x))) xs) <= length xs * f (L_facts.size (enc xs)).
 Proof.
   intros Hf.
   induction xs. reflexivity.
   cbn. rewrite size_list_cons,IHxs. hnf in Hf.
-  rewrite (Hf (L.size (enc a)) (L.size (enc a) + L.size (enc xs) + 5)). 2:nia.
-  rewrite (Hf (L.size (enc xs)) (L.size (enc a) + L.size (enc xs) + 5)). 2:nia. reflexivity.
+  rewrite (Hf (L_facts.size (enc a)) (L_facts.size (enc a) + L_facts.size (enc xs) + 5)). 2:nia.
+  rewrite (Hf (L_facts.size (enc xs)) (L_facts.size (enc a) + L_facts.size (enc xs) + 5)). 2:nia. reflexivity.
 Qed.
 
 Lemma pTC_map X Y `{registered X} `{registered Y} (f:X -> Y):
@@ -762,7 +762,7 @@ Proof.
   intros Hf.
   evar (time:nat -> nat). exists time. set (map f). extract.
   {solverec. rewrite (correct__leUpToC (mapTime_upTo _)).
-   rewrite mono_map_time. 2:now apply mono__polyTC. set (L.size _) as n.
+   rewrite mono_map_time. 2:now apply mono__polyTC. set (L_facts.size _) as n.
    unshelve erewrite (_ : length x <= n). now apply size_list_enc_r.
    [time]:intro. unfold time. reflexivity.
   }
@@ -772,7 +772,7 @@ Proof.
    rewrite sumn_map_le_pointwise.
    2:{ intros ? _. apply (bounds__rSP Hf). }
    rewrite mono_map_time. 2:eapply mono__rSP.
-   set (L.size _) as n.
+   set (L_facts.size _) as n.
    unshelve erewrite (_ : length x <= n). now apply size_list_enc_r.
    [size]:intro. unfold size. reflexivity.
   }
@@ -792,7 +792,7 @@ Proof.
    rewrite !size_list_enc_r.
 
    rewrite ! (bounds__rSP Hf).
-   set (n:=L.size _).
+   set (n:=L_facts.size _).
    [time]:intro. unfold time. reflexivity.
   }
   1,2:now unfold time;smpl_inO.
@@ -802,8 +802,8 @@ Proof.
    rewrite concat_map,sumn_concat.
    rewrite length_concat.
    rewrite map_map.
-   rewrite sumn_le_bound with (c:= length (concat (f x)) * resSize__rSP Hf (L.size (enc x))).
-   2:{ intros ? (?&<-&HIn)%in_map_iff. rewrite sumn_le_bound with (c:=L.size (enc x0)).
+   rewrite sumn_le_bound with (c:= length (concat (f x)) * resSize__rSP Hf (L_facts.size (enc x))).
+   2:{ intros ? (?&<-&HIn)%in_map_iff. rewrite sumn_le_bound with (c:=L_facts.size (enc x0)).
        2:{  intros ? (?&<-&?)%in_map_iff. now apply size_list_In. }
        rewrite map_length,length_concat. rewrite <- bounds__rSP.
        rewrite size_list_In. 2:eassumption.
@@ -811,15 +811,15 @@ Proof.
        eapply sumn_le_in. now apply in_map_iff.
    }
    rewrite length_concat,map_length.
-   unshelve erewrite (_ : (sumn (map (length (A:=Y)) (f x)) <= resSize__rSP Hf (L.size (enc x)))).
+   unshelve erewrite (_ : (sumn (map (length (A:=Y)) (f x)) <= resSize__rSP Hf (L_facts.size (enc x)))).
    { rewrite <- bounds__rSP,size_list.
-     rewrite <- sumn_map_le_pointwise with (f2:=(fun x0 : list Y => L.size (enc x0) + 5)) (f1:= @length _).
+     rewrite <- sumn_map_le_pointwise with (f2:=(fun x0 : list Y => L_facts.size (enc x0) + 5)) (f1:= @length _).
      2: now intros; rewrite <- size_list_enc_r. nia.
    }
-    unshelve erewrite (_ : length (f x) <= resSize__rSP Hf (L.size (enc x))).
+    unshelve erewrite (_ : length (f x) <= resSize__rSP Hf (L_facts.size (enc x))).
    { rewrite <- bounds__rSP,size_list. rewrite sumn_map_add,sumn_map_c. unfold c__listsizeNil, c__listsizeCons. nia.
    }
-   set (L.size _). [size]:intros n. unfold size. reflexivity.
+   set (L_facts.size _). [size]:intros n. unfold size. reflexivity.
   }
   1,2:unfold size;smpl_inO.
 Qed.
@@ -831,9 +831,9 @@ Proof.
   eapply polyTimeComputable_composition2. 1,2:eauto.
   evar (time : nat -> nat). exists time. extract.
      {solverec.
-      unshelve erewrite (_: |a| <= L.size (enc (a,b))).
+      unshelve erewrite (_: |a| <= L_facts.size (enc (a,b))).
       { rewrite LProd.size_prod,size_list_enc_r;cbn. nia. }
-      set (L.size _). [time]:intro. now unfold time.
+      set (L_facts.size _). [time]:intro. now unfold time.
      }
      1,2:now unfold time;smpl_inO.
      { evar (size : nat -> nat). exists size.

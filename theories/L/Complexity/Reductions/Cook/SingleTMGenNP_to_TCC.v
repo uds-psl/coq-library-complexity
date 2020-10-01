@@ -7,7 +7,7 @@ From PslBase Require Import FiniteTypes.
 Require Import Lia. 
 Require Import PslBase.FiniteTypes.BasicDefinitions. 
 Require Import PslBase.FiniteTypes.FinTypes.
-From Undecidability.TM Require Import TM.
+From Undecidability.TM Require Import TM_facts.
 
 
 (** * Reduction of single-tape Turing machines to 3-CC *)
@@ -20,9 +20,9 @@ Notation "f $ x" := (f x) (at level 60, right associativity, only parsing).
   (and it would be super tedious to explicitly pass in the fixed variables after leaving the section).*)
 Section fixTM. 
   Variable (Sigma : finType).
-  Variable (fTM : mTM Sigma 1).
+  Variable (fTM : TM Sigma 1).
 
-  Notation states := (states fTM).  
+  Notation states := (state fTM).  
   Notation trans := (@strans Sigma fTM). 
   Notation start := (start fTM). 
   Notation halt := (@halt Sigma 1 fTM). 
@@ -58,9 +58,9 @@ Section fixTM.
   (**for polarities, we just interpret move in a different way in order to save us the translation at some point *)
   Hint Constructors move : core. 
   Notation polarity := move. 
-  Notation positive := R. 
-  Notation negative := L. 
-  Notation neutral := N. 
+  Notation positive := Rmove. 
+  Notation negative := Lmove. 
+  Notation neutral := Nmove. 
 
   Implicit Type σ : Sigma. 
 
@@ -95,6 +95,9 @@ Section fixTM.
   (*a new scope is used because the notation later is not needed anymore *)
   Open Scope cc_scope. 
   Notation "'|_|'" := (None) : cc_scope. 
+
+  (* The following options allow for asynchronous proof processing *)
+  Set Default Proof Using "Type".
 
   (**flip the polarity of a symbol *)
   Definition polarityFlip p := match p with negative => positive | positive => negative | neutral => neutral end. 
@@ -857,7 +860,7 @@ Section fixTM.
   (** decomposition into left, center, right *)
   Lemma tapeToList_lcr sig (tp : tape sig) : tapeToList tp = rev (left tp) ++ (match current tp with Some a => [a] | _ => [] end) ++ right tp. 
   Proof.
-    destruct tp; cbn. all: firstorder. 
+    clear_all. destruct tp; cbn. all: firstorder. 
   Qed. 
 
   Lemma sizeOfTape_lcr sig (tp : tape sig) : sizeOfTape tp = |left tp| + |right tp| + (if current tp then 1 else 0). 
@@ -1100,9 +1103,9 @@ Section fixTM.
 
   (** Some, Some *)
   Inductive transSomeSomeLeft : states -> transRule :=
-  | transSSLeftLeftC q q' (a b : Sigma) γ2 γ3 γ4 γ5 γ6: trans (q, Some a) = (q', (Some b, R)) -> transSomeLeftLeft q q' (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeSomeLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6
-  | transSSRightLeftC q q' (a b : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, L)) ->  transSomeRightLeft q q' (Some a) (Some b) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeSomeLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6
-  | transSSStayLeftC q q' (a b : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, N)) -> transSomeStayLeft q q' (Some a) (Some b) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeSomeLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6. 
+  | transSSLeftLeftC q q' (a b : Sigma) γ2 γ3 γ4 γ5 γ6: trans (q, Some a) = (q', (Some b, Rmove)) -> transSomeLeftLeft q q' (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeSomeLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6
+  | transSSRightLeftC q q' (a b : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, Lmove)) ->  transSomeRightLeft q q' (Some a) (Some b) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeSomeLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6
+  | transSSStayLeftC q q' (a b : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, Nmove)) -> transSomeStayLeft q q' (Some a) (Some b) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeSomeLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6. 
 
   Hint Constructors transSomeSomeLeft : trans.
   Derive Inversion transSomeSomeLeft_inv' with (forall q γ1 γ2 γ3 γ4 γ5 γ6, transSomeSomeLeft q γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
@@ -1125,9 +1128,9 @@ Section fixTM.
   Qed.
 
   Inductive transSomeSomeRight : states -> transRule :=
-  | transSSLeftRightC q q' (a b: Sigma) γ1 γ2 γ4 γ5 γ6: trans (q, Some a) = (q', (Some b, R)) -> transSomeLeftRight q q' (Some a) (Some b) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeSomeRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6
-  | transSSRightRightC q q' (a b : Sigma) γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, L)) -> transSomeRightRight q q' (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeSomeRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6
-  | transSSStayRightC q q' (a b : Sigma)  γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, N)) -> transSomeStayRight q q' (Some a) (Some b) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeSomeRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6. 
+  | transSSLeftRightC q q' (a b: Sigma) γ1 γ2 γ4 γ5 γ6: trans (q, Some a) = (q', (Some b, Rmove)) -> transSomeLeftRight q q' (Some a) (Some b) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeSomeRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6
+  | transSSRightRightC q q' (a b : Sigma) γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, Lmove)) -> transSomeRightRight q q' (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeSomeRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6
+  | transSSStayRightC q q' (a b : Sigma)  γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, Nmove)) -> transSomeStayRight q q' (Some a) (Some b) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeSomeRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6. 
 
   Hint Constructors transSomeSomeRight : trans.
   Derive Inversion transSomeSomeRight_inv' with (forall q γ1 γ2 γ3 γ4 γ5 γ6, transSomeSomeRight q γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
@@ -1150,9 +1153,9 @@ Section fixTM.
   Qed.
 
   Inductive transSomeSomeCenter : states -> transRule :=
-  | transSSLeftCenterC q q' (a b: Sigma) γ1 γ3 γ4 γ5 γ6: trans (q, Some a) = (q', (Some b, R)) -> transSomeLeftCenter q q' (Some a) (Some b) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeSomeCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6
-  | transSSRightCenterC q q' (a b: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, L)) -> transSomeRightCenter q q' (Some a) (Some b) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeSomeCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6
-  | transSSStayCenterC q q' (a b: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, N)) -> transSomeStayCenter q q' (Some a) (Some b) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeSomeCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6. 
+  | transSSLeftCenterC q q' (a b: Sigma) γ1 γ3 γ4 γ5 γ6: trans (q, Some a) = (q', (Some b, Rmove)) -> transSomeLeftCenter q q' (Some a) (Some b) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeSomeCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6
+  | transSSRightCenterC q q' (a b: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, Lmove)) -> transSomeRightCenter q q' (Some a) (Some b) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeSomeCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6
+  | transSSStayCenterC q q' (a b: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, Nmove)) -> transSomeStayCenter q q' (Some a) (Some b) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeSomeCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6. 
 
   Hint Constructors transSomeSomeCenter : trans.
   Derive Inversion transSomeSomeCenter_inv' with (forall q γ1 γ2 γ3 γ4 γ5 γ6, transSomeSomeCenter q γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
@@ -1176,9 +1179,9 @@ Section fixTM.
   
   (** None, Some *)
   Inductive transNoneSomeLeft : states -> transRule :=
-  | transNSLeftLeftC q q' (b : Sigma) γ2 γ3 γ4 γ5 γ6: trans (q, None) = (q', (Some b, R)) -> transSomeLeftLeft q q' |_| (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneSomeLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6
-  | transNSRightLeftC q q' (b : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, L)) ->  transSomeRightLeft q q' (|_|) (Some b) (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneSomeLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6
-  | transNSStayLeftC q q' (b : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, N)) -> transSomeStayLeft q q' (|_|) (Some b) (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneSomeLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6. 
+  | transNSLeftLeftC q q' (b : Sigma) γ2 γ3 γ4 γ5 γ6: trans (q, None) = (q', (Some b, Rmove)) -> transSomeLeftLeft q q' |_| (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneSomeLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6
+  | transNSRightLeftC q q' (b : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, Lmove)) ->  transSomeRightLeft q q' (|_|) (Some b) (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneSomeLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6
+  | transNSStayLeftC q q' (b : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, Nmove)) -> transSomeStayLeft q q' (|_|) (Some b) (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneSomeLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6. 
 
   Hint Constructors transNoneSomeLeft : trans.
   Derive Inversion transNoneSomeLeft_inv' with (forall q γ1 γ2 γ3 γ4 γ5 γ6, transNoneSomeLeft q γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
@@ -1201,9 +1204,9 @@ Section fixTM.
   Qed.
 
   Inductive transNoneSomeRight : states -> transRule :=
-  | transNSLeftRightC q q' (b: Sigma) γ1 γ2 γ4 γ5 γ6: trans (q, |_|) = (q', (Some b, R)) -> transSomeLeftRight q q' (|_|) (Some b) γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneSomeRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6
-  | transNSRightRightC q q' (b : Sigma) γ1 γ2 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, L)) -> transSomeRightRight q q' (|_|) γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneSomeRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6
-  | transNSStayRightC q q' (b : Sigma)  γ1 γ2 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, N)) -> transSomeStayRight q q' (|_|) (Some b) γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneSomeRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6. 
+  | transNSLeftRightC q q' (b: Sigma) γ1 γ2 γ4 γ5 γ6: trans (q, |_|) = (q', (Some b, Rmove)) -> transSomeLeftRight q q' (|_|) (Some b) γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneSomeRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6
+  | transNSRightRightC q q' (b : Sigma) γ1 γ2 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, Lmove)) -> transSomeRightRight q q' (|_|) γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneSomeRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6
+  | transNSStayRightC q q' (b : Sigma)  γ1 γ2 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, Nmove)) -> transSomeStayRight q q' (|_|) (Some b) γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneSomeRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6. 
 
   Hint Constructors transNoneSomeRight : trans.
   Derive Inversion transNoneSomeRight_inv' with (forall q γ1 γ2 γ3 γ4 γ5 γ6, transNoneSomeRight q γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
@@ -1226,9 +1229,9 @@ Section fixTM.
   Qed.
 
   Inductive transNoneSomeCenter : states -> transRule :=
-  | transNSLeftCenterC q q' (b: Sigma) γ1 γ3 γ4 γ5 γ6: trans (q, |_|) = (q', (Some b, R)) -> transSomeLeftCenter q q' (|_|) (Some b) γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneSomeCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6
-  | transNSRightCenterC q q' (b: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, L)) -> transSomeRightCenter q q' (|_|) (Some b) γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneSomeCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6
-  | transNSStayCenterC q q' (b: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, N)) -> transSomeStayCenter q q' (|_|) (Some b) γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneSomeCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6. 
+  | transNSLeftCenterC q q' (b: Sigma) γ1 γ3 γ4 γ5 γ6: trans (q, |_|) = (q', (Some b, Rmove)) -> transSomeLeftCenter q q' (|_|) (Some b) γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneSomeCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6
+  | transNSRightCenterC q q' (b: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, Lmove)) -> transSomeRightCenter q q' (|_|) (Some b) γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneSomeCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6
+  | transNSStayCenterC q q' (b: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, Nmove)) -> transSomeStayCenter q q' (|_|) (Some b) γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneSomeCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6. 
 
   Hint Constructors transNoneSomeCenter : trans.
   Derive Inversion transNoneSomeCenter_inv' with (forall q γ1 γ2 γ3 γ4 γ5 γ6, transNoneSomeCenter q γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
@@ -1252,9 +1255,9 @@ Section fixTM.
 
   (** Some, None  *)
   Inductive transSomeNoneLeft : states -> transRule :=
-  | transSNLeftLeftC q q' (a : Sigma) γ2 γ3 γ4 γ5 γ6: trans (q, Some a) = (q', (None, R)) -> transSomeLeftLeft q q' (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeNoneLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6
-  | transSNRightLeftC q q' (a : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, L)) ->  transSomeRightLeft q q' (Some a) (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeNoneLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6
-  | transSNStayLeftC q q' (a : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, N)) -> transSomeStayLeft q q' (Some a) (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeNoneLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6. 
+  | transSNLeftLeftC q q' (a : Sigma) γ2 γ3 γ4 γ5 γ6: trans (q, Some a) = (q', (None, Rmove)) -> transSomeLeftLeft q q' (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeNoneLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6
+  | transSNRightLeftC q q' (a : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, Lmove)) ->  transSomeRightLeft q q' (Some a) (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeNoneLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6
+  | transSNStayLeftC q q' (a : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, Nmove)) -> transSomeStayLeft q q' (Some a) (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeNoneLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6. 
 
   Hint Constructors transSomeNoneLeft : trans.
   Derive Inversion transSomeNoneLeft_inv' with (forall q γ1 γ2 γ3 γ4 γ5 γ6, transSomeNoneLeft q γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
@@ -1282,9 +1285,9 @@ Section fixTM.
   Qed.
 
   Inductive transSomeNoneRight : states -> transRule :=
-  | transSNLeftRightC q q' (a : Sigma) γ1 γ2 γ4 γ5 γ6: trans (q, Some a) = (q', (None, R)) -> transSomeLeftRight q q' (Some a) (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeNoneRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6
-  | transSNRightRightC q q' (a : Sigma) γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, L)) -> transSomeRightRight q q' (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeNoneRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6
-  | transSNStayRightC q q' (a : Sigma)  γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, N)) -> transSomeStayRight q q' (Some a) (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeNoneRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6. 
+  | transSNLeftRightC q q' (a : Sigma) γ1 γ2 γ4 γ5 γ6: trans (q, Some a) = (q', (None, Rmove)) -> transSomeLeftRight q q' (Some a) (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeNoneRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6
+  | transSNRightRightC q q' (a : Sigma) γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, Lmove)) -> transSomeRightRight q q' (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeNoneRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6
+  | transSNStayRightC q q' (a : Sigma)  γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, Nmove)) -> transSomeStayRight q q' (Some a) (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeNoneRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6. 
 
   Hint Constructors transSomeNoneRight : trans.
   Derive Inversion transSomeNoneRight_inv' with (forall q γ1 γ2 γ3 γ4 γ5 γ6, transSomeNoneRight q γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
@@ -1307,9 +1310,9 @@ Section fixTM.
   Qed.
 
   Inductive transSomeNoneCenter : states -> transRule :=
-  | transSNLeftCenterC q q' (a: Sigma) γ1 γ3 γ4 γ5 γ6: trans (q, Some a) = (q', (None, R)) -> transSomeLeftCenter q q' (Some a) (Some a) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeNoneCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6
-  | transSNRightCenterC q q' (a: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, L)) -> transSomeRightCenter q q' (Some a) (Some a) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeNoneCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6
-  | transSNStayCenterC q q' (a: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, N)) -> transSomeStayCenter q q' (Some a) (Some a) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeNoneCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6. 
+  | transSNLeftCenterC q q' (a: Sigma) γ1 γ3 γ4 γ5 γ6: trans (q, Some a) = (q', (None, Rmove)) -> transSomeLeftCenter q q' (Some a) (Some a) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeNoneCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6
+  | transSNRightCenterC q q' (a: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, Lmove)) -> transSomeRightCenter q q' (Some a) (Some a) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeNoneCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6
+  | transSNStayCenterC q q' (a: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, Nmove)) -> transSomeStayCenter q q' (Some a) (Some a) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeNoneCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6. 
 
   Hint Constructors transSomeNoneCenter : trans.
   Derive Inversion transSomeNoneCenter_inv' with (forall q γ1 γ2 γ3 γ4 γ5 γ6, transSomeNoneCenter q γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
@@ -1677,9 +1680,9 @@ Section fixTM.
   Qed.
   
   Inductive transNoneNoneLeft : states -> transRule :=
-  | transNNLeftLeftC q q' γ2 γ3 γ4 γ5 γ6: trans (q, None) = (q', (None, R)) -> transNoneLeftLeft q q' (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneNoneLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6
-  | transNNRightLeftC q q' γ2 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (None, L)) ->  transNoneRightLeft q q' (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneNoneLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6
-  | transNNStayLeftC q q' γ2 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (None, N)) -> transNoneStayLeft q q' (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneNoneLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6. 
+  | transNNLeftLeftC q q' γ2 γ3 γ4 γ5 γ6: trans (q, None) = (q', (None, Rmove)) -> transNoneLeftLeft q q' (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneNoneLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6
+  | transNNRightLeftC q q' γ2 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (None, Lmove)) ->  transNoneRightLeft q q' (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneNoneLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6
+  | transNNStayLeftC q q' γ2 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (None, Nmove)) -> transNoneStayLeft q q' (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneNoneLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6. 
 
   Hint Constructors transNoneNoneLeft : trans.
   Derive Inversion transNoneNoneLeft_inv' with (forall q γ1 γ2 γ3 γ4 γ5 γ6, transNoneNoneLeft q γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
@@ -1703,9 +1706,9 @@ Section fixTM.
   
 
   Inductive transNoneNoneRight : states -> transRule :=
-  | transNNLeftRightC q q' γ1 γ2 γ4 γ5 γ6: trans (q, None) = (q', (None, R)) -> transNoneLeftRight q q' γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneNoneRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6
-  | transNNRightRightC q q' γ1 γ2 γ4 γ5 γ6 : trans (q, None) = (q', (None, L)) -> transNoneRightRight q q' γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneNoneRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6
-  | transNNStayRightC q q' γ1 γ2 γ4 γ5 γ6 : trans (q, None) = (q', (None, N)) -> transNoneStayRight q q' γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneNoneRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6. 
+  | transNNLeftRightC q q' γ1 γ2 γ4 γ5 γ6: trans (q, None) = (q', (None, Rmove)) -> transNoneLeftRight q q' γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneNoneRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6
+  | transNNRightRightC q q' γ1 γ2 γ4 γ5 γ6 : trans (q, None) = (q', (None, Lmove)) -> transNoneRightRight q q' γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneNoneRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6
+  | transNNStayRightC q q' γ1 γ2 γ4 γ5 γ6 : trans (q, None) = (q', (None, Nmove)) -> transNoneStayRight q q' γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneNoneRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6. 
 
   Hint Constructors transNoneNoneRight : trans. 
   Derive Inversion transNoneNoneRight_inv' with (forall q γ1 γ2 γ3 γ4 γ5 γ6, transNoneNoneRight q γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
@@ -1728,9 +1731,9 @@ Section fixTM.
   Qed.
   
   Inductive transNoneNoneCenter : states -> transRule :=
-  | transNNLeftCenterC q q' γ1 γ3 γ4 γ5 γ6: trans (q, None) = (q', (None, R)) -> transNoneLeftCenter q q' γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneNoneCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6
-  | transNNRightCenterC q q' γ1 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (None, L)) -> transNoneRightCenter q q' γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneNoneCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6
-  | transNNStayCenterC q q' γ1 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (None, N)) -> transNoneStayCenter q q' γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneNoneCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6. 
+  | transNNLeftCenterC q q' γ1 γ3 γ4 γ5 γ6: trans (q, None) = (q', (None, Rmove)) -> transNoneLeftCenter q q' γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneNoneCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6
+  | transNNRightCenterC q q' γ1 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (None, Lmove)) -> transNoneRightCenter q q' γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneNoneCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6
+  | transNNStayCenterC q q' γ1 γ3 γ4 γ5 γ6 : trans (q, None) = (q', (None, Nmove)) -> transNoneStayCenter q q' γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneNoneCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6. 
 
   Hint Constructors transNoneNoneCenter : trans. 
   Derive Inversion transNoneNoneCenter_inv' with (forall q γ1 γ2 γ3 γ4 γ5 γ6, transNoneNoneCenter q γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
@@ -2479,22 +2482,22 @@ Section fixTM.
   
   Ltac get_next_headsym F1 F2 csym wsym dir := match wsym with 
    | Some ?wsym => match dir with 
-                     | L => get_next_headsym' F1 
-                     | R => get_next_headsym' F2 
-                     | N => constr:(Some wsym : stateSigma) 
+                     | Lmove => get_next_headsym' F1 
+                     | Rmove => get_next_headsym' F2 
+                     | Nmove => constr:(Some wsym : stateSigma) 
                    end 
    | None => match dir with 
-                 | L => match csym with Some ?csym => get_next_headsym' F1 
+                 | Lmove => match csym with Some ?csym => get_next_headsym' F1 
                                  | _ => match is_half_blank F2 with true => get_next_headsym' F1 
                                                                | false => constr:(|_| : stateSigma) 
                                        end 
                        end 
-                 | R => match csym with Some ?csym => get_next_headsym' F2 
+                 | Rmove => match csym with Some ?csym => get_next_headsym' F2 
                                  | _ => match is_half_blank F1 with true => get_next_headsym' F2 
                                                                  | false =>  constr:(|_| : stateSigma) 
                                        end 
                      end 
-                 | N => constr:(csym : stateSigma) 
+                 | Nmove => constr:(csym : stateSigma) 
                end 
      end.  
 
@@ -2512,17 +2515,17 @@ Section fixTM.
   (** get the direction in which the tape must be shifted *) 
   (** wsym: written sym as computed by get_written_sym *) 
   Ltac get_shift_direction wsym dir F1 F2 := match dir with 
-   | L => match wsym with None => match is_half_blank F1 with true => constr:(neutral) 
+   | Lmove => match wsym with None => match is_half_blank F1 with true => constr:(neutral) 
                                                        | false => constr:(positive) 
                                  end 
                      | Some _ => constr:(positive) 
          end 
-   | R => match wsym with None => match is_half_blank F2 with true => constr:(neutral) 
+   | Rmove => match wsym with None => match is_half_blank F2 with true => constr:(neutral) 
                                                        | false => constr:(negative) 
                                  end 
                      | Some _ => constr:(negative) 
          end 
-   | N => constr:(neutral) 
+   | Nmove => constr:(neutral) 
    end.  
 
   (** solve the part of the goal where we have to prove that the covering is valid *) 
@@ -2586,7 +2589,7 @@ Section fixTM.
     eapply covHeadSim_trans in K3; [ | eauto | eassumption];  
     eapply covHeadSim_trans in K4; [ | eauto | eassumption]; 
     eapply covHeadSim_trans in K5; [ | eauto | eassumption];  
-    inv K3; inv_trans_prim; inv K4; inv_trans_prim; inv K5; inv_trans_prim; 
+    inv K3;  inv_trans_prim;inv K4; inv_trans_prim; inv K5; inv_trans_prim; 
     inv_trans_sec; repeat (transRules_inv2_once;try congruence); simp_eqn;  
     (specialize (covHeadSim_unique_left K1 F1 Z3) as ?; 
     simp_eqn; 
@@ -2630,7 +2633,7 @@ Section fixTM.
         let h1 := fresh "h1" in let h2 := fresh "h2" in 
         cbn in F1; cbn in F2; 
         match shiftdir with 
-        | R => lazymatch type of F1 with 
+        | Rmove => lazymatch type of F1 with 
               | [] ≃t(?p, ?w) _ => specialize (E_cover_blank_rev p shiftdir w) as [Z1 Z3]; 
                                   specialize (proj1 (@niltape_repr w shiftdir)) as Z2
               | _ => destruct (tape_repr_rem_left F1) as (h1 & Z1 & Z3 & Z2); 
@@ -2646,7 +2649,7 @@ Section fixTM.
                                       specialize (proj1 (@niltape_repr w shiftdir)) as W2
                   end 
               end 
-        | L => lazymatch type of F2 with 
+        | Lmove => lazymatch type of F2 with 
               | [] ≃t(?p, ?w) _ => specialize (E_cover_blank p shiftdir w) as [W1 W3]; 
                                   specialize (proj1 (@niltape_repr w shiftdir)) as W2
                 | _ => destruct (tape_repr_rem_right F2) as (h2 & W1 & W3 & W2); 
@@ -2661,7 +2664,7 @@ Section fixTM.
                                           specialize (proj1 (@niltape_repr w shiftdir)) as Z2 
                   end 
             end 
-        | N => destruct (tape_repr_stay_left F1) as (h1 & Z1 & Z3 & Z2); destruct_tape_in_tidy Z2; 
+        | Nmove => destruct (tape_repr_stay_left F1) as (h1 & Z1 & Z3 & Z2); destruct_tape_in_tidy Z2; 
               destruct (tape_repr_stay_right F2) as (h2 & W1 & W3 & W2); destruct_tape_in_tidy W2 
         end; 
 
@@ -2680,6 +2683,7 @@ Section fixTM.
     idtac "solving uniqueness - this may take a few minutes".
     unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1.
     par:abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
+    idtac "solving uniqueness - done".
   Qed.
 
   (** if we are in a halting state, we can only rewrite to the same string (identity), except for setting the polarity to neutral *)
@@ -3131,7 +3135,7 @@ Section fixTM.
   Lemma prelude_right_half_covering_cert s n n' : 
     (repEl (|s|) (inr nstar) ++ repEl n (inr nstar) ++ repEl (S (S n')) (inr nblank) ++ [inr ndelimC]) 
       ⇝{lpreludeRules} (map inl (stringForTapeHalf' (S (S (n + n'))) s)). 
-  Proof. 
+  Proof using t.
     induction s as [ | a s IH].  
     - cbn. 
       replace (inr nblank :: inr nblank :: repEl t (inr nblank) ++ [inr ndelimC]) with (repEl (S (S t)) (inr (A := Gamma) nblank) ++ [inr ndelimC]) by now cbn. 
@@ -3148,7 +3152,7 @@ Section fixTM.
   Lemma prelude_right_half_covering_cert' s n n': 
     (repEl (|s| + n) (inr nstar) ++ repEl (S (S n')) (inr nblank) ++ [inr ndelimC]) 
         ⇝{lpreludeRules} (map inl (stringForTapeHalf' (S (S (n + n'))) s)).
-  Proof. 
+  Proof using t. 
     rewrite repEl_add. rewrite <- app_assoc. apply prelude_right_half_covering_cert. 
   Qed. 
 
@@ -3581,7 +3585,7 @@ Section fixTM.
   Qed. 
 
   (*generation to flat representation (natural numbers) *)
-  Variable (flatTM : TMflat.TM). 
+  Variable (flatTM : TMflat.flatTM). 
   Notation flatSigma := (TMflat.sig flatTM).
   Notation flatstates := (TMflat.states flatTM).
   Context (flatTM_TM_compat : TMflat.isFlatteningTMOf flatTM fTM). 
@@ -3707,22 +3711,22 @@ Section fixTM.
   Qed. 
 
   Lemma Sigma_finRepr : finRepr Sigma flatSigma. 
-  Proof. 
+  Proof using flatTM_TM_compat. 
     destruct flatTM_TM_compat. rewrite eq__sig. unfold Cardinality. easy. 
   Qed. 
 
   Lemma states_finRepr : finRepr states flatstates. 
-  Proof. 
+  Proof using flatTM_TM_compat. 
     destruct flatTM_TM_compat. rewrite eq__states. unfold Cardinality. easy. 
   Qed. 
 
   Lemma preludeSigP_finRepr : finRepr (FinType (EqType preludeSig')) flatPreludeSig'. 
-  Proof. 
+  Proof using flatTM_TM_compat.
     unfold finRepr, flatPreludeSig', elem, enum. cbn. rewrite map_length. now rewrite Sigma_finRepr.
   Qed. 
 
   Lemma flattenPreludeSigP_reprEl x : finReprEl flatPreludeSig' (flattenPreludeSig' x) x. 
-  Proof. 
+  Proof using flatTM_TM_compat.
     unfold finReprEl. split.
     - apply preludeSigP_finRepr.
     - destruct x; cbn; lia. 
@@ -3736,7 +3740,7 @@ Section fixTM.
 
 
   Lemma nsig_reprEl n σ: finReprEl flatSigma n σ -> finReprEl flatPreludeSig' (flatNsig n) (nsig σ).
-  Proof. 
+  Proof using flatTM_TM_compat. 
     intros H. split; [finRepr_simpl | ]. 
     destruct H as (_ & H). cbn. 
     rewrite getPosition_map. 2: {unfold injective; intros; congruence. }
@@ -3752,7 +3756,7 @@ Section fixTM.
   Smpl Add (apply polarity_finRepr) : finRepr.
 
   Lemma stateSigma_finRepr : finRepr FstateSigma flatStateSigma. 
-  Proof. 
+  Proof using flatTM_TM_compat. 
     finRepr_simpl. 
   Qed. 
 
@@ -3794,7 +3798,7 @@ Section fixTM.
   Lemma generateAlphabet_reprEl a b d :
     isFlatEnvOf a b -> bound_Alphabet a d
     -> exists e1 e2, generateAlphabetFin b d = Some e1 /\ generateAlphabetFlat a d = Some e2 /\ finReprEl flatAlphabet e2 e1. 
-  Proof.
+  Proof using flatTM_TM_compat.
     intros.
     specialize (proj1 (generateAlphabetFlat_canonical _ _ ) H0 ) as (e1 & H1). 
     eapply (isFlatEnvOf_bound_Alphabet_transfer ) in H0. 2: apply H. 
@@ -3873,7 +3877,7 @@ Section fixTM.
   (** the output of generateCard is related via isFlatCardOf for the two generation procedures *)
   Lemma generateCard_isFlatCardOf envFlat envFin rule :
     bound_card envFlat rule -> isFlatEnvOf envFlat envFin -> exists e1 e2, generateCard generateAlphabetFlat envFlat rule = Some e1 /\ generateCard generateAlphabetFin envFin rule = Some e2 /\ isFlatTCCCardOf e1 e2. 
-  Proof.
+  Proof using flatTM_TM_compat.
     intros.
     specialize (proj1 (isFlatEnvOf_bound_card_transfer _ H0) H) as H'.
     destruct (proj1 (generateCard_Some _ _ generateAlphabetFin_canonical) H') as (card & H1).  
@@ -4015,7 +4019,7 @@ Section fixTM.
   Definition makeAllEvalEnvFlat := makeAllEvalEnv (seq 0 flatPolarity) (seq 0 flatSigma) (seq 0 flatStateSigma) (seq 0 flatstates).
 
   Lemma makeAllEvalEnv_isFlatEnvOf' n1 n2 n3 n4 : list_isFlatEnvOf (makeAllEvalEnvFlat n1 n2 n3 n4) (makeAllEvalEnvFin n1 n2 n3 n4). 
-  Proof. 
+  Proof using flatTM_TM_compat. 
     apply makeAllEvalEnv_isFlatEnvOf. 
     - apply seq_isFlatListOf.
     - rewrite Sigma_finRepr. apply seq_isFlatListOf.
@@ -4077,7 +4081,7 @@ Section fixTM.
   Lemma makeCardsP_isFlatTCardsOf  (envFlatList : list evalEnvFlat) (envFinList : list evalEnvFin) rule :
     list_isFlatEnvOf envFlatList envFinList ->
     isFlatTCardsOf (makeCards' generateAlphabetFlat envFlatList rule) (makeCards' generateAlphabetFin envFinList rule).
-  Proof. 
+  Proof using flatTM_TM_compat. 
     intros. split; intros. 
     - apply in_makeCardsP_iff in H0 as (env & H1 & H2).
       symmetry in H2.
@@ -4108,7 +4112,7 @@ Section fixTM.
   Lemma makeCards_isFlatCardOf finenv flatenv rules :
     list_isFlatEnvOf flatenv finenv
     -> isFlatTCardsOf (makeCardsFlat flatenv rules) (makeCardsFin finenv rules).
-  Proof. 
+  Proof using flatTM_TM_compat. 
     intros H0. split. 
     - intros card H. unfold makeCardsFlat, makeCardsFin, makeCards in H. 
       apply in_concat_iff in H as (cards & H & H1). 
@@ -4438,15 +4442,15 @@ Section fixTM.
   (**Given a state and a current symbol, generate the rules for the corresponding transition *)
   Definition generateCardsForFinNonHalt (q : states) (m : stateSigma) :=
     match m, (trans (q, m)) with
-    | _, (q', (Some σ, L)) => makeSomeRight q q' m (Some σ) makeCardsFin fin_baseEnv
-    | _, (q', (Some σ, R)) => makeSomeLeft q q' m (Some σ) makeCardsFin fin_baseEnv
-    | _, (q', (Some σ, N)) => makeSomeStay q q' m (Some σ) makeCardsFin fin_baseEnv
-    | Some σ, (q', (None, L)) => makeSomeRight q q' (Some σ) (Some σ) makeCardsFin fin_baseEnv
-    | Some σ, (q', (None, R)) => makeSomeLeft q q' (Some σ) (Some σ) makeCardsFin fin_baseEnv
-    | Some σ, (q', (None, N)) => makeSomeStay q q' (Some σ) (Some σ) makeCardsFin fin_baseEnv
-    | None, (q', (None, L)) => makeNoneRight q q' makeCardsFin fin_baseEnvNone
-    | None, (q', (None, R)) => makeNoneLeft q q' makeCardsFin fin_baseEnvNone
-    | None, (q', (None, N)) => makeNoneStay q q' makeCardsFin fin_baseEnvNone
+    | _, (q', (Some σ, Lmove)) => makeSomeRight q q' m (Some σ) makeCardsFin fin_baseEnv
+    | _, (q', (Some σ, Rmove)) => makeSomeLeft q q' m (Some σ) makeCardsFin fin_baseEnv
+    | _, (q', (Some σ, Nmove)) => makeSomeStay q q' m (Some σ) makeCardsFin fin_baseEnv
+    | Some σ, (q', (None, Lmove)) => makeSomeRight q q' (Some σ) (Some σ) makeCardsFin fin_baseEnv
+    | Some σ, (q', (None, Rmove)) => makeSomeLeft q q' (Some σ) (Some σ) makeCardsFin fin_baseEnv
+    | Some σ, (q', (None, Nmove)) => makeSomeStay q q' (Some σ) (Some σ) makeCardsFin fin_baseEnv
+    | None, (q', (None, Lmove)) => makeNoneRight q q' makeCardsFin fin_baseEnvNone
+    | None, (q', (None, Rmove)) => makeNoneLeft q q' makeCardsFin fin_baseEnvNone
+    | None, (q', (None, Nmove)) => makeNoneStay q q' makeCardsFin fin_baseEnvNone
     end.
 
   (**Given a state, generate the cards needed for halting states *)
@@ -4513,15 +4517,15 @@ Section fixTM.
   Hint Constructors etransNoneStay : etrans. 
 
   Inductive etransRules : states -> stateSigma -> transRule :=
-  | etransXSomeStay q m σ q' γ1 γ2 γ3 γ4 γ5 γ6: trans (q, m) = (q', (Some σ, N)) -> etransSomeStay q q' m (Some σ) γ1 γ2 γ3 γ4 γ5 γ6 -> etransRules q m γ1 γ2 γ3 γ4 γ5 γ6
-  | etransXSomeLeft q m σ q' γ1 γ2 γ3 γ4 γ5 γ6: trans (q, m) = (q', (Some σ, R)) -> etransSomeLeft q q' m (Some σ) γ1 γ2 γ3 γ4 γ5 γ6 -> etransRules q m γ1 γ2 γ3 γ4 γ5 γ6
-  | etransXSomeRight q m σ q' γ1 γ2 γ3 γ4 γ5 γ6: trans (q, m) = (q', (Some σ, L)) -> etransSomeRight q q' m (Some σ) γ1 γ2 γ3 γ4 γ5 γ6 -> etransRules q m γ1 γ2 γ3 γ4 γ5 γ6
-  | etransSomeNoneStay q σ q' γ1 γ2 γ3 γ4 γ5 γ6: trans (q, Some σ) = (q', (None, N)) -> etransSomeStay q q' (Some σ) (Some σ) γ1 γ2 γ3 γ4 γ5 γ6 -> etransRules q (Some σ) γ1 γ2 γ3 γ4 γ5 γ6
-  | etransSomeNoneLeft q σ q' γ1 γ2 γ3 γ4 γ5 γ6: trans (q, Some σ) = (q', (None, R)) -> etransSomeLeft q q' (Some σ) (Some σ) γ1 γ2 γ3 γ4 γ5 γ6 -> etransRules q (Some σ) γ1 γ2 γ3 γ4 γ5 γ6
-  | etransSomeNoneRight q σ q' γ1 γ2 γ3 γ4 γ5 γ6: trans (q, Some σ) = (q', (None, L)) -> etransSomeRight q q' (Some σ) (Some σ) γ1 γ2 γ3 γ4 γ5 γ6 -> etransRules q (Some σ) γ1 γ2 γ3 γ4 γ5 γ6
-  | etransNoneNoneStay q q' γ1 γ2 γ3 γ4 γ5 γ6: trans (q, None) = (q', (None, N)) -> etransNoneStay q q' γ1 γ2 γ3 γ4 γ5 γ6 -> etransRules q None γ1 γ2 γ3 γ4 γ5 γ6
-  | etransNoneNoneLeft q q' γ1 γ2 γ3 γ4 γ5 γ6: trans (q, None) = (q', (None, R)) -> etransNoneLeft q q' γ1 γ2 γ3 γ4 γ5 γ6 -> etransRules q None γ1 γ2 γ3 γ4 γ5 γ6
-  | etransNoneNoneRight q q' γ1 γ2 γ3 γ4 γ5 γ6: trans (q, None) = (q', (None, L)) -> etransNoneRight q q' γ1 γ2 γ3 γ4 γ5 γ6 -> etransRules q None γ1 γ2 γ3 γ4 γ5 γ6.
+  | etransXSomeStay q m σ q' γ1 γ2 γ3 γ4 γ5 γ6: trans (q, m) = (q', (Some σ, Nmove)) -> etransSomeStay q q' m (Some σ) γ1 γ2 γ3 γ4 γ5 γ6 -> etransRules q m γ1 γ2 γ3 γ4 γ5 γ6
+  | etransXSomeLeft q m σ q' γ1 γ2 γ3 γ4 γ5 γ6: trans (q, m) = (q', (Some σ, Rmove)) -> etransSomeLeft q q' m (Some σ) γ1 γ2 γ3 γ4 γ5 γ6 -> etransRules q m γ1 γ2 γ3 γ4 γ5 γ6
+  | etransXSomeRight q m σ q' γ1 γ2 γ3 γ4 γ5 γ6: trans (q, m) = (q', (Some σ, Lmove)) -> etransSomeRight q q' m (Some σ) γ1 γ2 γ3 γ4 γ5 γ6 -> etransRules q m γ1 γ2 γ3 γ4 γ5 γ6
+  | etransSomeNoneStay q σ q' γ1 γ2 γ3 γ4 γ5 γ6: trans (q, Some σ) = (q', (None, Nmove)) -> etransSomeStay q q' (Some σ) (Some σ) γ1 γ2 γ3 γ4 γ5 γ6 -> etransRules q (Some σ) γ1 γ2 γ3 γ4 γ5 γ6
+  | etransSomeNoneLeft q σ q' γ1 γ2 γ3 γ4 γ5 γ6: trans (q, Some σ) = (q', (None, Rmove)) -> etransSomeLeft q q' (Some σ) (Some σ) γ1 γ2 γ3 γ4 γ5 γ6 -> etransRules q (Some σ) γ1 γ2 γ3 γ4 γ5 γ6
+  | etransSomeNoneRight q σ q' γ1 γ2 γ3 γ4 γ5 γ6: trans (q, Some σ) = (q', (None, Lmove)) -> etransSomeRight q q' (Some σ) (Some σ) γ1 γ2 γ3 γ4 γ5 γ6 -> etransRules q (Some σ) γ1 γ2 γ3 γ4 γ5 γ6
+  | etransNoneNoneStay q q' γ1 γ2 γ3 γ4 γ5 γ6: trans (q, None) = (q', (None, Nmove)) -> etransNoneStay q q' γ1 γ2 γ3 γ4 γ5 γ6 -> etransRules q None γ1 γ2 γ3 γ4 γ5 γ6
+  | etransNoneNoneLeft q q' γ1 γ2 γ3 γ4 γ5 γ6: trans (q, None) = (q', (None, Rmove)) -> etransNoneLeft q q' γ1 γ2 γ3 γ4 γ5 γ6 -> etransRules q None γ1 γ2 γ3 γ4 γ5 γ6
+  | etransNoneNoneRight q q' γ1 γ2 γ3 γ4 γ5 γ6: trans (q, None) = (q', (None, Lmove)) -> etransNoneRight q q' γ1 γ2 γ3 γ4 γ5 γ6 -> etransRules q None γ1 γ2 γ3 γ4 γ5 γ6.
 
   Hint Constructors etransRules : etrans.
 
@@ -4880,14 +4884,14 @@ Section fixTM.
   Definition flatTapeCards := flatMTRCards ++ flatMTICards ++ flatMTLCards. 
 
   Lemma isFlatTCardsOf_concat (X : finType) flat1 flat2 (fin1 fin2 : list (card X)): isFlatTCardsOf flat1 fin1 -> isFlatTCardsOf flat2 fin2 -> isFlatTCardsOf (flat1 ++ flat2) (fin1 ++ fin2). 
-  Proof. 
+  Proof using flatTM_TM_compat.
     intros; split; intros. 
     - apply in_app_iff in H1 as [H1 | H1]; [apply H in H1 | apply H0 in H1]; firstorder.
     - apply in_app_iff in H1 as [H1 | H1]; [apply H in H1 | apply H0 in H1]; firstorder. 
   Qed. 
   
   Lemma fin_flat_tapeCards_agree : isFlatTCardsOf flatTapeCards finTapeCards. 
-  Proof. 
+  Proof using flatTM_TM_compat. 
     unfold flatTapeCards, finTapeCards. 
     apply isFlatTCardsOf_concat; [ | apply isFlatTCardsOf_concat]. 
     all: apply makeCards_isFlatCardOf, makeAllEvalEnv_isFlatEnvOf; 
@@ -4934,15 +4938,15 @@ Section fixTM.
   (** given a state and a current symbol, generate the cards for the corresponding transition *)
   Definition opt_generateCardsForFlatNonHalt (q : nat) (m : option nat) transt:=
     match m, transt with
-    | _, (q', (Some x, L)) => makeSomeRight q q' (fOpt m) (fOpt $ Some x) makeCardsFlat flat_baseEnv
-    | _, (q', (Some x, R)) => makeSomeLeft q q' (fOpt m) (fOpt $ Some x) makeCardsFlat flat_baseEnv
-    | _, (q', (Some x, N)) => makeSomeStay q q' (fOpt m) (fOpt $ Some x) makeCardsFlat flat_baseEnv
-    | Some x, (q', (None, L)) => makeSomeRight q q' (fOpt $ Some x) (fOpt $ Some x) makeCardsFlat flat_baseEnv
-    | Some x, (q', (None, R)) => makeSomeLeft q q' (fOpt $ Some x) (fOpt $ Some x) makeCardsFlat flat_baseEnv
-    | Some x, (q', (None, N)) => makeSomeStay q q' (fOpt $ Some x) (fOpt $ Some x) makeCardsFlat flat_baseEnv
-    | None, (q', (None, L)) => makeNoneRight q q' makeCardsFlat flat_baseEnvNone
-    | None, (q', (None, R)) => makeNoneLeft q q' makeCardsFlat flat_baseEnvNone
-    | None, (q', (None, N)) => makeNoneStay q q' makeCardsFlat flat_baseEnvNone
+    | _, (q', (Some x, Lmove)) => makeSomeRight q q' (fOpt m) (fOpt $ Some x) makeCardsFlat flat_baseEnv
+    | _, (q', (Some x, Rmove)) => makeSomeLeft q q' (fOpt m) (fOpt $ Some x) makeCardsFlat flat_baseEnv
+    | _, (q', (Some x, Nmove)) => makeSomeStay q q' (fOpt m) (fOpt $ Some x) makeCardsFlat flat_baseEnv
+    | Some x, (q', (None, Lmove)) => makeSomeRight q q' (fOpt $ Some x) (fOpt $ Some x) makeCardsFlat flat_baseEnv
+    | Some x, (q', (None, Rmove)) => makeSomeLeft q q' (fOpt $ Some x) (fOpt $ Some x) makeCardsFlat flat_baseEnv
+    | Some x, (q', (None, Nmove)) => makeSomeStay q q' (fOpt $ Some x) (fOpt $ Some x) makeCardsFlat flat_baseEnv
+    | None, (q', (None, Lmove)) => makeNoneRight q q' makeCardsFlat flat_baseEnvNone
+    | None, (q', (None, Rmove)) => makeNoneLeft q q' makeCardsFlat flat_baseEnvNone
+    | None, (q', (None, Nmove)) => makeNoneStay q q' makeCardsFlat flat_baseEnvNone
     end.
 
   (** given a state, generate the cards needed for halting states *)
@@ -4960,7 +4964,7 @@ Section fixTM.
 
   (** generate cards for all states*)
   Definition generateCardsForFlatNonHalt (q : nat) (m : option nat) : (list (card nat)) :=
-    match lookup (q, [m]) flatTrans (q, [(None, N)]) with 
+    match lookup (q, [m]) flatTrans (q, [(None, Nmove)]) with 
       | (q', [succ]) => opt_generateCardsForFlatNonHalt q m (q', succ)
       | _ => []
     end. 
@@ -4975,7 +4979,7 @@ Section fixTM.
   (** agreement with finType cards *)
   Lemma envAddState_isFlatEnvOf a' finEnv flatEnv a : 
     finReprEl' a a' -> isFlatEnvOf flatEnv finEnv -> isFlatEnvOf (envAddState a flatEnv) (envAddState a' finEnv). 
-  Proof. 
+  Proof using flatTM_TM_compat. 
     intros. destruct flatEnv, finEnv. unfold envAddState. cbn. unfold isFlatEnvOf in *; cbn in *.
     unfold finReprEl' in H. repeat split; try easy. 
     unfold isFlatListOf in *. rewrite <- H. cbn.  firstorder. 
@@ -4983,7 +4987,7 @@ Section fixTM.
 
   Lemma envAddSSigma_isFlatEnvOf finEnv flatEnv a a' : 
     opt_finReprEl' a a' -> isFlatEnvOf flatEnv finEnv -> isFlatEnvOf (envAddSSigma (fOpt a) flatEnv) (envAddSSigma a' finEnv). 
-  Proof. 
+  Proof using flatTM_TM_compat. 
     intros. destruct flatEnv, finEnv. unfold envAddSSigma. cbn. unfold isFlatEnvOf in *; cbn in *.
     unfold opt_finReprEl' in H. repeat split; try easy. 
     unfold isFlatListOf in *. rewrite H. destruct a'; cbn [option_map map]; 
@@ -5030,7 +5034,7 @@ Section fixTM.
   Lemma fin_flat_nonhaltCards_agree q qflat m mflat : 
     finReprEl' qflat q -> opt_finReprEl' mflat m 
     -> isFlatTCardsOf (generateCardsForFlatNonHalt qflat mflat) (generateCardsForFinNonHalt q m). 
-  Proof. 
+  Proof using flatTM_TM_compat. 
     destruct flatTM_TM_compat as [_  _  _  R  _  _]. 
     specialize (TMunflatten.isFlatteningTrans_validFlatTrans R) as [trans_funct _].
     destruct R as [R1 R2].
@@ -5089,7 +5093,7 @@ Section fixTM.
   Lemma fin_flat_haltCards_agree q qflat : 
     finReprEl' qflat q  
     -> isFlatTCardsOf (generateCardsForFlatHalt qflat) (generateCardsForFinHalt q). 
-  Proof. 
+  Proof using flatTM_TM_compat. 
     intros; split; intros. 
     - unfold generateCardsForFlatHalt in H0. 
       eapply makeCards_isFlatCardOf in H0 as (fincard & H1 & H2); [ | unfold transEnvAddS; fin_flat_find_env].
@@ -5100,7 +5104,7 @@ Section fixTM.
   Qed. 
 
   Lemma fin_flat_stateCards_agree : isFlatTCardsOf flatStateCards finStateCards.
-  Proof. 
+  Proof using flatTM_TM_compat. 
     destruct flatTM_TM_compat as [_  _  _  _  _ []]. 
     split; intros. 
     - unfold flatStateCards in H. apply in_concat_map_iff in H as (q & H1 & H2). 
@@ -5156,7 +5160,7 @@ Section fixTM.
   Definition flatPreludeCards := makePreludeCards flatStart makeCardsFlat flat_baseEnvPrelude.
 
   Lemma fin_flat_preludeCards_agree : isFlatTCardsOf flatPreludeCards finPreludeCards.
-  Proof. 
+  Proof using flatTM_TM_compat. 
     split. 
     - intros. 
       destruct flatTM_TM_compat. 
@@ -5173,7 +5177,7 @@ Section fixTM.
   Definition allFlatCards := flatPreludeCards ++ allFlatSimCards. 
 
   Lemma fin_flat_cards_agree : isFlatTCardsOf allFlatCards allFinCards. 
-  Proof. 
+  Proof using flatTM_TM_compat. 
     unfold allFlatCards, allFinCards. apply isFlatTCardsOf_concat. 
     - apply fin_flat_preludeCards_agree. 
     - unfold allFlatSimCards, allFinSimCards. apply isFlatTCardsOf_concat. 
@@ -5189,22 +5193,22 @@ Section fixTM.
   Qed. 
 
   Lemma ndelimC_finReprEl : finReprEl flatPreludeSig' flatNdelimC ndelimC. 
-  Proof. 
+  Proof using flatTM_TM_compat. 
     split; [ now finRepr_simpl | cbn]. unfold flatNdelimC, flatPreludeSig'. easy.
   Qed. 
   Smpl Add (apply ndelimC_finReprEl) : finRepr.
   Lemma nstar_finReprEl : finReprEl flatPreludeSig' flatNstar nstar. 
-  Proof. 
+  Proof using flatTM_TM_compat. 
     split; [ now finRepr_simpl | cbn]. unfold flatNstar, flatPreludeSig'. easy.
   Qed. 
   Smpl Add (apply nstar_finReprEl) : finRepr. 
   Lemma nblank_finReprEl : finReprEl flatPreludeSig' flatNblank nblank.
-  Proof. 
+  Proof using flatTM_TM_compat. 
     split; [ now finRepr_simpl | cbn]. unfold flatNblank, flatPreludeSig'. easy.
   Qed. 
   Smpl Add (apply nblank_finReprEl) : finRepr. 
   Lemma ninit_finReprEl : finReprEl flatPreludeSig' flatNinit ninit.
-  Proof. 
+  Proof using flatTM_TM_compat. 
     split; [ now finRepr_simpl | cbn]. unfold flatNinit, flatPreludeSig'. easy.
   Qed. 
   Smpl Add (apply ninit_finReprEl) : finRepr. 
@@ -5228,15 +5232,15 @@ Section fixTM.
   Definition zPflat := wo + zflat. 
 
   Fact kflat_k_eq : kflat = k. 
-  Proof. unfold kflat, k. rewrite flatFixedInput_compat, map_length; easy. Qed.  
+  Proof using flatFixedInput_compat. unfold kflat, k. rewrite flatFixedInput_compat, map_length; easy. Qed.  
   Fact zflat_z_eq : zflat = z. 
-  Proof. unfold zflat, z. now rewrite kflat_k_eq. Qed. 
+  Proof using flatFixedInput_compat. unfold zflat, z. now rewrite kflat_k_eq. Qed. 
   Fact zPflat_zP_eq : zPflat = z'. 
-  Proof. unfold zPflat, z'. now rewrite zflat_z_eq. Qed. 
+  Proof using flatFixedInput_compat. unfold zPflat, z'. now rewrite zflat_z_eq. Qed. 
 
   Definition flat_initial_string := [flatInr flatGamma flatNdelimC ] ++ rev (repEl zPflat (flatInr flatGamma flatNblank)) ++ [flatInr flatGamma flatNinit] ++ map (fun n => flatInr flatGamma (flatNsig n)) flatFixedInput ++ repEl k' (flatInr flatGamma flatNstar) ++ repEl (wo + t) (flatInr flatGamma flatNblank) ++ [flatInr flatGamma flatNdelimC]. 
   Lemma flat_initial : isFlatListOf flat_initial_string (map (inr (A := Gamma)) preludeInitialString). 
-  Proof. 
+  Proof using Type*. 
     rewrite lifted_preludeInitialString. unfold flat_initial_string. 
     repeat match goal with [ |- isFlatListOf (_ ++ _) (_ ++ _) ] => apply isFlatListOf_app end. 
     - apply isFlatListOf_single. now finRepr_simpl. 
@@ -5256,7 +5260,7 @@ Section fixTM.
   Definition flat_haltingStates := filter (fun n => nth n flatHalt false) (seq 0 flatstates). 
 
   Lemma in_flat_haltingStates_iff s : s el flat_haltingStates <-> exists q, s = index q /\ halt q = true. 
-  Proof. 
+  Proof using flatTM_TM_compat. 
     unfold flat_haltingStates. rewrite in_filter_iff. split; intros. 
     - destruct H as (H1 & H2).
       rewrite states_finRepr in H1. apply finType_enum_list_finReprEl in H1 as (q & H1 & H3). 
@@ -5288,7 +5292,7 @@ Section fixTM.
   Qed. 
   
   Lemma flat_final : isFlatFinalOf flat_finalSubstrings (map (map inl) finalSubstrings). 
-  Proof. 
+  Proof using flatTM_TM_compat. 
     split; intros. 
     - unfold flat_finalSubstrings in H. apply in_map_iff in H as ([s m] & <- & H2). 
       apply in_prodLists_iff in H2 as (H2 & H3). 
@@ -5316,7 +5320,7 @@ Section fixTM.
   Definition reduction_wf := Build_FlatTCC flatAlphabet flat_initial_string allFlatCards flat_finalSubstrings (S t). 
 
   Lemma reduction_isFlatTCCOf : isFlatTCCOf (Build_FlatTCC flatAlphabet flat_initial_string allFlatCards flat_finalSubstrings (S t)) (Build_TCC (map inr preludeInitialString) allFinCards (map (map inl) finalSubstrings) (S t)). 
-  Proof. 
+  Proof using Type*. 
     constructor. 
     - cbn [TCC.Sigma FlatTCC.Sigma]. now finRepr_simpl.
     - cbn [TCC.init FlatTCC.init]. apply flat_initial.
@@ -5327,7 +5331,7 @@ Section fixTM.
 
   Lemma reduction_wf_correct : 
     SingleTMGenNP (existT _ Sigma (fTM, fixedInput, k', t)) <-> FlatTCCLang reduction_wf.
-  Proof. 
+  Proof using Type*. 
     rewrite <- SingleTMGenNP_to_TCC. symmetry. eapply isFlatTCCOf_equivalence, reduction_isFlatTCCOf.
   Qed. 
 
@@ -5343,19 +5347,19 @@ Proof.
 Qed. 
 
 Import TMunflatten.
-Definition reduction (fg : TMflat.TM * list nat * nat * nat) := 
+Definition reduction (fg : TMflat.flatTM * list nat * nat * nat) := 
   match fg with (tm, fixedInput, k', t) => if isValidFlatTM tm && (TMflat.tapes tm =? 1) && list_ofFlatType_dec (TMflat.sig tm) fixedInput then reduction_wf t k' tm fixedInput 
                                                   else trivial_no_instance
   end.
 
-Lemma unflatten_single (tm : TMflat.TM) : validFlatTM tm -> TMflat.tapes tm = 1 -> sigT (fun (TM' : mTM (finType_CS (Fin.t (TMflat.sig tm))) 1) => TMflat.isFlatteningTMOf tm TM').
+Lemma unflatten_single (tm : TMflat.flatTM) : validFlatTM tm -> TMflat.tapes tm = 1 -> sigT (fun (TM' : TM (finType_CS (Fin.t (TMflat.sig tm))) 1) => TMflat.isFlatteningTMOf tm TM').
 Proof. 
   intros. rewrite <- H0. 
   exists (unflattenTM tm).
   apply unflattenTM_correct, H. 
 Defined. 
 
-Lemma FlatSingleTMGenNP_to_FlatTCC (f : TMflat.TM * list nat * nat * nat) : FlatSingleTMGenNP f <-> FlatTCCLang (reduction f). 
+Lemma FlatSingleTMGenNP_to_FlatTCC (f : TMflat.flatTM * list nat * nat * nat) : FlatSingleTMGenNP f <-> FlatTCCLang (reduction f). 
 Proof. 
   split; intros. 
   - destruct f as (((tm & flatFixedInput) & k) & t). destruct H as (sig & M' & fixedInput & H1 & H2 & H3).

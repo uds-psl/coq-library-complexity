@@ -1,4 +1,4 @@
-From Undecidability.L Require Import L Tactics.LTactics.
+From Undecidability.L Require Import L_facts Tactics.LTactics.
 From Undecidability.L.Datatypes Require Import LSum LBool LNat Lists LProd.
 
 From Undecidability.L.AbstractMachines Require Import FunctionalDefinitions AbstractHeapMachineDef UnfoldTailRec UnfoldHeap.
@@ -28,6 +28,7 @@ Definition time_unfoldTailRecStep : (list task * list heapEntry * list term ) ->
                      end + 96.
 
 Instance term_unfoldTailRecStep : computableTime' unfoldTailRecStep (fun x _ => (time_unfoldTailRecStep x,tt)).
+Proof.
 extract. unfold time_unfoldTailRecStep. solverec.
 all: unfold c__leb2, leb_time, c__leb, c__sub1, sub_time, c__sub. all: solverec. 
 Qed.
@@ -105,7 +106,7 @@ Lemma unfoldBool_time_leq lengthH largestVar :
   unfoldBool_time lengthH largestVar <= (largestVar + 1) * (lengthH * 15 + 41 + 28) * 7 + EqBool.c__eqbComp term * 46 + 1245.
 Proof.
   unfold unfoldBool_time. unfold lookupTime.
-  unfold enc,registered_term_enc. cbn [size term_enc nat_enc]. cbn [plus].
+  unfold enc,registered_term_enc. cbn [size term_enc LNat.nat_enc]. cbn [plus].
   Lia.nia.
 Qed.
 

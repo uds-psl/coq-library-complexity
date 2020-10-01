@@ -74,7 +74,7 @@ Module CheckEncodesTape.
              | Some c =>
                if (isMarked c && haveSeenMark) || isNilBlank c || isLeftBlank c || isRightBlank c
                then Return Nop (inr (isRightBlank c && (xorb haveSeenMark (isMarked c)) && haveSeenSymbol))
-               else Return (Move R) (inl (haveSeenMark || isMarked c,haveSeenSymbol || isSymbol c))
+               else Return (Move Rmove) (inl (haveSeenMark || isMarked c,haveSeenSymbol || isSymbol c))
              end).
 
     (** We can do it as function here, althought that is not the prefered way. Instead, just define a "pretty" version o the relation you realise, then you don;t have to worry about termination *)
@@ -124,7 +124,7 @@ Module CheckEncodesTape.
     
     Definition M : pTM tau bool 1:=
       If (Relabel ReadChar (fun c => Option.apply isLeftBlank false (Option.bind Retr_g c)))
-         (Switch ReadChar (fun c => Move R;; M' (Option.apply (@isMarked _) false (Option.bind Retr_g c),false)))
+         (Switch ReadChar (fun c => Move Rmove;; M' (Option.apply (@isMarked _) false (Option.bind Retr_g c),false)))
          (Relabel ReadChar (fun c => Option.apply isNilBlank false (Option.bind Retr_g c))).
 
     Definition f (t : tape tau) : (bool*tape tau) :=
@@ -170,7 +170,7 @@ Module CheckEncodesTape.
         cbn;intros c. TM_Correct_step. now TM_Correct.
         unfold M'.
         eapply Realise_monotone with
-            (R:= fun t '(y,t')=> f' (Option.apply (@isMarked _) false (Option.bind Retr_g c), false) t[@Fin0] = (y,t'[@Fin0])).
+            (Rmove:= fun t '(y,t')=> f' (Option.apply (@isMarked _) false (Option.bind Retr_g c), false) t[@Fin0] = (y,t'[@Fin0])).
         { eapply StateWhile_Realise. now eapply Realises__step. }
         generalize (Option.apply (@isMarked _) false (Option.bind Retr_g c), false) as bs. clear c.
         apply StateWhileInduction. all:cbn - [f__step].

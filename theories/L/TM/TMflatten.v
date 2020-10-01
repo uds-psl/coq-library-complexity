@@ -1,4 +1,4 @@
-From Undecidability Require Import TM.TM.
+From Undecidability Require Import TM.Util.TM_facts.
 Require Import PslBase.FiniteTypes.
 From PslBase.FiniteTypes Require Import VectorFin Cardinality.
 From Undecidability.L.TM Require Import TMflat.
@@ -171,9 +171,9 @@ Section fixSig.
 
 End fixSig. 
 
-Definition flattenTM (sig : finType) (n : nat) (tm : mTM sig n) := 
-  Build_TM (|elem sig|) n (|elem (TM.states tm)|) (flattenTrans (@TM.trans sig n tm)) (index (TM.start tm)) (flattenHalt (@TM.halt sig n tm)). 
-Lemma flattenTM_isFlatteningTMOf sig n (tm : mTM sig n) : isFlatteningTMOf (flattenTM tm) tm.
+Definition flattenTM (sig : finType) (n : nat) (tm : TM sig n) := 
+  Build_flatTM (|elem sig|) n (|elem (TM.state tm)|) (flattenTrans (@TM.trans sig n tm)) (index (TM.start tm)) (flattenHalt (@TM.halt sig n tm)). 
+Lemma flattenTM_isFlatteningTMOf sig n (tm : TM sig n) : isFlatteningTMOf (flattenTM tm) tm.
 Proof. 
   constructor. 
   - now cbn.

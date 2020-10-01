@@ -1,4 +1,4 @@
-From Undecidability.L Require Import L.
+From Undecidability.L Require Import L_facts.
 From Undecidability.L Require Import AbstractMachines.LargestVar.
 
 (** ** Abstract Heap Machine *)

@@ -1,4 +1,4 @@
-From Undecidability.TM Require Import TM.
+From Undecidability.TM Require Import TM_facts.
 From Undecidability.L.TM Require Import TMflat TMflatEnc TMflatFun TMEncoding TapeDecode TMunflatten TMflatFun TMflatComp TMinL.
 From Undecidability.L.Datatypes Require Import LNat LProd Lists.
 From Undecidability.L.Complexity Require Import NP LinTimeDecodable ONotation.
@@ -9,17 +9,17 @@ From Undecidability Require Import L.Datatypes.LNat.
 (** Using this problem to establish NP-hardness as by Cook-levin would require us to construct TMs from L-terms. We don't want to do this. Instead, we define another problem (GenNPHalt_fixed_mTM) where the machine itself and some tape content is fixed, but a single tape has arbitrary content on it. *)
 
 (* Factorise proof over GenNP? *)
-Definition TMGenNP' sig n : mTM sig n * nat * nat -> Prop :=
+Definition TMGenNP' sig n : TM sig n * nat * nat -> Prop :=
   fun '(M, k, steps) =>
     exists tp, sizeOfmTapes tp <= k
           /\ exists f, loopM (initc M tp) steps = Some f.
 
-Definition TMGenNP: TM*nat*nat -> Prop:=
+Definition TMGenNP: flatTM*nat*nat -> Prop:=
   fun '(M,maxSize, steps (*in unary*)) =>
-    (exists sig n (M':mTM sig n), isFlatteningTMOf M M' /\ TMGenNP' (M',maxSize,steps)).
+    (exists sig n (M':TM sig n), isFlatteningTMOf M M' /\ TMGenNP' (M',maxSize,steps)).
 
 Definition TM1GenNP := restrictBy (fun '(M,_,_) => M.(TMflat.tapes) = 1)
-  (fun '(M,maxSize, steps (*in unary*)) => exists sig (M':mTM sig 1), isFlatteningTMOf M M' /\ TMGenNP' (M', maxSize, steps)).
+  (fun '(M,maxSize, steps (*in unary*)) => exists sig (M':TM sig 1), isFlatteningTMOf M M' /\ TMGenNP' (M', maxSize, steps)).
 
 
 Lemma inNP_TMgenericNPCompleteProblem:
@@ -27,7 +27,7 @@ Lemma inNP_TMgenericNPCompleteProblem:
 Proof.
   pose (R := fun '(exist (M,maxSize, steps (*in unary*)) _ : {x | True}) t =>
                sizeOfmTapesFlat t <= maxSize /\  
-               exists sig n (M':mTM sig n),
+               exists sig n (M':TM sig n),
                  isFlatteningTMOf M M'
                  /\ exists t', isFlatteningTapesOf t t'
                          /\ (exists f, loopM (initc M' t') steps = Some f)).

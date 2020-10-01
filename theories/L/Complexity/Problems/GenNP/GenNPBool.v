@@ -1,4 +1,4 @@
-From Undecidability.L Require Import L.
+From Undecidability.L Require Import L_facts.
 From Undecidability.L.Datatypes Require Import LProd LTerm LBool.
 From Undecidability.L.Complexity Require Import NP Synthetic Monotonic.
 From Undecidability.L.Functions Require Import Size.
@@ -74,9 +74,9 @@ Proof.
                then
                  evalForTimeBool true (N.of_nat steps) (s' (enc c))
                else false).
-    -Import N. Import L. Import Nat.  extract. intros [[[s' maxSize] steps] c].
+    -Import N. Import L_facts. Import Nat.  extract. intros [[[s' maxSize] steps] c].
      remember (size (enc (s', maxSize, steps, c))) as n.
-     assert (H1 : ( size (enc s') <= n)) by (subst n;rewrite !size_prod;cbn;lia).
+     assert (H1 : ( L_facts.size (enc s') <= n)) by (subst n;rewrite !size_prod;cbn;lia).
      assert (H2 : ( size (enc maxSize) <= n)) by (subst n;rewrite !size_prod;cbn;lia).
      assert (H3 : ( size (enc steps) <= n)) by (subst n;rewrite !size_prod;cbn;lia).
      assert (H4 : ( size (enc c) <= n)) by (subst n;rewrite !size_prod;cbn;lia).

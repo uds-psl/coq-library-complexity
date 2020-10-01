@@ -166,7 +166,7 @@ Proof.
 Qed. 
 
 Definition c__flatTapeSigma := c__add1 + 1 + (flatDelim + 1) * c__add.
-Definition flatTapeSigma_time (tm : TM) := flatPolSigma_time tm + c__flatTapeSigma.
+Definition flatTapeSigma_time (tm : flatTM) := flatPolSigma_time tm + c__flatTapeSigma.
 Instance term_flatTapeSigma : computableTime' flatTapeSigma (fun tm _ => (flatTapeSigma_time tm, tt)). 
 Proof. 
   extract. solverec. 
@@ -174,7 +174,7 @@ Proof.
 Defined. 
 
 Definition c__flatStates := c__mult1 + c__flatStateSigma + 10.
-Definition flatStates_time (tm : TM) := mult_time (states tm) (flatStateSigma tm) + c__flatStates.
+Definition flatStates_time (tm : flatTM) := mult_time (states tm) (flatStateSigma tm) + c__flatStates.
 Instance term_flatStates : computableTime' flatStates (fun tm _ => (flatStates_time tm, tt)).
 Proof. 
   extract. solverec. 
@@ -192,7 +192,7 @@ Proof.
 Qed. 
 
 Definition c__flatGamma := c__add1 + 1.
-Definition flatGamma_time (tm : TM) := flatStates_time tm + flatTapeSigma_time tm + add_time (flatStates tm) + c__flatGamma.
+Definition flatGamma_time (tm : flatTM) := flatStates_time tm + flatTapeSigma_time tm + add_time (flatStates tm) + c__flatGamma.
 Instance term_flatGamma : computableTime' flatGamma (fun tm _ => (flatGamma_time tm, tt)). 
 Proof. 
   extract. solverec. 
@@ -221,7 +221,7 @@ Proof.
 Defined. 
 
 Definition c__flatAlphabet := c__add1 + c__flatPreludeSig' + 1.
-Definition flatAlphabet_time (tm : TM) := flatGamma_time tm + add_time (flatGamma tm) + c__flatAlphabet.
+Definition flatAlphabet_time (tm : flatTM) := flatGamma_time tm + add_time (flatGamma tm) + c__flatAlphabet.
 Instance term_flatAlphabet : computableTime' flatAlphabet (fun tm _ => (flatAlphabet_time tm, tt)). 
 Proof. 
   extract. solverec. 
@@ -245,7 +245,7 @@ Qed.
 Definition c__flattenPolarity := 11.
 Instance term_flattenPolarity : computableTime' flattenPolarity (fun p _ => (c__flattenPolarity, tt)). 
 Proof. 
-  assert (extEq (fun p => match p with TM.L => 0 | TM.R => 1 | TM.N => 2 end) flattenPolarity ) as H. 
+  assert (extEq (fun p => match p with TM.Lmove => 0 | TM.Rmove => 1 | TM.Nmove => 2 end) flattenPolarity ) as H. 
   { intros []; easy. }
   eapply (computableTimeExt H).
   extract. solverec. all: now unfold c__flattenPolarity.
@@ -263,7 +263,7 @@ Notation fAlphabet := (sum fGamma fpreludeSig').
 Definition envConst_bound k (env : evalEnvFlat) := 
   |polarityEnv env| <= k /\ |sigmaEnv env| <= k /\ |stateSigmaEnv env| <= k /\ |stateEnv env| <= k.
 
-Definition envOfFlatTypes (tm : TM) (env : evalEnvFlat) := 
+Definition envOfFlatTypes (tm : flatTM) (env : evalEnvFlat) := 
   list_ofFlatType flatPolarity (polarityEnv env)
   /\ list_ofFlatType (sig tm) (sigmaEnv env)
   /\ list_ofFlatType (flatStateSigma tm) (stateSigmaEnv env)
@@ -528,7 +528,7 @@ Qed.
  
 (** generateGammaFlat *)
 Definition c__generateGammaFlat := 8 + c__add1 + c__optionMap.
-Definition generateGammaFlat_time (tm : TM) (env : evalEnvFlat) (c : fGamma) := 
+Definition generateGammaFlat_time (tm : flatTM) (env : evalEnvFlat) (c : fGamma) := 
   match c with 
   | inl c => generateStatesFlat_time (sig tm) env c 
   | inr c => flatStates_time tm + generateTapeSigmaFlat_time (sig tm) env c + add_time (flatStates tm)
@@ -618,7 +618,7 @@ Qed.
   
 (** generateAlphabetFlat *) 
 Definition c__generateAlphabetFlat := c__add1 + 7 + c__optionMap.
-Definition generateAlphabetFlat_time (tm : TM) (env : evalEnvFlat) (c : fAlphabet) := 
+Definition generateAlphabetFlat_time (tm : flatTM) (env : evalEnvFlat) (c : fAlphabet) := 
   match c with 
   | inl s => generateGammaFlat_time tm env s
   | inr s => flatGamma_time tm + generatePreludeSigPFlat_time env s + add_time (flatGamma tm)
@@ -667,9 +667,9 @@ Qed.
 
 Local Open Scope cc_scope. 
 (** generateCardFlat *)
-Definition generateCardFlat (tm : TM) := generateCard (generateAlphabetFlat tm). 
+Definition generateCardFlat (tm : flatTM) := generateCard (generateAlphabetFlat tm). 
 Definition c__generateCard := 60. 
-Definition generateCard_time (tm : TM) (env : evalEnvFlat) (card : TCCCard fAlphabet) := 
+Definition generateCard_time (tm : flatTM) (env : evalEnvFlat) (card : TCCCard fAlphabet) := 
   let '{cardEl1, cardEl2, cardEl3} / {cardEl4, cardEl5, cardEl6} := card in 
   generateAlphabetFlat_time tm env cardEl1 + generateAlphabetFlat_time tm env cardEl2 + generateAlphabetFlat_time tm env cardEl3 +
   generateAlphabetFlat_time tm env cardEl4 + generateAlphabetFlat_time tm env cardEl5 + generateAlphabetFlat_time tm env cardEl6
@@ -855,7 +855,7 @@ End fixprodLists.
 (** makeAllEvalEnvFlat *)
 Definition c__makeAllEvalEnvFlat1 := c__flatStateSigma + c__map + 59.
 Definition c__makeAllEvalEnvFlat2 := c__tupToEvalEnv + c__map. 
-Definition makeAllEvalEnvFlat_time (tm : TM) (n1 n2 n3 n4 : nat) := 
+Definition makeAllEvalEnvFlat_time (tm : flatTM) (n1 n2 n3 n4 : nat) := 
   seq_time flatPolarity 
   + seq_time (sig tm)
   + seq_time (flatStateSigma tm)
@@ -989,7 +989,7 @@ End fixfilterSome.
 Definition makeCardsP_flat_step tm card (env : evalEnvFlat) := generateCardFlat tm env card.
 
 Definition c__makeCardsPFlatStep := 3.
-Definition makeCardsP_flat_step_time (tm : TM) (card : TCCCard fAlphabet) (env : evalEnvFlat) := generateCard_time tm env card + c__makeCardsPFlatStep.
+Definition makeCardsP_flat_step_time (tm : flatTM) (card : TCCCard fAlphabet) (env : evalEnvFlat) := generateCard_time tm env card + c__makeCardsPFlatStep.
 Instance term_makeCardsP_flat_step : computableTime' makeCardsP_flat_step (fun tm _ => (1, fun card _ => (1, fun env _ => (makeCardsP_flat_step_time tm card env, tt)))). 
 Proof. 
   extract. solverec. 
@@ -997,9 +997,9 @@ Proof.
 Defined. 
 
 (** makeCards' *)
-Definition makeCardsP_flat (tm : TM) := makeCards' (generateAlphabetFlat tm). 
+Definition makeCardsP_flat (tm : flatTM) := makeCards' (generateAlphabetFlat tm). 
 Definition c__makeCards' := 4.
-Definition makeCardsP_flat_time (tm : TM) (envs : list evalEnvFlat) (card : TCCCard fAlphabet) := map_time (fun env => makeCardsP_flat_step_time tm card env) envs + (|envs| + 1) * c__filterSome + c__makeCards'.
+Definition makeCardsP_flat_time (tm : flatTM) (envs : list evalEnvFlat) (card : TCCCard fAlphabet) := map_time (fun env => makeCardsP_flat_step_time tm card env) envs + (|envs| + 1) * c__filterSome + c__makeCards'.
 Instance term_makeCards' : computableTime' makeCardsP_flat (fun tm _ => (1, fun envs _ => (1, fun card _ => (makeCardsP_flat_time tm envs card, tt)))). 
 Proof. 
   unfold makeCardsP_flat, makeCards'. 
@@ -1038,7 +1038,7 @@ Qed.
 
 (** makeCardsFlat *)
 Definition c__makeCardsFlat := 4.
-Definition makeCardsFlat_time (tm : TM) (envs : list evalEnvFlat) (cards : list (TCCCard fAlphabet)) := map_time (makeCardsP_flat_time tm envs) cards + concat_time (map (makeCardsP_flat tm envs) cards) + c__makeCardsFlat.
+Definition makeCardsFlat_time (tm : flatTM) (envs : list evalEnvFlat) (cards : list (TCCCard fAlphabet)) := map_time (makeCardsP_flat_time tm envs) cards + concat_time (map (makeCardsP_flat tm envs) cards) + c__makeCardsFlat.
 Instance term_makeCardsFlat : computableTime' makeCardsFlat (fun tm _ => (1, fun envs _ => (1, fun cards _ => (makeCardsFlat_time tm envs cards, tt)))). 
 Proof. 
   unfold makeCardsFlat, makeCards. 
@@ -1152,7 +1152,7 @@ Qed.
 
 (** tape cards *)
 Definition c__flatMTRCards := 22.
-Definition flatMTRCards_time (tm : TM) := makeAllEvalEnvFlat_time tm 1 4 0 0 + makeCardsFlat_time tm (makeAllEvalEnvFlat tm 1 4 0 0) mtrRules + c__flatMTRCards.
+Definition flatMTRCards_time (tm : flatTM) := makeAllEvalEnvFlat_time tm 1 4 0 0 + makeCardsFlat_time tm (makeAllEvalEnvFlat tm 1 4 0 0) mtrRules + c__flatMTRCards.
 Instance term_flatMTRCards : computableTime' flatMTRCards (fun tm _ => (flatMTRCards_time tm, tt)). 
 Proof. 
   extract. recRel_prettify2. 
@@ -1177,7 +1177,7 @@ Proof.
 Qed.
 
 Definition c__flatMTICards := 25. 
-Definition flatMTICards_time (tm : TM) := makeAllEvalEnvFlat_time tm 2 0 4 0 + makeCardsFlat_time tm (makeAllEvalEnvFlat tm 2 0 4 0) mtiRules + c__flatMTICards.
+Definition flatMTICards_time (tm : flatTM) := makeAllEvalEnvFlat_time tm 2 0 4 0 + makeCardsFlat_time tm (makeAllEvalEnvFlat tm 2 0 4 0) mtiRules + c__flatMTICards.
 Instance term_flatMTICards : computableTime' flatMTICards (fun tm _ => (flatMTICards_time tm, tt)). 
 Proof. 
   extract. recRel_prettify2. 
@@ -1202,7 +1202,7 @@ Proof.
 Qed.
 
 Definition c__flatMTLCards := 22. 
-Definition flatMTLCards_time (tm : TM) := makeAllEvalEnvFlat_time tm 1 4 0 0 + makeCardsFlat_time tm (makeAllEvalEnvFlat tm 1 4 0 0) mtlRules + c__flatMTLCards.
+Definition flatMTLCards_time (tm : flatTM) := makeAllEvalEnvFlat_time tm 1 4 0 0 + makeCardsFlat_time tm (makeAllEvalEnvFlat tm 1 4 0 0) mtlRules + c__flatMTLCards.
 Instance term_flatMTLCards : computableTime' flatMTLCards (fun tm _ => (flatMTLCards_time tm, tt)). 
 Proof. 
   extract. recRel_prettify2.  
@@ -1227,7 +1227,7 @@ Proof.
 Qed.
 
 Definition c__flatTapeCards := 2 * c__app + 11. 
-Definition flatTapeCards_time (tm : TM) := flatMTRCards_time tm + flatMTICards_time tm + flatMTLCards_time tm + (|flatMTICards tm| + |flatMTRCards tm| + 1) * c__flatTapeCards.
+Definition flatTapeCards_time (tm : flatTM) := flatMTRCards_time tm + flatMTICards_time tm + flatMTLCards_time tm + (|flatMTICards tm| + |flatMTRCards tm| + 1) * c__flatTapeCards.
 Instance term_flatTapeCards : computableTime' flatTapeCards (fun tm _ => (flatTapeCards_time tm, tt)). 
 Proof. 
   extract. recRel_prettify2. 
@@ -1282,7 +1282,7 @@ Qed.
 
 (** non-halting state cards *)
 (** makeSome_base *)
-Definition makeSome_base_flat (tm : TM) (cards : list (TCCCard fAlphabet)) (q q' m m' : nat):= @makeSome_base nat nat nat nat nat cards q q' m m' (makeCardsFlat tm).
+Definition makeSome_base_flat (tm : flatTM) (cards : list (TCCCard fAlphabet)) (q q' m m' : nat):= @makeSome_base nat nat nat nat nat cards q q' m m' (makeCardsFlat tm).
 
 Lemma makeSome_base_flat_ofFlatType tm rules q q' m m' envs : 
   (forall e, e el envs -> envOfFlatTypes tm e) 
@@ -1298,7 +1298,7 @@ Qed.
 
 Definition c__makeSomeBaseFlat1 := c__transEnvAddSM + c__map.
 Definition c__makeSomeBaseFlat2 := c__map + 8.
-Definition makeSome_base_flat_time (tm : TM) (cards : list (TCCCard fAlphabet)) (q q' m m' : nat) (envs : list evalEnvFlat) := (|envs|) * c__makeSomeBaseFlat1+ makeCardsFlat_time tm (map (transEnvAddSM q q' m m') envs) cards + c__makeSomeBaseFlat2.
+Definition makeSome_base_flat_time (tm : flatTM) (cards : list (TCCCard fAlphabet)) (q q' m m' : nat) (envs : list evalEnvFlat) := (|envs|) * c__makeSomeBaseFlat1+ makeCardsFlat_time tm (map (transEnvAddSM q q' m m') envs) cards + c__makeSomeBaseFlat2.
 Instance term_makeSome_base_flat : computableTime' makeSome_base_flat (fun tm _ => (1, fun cards _ => (1, fun q _ => (1, fun q' _ => (1, fun m _ => (1, fun m' _ => (1, fun envs _ => (makeSome_base_flat_time tm cards q q' m m' envs, tt)))))))). 
 Proof. 
   unfold makeSome_base_flat, makeSome_base.
@@ -1365,7 +1365,7 @@ Proof.
 Defined. 
 
 (** makeNone_base *)
-Definition makeNone_base_flat (tm : TM) (cards : list (TCCCard fAlphabet)) (q q' : nat) := @makeNone_base nat nat nat nat nat cards q q' (makeCardsFlat tm). 
+Definition makeNone_base_flat (tm : flatTM) (cards : list (TCCCard fAlphabet)) (q q' : nat) := @makeNone_base nat nat nat nat nat cards q q' (makeCardsFlat tm). 
 
 Lemma makeNone_base_flat_ofFlatType tm rules q q' envs : 
   (forall e, e el envs -> envOfFlatTypes tm e) 
@@ -1381,7 +1381,7 @@ Qed.
 
 Definition c__makeNoneBaseFlat1 := c__transEnvAddS + c__map.
 Definition c__makeNoneBaseFlat2 := c__map + 6.
-Definition makeNone_base_flat_time (tm : TM) (rules :list (TCCCard fAlphabet)) (q q' : nat) (envs : list evalEnvFlat) := (|envs|) * c__makeNoneBaseFlat1 + makeCardsFlat_time tm (map (transEnvAddS q q') envs) rules + c__makeNoneBaseFlat2.
+Definition makeNone_base_flat_time (tm : flatTM) (rules :list (TCCCard fAlphabet)) (q q' : nat) (envs : list evalEnvFlat) := (|envs|) * c__makeNoneBaseFlat1 + makeCardsFlat_time tm (map (transEnvAddS q q') envs) rules + c__makeNoneBaseFlat2.
 Instance term_makeNone_base_flat : computableTime' makeNone_base_flat (fun tm _ => (1, fun rules _ => (1, fun q _ => (1, fun q' _ => (1, fun envs _ => (makeNone_base_flat_time tm rules q q' envs, tt)))))). 
 Proof. 
   unfold makeNone_base_flat, makeNone_base. 
@@ -1472,17 +1472,17 @@ Defined.
 
 (** opt_generateRulesForFlatNonHalt *)
 Definition c__optGenerateCardsForFlatNonHalt := c__makeNoneLeftFlat + c__makeNoneRightFlat + c__makeNoneStayFlat + c__makeSomeLeftFlat + c__makeSomeRightFlat + c__makeSomeStayFlat + 2 * c__fOpt + 26.
-Definition opt_generateCardsForFlatNonHalt_time (tm : TM) (q : nat) (m : option nat) (dst : nat * (option nat * TM.move)) := 
+Definition opt_generateCardsForFlatNonHalt_time (tm : flatTM) (q : nat) (m : option nat) (dst : nat * (option nat * TM.move)) := 
   match m, dst with
-  | _, (q', (Some x, TM.L)) => makeSome_base_flat_time tm makeSomeRight_rules q q' (fOpt m) (fOpt $ Some x) (flat_baseEnv tm)
-  | _, (q', (Some x, TM.R)) => makeSome_base_flat_time tm makeSomeLeft_rules q q' (fOpt m) (fOpt $ Some x) (flat_baseEnv tm)
-  | _, (q', (Some x, TM.N)) => makeSome_base_flat_time tm makeSomeStay_rules q q' (fOpt m) (fOpt $ Some x) (flat_baseEnv tm)
-  | Some x, (q', (None, TM.L)) => makeSome_base_flat_time tm makeSomeRight_rules q q' (fOpt $ Some x) (fOpt $ Some x) (flat_baseEnv tm)
-  | Some x, (q', (None, TM.R)) => makeSome_base_flat_time tm makeSomeLeft_rules q q' (fOpt $ Some x) (fOpt $ Some x) (flat_baseEnv tm)
-  | Some x, (q', (None, TM.N)) => makeSome_base_flat_time tm makeSomeStay_rules q q' (fOpt $ Some x) (fOpt $ Some x) (flat_baseEnv tm)
-  | None, (q', (None, TM.L)) => makeNone_base_flat_time tm makeNoneRight_rules q q' (flat_baseEnvNone tm)
-  | None, (q', (None, TM.R)) => makeNone_base_flat_time tm makeNoneLeft_rules q q' (flat_baseEnvNone tm)
-  | None, (q', (None, TM.N)) => makeNone_base_flat_time tm makeNoneStay_rules q q' (flat_baseEnvNone tm)
+  | _, (q', (Some x, TM.Lmove)) => makeSome_base_flat_time tm makeSomeRight_rules q q' (fOpt m) (fOpt $ Some x) (flat_baseEnv tm)
+  | _, (q', (Some x, TM.Rmove)) => makeSome_base_flat_time tm makeSomeLeft_rules q q' (fOpt m) (fOpt $ Some x) (flat_baseEnv tm)
+  | _, (q', (Some x, TM.Nmove)) => makeSome_base_flat_time tm makeSomeStay_rules q q' (fOpt m) (fOpt $ Some x) (flat_baseEnv tm)
+  | Some x, (q', (None, TM.Lmove)) => makeSome_base_flat_time tm makeSomeRight_rules q q' (fOpt $ Some x) (fOpt $ Some x) (flat_baseEnv tm)
+  | Some x, (q', (None, TM.Rmove)) => makeSome_base_flat_time tm makeSomeLeft_rules q q' (fOpt $ Some x) (fOpt $ Some x) (flat_baseEnv tm)
+  | Some x, (q', (None, TM.Nmove)) => makeSome_base_flat_time tm makeSomeStay_rules q q' (fOpt $ Some x) (fOpt $ Some x) (flat_baseEnv tm)
+  | None, (q', (None, TM.Lmove)) => makeNone_base_flat_time tm makeNoneRight_rules q q' (flat_baseEnvNone tm)
+  | None, (q', (None, TM.Rmove)) => makeNone_base_flat_time tm makeNoneLeft_rules q q' (flat_baseEnvNone tm)
+  | None, (q', (None, TM.Nmove)) => makeNone_base_flat_time tm makeNoneStay_rules q q' (flat_baseEnvNone tm)
   end
   + makeAllEvalEnvFlat_time tm 1 0 3 0 + makeAllEvalEnvFlat_time tm 2 2 2 0 + c__flatBaseEnv + c__flatBaseEnvNone + c__optGenerateCardsForFlatNonHalt.
 Instance term_opt_generateCardsForFlatNonHalt : computableTime' opt_generateCardsForFlatNonHalt (fun tm _ => (1, fun q _ => (1, fun m _ => (1, fun dst _ => (opt_generateCardsForFlatNonHalt_time tm q m dst, tt))))). 
@@ -1490,15 +1490,15 @@ Proof.
   apply computableTimeExt with (x:= 
     fun tm q m transt => 
       match m, transt with
-      | _, (q', (Some x, TM.L)) => makeSomeRightFlat tm q q' (fOpt m) (fOpt $ Some x) (flat_baseEnv tm)
-      | _, (q', (Some x, TM.R)) => makeSomeLeftFlat tm q q' (fOpt m) (fOpt $ Some x) (flat_baseEnv tm)
-      | _, (q', (Some x, TM.N)) => makeSomeStayFlat tm q q' (fOpt m) (fOpt $ Some x) (flat_baseEnv tm)
-      | Some x, (q', (None, TM.L)) => makeSomeRightFlat tm q q' (fOpt $ Some x) (fOpt $ Some x) (flat_baseEnv tm)
-      | Some x, (q', (None, TM.R)) => makeSomeLeftFlat tm q q' (fOpt $ Some x) (fOpt $ Some x) (flat_baseEnv tm)
-      | Some x, (q', (None, TM.N)) => makeSomeStayFlat tm q q' (fOpt $ Some x) (fOpt $ Some x) (flat_baseEnv tm)
-      | None, (q', (None, TM.L)) => makeNoneRightFlat tm q q' (flat_baseEnvNone tm)
-      | None, (q', (None, TM.R)) => makeNoneLeftFlat tm q q' (flat_baseEnvNone tm)
-      | None, (q', (None, TM.N)) => makeNoneStayFlat tm q q' (flat_baseEnvNone tm)
+      | _, (q', (Some x, TM.Lmove)) => makeSomeRightFlat tm q q' (fOpt m) (fOpt $ Some x) (flat_baseEnv tm)
+      | _, (q', (Some x, TM.Rmove)) => makeSomeLeftFlat tm q q' (fOpt m) (fOpt $ Some x) (flat_baseEnv tm)
+      | _, (q', (Some x, TM.Nmove)) => makeSomeStayFlat tm q q' (fOpt m) (fOpt $ Some x) (flat_baseEnv tm)
+      | Some x, (q', (None, TM.Lmove)) => makeSomeRightFlat tm q q' (fOpt $ Some x) (fOpt $ Some x) (flat_baseEnv tm)
+      | Some x, (q', (None, TM.Rmove)) => makeSomeLeftFlat tm q q' (fOpt $ Some x) (fOpt $ Some x) (flat_baseEnv tm)
+      | Some x, (q', (None, TM.Nmove)) => makeSomeStayFlat tm q q' (fOpt $ Some x) (fOpt $ Some x) (flat_baseEnv tm)
+      | None, (q', (None, TM.Lmove)) => makeNoneRightFlat tm q q' (flat_baseEnvNone tm)
+      | None, (q', (None, TM.Rmove)) => makeNoneLeftFlat tm q q' (flat_baseEnvNone tm)
+      | None, (q', (None, TM.Nmove)) => makeNoneStayFlat tm q q' (flat_baseEnvNone tm)
       end). 
   1: { unfold makeSomeLeftFlat, makeSomeStayFlat, makeSomeRightFlat, makeNoneLeftFlat, makeNoneStayFlat, makeNoneRightFlat. easy. }
   extract. 
@@ -1589,8 +1589,8 @@ Proof.
 Qed.
 
 Definition c__generateCardsForFlatNonHalt := 43. 
-Definition generateCardsForFlatNonHalt_time (tm : TM) (q : nat) (m : option nat) := 
-  let (q', l) := lookup (q, [m]) (trans tm) (q, [(None, TM.N)]) in match l with 
+Definition generateCardsForFlatNonHalt_time (tm : flatTM) (q : nat) (m : option nat) := 
+  let (q', l) := lookup (q, [m]) (trans tm) (q, [(None, TM.Nmove)]) in match l with 
   | [] => 0
   | [succ] => opt_generateCardsForFlatNonHalt_time tm q m (q', succ)
   | _ :: _ :: _ => 0
@@ -1599,8 +1599,8 @@ Instance term_generateCardsForFlatNonHalt:
   computableTime' generateCardsForFlatNonHalt (fun tm _ => (1, fun q _ => (1, fun m _ => (generateCardsForFlatNonHalt_time tm q m, tt)))).
 Proof. 
   apply computableTimeExt with (x := 
-  fun (flatTM : TM) (q : nat) (m : option nat) =>
-   let (q', l) := lookup (q, [m]) (trans flatTM) (q, [(None, TM.N)]) in
+  fun (flatTM : flatTM) (q : nat) (m : option nat) =>
+   let (q', l) := lookup (q, [m]) (trans flatTM) (q, [(None, TM.Nmove)]) in
    match l with
    | [] => []
    | [succ] => opt_generateCardsForFlatNonHalt flatTM q m (q', succ)
@@ -1636,7 +1636,7 @@ Proof.
     rewrite opt_generateCardsForFlatNonHalt_time_bound. 
     2,3: easy.
     2: {
-      destruct (lookup_complete (trans tm) (q, [m]) (q, [(None, TM.N)])) as[Hl | Hl]. 
+      destruct (lookup_complete (trans tm) (q, [m]) (q, [(None, TM.Nmove)])) as[Hl | Hl]. 
       - rewrite H2 in Hl. apply (tm_trans_isValidFlatAct H) in Hl. apply Hl. 
       - destruct Hl as (_ & Hl). rewrite Hl in H2. inv H2. 
         unfold isValidFlatAct. apply H0.
@@ -1687,7 +1687,7 @@ Proof.
   intros H1 H2 H3. unfold generateCardsForFlatNonHalt. 
   destruct lookup eqn:H4. destruct l as [ | succ []]; [ easy | | easy]. 
   destruct H1 as (H1 & _). destruct H1. 
-  destruct (lookup_complete (trans tm)(q, [m]) (q, [(None, TM.N)])) as [H0 | H0]. 
+  destruct (lookup_complete (trans tm)(q, [m]) (q, [(None, TM.Nmove)])) as [H0 | H0]. 
   - (* work around typeclass inference problems with rewriting *) 
     assert ((q, [m], (n, [succ])) el trans tm) as H'.  
     { rewrite <- H4. apply H0. } 
@@ -1695,7 +1695,7 @@ Proof.
     unfold isValidFlatAct. destruct succ as ([ m' | ] & mo); [ split; [ | easy]| easy] .
     destruct H' as (_ & _ & _ & _ & _ & H'). eapply H'. eauto.
   - destruct H0 as [ _ H0]. 
-    assert ((n, [succ]) = (q, [(None, TM.N)])) as H'. 
+    assert ((n, [succ]) = (q, [(None, TM.Nmove)])) as H'. 
     { rewrite <- H4. apply H0. }
     inv H'. 
     apply opt_generateCardsForFlatNonHalt_ofFlatType; easy.
@@ -1706,7 +1706,7 @@ Qed.
 (**makeHalt *)
 Definition makeHaltFlat tm q := makeHalt q (makeCardsFlat tm). 
 Definition c__makeHaltFlat := 5. 
-Definition makeHaltFlat_time (tm : TM) (q : nat) (envs : list evalEnvFlat) := (|envs|) * (c__envAddState + c__map) + c__map + makeCardsFlat_time tm (map (envAddState q) envs) makeHalt_rules + c__makeHaltFlat. 
+Definition makeHaltFlat_time (tm : flatTM) (q : nat) (envs : list evalEnvFlat) := (|envs|) * (c__envAddState + c__map) + c__map + makeCardsFlat_time tm (map (envAddState q) envs) makeHalt_rules + c__makeHaltFlat. 
 Instance term_makeHaltFlat : computableTime' makeHaltFlat (fun tm _ => (1, fun q _ => (1, fun envs _ => (makeHaltFlat_time tm q envs, tt)))). 
 Proof.
   unfold makeHaltFlat, makeHalt. extract. 
@@ -1793,7 +1793,7 @@ Qed.
 
 Definition c__generateCardsForFlat1 := 20 + c__app. 
 Definition c__generateCardsForFlat2 := 52 + c__app. 
-Definition generateCardsForFlat_time (tm : TM) (q : nat) := 
+Definition generateCardsForFlat_time (tm : flatTM) (q : nat) := 
   c__generateCardsForFlat1 * q  
   + generateCardsForFlatHalt_time tm q 
   + generateCardsForFlatNonHalt_time tm q None 
@@ -1804,7 +1804,7 @@ Definition generateCardsForFlat_time (tm : TM) (q : nat) :=
 Instance term_generateCardsForFlat : computableTime' generateCardsForFlat (fun tm _ => (1, fun q _ => (generateCardsForFlat_time tm q, tt))). 
 Proof. 
   apply computableTimeExt with (x :=  
-    fun (flatTM : TM) (q : nat) =>
+    fun (flatTM : flatTM) (q : nat) =>
       if nth q (halt flatTM) false
       then generateCardsForFlatHalt flatTM q
       else
@@ -1872,7 +1872,7 @@ Qed.
 
 (**flatStateCards *)
 Definition c__flatStateCards := 17. 
-Definition flatStateCards_time (tm : TM) :=   seq_time (states tm) + map_time (fun q => generateCardsForFlat_time tm q) (seq 0 (states tm)) + concat_time (map (generateCardsForFlat tm) (seq 0 (states tm))) + c__flatStateCards.
+Definition flatStateCards_time (tm : flatTM) :=   seq_time (states tm) + map_time (fun q => generateCardsForFlat_time tm q) (seq 0 (states tm)) + concat_time (map (generateCardsForFlat tm) (seq 0 (states tm))) + c__flatStateCards.
 Instance term_flatStateCards : computableTime' flatStateCards (fun tm _ => (flatStateCards_time tm, tt)). 
 Proof. 
   extract. solverec. 
@@ -1923,7 +1923,7 @@ Qed.
 (** makePreludeCards *)
 Definition makePreludeCards_flat tm q := makePreludeCards q (makeCardsFlat tm) . 
 Definition c__makePreludeCardsFlat := 5 + c__map. 
-Definition makePreludeCards_flat_time (tm : TM) (q:nat) (envs : list evalEnvFlat) := |envs| * (c__envAddState + c__map) + makeCardsFlat_time tm (map (envAddState q) envs) listPreludeRules + c__makePreludeCardsFlat. 
+Definition makePreludeCards_flat_time (tm : flatTM) (q:nat) (envs : list evalEnvFlat) := |envs| * (c__envAddState + c__map) + makeCardsFlat_time tm (map (envAddState q) envs) listPreludeRules + c__makePreludeCardsFlat. 
 Instance term_makePreludeCards : computableTime' makePreludeCards_flat (fun tm _ => (1, fun q _ => (1, fun envs _ => (makePreludeCards_flat_time tm q envs, tt)))). 
 Proof. 
   unfold makePreludeCards_flat, makePreludeCards.
@@ -1963,7 +1963,7 @@ Qed.
 
 (** flatPreludeCards *)
 Definition c__flatPreludeCards := 12. 
-Definition flatPreludeCards_time (tm : TM) := makeAllEvalEnvFlat_time tm 0 3 1 0 + c__flatBaseEnvPrelude + makePreludeCards_flat_time tm (start tm) (flat_baseEnvPrelude tm) + c__flatPreludeCards.
+Definition flatPreludeCards_time (tm : flatTM) := makeAllEvalEnvFlat_time tm 0 3 1 0 + c__flatBaseEnvPrelude + makePreludeCards_flat_time tm (start tm) (flat_baseEnvPrelude tm) + c__flatPreludeCards.
 Instance term_flatPreludeCards : computableTime' flatPreludeCards (fun tm _ => (flatPreludeCards_time tm, tt)). 
 Proof. 
   unfold flatPreludeCards. eapply computableTimeExt with (x := fun tm => makePreludeCards_flat tm (start tm) (flat_baseEnvPrelude tm)). 
@@ -2010,7 +2010,7 @@ Proof.
 Qed.
 
 (** allFlatCards *)
-Definition allFlatCards_time (tm : TM) := flatPreludeCards_time tm + flatTapeCards_time tm + flatStateCards_time tm + (|flatTapeCards tm|) * c__app + c__app * (|flatPreludeCards tm|) + 2 * c__app + 11.
+Definition allFlatCards_time (tm : flatTM) := flatPreludeCards_time tm + flatTapeCards_time tm + flatStateCards_time tm + (|flatTapeCards tm|) * c__app + c__app * (|flatPreludeCards tm|) + 2 * c__app + 11.
 Instance term_allFlatCards : computableTime' allFlatCards (fun tm _ => (allFlatCards_time tm, tt)). 
 Proof. 
   unfold allFlatCards, allFlatSimCards. extract. recRel_prettify2. 
@@ -2161,7 +2161,7 @@ Qed.
 (* step function for map *)
 Definition flatInr_flatNsig tm n := flatInr (flatGamma tm) (flatNsig n). 
 Definition c__flatInrflatNsig := c__add1 + c__flatNsig + 1.
-Definition flatInr_flatNsig_time (tm : TM) (n : nat) := flatGamma_time tm + add_time (flatGamma tm) + c__flatInrflatNsig. 
+Definition flatInr_flatNsig_time (tm : flatTM) (n : nat) := flatGamma_time tm + add_time (flatGamma tm) + c__flatInrflatNsig. 
 Instance term_flatInr_flatNsig : computableTime' flatInr_flatNsig (fun tm _ => (1, fun n _ => (flatInr_flatNsig_time tm n, tt))). 
 Proof. 
   extract. solverec. 
@@ -2169,12 +2169,12 @@ Proof.
 Qed.
 
 Definition c__flatInitialString := 7 * c__add1 + c__repEl * wo + 3 * c__repEl + add_time wo + 8 * c__app + 56 + c__rev.
-Definition flat_initial_string_time (t k' : nat) (tm : TM) (fixed : list nat) := 
+Definition flat_initial_string_time (t k' : nat) (tm : flatTM) (fixed : list nat) := 
   6 * flatGamma_time tm + 6 * add_time (flatGamma tm) + zPflat_time t k' fixed + c__repEl * k' + c__repEl * t + map_time (flatInr_flatNsig_time tm) fixed + (wo + t) * c__app + c__app * k' + c__app * (|fixed|) + (c__app + c__rev + c__repEl) * zPflat t k' fixed + c__flatInitialString. 
 Instance term_flat_initial_string : computableTime' flat_initial_string (fun t _ => (1, fun k' _ => (1, fun tm _ => (1, fun fixed _ => (flat_initial_string_time t k' tm fixed, tt))))). 
 Proof. 
   unfold flat_initial_string. apply computableTimeExt with 
-    (x := (fun (t k' : nat) (flatTM : TM) (flatFixedInput : list nat) =>
+    (x := (fun (t k' : nat) (flatTM : flatTM) (flatFixedInput : list nat) =>
    [flatInr (flatGamma flatTM) flatNdelimC] ++
    rev
      (repEl (zPflat t k' flatFixedInput)
@@ -2329,14 +2329,14 @@ End fixX.
 (** flat_haltingStates *)
 Definition isHalting tm q := nth q (halt tm) false. 
 Definition c__isHalting := c__nth + 16. 
-Definition isHalting_time (tm : TM) (q : nat) := q * c__nth + c__isHalting.
+Definition isHalting_time (tm : flatTM) (q : nat) := q * c__nth + c__isHalting.
 Instance term_isHalting : computableTime' isHalting (fun tm _ => (1, fun q _ => (isHalting_time tm q, tt))). 
 Proof. 
   extract. solverec. unfold isHalting_time, c__isHalting; solverec.
 Qed.
 
 Definition c__flatHaltingStates := c__filter + 17. 
-Definition flat_haltingStates_time (tm : TM) := seq_time (states tm) + sumn (map (fun q => c__filter + isHalting_time tm q) (seq 0 (states tm))) + c__flatHaltingStates.
+Definition flat_haltingStates_time (tm : flatTM) := seq_time (states tm) + sumn (map (fun q => c__filter + isHalting_time tm q) (seq 0 (states tm))) + c__flatHaltingStates.
 Instance term_flat_haltingStates : computableTime' flat_haltingStates (fun tm _ => (flat_haltingStates_time tm, tt)). 
 Proof. 
   unfold flat_haltingStates. 
@@ -2380,7 +2380,7 @@ Qed.
 (** flat_finalSubstrings *)
 Definition flat_finalSubstrings_step tm '(s, m) := [flatInl (flatInl (flatPair (states tm) (flatStateSigma tm) s m))]. 
 Definition c__flatFinalSubstringsStep := c__flatStateSigma + 21. 
-Definition flat_finalSubstrings_step_time (tm : TM) (p : nat * nat) := let (s, m) := p in flatPair_time s (flatStateSigma tm) + c__flatFinalSubstringsStep.
+Definition flat_finalSubstrings_step_time (tm : flatTM) (p : nat * nat) := let (s, m) := p in flatPair_time s (flatStateSigma tm) + c__flatFinalSubstringsStep.
 Instance term_flat_finalSubstrings_step : computableTime' flat_finalSubstrings_step (fun tm _ => (1, fun p _ => (flat_finalSubstrings_step_time tm p, tt))). 
 Proof. 
   unfold flat_finalSubstrings_step, flatInl. 
@@ -2400,7 +2400,7 @@ Proof.
 Qed.
 
 Definition c__finalSubstrings := c__flatStateSigma + 13. 
-Definition flat_finalSubstrings_time (tm : TM) :=   flat_haltingStates_time tm + seq_time (flatStateSigma tm) + prodLists_time (flat_haltingStates tm) (seq 0 (flatStateSigma tm)) + map_time (flat_finalSubstrings_step_time tm) (prodLists (flat_haltingStates tm) (seq 0 (flatStateSigma tm))) + c__finalSubstrings. 
+Definition flat_finalSubstrings_time (tm : flatTM) :=   flat_haltingStates_time tm + seq_time (flatStateSigma tm) + prodLists_time (flat_haltingStates tm) (seq 0 (flatStateSigma tm)) + map_time (flat_finalSubstrings_step_time tm) (prodLists (flat_haltingStates tm) (seq 0 (flatStateSigma tm))) + c__finalSubstrings. 
 Instance term_flat_finalSubstrings : computableTime' flat_finalSubstrings (fun tm _ => (flat_finalSubstrings_time tm, tt)). 
 Proof. 
   apply computableTimeExt with (x := 
@@ -2431,7 +2431,7 @@ Proof.
   unfold poly__finalSubstrings; split; smpl_inO; first [apply flat_haltingStates_poly | apply flat_finalSubstrings_step_poly]. 
 Qed. 
 
-Proposition flat_finalSubstrings_length (tm : TM) : |flat_finalSubstrings tm| <= states tm * (S (sig tm)). 
+Proposition flat_finalSubstrings_length (tm : flatTM) : |flat_finalSubstrings tm| <= states tm * (S (sig tm)). 
 Proof. 
   unfold flat_finalSubstrings. rewrite map_length, prodLists_length.
   rewrite flat_haltingStates_length, seq_length. unfold flatStateSigma, flatOption. 
@@ -2473,7 +2473,7 @@ Qed.
 
 (** reduction_wf *)
 Definition c__reductionWf := 12. 
-Definition reduction_wf_time (t k' :nat) (tm : TM) (fixed : list nat) := flatAlphabet_time tm + flat_initial_string_time t k' tm fixed + allFlatCards_time tm + flat_finalSubstrings_time tm + c__reductionWf. 
+Definition reduction_wf_time (t k' :nat) (tm : flatTM) (fixed : list nat) := flatAlphabet_time tm + flat_initial_string_time t k' tm fixed + allFlatCards_time tm + flat_finalSubstrings_time tm + c__reductionWf. 
 Instance term_reduction_wf : computableTime' reduction_wf (fun t _ => (1, fun k' _ => (1, fun tm _ => (1, fun fixed _ => (reduction_wf_time t k' tm fixed, tt))))). 
 Proof. 
   extract. solverec. 
@@ -2796,7 +2796,7 @@ Qed.
 
 (** isValidFlatTM *)
 Definition c__isValidFlatTM := 64. 
-Definition isValidFlatTM_time (tm : TM) := isValidFlatTrans_time (sig tm) (tapes tm) (states tm) (trans tm) + ltb_time (start tm) (states tm) + c__isValidFlatTM.
+Definition isValidFlatTM_time (tm : flatTM) := isValidFlatTrans_time (sig tm) (tapes tm) (states tm) (trans tm) + ltb_time (start tm) (states tm) + c__isValidFlatTM.
 Instance term_isValidFlatTM : computableTime' isValidFlatTM (fun tm _ => (isValidFlatTM_time tm, tt)). 
 Proof. 
   extract. solverec. 
@@ -2820,7 +2820,7 @@ Qed.
 
 (** reduction *)
 Definition c__reduction := size (enc 1) * c__eqbComp nat + 54.
-Definition reduction_time (t k' : nat) (tm : TM) (fixed : list nat) := 
+Definition reduction_time (t k' : nat) (tm : flatTM) (fixed : list nat) := 
   isValidFlatTM_time tm + list_ofFlatType_dec_time (sig tm) fixed + 
   (if isValidFlatTM tm then reduction_wf_time k' t tm fixed else 0) + c__reduction.
 Instance term_reduction : computableTime' reduction (fun p _ => (let '(tm, fixed, t, k') := p in reduction_time t k' tm fixed, tt)). 

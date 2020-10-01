@@ -1,4 +1,4 @@
-From Undecidability.TM Require Import TM.
+From Undecidability.TM Require Import TM_facts.
 From Undecidability.L.TM Require Import TMflat TMflatEnc TMflatFun TMEncoding TapeDecode TMunflatten TMflatten.
 From Undecidability.L.Complexity.Problems Require Import TMGenNP_fixed_mTM Cook.SingleTMGenNP.
 From Undecidability.L.Functions Require Import EqBool.
@@ -20,7 +20,7 @@ Qed.
 
 Section fixTM. 
   Variable (sig : finType).
-  Variable (M : mTM sig 1).
+  Variable (M : TM sig 1).
   
   Variable (reg__sig : registered sig).
   Variable (index__comp : {c & computableTime' (index (F:=sig)) (fun _ _ => (c,tt))}).

@@ -1,4 +1,4 @@
-From Undecidability Require Import TM.Prelim TM.Relations.
+From Undecidability Require Import TM.Util.TM_facts TM.Util.Relations.
 From Undecidability.L Require Import LM_heap_def.
 
 Require Import FunInd.

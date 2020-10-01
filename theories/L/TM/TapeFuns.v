@@ -3,7 +3,7 @@ From Undecidability.L.Datatypes Require Import LNat Lists LProd LFinType LVector
 From Undecidability.L Require Import TM.TMEncoding.
 
 
-From Undecidability Require Import TM.TM.
+From Undecidability Require Import TM.Util.TM_facts.
 Require Import PslBase.FiniteTypes.FinTypes.
 
 
@@ -107,7 +107,7 @@ Section fix_sig.
       set (List.fold_right _ _ _). nia. 
     Qed.
 
-    Global Instance term_current: computableTime' ((current (sig:=sig))) (fun _ _ => (10,tt)).
+    Global Instance term_current: computableTime' ((current (Σ:=sig))) (fun _ _ => (10,tt)).
     Proof.
       extract.
       solverec.
@@ -117,7 +117,7 @@ Section fix_sig.
     Proof.
       extract.
       solverec.
-      rewrite map_time_const,to_list_length. unfold c__map. omega.
+      rewrite map_time_const,to_list_length. unfold c__map. lia.
     Qed.
 
     Global Instance term_doAct: computableTime' (doAct (sig:=sig)) (fun _ _ => (1,fun _ _ => (89,tt))).

@@ -105,12 +105,12 @@ Module CheckTapeContains.
 
     Definition M : pTM (tau ^+) bool 1:=
       If (Relabel ReadChar (fun c => match Option.bind Retr_g c with Some (inl START) => true | _ => false end))
-         (If (Move R;;M_checkX)
-             (Move R;;
+         (If (Move Rmove;;M_checkX)
+             (Move Rmove;;
                    If (Relabel ReadChar (fun c => match Option.bind Retr_g c with Some (inl STOP) => true | _ => false end))
-                   (Move R;;
+                   (Move Rmove;;
                          If (Relabel ReadChar (Option.apply (fun _ => false) true))
-                         (Move L;;Return (MoveToSymbol_L (fun x => match x with (inl START) => true | _ => false end) id) true)
+                         (Move Lmove;;Return (MoveToSymbol_L (fun x => match x with (inl START) => true | _ => false end) id) true)
                          (Return Nop false)
                    )
                    (Return Nop false)

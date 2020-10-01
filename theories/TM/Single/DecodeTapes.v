@@ -49,7 +49,7 @@ Module CheckEncodesTapes.
       match n with
         0 => Relabel ReadChar (fun c => match Option.bind Retr_g c with Some sigList_nil => true | _ => false end)
       | S n => If (Relabel ReadChar (fun c => match Option.bind Retr_g c with Some sigList_cons => true | _ => false end))
-                 (Move R;; If (CheckEncodesTape.M (I:=I__X)) (Move R;;M n) (Return Nop false))
+                 (Move Rmove;; If (CheckEncodesTape.M (I:=I__X)) (Move Rmove;;M n) (Return Nop false))
                  (Return Nop false)
       end.
 

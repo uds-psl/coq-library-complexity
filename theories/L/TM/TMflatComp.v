@@ -1,4 +1,4 @@
-From Undecidability.TM Require Import TM.
+From Undecidability.TM Require Import TM_facts.
 From Undecidability.L.TM Require Import TMflat TMflatEnc TMflatFun TMEncoding TMunflatten TapeFuns.
 From Undecidability.L.Datatypes Require Import LNat LProd Lists LOptions.
  
@@ -32,7 +32,7 @@ Qed.
 
 
 From Undecidability.L Require Import Functions.FinTypeLookup.
-Definition stepFlat_time (f : nat) (c:mconfigFlat) := 153 * (| snd c |) + f * size (enc (fst c, map (current (sig:=nat)) (snd c))) * c__eqbComp (nat * list (option nat)) + 24 * f + 96.
+Definition stepFlat_time (f : nat) (c:mconfigFlat) := 153 * (| snd c |) + f * size (enc (fst c, map (current (Σ:=nat)) (snd c))) * c__eqbComp (nat * list (option nat)) + 24 * f + 96.
 Import Nat.
 Instance term_stepFlat : computableTime' stepFlat (fun f _ => (1, fun c _ => (stepFlat_time (length f) c,tt))).
 Proof.
@@ -143,7 +143,7 @@ Lemma validFlatConf_step M c c' :
 Proof. 
   destruct c as [s t], c' as [s' t']. intros [[T0 T1] _] (H1&H2&H3) H0. 
   unfold stepFlat in H0. destruct lookup eqn:H5; cbn in H5. inv H0. 
-  destruct (lookup_complete (trans M) (s, map (current (sig:=nat)) t) (s, repeat (None, TM.N) (| t |))) as [H | [_ H]]; rewrite H5 in H; clear H5; (split; [ | split]). 
+  destruct (lookup_complete (trans M) (s, map (current (Σ:=nat)) t) (s, repeat (None, TM.Nmove) (| t |))) as [H | [_ H]]; rewrite H5 in H; clear H5; (split; [ | split]). 
   - rewrite <- H1, zipWith_length. enough (|l| = tapes M) by lia. eapply T1, H.
   - apply T1 in H as (_ & _ & _ & _ & _ & F3). clear T0 T1. 
     apply Forall_zipWith. intros x y Helx Hely. 
@@ -438,7 +438,7 @@ Proof.
   rewrite map_length. unfold c. nia.
 Qed.
 
-Definition execFlatTM_time (M:TM) (t:nat) (k:nat) :=
+Definition execFlatTM_time (M:flatTM) (t:nat) (k:nat) :=
  isValidFlatTM_time (length M.(trans)) (size (enc M.(trans))) M.(states) + isValidFlatTapes_time M.(sig) M.(tapes) t + loopMflat_timeNice M k + 66 .
 
 Instance term_execFlatTM: computableTime' execFlatTM (fun M _ => (1,fun t _ => (1,fun k _ => (execFlatTM_time M (sizeOfmTapesFlat t) k,tt)))).

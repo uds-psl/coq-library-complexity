@@ -11,7 +11,7 @@ From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import LNat Lists LProd LFinType LVector.
 From Undecidability.L Require Import Functions.EqBool Functions.Decoding.
 
-From Undecidability Require Import TM.VectorPrelim.
+From Undecidability Require Import TM.Util.VectorPrelim.
 
 
 From Undecidability Require Import TM.TM.

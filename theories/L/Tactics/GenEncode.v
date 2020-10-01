@@ -26,8 +26,8 @@ Definition mkMatch (t1 t2 d : Ast.term) (cases : nat -> list term -> Core.Templa
   ret (tCase (ind, params) (tLambda nAnon t1 t2) d
              body).
 
-MetaCoq Quote Definition tLproc := L.proc.
-MetaCoq Quote Definition tLredLe := L.redLe.
+MetaCoq Quote Definition tLproc := L_facts.proc.
+MetaCoq Quote Definition tLredLe := L_facts.redLe.
 
 
 Definition tmMatchCorrect (A : Type) : Core.TemplateMonad Prop :=

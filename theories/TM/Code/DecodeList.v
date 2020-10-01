@@ -71,7 +71,7 @@ Module CheckEncodeList.
              (fun c =>
                 match c with
                 | Some sigList_nil => (Return Nop (Some true))
-                | Some sigList_cons => (Move R;; If M__X (Move R;;Return Nop None) (Return Nop (Some false)))
+                | Some sigList_cons => (Move Rmove;; If M__X (Move Rmove;;Return Nop None) (Return Nop (Some false)))
                 | _ => Return Nop (Some false)
                 end).
     

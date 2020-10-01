@@ -45,7 +45,7 @@ Instance decode_term : decodable term.
 Proof.
   exists term_decode.
   all:unfold enc at 1. all:cbn.
-  -induction x;cbn. change nat_enc with (enc (X:=nat)).
+  -induction x;cbn. change LNat.nat_enc with (enc (X:=nat)).
    +rewrite (decode_correct n). congruence.
    +now rewrite IHx1,IHx2.
    +now rewrite IHx.  all:eauto using LNat.unenc_correct, LNat.unenc_correct2.
@@ -57,7 +57,7 @@ Proof.
     *reflexivity.
     *cbn;lia.
     *easy.
-   +cbn. change nat_enc with (enc (X:=nat)).
+   +cbn. change LNat.nat_enc with (enc (X:=nat)).
     erewrite decode_correct2. 2:eassumption.  reflexivity.
    +cbn. erewrite !IHt. reflexivity.
     1,3:cbn;lia.

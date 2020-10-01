@@ -1,4 +1,4 @@
-From Undecidability.L Require Import L  Complexity.ResourceMeasures AbstractMachines.LargestVar.
+From Undecidability.L Require Import L_facts  Complexity.ResourceMeasures AbstractMachines.LargestVar.
 From Undecidability.L Require Export AbstractMachines.AbstractHeapMachineDef.
 Import AbstractHeapMachineDef.clos_notation.
 

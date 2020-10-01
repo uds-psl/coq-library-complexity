@@ -1,4 +1,4 @@
-From Undecidability.L Require Import L.
+From Undecidability.L Require Import L_facts.
 From Undecidability.L.Datatypes Require Import LTerm Lists.
 From Undecidability.L.Complexity Require Import NP Monotonic CanEnumTerm_def PolyTimeComputable.
 From Undecidability.L.AbstractMachines Require Import FlatPro.Programs FlatPro.Computable.LPro Computable.Compile Computable.Decompile.
@@ -107,7 +107,7 @@ Module boollist_enum.
     specialize (boollist_term_inv' P [] []) as H. autorewrite with list in H. easy.
   Qed.
 
-  Lemma pro_to_boollist_size : (fun P => L.size (enc (pro_to_boollist P))) <=c fun P => L.size (enc P).
+  Lemma pro_to_boollist_size : (fun P => size (enc (pro_to_boollist P))) <=c fun P => size (enc P).
   Proof.
     evar (c:nat). exists c. intros P. rewrite !size_list. induction P as [ | [] P].
     all:cbn.
@@ -122,7 +122,7 @@ Module boollist_enum.
   Import FunInd.
   
   
-  Lemma boollist_term_size bs A:  L.size (enc (boollist_term bs A)) <= L.size (enc bs) + L.size (enc A).
+  Lemma boollist_term_size bs A:  size (enc (boollist_term bs A)) <= size (enc bs) + size (enc A).
   Proof.
     rewrite !size_list. functional induction (boollist_term bs A).
     all:cbn.
@@ -139,7 +139,7 @@ Module boollist_enum.
         exists (pro_to_boollist P).
         split. now rewrite boollist_term_inv.
         rewrite (correct__leUpToC pro_to_boollist_size), Hfsize.
-        set (L.size _). unfold fsize. reflexivity.
+        set (size _). unfold fsize. reflexivity.
     }
     3:easy.
     2,3:unfold fsize;smpl_inO.

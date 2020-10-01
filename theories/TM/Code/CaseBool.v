@@ -7,10 +7,10 @@ Section CaseBool.
   Local Notation sig := bool.
  
   Definition CaseBool : pTM bool^+ bool 1 :=
-    Move R;;
+    Move Rmove;;
     Switch (ReadChar)
     (fun s => match s with
-           | Some (inr x) => Return (Move R) x
+           | Some (inr x) => Return (Move Rmove) x
            | _ => Return (Nop) default
            end).
 

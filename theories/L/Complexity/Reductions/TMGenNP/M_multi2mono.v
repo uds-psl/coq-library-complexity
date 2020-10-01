@@ -1,11 +1,11 @@
 From Undecidability.L.Complexity Require Import NP.
 From Undecidability.TM Require TM ProgrammingTools CaseList.
-From Undecidability.TM Require Import TM SizeBounds.
+From Undecidability.TM Require Import TM_facts SizeBounds.
 
 From Undecidability.L.Complexity  Require Import TMGenNP_fixed_mTM.
 From Undecidability.TM.Single Require EncodeTapes StepTM DecodeTapes.
 
-From Undecidability Require Import TM.VectorPrelim.
+From Undecidability Require Import TM.Util.VectorPrelim.
 
 Unset Printing Coercions.
 
@@ -20,8 +20,8 @@ Module MultiToMono.
 
     Definition M : pTM ((sigList (sigTape sig)) ^+) (option F) 1 :=
       If (CheckTapeContains.M (CheckEncodesTapes.M n))
-         (Move L;;If (Relabel ReadChar (Option.apply (fun _ => false) true))
-                     (Move R;;Relabel (ToSingleTape M__multi) Some)
+         (Move Lmove;;If (Relabel ReadChar (Option.apply (fun _ => false) true))
+                     (Move Rmove;;Relabel (ToSingleTape M__multi) Some)
                      (Return Nop None))
          (Return Nop None).
 
@@ -106,14 +106,14 @@ Section putFirst.
   (** putting the first element at the end of an vector *)
 
   Definition putFirstAtEnd n: Vector.t (Fin.t (S n)) (S n):=
-    tabulate (fun i => match lt_dec (S (proj1_sig (Fin.to_nat i))) (S n) with
+    Vectors.tabulate (fun i => match lt_dec (S (proj1_sig (Fin.to_nat i))) (S n) with
                       Specif.left H => Fin.of_nat_lt H
                     | _ => Fin.F1
                     end).
   Arguments putFirstAtEnd : simpl never.
 
   Definition putEndAtFirst n': Vector.t (Fin.t (S n')) (S n'). 
-    refine (tabulate (fun i => match Fin.to_nat i with
+    refine (Vectors.tabulate (fun i => match Fin.to_nat i with
                             | exist 0 H => Fin.of_nat_lt (Nat.lt_succ_diag_r n')
                             | exist n' H => Fin.of_nat_lt (p:=n'-1) _
                             end )). abstract nia.
@@ -139,7 +139,7 @@ Section putFirst.
       now inv H.
     Qed.
     
-    Lemma putEndAtFirst_dupfree m: dupfree (putEndAtFirst m).
+    Lemma putEndAtFirst_dupfree m: VectorDupfree.dupfree (putEndAtFirst m).
     Proof.
       clear_all. apply dupfree_tabulate_injective.
       intros i j.
@@ -214,13 +214,13 @@ Section lemmas_for_LMGenNP_to_TMGenNP_mTM.
   Import LVector.
   Import TM.
 
-  Context (sig:finType) (n:nat)  (M : mTM sig (S n)).
+  Context (sig:finType) (n:nat)  (M : TM sig (S n)).
 
  
   
   
   Definition M__mono : pTM ((sigList (sigTape sig)) ^+) unit 1 :=
-    If (Move R ;; Relabel (MultiToMono.M (LiftTapes (M;(fun _ => tt)) (putEndAtFirst n) )) (Option.apply (fun _ => true) false))
+    If (Move Rmove ;; Relabel (MultiToMono.M (LiftTapes (M;(fun _ => tt)) (putEndAtFirst n) )) (Option.apply (fun _ => true) false))
        Nop
        Diverge.
 
@@ -230,7 +230,7 @@ Section lemmas_for_LMGenNP_to_TMGenNP_mTM.
               exists v v' : tapes sig (S n),
                 contains_tapes (tape_move_right tin[@Fin0]) v /\
                 contains_tapes tout[@Fin0] v' /\
-                Canonical_Rel (LiftTapes (existT (fun x : mTM sig (S n) => states x -> unit) M (fun _ : states M => tt)) (putEndAtFirst n)) v
+                Canonical_Rel (LiftTapes (existT (fun x : TM sig (S n) => state x -> unit) M (fun _ : state M => tt)) (putEndAtFirst n)) v
                               (tt, v')).
   Proof.
     eapply Realise_monotone.
@@ -241,7 +241,7 @@ Section lemmas_for_LMGenNP_to_TMGenNP_mTM.
     hnf in H__mono. cbn - [Canonical_Rel]in *|-*. rewrite Ht1 in *|-*. easy.
   Qed.
   
-    Lemma Terminates_False sig' n' (M' : mTM sig' n'): M' ↓ (fun _ _ => False).
+    Lemma Terminates_False sig' n' (M' : TM sig' n'): M' ↓ (fun _ _ => False).
   Proof.
     easy.
   Qed.

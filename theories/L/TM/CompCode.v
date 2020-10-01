@@ -53,7 +53,7 @@ Qed.
 
 
 Lemma size_boundary (l:boundary):
-  L.size (enc l) = match l with START => 6 | STOP => 5 | UNKNOWN => 4 end.
+  size (enc l) = match l with START => 6 | STOP => 5 | UNKNOWN => 4 end.
 Proof.
   change (enc l) with (boundary_enc l). 
   destruct l;easy.
@@ -70,7 +70,7 @@ Section sigList.
   
 
   Lemma size_sigList (l:sigList sig):
-    L.size (enc l) = match l with sigList_X x => L.size (enc x) + 7 | sigList_nil => 5 | _ => 4 end.
+    size (enc l) = match l with sigList_X x => size (enc x) + 7 | sigList_nil => 5 | _ => 4 end.
   Proof.
     change (enc l) with (sigList_enc l).
     destruct l. all:cbn [sigList_enc map sumn size].
@@ -431,7 +431,7 @@ Section int.
     all:  change ((match HY with
            | @mk_registered _ enc _ _ => enc
            end)) with (enc (X:=Y)).
-    all:cbn [L.size]. all: try nia.
+    all:cbn [L_facts.size]. all: try nia.
   Qed.
 
 End int.
@@ -454,13 +454,13 @@ Section sigTape.
 
   
   Lemma size_sigTape (l:sigTape sig):
-    L.size (enc l) =
+    size (enc l) =
     match l with
-      LeftBlank b => 11+ L.size (enc b)
-    | RightBlank b => 10+ L.size (enc b)
+      LeftBlank b => 11+ size (enc b)
+    | RightBlank b => 10+ size (enc b)
     | NilBlank => 8
-    | MarkedSymbol x => 8 + L.size (enc x)
-    | UnmarkedSymbol x => 7 + L.size (enc x)
+    | MarkedSymbol x => 8 + size (enc x)
+    | UnmarkedSymbol x => 7 + size (enc x)
     end.
   Proof.
     change (enc l) with (sigTape_enc l).

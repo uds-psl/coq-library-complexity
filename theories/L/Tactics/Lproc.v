@@ -1,4 +1,4 @@
-From Undecidability.L Require Export L.
+From Undecidability.L Require Export Util.L_facts.
 From Undecidability.L.Tactics Require Import Reflection ComputableTime mixedTactics.
 
 (** ** Symbolic simplification for L*)
@@ -36,9 +36,9 @@ Ltac Lproc' :=
   (*| |- lambda (@ext_ext ?X ?x ?H) => exact (proc_lambda (@proc_extT X tt x _))*)
   | |- lambda _ => (simple apply proc_lambda;(trivial with nocore LProc || tauto)) || tauto || (eexists;reflexivity)
   | |- rClosed ?phi _ => solve [simple apply rClosed_decb_correct;[assumption|vm_compute;reflexivity]]
-  | |- L.closed _ => refine (proj2 (closed_dcl _) _)
+  | |- L_facts.closed _ => refine (proj2 (closed_dcl _) _)
   | |- bound _  (match ?c with _ => _ end) => destruct c
-  | |- bound _ (L.var _) => solve [constructor;omega]
+  | |- bound _ (L.var _) => solve [constructor;lia]
   | |- bound _ (L.app _ _) => constructor
   | |- bound _ (L.lam _) => constructor
   | |- bound _ (rho ?s) => simple apply rho_dcls

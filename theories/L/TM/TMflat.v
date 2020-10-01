@@ -1,9 +1,9 @@
-From Undecidability Require Import TM.TM.
+From Undecidability Require Import TM.Util.TM_facts.
 Require Import PslBase.FiniteTypes.
 From PslBase.FiniteTypes Require Import VectorFin Cardinality.
 
 (** A firstorder encoding and the connection to an arbitrary TM *)
-Inductive TM : Type :=
+Inductive flatTM : Type :=
   { sig : nat;
     tapes : nat;
     states : nat;    
@@ -26,7 +26,7 @@ Inductive isFlatteningTransOf {st sig : finType} {n}
     (R_complete : (forall s0 v0, let (s0',v0') := f' (s0,v0)
                              in ((index s0,map (option_map index) (Vector.to_list v0))
                                  ,(index s0',map (map_fst (option_map index)) (Vector.to_list v0'))) el f
-                                \/ (s0=s0' /\ v0' = Vector.const (None,TM.N) n)))
+                                \/ (s0=s0' /\ v0' = Vector.const (None,TM.Nmove) n)))
   : isFlatteningTransOf f f'.
 
 Inductive isFlatteningHaltOf {st:finType} (f : list bool) (f' : st -> bool) : Prop :=
@@ -35,11 +35,11 @@ Inductive isFlatteningHaltOf {st:finType} (f : list bool) (f' : st -> bool) : Pr
         nth (index p) f false = f' p) : isFlatteningHaltOf f f'.
 
 
-Inductive isFlatteningTMOf {sig' n} (M:TM) (M': mTM sig' n) : Prop :=
+Inductive isFlatteningTMOf {sig' n} (M:flatTM) (M': TM sig' n) : Prop :=
   mkIsFlatteningTMOf
     (eq__tapes : tapes M = n)
     (eq__sig : sig M = Cardinality sig')
-    (eq__states : (states M) = Cardinality (TM.states M'))
+    (eq__states : (states M) = Cardinality (TM.state M'))
     (R__trans : isFlatteningTransOf (trans M) (TM.trans (m:=M')))
     (eq__start : start M = index (TM.start M'))
     (R__halt : isFlatteningHaltOf (halt M) (TM.halt (m:=M')))

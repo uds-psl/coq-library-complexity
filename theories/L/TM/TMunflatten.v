@@ -2,7 +2,7 @@ Require Import PslBase.FiniteTypes.
 From Undecidability Require Import L.Functions.EqBool.
 From PslBase.FiniteTypes Require Import VectorFin Cardinality.
 
-From Undecidability Require Import TM.TM.
+From Undecidability Require Import TM.Util.TM_facts.
 From Undecidability Require Import L.TM.TMflat.
 From Undecidability Require L.TM.TMEncoding.
 
@@ -35,13 +35,13 @@ Definition unflatten_acts' (sig:finType) (l__r : list (option nat * move)): (lis
 Definition unflatten_acts (sig:finType) n (l__r : list (option nat * move)) : (Vector.t (option sig*move) n) :=
   match Vector_of_list_length n  (unflatten_acts' sig l__r) with
   | Some l__r => l__r
-  | _ => Vector.const (None,N) n
+  | _ => Vector.const (None,Nmove) n
   end.
   
 Definition unflatten_trans (states:finType) (sig:finType) d n (f:list (nat * list (option nat) * (nat * list (option nat * move))))
   : states * Vector.t (option sig) n -> states * Vector.t (option sig * move) n :=
   fun '(st,l) =>
-    let (st__o,l__r) := lookup f (index st,map (option_map (fun x => index x)) (Vector.to_list l)) (index st,repeat (None,N) n) in
+    let (st__o,l__r) := lookup f (index st,map (option_map (fun x => index x)) (Vector.to_list l)) (index st,repeat (None,Nmove) n) in
     (nth st__o (elem _) d, unflatten_acts sig n l__r).
 
 
@@ -54,9 +54,9 @@ Proof.
   all:now constructor.
 Defined.
 
-Program Definition unflattenTM (M:TM) : mTM (finType_CS (Fin.t (sig M))) (tapes M) :=
+Program Definition unflattenTM (M:flatTM) : TM (finType_CS (Fin.t (sig M))) (tapes M) :=
   let d := def _ in
-  {|TM.states := (finType_CS ((Fin.t (max 1 (states M)))));
+  {|TM.state := (finType_CS ((Fin.t (max 1 (states M)))));
     TM.trans := unflatten_trans d (trans M);
     TM.start := nth (start M) (elem _) d;
     TM.halt := unflatten_halt (halt M);
@@ -131,7 +131,7 @@ Record validFlatTrans (sig n states:nat) (f:list (nat * list (option nat) * (nat
           /\ (forall a m, (Some a,m) el v' -> a < sig)   
   }.
 
-Definition validFlatTM (M:TM) :=
+Definition validFlatTM (M:flatTM) :=
   validFlatTrans M.(sig) M.(tapes) M.(states) M.(trans)
   /\ M.(start) < M.(states).
 
@@ -156,6 +156,7 @@ Lemma isFlattening_inv sig n (M':mTM sig n) d trans0 s s' v v':
   /\ v = map (option_map index) (unflatten_in (Cardinality sig) n v)
   /\ v' = map (map_fst (option_map index)) (unflatten_acts (Cardinality sig) n v').
 Admitted.*)
+
 
 
 Lemma unflatten_acts_correct (sig:finType) n v':
@@ -240,16 +241,16 @@ Proof.
     rewrite map_repeat. cbn.
     (*Set Printing Implicit.*)
     pattern n at 1 2 4 5 6 7 8.
-    replace n with (length (@repeat (option (Fin.t sig) * move) (@None (Fin.t sig), N) n)) at 1.
+    replace n with (length (@repeat (option (Fin.t sig) * move) (@None (Fin.t sig), Nmove) n)) at 1.
     2:now rewrite repeat_length.
     rewrite Vector_of_list_length_eq.
     induction n;cbn. easy.
     rewrite <- IHn. easy. 
 Qed.
 
-Lemma isFlatteningTrans_validFlatTrans n sig' (M' : mTM sig' n) f:
+Lemma isFlatteningTrans_validFlatTrans n sig' (M' : TM sig' n) f:
 isFlatteningTransOf f (TM.trans (m:=M'))
--> validFlatTrans (Cardinality sig') n (Cardinality (TM.states M')) f.
+-> validFlatTrans (Cardinality sig') n (Cardinality (TM.state M')) f.
 Proof.
   intros [H'].
   split.
@@ -295,7 +296,7 @@ Proof.
    econstructor. reflexivity.
 Qed.
 
-Lemma isFlattening_is_valid M sig n (M':mTM sig n):
+Lemma isFlattening_is_valid M sig n (M':TM sig n):
   isFlatteningTMOf M M'
   -> validFlatTM M.
 Proof.
@@ -452,7 +453,7 @@ Proof.
   all:try rewrite !map_rev. all:easy.
 Qed.
 
-Lemma flatteningTapeIsValid (sig:finType) n t (t' : TM.tapes sig n):
+Lemma flatteningTapeIsValid (sig:finType) n t (t' : TM_facts.tapes sig n):
   isFlatteningTapesOf t t' ->
   isValidFlatTapes (Cardinality.Cardinality sig) n t = true.
 Proof.

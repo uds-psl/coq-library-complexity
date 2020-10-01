@@ -1,4 +1,4 @@
-From Undecidability.L Require Import L Tactics.LTactics.
+From Undecidability.L Require Import L_facts Tactics.LTactics.
 
 From Undecidability.L.AbstractMachines Require Import AbstractHeapMachineDef UnfoldTailRec FunctionalDefinitions.
 From Undecidability.L.AbstractMachines.Computable Require Import Unfolding HeapMachine Shared.
@@ -116,7 +116,7 @@ Arguments evalForTime__step : simpl never.
     all:destruct (N.ltb_spec0 0 i);[|try easy]. all:easy.
   Qed.*)
 
-Import L ARS. Import AbstractMachines.AbstractHeapMachineDef.
+Import L_facts ARS. Import AbstractMachines.AbstractHeapMachineDef.
 
 Instance termT_init__evalForTime : computableTime' init__evalForTime (fun fuel (_:unit) => (1,fun s (_:unit) => (size s * 108 + N.size_nat fuel * 84 + 244,tt))).
 Proof.

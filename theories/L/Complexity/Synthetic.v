@@ -20,7 +20,7 @@ Record decInTime {X} `{R :registered X} `(P : restrictedP vX) (fT : nat -> nat) 
   decInTime_intro
   {
     f__decInTime : X -> bool ;
-    compIn__decInTime : computableTime (ty:=TyArr (TyB X) (TyB bool)) f__decInTime (fun x _ => (fT (L.size (enc x)),tt)) ;
+    compIn__decInTime : computableTime (ty:=TyArr (TyB X) (TyB bool)) f__decInTime (fun x _ => (fT (size (enc x)),tt)) ;
     correct__decInTime : forall x (Hx : vX x), P (exist _ x Hx) <-> f__decInTime x  = true
   }.
 
@@ -105,7 +105,7 @@ Record polyTimeComputable X Y `{registered X} `{registered Y} (f : X -> Y) :=
   polyTimeComputable_intro
   {
     time__polyTC : nat -> nat;
-    comp__polyTC : computableTime' f (fun x _ => (time__polyTC (L.size (enc x)),tt));
+    comp__polyTC : computableTime' f (fun x _ => (time__polyTC (size (enc x)),tt));
     poly__polyTC : inOPoly time__polyTC ;
     mono__polyTC : monotonic time__polyTC;
     resSize__polyTC :> resSizePoly f;

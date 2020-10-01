@@ -1,4 +1,4 @@
-From Undecidability.TM Require Import TM.
+From Undecidability.TM Require Import TM_facts.
 From Undecidability.L.Complexity Require Import MorePrelim. 
 Require Import Lia. 
 
@@ -12,9 +12,9 @@ Section TM_single.
   (** We use a variant of the Turing machine definitions fixed to a single tape *)
 
   Variable (Sigma : finType).
-  Variable (TM : mTM Sigma 1). 
+  Variable (TM : TM Sigma 1). 
 
-  Local Notation mstates := (@TM.states Sigma 1 TM). 
+  Local Notation mstates := (@TM.state Sigma 1 TM). 
   Local Notation mtrans := (@TM.trans Sigma 1 TM). 
   Local Notation start := (@TM.start Sigma 1 TM). 
   Local Notation halt := (@TM.halt Sigma 1 TM). 
@@ -46,10 +46,10 @@ Section TM_single.
     erewrite Vector.nth_map2 with (p2 := Fin0) (p3 := Fin0). 2-3: reflexivity. cbn. reflexivity.  
   Qed. 
 
-  Lemma sstep_agree2 (c : mconfig Sigma mstates 1) : mconfig_for_sconfig (sstep strans (sconfig_for_mconfig c)) = step (c : mconfig Sigma (states TM) 1).  
+  Lemma sstep_agree2 (c : mconfig Sigma mstates 1) : mconfig_for_sconfig (sstep strans (sconfig_for_mconfig c)) = step (c : mconfig Sigma (state TM) 1).  
   Proof.
     destruct c. cbn. unfold step. cbn. unfold current_chars.
-    assert ([| current ctapes[@Fin0]|] = Vector.map (current (sig := Sigma)) ctapes). 
+    assert ([| current ctapes[@Fin0]|] = Vector.map (current (Σ := Sigma)) ctapes). 
     { specialize (vec_case1 ctapes) as (? & ->). easy.  }
     rewrite H. destruct mtrans eqn:H1. 
     cbn. 
@@ -105,7 +105,7 @@ Section TM_single.
       + apply F3. 
   Qed. 
   
-  Lemma loopM_halt sig l (M : mTM sig l) (c : TM.mconfig sig (TM.states M) l) n (q' : TM.states M) tape' : 
+  Lemma loopM_halt sig l (M : TM.TM sig l) (c : TM_facts.mconfig sig (TM.state M) l) n (q' : TM.state M) tape' : 
     loopM c n = Some (mk_mconfig q' tape') -> TM.halt q' = true.
   Proof. 
     intros. revert c q' tape' H. induction n; intros; cbn in H. 

@@ -11,7 +11,7 @@ From Undecidability.L.Complexity.Reductions Require Import FlatSingleTMGenNP_to_
 Require Import Undecidability.L.Complexity.Reductions.TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP.
 From Undecidability.L.Complexity.Reductions Require Import TMGenNP.IntermediateProblems.
 
-From Undecidability.TM Require Import TM CodeTM.
+From Undecidability.TM Require Import TM_facts CodeTM.
 
 From Undecidability Require Import L_to_LM LM_to_mTM mTM_to_singleTapeTM TMGenNP_fixed_mTM.
 From Undecidability.L Require Import Prelim.MoreList Prelim.MoreBase.
@@ -41,7 +41,7 @@ Qed.
 
 (* reduce to the formulation of SingleTMGenNP where the TM is not fixed *)
 Import Specif.
-Lemma fixedTM_to_FlatSingleTMGenNP (sig : finType) (M : TM.mTM sig 1)
+Lemma fixedTM_to_FlatSingleTMGenNP (sig : finType) (M : TM sig 1)
       (reg__sig : registered sig) (index__comp : {c & computableTime' (index (F:=sig)) (fun _ _ => (c,tt))}):
   (unrestrictedP (TMGenNP_fixed_singleTapeTM M)) ⪯p (unrestrictedP FlatSingleTMGenNP). 
 Proof. 

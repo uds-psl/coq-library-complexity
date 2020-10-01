@@ -1,4 +1,4 @@
-From Undecidability.TM Require Import TM.
+From Undecidability.TM Require Import TM_facts.
 From Undecidability.L.TM Require Import TMflat TMflatEnc TMflatFun TMEncoding TapeDecode TMunflatten TMflatten.
 From Undecidability.L.Complexity Require Import FlatFinTypes MorePrelim.
 From Undecidability.L.Complexity.Problems Require Export TMGenNP_fixed_mTM. 
@@ -10,18 +10,18 @@ Definition isValidInput (sig : finType) s k' (inp : list sig) := exists c, isVal
 
 (** generic problem for single-tape machine whose head will always start at the leftmost position (i.e. initial tapes are niltape or leftof) *)
 (** the alphabet is part of the instance, not a parameter *)
-Definition SingleTMGenNP (i : { sig : finType & (mTM sig 1 * list sig * nat * nat)%type } ) : Prop := 
+Definition SingleTMGenNP (i : { sig : finType & (TM sig 1 * list sig * nat * nat)%type } ) : Prop := 
   match i with existT sig (tm, s, k', t) => exists cert, |cert| <= k'
                                                       /\ exists f, loopM (initc tm ([|initTape_singleTapeTM (s ++ cert)|])) t = Some f
   end.
 
 (** a flat version defined via the non-flat one *)
-Definition FlatSingleTMGenNP : TM * list nat * nat * nat -> Prop :=
+Definition FlatSingleTMGenNP : flatTM * list nat * nat * nat -> Prop :=
   fun '(M,s,maxSize, steps (*in unary*)) =>
-    exists sig (M':mTM sig 1) sfin, isFlatteningTMOf M M' /\ isFlatListOf s sfin /\ SingleTMGenNP (existT _ _ (M', sfin, maxSize, steps)). 
+    exists sig (M':TM sig 1) sfin, isFlatteningTMOf M M' /\ isFlatListOf s sfin /\ SingleTMGenNP (existT _ _ (M', sfin, maxSize, steps)). 
 
 (** another definition via the flat semantics *)
-Definition FlatFunSingleTMGenNP : TM * list nat * nat * nat -> Prop := 
+Definition FlatFunSingleTMGenNP : flatTM * list nat * nat * nat -> Prop := 
   fun '(M, s, maxSize, steps) => 
     list_ofFlatType (sig M) s /\ tapes M = 1
     /\ exists cert f, list_ofFlatType (sig M) cert /\ |cert| <= maxSize /\ execFlatTM M [initTape_singleTapeTM (s ++ cert)] steps = Some f.  

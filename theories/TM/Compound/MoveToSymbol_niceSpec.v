@@ -1,5 +1,5 @@
-From Undecidability Require Import TM.Prelim.
-From Undecidability Require Import TM TM.Compound.MoveToSymbol.
+From Undecidability Require Import TM.Util.Prelim.
+From Undecidability Require Import TM.Util.TM_facts TM.Compound.MoveToSymbol.
 
 Require Import ssrbool Lia.
 

@@ -1,4 +1,4 @@
-From Undecidability.L Require Import L AbstractMachines.AbstractHeapMachineDef.
+From Undecidability.L Require Import L_facts AbstractMachines.AbstractHeapMachineDef.
 
 (** We define a function f to unfold a closure, needed for the Turing machine M_unf. *)
 

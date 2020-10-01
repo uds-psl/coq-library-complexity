@@ -6,14 +6,14 @@ From Undecidability.L Require Import Functions.Decoding.
 From Undecidability.L.TM Require Export TMflat.
 From Undecidability.L.TM Require Import TMEncoding.
 
-Import Nat TM.
+Import Nat TM_facts.
 Import TMflat.
 Import GenEncode.
-MetaCoq Run (tmGenEncode "TM_enc" TM).
-Hint Resolve TM_enc_correct : Lrewrite.
+MetaCoq Run (tmGenEncode "flatTM_enc" flatTM).
+Hint Resolve flatTM_enc_correct : Lrewrite.
 
 
-Instance term_Build_TM : computableTime' (Build_TM) (fun _ _ => (1,fun _ _ => (1,fun _ _ => (1,fun _ _ => (1,fun _ _ => (1,fun _ _ => (1,tt))))))).
+Instance term_Build_TM : computableTime' (Build_flatTM) (fun _ _ => (1,fun _ _ => (1,fun _ _ => (1,fun _ _ => (1,fun _ _ => (1,fun _ _ => (1,tt))))))).
 Proof.
   extract constructor. solverec. 
 Defined.
@@ -99,10 +99,10 @@ Qed.
 
 *)
 
-Lemma size_TM (M:TM):
+Lemma size_TM (M:flatTM):
   size (enc M) = let (a,b,c,d,e,f) := M in size (enc a) + size (enc b) +size (enc c) +size (enc d) + size (enc e) + size (enc f) + 8.
 Proof.
-  change (enc M) with (TM_enc M).
+  change (enc M) with (flatTM_enc M).
   destruct M as []. cbn. solverec.
 Qed.
 
@@ -133,12 +133,12 @@ Qed.
 Definition c__encTM := max (c__regP (list (nat * list (option nat) * (nat * list (option nat * TM.move))))) (max (c__regP nat) (max (c__regP (list bool)) 4)).
 
 Instance term_TM_enc
-  :computableTime' (TM_enc) (fun x _ => (size (enc x) * c__encTM,tt)).
+  :computableTime' (flatTM_enc) (fun x _ => (size (enc x) * c__encTM,tt)).
 Proof.
-  unfold TM_enc.
+  unfold flatTM_enc.
   change (@list_enc (nat * list (option nat) * (nat * list (option nat * TM.move))) _) with (enc (X:=list (nat * list (option nat) * (nat * list (option nat * TM.move))))).
   change (@list_enc bool _) with (enc (X:=list bool)).
-  change (nat_enc) with (enc (X:=nat)).
+  change (LNat.nat_enc) with (enc (X:=nat)).
   extract.
   intros _ M [].
   rewrite size_TM.
@@ -150,7 +150,7 @@ Proof.
   repeat rewrite H1. repeat rewrite H2. repeat rewrite H3. rewrite <- H4 at 13. lia.
 Qed.
 
-Instance regP_TM : registeredP TM.
+Instance regP_TM : registeredP flatTM.
 Proof.
   exists c__encTM.
   eexists _. 

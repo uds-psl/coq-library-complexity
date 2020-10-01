@@ -223,7 +223,7 @@ Section int.
     -> list_eqbTime eqbT A B <= length A * (k+22) + 9.
   Proof.
     intros H'. induction A in B|-*.
-    -cbn. omega.
+    -cbn. lia.
     -destruct B.
      {cbn. intuition. }
      cbn - [callTime2]. setoid_rewrite IHA.
@@ -334,13 +334,13 @@ Proof.
   rewrite !size_list. cbn. lia.
 Qed.
 
-Lemma size_rev X {_:registered X} (xs : list X): L.size (enc (rev xs)) = L.size (enc xs).
+Lemma size_rev X {_:registered X} (xs : list X): L_facts.size (enc (rev xs)) = L_facts.size (enc xs).
 Proof.
   rewrite !size_list,map_rev,<- sumn_rev. easy.
 Qed.
 
 Lemma size_list_In X {R__X  :registered X} (x:X) xs:
-  x el xs -> L.size (enc x) <= L.size (enc xs).
+  x el xs -> L_facts.size (enc x) <= L_facts.size (enc xs).
 Proof.
   intro H. rewrite !size_list,sumn_map_add. rewrite <- (sumn_le_in (in_map _ _ _ H)) at 1. nia.
 Qed.

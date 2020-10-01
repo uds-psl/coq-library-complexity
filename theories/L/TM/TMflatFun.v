@@ -1,6 +1,6 @@
 From Undecidability.L Require Import TM.TMflat Tactics.LTactics Datatypes.LNat Datatypes.Lists Functions.EqBool.
 
-From Undecidability Require Import TM.TM TM.TMEncoding L.TM.TMunflatten.
+From Undecidability Require Import TM_facts TM.TMEncoding L.TM.TMunflatten.
 
 From PslBase.FiniteTypes Require FiniteFunction.
 From Undecidability Require Import Functions.FinTypeLookup.
@@ -86,7 +86,7 @@ Qed.
 Lemma isFlatteningTransOf_eq st sig' n trans trans' s v:
   isFlatteningTransOf (st:=st) (sig:=sig') (n:=n) trans trans' ->
   (let (s',v'):= trans' (s,v) in
-  (index s', map (map_fst (option_map index)) (Vector.to_list v'))) = FinTypeLookup.lookup (index s,map (option_map index) (Vector.to_list v)) trans (index s, repeat (None,N) n).
+  (index s', map (map_fst (option_map index)) (Vector.to_list v'))) = FinTypeLookup.lookup (index s,map (option_map index) (Vector.to_list v)) trans (index s, repeat (None,Nmove) n).
 Proof.
   intros [H1 H2].
   destruct trans' as [s' v'] eqn:eq.
@@ -146,12 +146,12 @@ Qed.
 
 
 Definition stepFlat (trans:list (nat * list (option nat) * (nat * list (option nat * move)))) (c:mconfigFlat) : mconfigFlat :=
-  let (news, actions) := lookup (fst c, map (@current _) (snd c)) trans (fst c, repeat (None, N) (length (snd c)))
+  let (news, actions) := lookup (fst c, map (@current _) (snd c)) trans (fst c, repeat (None, Nmove) (length (snd c)))
   in (news,(zipWith (@doAct _) (snd c) actions)).
 
 Lemma current_charsFlat_eq (sig:finType) n t (t': tapes sig n):
   isFlatteningTapesOf t t' ->
-  map (current (sig:=nat)) t = map ((option_map index)) (Vector.to_list (current_chars t')).
+  map (current (Σ:=nat)) t = map ((option_map index)) (Vector.to_list (current_chars t')).
 Proof.
   intros H. inv H. induction n in *|-*.
   -rewrite !destruct_vector_nil with (v:=t'). easy.
@@ -160,7 +160,7 @@ Proof.
    destruct x; easy.
 Qed.
 
-Lemma stepFlat_eq sig' n (M': mTM sig' n) (trans:list (nat * list (option nat) * (nat * list (option nat * move)))) (c:mconfigFlat) c':
+Lemma stepFlat_eq sig' n (M': TM sig' n) (trans:list (nat * list (option nat) * (nat * list (option nat * move)))) (c:mconfigFlat) c':
   isFlatteningTransOf (sig:=sig') (n:=n) trans (TM.TM.trans (m:=M')) ->
   isFlatteningConfigOf c c' -> 
   isFlatteningConfigOf (stepFlat trans c) (step (M:=M') c').
@@ -180,7 +180,7 @@ Definition haltConfFlat (l : list bool) (c:mconfigFlat) : bool := nth (fst c) l 
   
 Definition loopMflat M := loop (stepFlat M.(TMflat.trans)) (haltConfFlat M.(TMflat.halt)).
 
-Lemma loopMflat_correct (sig : finType) (n : nat) M (M' : mTM sig n)  k c c':
+Lemma loopMflat_correct (sig : finType) (n : nat) M (M' : TM sig n)  k c c':
   isFlatteningTMOf M M' ->
   isFlatteningConfigOf c c' ->
   match loopMflat M c k,loopM (M:=M') c' k with
@@ -205,7 +205,7 @@ Proof.
    do 2 destruct loop. all:easy.
 Qed.
 
-Lemma initFlat_correct sig n M (M' : mTM sig n) t t':
+Lemma initFlat_correct sig n M (M' : TM sig n) t t':
   isFlatteningTMOf M M' ->
   isFlatteningTapesOf t t' ->
   isFlatteningConfigOf (M.(TMflat.start), t) (initc M' t').
@@ -223,7 +223,7 @@ Definition execFlatTM M t n :=
 
 Lemma execFlatTM_correct M t k c :
   execFlatTM M t k = Some c <->
-  (exists sig n (M':mTM sig n) c0 c',
+  (exists sig n (M':TM sig n) c0 c',
       isFlatteningTMOf M M'
       /\ isFlatteningConfigOf (M.(TMflat.start),t) c0
       /\ loopM (M:=M') c0 k = Some c' 
@@ -235,7 +235,7 @@ Proof.
   split.
   -apply unflattenTM_correct in v.
    pose (sig' := (finType_CS (Fin.t (sig M)))).
-   pose (states' := states (unflattenTM M)). cbn [unflattenTM states] in states'.
+   pose (states' := state (unflattenTM M)). cbn [unflattenTM states] in states'.
    rewrite <- Fin_cardinality with (n:=sig M) at 1. fold sig'.
    destruct isValidFlatTapes eqn:H';cbn [andb]. 2:easy. apply isUnflattableTapes in H' as (t'&Ht).
    cbn [negb]. 

@@ -4,11 +4,11 @@ From Undecidability.L.Complexity Require Import NP Synthetic Monotonic.
 From Undecidability.L.Functions Require Import EqBool.
 From Undecidability.L.TM Require Import TapeFuns CompCode.
 
-From Undecidability.TM Require Import TM CodeTM.
+From Undecidability.TM Require Import TM_facts CodeTM.
 From Undecidability.TM.Single Require Import EncodeTapes StepTM.
 
 From Undecidability.TM Require M2MBounds.
-From Undecidability Require Import TM.VectorPrelim.
+From Undecidability Require Import TM.Util.VectorPrelim.
 
 Unset Printing Coercions.
 
@@ -23,7 +23,7 @@ From Undecidability.L.Complexity Require Import TMGenNP_fixed_mTM M_multi2mono.
 Section LMGenNP_to_TMGenNP_mTM.
 
 
-  Context (sig:finType) (n:nat) `{R__sig : registered sig}  (M : mTM sig (S n)).
+  Context (sig:finType) (n:nat) `{R__sig : registered sig}  (M : TM sig (S n)).
   Let M__mono := M__mono M.
   
   Local Arguments Canonical_Rel : simpl never. 
@@ -163,7 +163,7 @@ Section LMGenNP_to_TMGenNP_mTM.
       evar (time : nat -> nat). [time]:intros n0.
       eexists (fun x => time x).
       { unfold f__nice. Import Nat. extract. solverec.
-        set (n0:=(L.size (enc (a0, b0, b)))).
+        set (n0:=(L_facts.size (enc (a0, b0, b)))).
         assert (a0+b0+b+1 <= n0). 1:{ unfold n0. rewrite !size_prod. cbn [fst snd]. rewrite !size_nat_enc. 
           unfold c__natsizeS, c__natsizeO; nia. }
         unfold add_time, mult_time. 
@@ -172,7 +172,7 @@ Section LMGenNP_to_TMGenNP_mTM.
       1,2:unfold time;smpl_inO.
       { evar (f__size : nat -> nat). [f__size]:intros n0. exists f__size.
         { intros [[a0 b0] b]. unfold f__nice.
-          set (n0:=(L.size (enc (a0, b0, b)))).
+          set (n0:=(L_facts.size (enc (a0, b0, b)))).
           assert (a0+b0+b+1 <= n0). 1:{ unfold n0. rewrite !size_prod. cbn [fst snd]. rewrite !size_nat_enc. 
             unfold c__natsizeS, c__natsizeO; nia. }
           rewrite size_nat_enc. 
@@ -191,11 +191,11 @@ Section LMGenNP_to_TMGenNP_mTM.
       eexists (fun _ => c0).
       { unfold t__size. Import Init.Nat. Import EqBool LNat Equality. Import Equality. Import EqBool. set (WorkAround := Nat.eqb).
         extract. unfold WorkAround. solverec. all:rewrite eqbTime_le_l.
-        all:set (c:=L.size (enc 0)). all:cbv in c;subst c. all:subst c0. 2:easy. nia. }
+        all:set (c:=size (enc 0)). all:cbv in c;subst c. all:subst c0. 2:easy. nia. }
       1,2:smpl_inO.
       { evar (f__size : nat -> nat). [f__size]:intros n0. exists f__size.
         { intros x. unfold t__size.
-          set (n0:=(L.size (enc x))).
+          set (n0:=(size (enc x))).
           assert (Hx:x<=n0) by apply size_nat_enc_r.
           rewrite size_nat_enc. destruct _. 2:rewrite Hx;unfold f__size;reflexivity. unfold f__size. nia.
         }
@@ -229,7 +229,7 @@ Section LMGenNP_to_TMGenNP_mTM.
             reflexivity. }
         rewrite sumn_map_c,to_list_length.
         rewrite sumn_map_c,to_list_length.
-        rewrite TMEncoding.sizeOfmTapes_by_size. set (L.size _).
+        rewrite TMEncoding.sizeOfmTapes_by_size. set (size _).
         unfold time. reflexivity.
       }
       1,2:now unfold time;change S with (plus 1);smpl_inO.
@@ -238,7 +238,7 @@ Section LMGenNP_to_TMGenNP_mTM.
           rewrite size_list_cons. subst g f.
           rewrite Lists.size_list. rewrite map_app,concat_map,map_map. cbn. setoid_rewrite map_map. rewrite sumn_app.
           assert (H' : forall l, sumn (concat l) = sumn (map sumn l)). 1:{induction l;cbn;now autorewrite with list. }
-          rewrite H',map_map. cbn. set (tmp:=L.size (enc (inr sigList_cons)));cbv in tmp;subst tmp.
+          rewrite H',map_map. cbn. set (tmp:=size (enc (inr sigList_cons)));cbv in tmp;subst tmp.
           setoid_rewrite size_sum. rewrite size_boundary. setoid_rewrite size_sigList.
           repeat setoid_rewrite <- plus_assoc.  ring_simplify. ring_simplify (7 + (4 + 5)).
           repeat setoid_rewrite sumn_map_add. repeat setoid_rewrite sumn_map_c. setoid_rewrite sumn_map_mult_c_r.
@@ -250,7 +250,7 @@ Section LMGenNP_to_TMGenNP_mTM.
               2:{ intros. apply (correct__leUpToC (size_finType_any_le_c (X:=finType_CS (sigTape sig)))). }
               rewrite sumn_map_c. rewrite sizeOfTape_encodeTape_le,  sizeOfmTapes_upperBound. 2:now apply tolist_In. reflexivity. }
           rewrite sumn_map_c. rewrite to_list_length. setoid_rewrite TMEncoding.sizeOfmTapes_by_size.
-          set (n0:= L.size _). ring_simplify. unfold f__size. reflexivity.
+          set (n0:= L_facts.size _). ring_simplify. unfold f__size. reflexivity.
         }
         all:unfold f__size;smpl_inO.
       }
@@ -262,29 +262,29 @@ Section LMGenNP_to_TMGenNP_mTM.
       eexists (fun x => time x).
       {
         extract. solverec.
-        remember (L.size (enc (a0, b0, b))) as n0 eqn:Hn0.
+        remember (L_facts.size (enc (a0, b0, b))) as n0 eqn:Hn0.
         rewrite !size_prod in Hn0. cbn [fst snd] in Hn0.
-        erewrite (mono__polyTC _ (x':=n0)). 2:{ subst n0. repeat set (L.size _). nia. }
-        setoid_rewrite (mono__polyTC _ (x':=n0)) at 2. 2:{ subst n0. repeat set (L.size _). nia. } 
+        erewrite (mono__polyTC _ (x':=n0)). 2:{ subst n0. repeat set (L_facts.size _). nia. }
+        setoid_rewrite (mono__polyTC _ (x':=n0)) at 2. 2:{ subst n0. repeat set (L_facts.size _). nia. } 
         set (c0 := 5+c__natsizeO +c__natsizeS). 
-        assert (H'' : L.size (enc (b, sizeOfmTapes a0, b0)) <= n0*c0).
+        assert (H'' : L_facts.size (enc (b, sizeOfmTapes a0, b0)) <= n0*c0).
         {  rewrite !size_prod. cbn [fst snd]. setoid_rewrite size_nat_enc at 2.
-            rewrite TMEncoding.sizeOfmTapes_by_size. subst n0. repeat set (L.size _). nia. }
+            rewrite TMEncoding.sizeOfmTapes_by_size. subst n0. repeat set (L_facts.size _). nia. }
         setoid_rewrite (mono__polyTC _ (x':=n0*c0)) at 3. 2:exact H''. 
         specialize (bounds__rSP (f:=f__nice)) as H'. setoid_rewrite <- size_nat_enc_r in H'.
         unfold mult_time, add_time. 
         unshelve rewrite H'. now apply resSize__polyTC.
         setoid_rewrite mono__rSP. 2,3:exact H''.
-        rewrite TMEncoding.sizeOfmTapes_by_size at 1. unshelve erewrite (_ : L.size (enc a0) <= n0). now (subst n0;clear;repeat set (L.size _);nia).
+        rewrite TMEncoding.sizeOfmTapes_by_size at 1. unshelve erewrite (_ : L_facts.size (enc a0) <= n0). now (subst n0;clear;repeat set (L_facts.size _);nia).
         unfold time. reflexivity.
       }
       1,2:now unfold time;smpl_inO;apply inOPoly_comp;smpl_inO.
       { evar (f__size : nat -> nat). [f__size]:intros n0. exists f__size.
-        { intros [[a0 b0] b]. remember (L.size (enc (a0, b0, b))) as n0 eqn:Hn0.
+        { intros [[a0 b0] b]. remember (L_facts.size (enc (a0, b0, b))) as n0 eqn:Hn0.
           rewrite !size_prod in Hn0|-*. cbn [fst snd] in Hn0|-*. rewrite !size_nat_enc.
-          assert (H'' : L.size (enc (b, sizeOfmTapes a0, b0)) <= n0*(5 + c__natsizeS + c__natsizeO)).
+          assert (H'' : L_facts.size (enc (b, sizeOfmTapes a0, b0)) <= n0*(5 + c__natsizeS + c__natsizeO)).
         {  rewrite !size_prod. cbn [fst snd]. setoid_rewrite size_nat_enc at 2.
-           rewrite TMEncoding.sizeOfmTapes_by_size. subst n0. repeat set (L.size _). nia. }
+           rewrite TMEncoding.sizeOfmTapes_by_size. subst n0. repeat set (L_facts.size _). nia. }
         specialize (bounds__rSP (f:=f__nice)) as H'. setoid_rewrite <- size_nat_enc_r in H'.
         unshelve rewrite H'. now apply resSize__polyTC.
         setoid_rewrite mono__rSP. 2:exact H''.
@@ -295,7 +295,7 @@ Section LMGenNP_to_TMGenNP_mTM.
 
         specialize (bounds__rSP (f:=t__start)) as Hstart.
         unshelve rewrite Hstart. now apply resSize__polyTC. 
-        setoid_rewrite (mono__rSP _ (x':=n0)) at 1 . 2:subst;clear;repeat (set (L.size _));nia.
+        setoid_rewrite (mono__rSP _ (x':=n0)) at 1 . 2:subst;clear;repeat (set (L_facts.size _));nia.
         unfold f__size. reflexivity.
         }
         1,2:unfold f__size;smpl_inO; apply inOPoly_comp;smpl_inO.

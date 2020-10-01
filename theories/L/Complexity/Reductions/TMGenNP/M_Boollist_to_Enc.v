@@ -1,6 +1,6 @@
 From Undecidability.L.Complexity Require Import NP.
 From Undecidability.TM Require TM ProgrammingTools CaseList CaseBool Code.Decode Code.DecodeList.
-From Undecidability.TM Require Import TM SizeBounds.
+From Undecidability.TM Require Import TM_facts SizeBounds.
 
 From Undecidability.L.Complexity  Require Import UpToCNary.
 

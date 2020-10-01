@@ -1,6 +1,6 @@
 Require Import PslBase.Base.
 Require Import Lia. 
-From Undecidability.L Require Import L.
+From Undecidability.L Require Import L_facts.
 (*From Undecidability.Shared Require Import Prelim.*)
 From Undecidability.L.Complexity Require Export Tactics.
 

@@ -609,7 +609,7 @@ Proof.
     + eexists. eapply computesTime_timeLeq. 2: apply term_sat_verifierb.
       cbn. intros [N a] _. split; [ | easy]. rewrite !UpToC_le. unfold sat_verifierb_time. 
       rewpoly evalCnf_poly. monopoly (evalCnf_poly). 2: { instantiate (1 := size (enc (N, a))). rewrite !size_prod. cbn; lia. }
-      set (L.size _). [p]: intros n. and_solve p.
+      set (L_facts.size _). [p]: intros n. and_solve p.
     + intros [N a] ?. cbn. apply sat_verifierb_correct.
   } 
   all: subst p; smpl_inO. 
