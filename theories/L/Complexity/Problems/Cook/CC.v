@@ -1,6 +1,6 @@
 From PslBase Require Import Base FiniteTypes.
 Require Import Lia.
-From Undecidability.L.Complexity Require Import MorePrelim.
+From Complexity.L.Complexity Require Import MorePrelim.
 
 (** * Covering Cards *)
 (*

@@ -2,7 +2,7 @@ Require Import PslBase.Base.
 Require Import Lia. 
 From Undecidability.L Require Import L_facts.
 (*From Undecidability.Shared Require Import Prelim.*)
-From Undecidability.L.Complexity Require Export Tactics.
+From Complexity.L.Complexity Require Export Tactics.
 
 (** * Various preliminaries for the TM -> SAT part of the Cook-Levin Theorem *)
 
@@ -122,7 +122,8 @@ Require Import Lia.
 (*Require Template.utils.*)
 From PslBase Require Export FiniteTypes.FinTypes FiniteTypes.BasicFinTypes FiniteTypes.CompoundFinTypes Retracts Inhabited Base Vectors.Vectors FiniteTypes. 
 Require Export smpl.Smpl.
-From Undecidability.L.TM Require Import TMflat TMflatEnc TMflatFun TMEncoding TapeDecode TMunflatten.
+From Undecidability.L.TM Require Import TMEncoding.
+From Complexity.L.TM Require Import TMflat TMflatEnc TMflatFun TapeDecode TMunflatten.
 
 (*option monad in order to ease notation *)
 Definition optReturn := @Some.

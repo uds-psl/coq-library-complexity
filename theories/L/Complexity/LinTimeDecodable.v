@@ -1,7 +1,7 @@
 From Undecidability.L.Tactics Require Import LTactics.
 From Undecidability.L.Datatypes Require Import LNat Lists LTerm LOptions LUnit.
 
-From Undecidability.L Require Import Functions.Decoding.
+From Complexity.L Require Import Functions.Decoding.
 
 Class linTimeDecodable `(X:Type) `{decodable X}: Type :=
   {

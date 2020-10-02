@@ -1,12 +1,13 @@
 From Undecidability.L Require Import L Tactics.LTactics.
-From Undecidability.L.AbstractMachines Require Import FunctionalDefinitions.
+
+From Complexity.L.AbstractMachines Require Import FunctionalDefinitions.
 From Undecidability.L.Datatypes Require Import LTerm LOptions LProd.
 
 From Undecidability.L Require Import AbstractMachines.LargestVar.
 
 
-From Undecidability.L.AbstractMachines Require Import AbstractHeapMachineDef AbstractHeapMachine.
-From Undecidability.L.AbstractMachines.Computable Require Import Shared Lookup.
+From Complexity.L.AbstractMachines Require Import AbstractHeapMachineDef AbstractHeapMachine.
+From Complexity.L.AbstractMachines.Computable Require Import Shared Lookup.
 
 (** *** Heap Machine *)
 Import GenEncode.

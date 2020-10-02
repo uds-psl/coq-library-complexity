@@ -1,10 +1,11 @@
 From Undecidability.TM Require Import TM_facts.
-From Undecidability.L.TM Require Import TMflat TMflatEnc TMflatFun TMEncoding TapeDecode TMunflatten TMflatten.
-From Undecidability.L.Complexity.Problems Require Import TMGenNP_fixed_mTM Cook.SingleTMGenNP.
+From Undecidability.L.TM Require Import TMEncoding.
+From Complexity.L.TM Require Import TMflat TMflatEnc TMflatFun TapeDecode TMunflatten TMflatten.
+From Complexity.L.Complexity.Problems Require Import TMGenNP_fixed_mTM Cook.SingleTMGenNP.
 From Undecidability.L.Functions Require Import EqBool.
 
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Complexity Require Import PolyBounds FlatFinTypes MorePrelim.
+From Complexity.L.Complexity Require Import PolyBounds FlatFinTypes MorePrelim.
 From Undecidability.L.Datatypes Require Import LProd LOptions LBool LSum LNat Lists LFinType.
 
 (** * Reduction of TMGenNP with fixed TM to TMGenNP with variable TM *)

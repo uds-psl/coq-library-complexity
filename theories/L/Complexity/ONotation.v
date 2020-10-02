@@ -1,4 +1,5 @@
-From Undecidability Require Import Shared.Prelim L.Prelim.MoreBase L.Complexity.Monotonic.
+From Undecidability Require Import Shared.Prelim L.Prelim.MoreBase.
+From Complexity Require Import L.Complexity.Monotonic.
 Require Import smpl.Smpl.
 Require Import Nat Lia.
 

@@ -1,7 +1,7 @@
 From Undecidability Require Import TM.Util.TM_facts.
 Require Import PslBase.FiniteTypes.
 From PslBase.FiniteTypes Require Import VectorFin Cardinality.
-From Undecidability.L.TM Require Import TMflat.
+From Complexity.L.TM Require Import TMflat.
 Require Import Lia. 
 
 (** For every TM, there exists a flattening. *)

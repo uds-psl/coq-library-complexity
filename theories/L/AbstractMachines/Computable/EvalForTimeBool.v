@@ -1,10 +1,12 @@
 From Undecidability.L Require Import L Tactics.LTactics AbstractMachines.LargestVar.
 
-From Undecidability.L Require Import AbstractHeapMachineDef UnfoldTailRec AbstractHeapMachine.
-From Undecidability.L.AbstractMachines.Computable Require Import Unfolding HeapMachine Shared EvalForTime.
+From Complexity.L Require Import AbstractHeapMachineDef UnfoldTailRec AbstractHeapMachine.
+From Complexity.L.AbstractMachines.Computable Require Import Unfolding HeapMachine Shared EvalForTime.
 
-From Undecidability.L.Datatypes Require Import Lists LBinNums.
-From Undecidability.L.Functions Require Import BinNums BinNumsCompare UnboundIteration.
+From Undecidability.L.Datatypes Require Import Lists.
+From Complexity.L.Datatypes Require Import LBinNums.
+From Undecidability.L.Functions Require Import UnboundIteration Proc.
+From Complexity.L.Functions Require Import BinNums BinNumsCompare.
 
 Definition evalForTimeBool (checkFor:bool) (fuel : N) (s:term) := match evalForTime fuel s with
                                                    Some (g,H) => match unfoldBoolean H g with

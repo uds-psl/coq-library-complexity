@@ -5,7 +5,8 @@ From Undecidability Require Import LM_heap_def TM.PrettyBounds.MaxList.
 
 From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require Import Alphabets.
 From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require Import CaseCom.
-From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require Import StepTM LMBounds M_LHeapInterpreter SizeAnalysis.
+From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require Import StepTM M_LHeapInterpreter.
+From Complexity.L.AbstractMachines.TM_LHeapInterpreter Require Import SizeAnalysis LMBounds.
 
 From Undecidability Require Import UpToC UpToCNary.
 

@@ -1,7 +1,7 @@
 From Undecidability.L Require Import Tactics.LTactics.
 From Undecidability.L.Datatypes Require Import Lists.
 
-From Undecidability.L.AbstractMachines Require Import AbstractHeapMachineDef Computable.Shared.
+From Complexity.L.AbstractMachines Require Import AbstractHeapMachineDef Computable.Shared.
 
 Definition lookupTime l x := (x+1) * (l*15 + 41).
 

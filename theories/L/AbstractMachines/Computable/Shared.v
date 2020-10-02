@@ -1,6 +1,8 @@
 From Undecidability.L Require Import L Tactics.LTactics.
 
-From Undecidability.L.AbstractMachines Require Import Programs FunctionalDefinitions AbstractHeapMachineDef.
+From Complexity.L.AbstractMachines Require Import FunctionalDefinitions AbstractHeapMachineDef.
+From Undecidability.L.AbstractMachines Require Import Programs.
+
 From Undecidability.L.Datatypes Require Import Lists LOptions LProd LTerm.
 
 From Undecidability.L Require Import Tactics.GenEncode.

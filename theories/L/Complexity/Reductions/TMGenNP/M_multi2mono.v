@@ -1,9 +1,10 @@
-From Undecidability.L.Complexity Require Import NP.
+From Complexity.L.Complexity Require Import NP.
 From Undecidability.TM Require TM ProgrammingTools CaseList.
 From Undecidability.TM Require Import TM_facts SizeBounds.
 
-From Undecidability.L.Complexity  Require Import TMGenNP_fixed_mTM.
-From Undecidability.TM.Single Require EncodeTapes StepTM DecodeTapes.
+From Complexity.L.Complexity  Require Import TMGenNP_fixed_mTM.
+From Undecidability.TM.Single Require EncodeTapes StepTM.
+From Complexity.TM.Single Require DecodeTapes.
 
 From Undecidability Require Import TM.Util.VectorPrelim.
 
@@ -207,7 +208,8 @@ End putFirst.
 
 
 
-From Undecidability Require Import L.TM.CompCode Datatypes.Lists LBool.
+From Undecidability Require Import Datatypes.Lists LBool.
+From Complexity Require Import L.TM.CompCode.
 
 Section lemmas_for_LMGenNP_to_TMGenNP_mTM.
   Import EncodeTapes DecodeTapes Single.StepTM ProgrammingTools Combinators Decode.

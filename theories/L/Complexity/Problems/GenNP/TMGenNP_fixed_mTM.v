@@ -1,6 +1,6 @@
 From Undecidability.TM Require Import TM_facts.
 From Undecidability.L.TM Require Import TMEncoding.
-From Undecidability.L.Complexity Require Import NP.
+From Complexity.L.Complexity Require Import NP.
 From Undecidability.L Require Import Tactics.LTactics.
 
 (** For each Machine M (with n+1 tapes), we define this problem:

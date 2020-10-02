@@ -1,9 +1,10 @@
 From Undecidability.L Require Import Tactics.LTactics Prelim.MoreList Prelim.MoreBase.
-From Undecidability.L.Complexity Require Import NP Synthetic Monotonic.
-From Undecidability.L.Complexity.Problems.GenNP Require Import GenNP. 
-From Undecidability.L.Complexity.Reductions Require Import LMGenNP.
+From Complexity.L.Complexity Require Import NP Synthetic Monotonic.
+From Complexity.L.Complexity.Problems.GenNP Require Import GenNP. 
+From Complexity.L.Complexity.Reductions Require Import LMGenNP.
 
-From Undecidability.L Require Import LM_heap_def LM_heap_correct LBool ResourceMeasures Compile LNat LTerm Compile.
+From Undecidability.L Require Import LM_heap_def LM_heap_correct LBool ResourceMeasures LNat LTerm.
+From Complexity.L Require Import Compile.
 
 Import Nat.
 Lemma GenNP_to_LMGenNP (X:Type) `{R__X : registered X}:

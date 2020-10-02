@@ -1,4 +1,5 @@
-From Undecidability.TM Require Import TM ProgrammingTools Code.Decode.
+From Undecidability.TM Require Import TM ProgrammingTools.
+From Complexity.TM Require Import Code.Decode.
 
 Require Import Lia Ring Arith Program.Wf.
 

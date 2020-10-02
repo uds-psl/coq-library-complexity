@@ -1,7 +1,7 @@
 From PslBase Require Import Base FinTypes.
 From PslBase Require Import Vectors.Vectors. 
-From Undecidability.L.Complexity Require Import MorePrelim.
-From Undecidability.L.Complexity Require Import Problems.Cook.BinaryCC Problems.Cook.CC Reductions.Cook.CC_homomorphisms. 
+From Complexity.L.Complexity Require Import MorePrelim.
+From Complexity.L.Complexity Require Import Problems.Cook.BinaryCC Problems.Cook.CC Reductions.Cook.CC_homomorphisms. 
 Require Import Lia.
 
 (** * CC to BinaryCC *)

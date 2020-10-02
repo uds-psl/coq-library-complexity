@@ -1,5 +1,5 @@
-From Undecidability.L.Complexity Require Import MorePrelim Problems.Cook.FlatCC FlatFinTypes. 
-From Undecidability.L.Complexity.Problems.Cook Require Export TCC.
+From Complexity.L.Complexity Require Import MorePrelim Problems.Cook.FlatCC FlatFinTypes. 
+From Complexity.L.Complexity.Problems.Cook Require Export TCC.
 From PslBase Require Import Base FinTypes. 
 Require Import Lia.
 
@@ -412,7 +412,7 @@ Hint Resolve TCCCard_enc_correct : Lrewrite.
 MetaCoq Run (tmGenEncode "FlatTCC_enc" (FlatTCC)).
 Hint Resolve FlatTCC_enc_correct : Lrewrite. 
 
-From Undecidability.L.Complexity Require Import PolyBounds. 
+From Complexity.L.Complexity Require Import PolyBounds. 
 
 Instance term_Build_FlatTCC : computableTime' Build_FlatTCC (fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, tt)))))).
 Proof.

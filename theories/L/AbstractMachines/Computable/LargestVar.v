@@ -1,7 +1,7 @@
 From Undecidability.L Require Import L Tactics.LTactics.
 From Undecidability.L.Datatypes Require Import LNat LProd Lists LOptions. 
 
-From Undecidability.L.AbstractMachines Require Import FunctionalDefinitions AbstractHeapMachineDef.
+From Complexity.L.AbstractMachines Require Import FunctionalDefinitions AbstractHeapMachineDef.
 
 Require Import Undecidability.L.AbstractMachines.LargestVar.
 

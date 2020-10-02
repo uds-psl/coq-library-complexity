@@ -1,13 +1,13 @@
 From Undecidability.L Require Import L_facts Tactics.LTactics.
 From Undecidability.L.Datatypes Require Import LSum LBool LNat Lists LProd.
 
-From Undecidability.L.AbstractMachines Require Import FunctionalDefinitions AbstractHeapMachineDef UnfoldTailRec UnfoldHeap.
+From Complexity.L.AbstractMachines Require Import FunctionalDefinitions AbstractHeapMachineDef UnfoldTailRec UnfoldHeap.
 
 Require Import Undecidability.L.AbstractMachines.LargestVar.
 
 From Undecidability.L Require Import Prelim.LoopSum Functions.LoopSum Functions.UnboundIteration Functions.LoopSum Functions.Equality.
 
-From Undecidability.L.AbstractMachines.Computable Require Import Shared Lookup.
+From Complexity.L.AbstractMachines.Computable Require Import Shared Lookup.
 Import Nat.
 Import UnfoldTailRec.task.
 

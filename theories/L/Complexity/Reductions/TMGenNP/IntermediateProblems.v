@@ -1,5 +1,5 @@
 From Undecidability.L Require Import Tactics.LTactics Prelim.MoreList Prelim.MoreBase.
-From Undecidability.L.Complexity Require Import NP Synthetic Monotonic Problems.GenNP.GenNP.
+From Complexity.L.Complexity Require Import NP Synthetic Monotonic Problems.GenNP.GenNP.
 
 
 (** * From L to TMs *)
@@ -18,8 +18,9 @@ Da der simulierte Term evtl aber mit groesserer Schranke haelt muesste man dann 
 (* Weitere Idee: Prädikat nutzen, um Probleminstanzen weiter einzuschränken? *)
 
 From Undecidability.TM Require Import TM CodeTM.
+From Undecidability Require Import LFinType.
 
-From Undecidability Require Import NP L_to_LM LM_to_mTM mTM_to_singleTapeTM TMGenNP_fixed_mTM LFinType.
+From Complexity Require Import NP L_to_LM LM_to_mTM mTM_to_singleTapeTM TMGenNP_fixed_mTM.
 
 Import LNat.
 Lemma GenNP_to_TMGenNP:

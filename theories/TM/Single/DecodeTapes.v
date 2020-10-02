@@ -1,4 +1,5 @@
-From Undecidability.TM Require Import TM ProgrammingTools Code.Decode Code Single.DecodeTape.
+From Undecidability.TM Require Import TM ProgrammingTools Code.
+From Complexity.TM Require Import Code.Decode Single.DecodeTape.
 From Undecidability.L Require Import MoreBase.
 Require Import Lia Ring Arith Program.Wf.
 Import While Mono Multi Switch If Combinators EncodeTapes.

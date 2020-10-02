@@ -1,6 +1,6 @@
 From Undecidability.L Require Import L_facts.
 From Undecidability.L.Datatypes Require Import LProd LTerm LBool.
-From Undecidability.L.Complexity Require Import NP Synthetic Monotonic.
+From Complexity.L.Complexity Require Import NP Synthetic Monotonic.
 From Undecidability.L.Functions Require Import Size.
 Import Nat L_Notations. 
 Definition GenNPBool : term*nat*nat -> Prop:=
@@ -57,7 +57,7 @@ Proof.
 Qed.
 
 From Undecidability.L.Functions Require Import Proc.
-From Undecidability.L.AbstractMachines.Computable Require Import EvalForTimeBool.
+From Complexity.L.AbstractMachines.Computable Require Import EvalForTimeBool.
 Import EvalForTime LargestVar.
 
 

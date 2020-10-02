@@ -1,7 +1,8 @@
 From Undecidability.L.Tactics Require Import LTactics.
 From Undecidability.L.Datatypes Require Import LProd LTerm.
 
-From Undecidability.L Require Import Complexity.Monotonic Functions.Encoding.
+From Undecidability.L Require Import Functions.Encoding.
+From Complexity Require Import Complexity.Monotonic .
 
 Class registeredP `(X:Type) `{registered X}: Type :=
   {

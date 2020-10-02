@@ -1,8 +1,8 @@
 (* -*- company-coq-local-symbols: (("|_|" .?␣)); -*- *)
 (** printing  *|_|* %\textvisiblespace% #␣# *)
-From Undecidability.L.Complexity.Problems Require Import SingleTMGenNP TCC FlatTCC . 
-From Undecidability.L.Complexity.Reductions.Cook Require Import PTCC_Preludes TM_single.
-From Undecidability.L.Complexity Require Import FlatFinTypes MorePrelim. 
+From Complexity.L.Complexity.Problems Require Import SingleTMGenNP TCC FlatTCC . 
+From Complexity.L.Complexity.Reductions.Cook Require Import PTCC_Preludes TM_single.
+From Complexity.L.Complexity Require Import FlatFinTypes MorePrelim. 
 From PslBase Require Import FiniteTypes. 
 Require Import Lia. 
 Require Import PslBase.FiniteTypes.BasicDefinitions. 

@@ -2,10 +2,10 @@ From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import Lists LProd LNat.
 From Undecidability.L.Functions Require Import EqBool.
 
-From Undecidability.L.Complexity Require Import Synthetic PolyTimeComputable.
-From Undecidability.L.Complexity.CookPrelim Require Import Tactics.
+From Complexity.L.Complexity Require Import Synthetic PolyTimeComputable.
+From Complexity.L.Complexity.CookPrelim Require Import Tactics.
 
-From Undecidability.L.Complexity.Problems Require Import SharedSAT SAT.
+From Complexity.L.Complexity.Problems Require Import SharedSAT SAT.
 
 (** * Explicit Bounds *)
 (**
@@ -13,14 +13,14 @@ From Undecidability.L.Complexity.Problems Require Import SharedSAT SAT.
   We just write down the recurrences directly and then derive a polynomial bound.
 *)
 
-From Undecidability.L.Complexity Require CookPrelim.PolyBounds NP UpToCPoly.
+From Complexity.L.Complexity Require CookPrelim.PolyBounds NP UpToCPoly.
 
 
 
 Module explicit_bounds.
 Section explicit_bounds.
   Import Lists.
-  Import Undecidability.L.Complexity.CookPrelim.PolyBounds.
+  Import Complexity.L.Complexity.CookPrelim.PolyBounds.
   Import SAT.
 
   (** extraction of list_in_decb *)
@@ -179,7 +179,7 @@ Section explicit_bounds.
 
 
   (** We obtain that SAT is in NP *)
-  Import Undecidability.L.Complexity.NP.
+  Import Complexity.L.Complexity.NP.
   Lemma sat_NP : inNP (unrestrictedP SAT).
   Proof.
     apply inNP_intro with (R:= fun (a : { cnf | True}) => sat_verifier (proj1_sig a)).
@@ -355,7 +355,7 @@ Section uptoc_pure.
   Instance term_sat_verifierb : computableTime' sat_verifierb _ := projT2 _term_sat_verifierb.
 
   (** We obtain that SAT is in NP *)
-  Import Undecidability.L.Complexity.NP.
+  Import Complexity.L.Complexity.NP.
   Lemma sat_NP : inNP (unrestrictedP SAT).
   Proof.
     apply inNP_intro with (R:= fun (a : { cnf | True}) => sat_verifier (proj1_sig a)).
@@ -643,7 +643,7 @@ Section uptoc_mixed.
   Instance term_sat_verifierb : computableTime' sat_verifierb _ := projT2 _term_sat_verifierb.
 
   (** We obtain that SAT is in NP *)
-  Import Undecidability.L.Complexity.NP.
+  Import Complexity.L.Complexity.NP.
   Lemma sat_NP : inNP (unrestrictedP SAT).
   Proof.
     apply inNP_intro with (R:= fun (a : { cnf | True}) => sat_verifier (proj1_sig a)).
@@ -853,7 +853,7 @@ Proof.
 Qed.
 
 (* now the new stuff *)
-(*Require Import Undecidability.L.Complexity.CookPrelim.PolyBounds. *)
+(*Require Import Complexity.L.Complexity.CookPrelim.PolyBounds. *)
 Import Datatypes.LProd Datatypes.LBool Datatypes.Lists.
 Import Lists.
 Section fixX.

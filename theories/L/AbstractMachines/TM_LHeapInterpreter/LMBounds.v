@@ -656,7 +656,8 @@ Module LM_Lookup_nice.
 
 End LM_Lookup_nice.
 
-From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require Import StepTM M_LHeapInterpreter SizeAnalysis.
+From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require Import StepTM M_LHeapInterpreter.
+From Complexity.L.AbstractMachines.TM_LHeapInterpreter Require Import SizeAnalysis.
 
 Module LM.
   Import JumpTarget_steps_nice LM_Lookup_nice.

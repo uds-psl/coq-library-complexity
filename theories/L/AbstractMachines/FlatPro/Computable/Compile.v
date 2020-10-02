@@ -1,8 +1,8 @@
 From Undecidability.L Require Import L Tactics.LTactics Prelim.LoopSum Functions.LoopSum.
 From Undecidability.L.Datatypes Require Import LSum LBool LNat Lists.
 
-From Undecidability.L.AbstractMachines  Require Import FlatPro.Programs Computable.LPro.
-
+From Undecidability.L.AbstractMachines  Require Import FlatPro.Programs.
+From Complexity.L.AbstractMachines  Require Import Computable.LPro.
 (*
 fix compile (s : term) : list Tok :=
   match s with

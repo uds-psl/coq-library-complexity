@@ -2,9 +2,9 @@ From Undecidability.L Require Import L.
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import Lists LNat LProd.
 From PslBase.FiniteTypes Require Import FinTypes Cardinality VectorFin.
-From Undecidability.L.Complexity.Problems Require Import FlatUGraph kSAT FlatClique.
-From Undecidability.L.Complexity.Reductions Require Import kSAT_to_Clique.
-From Undecidability.L.Complexity Require Import FlatFinTypes MorePrelim.
+From Complexity.L.Complexity.Problems Require Import FlatUGraph kSAT FlatClique.
+From Complexity.L.Complexity.Reductions Require Import kSAT_to_Clique.
+From Complexity.L.Complexity Require Import FlatFinTypes MorePrelim.
 
 (** * k-SAT to FlatClique *)
 (** We compute a flat graph corresponding to the graph of the k-SAT to Clique reduction and then use the correctness of that reduction to derive the correctness of the flat reduction. *)
@@ -229,9 +229,9 @@ Proof.
 Qed. 
 
 (** ** extraction *)
-From Undecidability.L.Complexity Require Import NP Synthetic UpToCNary.
-From Undecidability.L Require Import Tactics.LTactics.
-From Undecidability.L.Complexity Require Import Problems.kSAT PolyBounds NP Synthetic. 
+From Complexity.L.Complexity Require Import NP Synthetic.
+From Undecidability.L Require Import Tactics.LTactics Complexity.UpToCNary.
+From Complexity.L.Complexity Require Import Problems.kSAT PolyBounds NP Synthetic. 
 From Undecidability.L.Datatypes Require Import LBool Lists LNat LProd LOptions. 
 
 (** allPositions *)

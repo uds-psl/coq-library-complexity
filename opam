@@ -1,19 +1,13 @@
 opam-version: "2.0"
 version: "dev+8.12"
-maintainer: "forster@ps.uni-saarland.de"
-homepage: "https://github.com/uds-psl/coq-library-undecidability/"
-dev-repo: "git+https://github.com/uds-psl/coq-library-undecidability/"
-bug-reports: "https://github.com/uds-psl/coq-library-undecidability/issues"
-authors: ["Yannick Forster"
-          "Dominique Larchey-Wendling"
-          "Andrej Dudenhefner"
-          "Edith Heiter"
-          "Dominik Kirst"
-          "Fabian Kunze"
-          "Gert Smolka"
-          "Simon Spies"
-          "Dominik Wehr"
-          "Maximilian Wuttke"]
+maintainer: "kunze@ps.uni-saarland.de"
+homepage: "https://github.com/uds-psl/coq-library-complexity/"
+dev-repo: "git+https://github.com/uds-psl/coq-library-complexity/"
+bug-reports: "https://github.com/uds-psl/coq-library-complexity/issues"
+authors: ["Fabian Kunze"
+          "Lennard Gäher"
+          "Maximilian Wuttke"
+          "Yannick Forster"]
 license: "CeCILL"
 build: [
   [make "-j%{jobs}%"]
@@ -22,7 +16,7 @@ install: [
   [make "install"]
 ]
 remove: [
-  ["rm" "-R" "%{lib}%/coq/user-contrib/Undecidability"]
+  ["rm" "-R" "%{lib}%/coq/user-contrib/Complexity"]
 ]
 depends: [
   "coq" {>= "8.12" & < "8.13~"}
@@ -32,10 +26,11 @@ depends: [
   "coq-psl-base-library" {="1.0.2+8.12"}
   "coq-metacoq-template" {="1.0~alpha3-uds-psl+8.12" }
   "coq-metacoq-checker" {="1.0~alpha3-uds-psl+8.12" }
+  "coq-library-undecidability" {>= "8.12" }
 ]
 
-synopsis: "A Coq Library of Undecidability Proofs"
+synopsis: "A Coq Library of Complexity Theory"
 flags: light-uninstall
 url {
-  git: "https://github.com/uds-psl/coq-library-undecidability.git#coq-8.12"
+  git: "https://github.com/uds-psl/coq-library-complexity#coq-8.12"
 }

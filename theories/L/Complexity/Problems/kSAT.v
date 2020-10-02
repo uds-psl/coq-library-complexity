@@ -1,4 +1,4 @@
-From Undecidability.L.Complexity.Problems Require Export SAT.
+From Complexity.L.Complexity.Problems Require Export SAT.
 From Undecidability.L.Datatypes Require Import LProd LTerm LNat Lists LOptions.
 From Undecidability.L.Functions Require Import EqBool.
 
@@ -44,7 +44,7 @@ Qed.
 
 (** extraction of decider *)
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Complexity Require Import PolyBounds. 
+From Complexity.L.Complexity Require Import PolyBounds. 
 
 Definition c__clauseLengthDecb :=  c__length + 5 + 1.
 Definition clause_length_decb_time (k : nat) (C : clause) := c__length * (|C|) + eqbTime (X := nat) (size (enc k)) (size (enc (|C|))) + c__clauseLengthDecb.

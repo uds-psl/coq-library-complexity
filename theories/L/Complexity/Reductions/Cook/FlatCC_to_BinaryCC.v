@@ -1,8 +1,8 @@
 From PslBase Require Import Base. 
 From PslBase Require Import Vectors.Vectors. 
-Require Import Undecidability.L.Complexity.CookPrelim.MorePrelim. 
-From Undecidability.L.Complexity.Problems.Cook Require Import BinaryCC FlatCC. 
-From Undecidability.L.Complexity.Reductions.Cook Require Import UniformHomomorphisms CC_to_BinaryCC. 
+Require Import Complexity.L.Complexity.CookPrelim.MorePrelim. 
+From Complexity.L.Complexity.Problems.Cook Require Import BinaryCC FlatCC. 
+From Complexity.L.Complexity.Reductions.Cook Require Import UniformHomomorphisms CC_to_BinaryCC. 
 Require Import Lia.
 
 (** * Reduction of FlatCC to BinaryCC *)
@@ -155,7 +155,7 @@ Qed.
 (** ** extraction *)
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import  LProd LOptions LBool.
-From Undecidability.L.Complexity Require Import PolyBounds. 
+From Complexity.L.Complexity Require Import PolyBounds. 
 
 (** repEl *)
 Section fixX. 

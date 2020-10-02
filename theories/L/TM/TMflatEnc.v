@@ -1,9 +1,9 @@
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import LNat Lists LProd LOptions LBool.
-From Undecidability.L Require Import Functions.Decoding.
+From Complexity.L Require Import Functions.Decoding.
 
 
-From Undecidability.L.TM Require Export TMflat.
+From Complexity.L.TM Require Export TMflat.
 From Undecidability.L.TM Require Import TMEncoding.
 
 Import Nat TM_facts.
@@ -106,7 +106,7 @@ Proof.
   destruct M as []. cbn. solverec.
 Qed.
 
-From Undecidability.L.Complexity Require Export RegisteredP LinTimeDecodable.
+From Complexity.L.Complexity Require Export RegisteredP LinTimeDecodable.
 
 
 Instance term_move_enc

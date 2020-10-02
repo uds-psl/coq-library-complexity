@@ -1,20 +1,21 @@
 From Undecidability.L Require Import Tactics.LTactics.
 From Undecidability.L.Datatypes Require Import Lists LVector.
-From Undecidability.L.Complexity Require Import NP Synthetic Monotonic.
+From Complexity.L.Complexity Require Import NP Synthetic Monotonic.
 From Undecidability.TM Require Import TM_facts.
-From Undecidability.L.AbstractMachines Require Import FlatPro.Programs FlatPro.Computable.LPro.
-
-From Undecidability.L.Complexity Require Import LMGenNP TMGenNP_fixed_mTM.
+From Complexity.L.AbstractMachines Require Import FlatPro.Computable.LPro.
+From Undecidability.L.AbstractMachines Require Import FlatPro.Programs.
+From Complexity.L.Complexity Require Import LMGenNP TMGenNP_fixed_mTM.
 
 Require Undecidability.L.AbstractMachines.TM_LHeapInterpreter.M_LHeapInterpreter.
 
-From Undecidability Require Import TMGenNP.M_LM2TM.
+From Complexity Require Import TMGenNP.M_LM2TM.
 
 (* Check LMtoTM.M. *)
 
-From Undecidability Require Import LSum L.TM.CompCode.
+From Undecidability Require Import LSum.
+From Complexity Require Import L.TM.CompCode.
 
-From Undecidability Require Import CompCode Alphabets.
+From Undecidability Require Import Alphabets.
 
 Import ProgrammingTools.
 
@@ -157,7 +158,7 @@ Module M.
 End M.
 
 
-From Undecidability Require Import PolyTimeComputable.
+From Complexity Require Import PolyTimeComputable.
 
 (*REMOVE?*)
 Import GenericNary UpToCNary.
@@ -376,7 +377,7 @@ Smpl Add 5 unshelve simple eapply pTC_initValue : polyTimeComputable.
 
 Import M_LHeapInterpreter.
 
-From Undecidability Require Import PolyTimeComputable.
+From Complexity Require Import PolyTimeComputable.
 
 Lemma sumn_repeat n c : sumn (repeat c n) = n*c.
 Proof. induction n;cbn;nia.

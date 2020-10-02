@@ -1,8 +1,10 @@
 From Undecidability.L Require Import Tactics.LTactics.
 From Undecidability.L.Datatypes Require Import Lists LVector LSum LProd LFinType LNat.
-From Undecidability.L.Complexity Require Import NP Synthetic Monotonic.
+From Complexity.L.Complexity Require Import NP Synthetic Monotonic.
 From Undecidability.L.Functions Require Import EqBool.
-From Undecidability.L.TM Require Import TapeFuns CompCode.
+From Undecidability.L.TM Require Import TapeFuns.
+From Complexity.L.TM Require Import CompCode.
+
 
 From Undecidability.TM Require Import TM_facts CodeTM.
 From Undecidability.TM.Single Require Import EncodeTapes StepTM.
@@ -17,7 +19,7 @@ Unset Printing Coercions.
 
 (*From Undecidability Require Import MultiUnivTimeSpaceSimulation. *)
 
-From Undecidability.L.Complexity Require Import TMGenNP_fixed_mTM M_multi2mono.
+From Complexity.L.Complexity Require Import TMGenNP_fixed_mTM M_multi2mono.
 
 
 Section LMGenNP_to_TMGenNP_mTM.

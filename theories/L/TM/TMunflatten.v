@@ -3,7 +3,7 @@ From Undecidability Require Import L.Functions.EqBool.
 From PslBase.FiniteTypes Require Import VectorFin Cardinality.
 
 From Undecidability Require Import TM.Util.TM_facts.
-From Undecidability Require Import L.TM.TMflat.
+From Complexity Require Import L.TM.TMflat.
 From Undecidability Require L.TM.TMEncoding.
 
 

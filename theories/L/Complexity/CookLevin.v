@@ -2,20 +2,22 @@ From Undecidability.L.Tactics Require Import LTactics GenEncode Computable.
 From Undecidability.L Require Import  FinTypeLookup LFinType LSum.
 From PslBase Require Import FinTypes.
 
-From Undecidability.L.Complexity.Reductions Require Import FSAT_to_SAT kSAT_to_SAT kSAT_to_FlatClique. 
-From Undecidability.L.Complexity.Problems.Cook Require Import FlatCC SingleTMGenNP BinaryCC.
-From Undecidability.L.Complexity.Problems.Cook Require FlatTCC. 
-From Undecidability.L.Complexity.Problems Require Import SAT FSAT kSAT FlatClique. 
-From Undecidability.L.Complexity.Reductions Require Import FlatSingleTMGenNP_to_FlatTCC FlatTCC_to_FlatCC FlatCC_to_BinaryCC BinaryCC_to_FSAT. 
+From Complexity.L.Complexity.Reductions Require Import FSAT_to_SAT kSAT_to_SAT kSAT_to_FlatClique. 
+From Complexity.L.Complexity.Problems.Cook Require Import FlatCC SingleTMGenNP BinaryCC.
+From Complexity.L.Complexity.Problems.Cook Require FlatTCC. 
+From Complexity.L.Complexity.Problems Require Import SAT FSAT kSAT FlatClique. 
+From Complexity.L.Complexity.Reductions Require Import FlatSingleTMGenNP_to_FlatTCC FlatTCC_to_FlatCC FlatCC_to_BinaryCC BinaryCC_to_FSAT. 
 
-Require Import Undecidability.L.Complexity.Reductions.TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP.
-From Undecidability.L.Complexity.Reductions Require Import TMGenNP.IntermediateProblems.
+Require Import Complexity.L.Complexity.Reductions.TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP.
+From Complexity.L.Complexity.Reductions Require Import TMGenNP.IntermediateProblems.
 
 From Undecidability.TM Require Import TM_facts CodeTM.
 
-From Undecidability Require Import L_to_LM LM_to_mTM mTM_to_singleTapeTM TMGenNP_fixed_mTM.
+From Complexity Require Import L_to_LM LM_to_mTM mTM_to_singleTapeTM TMGenNP_fixed_mTM.
 From Undecidability.L Require Import Prelim.MoreList Prelim.MoreBase.
-From Undecidability.L.Complexity Require Import NP Synthetic Monotonic Problems.GenNP.GenNP.
+From Complexity.L.Complexity Require Import NP Synthetic Monotonic Problems.GenNP.GenNP.
+
+From Complexity Require GenNP_is_hard CanEnumTerm.
 
 (** * Overview of the results proved in the paper. *)
 
@@ -121,12 +123,12 @@ Proof.
   apply FlatSingleTMGenNP_to_3SAT. 
 Qed.
 
+Import GenNP_is_hard CanEnumTerm.
 (** even 3-SAT is already NP-complete. *)
 Lemma CookLevin0 : NPcomplete (unrestrictedP (kSAT 3)).
 Proof.
   split. 2:apply inNP_kSAT.
   eapply red_NPhard. apply GenNP_to_3SAT.
-  From Undecidability Require Import GenNP_is_hard CanEnumTerm.
   apply NPhard_GenNP.
   eapply boollist_enum.boollists_enum_term.
 Qed.

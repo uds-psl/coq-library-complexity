@@ -1,6 +1,6 @@
 From PslBase Require Import Base FinTypes. 
 From Undecidability Require Import L.Functions.EqBool.
-From Undecidability.L.Complexity Require Export Problems.Cook.CC FlatFinTypes MorePrelim.
+From Complexity.L.Complexity Require Export Problems.Cook.CC FlatFinTypes MorePrelim.
 Require Import Lia.
 
 (** * Flat Covering Cards *)
@@ -523,7 +523,7 @@ Hint Resolve CCCard_enc_correct : Lrewrite.
 MetaCoq Run (tmGenEncode "FlatCC_enc" (FlatCC)).
 Hint Resolve FlatCC_enc_correct : Lrewrite. 
 
-From Undecidability.L.Complexity Require Import PolyBounds. 
+From Complexity.L.Complexity Require Import PolyBounds. 
 
 Instance term_Build_FlatCC : computableTime' Build_FlatCC (fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, tt)))))))).
 Proof.

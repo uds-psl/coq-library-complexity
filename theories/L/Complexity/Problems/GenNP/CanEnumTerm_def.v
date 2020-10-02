@@ -1,5 +1,5 @@
 From Undecidability.L Require Import L LTactics.
-From Undecidability.L.Complexity Require Import NP Synthetic Monotonic.
+From Complexity.L.Complexity Require Import NP Synthetic Monotonic.
 
 
 Record canEnumTerms (X__cert : Type) `{R__cert : registered X__cert} : Type :=

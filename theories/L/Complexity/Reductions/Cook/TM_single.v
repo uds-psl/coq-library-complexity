@@ -1,5 +1,5 @@
 From Undecidability.TM Require Import TM_facts.
-From Undecidability.L.Complexity Require Import MorePrelim. 
+From Complexity.L.Complexity Require Import MorePrelim. 
 Require Import Lia. 
 
 (** * Simpler definitions for single-tape Turing machines. *)

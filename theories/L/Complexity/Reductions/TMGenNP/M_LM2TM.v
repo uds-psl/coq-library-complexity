@@ -1,10 +1,14 @@
-From Undecidability.L.Complexity Require Import NP.
-From Undecidability.TM Require TM_facts ProgrammingTools CaseList CaseBool Code.Decode Code.DecodeList.
+From Undecidability.TM Require TM_facts ProgrammingTools CaseList.
+From Complexity.TM Require CaseBool Code.Decode Code.DecodeList.
+
 From Undecidability.TM Require Import TM SizeBounds.
 
 From Undecidability.L.Complexity  Require Import UpToCNary.
+From Complexity.L.Complexity  Require Import LMGenNP.
 
-From Undecidability.L.AbstractMachines Require Import FlatPro.Programs FlatPro.Computable.Compile.
+
+From Undecidability.L.AbstractMachines Require Import FlatPro.Programs.
+From Complexity.L.AbstractMachines Require Import FlatPro.Computable.Compile.
      
 Unset Printing Coercions.
 
@@ -12,10 +16,10 @@ From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require Alphabets.
 
 From Coq Require Import Lia Ring Arith.
 
-From Undecidability.L.Complexity  Require Import LMGenNP TMGenNP_fixed_mTM M_Boollist_to_Enc.
+From Complexity.L.Complexity  Require Import M_Boollist_to_Enc.
 
-From Undecidability Require Import Code.ListTM_concat_repeat.
-From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require M_LHeapInterpreter SizeAnalysis LMBounds_Loop.
+From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require M_LHeapInterpreter.
+From Complexity.L.AbstractMachines.TM_LHeapInterpreter Require SizeAnalysis LMBounds_Loop.
 
 Import DecodeList Decode.
 Module LMtoTM.

@@ -1,6 +1,6 @@
 From PslBase Require Import Base FinTypes. 
 From PslBase Require Import Vectors.Vectors. 
-From Undecidability.L.Complexity Require Import MorePrelim Problems.Cook.FlatTCC Problems.Cook.FlatCC Reductions.Cook.TCC_to_CC.
+From Complexity.L.Complexity Require Import MorePrelim Problems.Cook.FlatTCC Problems.Cook.FlatCC Reductions.Cook.TCC_to_CC.
 Require Import Lia.
 
 (** * Reduction of FlatTCC to FlatCC*)
@@ -68,7 +68,7 @@ Qed.
 (** ** extraction *)
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import  LProd LOptions.
-From Undecidability.L.Complexity Require Import PolyBounds. 
+From Complexity.L.Complexity Require Import PolyBounds. 
 
 
 Section fixX. 

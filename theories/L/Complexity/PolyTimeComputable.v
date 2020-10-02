@@ -1,4 +1,4 @@
-From Undecidability Require Import Complexity.Synthetic.
+From Complexity Require Import Complexity.Synthetic.
 From Undecidability.L Require Import L.
 From Undecidability.L.Tactics Require Import LTactics.
 

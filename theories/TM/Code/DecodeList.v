@@ -1,4 +1,5 @@
-From Undecidability.TM Require Import TM ProgrammingTools Code.Decode Code.
+From Undecidability.TM Require Import TM ProgrammingTools Code.
+From Complexity.TM Require Import Code.Decode.
 Require Import FunInd Lia Ring Arith Program.Wf.
 
 
@@ -25,7 +26,7 @@ Proof.
   intros c' Hc'. Realises
 Qed. *)
 
-From Undecidability.TM Require Import Code.DecodeBool.
+From Complexity.TM Require Import Code.DecodeBool.
 
 Module CheckEncodeList.
   Section checkEncodeList.

@@ -1,6 +1,9 @@
-From Undecidability.L.Datatypes Require Import LNat LBool LBinNums LProd LTerm.
-From Undecidability.L Require Import Tactics.LTactics Complexity.Synthetic Functions.Eval Functions.Equality.
-From Undecidability.L.AbstractMachines Require Import AbstractHeapMachine FunctionalDefinitions Programs.
+From Undecidability.L.Datatypes Require Import LNat LBool LProd LTerm.
+From Complexity.L Require Import LBinNums.
+From Undecidability.L Require Import Tactics.LTactics Functions.Eval Functions.Equality.
+From Complexity.L Require Import Synthetic.
+From Complexity.L.AbstractMachines Require Import AbstractHeapMachine FunctionalDefinitions.
+From Undecidability.L.AbstractMachines Require Import Programs.
 
 From Undecidability.L.Functions Require Import Size Proc.
 
@@ -8,7 +11,7 @@ Tactic Notation "destruct" "*" "eqn" :=
   let E := fresh "eq" in destruct * eqn:E.
 
 
-From Undecidability.L.AbstractMachines.Computable Require Import Shared HeapMachine.
+From Complexity.L.AbstractMachines.Computable Require Import Shared HeapMachine.
 From Undecidability.L Require Import AbstractMachines.LargestVar.
 Import Nat.
 (*Proof inspired by CS 172 handout 8 from 4/21/2015 from Luca Trevisan and Sipser's book  *)

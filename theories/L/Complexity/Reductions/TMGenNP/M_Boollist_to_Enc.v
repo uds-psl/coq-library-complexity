@@ -1,5 +1,7 @@
-From Undecidability.L.Complexity Require Import NP.
-From Undecidability.TM Require TM ProgrammingTools CaseList CaseBool Code.Decode Code.DecodeList.
+From Undecidability.L Require Import LTactics Datatypes.Lists Datatypes.LNat Datatypes.LBool.
+From Undecidability.TM Require TM ProgrammingTools CaseList.
+From Complexity.TM Require CaseBool Code.Decode Code.DecodeList.
+
 From Undecidability.TM Require Import TM_facts SizeBounds.
 
 From Undecidability.L.Complexity  Require Import UpToCNary.
@@ -12,7 +14,7 @@ From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require Alphabets.
 
 From Coq Require Import Lia Ring Arith.
 
-From Undecidability Require Import Code.ListTM_concat_repeat.
+From Complexity Require Import Code.ListTM_concat_repeat.
 Module BoollistToEnc.
 
   Definition enc_bool_perElem (b:bool) := [lamT;lamT;varT 0;lamT; lamT; varT (if b then 1 else 0); retT; retT;appT].

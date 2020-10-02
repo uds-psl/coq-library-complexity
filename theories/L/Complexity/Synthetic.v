@@ -1,5 +1,6 @@
-From Undecidability.L Require Import Tactics.LTactics Prelim.MoreList Prelim.MoreBase Datatypes.LBinNums Datatypes.LNat.
-From Undecidability.L.Complexity Require Export Monotonic ONotation LinTimeDecodable.
+From Undecidability.L Require Import Tactics.LTactics Prelim.MoreList Prelim.MoreBase Datatypes.LNat.
+From Complexity.L.Datatypes Require Import LBinNums.
+From Complexity.L.Complexity Require Export Monotonic ONotation LinTimeDecodable.
 
 Global Generalizable Variable vX.
 

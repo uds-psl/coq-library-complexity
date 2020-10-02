@@ -1,8 +1,8 @@
 From PslBase Require Import Base.
 Require Import Lia.
-From Undecidability.L.Complexity Require Import MorePrelim. 
-From Undecidability.L.Complexity.Problems.Cook Require Export CC.
-From Undecidability.L.Complexity.Problems.Cook Require Import FlatCC.
+From Complexity.L.Complexity Require Import MorePrelim. 
+From Complexity.L.Complexity.Problems.Cook Require Export CC.
+From Complexity.L.Complexity.Problems.Cook Require Import FlatCC.
 
 (** * BinaryCC: Parallel Rewriting restricted to a binary alphabet *)
 (** ** Definition *)
@@ -39,7 +39,7 @@ From Undecidability.L.Datatypes Require Import  LProd LOptions.
 MetaCoq Run (tmGenEncode "BinaryCC_enc" (BinaryCC)).
 Hint Resolve BinaryCC_enc_correct : Lrewrite. 
 
-From Undecidability.L.Complexity Require Import PolyBounds. 
+From Complexity.L.Complexity Require Import PolyBounds. 
 
 Instance term_Build_BinaryCC : computableTime' Build_BinaryCC (fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, tt))))))).
 Proof.

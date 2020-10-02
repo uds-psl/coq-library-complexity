@@ -1,6 +1,8 @@
-From Undecidability.L Require Import TM.TMflat Tactics.LTactics Datatypes.LNat Datatypes.Lists Functions.EqBool.
+From Undecidability.L Require Import Tactics.LTactics Datatypes.LNat Datatypes.Lists Functions.EqBool.
+From Complexity Require Import TMflat.
 
-From Undecidability Require Import TM_facts TM.TMEncoding L.TM.TMunflatten.
+From Undecidability Require Import TM_facts TM.TMEncoding.
+From Complexity Require Import L.TM.TMunflatten.
 
 From PslBase.FiniteTypes Require FiniteFunction.
 From Undecidability Require Import Functions.FinTypeLookup.

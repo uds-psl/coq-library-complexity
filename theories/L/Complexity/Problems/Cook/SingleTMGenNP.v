@@ -1,7 +1,8 @@
 From Undecidability.TM Require Import TM_facts.
-From Undecidability.L.TM Require Import TMflat TMflatEnc TMflatFun TMEncoding TapeDecode TMunflatten TMflatten.
-From Undecidability.L.Complexity Require Import FlatFinTypes MorePrelim.
-From Undecidability.L.Complexity.Problems Require Export TMGenNP_fixed_mTM. 
+From Undecidability.L.TM Require Import TMEncoding.
+From Complexity.L.TM Require Import TMflat TMflatEnc TMflatFun TapeDecode TMunflatten TMflatten.
+From Complexity.L.Complexity Require Import FlatFinTypes MorePrelim.
+From Complexity.L.Complexity.Problems Require Export TMGenNP_fixed_mTM. 
 
 (** * Definition of a generic problem for single-tape Turing machines *)
 

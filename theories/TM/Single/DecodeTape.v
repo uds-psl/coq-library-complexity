@@ -1,6 +1,7 @@
-From Undecidability.TM Require Import TM ProgrammingTools Code.Decode.
+From Undecidability.TM Require Import TM ProgrammingTools.
+From Complexity.TM Require Import Code.Decode.
 
-From Undecidability.TM Require Single.EncodeTapes Single.EncodeTapesInvariants .
+From Complexity.TM Require Single.EncodeTapesInvariants .
 Require Import FunInd Lia Ring Arith Program.Wf.
 Import EncodeTapes EncodeTapesInvariants.
 

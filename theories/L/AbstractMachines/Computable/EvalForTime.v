@@ -1,10 +1,12 @@
 From Undecidability.L Require Import L_facts Tactics.LTactics.
 
-From Undecidability.L.AbstractMachines Require Import AbstractHeapMachineDef UnfoldTailRec FunctionalDefinitions.
-From Undecidability.L.AbstractMachines.Computable Require Import Unfolding HeapMachine Shared.
+From Complexity.L.AbstractMachines Require Import AbstractHeapMachineDef UnfoldTailRec FunctionalDefinitions.
+From Complexity.L.AbstractMachines.Computable Require Import Unfolding HeapMachine Shared.
 
-From Undecidability.L.Datatypes Require Import Lists LBinNums.
-From Undecidability.L.Functions Require Import BinNums BinNumsCompare UnboundIteration Proc.
+From Undecidability.L.Datatypes Require Import Lists.
+From Complexity.L.Datatypes Require Import LBinNums.
+From Undecidability.L.Functions Require Import UnboundIteration Proc.
+From Complexity.L.Functions Require Import BinNums BinNumsCompare.
 
 Import AbstractHeapMachineDef.clos_notation .
 
@@ -150,7 +152,7 @@ Proof.
    eexists (_,_). rewrite IHk. cbn. repeat split. 2,3:eassumption. lia.
 Qed.
 
-Import Undecidability.L.AbstractMachines.LargestVar Undecidability.L.AbstractMachines.AbstractHeapMachine.
+Import Undecidability.L.AbstractMachines.LargestVar Complexity.L.AbstractMachines.AbstractHeapMachine.
 
 
 Lemma time_uiter_evalForTime__step s fuel:

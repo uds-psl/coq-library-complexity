@@ -1,5 +1,6 @@
 From Undecidability.L.Datatypes Require Import LProd LOptions.
-From Undecidability.L Require Import Tactics.LTactics Datatypes.LBinNums Functions.BinNums Functions.BinNumsCompare.
+From Undecidability.L Require Import Tactics.LTactics.
+From Complexity.L Require Import Datatypes.LBinNums Functions.BinNums Functions.BinNumsCompare.
 
 
 Definition iterupN {X} i max x f :=

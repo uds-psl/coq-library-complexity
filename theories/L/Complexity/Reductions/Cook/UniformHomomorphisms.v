@@ -1,5 +1,5 @@
 From PslBase Require Import Base FiniteTypes. 
-From Undecidability.L.Complexity Require Import MorePrelim.
+From Complexity.L.Complexity Require Import MorePrelim.
 Require Import Lia.
 
 (** * Uniform homomorphisms *)

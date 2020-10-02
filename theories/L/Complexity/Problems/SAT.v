@@ -1,10 +1,10 @@
-From Undecidability.L.Complexity.Problems Require Export SharedSAT.
+From Complexity.L.Complexity.Problems Require Export SharedSAT.
 Require Import Lia. 
 
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import  LProd LOptions LBool LNat Lists LUnit.
 From Undecidability.L.Functions Require Import EqBool. 
-From Undecidability.L.Complexity Require Import UpToCPoly MorePrelim. 
+From Complexity.L.Complexity Require Import UpToCPoly MorePrelim. 
 
 (** * SAT: Satisfiability of CNFs *)
 
@@ -432,7 +432,7 @@ Proof.
   rewrite cnf_maxVar_size_enc_bound, cnf_size_enc_bound.  lia. 
 Qed. 
 
-Require Import Undecidability.L.Complexity.UpToCPoly. 
+Require Import Complexity.L.Complexity.UpToCPoly. 
 
 (* we overwrite the already extracted version (eqbCompT instance) because we use that it is constant-time *)
 Definition c__eqbBool := 7.
@@ -589,7 +589,7 @@ Section extraction.
 End extraction.
        
 (** We obtain that SAT is in NP *)
-Require Import Undecidability.L.Complexity.NP. 
+Require Import Complexity.L.Complexity.NP. 
 Lemma sat_NP : inNP (unrestrictedP SAT).
 Proof.
   apply inNP_intro with (R:= fun (a : { cnf | True}) => sat_verifier (proj1_sig a)). 

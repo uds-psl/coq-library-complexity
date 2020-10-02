@@ -1,5 +1,5 @@
 From PslBase Require Import Base FinTypes. 
-From Undecidability.L.Complexity Require Import MorePrelim Problems.Cook.TCC Problems.Cook.CC.
+From Complexity.L.Complexity Require Import MorePrelim Problems.Cook.TCC Problems.Cook.CC.
 Require Import Lia.
 
 (** * Reduction of 3-CC to CC. *)

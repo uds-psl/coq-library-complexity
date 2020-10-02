@@ -1,6 +1,6 @@
 From Undecidability.L Require Import L.
 From Undecidability.L.Datatypes Require Import LProd LTerm LBool.
-From Undecidability.L.Complexity Require Import NP Synthetic Monotonic.
+From Complexity.L.Complexity Require Import NP Synthetic Monotonic.
 From Undecidability.L.Functions Require Import Size.
 
 Local Unset Implicit Arguments.

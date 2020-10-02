@@ -1,7 +1,7 @@
 
-From Undecidability.L.Complexity Require Export NP ONotation. 
+From Complexity.L.Complexity Require Export NP ONotation. 
 From Undecidability.L.Tactics Require Import LTactics.
-From Undecidability.L.Complexity Require Import MorePrelim.
+From Complexity.L.Complexity Require Import MorePrelim.
 From Undecidability.L Require Export Datatypes.Lists Datatypes.LNat.
 From Undecidability.L.Functions Require Import EqBool. 
 

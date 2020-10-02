@@ -1,7 +1,7 @@
 From PslBase Require Import FiniteTypes.
 Require Import PslBase.FiniteTypes.BasicDefinitions.
 Require Import Lia.
-From Undecidability.L.Complexity Require Import MorePrelim.
+From Complexity.L.Complexity Require Import MorePrelim.
 Require Export smpl.Smpl. 
 
 (** * Representation of finite types by natural numbers *)
@@ -308,7 +308,7 @@ Qed.
 (** extraction *)
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import LProd LOptions LBool LSum.
-From Undecidability.L.Complexity Require Import PolyBounds. 
+From Complexity.L.Complexity Require Import PolyBounds. 
 From Undecidability.L.Functions Require Import EqBool.
 Require Import Nat. 
 

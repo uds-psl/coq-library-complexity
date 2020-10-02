@@ -1,6 +1,6 @@
 From PslBase Require Import Base FiniteTypes. 
-From Undecidability.L.Complexity Require Import MorePrelim Problems.Cook.CC Reductions.Cook.UniformHomomorphisms.
-From Undecidability.L.Complexity.Problems.Cook Require BinaryCC .
+From Complexity.L.Complexity Require Import MorePrelim Problems.Cook.CC Reductions.Cook.UniformHomomorphisms.
+From Complexity.L.Complexity.Problems.Cook Require BinaryCC .
 Require Import Lia.
 
 (** * Results on the behaviour of CC under string homomorphisms *)

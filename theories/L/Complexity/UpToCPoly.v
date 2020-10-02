@@ -1,6 +1,7 @@
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Complexity Require Export Synthetic UpToC UpToCNary.
-From Undecidability.L.Complexity.CookPrelim Require Import Tactics. 
+From Complexity.L.Complexity Require Export Synthetic.
+From Undecidability.L.Complexity Require Export UpToC UpToCNary.
+From Complexity.L.Complexity.CookPrelim Require Import Tactics. 
 
 (* Coq 8.11 or 8.10 changed lia so that it isn't able to deal with η conversion anymore; use this tactic to fix *)
 Ltac simp_comp_arith := cbn -[Nat.add Nat.mul]; repeat change (fun x => ?h x) with h.
@@ -158,7 +159,7 @@ Proof.
 Qed. 
 
 
-Require Import Undecidability.L.Complexity.CookPrelim.MorePrelim. 
+Require Import Complexity.L.Complexity.CookPrelim.MorePrelim. 
 Lemma list_subsequence_size_bound {X : Type} `{registered X} (l l': list X) :
   subsequence l l' -> size (enc l) <= size (enc l').
 Proof. 

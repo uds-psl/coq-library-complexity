@@ -1,5 +1,5 @@
 From Undecidability.L Require Import Tactics.LTactics Prelim.MoreList Prelim.MoreBase.
-From Undecidability.L.Complexity Require Import Synthetic.
+From Complexity.L.Complexity Require Import Synthetic.
 
 From Undecidability.L Require Import LM_heap_def.
 

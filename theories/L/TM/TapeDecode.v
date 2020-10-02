@@ -5,11 +5,12 @@ From Undecidability.L Require Import TM.TMEncoding.
 
 From Undecidability Require Import TM.TM.
 
-From Undecidability.L Require Import Functions.Decoding Complexity.Synthetic Complexity.LinTimeDecodable.
+From Complexity.L Require Import Functions.Decoding Complexity.Synthetic Complexity.LinTimeDecodable.
 
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import LNat Lists LProd LFinType LVector.
-From Undecidability.L Require Import Functions.EqBool Functions.Decoding.
+From Undecidability.L Require Import Functions.EqBool.
+From Complexity.L Require Import Functions.Decoding.
 
 From Undecidability Require Import TM.Util.VectorPrelim.
 

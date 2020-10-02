@@ -1,9 +1,10 @@
 From Undecidability.L Require Import L_facts.
 From Undecidability.L.Datatypes Require Import LTerm Lists.
-From Undecidability.L.Complexity Require Import NP Monotonic CanEnumTerm_def PolyTimeComputable.
-From Undecidability.L.AbstractMachines Require Import FlatPro.Programs FlatPro.Computable.LPro Computable.Compile Computable.Decompile.
+From Complexity.L.Complexity Require Import NP Monotonic CanEnumTerm_def PolyTimeComputable.
+From Undecidability.L.AbstractMachines Require Import FlatPro.Programs.
+From Complexity.L.AbstractMachines Require Import FlatPro.Computable.LPro Computable.Compile Computable.Decompile.
 
-From Undecidability Require Export CanEnumTerm_def.
+From Complexity Require Export CanEnumTerm_def.
 
 Lemma terms_enum_themselves : canEnumTerms term.
 Proof with try eauto;smpl_inO.

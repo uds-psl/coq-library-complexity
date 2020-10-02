@@ -1,9 +1,10 @@
-From Undecidability.L.TM Require Import TMflatEnc TMflat TMEncoding. 
+From Undecidability.L.TM Require Import TMEncoding. 
+From Complexity.L.TM Require Import TMflatEnc TMflat. 
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Complexity Require Import MorePrelim PolyBounds FlatFinTypes. 
+From Complexity.L.Complexity Require Import MorePrelim PolyBounds FlatFinTypes. 
 From Undecidability.L.Datatypes Require Import LProd LOptions LBool LSum LNat Lists. 
 From Undecidability.L.Functions Require Import EqBool.
-From Undecidability.L.Complexity Require Import Reductions.Cook.SingleTMGenNP_to_TCC Problems.Cook.FlatTCC. 
+From Complexity.L.Complexity Require Import Reductions.Cook.SingleTMGenNP_to_TCC Problems.Cook.FlatTCC. 
 
 Fact None_ofFlatType n : ofFlatType (flatOption n) flatNone . 
 Proof. 
@@ -1576,7 +1577,7 @@ Defined.
  
 (** generateCardsForFlatNonHalt *)
 From Undecidability.L.Functions Require Import FinTypeLookup EqBool.
-From Undecidability.L.TM Require Import TMunflatten. 
+From Complexity.L.TM Require Import TMunflatten. 
 
 Lemma tm_trans_isValidFlatAct tm : validFlatTM tm
   -> forall q m q' a, ((q, [m]), (q', [a])) el trans tm -> isValidFlatAct tm (q', a). 
@@ -2866,7 +2867,7 @@ Proof.
 Qed.
 
 (** full reduction statement *)
-From Undecidability.L.Complexity.Problems.Cook Require Import SingleTMGenNP. 
+From Complexity.L.Complexity.Problems.Cook Require Import SingleTMGenNP. 
 (** This is the polynomial-time analysis of the reduction. 
   For the proof of correctness, see [SingleTMGenNP_to_TCC]. For the proof of correctness using the flattened problems, see [FlatSingleTMGenNP_to_FlatTCC]. 
 *)

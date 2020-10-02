@@ -1,12 +1,14 @@
 From Undecidability.L Require Import L Tactics.LTactics AbstractMachines.LargestVar.
 
-From Undecidability.L Require Import AbstractHeapMachineDef UnfoldTailRec AbstractHeapMachine.
-From Undecidability.L.AbstractMachines.Computable Require Import Unfolding HeapMachine Shared EvalForTime EvalForTimeBool.
+From Complexity.L Require Import AbstractHeapMachineDef UnfoldTailRec AbstractHeapMachine.
+From Complexity.L.AbstractMachines.Computable Require Import Unfolding HeapMachine Shared EvalForTime EvalForTimeBool.
 
-From Undecidability.L.Complexity Require Import Synthetic AbstractTimeHierarchyTheorem.
+From Complexity.L.Complexity Require Import Synthetic AbstractTimeHierarchyTheorem.
 
-From Undecidability.L.Datatypes Require Import Lists LBinNums.
-From Undecidability.L.Functions Require Import BinNums BinNumsCompare UnboundIteration.
+From Undecidability.L.Datatypes Require Import Lists.
+From Complexity.L.Datatypes Require Import LBinNums.
+From Complexity.L.Functions Require Import BinNums BinNumsCompare.
+From Undecidability.L.Functions Require Import UnboundIteration.
 
 Section TimeHierarchy.
 

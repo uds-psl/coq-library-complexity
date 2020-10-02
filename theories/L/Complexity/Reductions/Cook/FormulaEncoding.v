@@ -1,6 +1,6 @@
-From Undecidability.L.Complexity Require Import Tactics MorePrelim. 
+From Complexity.L.Complexity Require Import Tactics MorePrelim. 
 From Undecidability.L.Datatypes Require Import Lists LNat LBool LProd LOptions. 
-From Undecidability.L.Complexity.Problems Require Import FSAT.
+From Complexity.L.Complexity.Problems Require Import FSAT.
 
 (** * Some generic tools for encoding things as Boolean formulas *)
 
@@ -393,7 +393,7 @@ Ltac encodesPredicateAt_comp_simp H :=
 
 (** *** extraction *)
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Complexity Require Import PolyBounds. 
+From Complexity.L.Complexity Require Import PolyBounds. 
 From Undecidability.L.Datatypes Require Import LProd LOptions LBool LSum. 
 From Undecidability.L.Functions Require Import EqBool.
 

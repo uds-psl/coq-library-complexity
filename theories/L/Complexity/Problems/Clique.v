@@ -1,5 +1,5 @@
 From PslBase Require Import FinTypes. 
-From Undecidability.L.Complexity.Problems Require Import UGraph. 
+From Complexity.L.Complexity.Problems Require Import UGraph. 
 Require Import Lia.
 
 Section fixGraph. 

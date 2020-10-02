@@ -2,9 +2,9 @@ From Undecidability.L Require Import L.
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import Lists LNat LProd.
 From PslBase Require Import FinTypes. 
-From Undecidability.L.Complexity.Problems Require Import FlatUGraph Clique UGraph.
-From Undecidability.L.Complexity Require Import FlatFinTypes.
-From Undecidability.L.Complexity Require Import MorePrelim. 
+From Complexity.L.Complexity.Problems Require Import FlatUGraph Clique UGraph.
+From Complexity.L.Complexity Require Import FlatFinTypes.
+From Complexity.L.Complexity Require Import MorePrelim. 
 
 (** * Clique on flat graphs and NP containment *)
 
@@ -122,7 +122,7 @@ End fixGraph.
 
 (** ** extraction *)
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Complexity Require Import PolyBounds FlatFinTypes. 
+From Complexity.L.Complexity Require Import PolyBounds FlatFinTypes. 
 From Undecidability.L.Datatypes Require Import LProd LOptions LBool LSum. 
 From Undecidability.L.Functions Require Import EqBool.
 
