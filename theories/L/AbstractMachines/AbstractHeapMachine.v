@@ -44,7 +44,7 @@ Lemma unfolds_bound H k s s' a:
 Proof.
   induction 1.
   -now constructor. 
-  -econstructor. eapply bound_ge;eauto. omega.
+  -econstructor. eapply bound_ge;eauto. lia.
   -now constructor.
   -now constructor. 
 Qed.
@@ -72,14 +72,14 @@ Proof.
     {subst n. cbn. rewrite Nat.sub_diag. cbn. rewrite H1. reflexivity. }
     inv R.
     econstructor.
-    all:try eauto using unfolds;try omega. 
-   +econstructor. omega.      
+    all:try eauto using unfolds;try lia. 
+   +econstructor. lia.      
   -rename s into u.
    assert (H':lookup H a' (n-k) = Some (u,b)).
-   {destruct n. omega. rewrite Nat.sub_succ_l. cbn. rewrite H1. now rewrite Nat.sub_succ in H2. omega. }
+   {destruct n. lia. rewrite Nat.sub_succ_l. cbn. rewrite H1. now rewrite Nat.sub_succ in H2. lia. }
    rewrite bound_closed_k.
-   2:{ eapply bound_ge with (k:=0). 2:omega. now eauto using unfolds,unfolds_bound. }
-   econstructor. all:try eassumption;omega.
+   2:{ eapply bound_ge with (k:=0). 2:lia. now eauto using unfolds,unfolds_bound. }
+   econstructor. all:try eassumption;lia.
   -econstructor. all:eauto.
   -econstructor. all:eauto.
 Qed.
@@ -283,9 +283,9 @@ Proof.
    6:{ now econstructor. }
    all:try easy;eauto using timeBS,step.
   -inversion Unf as [| | | tmp1 tmp2 tmp3 tmp4 tmp5 Unf1 Unf2]. subst tmp1 tmp2 tmp3 s.
-   edestruct IH with (2:=R) (3:=Unf1) as (k11&k12&[s1' a']&H'1&t1&n1&eq1&R11&[R12 _]&Ev1&Ext1&Rg1&eqn1). now omega.
+   edestruct IH with (2:=R) (3:=Unf1) as (k11&k12&[s1' a']&H'1&t1&n1&eq1&R11&[R12 _]&Ev1&Ext1&Rg1&eqn1). now lia.
    rewrite Ext1 in Unf2.
-   edestruct IH with (2:=R12) (3:=Unf2) as (k21&k22&g2&H'2&t2&n2&eq2&R21&[R22 _]&Ev2&Ext2&Rg2&eqn2). now omega.
+   edestruct IH with (2:=R12) (3:=Unf2) as (k21&k22&g2&H'2&t2&n2&eq2&R21&[R22 _]&Ev2&Ext2&Rg2&eqn2). now lia.
    setoid_rewrite Ext2 in Rg1.
    
    assert (exists k22', k22 = 1 + k22') as (k22'&->).
@@ -297,13 +297,13 @@ Proof.
    assert (Ext2':=put_extends H0).
    inversion Rg1 as [AA BB CC t1' Unft']. subst AA BB CC t1.
    edestruct IH with (2:=R3) as (k31&k32&g3&H'3&t3&n3&eq3&R31&[R32 _]&Ev3&Ext3&Rg3&eqn3).
-   1:now omega.
+   1:now lia.
    1:{ eapply unfolds_subst. now eauto using get_current.
        all:setoid_rewrite <- Ext2'. all:eauto.
    }
    eexists (1+(k11+(k21+(1+k31)))),k32,_,_,_,_.
    repeat eapply ex_intro. repeat eapply conj.
-   +omega.
+   +lia.
    +repeat (eapply pow_add with (R:=step);eexists;split).
     all:try eapply rcomp_1 with (R:=step).
     all:now eauto using step.
@@ -313,7 +313,7 @@ Proof.
     all:try eassumption. reflexivity.
    +setoid_rewrite Ext1. setoid_rewrite Ext2. setoid_rewrite Ext2'. easy.
    +eassumption.
-   +omega.
+   +lia.
 Qed.
 
 Lemma soundness k s sigma:
@@ -413,7 +413,7 @@ Section Analysis.
   Proof.
     induction i in R,T,V,H|-*.
     {inv R. cbn. intuition. inv H0. eauto using subterm. }
-    replace (S n) with (n + 1) in R by omega.
+    replace (S n) with (n + 1) in R by lia.
     apply pow_add with (R:=step) in R. destruct R as [[[T' V'] H'] [R1 R2]].
     specialize IHn with (1:=R1) as (IH__T&IH__V&IH__H).
     eapply rcomp_1 in R2.
@@ -442,7 +442,7 @@ Section Analysis.
   Proof.
     induction i in R,T,V,H|-*.
     {inv R. cbn. intuition. inv H0. eauto using subterm. }
-    replace (S n) with (n + 1) in R by omega.
+    replace (S n) with (n + 1) in R by lia.
     apply pow_add with (R:=step) in R. destruct R as [[[T' V'] H'] [R1 R2]].
     specialize IHn with (1:=R1) as (IH__T&IH__V&IH__H).
     eapply rcomp_1 in R2.
@@ -492,7 +492,7 @@ Section Analysis.
      +intros [[= <- <-]|[]].
       eauto using sizeP_size,Nat.le_0_l.
      +intros ? [].
-    -replace (S n) with (n + 1) in R by omega.
+    -replace (S n) with (n + 1) in R by lia.
      apply pow_add in R. destruct R as [[[T' V'] H'] [R1 R2]].
      specialize (IHn _ _ _ R1).
      eapply rcomp_1 in R2.
@@ -508,52 +508,52 @@ Section Analysis.
        3:specialize (proj1 (IHn _ a0) ltac:(eauto)). 
        
        1,3:repeat (autorewrite with list in *;cbn in * ).
-       1,2:omega.
+       1,2:lia.
 
        1:specialize (proj1 (IHn P a) ltac:(eauto)).
        2:specialize (proj1 (IHn P a) ltac:(eauto)). 
 
-       all:omega. 
+       all:lia. 
 
       *inv H2.
        destruct Hel as [[[= <- <-] | [[= <- <-]|]]|].  
        all:repeat ((try setoid_rewrite in_app_iff in IHn);cbn in IHn). 
        1:specialize (proj1(IHn Q _) ltac:(eauto)). 
        1:repeat (autorewrite with list in *;cbn in * ).
-       1:now omega.
+       1:now lia.
 
        1:specialize (proj1(IHn _ a0) ltac:(eauto)). 
        1:repeat (autorewrite with list in *;cbn in * ).
-       1:now omega.
+       1:now lia.
 
        1:specialize (proj1(IHn P a) ltac:(eauto)). 
        1:autorewrite with list in IHn. 
        1:repeat (autorewrite with list in *;cbn in * ).
-       1:now omega.
+       1:now lia.
 
        1:specialize (proj1(IHn P a) ltac:(eauto)). 
        1:autorewrite with list in IHn. 
        1:repeat (autorewrite with list in *;cbn in * ).
-       1:try now omega.
+       1:try now lia.
       *destruct Hel as [[[= <- <-]|]|[-> | ]].
 
        all:repeat ((try setoid_rewrite in_app_iff in IHn);cbn in IHn). 
        1:specialize (proj1(IHn _ a0) ltac:(eauto)). 
        1:repeat (autorewrite with list in *;cbn in * ).
-       1:now omega.
+       1:now lia.
 
        1:specialize (proj1(IHn _ a) ltac:(eauto)).
        1:repeat (autorewrite with list in *;cbn in * ).
-       1:now omega.
+       1:now lia.
 
        1:apply lookup_el in H2 as (?&?). 
        1:specialize (proj2 (IHn _ a) _ ltac:(eauto)).
        1:repeat (autorewrite with list in *;cbn in * ).
-       1:now omega.
+       1:now lia.
 
        1:specialize (proj1(IHn _ a) ltac:(eauto)).
        1:repeat (autorewrite with list in *;cbn in * ).
-       1:now omega.
+       1:now lia.
       * apply IHn. intuition.
      +intros ? Hel. inv R2.
       1,3,4:now apply IHn.
@@ -562,10 +562,10 @@ Section Analysis.
       edestruct Hel as [|[[= -> ->]|[]]].
       1:specialize (proj2(IHn _ a) _ ltac:(eauto)).
       all:autorewrite with list;cbn.
-      now omega.
+      now lia.
       1:specialize (proj1(IHn _ a) ltac:(eauto)).
       1:specialize (proj1(IHn _ beta) ltac:(eauto)).
-      omega.
+      lia.
   Qed.
 
   Lemma largestVar_bound : (forall q, q el T -> largestVarC q <= largestVar s0)
@@ -578,7 +578,7 @@ Section Analysis.
       now rewrite largestVar_compile.
      +intros ? [].
      +intros ? ? [].
-    -replace (S n) with (n + 1) in R by omega.
+    -replace (S n) with (n + 1) in R by lia.
      apply pow_add in R. destruct R as [[[T' V'] H'] [R1 R2]].
      specialize (IHn _ _ _ R1).
      destruct IHn as [IHn1 [IHn2 IHn3]].
@@ -661,7 +661,7 @@ Section Analysis.
     induction i in T,V,H,R|-*.
     {inv R. repeat split. 2,3:easy.
      -intros ? [<-|[]]. cbn. eauto using compile_isCA. }
-    replace (S n) with (n + 1) in R by omega.
+    replace (S n) with (n + 1) in R by lia.
     apply pow_add in R. destruct R as [[[T' V'] H'] [R1 R2]].
     specialize (IHn _ _ _ R1).
     destruct IHn as [IHT [IHV IHH]].
@@ -765,7 +765,7 @@ Section Analysis.
   Proof.
     induction i in T,V,H,R|-*.
     {inv R. easy. }
-    replace (S n) with (n + 1) in R by omega.
+    replace (S n) with (n + 1) in R by lia.
     apply pow_add in R. destruct R as [[[T' V'] H'] [R1 R2]].
     specialize (IHn _ _ _ R1).
     eapply rcomp_1 in R2.
@@ -777,41 +777,41 @@ Section Analysis.
     -
     -
     all:try cbn;firstorder.
-    1,3,4:now omega.
-    inv H2. autorewrite with list. cbn. omega.
+    1,3,4:now lia.
+    inv H2. autorewrite with list. cbn. lia.
 *)    
 
   Lemma length_H : length H <= i.
   Proof.
     induction i in T,V,H,R|-*.
-    -inv R. cbn;omega.
-    -replace (S n) with (n + 1) in R by omega.
+    -inv R. cbn;lia.
+    -replace (S n) with (n + 1) in R by lia.
      apply pow_add in R. destruct R as [[[T' V'] H'] [R1 R2]].
      specialize (IHn _ _ _ R1).
      eapply rcomp_1 in R2.
      inv R2.
-     1,3,4:now omega.
-     inv H2. autorewrite with list. cbn. omega.
+     1,3,4:now lia.
+     inv H2. autorewrite with list. cbn. lia.
   Qed.
 
   Lemma length_TV : length T + length V <= 2*i + 1.
   Proof.
     induction i in T,V,H,R|-*.
-    -inv R. cbn. omega.
-    -replace (S n) with (n + 1) in R by omega.
+    -inv R. cbn. lia.
+    -replace (S n) with (n + 1) in R by lia.
      apply pow_add in R. destruct R as [[[T' V'] H'] [R1 R2]].
      specialize (IHn _ _ _ R1).
      eapply rcomp_1 in R2.
      inv R2.
-     all:cbn in *. all:try omega.
+     all:cbn in *. all:try lia.
   Qed.
 
 
   Lemma list_bound X size m (A:list X):
     (forall x, x el A -> size x <= m) -> sumn (map size A) <= length A * m.
   Proof.
-    induction A;cbn;intros H'. omega.
-    rewrite IHA. rewrite H'. omega. tauto. intuition.
+    induction A;cbn;intros H'. lia.
+    rewrite IHA. rewrite H'. lia. tauto. intuition.
   Qed.
 (*
   Lemma correctSpace:
@@ -824,10 +824,10 @@ Section Analysis.
     lia.
     -intros [[]] H'. cbn - [mult sizeP]. edestruct size_clos as [H1 H2].
      apply H2 in H' as (->&->&->).
-     rewrite length_H. omega.
+     rewrite length_H. lia.
     -intros [] H'. cbn - [mult sizeP]. edestruct size_clos as [H1 H2].
      apply H1 in H' as (->&->).
-     rewrite length_H. omega.
+     rewrite length_H. lia.
   Qed.  *)
 
 End Analysis.

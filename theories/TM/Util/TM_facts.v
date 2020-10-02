@@ -947,8 +947,8 @@ Hint Extern 4 => lazymatch goal with
 Section Test_def.
   Variable (n : nat) (sig : finType) (F : Type).
   Variable (pM : pTM sig F n).
-  Check default : state (projT1 pM).
-  Check default : F.
+  Goal let _ := default : state (projT1 pM) in True. Proof. exact I. Qed.  
+  Goal let _ :=  default : F in True. Proof. exact I. Qed.  
 End Test_def.
 
 

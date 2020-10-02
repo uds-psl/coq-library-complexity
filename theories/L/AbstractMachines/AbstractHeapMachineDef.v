@@ -34,7 +34,7 @@ Section Lin.
 
   Definition state := (list task * list clos *Heap)%type.
 
-  Hint Transparent state.
+  Hint Transparent state : core.
 
   Inductive step : state -> state -> Prop :=
     step_pushVal a s T V H:
@@ -47,7 +47,7 @@ Section Lin.
       -> step (closT (var x,a)::T,V,H) (T,g::V,H)
   | step_app s t a T V H: step (closT (app s t,a)::T,V,H) (closT (s,a)::closT(t,a)::appT::T,V,H).
 
-  Hint Constructors step.
+  Hint Constructors step : core.
 
   
   (** *** Unfolding *)
@@ -85,7 +85,7 @@ Module clos_notation.
   Notation clos := (term * nat)%type (only parsing).
 End clos_notation.
 Import clos_notation.
-Hint Transparent state.
+Hint Transparent state : core.
 
 Definition largestVarC : clos -> nat := (fun '(s,_) => largestVar s).
 

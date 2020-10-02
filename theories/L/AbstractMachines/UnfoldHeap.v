@@ -6,6 +6,8 @@ Section UnfoldPro.
 
   Variable H : list heapEntry.
 
+  Set Defaut Proof Using "Type".
+
   Import L_Notations.
 
   Fixpoint unfoldC fuel (s:term) a k {struct fuel}: option term :=
@@ -38,21 +40,21 @@ Section UnfoldPro.
       end
     end.
 
-  Lemma unfoldC_mono s a k n n' :
-    n <= n' -> unfoldC n s a k <> None -> unfoldC n' s a k = unfoldC n s a k.
+  Lemma unfoldC_mono s a k n n':
+    n <= n' -> forall t, unfoldC n s a k = Some t -> unfoldC n' s a k = Some t.
   Proof.
     induction n in s,a,k,n'|-*. now cbn.
-    destruct n'. now omega.
-    intros leq eq. cbn in eq|-*.
-    repeat (let eq := fresh "eq" in destruct _ eqn:eq).
-    all:try congruence.
-    all: repeat lazymatch goal with
-            _ : S ?n <= S ?n', 
-                H : (unfoldC ?n ?P ?a ?k  = _) ,
-                    H' : (unfoldC ?n' ?P ?a ?k = _)
-            |- _ => rewrite IHn in H';[ | omega | congruence]
+    destruct n'. now lia.
+    intros leq%Peano.le_S_n t. 
+    specialize IHn with (1:=leq). clear leq.
+    cbn in *.
+    repeat (let eq := fresh "eq" in destruct _ eqn:eq);subst.
+    all:try congruence.  
+    all: repeat match goal with
+          H : (unfoldC ?n ?P ?a ?k  = Some _) 
+            |- _ => progress eapply IHn in H
                     end.
-    all:congruence.
+    all:try congruence.
   Qed.
 
   Fixpoint depth s : nat :=
@@ -67,14 +69,12 @@ Section UnfoldPro.
     unfoldC (depth s') s a k = Some s'.
   Proof.
     induction 1. all:cbn.
-    1,2: (destruct (Nat.leb_spec0 k n); try omega);[].
+    1,2: (destruct (Nat.leb_spec0 k n); try lia);[].
     - easy.
     -rewrite H1, IHunfolds. all:easy.
     -rewrite IHunfolds. easy.
-    -erewrite unfoldC_mono. 3:now rewrite IHunfolds1. 2:now Lia.lia.
-     rewrite IHunfolds1. 
-     erewrite unfoldC_mono. 3:now rewrite IHunfolds2. 2:now Lia.lia.
-     rewrite IHunfolds2. easy.
+    -unshelve erewrite (unfoldC_mono _ IHunfolds1). nia. 
+     unshelve erewrite (unfoldC_mono _ IHunfolds2). nia.  easy.
   Qed.
 
   Lemma unfoldC_correct_final P a s:
@@ -108,10 +108,10 @@ Proof.
   enough (unfoldC H a k s n1 = unfoldC H a k s n2) by congruence.
   specialize unfoldC_mono with (n':= max n1 n2) (n:= min n1 n2).
   eapply Max.max_case_strong;eapply Min.min_case_strong;intros ? ?.
-  all:try (replace n2 with n1 in * by omega;congruence).
+  all:try (replace n2 with n1 in * by ;congruence).
   all:intros ->. all:easy. *)
   
-  induction 1 in s2|-*;intros H';inv H';try congruence;try omega.
+  induction 1 in s2|-*;intros H';inv H';try congruence;try lia.
   -rewrite H1 in H5. inv H5. f_equal. eauto.
   -f_equal. eauto.
   -f_equal. all:auto.

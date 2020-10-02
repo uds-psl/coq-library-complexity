@@ -23,9 +23,9 @@ Proof.
   revert P;induction n as [n IH] using lt_wf_ind;intros P.
   destruct n;cbn.
   all:destruct P;cbn. 
-  -omega.  
-  -omega.
-  -transitivity True. 2: now intuition omega. split. tauto. intros [].
+  -lia.  
+  -lia.
+  -transitivity True. 2: now intuition lia. split. tauto. intros [].
    autorewrite with list. intuition.
   -autorewrite with list. unfold sizeP in *.
    split.
@@ -33,7 +33,7 @@ Proof.
     all:now repeat match goal with
                      H : exists x, _ |- _ => destruct H
                    | H : (_ :: _ = _ :: _) |- _ => inv H
-                   | H : ?P el L_Pro _ |- _ => rewrite IH in H;[ | omega]
+                   | H : ?P el L_Pro _ |- _ => rewrite IH in H;[ | lia]
                    | H : _ <=? _ = true |- _ => apply leb_complete in H
                    | H : _ :: _ el [[]] |- _ => now inv H
                    | _ => intuition;autorewrite with list in *;subst;cbn [sizeT];unfold sizeP in *
@@ -42,19 +42,19 @@ Proof.
     destruct t.
     1:left.
     2-4: repeat (left + right);eexists;split;[reflexivity| ].
-    2-4:now cbn [sizeT] in *; apply IH;try omega.
+    2-4:now cbn [sizeT] in *; apply IH;try lia.
     cbn in H.
     eexists. split. 2:autorewrite with list. 2:eexists;split;[reflexivity |].
     autorewrite with list. eexists. split. reflexivity.
     autorewrite with list.
-    rewrite IH. 2:now cbn in H;omega. omega.
-    apply natsLess_in_iff. omega.
+    rewrite IH. 2:now cbn in H;lia. lia.
+    apply natsLess_in_iff. lia.
 Qed.
 
 Lemma L_Pro_mono n m :
   n <= m -> L_Pro n <<= L_Pro m.
 Proof.
-  repeat intro. rewrite L_Pro_in_iff in *. omega.
+  repeat intro. rewrite L_Pro_in_iff in *. lia.
 Qed.
 
 Lemma L_Pro_length' f :
@@ -65,21 +65,21 @@ Proof.
   intros H0 HS.
   induction n as [n IH] using lt_wf_ind.
   destruct n.
-  -cbn. omega.
+  -cbn. lia.
   -cbn -[mult].
    autorewrite with list. 
    cbn [length].
-   setoid_rewrite IH;[|omega..].
+   setoid_rewrite IH;[|lia..].
    enough ((| concat (map (fun i : nat => map (cons (varT i)) (L_Pro (n - i))) (natsLess n)) |)
            <= sumn (map f (natsLess (S n)))).
-   { rewrite H. rewrite <- HS. omega. }
+   { rewrite H. rewrite <- HS. lia. }
    rewrite length_concat. rewrite map_map. setoid_rewrite map_length.
    rewrite sumn_map_natsLess with (n:=S n).
    cbn. rewrite Nat.sub_diag,<- H0. cbn.
    induction n. reflexivity.
    rewrite natsLess_S,!map_app,!map_map,!sumn_app.
    repeat setoid_rewrite Nat.sub_succ. rewrite IHn. 2:now intuition.
-   cbn -[L_Pro].  rewrite IH. 2:omega.
+   cbn -[L_Pro].  rewrite IH. 2:lia.
    reflexivity.
 Qed.
 
@@ -91,10 +91,10 @@ Proof.
   rewrite natsLess_S,map_app,sumn_app, map_map.
   cbn -[Nat.pow mult plus].
   enough (forall n, sumn (map (fun x : nat => 5 ^ x) (natsLess n)) + 1 <= 5^n).
-  { cbn in *. rewrite <- H at 7. omega. }
+  { cbn in *. rewrite <- H at 7. lia. }
   clear.
   induction n;cbn. reflexivity.
-  rewrite <- IHn at 4. omega.
+  rewrite <- IHn at 4. lia.
 Qed.
 
 Lemma L_term_card n A:
@@ -119,9 +119,9 @@ Proof.
   eapply NoDup_incl_length in H. 2:eassumption.
   rewrite L_Pro_length in H.
   eapply lt_not_le. 2:eassumption. rewrite <- Hlong.
-  destruct n. cbn. omega.
-  replace (2*S n) with (S (S (2*n))) by omega.
-  eapply Nat.pow_lt_mono_r. all:omega.
+  destruct n. cbn. lia.
+  replace (2*S n) with (S (S (2*n))) by lia.
+  eapply Nat.pow_lt_mono_r. all:lia.
 Qed.
 
 Section TraceArgument.
@@ -171,7 +171,7 @@ Proof.
   inv lam. inv lam'.
   induction k in m',lem,s, Sp,Tm |-*.
   -cbv in Tm. subst s. inv Sp. 2:easy.
-   exists []. cbn. repeat split. eauto using trace. intuition subst;cbn in *. omega.
+   exists []. cbn. repeat split. eauto using trace. intuition subst;cbn in *. lia.
   -eapply pow_add with (n:=1) in Tm as (s'&R&Tm).
    eapply rcomp_1 with (R:=Leftmost.step_lm) in R.
    inv Sp. easy.
@@ -181,7 +181,7 @@ Proof.
    edestruct IHk as (A&?&?&?&?). 1-3:eassumption.
    exists (s'::A);repeat split.
    +eauto using trace.
-   +cbn;omega.
+   +cbn;lia.
    +cbn;intuition.
    +cbn;intuition. all:subst. all:eauto.
 Qed.
@@ -194,7 +194,7 @@ Proof.
   edestruct time_Leftmost_space_trace as (A&tr&leq&_&allSmall). 1,2:eassumption.
   edestruct trace_not_dupfree_loop with (s:=s)(A:=A) as (s'&?).
   now eauto.
-  -eapply L_term_card. eassumption. rewrite Nat.pow_mul_r. change (5^2) with 25. rewrite H. cbn. omega.
+  -eapply L_term_card. eassumption. rewrite Nat.pow_mul_r. change (5^2) with 25. rewrite H. cbn. lia.
   -destruct Tm as (?&?&lam).
     eapply uniform_confluent_noloop.
     1,2,4:now eauto using uniform_confluence,pow_star.
@@ -217,7 +217,7 @@ Proof.
    edestruct IHk as (A&?&?&?). 1-3:now eauto using star.
    exists (s'::A);repeat split.
    +eauto using trace.
-   +cbn;omega.
+   +cbn;lia.
    +cbn;intuition. all:subst. all:eauto using star,le_trans.
 Qed.
 
@@ -229,7 +229,7 @@ Proof.
   edestruct time_space_trace as (A&tr&leq&?). 1,2:eassumption.
   edestruct trace_not_dupfree_loop with (s:=s)(A:=A) as (s'&?).
   now eauto.
-  -eapply L_term_card. eassumption. rewrite Nat.pow_mul_r. change (5^2) with 25. rewrite H. cbn. omega.
+  -eapply L_term_card. eassumption. rewrite Nat.pow_mul_r. change (5^2) with 25. rewrite H. cbn. lia.
   -destruct Tm as (?&?&lam).
     eapply uniform_confluent_noloop.
     1,2,4:now eauto using uniform_confluence,pow_star.

@@ -13,10 +13,14 @@ From Undecidability.L.Complexity.Problems Require Import SharedSAT SAT.
   We just write down the recurrences directly and then derive a polynomial bound.
 *)
 
+From Undecidability.L.Complexity Require CookPrelim.PolyBounds NP UpToCPoly.
+
+
+
 Module explicit_bounds.
 Section explicit_bounds.
   Import Lists.
-  Require Import Undecidability.L.Complexity.CookPrelim.PolyBounds.
+  Import Undecidability.L.Complexity.CookPrelim.PolyBounds.
   Import SAT.
 
   (** extraction of list_in_decb *)
@@ -175,7 +179,7 @@ Section explicit_bounds.
 
 
   (** We obtain that SAT is in NP *)
-  Require Import Undecidability.L.Complexity.NP.
+  Import Undecidability.L.Complexity.NP.
   Lemma sat_NP : inNP (unrestrictedP SAT).
   Proof.
     apply inNP_intro with (R:= fun (a : { cnf | True}) => sat_verifier (proj1_sig a)).
@@ -205,7 +209,7 @@ End explicit_bounds.
 (** * Intuitive Bounds using upToC *)
 (** We use the upToC mechanism to hide constants.
   This enables us to nicely solve recurrences explicitly to get _closed_ running time functions which are quite close to analyses on paper. *)
-From Undecidability.L.Complexity Require Import UpToCPoly.
+Import UpToCPoly.
 
 Module uptoc_pure.
 Section uptoc_pure.
@@ -351,7 +355,7 @@ Section uptoc_pure.
   Instance term_sat_verifierb : computableTime' sat_verifierb _ := projT2 _term_sat_verifierb.
 
   (** We obtain that SAT is in NP *)
-  Require Import Undecidability.L.Complexity.NP.
+  Import Undecidability.L.Complexity.NP.
   Lemma sat_NP : inNP (unrestrictedP SAT).
   Proof.
     apply inNP_intro with (R:= fun (a : { cnf | True}) => sat_verifier (proj1_sig a)).
@@ -639,7 +643,7 @@ Section uptoc_mixed.
   Instance term_sat_verifierb : computableTime' sat_verifierb _ := projT2 _term_sat_verifierb.
 
   (** We obtain that SAT is in NP *)
-  Require Import Undecidability.L.Complexity.NP.
+  Import Undecidability.L.Complexity.NP.
   Lemma sat_NP : inNP (unrestrictedP SAT).
   Proof.
     apply inNP_intro with (R:= fun (a : { cnf | True}) => sat_verifier (proj1_sig a)).
@@ -708,7 +712,7 @@ Section polytime.
 
 (*REMOVE?*)
 Import GenericNary UpToCNary.
-From Coq Require Import CRelationClasses CMorphisms.
+Import CRelationClasses CMorphisms.
 
 (* TODO MOVE :tidy up *)
 Lemma pTC_length X `{registered X}: polyTimeComputable (@length X).
@@ -850,7 +854,7 @@ Qed.
 
 (* now the new stuff *)
 (*Require Import Undecidability.L.Complexity.CookPrelim.PolyBounds. *)
-From Undecidability.L.Datatypes Require Import LProd LBool Lists.
+Import Datatypes.LProd Datatypes.LBool Datatypes.Lists.
 Import Lists.
 Section fixX.
     Variable (X : Type).

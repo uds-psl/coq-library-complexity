@@ -1305,7 +1305,7 @@ Proof.
   extract. solverec. 
   rewrite map_time_const. 
   unfold makeSome_base_flat_time, c__makeSomeBaseFlat1, c__makeSomeBaseFlat2. 
-  Set Printing All. unfold evalEnvFlat. nia.
+  unfold evalEnvFlat. nia.
 Defined. 
 
 Definition poly__makeSomeBaseFlat n := n * c__makeSomeBaseFlat1 + poly__makeCardsFlat (n + 2) + c__makeSomeBaseFlat2. 
@@ -1388,7 +1388,7 @@ Proof.
   extract. solverec. 
   rewrite map_time_const.
   unfold makeNone_base_flat_time, c__makeNoneBaseFlat1, c__makeNoneBaseFlat2. 
-  Set Printing All. unfold evalEnvFlat. nia. 
+  unfold evalEnvFlat. nia. 
 Defined. 
 
 Definition poly__makeNoneBaseFlat n := n * c__makeNoneBaseFlat1 + poly__makeCardsFlat (n + 2) + c__makeNoneBaseFlat2.
@@ -1711,7 +1711,7 @@ Instance term_makeHaltFlat : computableTime' makeHaltFlat (fun tm _ => (1, fun q
 Proof.
   unfold makeHaltFlat, makeHalt. extract. 
   solverec. rewrite map_time_const. 
-  unfold makeHaltFlat_time, c__makeHaltFlat. Set Printing All. unfold evalEnvFlat. lia.
+  unfold makeHaltFlat_time, c__makeHaltFlat. unfold evalEnvFlat. lia.
 Qed.
 
 Definition poly__makeHaltFlat n := n * (c__envAddState + c__map) + c__map + poly__makeCardsFlat (n + ((|makeHalt_rules|) + 1)) + c__makeHaltFlat.
@@ -2569,7 +2569,7 @@ Section fixIsInjFinfuncTable.
   Global Instance term_allSameEntry_step : computableTime' allSameEntry_step (fun x _ => (1, fun y _ => (1, fun p _ => (allSameEntry_step_time x y p, tt)))). 
   Proof. 
     extract. solverec. 
-    unfold c__allSameEntryStep. Set Printing All. unfold eqb. nia. 
+    unfold c__allSameEntryStep. unfold eqb. nia. 
   Qed.
 
   Definition c__allSameEntry := 4.

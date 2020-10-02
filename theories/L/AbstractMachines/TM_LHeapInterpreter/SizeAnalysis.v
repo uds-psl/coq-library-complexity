@@ -81,7 +81,7 @@ Section Analysis.
        1:specialize (proj1 (IHn P a) ltac:(eauto)).
        2:specialize (proj1 (IHn P a) ltac:(eauto)).
 
-       all:omega.
+       all:lia.
 
       *inv H2.
        destruct Hel as [[[= <- <-] | ]| ].
@@ -89,41 +89,41 @@ Section Analysis.
        all:repeat ((try setoid_rewrite in_app_iff in IHn);cbn in IHn).
        1:specialize (proj1(IHn Q _) ltac:(eauto)).
        1:repeat (autorewrite with list in *;cbn in * ).
-       1:now omega.
+       1:now lia.
 
        1:specialize (proj1(IHn _ a0) ltac:(eauto)).
        1:repeat (autorewrite with list in *;cbn in * ).
-       1:now omega.
+       1:now lia.
 
        1:specialize (proj1(IHn P a) ltac:(eauto)).
        1:autorewrite with list in IHn.
        1:repeat (autorewrite with list in *;cbn in * ).
-       1:now omega.
+       1:now lia.
 
        1:specialize (proj1(IHn P a) ltac:(eauto)).
        1:autorewrite with list in IHn.
        1:repeat (autorewrite with list in *;cbn in * ).
-       1:try now omega.
+       1:try now lia.
       *destruct Hel as [ |[-> | ]].
        apply tailRecursion_incl in H0 as [[= <- <-]| ].
 
        all:repeat ((try setoid_rewrite in_app_iff in IHn);cbn in IHn).
        1:specialize (proj1(IHn _ a0) ltac:(eauto)).
        1:repeat (autorewrite with list in *;cbn in * ).
-       1:now omega.
+       1:now lia.
 
        1:specialize (proj1(IHn _ a) ltac:(eauto)).
        1:repeat (autorewrite with list in *;cbn in * ).
-       1:now omega.
+       1:now lia.
 
        1:apply lookup_el in H2 as (?&?).
        1:specialize (proj2 (IHn _ a) _ ltac:(eauto)).
        1:repeat (autorewrite with list in *;cbn in * ).
-       1:now omega.
+       1:now lia.
 
        1:specialize (proj1(IHn _ a) ltac:(eauto)).
        1:repeat (autorewrite with list in *;cbn in * ).
-       1:now omega.
+       1:now lia.
      +intros ? Hel. inv R2.
       1,3:now apply IHn.
       inv H2.
@@ -131,30 +131,30 @@ Section Analysis.
       edestruct Hel as [ |[[= -> ->]|[]]].
       1:specialize (proj2(IHn _ a) _ ltac:(eauto)).
       all:autorewrite with list;cbn.
-      now omega.
+      now lia.
       1:specialize (proj1(IHn _ a) ltac:(eauto)).
       1:specialize (proj1(IHn _ beta) ltac:(eauto)).
-      omega.
+      lia.
   Qed.
 
   Lemma length_H : length H <= length H__init+i.
   Proof.
     induction i in T,V,H,R|-*.
-    -inv R. cbn;omega.
-    -replace (S n) with (n + 1) in R by omega.
+    -inv R. cbn;lia.
+    -replace (S n) with (n + 1) in R by lia.
      apply pow_add in R. destruct R as [[[T' V'] H'] [R1 R2]].
      specialize (IHn _ _ _ R1).
      eapply rcomp_1 in R2.
      inv R2.
-     1,3:now omega.
-     inv H2. autorewrite with list. cbn. omega.
+     1,3:now lia.
+     inv H2. autorewrite with list. cbn. lia.
   Qed.
 
   Lemma length_TV : length T + length V <= 1+i.
   Proof.
     induction i in T,V,H,R|-*.
-    -inv R. cbn;omega.
-    -replace (S n) with (n + 1) in R by omega.
+    -inv R. cbn;lia.
+    -replace (S n) with (n + 1) in R by lia.
      apply pow_add in R. destruct R as [[[T' V'] H'] [R1 R2]].
      specialize (IHn _ _ _ R1).
      eapply rcomp_1 in R2.

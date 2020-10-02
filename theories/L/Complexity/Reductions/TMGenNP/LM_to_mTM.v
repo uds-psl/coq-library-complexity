@@ -10,7 +10,7 @@ Require Undecidability.L.AbstractMachines.TM_LHeapInterpreter.M_LHeapInterpreter
 
 From Undecidability Require Import TMGenNP.M_LM2TM.
 
-Check LMtoTM.M.
+(* Check LMtoTM.M. *)
 
 From Undecidability Require Import LSum L.TM.CompCode.
 
@@ -210,7 +210,7 @@ Smpl Add 5 lazymatch goal with
            end: polyTimeComputable.
 
 Section Vcons.
-  From PslBase Require Import Vectors.
+  Import PslBase.Vectors.Vectors.
   Import Vector.
   Local Arguments VectorDef.to_list : simpl never.
   Global Instance termT_cons n X {regX : registered X} : computableTime' (fun x => @Vector.cons X x n) (fun a aT => (1,fun A AT => (4,tt))).

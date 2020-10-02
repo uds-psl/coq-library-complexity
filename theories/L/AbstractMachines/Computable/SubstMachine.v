@@ -85,7 +85,7 @@ Proof.
   | varT k' => time_N_of_nat (1 + k') + 17 * Init.Nat.min k' k + 12 * N.size_nat sizeQ
   | _ => 0
                         end <= time_N_of_nat (1 + largestVar (a :: P)) + 17 * sizeT a + 12*N.size_nat sizeQ)) at 1.
-  2:{ destruct a. 2-4:omega. cbn [largestVar].
+  2:{ destruct a. 2-4:lia. cbn [largestVar].
       rewrite <- (Nat.le_max_l n (largestVar P)) at 1. cbn [sizeT]. Lia.nia. (*assert (12 * N.size_nat sizeQ <= cnst "12*N.size_nat sizeQ"
                                                              ) by admit. Lia.nia. *) }
   rewrite N_size_nat_add_leq. 

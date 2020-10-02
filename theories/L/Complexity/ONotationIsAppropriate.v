@@ -75,11 +75,11 @@ Module smallo_equiv.
   Qed.
 
  
-  Hint Resolve NtoQ_pos.
+  Hint Resolve NtoQ_pos : core.
   Lemma ino_agree_real f g (fNonZero : (exists n0, forall x, n0 <= x -> 0 < f x)%nat) :
     f ∈o g <-> inoR (liftR f) (liftR g).
   Proof.
-    Local Hint Resolve Qlt_le_weak Qinv_lt_0_compat.
+    Local Hint Resolve Qlt_le_weak Qinv_lt_0_compat : core.
     destruct fNonZero as  [c__fnz fNonZero]. split. all:unfold inoR, ino.
     -intros H ε ?. specialize (H (Z.to_nat (Qceiling (/ε)) + 1)%nat) as (n0&H).
      exists (NtoQ (max n0 (max 0 c__fnz))). intros x Hx.

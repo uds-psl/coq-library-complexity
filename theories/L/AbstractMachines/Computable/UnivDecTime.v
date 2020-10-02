@@ -80,7 +80,7 @@ Proof.
      *rewrite <- H1. eapply length_H. eauto.
      *eapply Nat.max_case. easy.
       destruct g. cbn. eauto using subterm_lam_inv, subterm_largestVar.
-    -change (S n') with (1+n') in R2. replace (S n) with (n+1) by omega.
+    -change (S n') with (1+n') in R2. replace (S n) with (n+1) by lia.
      eapply pow_add with (R:=step) in R2 as (?&R2&R2').
      eapply rcomp_1 with (R:=step) in R2. revert Heqn0. inv R2. all:intro.
      all: cbn [heapStep].

@@ -77,7 +77,7 @@ Proof.
 
    3:now cbn in *;Lia.nia.
    1-3:assert (H'3 : n1 <= (Init.Nat.max (largestVarH H) (largestVar s))) by (cbn in *; Lia.nia).
-   1-3:rewrite lookupTime_mono with (n' := Init.Nat.max (largestVarH H) (largestVar s));[|reflexivity|try omega].
+   1-3:rewrite lookupTime_mono with (n' := Init.Nat.max (largestVarH H) (largestVar s));[|reflexivity|try lia].
    1-3:cbn - [plus mult]in *.
    1-3:Lia.lia.
   -rewrite H'. clear H'.

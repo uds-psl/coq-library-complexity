@@ -32,7 +32,7 @@ Section CaseBool.
     {
       intros tin (yout, tout) H. intros x s HEncX.
       destruct HEncX as (ls&HEncX&Hs).  
-      TMSimp. split. 2:auto. hnf. do 2 eexists. split;[f_equal| ]. cbn;omega.
+      TMSimp. split. 2:auto. hnf. do 2 eexists. split;[f_equal| ]. cbn;nia.
     }
   Qed.
 

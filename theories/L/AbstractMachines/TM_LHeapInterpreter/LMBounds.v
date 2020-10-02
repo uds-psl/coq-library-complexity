@@ -59,19 +59,19 @@ Proof. unfold size. destruct t; cbn; reflexivity. Qed.
 
 Lemma size_Var (n : nat) :
   size (varT n) = 2 + n.
-Proof. unfold size. cbn. simpl_list. rewrite repeat_length. cbn. omega. Qed.
+Proof. unfold size. cbn. simpl_list. rewrite repeat_length. cbn. lia. Qed.
 
 Lemma size_nat' (n : nat) :
   size (varT n) = 1 + size n.
-Proof. unfold size. cbn. simpl_list. rewrite repeat_length. cbn. omega. Qed.
+Proof. unfold size. cbn. simpl_list. rewrite repeat_length. cbn. lia. Qed.
 
 Lemma Encode_Com_hasSize_ge1 (t : Tok) :
   1 <= size t.
-Proof. unfold size. destruct t; auto. unfold Encode_Heap. cbn. simpl_list. all: cbn; omega. Qed.
+Proof. unfold size. destruct t; auto. unfold Encode_Heap. cbn. simpl_list. all: cbn; lia. Qed.
 
 Lemma size_Com_singleton (t : Tok) :
   size [t] = 2 + size t.
-Proof. unfold size. destruct t; cbn; try omega. simpl_list. rewrite repeat_length. cbn. omega. Qed.
+Proof. unfold size. destruct t; cbn; try lia. simpl_list. rewrite repeat_length. cbn. lia. Qed.
 
 Lemma Encode_Pro_hasSize_ge1 (P : Pro) :
   1 <= size P.
@@ -81,16 +81,16 @@ Lemma Encode_Pro_hasSize_ge_length (P : Pro) :
   length P <= Encode_list_size _ P.
 Proof.
   induction P.
-  - cbn. omega.
-  - cbn. rewrite IHP. omega.
+  - cbn. lia.
+  - cbn. rewrite IHP. lia.
 Qed.
 
 Lemma Encode_Heap_hasSize_ge_length (H : Heap) :
   length H <= Encode_list_size _ H.
 Proof.
   induction H.
-  - cbn. omega.
-  - cbn. rewrite IHlist. omega.
+  - cbn. lia.
+  - cbn. rewrite IHlist. lia.
 Qed.
 
 (** ** JumpTarget *)
@@ -104,10 +104,10 @@ Module JumpTarget_steps_nice.
   Proof.
     eexists. intros. unfold App_Commands_steps.
     rewrite <- Nat.add_assoc. eapply dominatedWith_add_l.
-    2:{ enough (1 <= size Q) by omega. setoid_rewrite Encode_list_hasSize. apply Encode_list_hasSize_ge1. }
+    2:{ enough (1 <= size Q) by lia. setoid_rewrite Encode_list_hasSize. apply Encode_list_hasSize_ge1. }
     domWith_approx.
     - eapply dominatedWith_trans. apply (proj2_sig (App'_steps_nice _)). apply dominatedWith_solve.
-      enough (size Q <= size Q + size Q') by auto. omega.
+      enough (size Q <= size Q + size Q') by auto. lia.
     - eapply dominatedWith_trans. unshelve eapply (proj2_sig MoveValue_steps_nice').
       1-2: setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
       hnf. setoid_rewrite encodeList_size_app.
@@ -124,7 +124,7 @@ Module JumpTarget_steps_nice.
     2:{ setoid_rewrite Encode_list_hasSize. apply Encode_list_hasSize_ge1. }
     domWith_approx.
     - hnf. rewrite size_ACom_singleton.
-      instantiate (1 := 4). ring_simplify. enough (1 <= size Q) by omega.
+      instantiate (1 := 4). ring_simplify. enough (1 <= size Q) by lia.
       1: setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
     - setoid_rewrite Encode_list_hasSize. hnf. instantiate (1 := 1). ring_simplify. apply Encode_list_hasSize_ge1.
     - apply (proj2_sig (App'_steps_nice _)).
@@ -133,8 +133,8 @@ Module JumpTarget_steps_nice.
       1-2: setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
       hnf. setoid_rewrite encodeList_size_app.
       setoid_rewrite size_ACom_singleton. ring_simplify. instantiate (1 := 6).
-      transitivity (2 * size Q + 4). 1:{ cbn [mult]. now rewrite Nat.add_0_r. } enough (2 * size Q + 4 <= 6 * size Q) by omega.
-      enough (size Q + 2 <= 3 * size Q) by omega. enough (1 <= size Q) by nia.
+      transitivity (2 * size Q + 4). 1:{ cbn [mult]. now rewrite Nat.add_0_r. } enough (2 * size Q + 4 <= 6 * size Q) by lia.
+      enough (size Q + 2 <= 3 * size Q) by lia. enough (1 <= size Q) by nia.
       1: setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
   Qed.
 
@@ -142,27 +142,27 @@ Module JumpTarget_steps_nice.
     { c | forall (Q : Pro) (t : Tok), App_Com_steps Q t <=(c) size Q + size t }.
   Proof.
     eexists. intros. unfold App_Com_steps. rewrite <- !Nat.add_assoc. apply dominatedWith_add_l.
-    2: { enough (1 <= size Q) by omega. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1. }
+    2: { enough (1 <= size Q) by lia. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1. }
     ring_simplify. domWith_approx.
     - eapply dominatedWith_trans. apply (proj2_sig Constr_nil_steps_nice).
-      apply dominatedWith_solve. enough (1 <= size t /\ 1 <= size Q) by omega. split.
+      apply dominatedWith_solve. enough (1 <= size t /\ 1 <= size Q) by lia. split.
       + apply Encode_Com_hasSize_ge1.
       + setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
     - eapply dominatedWith_trans.
       + apply (proj2_sig Constr_cons_steps_nice).
       + rewrite Nat.add_comm. apply dominatedWith_S'.
-        * enough (1 <= size Q) by omega. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
-        * apply dominatedWith_solve. enough (1 <= size Q) by omega. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
+        * enough (1 <= size Q) by lia. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
+        * apply dominatedWith_solve. enough (1 <= size Q) by lia. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
     - eapply dominatedWith_trans.
       + apply (proj2_sig App_Commands_steps_nice).
       + rewrite size_Com_singleton. ring_simplify. rewrite Nat.add_comm. eapply dominatedWith_add_l.
-        * apply dominatedWith_refl. instantiate (1 := 1). omega.
-        * enough (1 <= size Q) by omega. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
+        * apply dominatedWith_refl. instantiate (1 := 1). lia.
+        * enough (1 <= size Q) by lia. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
     - eapply dominatedWith_trans.
       + apply (proj2_sig Reset_steps_nice).
       + rewrite Nat.add_comm. apply dominatedWith_add_l.
-        * apply dominatedWith_solve. enough (1 <= size Q) by omega. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
-        * enough (1 <= size Q) by omega. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
+        * apply dominatedWith_solve. enough (1 <= size Q) by lia. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
+        * enough (1 <= size Q) by lia. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
   Qed.
 
   Lemma JumpTarget_Step_steps_CaseCom_nice :
@@ -194,8 +194,8 @@ Module JumpTarget_steps_nice.
         * apply (proj2_sig App_Com_steps_nice).
         * rewrite size_Var. ring_simplify. rewrite Nat.add_comm. apply dominatedWith_add_l.
           -- apply dominatedWith_refl. constructor.
-          -- enough (1 <= size Q) by omega. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
-      + enough (1 <= size Q) by omega. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
+          -- enough (1 <= size Q) by lia. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
+      + enough (1 <= size Q) by lia. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
   Qed.
 
   Lemma JumpTarget_Step_steps_CaseList_nice :
@@ -218,12 +218,12 @@ Module JumpTarget_steps_nice.
   Proof.
     pose_nice JumpTarget_Step_steps_CaseCom_nice H c'.
     eexists. intros. apply dominatedWith_match_list.
-    - intros ->. apply dominatedWith_solve. omega.
+    - intros ->. apply dominatedWith_solve. lia.
     - intros t P' ->. apply dominatedWith_add_l.
       + apply H.
       + destruct t.
         4: destruct k; [reflexivity| ].
-        all: enough (1 <= size Q) by omega; setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
+        all: enough (1 <= size Q) by lia; setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
   Qed.
 
   Lemma JumpTarget_Step_steps_nice :
@@ -249,25 +249,25 @@ Module JumpTarget_steps_nice.
     rewrite <- Nat.add_assoc. apply dominatedWith_add_l.
     - apply dominatedWith_add.
       + apply dominatedWith_match_list.
-        * intros ->. apply dominatedWith_const. omega.
+        * intros ->. apply dominatedWith_const. lia.
         * intros t P' ->. destruct t.
           -- eapply dominatedWith_trans.
              ++ apply (proj2_sig CaseList_steps_cons_nice).
              ++ rewrite size_Var. ring_simplify. rewrite Nat.add_comm. apply dominatedWith_add_l.
-                ** apply dominatedWith_solve. enough (1 <= size Q) by omega. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
-                ** enough (1 <= size Q) by omega. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
+                ** apply dominatedWith_solve. enough (1 <= size Q) by lia. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
+                ** enough (1 <= size Q) by lia. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
           -- eapply dominatedWith_trans. apply (proj2_sig CaseList_steps_cons_nice).
-             hnf. cbn. setoid_rewrite (size_ACom' appAT). enough (1 <= size Q) by omega. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
+             hnf. cbn. setoid_rewrite (size_ACom' appAT). enough (1 <= size Q) by lia. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
           -- eapply dominatedWith_trans. apply (proj2_sig CaseList_steps_cons_nice).
-             hnf. cbn. setoid_rewrite (size_ACom' lamAT). enough (1 <= size Q) by omega. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
+             hnf. cbn. setoid_rewrite (size_ACom' lamAT). enough (1 <= size Q) by lia. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
           -- eapply dominatedWith_trans. apply (proj2_sig CaseList_steps_cons_nice).
              hnf. cbn. setoid_rewrite (size_ACom' retAT).
-             destruct k. omega.
-             enough (1 <= size Q) by omega. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
+             destruct k. lia.
+             enough (1 <= size Q) by lia. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
       + apply H.
     - destruct P; [reflexivity| ]. destruct t.
       4: destruct k; [reflexivity| ].
-      all: enough (1 <= size Q) by omega; setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
+      all: enough (1 <= size Q) by lia; setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
   Qed.
 
   (*
@@ -321,14 +321,14 @@ Module JumpTarget_steps_nice.
   Proof.
     eexists. intros. eapply dominatedWith_trans. apply (proj2_sig JumpTarget_Step_steps_nice).
     domWith_match.
-    - cbn. apply dominatedWith_solve. enough (1 <= size Q) by omega. setoid_rewrite Encode_list_hasSize. apply Encode_list_hasSize_ge1.
+    - cbn. apply dominatedWith_solve. enough (1 <= size Q) by lia. setoid_rewrite Encode_list_hasSize. apply Encode_list_hasSize_ge1.
     - domWith_match; cbn.
-      + apply dominatedWith_solve. enough (1 <= size Q) by omega. setoid_rewrite Encode_list_hasSize. apply Encode_list_hasSize_ge1.
-      + apply dominatedWith_solve. enough (1 <= size Q) by omega. setoid_rewrite Encode_list_hasSize. apply Encode_list_hasSize_ge1.
+      + apply dominatedWith_solve. enough (1 <= size Q) by lia. setoid_rewrite Encode_list_hasSize. apply Encode_list_hasSize_ge1.
+      + apply dominatedWith_solve. enough (1 <= size Q) by lia. setoid_rewrite Encode_list_hasSize. apply Encode_list_hasSize_ge1.
       + domWith_match.
-        * apply dominatedWith_solve. enough (1 <= size Q) by omega. setoid_rewrite Encode_list_hasSize. apply Encode_list_hasSize_ge1.
-        * apply dominatedWith_solve. enough (1 <= size Q) by omega. setoid_rewrite Encode_list_hasSize. apply Encode_list_hasSize_ge1.
-      + subst. apply dominatedWith_solve. enough (1 <= size Q /\ 2 + x0 <= size (varT x0)) by omega. split.
+        * apply dominatedWith_solve. enough (1 <= size Q) by lia. setoid_rewrite Encode_list_hasSize. apply Encode_list_hasSize_ge1.
+        * apply dominatedWith_solve. enough (1 <= size Q) by lia. setoid_rewrite Encode_list_hasSize. apply Encode_list_hasSize_ge1.
+      + subst. apply dominatedWith_solve. enough (1 <= size Q /\ 2 + x0 <= size (varT x0)) by lia. split.
         * setoid_rewrite Encode_list_hasSize. apply Encode_list_hasSize_ge1.
         * now setoid_rewrite size_Var.
   Qed.
@@ -393,7 +393,7 @@ Proof.
   setoid_rewrite Encode_pair_hasSize; unfold Encode_pair_size.
   setoid_rewrite Encode_nat_hasSize.
   setoid_rewrite Encode_list_hasSize.
-  omega.
+  lia.
 Qed.
 
 Lemma Encode_Clos_hasSize' (g : HClos) :
@@ -403,12 +403,12 @@ Proof.
   setoid_rewrite Encode_pair_hasSize; unfold Encode_pair_size.
   setoid_rewrite Encode_nat_hasSize.
   setoid_rewrite Encode_list_hasSize.
-  omega.
+  lia.
 Qed.
 
 Lemma Encode_Clos_hasSize_ge1 (g : HClos) :
   1 <= size g.
-Proof. rewrite Encode_Clos_hasSize. omega. Qed.
+Proof. rewrite Encode_Clos_hasSize. lia. Qed.
 
 Lemma Encode_HEntr_hasSize_ge1 (e : HEntr) :
   1 <= size e.
@@ -428,23 +428,23 @@ Module LM_Lookup_nice.
     domWith_match; subst; cbn -[mult plus].
     - ring_simplify. rewrite Nat.add_comm. apply dominatedWith_add_l. 1: domWith_approx.
       + eapply dominatedWith_trans. apply (proj2_sig Reset_steps_nice). hnf. instantiate (1 := 1). ring_simplify.
-        enough (1 <= size g) by omega. apply Encode_Clos_hasSize_ge1.
-      + apply dominatedWith_const. enough (1 <= size g) by omega. apply Encode_Clos_hasSize_ge1.
+        enough (1 <= size g) by lia. apply Encode_Clos_hasSize_ge1.
+      + apply dominatedWith_const. enough (1 <= size g) by lia. apply Encode_Clos_hasSize_ge1.
       + eapply dominatedWith_trans. apply (proj2_sig Translate_steps_nice).
         hnf. instantiate (1 := 1). ring_simplify.
-        enough (1 <= size g /\ 1 <= size b) by omega. split. apply Encode_Clos_hasSize_ge1. apply Encode_nat_hasSize_ge1.
-      + enough (1 <= size g) by omega. apply Encode_Clos_hasSize_ge1.
+        enough (1 <= size g /\ 1 <= size b) by lia. split. apply Encode_Clos_hasSize_ge1. apply Encode_nat_hasSize_ge1.
+      + enough (1 <= size g) by lia. apply Encode_Clos_hasSize_ge1.
     - ring_simplify. rewrite Nat.add_comm. apply dominatedWith_add_l. 1: domWith_approx.
       + eapply dominatedWith_trans. apply (proj2_sig CopyValue_steps_nice). hnf. instantiate (1 := 1). ring_simplify.
-        enough (1 <= size g) by omega. apply Encode_Clos_hasSize_ge1.
+        enough (1 <= size g) by lia. apply Encode_Clos_hasSize_ge1.
       + eapply dominatedWith_trans. apply (proj2_sig Translate_steps_nice).
         hnf. instantiate (1 := 1). ring_simplify.
-        enough (1 <= size g /\ 1 <= size b) by omega. split. apply Encode_Clos_hasSize_ge1. apply Encode_nat_hasSize_ge1.
+        enough (1 <= size g /\ 1 <= size b) by lia. split. apply Encode_Clos_hasSize_ge1. apply Encode_nat_hasSize_ge1.
       + eapply dominatedWith_trans. apply (proj2_sig Reset_steps_nice ). hnf. instantiate (1 := 1). ring_simplify.
-        enough (1 <= size g) by omega. apply Encode_Clos_hasSize_ge1.
+        enough (1 <= size g) by lia. apply Encode_Clos_hasSize_ge1.
       + eapply dominatedWith_trans. apply (proj2_sig Reset_steps_nice). hnf. instantiate (1 := 1). ring_simplify.
-        enough (1 <= size g /\ 1 <= size b) by omega. split. apply Encode_Clos_hasSize_ge1. apply Encode_nat_hasSize_ge1.
-      + enough (1 <= size g) by omega. apply Encode_Clos_hasSize_ge1.
+        enough (1 <= size g /\ 1 <= size b) by lia. split. apply Encode_Clos_hasSize_ge1. apply Encode_nat_hasSize_ge1.
+      + enough (1 <= size g) by lia. apply Encode_Clos_hasSize_ge1.
   Qed.
 
   Lemma Lookup_Step_steps_CaseOption_nice :
@@ -454,13 +454,13 @@ Module LM_Lookup_nice.
     - destruct x as (g,b). ring_simplify. rewrite Nat.add_comm. apply dominatedWith_add_l. 1: domWith_approx.
       + eapply dominatedWith_trans. apply (proj2_sig CasePair_steps_nice).
         apply dominatedWith_solve. setoid_rewrite Encode_option_hasSize. cbn. setoid_rewrite Encode_pair_hasSize at 2. cbn.
-        hnf. enough (size g + 1 <= size g + size b) by auto with arith. enough (1 <= size b) by omega. apply Encode_nat_hasSize_ge1.
-      + apply dominatedWith_const. setoid_rewrite Encode_option_hasSize. cbn. omega.
+        hnf. enough (size g + 1 <= size g + size b) by auto with arith. enough (1 <= size b) by lia. apply Encode_nat_hasSize_ge1.
+      + apply dominatedWith_const. setoid_rewrite Encode_option_hasSize. cbn. lia.
       + eapply dominatedWith_trans. apply (proj2_sig Lookup_Step_steps_CaseNat_nice). cbn.
         apply dominatedWith_solve. setoid_rewrite Encode_option_hasSize. cbn. setoid_rewrite Encode_pair_hasSize at 2. cbn.
-        hnf. enough (size g + 1 <= size g + size b) by auto with arith. enough (1 <= size b) by omega. apply Encode_nat_hasSize_ge1.
-      + setoid_rewrite Encode_option_hasSize. cbn. omega.
-    - apply dominatedWith_const. setoid_rewrite Encode_option_hasSize. cbn. omega.
+        hnf. enough (size g + 1 <= size g + size b) by auto with arith. enough (1 <= size b) by lia. apply Encode_nat_hasSize_ge1.
+      + setoid_rewrite Encode_option_hasSize. cbn. lia.
+    - apply dominatedWith_const. setoid_rewrite Encode_option_hasSize. cbn. lia.
   Qed.
 
   Lemma Lookup_Step_steps_Nth'_nice :
@@ -485,14 +485,14 @@ Module LM_Lookup_nice.
     - domWith_approx.
       + eapply dominatedWith_trans. apply (proj2_sig (Nth'_steps_nice _)).
         rewrite Nat.add_comm. apply dominatedWith_add_l.
-        * apply dominatedWith_solve. enough (size H + a <= size H + S a) by eauto. omega. (* walkaround some problem with typeclasses and [omega] *)
-        * enough (1 <= size H) by omega. apply Encode_Heap_hasSize_ge1.
+        * apply dominatedWith_solve. enough (size H + a <= size H + S a) by eauto. lia. (* walkaround some problem with typeclasses and [lia] *)
+        * enough (1 <= size H) by lia. apply Encode_Heap_hasSize_ge1.
       + eapply dominatedWith_trans. apply (proj2_sig Lookup_Step_steps_Nth'_nice). domWith_match.
-        * apply dominatedWith_solve. enough (size x < size H) by omega.
+        * apply dominatedWith_solve. enough (size x < size H) by lia.
           setoid_rewrite Encode_list_hasSize. apply Encode_list_hasSize_el.
           eapply nth_error_In; eauto.
-        * apply dominatedWith_solve. enough (1 <= size H) by omega. apply Encode_Heap_hasSize_ge1.
-    - enough (1 <= size H) by omega. apply Encode_Heap_hasSize_ge1.
+        * apply dominatedWith_solve. enough (1 <= size H) by lia. apply Encode_Heap_hasSize_ge1.
+    - enough (1 <= size H) by lia. apply Encode_Heap_hasSize_ge1.
   Qed.
 
   (* We don't need to compute with this any more, since we have the upper bound *)
@@ -648,7 +648,7 @@ Module LM_Lookup_nice.
       unfold heap_global_greatest_address.
       setoid_rewrite max_list_map_monotone.
       - setoid_rewrite Encode_list_hasSize_ge_max. setoid_rewrite Encode_list_hasSize. instantiate (1 := Encode_HEntr). rewrite Encode_nat_hasSize. nia.
-      - intros [ [ g b ] | ]; cbn. 2: omega. setoid_rewrite Encode_option_hasSize; cbn. setoid_rewrite Encode_pair_hasSize. cbn. setoid_rewrite Encode_nat_hasSize. omega.
+      - intros [ [ g b ] | ]; cbn. 2: lia. setoid_rewrite Encode_option_hasSize; cbn. setoid_rewrite Encode_pair_hasSize. cbn. setoid_rewrite Encode_nat_hasSize. lia.
     Qed.
 
   End heap_global_greatest_address_Bound.
@@ -668,44 +668,44 @@ Module LM.
   Proof.
     eexists. intros. unfold TailRec_steps. domWith_match.
     - apply dominatedWith_add_l.
-      + apply dominatedWith_const. unfold size. cbn. omega.
-      + unfold size. cbn. omega.
+      + apply dominatedWith_const. unfold size. cbn. lia.
+      + unfold size. cbn. lia.
     - subst. ring_simplify. rewrite Nat.add_comm. rewrite !Nat.add_assoc. do 2 rewrite <- Nat.add_assoc. apply dominatedWith_add_l.
       1: domWith_approx.
       + eapply dominatedWith_trans. apply (proj2_sig Constr_pair_steps_nice). apply dominatedWith_add_r.
         * apply dominatedWith_solve. unfold sigHAdd. nia.
-        * enough (1 <= size a) by omega. apply Encode_nat_hasSize_ge1.
+        * enough (1 <= size a) by lia. apply Encode_nat_hasSize_ge1.
       + eapply dominatedWith_trans. apply (proj2_sig Constr_cons_steps_nice). apply dominatedWith_add_r.
         * apply dominatedWith_solve. setoid_rewrite Encode_pair_hasSize. cbn. setoid_rewrite Encode_list_hasSize. cbn. ring_simplify. unfold sigHAdd. nia.
-        * enough (1 <= size a) by omega. apply Encode_nat_hasSize_ge1.
+        * enough (1 <= size a) by lia. apply Encode_nat_hasSize_ge1.
       + eapply dominatedWith_trans. apply (proj2_sig Reset_steps_nice).
         apply dominatedWith_add_r.
         * setoid_rewrite Encode_pair_hasSize. cbn. setoid_rewrite Encode_list_hasSize. cbn. ring_simplify.
           apply dominatedWith_solve.
           (* This is equivialent to [unfold sigHAdd]. *)
           progress enough (size a + size x + Encode_list_size Encode_Com xs + 1 <= size x + Encode_list_size Encode_Com xs + size a + 1) by auto. nia.
-        * unfold size. cbn. omega.
-      + unfold size. cbn. omega.
+        * unfold size. cbn. lia.
+      + unfold size. cbn. lia.
   Qed.
 
   Lemma ConsClos_steps_nice :
     { c | forall (Q : Pro) (a : HAdd), ConsClos_steps Q a <=(c) size Q + size a }.
   Proof.
     eexists. intros. unfold ConsClos_steps. rewrite <- !Nat.add_assoc. apply dominatedWith_add_l. 1:domWith_approx.
-    - eapply dominatedWith_trans. apply (proj2_sig Constr_pair_steps_nice). apply dominatedWith_solve. enough (1 <= size Q) by omega. apply Encode_Pro_hasSize_ge1.
+    - eapply dominatedWith_trans. apply (proj2_sig Constr_pair_steps_nice). apply dominatedWith_solve. enough (1 <= size Q) by lia. apply Encode_Pro_hasSize_ge1.
     - eapply dominatedWith_trans. apply (proj2_sig Constr_cons_steps_nice).
       eapply dominatedWith_add_r.
       + apply dominatedWith_solve. setoid_rewrite Encode_pair_hasSize. cbn. unfold sigHAdd. nia.
-      + enough (1 <= size a) by omega. apply Encode_nat_hasSize_ge1.
+      + enough (1 <= size a) by lia. apply Encode_nat_hasSize_ge1.
     - eapply dominatedWith_trans. apply (proj2_sig (Reset_steps_nice)).
       eapply dominatedWith_add_r.
       + apply dominatedWith_solve. setoid_rewrite Encode_pair_hasSize. cbn. unfold sigHAdd. nia.
-      + enough (1 <= size a) by omega. apply Encode_nat_hasSize_ge1.
+      + enough (1 <= size a) by lia. apply Encode_nat_hasSize_ge1.
     - eapply dominatedWith_trans. apply (proj2_sig (Reset_steps_nice)).
       eapply dominatedWith_add_r.
       + apply dominatedWith_solve. unfold sigHAdd. nia.
-      + enough (1 <= size a) by omega. apply Encode_nat_hasSize_ge1.
-    - enough (1 <= size a) by omega. apply Encode_nat_hasSize_ge1.
+      + enough (1 <= size a) by lia. apply Encode_nat_hasSize_ge1.
+    - enough (1 <= size a) by lia. apply Encode_nat_hasSize_ge1.
   Qed.
 
 
@@ -724,7 +724,7 @@ Module LM.
     - destruct x as (Q',P'). ring_simplify. apply dominatedWith_add_r. 1: domWith_approx.
       + eapply dominatedWith_trans. apply (proj2_sig (TailRec_steps_nice)). apply dominatedWith_solve. nia.
       + eapply dominatedWith_trans. apply (proj2_sig (ConsClos_steps_nice)). apply dominatedWith_solve. nia.
-      + enough (1 <= size P') by omega. apply Encode_Pro_hasSize_ge1.
+      + enough (1 <= size P') by lia. apply Encode_Pro_hasSize_ge1.
     - domWith_approx.
   Qed.
 
@@ -780,7 +780,7 @@ Module LM.
     all:unfold sigPro,Encode_Prog in *.
     all:repeat rewrite encodeList_size_app_eq.
     all:repeat rewrite encodeList_size_cons.
-    all:omega. 
+    all:lia. 
   Qed.
 
   Lemma Step_lam_steps_nice :
@@ -789,9 +789,9 @@ Module LM.
     eexists. intros. eapply dominatedWith_trans. apply (proj2_sig Step_lam_steps_nice').
     domWith_match; rename H into E; [destruct x as (Q',P')| ].
     - apply dominatedWith_trans with (y := (size a + size P * size P + size P + 1)).
-      { apply dominatedWith_solve. rewrite <- Nat.add_assoc. apply jumpTarget_size in E. rewrite E. omega. }
+      { apply dominatedWith_solve. rewrite <- Nat.add_assoc. apply jumpTarget_size in E. rewrite E. lia. }
       domWith_approx. apply dominatedWith_solve. enough (1 <= size a) by nia. apply Encode_nat_hasSize_ge1.
-    - apply dominatedWith_solve. omega.
+    - apply dominatedWith_solve. lia.
   Qed.
 
 
@@ -802,22 +802,22 @@ Module LM.
   Proof.
     eexists. intros. unfold Put_steps. ring_simplify. apply dominatedWith_add_r. 1: domWith_approx.
     - eapply dominatedWith_trans. apply (proj2_sig (Length_steps_nice _)). apply dominatedWith_solve.
-      enough (size H <= size H + size g + size b) by auto. omega.
+      enough (size H <= size H + size g + size b) by auto. lia.
     - eapply dominatedWith_trans. apply (proj2_sig (Constr_nil_steps_nice)).
-      apply dominatedWith_solve. enough (1 <= size H) by omega. apply Encode_Heap_hasSize_ge1.
+      apply dominatedWith_solve. enough (1 <= size H) by lia. apply Encode_Heap_hasSize_ge1.
     - eapply dominatedWith_trans. apply (proj2_sig Translate_steps_nice).
-      apply dominatedWith_solve. enough (1 <= size H) by omega. apply Encode_Heap_hasSize_ge1.
+      apply dominatedWith_solve. enough (1 <= size H) by lia. apply Encode_Heap_hasSize_ge1.
     - eapply dominatedWith_trans. apply (proj2_sig Translate_steps_nice).
-      apply dominatedWith_solve. enough (1 <= size H) by omega. apply Encode_Heap_hasSize_ge1.
+      apply dominatedWith_solve. enough (1 <= size H) by lia. apply Encode_Heap_hasSize_ge1.
     - eapply dominatedWith_trans. apply (proj2_sig Constr_pair_steps_nice).
-      apply dominatedWith_solve. enough (1 <= size H) by omega. apply Encode_Heap_hasSize_ge1.
+      apply dominatedWith_solve. enough (1 <= size H) by lia. apply Encode_Heap_hasSize_ge1.
     - eapply dominatedWith_trans. apply (proj2_sig (Constr_Some_steps_nice)).
-      apply dominatedWith_solve. enough (1 <= size H) by omega. apply Encode_Heap_hasSize_ge1.
+      apply dominatedWith_solve. enough (1 <= size H) by lia. apply Encode_Heap_hasSize_ge1.
     - eapply dominatedWith_trans. apply (proj2_sig Constr_cons_steps_nice).
       setoid_rewrite Encode_option_hasSize. cbn. setoid_rewrite Encode_pair_hasSize at 1. cbn. setoid_rewrite Encode_nat_hasSize.
-      ring_simplify. unfold Encode_pair_size. apply dominatedWith_add_r. apply dominatedWith_solve. omega. omega.
+      ring_simplify. unfold Encode_pair_size. apply dominatedWith_add_r. apply dominatedWith_solve. lia. lia.
     - eapply dominatedWith_trans. apply (proj2_sig (App'_steps_nice _)).
-      apply dominatedWith_solve. enough (size H <= size H + size g + size b) by auto. omega.
+      apply dominatedWith_solve. enough (size H <= size H + size g + size b) by auto. lia.
     - eapply dominatedWith_trans.
       apply (proj2_sig MoveValue_steps_nice).
       setoid_rewrite Encode_list_hasSize. intros. rewrite Encode_list_hasSize_app. cbn. setoid_rewrite Encode_option_hasSize. cbn. setoid_rewrite Encode_pair_hasSize at 1. cbn. ring_simplify. eapply dominatedWith_add_r. domWith_approx.
@@ -826,14 +826,14 @@ Module LM.
           transitivity (Encode_list_size Encode_HEntr H + 2 + (size g + size b + 1)).
           -- rewrite <- !Nat.add_assoc. apply Nat.le_sub_l.
           -- rewrite <- !Nat.add_assoc. ring_simplify. nia.
-        * apply dominatedWith_add_r. apply dominatedWith_solve. omega. enough (1 <= Encode_list_size _ H) by omega. apply Encode_list_hasSize_ge1.
-      + enough (1 <= Encode_list_size _ H) by omega. apply Encode_list_hasSize_ge1.
+        * apply dominatedWith_add_r. apply dominatedWith_solve. lia. enough (1 <= Encode_list_size _ H) by lia. apply Encode_list_hasSize_ge1.
+      + enough (1 <= Encode_list_size _ H) by lia. apply Encode_list_hasSize_ge1.
     - eapply dominatedWith_trans. apply (proj2_sig Reset_steps_nice).
       setoid_rewrite Encode_option_hasSize. cbn. setoid_rewrite Encode_pair_hasSize at 1. cbn. setoid_rewrite Encode_nat_hasSize.
-      ring_simplify. unfold Encode_pair_size. apply dominatedWith_add_r. apply dominatedWith_solve. omega. omega.
+      ring_simplify. unfold Encode_pair_size. apply dominatedWith_add_r. apply dominatedWith_solve. lia. lia.
     - eapply dominatedWith_trans. apply (proj2_sig Reset_steps_nice).
-      apply dominatedWith_solve. enough (1 <= size H) by omega. apply Encode_Heap_hasSize_ge1.
-    - enough (1 <= size H) by omega. apply Encode_Heap_hasSize_ge1.
+      apply dominatedWith_solve. enough (1 <= size H) by lia. apply Encode_Heap_hasSize_ge1.
+    - enough (1 <= size H) by lia. apply Encode_Heap_hasSize_ge1.
   Qed.
 
   (** APP *)
@@ -850,15 +850,15 @@ Module LM.
     eexists. intros. unfold Step_app_steps_CaseList'. domWith_match; subst. 1: now domWith_approx.
     destruct x as (b,Q). ring_simplify. apply dominatedWith_add_r. 1: domWith_approx.
     - eapply dominatedWith_trans. apply (proj2_sig CasePair_steps_nice).
-      apply dominatedWith_solve. enough (1 <= size a) by omega. apply Encode_nat_hasSize_ge1.
+      apply dominatedWith_solve. enough (1 <= size a) by lia. apply Encode_nat_hasSize_ge1.
     - eapply dominatedWith_trans. apply (proj2_sig (TailRec_steps_nice)).
-      apply dominatedWith_solve. enough (1 <= size a) by omega. apply Encode_nat_hasSize_ge1.
+      apply dominatedWith_solve. enough (1 <= size a) by lia. apply Encode_nat_hasSize_ge1.
     - eapply dominatedWith_trans. apply (proj2_sig Reset_steps_nice).
-      apply dominatedWith_solve. enough (1 <= size b) by omega. apply Encode_nat_hasSize_ge1.
+      apply dominatedWith_solve. enough (1 <= size b) by lia. apply Encode_nat_hasSize_ge1.
     - eapply dominatedWith_trans. apply (proj2_sig (Put_steps_nice)). apply dominatedWith_solve. nia.
     - eapply dominatedWith_trans. apply (proj2_sig (ConsClos_steps_nice)).
-      apply dominatedWith_solve. enough (size Q + size (| H |) <= size a + size b + size g + size H + size P + size Q + size (| H |)) by auto. omega.
-    - enough (1 <= size a) by omega. apply Encode_nat_hasSize_ge1.
+      apply dominatedWith_solve. enough (size Q + size (| H |) <= size a + size b + size g + size H + size P + size Q + size (| H |)) by auto. lia.
+    - enough (1 <= size a) by lia. apply Encode_nat_hasSize_ge1.
   Qed.
 
   Lemma Step_app_steps_CaseList_nice :
@@ -874,14 +874,14 @@ Module LM.
     ring_simplify. eapply dominatedWith_add_r. 1: domWith_approx.
     - eapply dominatedWith_trans. apply (proj2_sig CaseList_steps_nice).
       destruct V' as [ | e V'']; cbn.
-      + apply dominatedWith_solve. enough (1 <= size a) by omega. apply Encode_nat_hasSize_ge1.
-      + apply dominatedWith_solve. rewrite Encode_list_hasSize; cbn. omega.
+      + apply dominatedWith_solve. enough (1 <= size a) by lia. apply Encode_nat_hasSize_ge1.
+      + apply dominatedWith_solve. rewrite Encode_list_hasSize; cbn. lia.
     - eapply dominatedWith_trans. apply (proj2_sig Step_app_steps_CaseList'_nice).
       destruct V' as [ | (b,Q) V'']; cbn.
       + domWith_approx.
       + apply dominatedWith_solve. rewrite Encode_list_hasSize; cbn. setoid_rewrite (Encode_pair_hasSize _ _ (b,Q)); cbn.
         ring_simplify. enough (size a + size b + size g + size H + size P + size Q + size (| H |) <= size a + size g + size H + size P + size Q + size (| H |) + size b + Encode_list_size Encode_HClos V'' + 1) by auto. nia.
-    - enough (1 <= size a) by omega. apply Encode_nat_hasSize_ge1.
+    - enough (1 <= size a) by lia. apply Encode_nat_hasSize_ge1.
   Qed.
 
   Lemma Step_app_steps_nice :
@@ -889,12 +889,12 @@ Module LM.
   Proof.
     eexists. intros. unfold Step_app_steps. ring_simplify. apply dominatedWith_add_r. 1: domWith_approx.
     - eapply dominatedWith_trans. apply (proj2_sig CaseList_steps_nice). domWith_match; subst.
-      + apply dominatedWith_solve. enough (1 <= size a) by omega. apply Encode_nat_hasSize_ge1.
-      + apply dominatedWith_solve. rewrite Encode_list_hasSize; cbn. omega.
+      + apply dominatedWith_solve. enough (1 <= size a) by lia. apply Encode_nat_hasSize_ge1.
+      + apply dominatedWith_solve. rewrite Encode_list_hasSize; cbn. lia.
     - eapply dominatedWith_trans. apply (proj2_sig (Step_app_steps_CaseList_nice)). domWith_match; subst.
       + domWith_approx.
-      + apply dominatedWith_solve. do 2 rewrite Encode_list_hasSize; cbn. omega.
-    - enough (1 <= size a) by omega. apply Encode_nat_hasSize_ge1.
+      + apply dominatedWith_solve. do 2 rewrite Encode_list_hasSize; cbn. lia.
+    - enough (1 <= size a) by lia. apply Encode_nat_hasSize_ge1.
   Qed.
 
   (** VAR *)
@@ -921,7 +921,7 @@ Module LM.
     induction n as [ | n'] in a,n|-*; intros HEq; cbn in *.
     - destruct (nth_error H a) as [ [ (g',b) | ] | ] eqn:E; inv HEq.
       transitivity (size (Some (g, b))).
-      + setoid_rewrite Encode_option_hasSize; cbn. setoid_rewrite Encode_pair_hasSize at 2; cbn. omega.
+      + setoid_rewrite Encode_option_hasSize; cbn. setoid_rewrite Encode_pair_hasSize at 2; cbn. lia.
       + apply nth_error_In in E. setoid_rewrite Encode_list_hasSize. now apply Encode_list_hasSize_el.
     - destruct (nth_error H a) as [ [ (g',b) | ] | ] eqn:E; inv HEq. eauto.
   Qed.
@@ -957,31 +957,31 @@ Module LM.
            end }.
   Proof.
     eexists. intros. unfold Step_steps_CaseCom. domWith_approx; subst.
-    - eapply dominatedWith_trans. apply (proj2_sig Step_app_steps_nice). apply dominatedWith_solve. omega.
-    - eapply dominatedWith_trans. apply (proj2_sig Step_lam_steps_nice). apply dominatedWith_solve. omega.
-    - eapply dominatedWith_trans. apply (proj2_sig Step_var_steps_nice'). apply dominatedWith_solve. omega.
+    - eapply dominatedWith_trans. apply (proj2_sig Step_app_steps_nice). apply dominatedWith_solve. lia.
+    - eapply dominatedWith_trans. apply (proj2_sig Step_lam_steps_nice). apply dominatedWith_solve. lia.
+    - eapply dominatedWith_trans. apply (proj2_sig Step_var_steps_nice'). apply dominatedWith_solve. lia.
   Qed.
 
   Lemma heap_greatest_address_ge (H : Heap) (a : HAdd) (n : nat) :
     a <= heap_greatest_address H a n.
   Proof.
     intros. induction n as [ | n' IH] in H,a|-*; cbn in *.
-    - destruct (nth_error H a) as [ [ (g,b) | ] | ] eqn:E; cbn; omega.
+    - destruct (nth_error H a) as [ [ (g,b) | ] | ] eqn:E; cbn; lia.
     - destruct (nth_error H a) as [ [ (g,b) | ] | ] eqn:E; cbn.
-      + assert (heap_greatest_address H b n' <= a \/ a <= heap_greatest_address H b n') as [HO|HO] by omega.
-        * rewrite max_l by assumption. omega.
+      + assert (heap_greatest_address H b n' <= a \/ a <= heap_greatest_address H b n') as [HO|HO] by lia.
+        * rewrite max_l by assumption. lia.
         * rewrite max_r by assumption. assumption.
-      + omega.
-      + omega.
+      + lia.
+      + lia.
   Qed.
 
   Lemma size_length_heap (H : Heap) :
     size (length H) <= Encode_list_size _ H.
   Proof.
     induction H as [ | e H IH].
-    - cbn. unfold size. cbn. omega.
+    - cbn. unfold size. cbn. lia.
     - cbn. setoid_rewrite <- IH. rewrite Encode_nat_hasSize.
-      enough (S (length H) <= size (length H)) by omega.
+      enough (S (length H) <= size (length H)) by lia.
       rewrite Encode_nat_hasSize. reflexivity.
   Qed.
 
@@ -989,8 +989,8 @@ Module LM.
     length H <= Encode_list_size _ H.
   Proof.
     induction H as [ | e H IH].
-    - cbn. unfold size. cbn. omega.
-    - cbn. setoid_rewrite <- IH. omega.
+    - cbn. unfold size. cbn. lia.
+    - cbn. setoid_rewrite <- IH. lia.
   Qed.
 
   (* TODO: Apply nicer bound for [heap_greatest_address] here *)
@@ -1063,8 +1063,8 @@ Module LM.
       unfold sigHAdd.
       enough (1 <= size P) by nia. apply Encode_Pro_hasSize_ge1.
     - eapply dominatedWith_trans. apply (proj2_sig (Step_steps_CaseList_nice)). domWith_match; [now domWith_approx | ].
-      destruct x as (a,P). apply dominatedWith_solve. omega.
-    - destruct T. omega. destruct h as (a,P). enough (1 <= size a) by nia. apply Encode_nat_hasSize_ge1.
+      destruct x as (a,P). apply dominatedWith_solve. lia.
+    - destruct T. lia. destruct h as (a,P). enough (1 <= size a) by nia. apply Encode_nat_hasSize_ge1.
   Qed.
 
   (** Loop *)

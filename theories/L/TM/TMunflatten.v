@@ -85,7 +85,7 @@ Definition defFin (X:finType):
   -> X.
 Proof.
   unfold Cardinality.
-  destruct (elem X). cbn. intros. omega. easy.
+  destruct (elem X). cbn. intros. lia. easy.
 Qed.
 
 Definition unflatten_in (sig:finType) n (l__r : list (option nat)) : (Vector.t (option sig) n) :=
@@ -111,7 +111,7 @@ Proof.
   apply H in H0. 
   unfold Basics.compose. cbn.
   unshelve erewrite nth_indep with (d':= Some _).
-  -eapply defFin. omega.
+  -eapply defFin. lia.
   -rewrite map_nth. cbn.
    erewrite index_nth_elem. all:try easy.
   -rewrite map_length. easy.
@@ -176,7 +176,7 @@ Proof.
   apply H in H0. 
   unfold Basics.compose. cbn.
   unshelve erewrite nth_indep with (d':= Some ltac:(eapply defFin)).
-  abstract omega.
+  abstract lia.
   2:{ rewrite map_length. easy. }
 
   rewrite map_nth. cbn.

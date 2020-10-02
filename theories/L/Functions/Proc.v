@@ -45,7 +45,7 @@ Proof.
 Defined.
 
 
-Fixpoint lambdab (t : term) : bool :=
+Definition lambdab (t : term) : bool :=
 match t with
 | lam _ => true
 | _ => false

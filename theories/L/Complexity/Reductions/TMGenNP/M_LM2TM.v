@@ -15,8 +15,7 @@ From Coq Require Import Lia Ring Arith.
 From Undecidability.L.Complexity  Require Import LMGenNP TMGenNP_fixed_mTM M_Boollist_to_Enc.
 
 From Undecidability Require Import Code.ListTM_concat_repeat.
-
-From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require M_LHeapInterpreter.
+From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require M_LHeapInterpreter SizeAnalysis LMBounds_Loop.
 
 Import DecodeList Decode.
 Module LMtoTM.
@@ -97,7 +96,8 @@ Module LMtoTM.
     Lemma size_compile_list_bool:
       (fun bs : list bool => Code.size (compile (Computable.enc (rev bs)))) <=c (fun bs => length bs + 1).
     Proof.
-      From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require Import SizeAnalysis LMBounds_Loop.
+      (* From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require  *)
+      Import TM_LHeapInterpreter.SizeAnalysis TM_LHeapInterpreter.LMBounds_Loop.
       evar (c:nat). exists c. intros xs.
       rewrite size_le_sizeP. unfold sizeP;rewrite sizeP_size,Lists.size_list.
       rewrite map_rev,<-sumn_rev. rewrite MoreBase.sumn_le_bound.

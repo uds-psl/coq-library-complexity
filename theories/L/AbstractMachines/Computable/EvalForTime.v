@@ -141,7 +141,7 @@ Lemma pow_Rstep k i i' x x':
 Proof.
   induction k in i',x'|-*.
   {unfold pow. cbn. split. now intros [=]. intros. f_equal; intuition try solve [lia|easy]. }
-  replace (S k) with (k + 1) in * by omega.
+  replace (S k) with (k + 1) in * by lia.
   rewrite !pow_add. unfold rcomp.
   repeat setoid_rewrite <- rcomp_1.
   split.

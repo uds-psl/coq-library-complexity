@@ -60,8 +60,8 @@ Module BoollistToEnc.
             `{retr__nat : Retract sigNat sig}.
     Local Instance retr__bool : Retract bool sig := ComposeRetract retr__list (Retract_sigList_X _).
     
-    Check _ : codable sig (list bool).
-    Check _ : codable sig bool.
+    (* Check _ : codable sig (list bool). *)
+    (* Check _ : codable sig bool. *)
 
     (* Tapes: 
        0: bs (input)

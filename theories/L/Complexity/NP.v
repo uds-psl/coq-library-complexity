@@ -286,7 +286,7 @@ Qed.
 
 (** ** NP Hardness and Completeness *)
 Definition NPhard X `{registered X} `(P:restrictedP (X:=X) vX) :=
-  forall Y `{registeredP Y} vY (Q:restrictedP (X:=Y) vY),
+  forall Y `(registeredP Y) vY (Q:restrictedP (X:=Y) vY),
     inNP Q -> Q ⪯p P.
 
 Lemma red_NPhard X Y `{registered X} `{registered Y} `(P:restrictedP (X:=X) vX) `(Q:restrictedP (X:=Y) vY)
