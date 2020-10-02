@@ -61,6 +61,8 @@ Shared/Dec.v
 Shared/ListAutomation.v
 Shared/FilterFacts.v
 Shared/embed_nat.v
+Shared/FinTypeEquiv.v
+Shared/FinTypeForallExists.v
 
 Synthetic/Definitions.v
 Synthetic/Undecidability.v
@@ -381,6 +383,11 @@ TM/Single/EncodeTapesInvariants.v
 TM/Single/DecodeTape.v
 TM/Single/DecodeTapes.v
 
+
+TM/Reductions/Arbitrary_to_Binary.v
+TM/SBTM.v
+TM/Reductions/TM_to_SBTM.v
+StackMachines/Reductions/SBTM_to_BSM.v
 
 # Univ
 TM/Univ/LookupAssociativeListTM.v
