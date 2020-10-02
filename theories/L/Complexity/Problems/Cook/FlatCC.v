@@ -123,7 +123,7 @@ Section fixInstance.
     intros. induction H1 as [ a | ? ? ? ? H1 H2 IH]; [easy | ]. 
     apply IH. eapply valid_list_ofFlatType_invariant, H1; [ apply H | ]. 
     - apply H0.  
-    - apply valid_length_inv in H1. lia. 
+    - apply valid_length_inv in H1. nia.  
   Qed. 
 
 End fixInstance.

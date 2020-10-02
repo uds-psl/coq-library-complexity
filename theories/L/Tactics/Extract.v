@@ -76,22 +76,36 @@ Definition tmTryInfer (n : ident) (red : option reductionStrategy) (A : Type) : 
 (** Generate a name for a quoted term *)
 Definition name_of (t : Ast.term) : ident :=
   match t with
-    tConst n _ => name_after_dot (string_of_kername n)
-  | tConstruct (mkInd n _) i _ => "cnstr_"  ++ name_after_dot (string_of_kername n) ++ string_of_int i
-  | tInd (mkInd n _) _ => "type_" ++ name_after_dot (string_of_kername n)
+    tConst (modp, n) _ => name_after_dot n
+  | tConstruct (mkInd (modp, n) _) i _ => "cnstr_"  ++ name_after_dot n ++ string_of_int i
+  | tInd (mkInd (modp, n) _) _ => "type_" ++ name_after_dot n
   | tVar i => "var_" ++ i
   | _ => "no_name" 
   end.
 
-(* Fixpoint name_after_dot' (s : string) (r : string) := *)
-(*   match s with *)
-(*   | EmptyString => r *)
-(*   | String "#" xs => name_after_dot' xs xs (* see Coq_name in a section *) *)
-(*   | String ("."%char) xs => name_after_dot' xs xs *)
-(*   | String _ xs => name_after_dot' xs r *)
+(* Fixpoint fixNames (t : term) := *)
+(*   match t with *)
+(*   | tRel i => tRel i *)
+(*   | tEvar ev args => tEvar ev (List.map (fixNames) args) *)
+(*   | tLambda na T M => tLambda na (fixNames T) (fixNames M) *)
+(*   | tApp u v => tApp (fixNames u) (List.map (fixNames) v) *)
+(*   | tProd na A B => tProd na (fixNames A) (fixNames B) *)
+(*   | tCast C kind t => tCast (fixNames C) kind (fixNames t) *)
+(*   | tLetIn na b t b' => tLetIn na (fixNames b) (fixNames t) (fixNames b') *)
+(*   | tCase ind p C brs => *)
+(*     let brs' := List.map (on_snd (fixNames)) brs in *)
+(*     tCase ind (fixNames p) (fixNames C) brs' *)
+(*   | tProj p C => tProj p (fixNames C) *)
+(*   | tFix mfix idx => *)
+(*     let mfix' := List.map (map_def (fixNames) (fixNames)) mfix in *)
+(*     tFix mfix' idx *)
+(*   | tCoFix mfix idx => *)
+(*     let mfix' := List.map (map_def (fixNames) (fixNames)) mfix in *)
+(*     tCoFix mfix' idx *)
+(*   | tConst name u => tConst (name_after_dot name) u *)
+(*   | tInd (mkInd name i) u => tInd (mkInd (name_after_dot name) i)  u *)
+(*   | x => x *)
 (*   end. *)
-
-(* Definition name_after_dot s := name_after_dot' s s. *)
 
 (** Check whether a list of quoted terms starts with a type *)
 Fixpoint tmIsType (s : Ast.term) : TemplateMonad bool :=
@@ -134,6 +148,12 @@ Definition list_constructors (ind : inductive) : TemplateMonad (list (ident * te
     | _ => tmFail "error: no mutual inductives supported"
     end.
 
+(** determine whether two inductives are equal, based on their name *)
+Definition eq_inductive (hs hs2 : inductive) :=
+  match hs, hs2 with
+  | mkInd k _, mkInd k2 _ => if kername_eq_dec k k2 then true else false
+  end.
+
 (** Get the argument types for a constructor (specified by inductive and index) *)
 Definition tmArgsOfConstructor ind i :=
   A <- tmTypeOf (tConstruct ind i []) ;;
@@ -152,15 +172,15 @@ Class encodable (A : Type) := enc_f : A -> L.term.
 (** Construct quoted L terms and natural numbers *)
 
 MetaCoq Quote Definition tTerm := L.term.
-MetaCoq Quote Definition tLLam := L.lam. 
-MetaCoq Quote Definition tLVar := L.var. 
-MetaCoq Quote Definition tLApp := L.app. 
 
-Definition mkLLam x := tApp tLLam [x].
-Definition mkLVar x := tApp tLVar [x].
-Definition mkLApp x y := tApp tLApp [x; y].
+Definition term_mp := MPfile ["L"; "L"; "Undecidability"].
+Definition term_kn := (term_mp, "term").
 
-Definition mkLAppList s B := fold_left (fun a b => mkLApp a b) B s.
+Definition mkLam x := tApp (tConstruct (mkInd term_kn 0) 2 []) [x].
+Definition mkVar x := tApp (tConstruct (mkInd term_kn 0) 0 []) [x].
+Definition mkApp x y := tApp (tConstruct (mkInd term_kn 0) 1 []) [x; y].
+
+Definition mkAppList s B := fold_left (fun a b => mkApp a b) B s.
 
 MetaCoq Quote Definition mkZero := 0.
 MetaCoq Quote Definition mkSucc := S.
@@ -250,7 +270,7 @@ Definition tmEncode (name : string) (A : Type) :=
               args <- tmEval cbv (|ctr_types|);; 
               C <- monad_map_i (encode_arguments t args) ctr_types ;; 
               ret (stack (map (tLambda (nAnon)) ctr_types)
-                               (it mkLLam num ((fun s => mkLAppList s C) (mkLVar (mkNat (num - i - 1))))))
+                               (it mkLam num ((fun s => mkAppList s C) (mkVar (mkNat (num - i - 1))))))
            ) ;;
   u <- tmUnquoteTyped (encodable A) ter;; 
  tmInstanceRed name None u;;
@@ -375,7 +395,6 @@ Definition tmDependentArgs x:=
   | _ => (*tmPrint ("tmDependentArgs not supported");;*)ret 0
   end.
  *)
-
 
 Fixpoint inferHead' (s:Ast.term) (revArg R: list Ast.term) : TemplateMonad (L.term * list Ast.term)  :=
   s'0 <- tmEval cbn (if forallb (fun _ => false) revArg then s else Ast.tApp s (rev revArg));;
@@ -503,7 +522,7 @@ Definition tmUnfoldTerm {A}(a:A) :=
   | _ => ret t
   end.
 
-Definition tmExtract (nm : option string) {A} (a : A) : TemplateMonad L.term :=
+Polymorphic Definition tmExtract (nm : option string) {A} (a : A) : TemplateMonad (extracted a) :=
   q <- tmUnfoldTerm a ;;
   t <- extract (fun x => x) q FUEL ;;
   match nm with
@@ -530,9 +549,9 @@ Opaque extracted.
 
 (* MetaCoq Run (tmExtractConstr "tm_zero" 0). *)
 (* MetaCoq Run (tmExtractConstr "tm_succ" S). *)
-(* MetaCoq Run (tmExtract (Some "tm_ack") ackermann >>= tmPrint). *)
+(* (* MetaCoq Run (tmExtract (Some "tm_ack") ackermann >>= tmPrint). *) *)
 
-(* Print tm_ack. *)
+(* (* Print tm_ack. *) *)
 
 (* Require Import Init.Nat. *)
 (* MetaCoq Run (tmExtract (Some "add_term") add ). *)

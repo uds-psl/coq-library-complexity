@@ -104,7 +104,7 @@ Section remove.
     - intros [].
     - intros [-> | H1].
       + cbn. destruct (eqdec a a); [specialize (remove_length l a); lia | congruence].
-      + cbn. destruct (eqdec a a0); [specialize (remove_length l a); lia | cbn; firstorder ].  
+      + cbn. destruct (eqdec a a0); [specialize (remove_length l a); lia | cbn; firstorder nia ].  
   Qed. 
 End remove.
 
@@ -341,7 +341,7 @@ Proof.
       * apply in_map_iff in H; destruct H as (? & H1 & H2). inv H1. auto. 
       * apply IHA in H. tauto. 
     + destruct H as [[H1 | H1] H2].
-      * apply in_app_iff. left. apply in_map_iff. exists b. firstorder. 
+      * apply in_app_iff. left. apply in_map_iff. exists b. firstorder congruence. 
       * apply in_app_iff. right. now apply IHA. 
 Qed. 
 
@@ -512,7 +512,7 @@ Lemma nth_error_firstn (X : Type) k m (l : list X): k < m -> nth_error (firstn m
 Proof. 
   revert k l. induction m; intros. 
   - lia.
-  - destruct k; cbn; destruct l; cbn; firstorder.
+  - destruct k; cbn; destruct l; cbn; firstorder. now apply IHm.
 Qed. 
 
 Lemma nth_error_skipn (X : Type) k m (l : list X) : nth_error (skipn m l) k = nth_error l (m + k). 

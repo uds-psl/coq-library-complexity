@@ -118,10 +118,10 @@ Proof.
     destruct m; [ setoid_rewrite tapeToList_move_L | setoid_rewrite tapeToList_move_R | cbn [tape_move]]; assumption.
   }
   destruct t; cbn in *. 
-  - firstorder. 
-  - firstorder. 
-  - intros n'. rewrite !in_app_iff. firstorder. eapply H. apply in_app_iff; firstorder.
-  - intros n'. rewrite !in_app_iff. firstorder. 
+  - firstorder nia. 
+  - firstorder nia. 
+  - intros n'. rewrite !in_app_iff. firstorder. 2:nia. eapply H. apply in_app_iff; firstorder.
+  - intros n'. rewrite !in_app_iff. firstorder. nia. 
 Qed.
 
 Lemma Forall_elim (A : Type) (P : A -> Prop) l : Forall P l -> forall x, x el l -> P x. 

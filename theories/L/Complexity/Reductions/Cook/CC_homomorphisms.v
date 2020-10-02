@@ -30,9 +30,11 @@ Section fixInstance.
   (** of course, we need injectivity *)
   Context (A2 : injective h'). 
 
+  Local Set Default Proof Using "Type".
+
   (** we show basic results about h *)
   Lemma h_unifHom : uniform_homomorphism h. 
-  Proof. 
+  Proof using A0 A1. 
     repeat split. 
     - apply canonicalHom_is_homomorphism. 
     - intros. cbn. rewrite !app_nil_r. now rewrite !A0.
@@ -41,7 +43,7 @@ Section fixInstance.
 
   Hint Extern 4 (uniform_homomorphism h) => apply h_unifHom : core. 
   Lemma h_injective l1 l2 : h l1 = h l2 -> l1 = l2. 
-  Proof. 
+  Proof using A0 A1 A2. 
     revert l2. induction l1; intros l2 H0. 
     - destruct l2; [cbn in *; reflexivity | ]. 
       cbn in H0. apply list_eqn_length in H0. rewrite app_length in H0. cbn in H0. 
@@ -55,14 +57,14 @@ Section fixInstance.
   Qed. 
 
   Lemma h_multiplier x : |h x| = k * |x|. 
-  Proof. 
-    induction x. 
+  Proof using A0 .
+  clear A1. induction x. 
     - cbn. lia. 
     - cbn. rewrite app_length. unfold h, canonicalHom in IHx. rewrite IHx. rewrite A0. nia. 
   Qed. 
 
   Lemma h_app_inv1 a u v : h a = u ++ v -> |u| = k -> exists a1 a2, a = a1::a2 /\ h [a1] = u /\ h a2 = v. 
-  Proof. 
+  Proof using A0 A1.
     intros.  destruct a. 
     - specialize (h_multiplier []) as H1. rewrite H in H1. rewrite app_length in H1. cbn in H1. nia. 
     - rewrite homo_cons in H; [ | apply h_unifHom]. 
@@ -72,7 +74,7 @@ Section fixInstance.
   Qed. 
 
   Lemma h_app_inv a c u v : h a = u ++ v -> |u| = c * k -> exists a1 a2, a = a1 ++ a2 /\ h a1 = u /\ h a2 = v. 
-  Proof. 
+  Proof using A1 A0. 
     intros. revert a u H0 H. induction c; intros. 
     - cbn in H0; destruct u; [ | cbn in H0; congruence]. 
       exists [], a. split; [ now cbn | split; [apply homo_nil, h_unifHom | cbn in H; apply H]]. 
@@ -100,7 +102,7 @@ Section fixInstance.
   Context (A : CC_wellformed fpr). 
 
   Lemma hCC_wf : CC_wellformed hCC. 
-  Proof. 
+  Proof using A A0 A1. 
     destruct A as (F1 & F2 & F3 & F4 & F5 & F6). 
     unfold CC_wellformed. cbn. unfold hwidth, hoffset, hinit, hcards, hsteps. repeat match goal with [ |- _ /\ _] => split end; try nia.
     - destruct F3 as (k0 & F3 & F3'). exists k0; split; [easy | nia].
@@ -115,7 +117,7 @@ Section fixInstance.
   (** agreement of coversHead *)
   Lemma coversHead_homomorphism_iff card a b : 
     coversHead card a b <-> coversHead (hcard card) (h a) (h b). 
-  Proof. 
+  Proof using A A0 A1 A2. 
     split.
     - unfold hcard. destruct card. intros ((c1 & H1) & (c2 & H2)). 
       subst. split; cbn -[canonicalHom]; rewrite (proj1 h_unifHom); unfold prefix; eauto.
@@ -138,7 +140,7 @@ Section fixInstance.
     -> coversHead card (h a1 ++ h a2) (u ++ v) 
     -> exists b1, u = h b1 /\ |b1| = offset 
         /\ coversHead card (h a1 ++ h a2) (h b1 ++ v). 
-  Proof. 
+  Proof using A A0 A1. 
     intros. destruct H2 as ((c1 & H3) & (c2 & H4)). 
     unfold hcards in H; apply in_map_iff in H as (card' & <- & H).  
     destruct card'; cbn in *. 
@@ -164,7 +166,7 @@ Section fixInstance.
     |a| >= width 
     -> valid offset width cards a b 
     -> valid hoffset hwidth hcards (h a) (h b).
-  Proof. 
+  Proof using Type*. 
     intros H0. unfold hwidth, hoffset.
     induction 1 as [ | ? ? ? ? H IH H1 H2 H3 | ? ? ? ? card H IH H1 H2 H3 H4]. 
     + rewrite homo_nil; [eauto | apply h_unifHom]. 
@@ -195,7 +197,7 @@ Section fixInstance.
     |a| >= width 
     -> valid hoffset hwidth hcards (h a) b' 
     -> exists b, b' = h b /\ valid offset width cards a b.
-  Proof. 
+  Proof using Type*. 
     (*we switch to the validDirect characterisation *)
     intros H H0. assert (valid hoffset hwidth hcards (h a) b' /\ |h a| >= hwidth) as H1%validDirect_valid. 
     { split; [easy | ]. unfold hwidth; rewrite h_multiplier. nia. }
@@ -242,7 +244,7 @@ Section fixInstance.
   Lemma valid_homomorphism_iff a b : 
     |a| >= width 
     -> valid offset width cards a b <-> valid hoffset hwidth hcards (h a) (h b).
-  Proof. 
+  Proof using Type*. 
     intros H0; split. unfold hwidth, hoffset. 
     - apply valid_homomorphism1; easy.  
     - intros. apply valid_homomorphism2 in H as (b' & Heq & H1 ). 
@@ -255,7 +257,7 @@ Section fixInstance.
     |a| >= width 
     -> relpower (valid offset width cards) steps a b 
     -> relpower (valid (k * offset) (k * width) hcards) steps (h a) (h b).
-  Proof. 
+  Proof using Type*. 
     intros H. induction 1 as [ | ? ? ? ? H0 ? IH]; [ eauto | ]. econstructor. 
     + apply valid_homomorphism_iff; [ apply H | easy ]. 
     + apply IH.  apply valid_length_inv in H0. lia. 
@@ -265,7 +267,7 @@ Section fixInstance.
     |a| >= width 
     -> relpower (valid (k * offset) (k * width) hcards) steps (h a) b' 
     -> exists b, b' = h b /\ relpower (valid offset width cards) steps a b. 
-  Proof. 
+  Proof using Type*. 
     intros H H0. remember (h a). revert a Heql H. induction H0 as [ | ? ? ? ? H0 H1 IH]; intros. 
     - exists a0. split; eauto. 
     - subst. apply valid_homomorphism2 in H0 as (b' & -> & H0); [ | easy ]. 
@@ -278,7 +280,7 @@ Section fixInstance.
   Lemma valid_relpower_homomorphism_iff a b steps : 
     |a| >= width 
     -> relpower (valid offset width cards) steps a b <-> relpower (valid (k * offset) (k * width) hcards) steps (h a) (h b).
-  Proof. 
+  Proof using Type*. 
     intros. split. 
     - now apply valid_relpower_homomorphism1.  
     - intros (b' & Heq & H1)%valid_relpower_homomorphism2; [ | easy ]. 
@@ -289,7 +291,7 @@ Section fixInstance.
   Lemma final_agree sf : 
     |init| = |sf| 
     -> satFinal offset (length init) final sf <-> satFinal hoffset (length hinit) hfinal (h sf). 
-  Proof. 
+  Proof using Type*. 
     intros G. unfold satFinal, hoffset, hfinal. split; intros (subs & k0 & H1 & H2 & H3). 
     - rewrite G in H2. exists (h subs), (k0). 
       split; [now apply in_map_iff | split; [ unfold hinit; rewrite h_multiplier; nia | ]]. 
@@ -320,7 +322,7 @@ Section fixInstance.
   Lemma CC_homomorphism_iff : 
     (exists sf, relpower (valid offset width cards) steps init sf /\ satFinal offset (|init|) final sf) 
     <-> (exists sf, relpower (valid hoffset hwidth hcards) hsteps hinit sf /\ satFinal hoffset (|hinit|) hfinal sf). 
-  Proof. 
+  Proof using Type*. 
     unfold hsteps, hinit, hoffset, hwidth. 
     destruct A as (_ & _ & _  & A4 &_). 
     split; intros. 
@@ -341,7 +343,7 @@ Section fixInstance.
 
   Corollary CC_homomorphism_inst_iff : 
     CCLang fpr <-> CCLang hCC. 
-  Proof. 
+  Proof using Type*. 
     split; intros [H1 H2%CC_homomorphism_iff].
     - split; [apply hCC_wf | apply H2].
     - split; [apply A | apply H2]. 

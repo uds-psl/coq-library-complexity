@@ -860,7 +860,7 @@ Section fixTM.
   (** decomposition into left, center, right *)
   Lemma tapeToList_lcr sig (tp : tape sig) : tapeToList tp = rev (left tp) ++ (match current tp with Some a => [a] | _ => [] end) ++ right tp. 
   Proof.
-    clear_all. destruct tp; cbn. all: firstorder. 
+    clear_all. destruct tp; cbn. all: firstorder. now rewrite app_nil_r.   
   Qed. 
 
   Lemma sizeOfTape_lcr sig (tp : tape sig) : sizeOfTape tp = |left tp| + |right tp| + (if current tp then 1 else 0). 
@@ -4982,7 +4982,7 @@ Section fixTM.
   Proof using flatTM_TM_compat. 
     intros. destruct flatEnv, finEnv. unfold envAddState. cbn. unfold isFlatEnvOf in *; cbn in *.
     unfold finReprEl' in H. repeat split; try easy. 
-    unfold isFlatListOf in *. rewrite <- H. cbn.  firstorder. 
+    unfold isFlatListOf in *. rewrite <- H. cbn.  firstorder congruence. 
   Qed. 
 
   Lemma envAddSSigma_isFlatEnvOf finEnv flatEnv a a' : 
@@ -4992,8 +4992,8 @@ Section fixTM.
     unfold opt_finReprEl' in H. repeat split; try easy. 
     unfold isFlatListOf in *. rewrite H. destruct a'; cbn [option_map map]; 
     cbn [fOpt index]. 
-    - cbn. rewrite getPosition_map; [ | unfold injective; intros; now apply Some_injective]. firstorder. 
-    - unfold index. cbn. firstorder. 
+    - cbn. rewrite getPosition_map; [ | unfold injective; intros; now apply Some_injective]. f_equal;firstorder. 
+    - unfold index. cbn. f_equal;firstorder. 
   Qed. 
 
   Lemma list_isFlatEnvOf_map flatL finL f1 f2: 

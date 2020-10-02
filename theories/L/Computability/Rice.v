@@ -59,8 +59,8 @@ Proof with eauto; try now intuition.
   }
 
   transitivity (M vs /\ proc s).
-  split; intros [? ?]; intuition; try (now rewrite Hu).
-  apply Hu;tauto.  
+  split; intros [? ?]; intuition; try (now rewrite Hu). apply Hu;tauto. 
+  
   {
     split.
     - intros [Mvs cls_s]; intuition.

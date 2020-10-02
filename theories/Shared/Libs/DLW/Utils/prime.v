@@ -227,7 +227,6 @@ Section prime.
         rewrite <- Nat.mul_1_r at 1.
         apply prime_ge_2 in H1.
         apply mult_lt_compat_l; try lia.
-        revert H2; destruct (div (S (S n)) p); intros; lia.
       + apply HPp, H1.
     Qed.
 

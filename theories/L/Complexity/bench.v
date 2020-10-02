@@ -39,6 +39,8 @@ Section explicit_bounds.
   End fixXeq.
   Existing Instance term_list_in_decb.
 
+  Definition TODO {Y:Type} : Y. Admitted.
+
   Notation ntodo := (TODO (Y := nat)).
 
   (** extraction of evalVar *)

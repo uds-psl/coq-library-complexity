@@ -85,6 +85,8 @@ Section fixX.
 
   Context (G0 : width > 0).
 
+  Local Set Default Proof Using "Type".
+
   (** The final constraint*)
   (** This is defined in terms of the offset: there must exist an element of a list of strings final which is a substring of the the string s at a multiple of offset *)
   Definition satFinal l (final : list (list X)) s := 
@@ -96,7 +98,7 @@ Section fixX.
   Definition coversAt (card : CCCard X) (i : nat) a b := coversHead card (skipn i a) (skipn i b).
   Lemma coversAt_head card a b : coversHead card a b <-> coversAt card 0 a b. 
   Proof. 
-    unfold coversAt.
+    clear G0. unfold coversAt.
     rewrite <- firstn_skipn with (n:= 0) (l:= a) at 1.
     rewrite <- firstn_skipn with (n:= 0) (l:= b) at 1.
     repeat rewrite firstn_O; now cbn. 
@@ -104,7 +106,7 @@ Section fixX.
 
   Lemma coversAt_step (card : CCCard X) a b u v (i:nat) : length u = offset -> length v = offset -> coversAt card i a b <-> coversAt card (i + offset) (u ++ a) (v ++ b).
   Proof.
-    intros. unfold coversAt.
+    clear G0. intros. unfold coversAt.
     rewrite Nat.add_comm. now repeat rewrite skipn_add. 
   Qed. 
 
@@ -129,8 +131,8 @@ Section fixX.
 
   Lemma valid_length_inv a b : valid a b -> length a = length b. 
   Proof.
-    induction 1; cbn. reflexivity.  
-    all: repeat rewrite app_length; firstorder. 
+    clear G0. induction 1; cbn. reflexivity.  
+    all: repeat rewrite app_length; firstorder; nia. 
   Qed. 
 
   (** We can make a step to any string if the length is less than width *)
@@ -147,6 +149,7 @@ Section fixX.
 
   Lemma valid_multiple_of_offset a b : valid a b -> exists k, |a| = k * offset.
   Proof. 
+    clear G0.
     induction 1 as [ | a b u v ? IH ? ? ? | a b u v card ? IH ? ? ? ?]. 
     exists 0; now cbn. 
     all: setoid_rewrite app_length; destruct IH as (k & ->); exists (S k); nia. 
@@ -173,7 +176,7 @@ Section fixX.
   Variable (A0 : exists k, k > 0 /\ width = k * offset). 
   Variable (A1 : offset > 0). 
   Lemma validDirect_valid a b : validDirect a b <-> valid a b /\ |a| >= width.
-  Proof. 
+  Proof using G0 A1 A0. 
     split.
     - induction 1 as [a b card H H0 H1 H2 | a b u v card H IH H0 H1 H2 H3]. 
       + split; [ | lia]. 
@@ -216,7 +219,7 @@ Section fixX.
         split.
         1: { destruct IH2 as (k & IH2). exists (S k). rewrite app_length; lia. }
         rewrite app_length; intros. lia. 
-      + destruct IHvalid as (IH1 & IH2 & IH3). split; [repeat rewrite app_length; firstorder | ].  
+      + destruct IHvalid as (IH1 & IH2 & IH3). split; [repeat rewrite app_length; firstorder;nia | ].  
         split.
         1: { destruct IH2 as (k & IH2). exists (S k). rewrite app_length; lia. }
         rewrite app_length. intros i (iH1 & (j & iH2)). destruct j. 

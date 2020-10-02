@@ -318,7 +318,7 @@ Section fixInstance.
   Proof. 
     intros. unfold encodeSubstringInLine. destruct s eqn:H1. 
     - unfold satisfies. cbn. intros; split.
-      + intros _. exists 0; cbn; firstorder.
+      + intros _. exists 0; cbn; firstorder nia.
       + intros _. reflexivity. 
     - apply encodeSubstringInLineP_encodesPredicate; cbn; easy.
   Qed. 

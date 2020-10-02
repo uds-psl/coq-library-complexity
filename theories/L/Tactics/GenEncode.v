@@ -6,6 +6,14 @@ Export String.StringSyntax.
 Import MonadNotation.
 Open Scope string_scope.
 
+(** *** Generation of encoding functions *)
+
+Fixpoint mkLApp (s : term) (L : list term) :=
+  match L with
+  | [] => s
+  | t :: L => mkLApp (tApp (tConstruct (mkInd term_kn 0) 1 []) [s; t]) L
+  end.
+
 Definition encode_arguments (B : term) (a i : nat) A_j :=
       A <- tmUnquoteTyped Type A_j ;;
       name <- (tmEval cbv (name_of A_j ++ "_term") >>=  Core.tmFreshName)  ;;
@@ -26,9 +34,7 @@ Definition mkMatch (t1 t2 d : Ast.term) (cases : nat -> list term -> Core.Templa
   ret (tCase (ind, params) (tLambda nAnon t1 t2) d
              body).
 
-MetaCoq Quote Definition tLproc := L_facts.proc.
-MetaCoq Quote Definition tLredLe := L_facts.redLe.
-
+Definition L_facts_mp := MPfile ["L_facts"; "Util"; "L"; "Undecidability"].
 
 Definition tmMatchCorrect (A : Type) : Core.TemplateMonad Prop :=
   t <- (tmEval hnf A >>= tmQuote) ;; 
@@ -41,28 +47,24 @@ Definition tmMatchCorrect (A : Type) : Core.TemplateMonad Prop :=
               args <- tmEval cbv (|ctr_types|);; 
               C <- monad_map_i (encode_arguments t args) ctr_types ;; 
               ret (stack (map (tLambda (nAnon)) ctr_types)
-                               (((fun s => mkLAppList s C) (tRel (args + 2 * (num - i) - 1)))))
+                               (((fun s => mkAppList s C) (tRel (args + 2 * (num - i) - 1)))))
            ) ;;
    E' <- Core.tmInferInstance None (registered A);;
    E <- tmGetMyOption E' "failed" ;;        
    t' <- ret (@enc A E);;
    l <- tmQuote t';;
    encn <- ret (tApp l [tRel (2*num) ]) ;;
-   lhs <- ret (mkLAppList encn ((fix f n := match n with 0 => [] | S n => tRel (2 * n + 1) :: f n end ) num)) ;;
-   ter <- ret (tProd nAnon t (it (fun s : term => tProd nAnon tTerm (tProd nAnon (tApp tLproc [tRel 0]) s)) num ((tApp tLredLe [mkNat num; lhs; mtch]))));;
+   lhs <- ret (mkLApp encn ((fix f n := match n with 0 => [] | S n => tRel (2 * n + 1) :: f n end ) num)) ;;
+   ter <- ret (tProd nAnon t (it (fun s : term => tProd nAnon tTerm (tProd nAnon (tApp (tConst (L_facts_mp, "proc") []) [tRel 0]) s)) num ((tApp (tConst (L_facts_mp, "redLe") []) [mkNat num; lhs; mtch]))));;
    ter <- tmEval cbv ter ;;
    tmUnquoteTyped Prop ter.
 
 Definition matchlem n A := (Core.tmBind (tmMatchCorrect A) (fun m => tmLemma n m ;; ret tt)).
 
-Definition tmGenEncode (n : ident) (A : Type) : TemplateMonad _:=
+Definition tmGenEncode (n : ident) (A : Type) : TemplateMonad unit :=
   e <- tmEncode n A;;
-  tmp' <- tmLocate1 n;;
-  tmp <- match tmp' with
-          ConstRef n' => tmReturn n'
-        | _ => tmFail "internal error in tmGenEncode"
-        end;;
-  e <- tmUnquoteTyped (encodable A) (tConst tmp Instance.empty);;
+  modpath <- tmCurrentModPath tt ;;
+  e <- tmUnquoteTyped (encodable A) (tConst (modpath, n) []);;
   p <- Core.tmLemma (n ++ "_proc") (forall x : A, proc (@enc_f A e x)) ;;
   n2 <- tmEval cbv ((n ++ "_inj"));;
   i <- Core.tmLemma n2  (injective (@enc_f _ e)) ;;
@@ -75,6 +77,8 @@ Definition tmGenEncode (n : ident) (A : Type) : TemplateMonad _:=
 (*
 Definition tmGenEncode' (n : ident) (A : Type) :=
   e <- tmEncode n A;;
+  modpath <- tmCurrentModPath tt ;;
+  e <- tmUnquoteTyped (encodable A) (tConst (modpath, n) []);;
   p <- Core.tmLemma (n ++ "_proc") (forall x : A, proc (@enc_f A e x)) ;;
   n2 <- tmEval cbv ((n ++ "_inj"));;
   i <- Core.tmLemma n2  (injective (@enc_f _ e)) ;;
@@ -87,4 +91,5 @@ Global Obligation Tactic := try fold (injective (enc_f)); match goal with
                            | [ |- forall x : ?X, proc ?f ] => try register_proc
                            | [ |- injective ?f ] => register_inj
                            | [ |- context [_ >(<= _) _] ] => extract match
-                                                          end || Tactics.program_simpl.
+                           end || Tactics.program_simpl.
+
