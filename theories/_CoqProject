@@ -74,6 +74,20 @@ TM/Single/DecodeTape.v
 TM/Single/DecodeTapes.v
 
 
+# PrettyBounds
+TM/PrettyBounds/PrettyBounds.v
+TM/PrettyBounds/BaseCode.v
+TM/PrettyBounds/UnivBounds.v
+TM/PrettyBounds/M2MBounds.v
+
+TM/PrettyBounds/SpaceBounds.v
+TM/PrettyBounds/BaseCodeSpace.v
+TM/PrettyBounds/UnivSpaceBounds.v
+
+# Multi-Univ Simulation Theorem
+TM/Univ/MultiUnivTimeSpaceSimulation.v
+
+
 
 L/Datatypes/LBinNums.v
 L/Datatypes/LComparison.v

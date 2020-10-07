@@ -9,7 +9,7 @@ From Complexity.L.TM Require Import CompCode.
 From Undecidability.TM Require Import TM_facts CodeTM.
 From Undecidability.TM.Single Require Import EncodeTapes StepTM.
 
-From Undecidability.TM Require M2MBounds.
+From Complexity.TM Require M2MBounds.
 From Undecidability Require Import TM.Util.VectorPrelim.
 
 Unset Printing Coercions.

@@ -1,6 +1,6 @@
 
-From Undecidability Require Import TM.PrettyBounds.PrettyBounds.
-From Undecidability Require Import TM.PrettyBounds.BaseCode.
+From Complexity Require Import TM.PrettyBounds.PrettyBounds.
+From Complexity Require Import TM.PrettyBounds.BaseCode.
 From Undecidability Require Import LM_heap_def TM.PrettyBounds.MaxList.
 
 From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require Import Alphabets.

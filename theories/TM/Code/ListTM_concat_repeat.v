@@ -1,5 +1,8 @@
 From Undecidability Require Import ProgrammingTools.
-From Undecidability Require Import CaseNat ListTM PrettyBounds.BaseCode.
+From Undecidability Require Import CaseNat ListTM.
+From Undecidability Require Import CaseNat ListTM.
+From Complexity Require Import PrettyBounds.BaseCode.
+
 From Undecidability.L.Complexity Require Import UpToCNary.
 
 
