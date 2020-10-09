@@ -42,5 +42,5 @@ jobs:
     - stage: prepare cache
       script: true
     - stage: build
-      script:
-        - make -j ${NJOBS} all TIMED=1
+      script: #The following disables "par:"-tactics in travism, to limit memory usage
+        - export $(coqworkmgr -j 1);make -j ${NJOBS} all TIMED=1

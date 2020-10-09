@@ -1,6 +1,6 @@
 From Undecidability.TM Require Import TM_facts.
 From Undecidability.L.TM Require Import TMEncoding.
-From Complexity.L.TM Require Import TMflat TMflatEnc TMflatFun TapeDecode TMunflatten TMflatten.
+From Complexity.L.TM Require Import TMflat TMflatFun TMunflatten TMflatten.
 From Complexity.L.Complexity Require Import FlatFinTypes MorePrelim.
 From Complexity.L.Complexity.Problems Require Export TMGenNP_fixed_mTM. 
 

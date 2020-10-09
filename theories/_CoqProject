@@ -118,6 +118,7 @@ L/Complexity/ONotation.v
 L/Complexity/ONotationIsAppropriate.v
 L/Complexity/RegisteredP.v
 L/Complexity/LinTimeDecodable.v
+L/Complexity/LinTimeDecodable_def.v
 L/Complexity/NP.v
 L/Complexity/Problems/GenNP/CanEnumTerm_def.v
 L/Complexity/Problems/GenNP/CanEnumTerm.v
