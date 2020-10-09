@@ -43,4 +43,4 @@ jobs:
       script: true
     - stage: build
       script:
-        - make -j ${NJOBS} all
+        - make -j ${NJOBS} all TIMED=1
