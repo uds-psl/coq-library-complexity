@@ -14,6 +14,8 @@ From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require Alphabets.
 
 From Coq Require Import Lia Ring Arith.
 
+Set Default Proof Using "Type".
+
 From Complexity Require Import Code.ListTM_concat_repeat.
 Module BoollistToEnc.
 
@@ -127,10 +129,10 @@ Module BoollistToEnc.
       intros bs res Hbs Hres Ht2. 
       destruct H as [H|H].
       -cbn in H. TMSimp. modpon H;[]. destruct bs. now exfalso.
-       TMSimp. modpon H0;[]. modpon H1;[]. modpon H2;[]. modpon H3;[]. TMSimp.
+       TMSimp. modpon H0;[]. modpon H2;[]. modpon H4;[]. modpon H7;[]. TMSimp.
        repeat (simple apply conj). all:try contains_ext. 2:reflexivity. now isRight_mono. 
       -cbn in H. TMSimp. modpon H;[]. destruct bs. 2:easy. TMSimp.
-       modpon H0;[]. modpon H1; [].
+       modpon H1;[].
        repeat (simple apply conj). all:try now isRight_mono. all:reflexivity.
     Qed.
 
@@ -162,9 +164,8 @@ Module BoollistToEnc.
           destruct b,bs. all:try now (exfalso;assumption).
           all:TMSimp;simpl_surject.
           2:{ do 2 eexists. now contains_ext. unfold Reset_steps. cbv -[mult plus]. reflexivity. }
-          infTer 4. intros ? H1. modpon H1. TMSimp.
-          infTer 4. intros H2. modpon H2.  TMSimp.
-          infTer 4. intros ? ? H3. modpon H3.  TMSimp.
+          infTer 4. intros ? ? H1. modpon H1. TMSimp.
+          infTer 4. intros ? ? ?. modpon H2. TMSimp.
           unfold App'_T. cbn.
           infTer 6. 1,2:now simpl_surject;contains_ext.
           { eassert (HApp:=proj2_sig (App'_steps_nice _) (enc_bool_perElem b)). hnf in HApp.
@@ -257,9 +258,9 @@ Module BoollistToEnc.
        all:now (notypeclasses refine (@Reset_Realise _ _ _ _ _);shelve). }
       intros tin (yout,tout) H. hnf. intros bs Hbs Htin1 Htin2 Htin3.
       hnf in H. cbn in H. TMSimp. modpon H;[]. specialize H0 with (x:=[]). modpon H0;[].
-      modpon H1;[]. modpon H2;[]. modpon H3;[].  modpon H4;[]. modpon H5;[]. modpon H6;[].
-      modpon H7;[]. TMSimp.  repeat (simple apply conj). 1,3,4:now isRight_mono.
-      { rewrite enc_bool_explicit,rev_length. autorewrite with list in H14. contains_ext. }
+      modpon H2;[]. modpon H4;[]. modpon H6;[].  modpon H8;[]. modpon H10;[]. modpon H12;[].
+      modpon H14;[]. TMSimp.  repeat (simple apply conj). 1,3,4:now isRight_mono.
+      { rewrite enc_bool_explicit,rev_length. autorewrite with list in H13. contains_ext. }
     Qed.
 
     
@@ -289,13 +290,13 @@ Module BoollistToEnc.
         assert (H':=proj2_sig (Length_steps_nice _) bs). hnf in H'. rewrite H',(correct__leUpToC boollist_size). reflexivity.
       }
       2:{ intros tout _ (H&Hrem). TMSimp. modpon H.
-          infTer 5. intros t1 _ (Ht1&Ht1Rem). TMSimp. specialize (Ht1 []). modpon Ht1;[].
-          infTer 5. intros t2 _ (Ht2&Ht2Rem). TMSimp. modpon Ht2;[].
+          infTer 5. intros t1_ _ (Ht1&Ht1Rem). TMSimp. specialize (Ht1 []). modpon Ht1;[].
+          infTer 5. intros t2_ _ (Ht2&Ht2Rem). TMSimp. modpon Ht2;[].
           unfold ConcatRepeat.Ter. cbn. 
           infTer 5. 1:{ repeat simple apply conj. 1,2,3:now contains_ext.  rewrite UpToC_le. reflexivity. }
-          intros t3 _ (Ht3&Ht3Rem). TMSimp. modpon Ht3;[]. rewrite app_nil_r in Ht4. 
-          infTer 5. now contains_ext. intros t4 _ (Htp4&Ht4Rem). TMSimp. modpon Htp4;[].
-          infTer 5. intros t5 _ (Htp5&Ht5Rem). TMSimp. modpon Htp5;[].
+          intros t3_ _ (Ht3&Ht3Rem). TMSimp. modpon Ht3;[]. rewrite app_nil_r in Ht4.  
+          infTer 4. eassumption. reflexivity. intros t4 _ (Htp4&Ht4Rem). TMSimp. modpon Htp4;[].
+          infTer 5. intros t5_ _ (Htp5&Ht5Rem). TMSimp. modpon Htp5;[].
           infTer 5. 1:{unfold App'_T. cbn. eexists _,_.  repeat simple apply conj. 1,2:simpl_surject;now contains_ext.
                        eassert (H':=proj2_sig (App'_steps_nice _) enc_bool_nil). hnf in H'. rewrite H'. reflexivity.
           }
