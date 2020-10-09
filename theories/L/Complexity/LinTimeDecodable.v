@@ -3,19 +3,8 @@ From Undecidability.L.Datatypes Require Import LNat Lists LTerm LOptions LUnit.
 
 From Complexity.L Require Import Functions.Decoding.
 
-Class linTimeDecodable `(X:Type) `{decodable X}: Type :=
-  {
-    c__linDec : nat;
-    comp_enc_lin : computableTime' (decode X) (fun x _ => (size x *c__linDec + c__linDec,tt));
-  }.
+From Complexity.L Require Export LinTimeDecodable_def.
 
-Arguments linTimeDecodable : clear implicits.
-Arguments linTimeDecodable _ {_ _}.
-
-Arguments c__linDec : clear implicits.
-Arguments c__linDec _ {_ _ _}.
-
-Existing Instance comp_enc_lin.
 
 Instance linDec_unit : linTimeDecodable unit.
 Proof. 

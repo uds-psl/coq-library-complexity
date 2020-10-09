@@ -122,8 +122,11 @@ Require Import Lia.
 (*Require Template.utils.*)
 From PslBase Require Export FiniteTypes.FinTypes FiniteTypes.BasicFinTypes FiniteTypes.CompoundFinTypes Retracts Inhabited Base Vectors.Vectors FiniteTypes. 
 Require Export smpl.Smpl.
-From Undecidability.L.TM Require Import TMEncoding.
-From Complexity.L.TM Require Import TMflat TMflatEnc TMflatFun TapeDecode TMunflatten.
+From Undecidability.Shared Require Import Prelim.
+
+From Undecidability.L Require Import Util.L_facts.
+From Undecidability.L.Tactics Require Import Lrewrite.
+
 
 (*option monad in order to ease notation *)
 Definition optReturn := @Some.
