@@ -2695,6 +2695,8 @@ Section fixTM.
     idtac "solving uniqueness - done".
   Qed.
 
+  Optimize Heap.
+
   (** if we are in a halting state, we can only rewrite to the same string (identity), except for setting the polarity to neutral *)
   Lemma haltsim q tp s :
     (q, tp) ≃c s
@@ -2743,6 +2745,9 @@ Section fixTM.
     cbn; try rewrite <- !app_assoc; cbn; reflexivity)). 
     Set Default Goal Selector "1".
   Qed. 
+
+  Check 0. Optimize Heap. Check true.
+
 
   Set Default Goal Selector "1". 
 
@@ -3297,6 +3302,8 @@ Section fixTM.
     - destruct u; cbn; [ | destruct u; cbn; [eauto | eauto]].
       destruct finp; [destruct s; [destruct n | ] | ]; cbn; eauto.
   Qed.
+
+  Check 1. Optimize Heap. Check true.
 
   Lemma prelude_left_covering_blank_unique finp j i u s: 
     (map inr (repEl u nblank ++ ninit :: map nsig finp ++ repEl j nstar ++ repEl (wo + i) nblank ++ [ndelimC])) ⇝{lpreludeRules} s 
@@ -3856,6 +3863,9 @@ Section fixTM.
     split; intros ((F1 & F2 & F3) & (F4 & F5 & F6)); repeat split.
     all: now apply (isFlatEnvOf_bound_Alphabet_transfer _ H). 
   Qed.
+
+  Check 2. Optimize Heap. Check true.
+
 
   (** for canonical generation procedures, generateCard works as intended *)
   Lemma generateCard_Some (X Y Z W M : Type) (r : evalEnv X Y Z W -> fAlphabet -> option M) (env : evalEnv X Y Z W) rule :
@@ -4564,6 +4574,9 @@ Section fixTM.
 
   Notation ecovHeadSim := (coversHeadInd esimRules).   
 
+  Check 3. Optimize Heap. Check true.
+
+
   Ltac ecovHeadSim_inv := 
     repeat match goal with
              | [H : esimRules _ _ _ _ _ _ |- _] => inv H
@@ -5039,6 +5052,8 @@ Section fixTM.
 
   (** those nice little singleton vectors have to go :) sorry *)
   Ltac destruct_vec1 := repeat match goal with [v : Vector.t _ 1 |- _] => specialize (vec_case1 v) as (? & ->) end. 
+
+  Check 4. Optimize Heap. Check true.
 
   Lemma fin_flat_nonhaltCards_agree q qflat m mflat : 
     finReprEl' qflat q -> opt_finReprEl' mflat m 
