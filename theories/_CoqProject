@@ -4,7 +4,6 @@
 COQDOCFLAGS = "--charset utf-8 -s --with-header ../website/resources/header.html --with-footer ../website/resources/footer.html --index indexpage"
 
 
-#this file takes long to compile, so it should be early in the list
 L/Complexity/Reductions/Cook/SingleTMGenNP_to_TCC.v
 L/Complexity/CookLevin.v
 
