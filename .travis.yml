@@ -43,4 +43,4 @@ jobs:
       script: true
     - stage: build
       script: #The following disables "par:"-tactics in travis, to limit memory usage
-        - export $(coqworkmgr -j 1);make -j ${NJOBS} all TIMED=1
+        - COQMF_ARGS='-arg "-async-proofs-tac-j 1"' make -j ${NJOBS} all TIMED=1
