@@ -2682,7 +2682,16 @@ Section fixTM.
     (*therefore abstract into opaque lemmas *)
     idtac "solving uniqueness - this may take a few minutes".
     unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1.
-    par:abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
+    1-10:abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). idtac "solving uniqueness - 10%".
+    1-10:abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). idtac "solving uniqueness - 20%".
+    1-10:abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). idtac "solving uniqueness - 30%".
+    1-10:abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). idtac "solving uniqueness - 40%".
+    1-10:abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). idtac "solving uniqueness - 50%".
+    1-10:abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). idtac "solving uniqueness - 60%".
+    1-10:abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). idtac "solving uniqueness - 70%".
+    1-10:abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). idtac "solving uniqueness - 80%".
+    1-10:abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). idtac "solving uniqueness - 90%".
+    1-10:abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
     idtac "solving uniqueness - done".
   Qed.
 
