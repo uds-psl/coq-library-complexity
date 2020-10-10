@@ -1,5 +1,5 @@
 all: Makefile.coq
-	+make -f Makefile.coq L/Complexity/Reductions/Cook/SingleTMGenNP_to_TCC.vo all
+	+make -f Makefile.coq all
 
 html: Makefile.coq
 	+make -f Makefile.coq html
