@@ -358,12 +358,12 @@ Section fixTM.
                         | _ ≃t(?p, ?w) ?x :: ?h => is_var x; destruct x; [discr H | ]     
                         | _ ≃t(?p, ?w) (inr ?e) :: ?h => is_var e; destruct e; [discr H | ]
                         | _ ≃t(?p, ?w) (inr (inr ?e)) :: ?h => is_var e; destruct e
-                        | _ ≃t(?p, ?w) (inr (inr (?p', _))) :: ?h => is_var p'; specialize (tape_repr_inv16 H) as -> 
+                        | _ ≃t(?p, ?w) (inr (inr (?p', _))) :: ?h => is_var p'; pose proof (tape_repr_inv16 H); subst p' 
                         | [] ≃t(?p, ?w) (inr (inr (_, ?e))) :: ?h => is_var e; destruct e; [ discr H | ]
                         | ?u ≃t(?p, ?w) inr (inr (_, |_|)) :: ?h => is_var u; destruct u; [ | discr H] 
                         | ?u :: ?us ≃t(?p, ?w) ?h => is_var h; destruct h; [ discr H | ]
                         | ?u :: ?us ≃t(?p, ?w) ?h' ++ ?h'' => is_var h'; destruct h'; cbn in H; try discr H
-                        | ?u :: ?us ≃t(?p, ?w) inr(inr (_, ?m)) :: _ => is_var m; specialize (tape_repr_inv8 H) as ->  
+                        | ?u :: ?us ≃t(?p, ?w) inr(inr (_, ?m)) :: _ => is_var m; pose proof  (tape_repr_inv8 H); subst m  
                         | ?u1 :: _ ≃t(?p, ?w) _  => is_var w; destruct w; [ discr H | ]
                         | ?u1 :: [] ≃t(_, S ?w) _ :: ?h  => specialize (tape_repr_inv9 H) as ->
                         | ?u ≃t(_, _) inr (inr (_, Some _)) :: _ => is_var u;
@@ -880,16 +880,17 @@ Section fixTM.
   Proof. intros; congruence. Qed. 
 
   Ltac simp_eqn := repeat once match goal with
-                          | [H : trans (?a, ?b) = ?h1, H1 : trans (?a, ?b) = ?h2 |- _] => assert (h1 = h2) by congruence; clear H1
-                          | [H : (?a, ?b) = (?c, ?d) |- _] => specialize (prod_eq H) as (? & ?); clear H
+                          | [H : trans (?a, ?b) = ?h1, H1 : trans (?a, ?b) = ?h2 |- _] => assert (h1 = h2) by (now (rewrite <- H;rewrite <- H1)); clear H1
+                          | [H : (?a, ?b) = (?c, ?d) |- _] => simple apply prod_eq in H as []
                           | [H : ?a = ?a |- _] => clear H
-                          | [H : ?a = _ |- _] => is_var a; rewrite H in *; clear H
-                          | [H : Some ?a = Some ?b |- _] => apply Some_injective in H
-                          | [H : inr ?a = inr ?b |- _] => apply inr_injective in H 
-                          | [H : inl ?a = inl ?b |- _] => apply inl_injective in H 
-                          | [H : ?h1 :: ?a = ?h2 :: ?b |- _] => assert (a = b) by congruence; assert (h1 = h2) by congruence; clear H
+                          | [H : ?a = _ |- _] => is_var a; subst a
+                          | [H : Some ?a = Some ?b |- _] => simple apply Some_injective in H
+                          | [H : inr ?a = inr ?b |- _] => simple apply inr_injective in H 
+                          | [H : inl ?a = inl ?b |- _] => simple apply inl_injective in H 
+                          | [H : ?h1 :: ?a = ?h2 :: ?b |- _] => simple apply Code.cons_injective in H as [? ?]
                           | [H : rev ?A = _ |- _ ] => is_var A; apply involution_invert_eqn2 in H as ?; [ | involution_simpl]; clear H
                           | [H : _ = rev ?A |- _ ] => is_var A; symmetry in H; apply involution_invert_eqn2 in H; [ | involution_simpl]
+                          | [H : _ = ?a |- _] => is_var a; subst a
                           | [H : context[E _ (S _)] |- _] => cbn in H
                           | [H : context[E _ (wo + _)] |- _] => cbn in H
                     end; try congruence.
@@ -1911,11 +1912,28 @@ Section fixTM.
     intros. transRules_inv2;eauto 10 with trans.
   Qed. 
 
-  Ltac inv_eqn H := match type of H with 
-                    | ?h = ?h' => is_var h; rewrite !H in *; clear H 
-                    | ?h = ?h' => is_var h'; rewrite <- !H in *; clear H 
-                    | _ => inv H 
-                    end.  
+  Ltac inv_eqn H :=
+    let t:= type of H in
+    once match t with 
+    | ?h = ?h' => is_var h ; subst h
+    | ?h = ?h' => is_var h'; subst h'
+      | _ => 
+      lazymatch t with 
+      | None = None => clear H
+      | None = Some _ => discriminate H
+      | Some _ = None => discriminate H
+      | Some _ = Some _ => simple apply Some_injective in H;inv_eqn H
+      | inl _ = inr _ => discriminate H
+      | inr _ = inl _ => discriminate H
+      | inl _ = inl _ => simple apply inl_injective in H;inv_eqn H
+      | inr _ = inr _ => simple apply inr_injective in H;inv_eqn H
+      | (_,_) = (_,_) =>
+          let H1 := fresh in 
+          let H2 := fresh in
+          simple apply prod_eq in H as [H1 H2]; inv_eqn H1;inv_eqn H2
+          | _ => fail 1000 "inv_eqn" t
+      end
+    end.  
 
   (** inversions for the second level of the hierarchy of predicates *) 
   Ltac inv_trans_prim := repeat once match goal with 
@@ -2589,7 +2607,7 @@ Section fixTM.
     eapply covHeadSim_trans in K3; [ | eauto | eassumption];  
     eapply covHeadSim_trans in K4; [ | eauto | eassumption]; 
     eapply covHeadSim_trans in K5; [ | eauto | eassumption];  
-    inv K3;  inv_trans_prim;inv K4; inv_trans_prim; inv K5; inv_trans_prim; 
+    inv' K3 transRules_inv;  inv_trans_prim;inv' K4 transRules_inv; inv_trans_prim; inv' K5 transRules_inv; inv_trans_prim; 
     inv_trans_sec; repeat (transRules_inv2_once;try congruence); simp_eqn;  
     (specialize (covHeadSim_unique_left K1 F1 Z3) as ?; 
     simp_eqn; 
@@ -2611,6 +2629,7 @@ Section fixTM.
     intros H (H0' &  H0) H1. cbn in H0'. unfold sstep in H0. destruct trans eqn:H2 in H0. inv H0. rename p into p'. 
     apply valid_reprConfig_unfold. 
     rewrite sizeOfTape_lcr in H1. 
+
     destruct H as (ls & qm & rs & -> & H). destruct H as (p & -> & F1 & F2). unfold embedState. 
     destruct p' as ([wsym | ] & []); destruct tp as [ | ? l1 | ? l0 | l0 ? l1]; cbn in *; destruct_tape_in_tidy F1; destruct_tape_in_tidy F2. 
 
@@ -2621,7 +2640,8 @@ Section fixTM.
     try match type of F1 with _ :: ?l0 ≃t(_, _) _ => destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end;
     try match type of F2 with ?l1 ≃t(_, _) _ => is_var l1; destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end;
     try match type of F2 with _ :: ?l1 ≃t(_, _) _ => destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end. 
-    
+    (* 84 goals *)
+
     Optimize Proof. 
     cbn in H1.
     
@@ -2681,6 +2701,9 @@ Section fixTM.
       (*solve goals, except for the uniqueness goal (factored out due to performance)*)
       (split; [abstract solve_stepsim_covering shiftdir Z1 W1 | split; [  | abstract solve_stepsim_repr shiftdir Z2 W2]]) 
     end.
+    (* 100 goals*)
+
+
     Optimize Proof. 
     
     (*solve the uniqueness obligations - this is very expensive because of the needed inversions *)
