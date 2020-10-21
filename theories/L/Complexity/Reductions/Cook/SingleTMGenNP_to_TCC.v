@@ -2613,14 +2613,19 @@ Section fixTM.
     rewrite sizeOfTape_lcr in H1. 
     destruct H as (ls & qm & rs & -> & H). destruct H as (p & -> & F1 & F2). unfold embedState. 
     destruct p' as ([wsym | ] & []); destruct tp as [ | ? l1 | ? l0 | l0 ? l1]; cbn in *; destruct_tape_in_tidy F1; destruct_tape_in_tidy F2. 
-    try match type of F1 with ?l0 ≃t(_, _) _ => is_var l0; destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end. 
-    try match type of F1 with _ :: ?l0 ≃t(_, _) _ => destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end. 
-    try match type of F2 with ?l1 ≃t(_, _) _ => is_var l1; destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end. 
+
+    idtac "proving stepsim lemma - this may take a few minutes".
+
+    time "case destinctions"
+    try match type of F1 with ?l0 ≃t(_, _) _ => is_var l0; destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end;
+    try match type of F1 with _ :: ?l0 ≃t(_, _) _ => destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end;
+    try match type of F2 with ?l1 ≃t(_, _) _ => is_var l1; destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end;
     try match type of F2 with _ :: ?l1 ≃t(_, _) _ => destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end. 
     
     Optimize Proof. 
     cbn in H1.
     
+    time "main proof except uniqueness"
     (*analyse what transition should be taken, instantiate the needed lemmas and solve all of the obligations except for uniqueness*)
     match type of H2 with 
       | trans (?q, ?csym) = (?q', (?wsym, ?dir)) => 
@@ -2680,19 +2685,19 @@ Section fixTM.
     
     (*solve the uniqueness obligations - this is very expensive because of the needed inversions *)
     (*therefore abstract into opaque lemmas *)
-    idtac "solving uniqueness - this may take a few minutes".
+    idtac "solving uniqueness".
     unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1.
-    1-10:abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). idtac "solving uniqueness - 10%".
-    1-10:abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). idtac "solving uniqueness - 20%".
-    1-10:abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). idtac "solving uniqueness - 30%".
-    1-10:abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). idtac "solving uniqueness - 40%".
-    1-10:abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). idtac "solving uniqueness - 50%".
-    1-10:abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). idtac "solving uniqueness - 60%".
-    1-10:abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). idtac "solving uniqueness - 70%".
-    1-10:abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). idtac "solving uniqueness - 80%".
-    1-10:abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3). idtac "solving uniqueness - 90%".
-    1-10:abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
-    idtac "solving uniqueness - done".
+    1-10:time "solving uniqueness - 10%" abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
+    1-10:time "solving uniqueness - 20%" abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
+    1-10:time "solving uniqueness - 30%" abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
+    1-10:time "solving uniqueness - 40%" abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
+    1-10:time "solving uniqueness - 50%" abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
+    1-10:time "solving uniqueness - 60%" abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
+    1-10:time "solving uniqueness - 70%" abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
+    1-10:time "solving uniqueness - 80%" abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
+    1-10:time "solving uniqueness - 90%" abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
+    1-10:time "solving uniqueness - 100%" abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
+    idtac "stepsim - done".
   Qed.
 
   Optimize Heap.

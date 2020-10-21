@@ -151,7 +151,7 @@ Ltac inv_valid := match goal with
                     | [ H : valid _ _ _ |- _] => inv H
                   end;
                   try match goal with
-                  | [ H : | _ | < 2 |- _] => now cbn in H
+                  | [ H : | _ | < 2 |- _] => solve [exfalso;cbn in H;nia]
                   end.
 
 

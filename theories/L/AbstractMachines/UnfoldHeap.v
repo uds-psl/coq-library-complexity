@@ -7,7 +7,7 @@ Section UnfoldPro.
 
   Variable H : list heapEntry.
 
-  Set Defaut Proof Using "Type".
+  Set Default Proof Using "Type".
 
   Import L_Notations.
 
