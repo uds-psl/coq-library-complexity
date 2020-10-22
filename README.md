@@ -1,4 +1,5 @@
 # A Coq Library of Complexity Theory
+[![Build Status](https://travis-ci.com/uds-psl/coq-library-complexity.svg?branch=coq-8.12)](https://travis-ci.com/uds-psl/coq-library-complexity)
 
 This library contains complexity theory. It is build upon the [Coq Library of Undecidability Proofs](https://github.com/uds-psl/coq-library-undecidability).
 
