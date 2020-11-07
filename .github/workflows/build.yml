@@ -1,5 +1,5 @@
   
-name: Test compilation
+name: build
 
 on:
   push:
