@@ -18,8 +18,10 @@ jobs:
         id: opam-cache
         uses: actions/cache@v2
         with:
-          path: "~/.opam"
-          key: opam-cache-key
+          path: |
+            ~/.opam
+            ~/bin
+          key: ${{ runner.os }}-${{ hashFiles('opam') }}
 
       - name: Install OCaml
         uses: avsm/setup-ocaml@v1
