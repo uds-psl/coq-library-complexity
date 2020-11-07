@@ -1,7 +1,13 @@
   
 name: Test compilation
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+    - 'coq-*'
+  pull_request:
+    branches:
+    - 'coq-*'
 
 jobs:
   build:
