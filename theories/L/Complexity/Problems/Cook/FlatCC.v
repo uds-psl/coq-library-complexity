@@ -1,4 +1,4 @@
-From PslBase Require Import Base FinTypes. 
+From Undecidability.Shared.Libs.PSL Require Import Base FinTypes. 
 From Undecidability Require Import L.Functions.EqBool.
 From Complexity.L.Complexity Require Export Problems.Cook.CC FlatFinTypes MorePrelim.
 Require Import Lia.
@@ -432,7 +432,7 @@ Qed.
 (** given a well-formed flat instance, we can derive a "canonical" (up to bijections of the finite type) CC instance *)
 (** we use Fin.t as the canonical finite type *)
 
-Require Import PslBase.FiniteTypes.VectorFin PslBase.FiniteTypes.Cardinality. 
+Require Import Undecidability.Shared.Libs.PSL.FiniteTypes.VectorFin Undecidability.Shared.Libs.PSL.FiniteTypes.Cardinality. 
 Import Coq.Init.Specif.
 Lemma unflattenString (f : list nat) k : list_ofFlatType k f -> {f' : list (finType_CS (Fin.t k)) & isFlatListOf f f'}.
 Proof. 

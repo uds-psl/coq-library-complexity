@@ -18,7 +18,7 @@ Proof. apply Nat.lt_le_incl. apply Encode_list_hasSize_gt_length. Qed.
 
 
 (* Don't [Import] it globally here, or there will be name clashes with LM Lookup *)
-From Undecidability Require Univ.LookupAssociativeListTM Univ.StepTM.
+From Undecidability.TM.Univ Require LookupAssociativeListTM Univ LowLevel.
 
 
 Module Univ_nice.

@@ -1,5 +1,5 @@
-From PslBase Require Import FiniteTypes.
-Require Import PslBase.FiniteTypes.BasicDefinitions.
+From Undecidability.Shared.Libs.PSL Require Import FiniteTypes.
+Require Import Undecidability.Shared.Libs.PSL.FiniteTypes.BasicDefinitions.
 Require Import Lia.
 From Complexity.L.Complexity Require Import MorePrelim.
 Require Export smpl.Smpl. 

@@ -147,7 +147,6 @@ End Lookup_size_nice.
 Local Arguments Lookup_size : simpl never.
 
 
-From Undecidability Require Import Univ.StepTM.
 From Complexity Require Import UnivBounds. (* We may need some lemmas from here *)
 Import Univ_nice.
 

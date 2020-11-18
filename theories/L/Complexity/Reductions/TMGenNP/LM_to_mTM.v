@@ -6,7 +6,7 @@ From Complexity.L.AbstractMachines Require Import FlatPro.Computable.LPro.
 From Undecidability.L.AbstractMachines Require Import FlatPro.Programs.
 From Complexity.L.Complexity Require Import LMGenNP TMGenNP_fixed_mTM.
 
-Require Undecidability.L.AbstractMachines.TM_LHeapInterpreter.M_LHeapInterpreter.
+From Undecidability.TM.L Require M_LHeapInterpreter.
 
 From Complexity Require Import TMGenNP.M_LM2TM.
 
@@ -106,7 +106,7 @@ Module M.
       intros ? out H P t__cert ->. hnf in H|-*. specialize (H P).
       apply H.
       -apply CodeTM.initValue_contains.
-      -intros ?. cbn - [Vector.const]. rewrite Vector.const_nth. now apply CodeTM.initRight_isRight.
+      -intros ?. cbn - [Vector.const]. rewrite Vector.const_nth. now apply CodeTM.initRight_isVoid.
     Qed.
 
     Definition time := @f__UpToC _ _ (projT1 (@LMtoTM._Terminates sig Retr1 Retr2)).
@@ -125,13 +125,13 @@ Module M.
       split.
       2:{ split. easy. unfold LMtoTM.Rel. intros _ H. eapply (H P).
           -apply CodeTM.initValue_contains.
-          -intros ?. cbn - [Vector.const]. rewrite Vector.const_nth. now apply CodeTM.initRight_isRight.
+          -intros ?. cbn - [Vector.const]. rewrite Vector.const_nth. now apply CodeTM.initRight_isVoid.
           -eauto.
       }
       exists P,k__LM.
       repeat simple apply conj.
       -apply CodeTM.initValue_contains.
-      -intros ?. cbn - [Vector.const]. rewrite Vector.const_nth. now apply CodeTM.initRight_isRight.
+      -intros ?. cbn - [Vector.const]. rewrite Vector.const_nth. now apply CodeTM.initRight_isVoid.
       -right. exists bs;split. all:easy.
       -eassumption.
     Qed.
@@ -211,7 +211,7 @@ Smpl Add 5 lazymatch goal with
            end: polyTimeComputable.
 
 Section Vcons.
-  Import PslBase.Vectors.Vectors.
+  Import Undecidability.Shared.Libs.PSL.Vectors.Vectors.
   Import Vector.
   Local Arguments VectorDef.to_list : simpl never.
   Global Instance termT_cons n X {regX : registered X} : computableTime' (fun x => @Vector.cons X x n) (fun a aT => (1,fun A AT => (4,tt))).

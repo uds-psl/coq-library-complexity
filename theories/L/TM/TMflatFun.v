@@ -4,7 +4,7 @@ From Complexity Require Import TMflat.
 From Undecidability Require Import TM_facts TM.TMEncoding.
 From Complexity Require Import L.TM.TMunflatten.
 
-From PslBase.FiniteTypes Require FiniteFunction.
+From Undecidability.Shared.Libs.PSL.FiniteTypes Require FiniteFunction.
 From Undecidability Require Import Functions.FinTypeLookup.
 
 

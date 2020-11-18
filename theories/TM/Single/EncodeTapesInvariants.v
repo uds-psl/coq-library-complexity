@@ -2,7 +2,7 @@ From Undecidability.TM Require Import TM ProgrammingTools Single.EncodeTapes.
 
 Import Lia.
 
-From Undecidability Require Shared.Prelim. 
+From Undecidability.Shared.Libs.PSL Require Prelim. 
 
 Hint Rewrite filter_app : list.
 Lemma filter_rev (A : Type) (f : A -> bool) (l : list A): filter f (rev l) = rev (filter f l).

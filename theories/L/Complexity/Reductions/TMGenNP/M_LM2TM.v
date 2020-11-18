@@ -12,13 +12,12 @@ From Complexity.L.AbstractMachines Require Import FlatPro.Computable.Compile.
      
 Unset Printing Coercions.
 
-From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require Alphabets.
+From Undecidability.TM.L Require Alphabets M_LHeapInterpreter.
 
 From Coq Require Import Lia Ring Arith.
 
 From Complexity.L.Complexity  Require Import M_Boollist_to_Enc.
 
-From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require M_LHeapInterpreter.
 From Complexity.L.AbstractMachines.TM_LHeapInterpreter Require SizeAnalysis LMBounds_Loop.
 
 Set Default Proof Using "Type".
@@ -51,7 +50,7 @@ Module LMtoTM.
       fun tin '(y,tout) =>
         forall (P:Pro),
         tin[@Fin1] ≃(retr__pro) P ->
-        (forall i : Fin.t 9, isRight tin[@FinR 2 i])
+        (forall i : Fin.t 9, isVoid tin[@FinR 2 i])
         -> match y with
             false => ~ exists (bs:list bool), tin[@Fin0] ≃ bs
           | true => exists (bs : list bool),
@@ -83,7 +82,7 @@ Module LMtoTM.
       (fun tin k =>
          exists (P:Pro) steps__LM,
            tin[@Fin1] ≃(retr__pro) P /\
-           (forall i : Fin.t 9, isRight tin[@FinR 2 i])
+           (forall i : Fin.t 9, isVoid tin[@FinR 2 i])
            /\ (((~exists (bs : list bool), tin[@Fin0] ≃ bs) /\ steps__LM = 0)
              \/
              exists (bs : list bool),
@@ -160,7 +159,7 @@ Module LMtoTM.
            destruct Hbs as (rem&->). cbn.  rewrite encode_list_concat. repeat (autorewrite with list;cbn).
            rewrite length_concat. rewrite map_map;cbn. rewrite sumn_map_c. nia. } 
           modpon Hb2;[]. infTer 3. 2:easy.
-          {hnf. cbn. TMSimp. exists bs. repeat simple apply conj. easy. 1-3:try isRight_mono. 
+          {hnf. cbn. TMSimp. exists bs. repeat simple apply conj. easy. 1-3:try isVoid_mono. 
            erewrite UpToC_le. rewrite Hlebs. reflexivity. }
           intros t1_ _ (HP'&Hrem_1). specialize (HP' bs). TMSimp. modpon HP'.
           infTer 5. TMSimp_goal. intros t2_ _ (Ht2&Ht2Rem). specialize (Ht2 [appT]). modpon Ht2.
@@ -209,7 +208,7 @@ Module LMtoTM.
           -cbn. simpl_surject. TMSimp_goal. contains_ext. 
           -cbn. simpl_surject. TMSimp_goal. contains_ext. 
           -cbn. simpl_surject. TMSimp_goal. contains_ext.
-          -intros i. cbn. destruct_fin i;cbn. all:simpl_surject. all:isRight_mono.
+          -intros i. cbn. destruct_fin i;cbn. all:simpl_surject. all:isVoid_mono.
           -unshelve erewrite (correct__leUpToC (Loop_steps_nice _) (_,_)). easy. 
            cbn [length]. unfold sizeP. rewrite !map_app,!sumn_app.
          

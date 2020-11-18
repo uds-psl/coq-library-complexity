@@ -1,6 +1,6 @@
 From Complexity.L.Complexity Require Import MorePrelim Problems.Cook.FlatCC FlatFinTypes. 
 From Complexity.L.Complexity.Problems.Cook Require Export TCC.
-From PslBase Require Import Base FinTypes. 
+From Undecidability.Shared.Libs.PSL Require Import Base FinTypes. 
 Require Import Lia.
 
 (** * Flat 3-Covering Cards *)
@@ -264,7 +264,7 @@ Qed.
 (** ** Mapping FlatTCC instances to canonical TCC instances *)
 (** from a flat instance, we can restore a canonical non-flat instance *)
 
-Require Import PslBase.FiniteTypes.VectorFin PslBase.FiniteTypes.Cardinality. 
+Require Import Undecidability.Shared.Libs.PSL.FiniteTypes.VectorFin Undecidability.Shared.Libs.PSL.FiniteTypes.Cardinality. 
 Lemma unflattenTCCCardP (w : TCCCardP nat) k : 
   TCCCardP_ofFlatType w k -> sigT (fun (w' : TCCCardP (finType_CS (Fin.t k))) => isFlatTCCCardPOf w w'). 
 Proof. 

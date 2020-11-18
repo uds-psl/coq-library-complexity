@@ -1,6 +1,6 @@
 From Undecidability.L.Tactics Require Import LTactics GenEncode Computable.
 From Undecidability.L Require Import  FinTypeLookup LFinType LSum.
-From PslBase Require Import FinTypes.
+From Undecidability.Shared.Libs.PSL Require Import FinTypes.
 
 From Complexity.L.Complexity.Reductions Require Import FSAT_to_SAT kSAT_to_SAT kSAT_to_FlatClique. 
 From Complexity.L.Complexity.Problems.Cook Require Import FlatCC SingleTMGenNP BinaryCC.

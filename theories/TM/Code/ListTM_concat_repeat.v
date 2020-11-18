@@ -57,7 +57,7 @@ Module ConcatRepeat.
           match yout, n with
           | (Some tt), 0 => (* break *)
             tout[@Fin0] ≃ cs /\
-            isRight tout[@Fin1] /\
+            isVoid tout[@Fin1] /\
             tout[@Fin2] ≃ xs
           | None, S n => (* continue *)
             tout[@Fin0] ≃ cs /\
@@ -85,7 +85,7 @@ Module ConcatRepeat.
        repeat eapply conj. 1-3:now contains_ext.
       -destruct H as (?&(HCase&HCaseRem)&->&tt1&HReset&HResetRem). clear tt1.
        modpon HCase. destruct n. 2:easy. TMSimp. modpon HReset.
-       repeat eapply conj. 1,3:now contains_ext. now isRight_mono.
+       repeat eapply conj. 1,3:now contains_ext. now isVoid_mono.
     Qed.
 
 
@@ -98,7 +98,7 @@ Module ConcatRepeat.
               tin[@Fin1] ≃ n ->
               tin[@Fin2] ≃ xs ->
               tout[@Fin0] ≃ cs /\
-              isRight tout[@Fin1] /\
+              isVoid tout[@Fin1] /\
               tout[@Fin2] ≃ concat (repeat cs n)++xs
         ).
 

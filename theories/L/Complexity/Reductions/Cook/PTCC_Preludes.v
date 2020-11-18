@@ -1,6 +1,6 @@
 From Complexity.L.Complexity Require Import Problems.Cook.TCC MorePrelim.
-From PslBase Require Import Base. 
-From PslBase Require Import FinTypes. 
+From Undecidability.Shared.Libs.PSL Require Import Base. 
+From Undecidability.Shared.Libs.PSL Require Import FinTypes. 
 Require Import Lia. 
 
 (** * Adding preludes to P-3-CC instances *)

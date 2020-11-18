@@ -73,8 +73,8 @@ Module CheckEncodesTape.
              match Option.bind Retr_g x with
                None => Return Nop (inr false)
              | Some c =>
-               if (isMarked c && haveSeenMark) || isNilBlank c || isLeftBlank c || isRightBlank c
-               then Return Nop (inr (isRightBlank c && (xorb haveSeenMark (isMarked c)) && haveSeenSymbol))
+               if (isMarked c && haveSeenMark) || isNilBlank c || isLeftBlank c || isVoidBlank c
+               then Return Nop (inr (isVoidBlank c && (xorb haveSeenMark (isMarked c)) && haveSeenSymbol))
                else Return (Move Rmove) (inl (haveSeenMark || isMarked c,haveSeenSymbol || isSymbol c))
              end).
 
@@ -84,8 +84,8 @@ Module CheckEncodesTape.
       match Option.bind Retr_g (current t) with
         None => (inr false,t)
       | Some c =>
-        if (isMarked c && haveSeenMark) || isNilBlank c || isLeftBlank c || isRightBlank c
-        then (inr (isRightBlank c && (xorb haveSeenMark (isMarked c)) && haveSeenSymbol),t)
+        if (isMarked c && haveSeenMark) || isNilBlank c || isLeftBlank c || isVoidBlank c
+        then (inr (isVoidBlank c && (xorb haveSeenMark (isMarked c)) && haveSeenSymbol),t)
         else (inl (haveSeenMark || isMarked c,haveSeenSymbol || isSymbol c),tape_move_right t)
       end.
 
@@ -143,7 +143,7 @@ Module CheckEncodesTape.
       destruct bs as (seenMark, seenSymbol). eapply Realise_monotone.
       { unfold M__step;cbn. apply Switch_Realise. now TM_Correct.
         introsSwitch c'. destructBoth (Option.bind Retr_g c') as [c | ]. 2:now TM_Correct.
-        destructBoth (isMarked c && seenMark || isNilBlank c || isLeftBlank c || isRightBlank c). all:TM_Correct.
+        destructBoth (isMarked c && seenMark || isNilBlank c || isLeftBlank c || isVoidBlank c). all:TM_Correct.
       }
       hnf;cbn. intros t (y&t') (?&?&[-> -> ]&H);revert H.
       destruct Option.bind. 2:{ cbn. now intros (->&_&->). }
@@ -156,7 +156,7 @@ Module CheckEncodesTape.
       destruct bs as (seenMark, seenSymbol). eapply TerminatesIn_monotone.
       { unfold M__step;cbn. apply Switch_TerminatesIn. 1,2:now TM_Correct.
         introsSwitch c'. destructBoth (Option.bind Retr_g c') as [c | ]. 2:now TM_Correct.
-        destructBoth (isMarked c && seenMark || isNilBlank c || isLeftBlank c || isRightBlank c). all:TM_Correct.
+        destructBoth (isMarked c && seenMark || isNilBlank c || isLeftBlank c || isVoidBlank c). all:TM_Correct.
       }
       hnf;cbn. intros t y Hy. infTer 3. rewrite <- Hy.
       2:{ intros ? ? [-> ->]. destruct Option.bind. 2:lia. destruct _. 2:reflexivity. nia. }

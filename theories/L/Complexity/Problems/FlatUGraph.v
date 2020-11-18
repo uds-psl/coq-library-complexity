@@ -1,7 +1,7 @@
 From Undecidability.L Require Import L.
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import Lists LNat LProd.
-From PslBase Require Import FinTypes. 
+From Undecidability.Shared.Libs.PSL Require Import FinTypes. 
 From Complexity.L.Complexity.Problems Require Import UGraph.
 From Complexity.L.Complexity Require Import FlatFinTypes.
 

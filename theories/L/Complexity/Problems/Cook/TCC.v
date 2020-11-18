@@ -1,5 +1,5 @@
-From PslBase Require Import Base. 
-From PslBase Require Import FiniteTypes. 
+From Undecidability.Shared.Libs.PSL Require Import Base. 
+From Undecidability.Shared.Libs.PSL Require Import FiniteTypes. 
 From Complexity.L.Complexity Require Import MorePrelim.
 Require Import Lia.
 

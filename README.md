@@ -1,4 +1,4 @@
-# A Coq Library of Complexity Theory
+# The Coq Library of Complexity Theory
 [![Build Status](https://travis-ci.com/uds-psl/coq-library-complexity.svg?branch=coq-8.12)](https://travis-ci.com/uds-psl/coq-library-complexity)
 
 This library contains complexity theory. It is build upon the [Coq Library of Undecidability Proofs](https://github.com/uds-psl/coq-library-undecidability).
@@ -9,15 +9,25 @@ TODO
 
 ## How to build
 
-If you can use `opam 2` on your system, you can follow the instructions here.
 
-### Install from opam
+
+
+<!---### Install from opam
 
 Install the [A Coq Library of Undecidability Proofs](https://github.com/uds-psl/coq-library-undecidability), then install this.
+--->
+### Building from source
 
-### Building
+First, make sure you checked out this git, including submodules, for example via:
 
-- `make all` builds the library
+```
+git clone --recurse-submodules git@github.com:uds-psl/coq-library-complexity.git
+```
+
+Then, the [Coq Library of Undecidability Proofs](https://github.com/uds-psl/coq-library-undecidability)is included as a submodule in `./coq-library-undecidability`.
+
+- `make all` builds the library and the dependencies
+- `make deps` builds the dependencies by itself 
 - `make html` generates clickable coqdoc `.html` in the `website` subdirectory
 - `make clean` removes all build files in `theories` and `.html` files in the `website` directory
 
@@ -40,7 +50,7 @@ We use two Frameworks they ease resource analysis and computability proofs for c
 TODO: tidy up following, add POPL paper
 + Formal Small-step Verification of a Call-by-value Lambda Calculus Machine. Fabian Kunze, Gert Smolka, and Yannick Forster. APLAS 2018. Subdirectory `L/AbstractMachines`. https://www.ps.uni-saarland.de/extras/cbvlcm2/
 
-
+<!---
 ## How to contribute
 
 - Fork the project on GitHub.
@@ -48,6 +58,7 @@ TODO: tidy up following, add POPL paper
 - Add a license for your project.
 - Edit the "Existing undecidable problems" and the "Contributors" section in this file
 - File a pull request.
+--->
 
 ## Contributors
 

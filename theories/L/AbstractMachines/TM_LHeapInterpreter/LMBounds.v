@@ -4,9 +4,11 @@ From Complexity Require Import TM.PrettyBounds.PrettyBounds.
 From Complexity Require Import TM.PrettyBounds.BaseCode.
 From Undecidability Require Import LM_heap_def TM.PrettyBounds.MaxList.
 
-From Undecidability.L.AbstractMachines.TM_LHeapInterpreter  Require Import CaseCom Alphabets JumpTargetTM.
+From Undecidability.TM.L  Require Import CaseCom Alphabets JumpTargetTM LookupTM StepTM.
 
 
+From Undecidability.TM.L Require Import StepTM M_LHeapInterpreter.
+From Complexity.L.AbstractMachines.TM_LHeapInterpreter Require Import SizeAnalysis.
 
 (** ** LM step functions *)
 
@@ -380,7 +382,6 @@ Module JumpTarget_steps_nice.
 End JumpTarget_steps_nice.
 
 
-From Undecidability Require Import L.AbstractMachines.TM_LHeapInterpreter.LookupTM.
 
 
 (** ** LM Lookup *)
@@ -656,8 +657,7 @@ Module LM_Lookup_nice.
 
 End LM_Lookup_nice.
 
-From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require Import StepTM M_LHeapInterpreter.
-From Complexity.L.AbstractMachines.TM_LHeapInterpreter Require Import SizeAnalysis.
+
 
 Module LM.
   Import JumpTarget_steps_nice LM_Lookup_nice.

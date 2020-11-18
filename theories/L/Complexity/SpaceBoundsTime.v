@@ -1,5 +1,5 @@
 From Undecidability.L Require Import L_facts Complexity.ResourceMeasures AbstractMachines.FlatPro.Programs.
-Require Import PslBase.Lists.BaseLists.
+Require Import Undecidability.Shared.Libs.PSL.Lists.BaseLists.
 
 Fixpoint L_Pro n {struct n}: list Pro :=
   match n with

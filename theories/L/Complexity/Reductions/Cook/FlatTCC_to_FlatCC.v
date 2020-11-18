@@ -1,5 +1,5 @@
-From PslBase Require Import Base FinTypes. 
-From PslBase Require Import Vectors.Vectors. 
+From Undecidability.Shared.Libs.PSL Require Import Base FinTypes. 
+From Undecidability.Shared.Libs.PSL Require Import Vectors.Vectors. 
 From Complexity.L.Complexity Require Import MorePrelim Problems.Cook.FlatTCC Problems.Cook.FlatCC Reductions.Cook.TCC_to_CC.
 Require Import Lia.
 

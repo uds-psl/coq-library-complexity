@@ -2,9 +2,9 @@ From Undecidability.TM Require Import CodeTM Single.EncodeTapes.
 From Undecidability.L Require Import LTactics LBool GenEncode Datatypes.Lists.
 
 Import Nat.
-Require Export PslBase.FiniteTypes.FinTypes.
+Require Export Undecidability.Shared.Libs.PSL.FiniteTypes.FinTypes.
 
-Require Import PslBase.Vectors.Vectors.
+Require Import Undecidability.Shared.Libs.PSL.Vectors.Vectors.
      
 From Undecidability Require Import TMEncoding EqBool.
 

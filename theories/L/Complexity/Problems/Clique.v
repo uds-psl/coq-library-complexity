@@ -1,4 +1,4 @@
-From PslBase Require Import FinTypes. 
+From Undecidability.Shared.Libs.PSL Require Import FinTypes. 
 From Complexity.L.Complexity.Problems Require Import UGraph. 
 Require Import Lia.
 

@@ -1,4 +1,4 @@
-Require Import PslBase.Base.
+Require Import Undecidability.Shared.Libs.PSL.Base.
 Require Import Lia. 
 From Undecidability.L Require Import L_facts.
 (*From Undecidability.Shared Require Import Prelim.*)
@@ -120,7 +120,7 @@ Qed.
 
 Require Import Lia.
 (*Require Template.utils.*)
-From PslBase Require Export FiniteTypes.FinTypes FiniteTypes.BasicFinTypes FiniteTypes.CompoundFinTypes Retracts Inhabited Base Vectors.Vectors FiniteTypes. 
+From Undecidability.Shared.Libs.PSL Require Export FiniteTypes.FinTypes FiniteTypes.BasicFinTypes FiniteTypes.CompoundFinTypes Retracts Inhabited Base Vectors.Vectors FiniteTypes. 
 Require Export smpl.Smpl.
 From Undecidability.Shared Require Import Prelim.
 

@@ -1,6 +1,6 @@
-Require Import PslBase.FiniteTypes.
+Require Import Undecidability.Shared.Libs.PSL.FiniteTypes.
 From Undecidability Require Import L.Functions.EqBool.
-From PslBase.FiniteTypes Require Import VectorFin Cardinality.
+From Undecidability.Shared.Libs.PSL.FiniteTypes Require Import VectorFin Cardinality.
 
 From Undecidability Require Import TM.Util.TM_facts.
 From Complexity Require Import L.TM.TMflat.
