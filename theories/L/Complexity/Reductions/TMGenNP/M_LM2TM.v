@@ -1,5 +1,5 @@
-From Undecidability.TM Require TM_facts ProgrammingTools CaseList.
-From Complexity.TM Require CaseBool Code.Decode Code.DecodeList.
+From Undecidability.TM Require TM_facts ProgrammingTools CaseList CaseBool.
+From Complexity.TM Require Code.Decode Code.DecodeList.
 
 From Undecidability.TM Require Import TM SizeBounds.
 
@@ -16,7 +16,7 @@ From Undecidability.TM.L Require Alphabets M_LHeapInterpreter.
 
 From Coq Require Import Lia Ring Arith.
 
-From Complexity.L.Complexity  Require Import M_Boollist_to_Enc.
+From Undecidability.TM.L Require Import Boollist_to_Enc.
 
 From Complexity.L.AbstractMachines.TM_LHeapInterpreter Require SizeAnalysis LMBounds_Loop.
 
@@ -58,21 +58,22 @@ Module LMtoTM.
                    /\ exists sigma' k, ARS.evaluatesIn LM_heap_def.step k (initLMGen P (compile (Computable.enc (rev bs)))) sigma'
           end.
 (* initLMGen = n s c : list Tok => ([(0, s ++ c ++ [appT])], [], []) *)
-    Import M_Boollist_to_Enc ListTM Alphabets StepTM.
+    Import Boollist_to_Enc ListTM Alphabets StepTM.
 
     Definition M : pTM sig ^+ bool 11 :=
-      If (LiftTapes (CheckTapeContains.M (CheckEncodeList.M (I:=_))) [|Fin0|])
-         (Return (F:=FinType (EqType unit)) (LiftTapes (BoollistToEnc.M (sig:=sig) (retr__Pro := retr__pro) (retr__nat := retr__nat)) [|Fin0;Fin2;Fin3;Fin4 |];; (* 0:right, 2:compile (enc (rev b)), 3,4:right*)
-                  LiftTapes (ChangeAlphabet (WriteValue (encode [appT])) retr__pro) [| Fin3|];; (*3:[appT]*)
-                  LiftTapes (ChangeAlphabet (App' _) retr__pro) [|Fin2;Fin3|];; (*3:compile (rev b)++[appT]*)         
+      If (CheckTapeContains.M (CheckEncodeList.M (I:=_)) @ [|Fin0|])
+         (Return (F:=FinType (EqType unit)) (LiftTapes (BoollistToEnc.M _ retr__pro) [|Fin0;Fin2;Fin3;Fin4 |];; (* 0:right, 2:compile (enc (rev b)), 3,4:right*)
+                  LiftTapes (ChangeAlphabet (WriteValue ([appT])) retr__pro) [| Fin3|];; (*3:[appT]*)
+                  LiftTapes (ChangeAlphabet (App' _ ) retr__pro) [|Fin2;Fin3|];; (*3:compile (rev b)++[appT]*)         
                   LiftTapes (ChangeAlphabet (App' _) retr__pro) [|Fin1;Fin3|];; (*3:P++compile (rev b)++[appT]*)
-                  LiftTapes (ChangeAlphabet (WriteValue (encode (@nil (LM_heap_def.HClos)))) retr__listHClos) [| Fin0|];; (*0:[]*)
-                  LiftTapes (ChangeAlphabet (WriteValue (encode 0)) (StepTM.retr_nat_step_clos_ad retr__listHClos)) [| Fin5|];; (*5:0*)
+                  LiftTapes (ChangeAlphabet (WriteValue ((@nil (LM_heap_def.HClos)))) retr__listHClos) [| Fin0|];; (*0:[]*)
+                  LiftTapes (ChangeAlphabet (WriteValue (0)) (StepTM.retr_nat_step_clos_ad retr__listHClos)) [| Fin5|];; (*5:0*)
                   LiftTapes (StepTM.ConsClos retr__listHClos) [|Fin0;Fin5;Fin3 |];; (* 0: initLMGen, 5,3:right *)
-                  LiftTapes (Reset _) [|Fin1|];;LiftTapes (Reset _) [|Fin2|];;(*1,2: right*)
+                  LiftTapes (Reset _) [|Fin1|];;
+                  LiftTapes (Reset _) [|Fin2|];;(*1,2: right*)
 (*1,2: empty*)
-                  LiftTapes (ChangeAlphabet (WriteValue (encode (@nil (LM_heap_def.HClos)))) retr__listHClos) [| Fin1|];; (*1:[]*)
-                  LiftTapes (ChangeAlphabet (WriteValue (encode (@nil (LM_heap_def.HEntr)))) retr__Heap) [| Fin2|];; (*2:[]*)
+                  LiftTapes (ChangeAlphabet (WriteValue ((@nil (LM_heap_def.HClos)))) retr__listHClos) [| Fin1|];; (*1:[]*)
+                  LiftTapes (ChangeAlphabet (WriteValue ((@nil (LM_heap_def.HEntr)))) retr__Heap) [| Fin2|];; (*2:[]*)
                   ChangeAlphabet M_LHeapInterpreter.Loop retr__LAM )
                  true)
          (Return Nop false).
@@ -126,13 +127,13 @@ Module LMtoTM.
       eexists_UpToC time.
       eapply TerminatesIn_monotone.
       { unfold M. TM_Correct.
-        all: eauto 2 using App'_Terminates,App'_Realise,BoollistToEnc.Realises,ConsClos_Realise,ConsClos_Terminates,Loop_Terminates.
+        all: eauto 2 using App'_Terminates,App'_Realise,BoollistToEnc.Realise,ConsClos_Realise,ConsClos_Terminates,Loop_Terminates.
         all: try now (notypeclasses refine (@Reset_Terminates _ _ _ _ _);shelve).
         all: try now (notypeclasses refine (@Reset_Realise _ _ _ _ _);shelve).
-        1:notypeclasses refine (CheckTapeContains.Realises _ _).
+        1:notypeclasses refine (CheckTapeContains.Realise _ _).
         3:notypeclasses refine (CheckTapeContains.Terminates _ _).
         4:apply CheckEncodeList.Terminates.
-        1,3:apply CheckEncodeList.Realises;now destruct x.
+        1,3:apply CheckEncodeList.Realise;now destruct x.
         now apply list_encode_prefixInjective,DecodeBool.bool_encode_prefixInjective.
         apply BoollistToEnc.Terminates. 
       }
@@ -152,9 +153,9 @@ Module LMtoTM.
             apply encode_list_injective in H1. easy. apply Encode_bool_injective.
           }
           clear bs' Hbs'.
-          set (sizeM := sizeOfmTapes [|tin0; tin1; tin2; tin3; tin4; tin5; tin6; tin7; tin8; tin9;tin10|]).
+          set (sizeM := sizeOfmTapes [|tin_0; tin_1; tin_2; tin_3; tin_4; tin_5; tin_6; tin_7; tin_8; tin_9; tin_10|]).
           assert (Hlebs : length bs <= sizeM).
-          { clear - Hbs. unfold sizeM. rewrite <- sizeOfmTapes_upperBound with (t:=tin0).
+          { clear - Hbs. unfold sizeM. rewrite <- sizeOfmTapes_upperBound with (t:=tin_0).
            2:now eapply vect_nth_In with (i:=Fin0).
            destruct Hbs as (rem&->). cbn.  rewrite encode_list_concat. repeat (autorewrite with list;cbn).
            rewrite length_concat. rewrite map_map;cbn. rewrite sumn_map_c. nia. } 
@@ -162,7 +163,7 @@ Module LMtoTM.
           {hnf. cbn. TMSimp. exists bs. repeat simple apply conj. easy. 1-3:try isVoid_mono. 
            erewrite UpToC_le. rewrite Hlebs. reflexivity. }
           intros t1_ _ (HP'&Hrem_1). specialize (HP' bs). TMSimp. modpon HP'.
-          infTer 5. TMSimp_goal. intros t2_ _ (Ht2&Ht2Rem). specialize (Ht2 [appT]). modpon Ht2.
+          infTer 5. TMSimp_goal. intros t2_ _ (Ht2&Ht2Rem). modpon Ht2.
           (*unfold tapes in tin,tout,t1 |-. destruct_vector. cbn [Vector.nth Vector.caseS] in *. all:subst. *)
           TMSimp.
           
@@ -179,8 +180,8 @@ Module LMtoTM.
             hnf in H'. rewrite H'. reflexivity. }
           intros t4_ _ (Ht4&Ht4Rem). specialize (Ht4 P (compile (Computable.enc (rev bs)) ++ [appT])). TMSimp.
           modpon Ht4; [].
-          infTer 5. intros t5_ _ (Ht5&Ht5Rem). specialize Ht5 with (x:=[]). modpon Ht5;[].
-          infTer 5. intros t6_ _ (Ht6&Ht6Rem). specialize (Ht6 0). TMSimp. modpon Ht6;[].
+          infTer 5. intros t5_ _ (Ht5&Ht5Rem). modpon Ht5;[].
+          infTer 5. intros t6_ _ (Ht6&Ht6Rem). TMSimp. modpon Ht6;[].
           infTer 5.
           { hnf;cbn. eexists _,_,_. repeat simple apply conj. 1-3:now simpl_surject;try contains_ext.
             match goal with |- _ <= ?c' => set (c:=c') end.
@@ -201,8 +202,8 @@ Module LMtoTM.
           reflexivity. 
           intros t9_ _ (Ht9'&Ht9Rem). modpon Ht9'.
           infTer 4. intros t10 _ (Ht10&Ht10Rem). TMSimp.
-          specialize (Ht10 []). modpon Ht10.
-          infTer 4. intros t11 _ (Ht11&Ht11Rem). specialize (Ht11 []). modpon Ht11. TMSimp.
+          modpon Ht10.
+          infTer 4. intros t11 _ (Ht11&Ht11Rem). specialize Ht11. modpon Ht11. TMSimp.
           hnf. eexists [(0,_)],[],[],_. repeat eapply conj. 
           -eexists. eassumption.
           -cbn. simpl_surject. TMSimp_goal. contains_ext. 
@@ -241,14 +242,14 @@ Module LMtoTM.
     Definition Terminates := projT2 _Terminates.
 
       
-    Definition Realises : M ⊨ Rel.
+    Definition Realise : M ⊨ Rel.
     Proof.
       unfold M. eapply Realise_monotone.
       { TM_Correct.
-        1:{  notypeclasses refine (CheckTapeContains.Realises _ _).
-             eapply CheckEncodeList.Realises. now destruct x.
+        1:{  notypeclasses refine (CheckTapeContains.Realise _ _).
+             eapply CheckEncodeList.Realise. now destruct x.
              now eapply list_encode_prefixInjective,DecodeBool.bool_encode_prefixInjective. }
-        now apply BoollistToEnc.Realises.
+        now apply BoollistToEnc.Realise.
         all:try now simple apply App'_Realise.
         now apply ConsClos_Realise.
         all:try now (notypeclasses refine (@Reset_Realise _ _ _ _ _);shelve).
@@ -265,19 +266,18 @@ Module LMtoTM.
       do_n_times_fin 9 ltac:(fun i => let H := fresh "HRem" in specialize (HRem i) as H;cbn in H);clear HRem.
       modpon H0.
       eexists bs. split. contains_ext.
-      specialize (H2 [appT]). modpon H2;[]. modpon H4;[].
-      progress TMSimp. modpon H6;[].
-      specialize (H8 []). modpon H8;[].
-      specialize (H10 0);[]. modpon H10;[].
-      specialize (H12 [] (P ++ (compile (Computable.enc (rev bs))) ++ [appT]) 0).
+      modpon H2;[]. modpon H4;[].
+      modpon H6;[].
+      modpon H8;[].
+      modpon H10;[].
       modpon H12;[]. modpon H14;[]. modpon H16;[].
-      specialize (H18 []). modpon H18;[].
-      specialize (H20 []). modpon H20;[].
+      modpon H18;[].
+      modpon H20;[].
       rename H11 into H11',H22 into H11.
       specialize (H11 (fst (fst (initLMGen P (compile (Computable.enc (rev bs)))))) [] []).
       cbn in H11. TMSimp. 
       modpon H11.
-      1:{ instantiate (1:= [|_;_;_;_;_;_;_;_|]). 
+      1:{ instantiate (1:= [| _;_;_;_;_;_;_;_|]). 
           intros i. destruct_fin i;cbn;simpl_surject;eauto.
       }
       destruct H11 as (T'&V'&H'&k&Hred&HHalt&_).

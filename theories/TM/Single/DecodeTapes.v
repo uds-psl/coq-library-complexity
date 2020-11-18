@@ -63,7 +63,7 @@ Module CheckEncodesTapes.
        {rewrite H in Hf. subst b. now constructor. }
        destruct (Option.bind Retr_g (current t'[@Fin0])) as [ [] | ]. all:subst b;constructor. all:easy.
       -cbn. eapply Realise_monotone.
-       { TM_Correct. eapply Realise_monotone. now apply CheckEncodesTape.Realises.
+       { TM_Correct. eapply Realise_monotone. now apply CheckEncodesTape.Realise.
          intros ? ? H. setoid_rewrite ContainsEncoding.legacy_iff in H. exact H. intros x';now destruct x'.
          eassumption. }
        hnf;cbn. intros t (b,t') [H|H]. 
@@ -97,7 +97,7 @@ Module CheckEncodesTapes.
        intros ? ? ?. nia.
       -assert (Ht:= length_right_tape_move_right).
        cbn - [plus mult]. eapply TerminatesIn_monotone.
-       {TM_Correct. now apply CheckEncodesTape.Realises. now apply CheckEncodesTape.Terminates. eassumption. }
+       {TM_Correct. now apply CheckEncodesTape.Realise. now apply CheckEncodesTape.Terminates. eassumption. }
        intros ? ? HT. set (n0:= | tape_local x[@Fin0] |) in *. cbn. infTer 5.
         2:{ intros t ? (?&->&->&<-). destruct _.
             infTer 5.  unfold CheckEncodesTape.Ter. intros ? _ Htout. rewrite !Htout. infTer 4.
@@ -121,7 +121,7 @@ Module CheckEncodesTapes.
       induction n in t |-*;cbn [R_syntactic].
       {unfold ContainsEncoding.Rel. intros [[Hb] <-]. split. 2:now eexists 0. destruct Hb.
        -destruct t;inv e. apply retract_g_inv in H0 as ->.
-        eexists [||],_,_. cbn. split. now eexists _,[]. now eexists [],_.
+        eexists [| |],_,_. cbn. split. now eexists _,[]. now eexists [],_.
        -intros ? v ?. rewrite (destruct_vector_nil v);cbn.
         eexists _,_. split. easy. intros ->. cbn in n. now retract_adjoint.
       }
@@ -152,7 +152,8 @@ Module CheckEncodesTapes.
       -intros ? v ?. destruct (destruct_vector_cons v) as (t0'&b'&->). cbn.
        do 3 eexists. reflexivity. intros [= <- H]. revert H. unfold retr_comp_f;autorewrite with list;rewrite map_map.
        rewrite app_comm_cons,<-(map_cons (fun a : sigTape sig => Retr_f (sigList_X a))). rewrite <- eq__hd.
-       intros H. assert (H':=H). change (fun x : sigTape sig => Retr_f  (sigList_X x)) with (Retr_f) in H'.
+       intros H. assert (H':=H).
+       change (fun x : sigTape sig => Retr_f  (sigList_X x)) with (Retr_f (X:=sigTape sig) (Y:=tau)) in H'.
        eapply (f_equal (map _)) in H'. rewrite !map_app,!(surject_inject' _ NilBlank) in H'. 
        change (@encode_tape sig) with (encode (X:=tape sig)) in H'.
        apply (tape_encode_prefixInjective) in H'. subst t0'.
@@ -161,7 +162,7 @@ Module CheckEncodesTapes.
        f_equal.
     Qed.
 
-    Lemma Realises n: M n ⊨ Rel n.
+    Lemma Realise n: M n ⊨ Rel n.
     Proof.
       eapply Realise_monotone. now apply Realises_intern. intros t [? t'] ?%R_syntactic__spec.
       unfold tapes in *. destruct_vector. easy.

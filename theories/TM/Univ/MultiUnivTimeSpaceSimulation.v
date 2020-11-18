@@ -118,7 +118,7 @@ Definition apply_sizeFun {n:nat} (f : Vector.t (nat->nat) n) (s : Vector.t nat n
 
 
 
-
+Import Univ.LowLevel.
 (** Create the initial tapes of [Univ], given a single-tape machine [M] and a tape [t]. *)
 Section InitUniv.
 
@@ -197,7 +197,7 @@ End InitUniv.
 
 
 Lemma vector_to_list_nil (X : Type) :
-  vector_to_list [||] = @nil X.
+  vector_to_list [| |] = @nil X.
 Proof. reflexivity. Qed.
 
 Lemma vector_to_list_cons (X : Type) (n : nat) (x : X) (xs : Vector.t X n) :
@@ -818,7 +818,7 @@ Section U.
       specialize Univ_correct with (M := projT1 pM) (tp := T) (q := q_M).
 
       modpon Univ_correct. (* This needs a bit help, because there are sizes involved *)
-      { instantiate (1 := [|_;_;_|]). intros i; specialize (HConf4 i); destruct_fin i; cbn in *; isVoid_mono. }
+      { instantiate (1 := [| _;_;_|]). intros i; specialize (HConf4 i); destruct_fin i; cbn in *; isVoid_mono. }
 
       cbn in Univ_correct. destruct Univ_correct as (k_M&oconf_M&M_term&Univ_oconfCont1&Univ_oconfCont2&Univ_oconfCont3&Univ_oconfCont4).
       destruct oconf_M as [qout_M Ts']. pose proof vector_1_eta Ts' as (T'&->).
@@ -1052,7 +1052,7 @@ Section UnivMultiTimeSpaceTheorem.
       exists (projT1 (Loop (castState (start M)))).
       exists T_Univ.
       exists (makeSingleTape T).
-      eexists. eexists (mk_mconfig _ [|_|]). eexists.
+      eexists. eexists (mk_mconfig _ [| _|]). eexists.
       repeat split.
       - auto.
       - auto.

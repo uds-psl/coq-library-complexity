@@ -2,7 +2,7 @@ all: Makefile.coq deps
 	$(MAKE) -f Makefile.coq all
 
 deps:
-	$(MAKE) -C coq-library-undecidability all
+	$(MAKE) -C coq-library-undecidability/theories all
 
 html: Makefile.coq
 	$(MAKE) -f Makefile.coq html
@@ -15,8 +15,10 @@ install: Makefile.coq
 uninstall: Makefile.coq
 	$(MAKE) -f Makefile.coq uninstall
 
+realclean: Makefile.coq clean
+	$(MAKE) -C coq-library-undecidability/theories clean
+
 clean: Makefile.coq
-	$(MAKE) -C coq-library-undecidability clean
 	$(MAKE) -f Makefile.coq clean
 	rm -f Makefile.coq Makefile.coq.conf
 

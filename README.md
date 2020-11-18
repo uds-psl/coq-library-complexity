@@ -30,6 +30,7 @@ Then, the [Coq Library of Undecidability Proofs](https://github.com/uds-psl/coq-
 - `make deps` builds the dependencies by itself 
 - `make html` generates clickable coqdoc `.html` in the `website` subdirectory
 - `make clean` removes all build files in `theories` and `.html` files in the `website` directory
+- `make realclean` removes the build files of the dependencies as well as everything `make clean` removes
 
 ### Troubleshooting
 

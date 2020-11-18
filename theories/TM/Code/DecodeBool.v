@@ -26,7 +26,7 @@ Module CheckEncodesBool.
     Let Rel : pRel tau bool 1 := ContainsEncoding.Rel (Encode_bool) Retr_f.
     
     Definition M : pTM tau bool 1:=
-      Relabel ReadChar (fun c => Option.apply (fun _ => true) false (Option.bind Retr_g c)).
+      Relabel ReadChar (fun c => Option.apply (fun _ => true) false (Option.bind (rT:=bool) Retr_g c)).
 
     Lemma RealisesIn : M ⊨c(1) (fun tin out => Rel tin out /\ tin = snd out).
     Proof.

@@ -56,6 +56,8 @@ Qed.
 
 Arguments extractRes : simpl never.
 
+Import AbstractHeapMachineDef.
+
 Lemma spec_evalForTime__step i sigma:
   match evalForTime__step (i,sigma) with
     inl (i',sigma') => i = N.succ i' /\ step sigma sigma' /\ extractRes sigma = None

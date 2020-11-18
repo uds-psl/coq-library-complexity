@@ -4,7 +4,8 @@ From Complexity.L.TM Require Import TMflat TMflatEnc TMflatFun TapeDecode TMunfl
 From Undecidability.L.Datatypes Require Import LNat LProd Lists.
 From Complexity.L.Complexity Require Import NP LinTimeDecodable ONotation.
 From Undecidability.L Require Import Tactics.LTactics.
-From Complexity.L Require Import Functions.Decoding TMflatFun TMflatComp.
+From Undecidability.L Require Import Functions.Decoding.
+From Complexity.L Require Import TMflatFun TMflatComp.
 From Undecidability Require Import L.Functions.EqBool.
 From Undecidability Require Import L.Datatypes.LNat.
 

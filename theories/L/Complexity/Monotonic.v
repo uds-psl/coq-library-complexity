@@ -26,7 +26,7 @@ Lemma monotonic_mul f1 f2: monotonic f1 -> monotonic f2 -> monotonic (fun x => f
 Proof.
   unfold monotonic.
   intros H1 H2 **.
-  rewrite H1,H2. reflexivity. assert (H': x<= x) by nia. exact H'. exact (ltac:(abstract nia): x <= x). all:eassumption.
+  rewrite H1,H2. reflexivity. all:eassumption.
 Qed.
 
 Require Import Nat.

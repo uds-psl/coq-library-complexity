@@ -105,7 +105,7 @@ Proof.
       exists finStr2.
       enough (finStr1 = conc card') as H3 by (now setoid_rewrite H3).
       apply isFlatTCCCardOf_map_index in F2. destruct F2 as (_ & F2). rewrite F2 in H0. 
-      apply Prelim.map_inj in H0; [easy | unfold injective; apply injective_index].
+      apply map_injective in H0; [easy | unfold injective; apply injective_index].
 Qed.
 
 Lemma valid_flat_agree (X : finType) (cards : list (TCCCard X)) fcards s1 s2 fs1 fs2: 

@@ -4,21 +4,21 @@ From Complexity.TM Require Import Code.Decode.
 From Complexity.TM Require Single.EncodeTapesInvariants .
 Require Import FunInd Lia Ring Arith Program.Wf.
 Import EncodeTapes EncodeTapesInvariants.
-
+From Undecidability.Shared.Libs.PSL Require Import BaseLists.
 
 Lemma tape_encode_injective sig (t t' : tape sig): encode_tape t = encode_tape t' -> t = t'.
 Proof.
   intros H. specialize (f_equal (fun l => hd_error (rev l)) H ) as Hlast. cbn in Hlast.
   destruct t;destruct t';cbn in H,Hlast|-*;inv H;repeat (autorewrite with list in Hlast;cbn in Hlast);inv Hlast.
   -easy. 
-  -eapply app_inv_tail in H2. rewrite Prelim.map_inj in H2. congruence. now intros ? ? [=]. 
+  -eapply app_inv_tail in H2. apply map_injective in H2. congruence. now intros ? ? [=]. 
   -apply (f_equal (@rev _)) in H1. autorewrite with list in H1. cbn in H1.
-   rewrite !map_rev,!rev_involutive in H1. inv H1. rewrite Prelim.map_inj in H2. congruence. now intros ? ? [=]. 
+   rewrite !map_rev,!rev_involutive in H1. inv H1. apply map_injective in H2. congruence. now intros ? ? [=]. 
   -rewrite <- (rev_involutive l), <- (rev_involutive l1);revert H1.
    generalize (rev l1), (rev l);clear l l1;intros t t' Heq.
    induction t in t',Heq|-*. all:destruct t';cbn in Heq;revert Heq. 2,3:now intros [=].
    +intros [= -> Heq].
-    eapply app_inv_tail in Heq. rewrite Prelim.map_inj in Heq. congruence. now intros ? ? [=].
+    eapply app_inv_tail in Heq. apply map_injective in Heq. congruence. now intros ? ? [=].
    +intros [= ->  Heq]. cbn. apply IHt in Heq as [= <- <- <-]. easy.
 Qed.
 
@@ -142,7 +142,7 @@ Module CheckEncodesTape.
     Proof.
       destruct bs as (seenMark, seenSymbol). eapply Realise_monotone.
       { unfold M__step;cbn. apply Switch_Realise. now TM_Correct.
-        introsSwitch c'. destructBoth (Option.bind Retr_g c') as [c | ]. 2:now TM_Correct.
+        introsSwitch c'. destructBoth (Option.bind Retr_g (rT:=sig__M) c') as [c | ]. 2:now TM_Correct.
         destructBoth (isMarked c && seenMark || isNilBlank c || isLeftBlank c || isVoidBlank c). all:TM_Correct.
       }
       hnf;cbn. intros t (y&t') (?&?&[-> -> ]&H);revert H.
@@ -155,7 +155,7 @@ Module CheckEncodesTape.
     Proof.
       destruct bs as (seenMark, seenSymbol). eapply TerminatesIn_monotone.
       { unfold M__step;cbn. apply Switch_TerminatesIn. 1,2:now TM_Correct.
-        introsSwitch c'. destructBoth (Option.bind Retr_g c') as [c | ]. 2:now TM_Correct.
+        introsSwitch c'. destructBoth (Option.bind Retr_g (rT:=sig__M) c') as [c | ]. 2:now TM_Correct.
         destructBoth (isMarked c && seenMark || isNilBlank c || isLeftBlank c || isVoidBlank c). all:TM_Correct.
       }
       hnf;cbn. intros t y Hy. infTer 3. rewrite <- Hy.
@@ -171,7 +171,7 @@ Module CheckEncodesTape.
         cbn;intros c. TM_Correct_step. now TM_Correct.
         unfold M'.
         eapply Realise_monotone with
-            (Rmove:= fun t '(y,t')=> f' (Option.apply (@isMarked _) false (Option.bind Retr_g c), false) t[@Fin0] = (y,t'[@Fin0])).
+            (R:= fun t '(y,t')=> f' (Option.apply (@isMarked _) false (Option.bind Retr_g (rT:=sig__M) c), false) t[@Fin0] = (y,t'[@Fin0])).
         { eapply StateWhile_Realise. now eapply Realises__step. }
         generalize (Option.apply (@isMarked _) false (Option.bind Retr_g c), false) as bs. clear c.
         apply StateWhileInduction. all:cbn - [f__step].
@@ -389,7 +389,7 @@ Module CheckEncodesTape.
        +rewrite Hx;cbn. do 3 eexists. easy. cbn. eauto.
        +destruct (exists_last (l:=encode_tape x)) as (?&?&eqx). congruence. rewrite eqx in *.
         repeat eexists.
-        apply (f_equal (fun t => rev (map Retr_f t))) in Hx. cbn in  Hx.
+        apply (f_equal (fun t => rev (map (Retr_f (Y:=tau)) t))) in Hx. cbn in  Hx.
         autorewrite with list in Hx;cbn in Hx. f_equal.
         
         *rewrite (app_comm_cons' _ _ (Retr_f (LeftBlank marked))). rewrite <- tl_app. 2: length_not_eq.
@@ -402,7 +402,7 @@ Module CheckEncodesTape.
        inv H''. eapply H. 1,2:reflexivity. eassumption.
     Qed.
 
-    Lemma Realises : M ⊨ Rel.
+    Lemma Realise : M ⊨ Rel.
     Proof.
       eapply Realise_monotone. now apply Realises_intern. intros t [? t'] ?%f_spec.
       unfold tapes in *. 

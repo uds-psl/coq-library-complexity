@@ -2,6 +2,7 @@ From Undecidability.L Require Import L_facts Prelim.LoopSum Functions.UnboundIte
 From Complexity.L.AbstractMachines Require Import AbstractHeapMachine UnfoldHeap.
 Import AbstractHeapMachineDef.clos_notation.
 
+(* TODO: DELETE (is in undec)*)
 Module task.
   Inductive task := closT (q:clos) (k:nat) | appT | lamT.
 End task.

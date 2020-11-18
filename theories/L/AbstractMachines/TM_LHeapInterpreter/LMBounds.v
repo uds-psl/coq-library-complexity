@@ -101,10 +101,10 @@ Module JumpTarget_steps_nice.
 
 
 
-  Lemma App_Commands_steps_nice :
-    { c | forall Q Q', App_Commands_steps Q Q' <=(c) size Q + size Q' }.
+  Lemma App_steps_nice X (Σ:finType) `{codable Σ X}:
+    { c | forall (Q Q' : list X), App_steps (sigX:=Σ) Q Q' <=(c) size Q + size Q' }.
   Proof.
-    eexists. intros. unfold App_Commands_steps.
+    eexists. intros. unfold App_steps.
     rewrite <- Nat.add_assoc. eapply dominatedWith_add_l.
     2:{ enough (1 <= size Q) by lia. setoid_rewrite Encode_list_hasSize. apply Encode_list_hasSize_ge1. }
     domWith_approx.
@@ -113,7 +113,7 @@ Module JumpTarget_steps_nice.
     - eapply dominatedWith_trans. unshelve eapply (proj2_sig MoveValue_steps_nice').
       1-2: setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
       hnf. setoid_rewrite encodeList_size_app.
-      unfold sigPro, Encode_Prog. domWith_approx.
+      unfold sigPro, Encode_Prog. cbn. domWith_approx.
   Qed.
 
   Lemma App_ACom_steps_nice :
@@ -121,7 +121,7 @@ Module JumpTarget_steps_nice.
   Proof.
     eexists. intros. unfold App_ACom_steps. rewrite <- Nat.add_assoc. apply dominatedWith_add_l.
     2:{ setoid_rewrite Encode_list_hasSize. apply Encode_list_hasSize_ge1. }
-    unfold WriteValue_steps, App_Commands_steps.
+    unfold WriteValue_steps, App_steps.
     rewrite <- Nat.add_assoc. apply dominatedWith_add_l.
     2:{ setoid_rewrite Encode_list_hasSize. apply Encode_list_hasSize_ge1. }
     domWith_approx.
@@ -134,11 +134,12 @@ Module JumpTarget_steps_nice.
       eapply (proj2_sig (MoveValue_steps_nice')).
       1-2: setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
       hnf. setoid_rewrite encodeList_size_app.
-      setoid_rewrite size_ACom_singleton. ring_simplify. instantiate (1 := 6).
-      transitivity (2 * size Q + 4). 1:{ cbn [mult]. now rewrite Nat.add_0_r. } enough (2 * size Q + 4 <= 6 * size Q) by lia.
-      enough (size Q + 2 <= 3 * size Q) by lia. enough (1 <= size Q) by nia.
-      1: setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
+      setoid_rewrite size_ACom_singleton. instantiate (1 := 6).
+      Set Keyed Unification.
+      set (c:= size Q). enough (1 <= c) by nia.
+      1: subst c. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
   Qed.
+  Unset Keyed Unification.
 
   Lemma App_Com_steps_nice :
     { c | forall (Q : Pro) (t : Tok), App_Com_steps Q t <=(c) size Q + size t }.
@@ -151,14 +152,14 @@ Module JumpTarget_steps_nice.
       + apply Encode_Com_hasSize_ge1.
       + setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
     - eapply dominatedWith_trans.
-      + apply (proj2_sig Constr_cons_steps_nice).
+      + refine (proj2_sig Constr_cons_steps_nice _ _ _ _).
       + rewrite Nat.add_comm. apply dominatedWith_S'.
         * enough (1 <= size Q) by lia. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
         * apply dominatedWith_solve. enough (1 <= size Q) by lia. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
     - eapply dominatedWith_trans.
-      + apply (proj2_sig App_Commands_steps_nice).
+      + refine (proj2_sig App_steps_nice Q [t]).
       + rewrite size_Com_singleton. ring_simplify. rewrite Nat.add_comm. eapply dominatedWith_add_l.
-        * apply dominatedWith_refl. instantiate (1 := 1). lia.
+        * instantiate (1 := 1). cbv - [size "+"]. nia.
         * enough (1 <= size Q) by lia. setoid_rewrite Encode_list_hasSize; apply Encode_list_hasSize_ge1.
     - eapply dominatedWith_trans.
       + apply (proj2_sig Reset_steps_nice).

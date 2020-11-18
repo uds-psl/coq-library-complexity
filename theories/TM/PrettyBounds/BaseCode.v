@@ -14,11 +14,11 @@ Section CaseList_nice.
   Implicit Types (sigX X : Type).
 
   Lemma CaseList_steps_nice :
-    { c | forall sigX X (cX:codable sigX X) xs, CaseList_steps xs
-                                           <=(c) match xs with
-                                                | nil => 1
-                                                | x :: _ => size x + 1
-                                                end }.
+    { c | forall sigX X (cX:codable sigX X) (xs:list X),
+    CaseList_steps xs  <=(c) match xs with
+                             | nil => 1
+                             | x :: _ => size x + 1
+                             end }.
   Proof. eexists. intros. unfold CaseList_steps, CaseList_steps_nil,CaseList_steps_cons. domWith_approx. Qed.
 
   Lemma CaseList_steps_nil_nice :
@@ -108,7 +108,7 @@ Section Copy_very_nice.
 
 
   Lemma CopyValue_steps_nice :
-    { c | forall sigX X (cX : codable sigX X) x, CopyValue_steps x <=(c) size x + 1 }.
+    { c | forall sigX X (cX : codable sigX X) (x:X), CopyValue_steps x <=(c) size x + 1 }.
   Proof.
     eexists. intros ? ? ? x. unfold CopyValue_steps. domWith_approx.
     (*
@@ -118,7 +118,7 @@ Section Copy_very_nice.
   Qed.
 
   Lemma Reset_steps_nice :
-    { c | forall sigX X (cX : codable sigX X) x, Reset_steps x <=(c) size x + 1 }.
+    { c | forall sigX X (cX : codable sigX X) (x:X), Reset_steps x <=(c) size x + 1 }.
   Proof.
     eexists. intros ? ? ? x. unfold Reset_steps. domWith_approx.
     (*
@@ -128,7 +128,7 @@ Section Copy_very_nice.
   Qed.
 
   Lemma Translate_steps_nice :
-    { c | forall  sigX X (cX : codable sigX X) x, Translate_steps x <=(c) size x + 1 }.
+    { c | forall  sigX X (cX : codable sigX X) (x:X), Translate_steps x <=(c) size x + 1 }.
   Proof. eexists. intros. unfold Translate_steps. domWith_approx. Qed.
 
   Lemma MoveValue_steps_nice :
@@ -186,7 +186,7 @@ Section Nth'_nice.
 *)
 
   Lemma Nth'_Step_steps_nice_nil :
-    { c | forall (n : nat), Nth'_Step_steps nil n <=(c) 1 }.
+    { c | forall (n : nat), Nth'_Step_steps (X:=X) nil n <=(c) 1 }.
   Proof.
     evar (c:nat). exists c.
     intros. unfold Nth'_Step_steps. apply dominatedWith_match_nat.
@@ -314,7 +314,7 @@ Section Length_steps_nice.
   (* Print Length_Step_steps. *)
 
   Lemma Length_Step_steps_nice_nil :
-    {c | Length_Step_steps nil <=(c) 1 }.
+    {c | Length_Step_steps (X:=X)nil <=(c) 1 }.
   Proof. eexists. cbn. intros. apply dominatedWith_const. lia. Qed.
 
   Lemma Length_Step_steps_nice_cons :

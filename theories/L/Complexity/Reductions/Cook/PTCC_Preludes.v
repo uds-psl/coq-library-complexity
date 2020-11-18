@@ -242,7 +242,7 @@ Section fixPTCCInstance.
     clear A1 A2 A3 A4 A0. intros H0 H. remember (map inl x) as x' eqn:Hx'. remember (map inl sf) as sf' eqn:Hsf'. 
     revert x sf H0 Hx' Hsf'. 
     induction H as [ | ? ? ? ? H H0 IH]; intros. 
-    - subst; apply Prelim.map_inj in Hsf'; [ subst; auto| unfold injective; intros; congruence]. 
+    - subst; apply map_injective in Hsf'; [ subst; auto| unfold injective; intros; congruence]. 
     - assert (|a| >= 3) as H2. { subst. rewrite map_length. apply H1. } 
       specialize (valid_liftOrig_isOrigString H2 H) as (? & ->). econstructor. 
       + subst. apply liftOrig_valid_p, H.  
@@ -276,7 +276,7 @@ Section fixPTCCInstance.
       apply map_eq_app in H as (b1' & b & H & -> & H2). 
       symmetry in H2. apply map_eq_app in H2 as (b' & b2' & -> & H2 & ->). 
       exists b1', b2'. enough (subs' = b') by (subst; reflexivity). 
-      apply Prelim.map_inj in H2; [apply H2 | unfold injective; congruence].
+      apply map_injective in H2; [apply H2 | unfold injective; congruence].
   Qed.
 
   (** Reduction to ExPTCC *)
@@ -307,7 +307,7 @@ Section fixPTCCInstance.
       specialize (A1 Hi H4) as (x0' & ->). exists x0'. split; [ | split]. 
       + apply relpower_valid_length_inv in H4. rewrite !map_length in H4. cbn. lia.
       + apply (A4 Hi) in H4. destruct H4 as (? & H4' & H4). 
-        apply Prelim.map_inj in H4'; [subst; apply H4 | unfold injective; intros; congruence  ]. 
+        apply map_injective in H4'; [subst; apply H4 | unfold injective; intros; congruence  ]. 
       + unfold PTCCLang. split. 
         1: { 
           unfold PTCC_wellformed. cbn. 
@@ -419,7 +419,7 @@ Section fixPrelude.
       specialize (A1 H1) as (x & ->). exists x. split; [ | split]. 
       + apply relpower_valid_length_inv in H2. rewrite map_length in H2. 
         apply relpower_valid_length_inv in H1. rewrite !map_length in H1. rewrite <- A5, H1. easy. 
-      + apply A4 in H1. destruct H1 as (? & H1 & H4). apply Prelim.map_inj in H1; [subst; apply H4 | ]. 
+      + apply A4 in H1. destruct H1 as (? & H1 & H4). apply map_injective in H1; [subst; apply H4 | ]. 
         unfold injective. intros. congruence. 
       + unfold PTCCLang. split. 
         1: { 

@@ -1,9 +1,10 @@
-From Complexity.L.Complexity Require Export Synthetic RegisteredP LinTimeDecodable_def.
+From Complexity.L.Complexity Require Export Synthetic RegisteredP.
+From Undecidability.L.Complexity Require Export LTD_def.
 From Undecidability.L.Tactics Require Import LTactics.
 
 
 From Undecidability.L.Datatypes Require Import LProd LOptions LTerm LUnit.
-From Complexity.L Require Export Functions.Decoding.
+From Undecidability.L Require Export Functions.Decoding.
 
 (** inspired by Papadimitriou *)
 

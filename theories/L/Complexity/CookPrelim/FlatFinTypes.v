@@ -145,7 +145,7 @@ Qed.
 Lemma isFlatListOf_functional (X: finType) (L1 L2 : list X) (l : list nat) : 
   isFlatListOf l L1 -> isFlatListOf l L2 -> L1 = L2. 
 Proof. 
-  unfold isFlatListOf. intros. rewrite H0 in H. apply Prelim.map_inj in H; [easy | ].  
+  unfold isFlatListOf. intros. rewrite H0 in H. apply map_injective in H; [easy | ].  
   intros a b H2. now apply injective_index, H2. 
 Qed. 
 

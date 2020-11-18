@@ -181,7 +181,7 @@ Section Length_size_nice.
 
 
   Lemma Length_Loop_size_nice (xs : list X) :
-    (forall (s0 : nat),         Length_Loop_size xs @>Fin0 s0 + size nil             = s0 + size xs) /\
+    (forall (s0 : nat),         Length_Loop_size xs @>Fin0 s0 + size (@nil X)             = s0 + size xs) /\
     (forall (n : nat) (s1 : nat), Length_Loop_size xs @>Fin1 s1 + size (n + length xs) = max (size n + s1) (size (n + length xs)))  /\
     (forall (s2 : nat),         Length_Loop_size xs @>Fin2 s2                        = max_list_rec s2 (map (fun x => size x + 1) xs)).
   Proof.

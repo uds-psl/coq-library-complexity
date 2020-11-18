@@ -38,7 +38,7 @@ Smpl Add (apply inr_ofFlatType) : finRepr.
 
 
 (** * extraction of the reduction from FlatGenNP to FlatCC *)
-
+Import GenEncode.
 MetaCoq Run (tmGenEncode "fstateSigma_enc" fstateSigma).
 Hint Resolve fstateSigma_enc_correct : Lrewrite.
 
@@ -57,31 +57,31 @@ Hint Resolve evalEnv_enc_correct : Lrewrite.
 Instance term_Build_evalEnv : computableTime' (@Build_evalEnv nat nat nat nat) (fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, tt))))). 
 Proof. 
   extract constructor. solverec. 
-Defined. 
+Qed.
 
 Definition c__polarityEnv := 7. 
 Instance term_polarityEnv : computableTime' (@polarityEnv nat nat nat nat) (fun _ _ => (c__polarityEnv, tt)). 
 Proof. 
   extract. solverec. unfold c__polarityEnv. solverec. 
-Defined. 
+Qed.
 
 Definition c__sigmaEnv := 7.
 Instance term_sigmaEnv : computableTime' (@sigmaEnv nat nat nat nat) (fun _ _ => (c__sigmaEnv, tt)). 
 Proof. 
   extract. solverec. unfold c__sigmaEnv. solverec. 
-Defined. 
+Qed.
 
 Definition c__stateSigmaEnv := 7.
 Instance term_stateSigmaEnv : computableTime' (@stateSigmaEnv nat nat nat nat) (fun _ _ => (c__stateSigmaEnv, tt)). 
 Proof. 
   extract. solverec. unfold c__stateSigmaEnv. solverec. 
-Defined. 
+Qed.
 
 Definition c__stateEnv := 7.
 Instance term_stateEnv : computableTime' (@stateEnv nat nat nat nat) (fun _ _ => (c__stateEnv, tt)). 
 Proof. 
   extract. solverec. unfold c__stateEnv. solverec. 
-Defined. 
+Qed.
 
 (** bounds for alphabet sizes *)
 Proposition flatStateSigma_bound tm : flatStateSigma tm <= sig tm + 1. 
@@ -146,7 +146,7 @@ Instance term_flatStateSigma : computableTime' flatStateSigma (fun tm _ => (c__f
 Proof. 
   extract. solverec. 
   unfold c__flatStateSigma; lia.
-Defined. 
+Qed.
 
 Definition c__flatPolSigma := c__mult1 + c__flatStateSigma + 1 + c__mult * (flatPolarity + 1).
 Definition flatPolSigma_time tm := (flatStateSigma tm + 1) * c__flatPolSigma.
@@ -154,7 +154,7 @@ Instance term_flatPolSigma : computableTime' flatPolSigma (fun tm _ => (flatPolS
 Proof. 
   extract. solverec. 
   unfold mult_time. unfold flatPolSigma_time, c__flatPolSigma. solverec. 
-Defined. 
+Qed.
 Definition poly__flatPolSigma n := (n + 2) * c__flatPolSigma. 
 Lemma flatPolSigma_time_bound tm : flatPolSigma_time tm <= poly__flatPolSigma (size (enc tm)). 
 Proof. 
@@ -172,7 +172,7 @@ Instance term_flatTapeSigma : computableTime' flatTapeSigma (fun tm _ => (flatTa
 Proof. 
   extract. solverec. 
   unfold add_time. unfold flatTapeSigma_time, c__flatTapeSigma. solverec. 
-Defined. 
+Qed.
 
 Definition c__flatStates := c__mult1 + c__flatStateSigma + 10.
 Definition flatStates_time (tm : flatTM) := mult_time (states tm) (flatStateSigma tm) + c__flatStates.
@@ -180,7 +180,7 @@ Instance term_flatStates : computableTime' flatStates (fun tm _ => (flatStates_t
 Proof. 
   extract. solverec. 
   unfold flatStates_time, c__flatStates. solverec.  
-Defined. 
+Qed.
 Definition poly__flatStates n := (n + 1) * (n + 1) * c__mult + c__flatStates.
 Lemma flatStates_time_bound tm : flatStates_time tm <= poly__flatStates (size (enc tm)). 
 Proof. 
@@ -198,7 +198,7 @@ Instance term_flatGamma : computableTime' flatGamma (fun tm _ => (flatGamma_time
 Proof. 
   extract. solverec. 
   unfold flatGamma_time, c__flatGamma; solverec. 
-Defined. 
+Qed.
 Definition poly__flatGamma n := poly__flatStates n + poly__flatPolSigma n + (n * (n + 1) + 1) * c__add + c__flatTapeSigma + c__flatGamma.
 Lemma flatGamma_time_bound tm : flatGamma_time tm <= poly__flatGamma (size (enc tm)). 
 Proof. 
@@ -219,7 +219,7 @@ Instance term_flatPreludeSig' : computableTime' flatPreludeSig' (fun tm _ => (c_
 Proof. 
   extract. solverec. 
   unfold add_time. unfold c__flatPreludeSig', flatSome. solverec.
-Defined. 
+Qed.
 
 Definition c__flatAlphabet := c__add1 + c__flatPreludeSig' + 1.
 Definition flatAlphabet_time (tm : flatTM) := flatGamma_time tm + add_time (flatGamma tm) + c__flatAlphabet.
@@ -227,7 +227,7 @@ Instance term_flatAlphabet : computableTime' flatAlphabet (fun tm _ => (flatAlph
 Proof. 
   extract. solverec. 
   unfold flatAlphabet_time, c__flatAlphabet. solverec. 
-Defined. 
+Qed.
 Definition poly__flatAlphabet n := poly__flatGamma n + (c__flatGammaS * (n + 1) * (n + 1) + 1) * c__add + c__flatAlphabet.
 Lemma flatAlphabet_time_bound tm : flatAlphabet_time tm <= poly__flatAlphabet (size (enc tm)). 
 Proof. 
@@ -250,7 +250,7 @@ Proof.
   { intros []; easy. }
   eapply (computableTimeExt H).
   extract. solverec. all: now unfold c__flattenPolarity.
-Defined.
+Qed.
 
 
 (*define notations again, because Coq doesn't allow to keep notations beyond the end of a section (why!?) *)
@@ -278,7 +278,7 @@ Instance term_generatePolarityFlat : computableTime' generatePolarityFlat (fun e
 Proof. 
   extract. solverec. 
   all: unfold generatePolarityFlat_time, c__generatePolarityFlat; solverec. 
-Defined. 
+Qed.
 Definition poly__generatePolarityFlat n := (n + 1) * c__ntherror + c__generatePolarityFlat.
 Lemma generatePolarityFlat_time_bound n env p : envConst_bound n env -> generatePolarityFlat_time env p<= poly__generatePolarityFlat n. 
 Proof. 
@@ -314,7 +314,7 @@ Section fix_option_map.
   Proof. 
     extract. solverec. 
     all: unfold optionMap_time, c__optionMap; solverec. 
-  Defined. 
+  Qed.
 
   Lemma optionMap_time_bound_c (a : option A) c : optionMap_time (fun _ => c) a <= c + c__optionMap. 
   Proof. 
@@ -335,7 +335,7 @@ Proof.
   extract. solverec. 
   2: unfold optionMap_time; destruct nth_error. 
   all: unfold generateStateSigmaFlat_time, c__generateStateSigmaFlat; solverec. 
-Defined. 
+Qed.
 Definition poly__generateStateSigmaFlat n := (n + 1) * c__ntherror + c__generateStateSigmaFlat.
 Lemma generateStateSigmaFlat_time_bound n env c : envConst_bound n env -> generateStateSigmaFlat_time env c <= poly__generateStateSigmaFlat n. 
 Proof. 
@@ -370,7 +370,7 @@ Section fix_optReturn.
   Global Instance term_optReturn : computableTime' (@optReturn X) (fun a _ => (1, tt)). 
   Proof. 
     extract. solverec. 
-  Defined. 
+  Qed.
 End fix_optReturn. 
 
 (** generatePolSigmaFlat *)
@@ -388,7 +388,7 @@ Proof.
   intros env ?. split; [solverec | ]. 
   intros [p s] ?. unfold generatePolSigmaFlat_time. cbn. solverec. 
   all: unfold flatStateSigma, c__generatePolSigmaFlat; solverec. 
-Defined. 
+Qed.
 
 Definition poly__generatePolSigmaFlat n := poly__generatePolarityFlat n + poly__generateStateSigmaFlat n + (n + 1) * (c__mult + c__add) * flatPolarity + c__mult * (flatPolarity + 1) + c__add + c__flatPair + c__generatePolSigmaFlat.
 Lemma generatePolSigmaFlat_time_bound n tm env c : envConst_bound n env -> envOfFlatTypes tm env -> generatePolSigmaFlat_time (sig tm) env c <= poly__generatePolSigmaFlat (size (enc tm) + n). 
@@ -444,7 +444,7 @@ Proof.
   intros [ c | c] ?. 
   - unfold c__generateTapeSigmaFlat. solverec. 
   - cbn -[c__generateTapeSigmaFlat]. rewrite optionMap_time_bound_c. split; [unfold c__generateTapeSigmaFlat; nia| easy]. 
-Defined. 
+Qed.
 
 Definition poly__generateTapeSigmaFlat n := poly__generatePolSigmaFlat n + c__generateTapeSigmaFlat. 
 Lemma generateTapeSigmaFlat_time_bound n env tm c : envConst_bound n env -> envOfFlatTypes tm env -> generateTapeSigmaFlat_time (sig tm) env c <= poly__generateTapeSigmaFlat (size (enc tm) + n). 
@@ -484,7 +484,7 @@ Proof.
   extract. unfold generateStatesFlat_time, c__generateStatesFlat, flatStateSigma; solverec. 
   - now inv H. 
   - now inv H. 
-Defined. 
+Qed.
 
 Definition poly__generateStatesFlat n := (n + 1) * c__ntherror + poly__generateStateSigmaFlat n + (n * (n + 1) * (c__mult + c__add) + c__mult * (n + 1)) + c__add + c__flatPair + c__generateStatesFlat.
 Lemma generateStatesFlat_time_bound n tm env c : envConst_bound n env -> envOfFlatTypes tm env -> generateStatesFlat_time (sig tm) env c <= poly__generateStatesFlat (size (enc tm) + n).
@@ -545,7 +545,7 @@ Proof.
   - cbn -[Nat.mul Nat.add].
     rewrite optionMap_time_bound_c. 
     unfold generateGammaFlat_time, c__generateGammaFlat. nia. 
-Defined. 
+Qed.
 
 Definition poly__generateGammaFlat n := poly__flatStates n + poly__generateTapeSigmaFlat n + poly__generateStatesFlat n + (n * (n + 1) + 1) * c__add + c__generateGammaFlat. 
 Lemma generateGammaFlat_time_bound n env tm c: envConst_bound n env -> envOfFlatTypes tm env -> generateGammaFlat_time tm env c <= poly__generateGammaFlat (size (enc tm) + n). 
@@ -580,7 +580,7 @@ Definition c__flatNsig := c__add1 + 5 * c__add + 13.
 Instance term_flatNsig : computableTime' flatNsig (fun n _ => (c__flatNsig, tt)). 
 Proof. 
   extract. solverec. unfold add_time. cbn. easy.
-Defined. 
+Qed.
 
 (** generatePreludeSigPFlat *)
 Definition c__generatePreludeSigPFlat := 8 + c__sigmaEnv + c__flatNsig + 18.
@@ -591,7 +591,7 @@ Proof.
   unfold generatePreludeSigPFlat, optBind. 
   extract. solverec. 
   all: unfold generatePreludeSigPFlat_time, c__generatePreludeSigPFlat; solverec. 
-Defined. 
+Qed.
 
 Definition poly__generatePreludeSigPFlat n := (n + 1) * c__ntherror + c__generatePreludeSigPFlat. 
 Lemma generatePreludeSigPFlat_time_bound (env : evalEnvFlat) (c : fpreludeSig') n : envConst_bound n env -> generatePreludeSigPFlat_time env c <= poly__generatePreludeSigPFlat n. 
@@ -634,7 +634,7 @@ Proof.
   - cbn. rewrite optionMap_time_bound_c. nia.  
   - solverec. rewrite optionMap_time_bound_c. 
     unfold generateAlphabetFlat_time, c__generateAlphabetFlat. solverec. 
-Defined. 
+Qed.
 
 Definition poly__generateAlphabetFlat n := poly__generateGammaFlat n + poly__generatePreludeSigPFlat n + poly__flatGamma n + (c__flatGammaS * (n + 1) * (n + 1) + 1) * c__add + c__generateAlphabetFlat. 
 Lemma generateAlphabetFlat_time_bound tm env c n : envConst_bound n env -> envOfFlatTypes tm env -> generateAlphabetFlat_time tm env c <= poly__generateAlphabetFlat (size (enc tm) + n). 
@@ -680,7 +680,7 @@ Proof.
   unfold generateCardFlat, generateCard, optBind.
   extract. solverec. 
   all: unfold c__generateCard; solverec. 
-Defined. 
+Qed.
 
 Definition poly__generateCard n := poly__generateAlphabetFlat n * 6 + c__generateCard. 
 Lemma generateCard_time_bound tm env card n : envConst_bound n env -> envOfFlatTypes tm env -> generateCard_time tm env card <= poly__generateCard (size (enc tm) + n). 
@@ -705,6 +705,7 @@ Proof.
   repeat split; easy.
 Qed.
 
+Set Default Proof Using "Type".
 (** listProd *)
 Section fixListProd. 
   Variable (X : Type).
@@ -749,7 +750,7 @@ Proof.
   extract. solverec. 
   rewrite list_prod_length. 
   unfold mkVarEnv_step_time, c__mkVarEnvStep. solverec. 
-Defined. 
+Qed.
 
 (** it *)
 Section fixIt. 
@@ -767,7 +768,7 @@ Section fixIt.
     extract. solverec. all: unfold c__it. 
     - lia. 
     - fold (it x). solverec. 
-  Defined.  
+  Qed. 
 End fixIt. 
 
 (** mkVarEnv *)
@@ -780,7 +781,7 @@ Proof.
   extract. solverec.  
   unfold mkVarEnv_time. change (fun x => ?h x) with h. 
   now unfold c__mkVarEnv. 
-Defined. 
+Qed.
 
 Fact mkVarEnv_length (l : list nat) n : |mkVarEnv l n|  = (|l| + 1) ^ n.
 Proof. 
@@ -819,7 +820,7 @@ Instance term_tupToEvalEnv : computableTime' (@tupToEvalEnv nat nat nat nat) (fu
 Proof. 
   extract. solverec. 
   now unfold c__tupToEvalEnv. 
-Defined.
+Qed.
 
 Section fixprodLists. 
   Variable (X Y : Type).
@@ -839,7 +840,7 @@ Section fixprodLists.
     extract. solverec. 
     all: unfold prodLists_time, c__prodLists1, c__prodLists2; solverec. 
     rewrite map_length, map_time_const. leq_crossout. 
-  Defined. 
+  Qed.
 
   Definition poly__prodLists n := n * (n + 1) * c__prodLists2 + c__prodLists1.
   Lemma prodLists_time_bound (l1 : list X) (l2 : list Y) : prodLists_time l1 l2 <= poly__prodLists (size (enc l1) + size (enc l2)). 
@@ -881,9 +882,9 @@ Proof.
   cbn [length Nat.add]. 
   rewrite !seq_length. 
   unfold makeAllEvalEnvFlat_time, c__makeAllEvalEnvFlat1, c__makeAllEvalEnvFlat2. unfold flatStateSigma, flatOption. solverec. 
-  replace (1 + (sig x + 1)) with (1 + sig x + 1) by lia. 
+  replace (1 + (sig x + 1)) with (1 + sig x + 1) by lia.
   leq_crossout.
-Defined. 
+Qed.
 
 (**we prove that the running time is polynomial for fixed n1, n2, n3, n4 *)
 Definition poly__makeAllEvalEnvFlat (n1 n2 n3 n4 : nat) n := 
@@ -973,7 +974,7 @@ Section fixfilterSome.
     1: { unfold filterSome. intros l. induction l; cbn; [ | destruct a]; easy. }
     extract. solverec. 
     all: unfold filterSome_time, c__filterSome; solverec. 
-  Defined. 
+  Qed.
 
   Definition poly__filterSome n := (n + 1) * c__filterSome. 
   Lemma filterSome_time_bound l : filterSome_time l <= poly__filterSome (size (enc l)). 
@@ -995,7 +996,7 @@ Instance term_makeCardsP_flat_step : computableTime' makeCardsP_flat_step (fun t
 Proof. 
   extract. solverec. 
   unfold makeCardsP_flat_step_time, c__makeCardsPFlatStep; solverec. 
-Defined. 
+Qed.
 
 (** makeCards' *)
 Definition makeCardsP_flat (tm : flatTM) := makeCards' (generateAlphabetFlat tm). 
@@ -1010,7 +1011,7 @@ Proof.
   unfold filterSome_time. rewrite map_length. 
   unfold makeCardsP_flat_time, c__makeCards'.
   nia. 
-Defined. 
+Qed.
 
 Definition poly__makeCards' n := n * (poly__generateCard n + c__makeCardsPFlatStep + c__map) + c__map + (n + 1) * c__filterSome + c__makeCards'.
 Lemma makeCardsP_time_bound tm envs n card : (forall e, e el envs -> envBounded tm n e) -> makeCardsP_flat_time tm envs card <= poly__makeCards' (size (enc tm) + n + |envs|). 
@@ -1047,7 +1048,7 @@ Proof.
   1: { unfold makeCardsP_flat. easy. }
   extract. solverec. 
   unfold makeCardsFlat_time, c__makeCardsFlat. simp_comp_arith. solverec.  
-Defined. 
+Qed.
 
 Definition poly__makeCardsFlat n := n * (poly__makeCards' n + c__map) + c__map + n * (c__concat * n) + (n + 1) * c__concat + c__makeCardsFlat.
 Lemma makeCardsFlat_time_bound tm envs cards n : (forall e, e el envs -> envBounded tm n e) -> makeCardsFlat_time tm envs cards <= poly__makeCardsFlat (size (enc tm) + n + (|envs|) + (|cards|)). 
@@ -1089,7 +1090,7 @@ Instance term_envAddState : computableTime' (@envAddState nat nat nat nat) (fun 
 Proof. 
   extract. solverec. 
   unfold c__envAddState. lia. 
-Defined. 
+Qed.
 
 Fact envAddState_envBounded tm env q n: ofFlatType (states tm) q -> envBounded tm n env -> envBounded tm (S n) (envAddState q env).
 Proof. 
@@ -1107,7 +1108,7 @@ Instance term_envAddSSigma : computableTime' (@envAddSSigma nat nat nat nat) (fu
 Proof. 
   extract. solverec. 
   unfold c__envAddSSigma. lia. 
-Defined. 
+Qed.
 
 Fact envAddSSigma_envBounded tm env m n : ofFlatType (flatStateSigma tm) m -> envBounded tm n env -> envBounded tm (S n) (envAddSSigma m env). 
 Proof. 
@@ -1125,7 +1126,7 @@ Instance term_transEnvAddS : computableTime' (@transEnvAddS nat nat nat nat) (fu
 Proof. 
   extract. solverec. 
   unfold c__transEnvAddS. lia. 
-Defined. 
+Qed.
 
 Fact transEnvAddS_envBounded tm env q q' n : ofFlatType (states tm) q -> ofFlatType (states tm) q' -> envBounded tm n env -> envBounded tm (S (S n)) (transEnvAddS q q' env).
 Proof. 
@@ -1138,7 +1139,7 @@ Instance term_transEnvAddSM : computableTime' (@transEnvAddSM nat nat nat nat) (
 Proof. 
   extract. solverec. 
   unfold c__transEnvAddSM; lia. 
-Defined. 
+Qed.
 
 Fact transEnvAddSM_envBounded tm env q q' m m' n : ofFlatType (states tm) q -> ofFlatType (states tm) q' -> ofFlatType (flatStateSigma tm) m -> ofFlatType (flatStateSigma tm) m' -> envBounded tm n env -> envBounded tm (S (S n)) (transEnvAddSM q q' m m' env). 
 Proof. 
@@ -1158,7 +1159,7 @@ Instance term_flatMTRCards : computableTime' flatMTRCards (fun tm _ => (flatMTRC
 Proof. 
   extract. recRel_prettify2. 
   unfold flatMTRCards_time, c__flatMTRCards. unfold flatSome. lia. 
-Defined. 
+Qed.
 
 Definition poly__flatMTRCards n := poly__makeAllEvalEnvFlat 1 4 0 0 n + poly__makeCardsFlat (n + 4 + poly__makeAllEvalEnvFlatLength 1 4 0 0 n + |mtrRules|) + c__flatMTRCards.
 Lemma flatMTRCards_time_bound tm : flatMTRCards_time tm <= poly__flatMTRCards (size (enc tm)). 
@@ -1183,7 +1184,7 @@ Instance term_flatMTICards : computableTime' flatMTICards (fun tm _ => (flatMTIC
 Proof. 
   extract. recRel_prettify2. 
   unfold flatMTICards_time, c__flatMTICards. unfold flatSome. lia. 
-Defined. 
+Qed.
 
 Definition poly__flatMTICards n := poly__makeAllEvalEnvFlat 2 0 4 0 n + poly__makeCardsFlat (n + 4 + poly__makeAllEvalEnvFlatLength 2 0 4 0 n + |mtiRules|) + c__flatMTICards.
 Lemma flatMTICards_time_bound tm : flatMTICards_time tm <= poly__flatMTICards (size (enc tm)). 
@@ -1208,7 +1209,7 @@ Instance term_flatMTLCards : computableTime' flatMTLCards (fun tm _ => (flatMTLC
 Proof. 
   extract. recRel_prettify2.  
   unfold flatMTLCards_time, c__flatMTLCards. unfold flatSome. lia. 
-Defined. 
+Qed.
 
 Definition poly__flatMTLCards n := poly__makeAllEvalEnvFlat 1 4 0 0 n + poly__makeCardsFlat (n + 4 + poly__makeAllEvalEnvFlatLength 1 4 0 0 n + |mtlRules|) + c__flatMTLCards.
 Lemma flatMTLCards_time_bound tm : flatMTLCards_time tm <= poly__flatMTLCards (size (enc tm)). 
@@ -1233,7 +1234,7 @@ Instance term_flatTapeCards : computableTime' flatTapeCards (fun tm _ => (flatTa
 Proof. 
   extract. recRel_prettify2. 
   unfold flatTapeCards_time, c__flatTapeCards. nia.
-Defined. 
+Qed.
 
 Definition poly__flatTapeCards n := 
   poly__flatMTRCards n + poly__flatMTICards n + poly__flatMTLCards n 
@@ -1307,7 +1308,7 @@ Proof.
   rewrite map_time_const. 
   unfold makeSome_base_flat_time, c__makeSomeBaseFlat1, c__makeSomeBaseFlat2. 
   unfold evalEnvFlat. nia.
-Defined. 
+Qed.
 
 Definition poly__makeSomeBaseFlat n := n * c__makeSomeBaseFlat1 + poly__makeCardsFlat (n + 2) + c__makeSomeBaseFlat2. 
 Lemma makeSome_base_flat_time_bound tm cards envs n q q' m m': 
@@ -1339,7 +1340,7 @@ Proof.
   1: { unfold makeSome_base_flat. easy. }
   extract. solverec. 
   now unfold c__makeSomeRightFlat. 
-Defined. 
+Qed.
   
 (** makeSomeLeft *)
 Definition makeSomeLeftFlat tm q q' m m' := makeSomeLeft q q' m m' (makeCardsFlat tm). 
@@ -1351,7 +1352,7 @@ Proof.
   1: { unfold makeSome_base_flat. easy. }
   extract. solverec. 
   now unfold c__makeSomeLeftFlat. 
-Defined. 
+Qed.
 
 (**makeSomeStay *)
 Definition makeSomeStayFlat tm q q' m m' := makeSomeStay q q' m m' (makeCardsFlat tm). 
@@ -1363,7 +1364,7 @@ Proof.
   1: { unfold makeSome_base_flat. easy. }
   extract. solverec. 
   now unfold c__makeSomeStayFlat. 
-Defined. 
+Qed.
 
 (** makeNone_base *)
 Definition makeNone_base_flat (tm : flatTM) (cards : list (TCCCard fAlphabet)) (q q' : nat) := @makeNone_base nat nat nat nat nat cards q q' (makeCardsFlat tm). 
@@ -1390,7 +1391,7 @@ Proof.
   rewrite map_time_const.
   unfold makeNone_base_flat_time, c__makeNoneBaseFlat1, c__makeNoneBaseFlat2. 
   unfold evalEnvFlat. nia. 
-Defined. 
+Qed.
 
 Definition poly__makeNoneBaseFlat n := n * c__makeNoneBaseFlat1 + poly__makeCardsFlat (n + 2) + c__makeNoneBaseFlat2.
 Lemma makeNone_base_flat_time_bound tm rules envs n q q': 
@@ -1422,7 +1423,7 @@ Proof.
   1: { unfold makeNone_base_flat. easy. }
   extract. solverec. 
   now unfold c__makeNoneRightFlat.  
-Defined. 
+Qed.
 
 (** makeNoneLeft *)
 Definition makeNoneLeftFlat tm q q' := makeNoneLeft q q' (makeCardsFlat tm). 
@@ -1434,7 +1435,7 @@ Proof.
   1: { unfold makeNone_base_flat. easy. }
   extract. solverec. 
   now unfold c__makeNoneLeftFlat.  
-Defined. 
+Qed.
 
 (** makeNoneStay *)
 Definition makeNoneStayFlat tm q q' := makeNoneStay q q' (makeCardsFlat tm). 
@@ -1446,7 +1447,7 @@ Proof.
   1: { unfold makeNone_base_flat. easy. }
   extract. solverec. 
   now unfold c__makeNoneStayFlat.  
-Defined. 
+Qed.
 
 (** flat_baseEnv *)
 Definition c__flatBaseEnv := 17.
@@ -1454,7 +1455,7 @@ Instance term_flat_baseEnv : computableTime' flat_baseEnv (fun tm _ => (makeAllE
 Proof. 
   extract. solverec. 
   now unfold c__flatBaseEnv. 
-Defined.
+Qed.
 
 (** flat_baseEnvNone *)
 Definition c__flatBaseEnvNone := 23. 
@@ -1462,14 +1463,14 @@ Instance term_flat_baseEnvNone : computableTime' flat_baseEnvNone (fun tm _ => (
 Proof. 
   extract. solverec. 
   now unfold c__flatBaseEnvNone. 
-Defined.
+Qed.
 
 (** fOpt *)
 Definition c__fOpt := 8. 
 Instance term_fOpt : computableTime' fOpt (fun o _ => (c__fOpt, tt)). 
 Proof. 
   extract. solverec. all: unfold c__fOpt; lia.
-Defined.
+Qed.
 
 (** opt_generateRulesForFlatNonHalt *)
 Definition c__optGenerateCardsForFlatNonHalt := c__makeNoneLeftFlat + c__makeNoneRightFlat + c__makeNoneStayFlat + c__makeSomeLeftFlat + c__makeSomeRightFlat + c__makeSomeStayFlat + 2 * c__fOpt + 26.
@@ -1506,7 +1507,7 @@ Proof.
   recRel_prettify2. 
   all: unfold opt_generateCardsForFlatNonHalt_time, c__optGenerateCardsForFlatNonHalt. 
   all: unfold optReturn; lia. 
-Defined. 
+Qed.
 
 Definition isValidFlatAct tm (a : nat * (option nat * TM.move)) := 
   let '(q, (m, mo)) := a in match m with 
@@ -1572,7 +1573,7 @@ Qed.
 Instance eqbComp_inp : EqBool.eqbCompT (nat * list (option nat)).
 Proof. 
   easy.
-Defined. 
+Qed.
 
  
 (** generateCardsForFlatNonHalt *)
@@ -2324,7 +2325,7 @@ Section fixX.
                                                                         end)).
     extract. unfold c__filter. 
     solverec.
-  Defined.
+  Qed.
 End fixX. 
 
 (** flat_haltingStates *)

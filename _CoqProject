@@ -66,8 +66,6 @@ theories/TM/Compound/MoveToSymbol_niceSpec.v
 theories/TM/Code/Decode.v
 theories/TM/Code/DecodeList.v
 theories/TM/Code/DecodeBool.v
-theories/TM/Code/CaseBool.v
-theories/TM/Code/ListTM_concat_repeat.v
 theories/TM/Single/EncodeTapesInvariants.v
 theories/TM/Single/DecodeTape.v
 theories/TM/Single/DecodeTapes.v
@@ -116,7 +114,6 @@ theories/L/Complexity/ONotation.v
 theories/L/Complexity/ONotationIsAppropriate.v
 theories/L/Complexity/RegisteredP.v
 theories/L/Complexity/LinTimeDecodable.v
-theories/L/Complexity/LinTimeDecodable_def.v
 theories/L/Complexity/NP.v
 theories/L/Complexity/Problems/GenNP/CanEnumTerm_def.v
 theories/L/Complexity/Problems/GenNP/CanEnumTerm.v
@@ -129,7 +126,6 @@ theories/L/Complexity/Reductions/TMGenNP/L_to_LM.v
 theories/L/Complexity/Reductions/TMGenNP/LM_to_mTM.v
 theories/L/Complexity/Reductions/TMGenNP/mTM_to_singleTapeTM.v
 theories/L/Complexity/Reductions/TMGenNP/M_multi2mono.v
-theories/L/Complexity/Reductions/TMGenNP/M_Boollist_to_Enc.v
 theories/L/Complexity/Reductions/TMGenNP/M_LM2TM.v
 theories/L/Complexity/Reductions/TMGenNP/IntermediateProblems.v
 theories/L/Complexity/Reductions/TMGenNP/LMGenNP.v

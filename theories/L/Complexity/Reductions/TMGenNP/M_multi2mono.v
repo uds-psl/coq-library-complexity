@@ -34,12 +34,12 @@ Module MultiToMono.
                                                       /\ Canonical_Rel M__multi v (y,v')
                     end.
 
-    Lemma Realises : M ⊨ Rel .
+    Lemma Realise : M ⊨ Rel .
     Proof.
       intros H__multi.
       eapply Realise_monotone.
       {unfold M. TM_Correct.
-       -apply CheckTapeContains.Realises. now apply CheckEncodesTapes.Realises. now apply tapes_encode_prefixInjective.
+       -refine (CheckTapeContains.Realise _ _). now apply CheckEncodesTapes.Realise. now apply tapes_encode_prefixInjective.
        -eapply ToSingleTape_Realise', Canonical_Realise.
       }  
       intros t (y,t'). cbn in *.
@@ -74,8 +74,8 @@ Module MultiToMono.
       intros H__multi.
       eapply TerminatesIn_monotone.
       {unfold M. TM_Correct.
-       -apply CheckTapeContains.Realises. now apply CheckEncodesTapes.Realises. now apply tapes_encode_prefixInjective.
-       -eapply CheckTapeContains.Terminates. now apply CheckEncodesTapes.Realises. apply CheckEncodesTapes.Terminates.
+       -eapply CheckTapeContains.Realise. now apply CheckEncodesTapes.Realise. now apply tapes_encode_prefixInjective.
+       -eapply CheckTapeContains.Terminates. now apply CheckEncodesTapes.Realise. apply CheckEncodesTapes.Terminates.
        -eapply ToSingleTape_Terminates'. eassumption.
       }  
       intros t k (k'&k__sim&Hk__sim&Hk). infTer 2. infTer 2. hnf. reflexivity.
@@ -236,7 +236,7 @@ Section lemmas_for_LMGenNP_to_TMGenNP_mTM.
                               (tt, v')).
   Proof.
     eapply Realise_monotone.
-    { unfold M__mono. TM_Correct. apply MultiToMono.Realises. } cbn.
+    { unfold M__mono. TM_Correct. apply MultiToMono.Realise. } cbn.
     intros tin ([],tout). cbn. intros [H|H].
     2:now decompose record H.
     destruct H as (?&([]&t1&Ht1&b&Hb&H__mono)&<-). destruct b as [ [] | ] ;inv Hb.
@@ -259,7 +259,7 @@ Section lemmas_for_LMGenNP_to_TMGenNP_mTM.
   Proof.
     eapply TerminatesIn_monotone.
     { unfold M__mono. TM_Correct.
-      -apply MultiToMono.Realises.
+      -apply MultiToMono.Realise.
       -eapply MultiToMono.Terminates. apply LiftTapes_Terminates. apply putEndAtFirst_dupfree. eapply Canonical_TerminatesIn.
       -apply Terminates_False.
     }

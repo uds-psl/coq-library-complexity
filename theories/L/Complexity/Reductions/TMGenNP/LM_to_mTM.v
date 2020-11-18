@@ -27,7 +27,7 @@ Module TrueOrDiverge.
 
     Definition M := If M' Nop Diverge.
 
-    Lemma Realises R' (H' : M' ⊨ R'):
+    Lemma Realise R' (H' : M' ⊨ R'):
       M ⊨ (fun tin out => R' tin (true,snd out)).
     Proof.
       eapply Realise_monotone.
@@ -93,7 +93,7 @@ Module M.
             (exists (sigma' : LM_heap_def.state) (k : nat), evaluatesIn LM_heap_def.step k (initLMGen P (compile (enc (rev bs)))) sigma').
 
 
-    Definition Realises :
+    Definition Realise :
       M ⊨
         (fun tin _ =>
            forall P t__cert, tin = t__cert:::ts__start P
@@ -102,7 +102,7 @@ Module M.
                (exists (sigma' : LM_heap_def.state) (k : nat), evaluatesIn LM_heap_def.step k (initLMGen P (compile (enc (rev bs)))) sigma')).
     Proof.
       unfold M. eapply Realise_monotone.
-      1:now eapply TrueOrDiverge.Realises, LMtoTM.Realises.
+      1:now eapply TrueOrDiverge.Realise, LMtoTM.Realise.
       intros ? out H P t__cert ->. hnf in H|-*. specialize (H P).
       apply H.
       -apply CodeTM.initValue_contains.
@@ -120,7 +120,7 @@ Module M.
                               /\ time (k__LM, sizeOfmTapes tin) <= k-1).
     Proof.
       unfold M. eapply TerminatesIn_monotone.
-      {eapply TrueOrDiverge.Terminates. now apply LMtoTM.Realises. apply LMtoTM.Terminates. }
+      {eapply TrueOrDiverge.Terminates. now apply LMtoTM.Realise. apply LMtoTM.Terminates. }
       intros tin k (HkPos&P&k__LM&t__cert&bs&->&Ht__cert&HLM&Htime). unfold LMtoTM.Ter.
       split.
       2:{ split. easy. unfold LMtoTM.Rel. intros _ H. eapply (H P).
@@ -448,7 +448,7 @@ Proof.
   2:intros [[P maxSize] steps] H; split.
   2:{ hnf in H|-*. destruct H as ((s&->&s__proc)&HsmallCert&Hk).
       intros t__cert' k res' HM.
-      specialize (M.Realises HM) as H'. hnf in H'. specialize H' with (1:=eq_refl) as (bs'&Hbs'&(sigma'&k__LM'&HbsRed')).
+      specialize (M.Realise HM) as H'. hnf in H'. specialize H' with (1:=eq_refl) as (bs'&Hbs'&(sigma'&k__LM'&HbsRed')).
       specialize HsmallCert with (1:=HbsRed') as (bs&res__LM&Hbs&HbsRed&Hter__LM). clear HM k res' t__cert' bs' Hbs' sigma' k__LM' HbsRed'.
       apply star_pow in HbsRed as (k__LM&HbsRed).
       assert (Hk__LM : k__LM <= steps).
@@ -476,7 +476,7 @@ Proof.
   }
   3:{ intros maxSize bs sig R Hsize. rewrite initValue_sizeOfTape. 
       
-      specialize @correct__leUpToC with (l:=M_Boollist_to_Enc.BoollistToEnc.boollist_size) (x:=bs) as ->.
+      specialize @correct__leUpToC with (l:=BoollistEnc.boollist_size) (x:=bs) as ->.
       rewrite <- size_list_enc_r in Hsize. rewrite Hsize. 
       [f__size]:refine (fun n => _). subst f__size;cbn beta. reflexivity.
   }
@@ -501,7 +501,7 @@ Proof.
        eexists. eassumption. }
      eapply Hcert_f__size. now rewrite size_rev.
     -intros (t__cert&Hsize_t__cert&(res&Hres)).
-     specialize (M.Realises Hres) as H'. hnf in H'. specialize H' with (1:=eq_refl) as (bs'&Hbs'&(sigma'&k__LM'&HbsRed')).
+     specialize (M.Realise Hres) as H'. hnf in H'. specialize H' with (1:=eq_refl) as (bs'&Hbs'&(sigma'&k__LM'&HbsRed')).
       specialize HsmallCert with (1:=HbsRed') as (bs&res__LM&Hbs&HbsRed&Hter__LM). clear Hres bs' Hbs' sigma' k__LM' HbsRed'.
       apply star_pow in HbsRed as (k__LM&HbsRed).
       assert (Hk__LM : k__LM <= steps).

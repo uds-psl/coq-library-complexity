@@ -71,7 +71,7 @@ Section fixTM.
   Local Open Scope polscope.
 
   (** delimiter symbol *)
-  Inductive delim : Type := delimC. 
+  Inductive delim : Set := delimC. 
   Hint Constructors delim : core.
   Global Instance delim_eqTypeC : eq_dec delim.
   Proof. unfold dec. decide equality. Defined. 
@@ -291,7 +291,7 @@ Section fixTM.
   Lemma tape_repr_inv7 w p p' u us n : us :: u ≃t(p, w) E p' n -> False. 
   Proof. intros (H1 & H2). destruct n; cbn in H2; congruence. Qed.
 
-  Lemma tape_repr_inv16 w p p' m u h : u ≃t(p, w) inr (inr (p', m)) :: h -> p' = p.
+  Lemma tape_repr_inv16 w p p' m u h : u ≃t(p, w) inr (inr (p', m)) :: h -> p = p'.
   Proof. intros (H1 & H2). destruct u; cbn in H2; inv H2; easy. Qed. 
 
   Lemma tape_repr_inv8 u us p p' w m rs : us :: u ≃t(p, w) inr(inr (p', m)) :: rs -> m = Some us. 
@@ -883,14 +883,14 @@ Section fixTM.
                           | [H : trans (?a, ?b) = ?h1, H1 : trans (?a, ?b) = ?h2 |- _] => assert (h1 = h2) by (now (rewrite <- H;rewrite <- H1)); clear H1
                           | [H : (?a, ?b) = (?c, ?d) |- _] => simple apply prod_eq in H as []
                           | [H : ?a = ?a |- _] => clear H
-                          | [H : ?a = _ |- _] => is_var a; subst a
+                          | [H : ?a = _ |- _] => is_var a; move a at bottom; subst a
                           | [H : Some ?a = Some ?b |- _] => simple apply Some_injective in H
                           | [H : inr ?a = inr ?b |- _] => simple apply inr_injective in H 
                           | [H : inl ?a = inl ?b |- _] => simple apply inl_injective in H 
                           | [H : ?h1 :: ?a = ?h2 :: ?b |- _] => simple apply Code.cons_injective in H as [? ?]
                           | [H : rev ?A = _ |- _ ] => is_var A; apply involution_invert_eqn2 in H as ?; [ | involution_simpl]; clear H
                           | [H : _ = rev ?A |- _ ] => is_var A; symmetry in H; apply involution_invert_eqn2 in H; [ | involution_simpl]
-                          | [H : _ = ?a |- _] => is_var a; symmetry in H; subst a
+                          | [H : _ = ?a |- _] => is_var a; symmetry in H;move H at bottom; subst a
                           | [H : context[E _ (S _)] |- _] => cbn in H
                           | [H : context[E _ (wo + _)] |- _] => cbn in H
                     end; try congruence.
@@ -1916,7 +1916,7 @@ Section fixTM.
     let t:= type of H in
     match t with 
     | ?h = ?h' => is_var h ; subst h
-    | ?h = ?h' => is_var h'; symmetry in H; subst h'
+    | ?h = ?h' => is_var h'; symmetry in H;move H at bottom; subst h'
       | _ => 
       once lazymatch t with 
       | None = None => clear H
@@ -4290,16 +4290,16 @@ Section fixTM.
 
   (*solve: an existential goal *)
   (*given a list of elements l, try to instantiate the existential with an element of l and then solve the remaining goal with cont *)
-  Ltac rec_exists l cont:=
+  Ltac rec_exists l out cont:=
     match l with
     | [] => fail
-    | ?a :: ?l => exists a; cont
-    | ?a :: ?l => rec_exists l cont
+    | ?a :: ?l => exists a; cont(*;idtac "was" out*)
+    | ?a :: ?l => rec_exists l constr:(S out)cont
     end. 
 
   Ltac solve_agreement_tape := unfold mtrRules, mtiRules, mtlRules; 
         match goal with
-        | [ |- ex (fun r => r el ?h /\ _) ] => rec_exists h ltac:(solve_agreement_in_env)
+        | [ |- ex (fun r => r el ?h /\ _) ] => rec_exists h 0 ltac:(solve_agreement_in_env)
         end.
 
   Hint Extern 2 => exfalso; assumption : tmp.
@@ -4673,9 +4673,23 @@ Section fixTM.
     - exists (f env), rule. rewrite in_map_iff. eauto.
   Qed. 
 
+  (*solve: an existential goal *)
+  (*given a list of elements l, try to instantiate the existential with an element of l and then solve the remaining goal with cont *)
+  Ltac rec_existsAt l k cont:=
+    lazymatch constr:((l , k)) with
+    | (?a :: ?l,0) => exists a; cont
+    | (?a :: ?l,S ?k) => rec_existsAt l k cont
+    end. 
+  
+  Ltac solve_agreement_transAt k :=
+    match goal with
+      | [ |- ex (fun x => (x el ?h /\ _))] => rec_existsAt h k ltac:(split; [ force_In | split; [ | reflexivity]])
+    end;
+    apply in_makeAllEvalEnv_iff; repeat split; cbn; solve_agreement_incl.
+
   Ltac solve_agreement_trans :=
     match goal with
-      | [ |- ex (fun x => (x el ?h /\ _))] => rec_exists h ltac:(split; [ force_In | split; [ | cbn; reflexivity]])
+      | [ |- ex (fun x => (x el ?h /\ _))] => rec_exists h 0 ltac:(split; [ force_In | split; [ | reflexivity]])
     end;
     apply in_makeAllEvalEnv_iff; repeat split; cbn; solve_agreement_incl.
 
@@ -4696,10 +4710,10 @@ Section fixTM.
       all: rewrite H; apply in_makeCards_iff, agreement_trans_unfold_env.
       all: unfold makeSomeStay_rules, makeSomeLeft_rules, makeSomeRight_rules, makeNoneLeft_rules, makeNoneRight_rules, makeNoneStay_rules. 
       (*some things are easy to automate, some aren't... *)
-      * exists (Build_evalEnv [p] [] [m1; m2] []). abstract solve_agreement_trans.
-      * exists (Build_evalEnv [p] [] [m1; m2] []). abstract solve_agreement_trans. 
-      * exists (Build_evalEnv [p] [] [m1; m2] []). abstract solve_agreement_trans. 
-      * exists (Build_evalEnv [p] [] [m1; m2] []). abstract solve_agreement_trans. 
+      * exists (Build_evalEnv [p] [] [m1; m2] []). abstract solve_agreement_transAt 1.
+      * exists (Build_evalEnv [p] [] [m1; m2] []). abstract solve_agreement_transAt 1. 
+      * exists (Build_evalEnv [p] [] [m1; m2] []). abstract solve_agreement_transAt 2.
+      * exists (Build_evalEnv [p] [] [m1; m2] []). time abstract solve_agreement_transAt 2. 
       * exists (Build_evalEnv [p] [] [m1; m2] []). abstract solve_agreement_trans. 
       * exists (Build_evalEnv [p] [] [m1; m2] []). abstract solve_agreement_trans. 
       * exists (Build_evalEnv [p] [] [m1; m2; m3] []). abstract solve_agreement_trans. 
@@ -4861,7 +4875,14 @@ Section fixTM.
 
   Ltac solve_agreement_prelude := 
     match goal with
-      | [ |- ex (fun x => (x el ?h /\ _))] => rec_exists h ltac:(split; [ force_In | split; [ | cbn; reflexivity]])
+      | [ |- ex (fun x => (x el ?h /\ _))] => rec_exists h 0 ltac:(split; [ force_In | split; [ | cbn; reflexivity]])
+    end;
+    apply in_makeAllEvalEnv_iff; repeat split; cbn; solve_agreement_incl.
+
+
+  Ltac solve_agreement_preludeAt k := 
+    match goal with
+      | [ |- ex (fun x => (x el ?h /\ _))] => rec_existsAt h k ltac:(split; [ force_In | split; [ | cbn; reflexivity]])
     end;
     apply in_makeAllEvalEnv_iff; repeat split; cbn; solve_agreement_incl.
 
@@ -4870,25 +4891,33 @@ Section fixTM.
     split; intros. 
     - inv H. inv H0. 
       all: apply in_makeCards_iff, agreement_trans_unfold_env; unfold listPreludeRules.
-      1-4,7-8,14,24,26: abstract (solve [exists (Build_evalEnv [] [] [] []); solve_agreement_prelude]). 
-      + exists (Build_evalEnv [] [σ] [] [])... 
-      + exists (Build_evalEnv [] [] [m] [])... 
-      + exists (Build_evalEnv [] [σ1] [m1] [])... 
-      + exists (Build_evalEnv [] [σ1] [] [])... 
-      + exists (Build_evalEnv [] [σ1; σ2] [] [])...
-      + exists (Build_evalEnv [] [] [m] [])...
-      + exists (Build_evalEnv [] [σ] [m] [])... 
-      + exists (Build_evalEnv [] [σ1; σ2; σ3] [] [])...
-      + exists (Build_evalEnv [] [σ1; σ2] [m1] [])...
-      + exists (Build_evalEnv [] [σ1; σ2] [m1] [])...
-      + exists (Build_evalEnv [] [σ1] [] [])...
-      + exists (Build_evalEnv [] [σ1] [m1] [])...
-      + exists (Build_evalEnv [] [σ1; σ2] [] [])...
-      + exists (Build_evalEnv [] [σ1] [] [])...
-      + exists (Build_evalEnv [] [σ1; σ2] [m] [])...
-      + exists (Build_evalEnv [] [σ] [] [])...
-      + exists (Build_evalEnv [] [σ] [m] [])... 
-      + exists (Build_evalEnv [] [] [m] [])... 
+      +abstract (solve [exists (Build_evalEnv [] [] [] []); solve_agreement_preludeAt 0]). 
+      +abstract (solve [exists (Build_evalEnv [] [] [] []); solve_agreement_preludeAt 1]). 
+      +abstract (solve [exists (Build_evalEnv [] [] [] []); solve_agreement_preludeAt 2]). 
+      +abstract (solve [exists (Build_evalEnv [] [] [] []); solve_agreement_preludeAt 3]). 
+      + exists (Build_evalEnv [] [σ] [] []);abstract solve_agreement_preludeAt 4. 
+      + exists (Build_evalEnv [] [] [m] []);abstract solve_agreement_preludeAt 5. 
+      +abstract (solve [exists (Build_evalEnv [] [] [] []); solve_agreement_preludeAt 6]). 
+      +abstract (solve [exists (Build_evalEnv [] [] [] []); solve_agreement_preludeAt 7]). 
+      + exists (Build_evalEnv [] [σ1] [m1] []);abstract solve_agreement_preludeAt 8. 
+      + exists (Build_evalEnv [] [σ1] [] []);abstract solve_agreement_preludeAt 9. 
+      + exists (Build_evalEnv [] [σ1; σ2] [] []);abstract solve_agreement_preludeAt 10. 
+      + exists (Build_evalEnv [] [] [m] []);abstract solve_agreement_preludeAt 11. 
+      + exists (Build_evalEnv [] [σ] [m] []);abstract solve_agreement_preludeAt 12. 
+      +abstract (solve [exists (Build_evalEnv [] [] [] []); solve_agreement_preludeAt 13]). 
+      + exists (Build_evalEnv [] [σ1; σ2; σ3] [] []);abstract solve_agreement_preludeAt 14. 
+      + exists (Build_evalEnv [] [σ1; σ2] [m1] []);abstract solve_agreement_preludeAt 15. 
+      + exists (Build_evalEnv [] [σ1; σ2] [m1] []);abstract solve_agreement_preludeAt 16. 
+      + exists (Build_evalEnv [] [σ1] [] []);abstract solve_agreement_preludeAt 17. 
+      + exists (Build_evalEnv [] [σ1] [m1] []);abstract solve_agreement_preludeAt 18. 
+      + exists (Build_evalEnv [] [σ1; σ2] [] []);abstract solve_agreement_preludeAt 19. 
+      + exists (Build_evalEnv [] [σ1] [] []);abstract solve_agreement_preludeAt 20. 
+      + exists (Build_evalEnv [] [σ1; σ2] [m] []);abstract solve_agreement_preludeAt 21. 
+      + exists (Build_evalEnv [] [σ] [] []);abstract solve_agreement_preludeAt 22.
+      +abstract (solve [exists (Build_evalEnv [] [] [] []); solve_agreement_preludeAt 23]).  
+      + exists (Build_evalEnv [] [σ] [m] []);abstract solve_agreement_preludeAt 24.
+      +abstract (solve [exists (Build_evalEnv [] [] [] []); solve_agreement_preludeAt 25]).  
+      + (exists (Build_evalEnv [] [] [m] []);abstract solve_agreement_preludeAt 26). 
     - unfold finPreludeCards in H. 
       apply in_makeCards_iff in H as (rule & env & H1 & H2 & H3);
       apply in_map_iff in H2 as ([] & <- & H2);
@@ -5004,12 +5033,12 @@ Section fixTM.
 
   (** we need to use the Boolean version of lookup for it to be extractable *)
   Import Undecidability.L.Functions.FinTypeLookup Undecidability.L.Functions.EqBool.
-  Definition inp_eqb := LProd.prod_eqb Nat.eqb (Lists.list_eqb (LOptions.option_eqb Nat.eqb)).
+  Definition inp_eqb := LProd.prod_eqb Nat.eqb (List_eqb.list_eqb (LOptions.option_eqb Nat.eqb)).
   Instance eqBool_inp_eqb : eqbClass inp_eqb. 
   Proof. 
     apply LProd.eqbProd. 
     - apply LNat.eqbNat_inst. 
-    - apply Lists.eqbList. apply LOptions.eqbOption. apply LNat.eqbNat_inst. 
+    - apply List_eqb.eqbList. apply LOptions.eqbOption. apply LNat.eqbNat_inst. 
   Qed. 
 
   (** generate cards for all states*)

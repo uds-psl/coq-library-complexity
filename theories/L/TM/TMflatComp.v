@@ -5,7 +5,9 @@ From Undecidability.L.Datatypes Require Import LNat LProd Lists LOptions.
  
 From Complexity.L.Complexity Require Import ONotation Monotonic.
 From Undecidability.L Require Import Tactics.LTactics.
-From Complexity Require Import Functions.Decoding TMflatFun.
+From Undecidability Require Import Functions.Decoding .
+From Complexity Require Import TMflatFun.
+
 From Undecidability Require Import L.Functions.EqBool.
 
 Definition haltConfFlat_time (c : nat) := 20 * c + 21.

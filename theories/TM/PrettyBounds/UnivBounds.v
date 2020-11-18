@@ -250,7 +250,7 @@ Module Univ_nice.
   Proof. destruct (enum X) eqn:E; cbn; congruence || lia. Qed.
 
 
-  Import Univ.StepTM.
+  Import Univ.Univ Univ.LowLevel.
 
   Section Univ_nice.
 

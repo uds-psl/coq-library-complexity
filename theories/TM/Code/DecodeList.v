@@ -20,10 +20,10 @@ Lemma TerminatesIn_Realises sig F n (M : pTM sig F n) Ter Rel:
   projT1 M ↓ Ter -> M ⊨ Rel
   -> forall tin, (exists k, Ter tin k) -> (exists ! y, Rel tin y ).
 Proof.
-  intros Terminates Realises. intros t (k&Tt).
+  intros Terminates Realise. intros t (k&Tt).
   specialize (Terminates _ _ Tt) as (c&Hc).
-  eexists. split. now eapply Realises;eassumption.
-  intros c' Hc'. Realises
+  eexists. split. now eapply Realise;eassumption.
+  intros c' Hc'. Realise
 Qed. *)
 
 From Complexity.TM Require Import Code.DecodeBool.
@@ -45,7 +45,7 @@ Module CheckEncodeList.
     Local Remove Hints Retract_id : typeclass_instances.
     
     Let Rel : pRel tau bool 1 := ContainsEncoding.Rel (Encode_list cX) Retr_f.
-    Let Rel__X :=  ContainsEncoding.Rel cX Retr_f.
+    Let Rel__X :=  ContainsEncoding.Rel (tau:=tau) cX Retr_f.
     
     Definition R__step : pRel tau (option bool) 1 :=
       fun t '(y,t') =>
@@ -109,7 +109,7 @@ Module CheckEncodeList.
 
     Definition M := While M__step.
 
-    Lemma Realises:
+    Lemma Realise:
       (*prefixInjective cX -> *)
       (forall (x:X), encode x <> []) ->
       M ⊨ Rel.

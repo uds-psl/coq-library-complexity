@@ -78,7 +78,7 @@ Module ContainsEncoding.
 End ContainsEncoding.
 
 (* MOVE *)
-Lemma map_retract_prefix_inj X Y `{Retract X Y} (x:list X) xs y ys:
+Lemma map_retract_prefix_inj X Y `{Retract X Y} (x:list X) xs y (ys: list Y):
   map Retr_f x ++ xs = map Retr_f y ++ ys -> { xs' & {ys' & x++xs' = y++ys' }}.
 Proof.
   induction x in xs,y,ys|-*.
@@ -123,7 +123,7 @@ Module CheckTapeContains.
     Hypothesis Realises_M_checkX : M_checkX ⊨ ContainsEncoding.Rel (X:=X) encode Retr_f.
     Hypothesis (prefInj : prefixInjective cX).
 
-    Lemma Realises : M ⊨ Rel.
+    Lemma Realise : M ⊨ Rel.
     Proof.
       Local Set Printing Depth 30.
       unfold M,Rel.

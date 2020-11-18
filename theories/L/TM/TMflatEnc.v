@@ -1,6 +1,6 @@
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import LNat Lists LProd LOptions LBool.
-From Complexity.L Require Import Functions.Decoding.
+From Undecidability.L Require Import Functions.Decoding.
 
 
 From Complexity.L.TM Require Export TMflat.

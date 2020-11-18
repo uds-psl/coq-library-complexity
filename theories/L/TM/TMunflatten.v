@@ -506,7 +506,7 @@ Proof.
   cbn. unfold isValidFlatTapes.
   intros H. destruct (Nat.eqb_spec (length t) n). 2:easy. subst n.
   induction t.
-  -eexists [||]. rewrite isFlatteningTapesOf_iff. easy.
+  -eexists [| |]. rewrite isFlatteningTapesOf_iff. easy.
   -cbn in H.
    rewrite !andb_true_iff in H. destruct H as (H'&H).
    apply IHt in H as (v'&Hv).

@@ -250,7 +250,7 @@ Proof.
       exists finStr2.
       enough (finStr1 = conc card') as H3 by (now setoid_rewrite H3).
       destruct F2. rewrite Hconc in H0. 
-      apply Prelim.map_inj in H0; [easy | unfold injective; apply injective_index].
+      apply map_injective in H0; [easy | unfold injective; apply injective_index].
 Qed.
 
 Section fixFCCInstance. 

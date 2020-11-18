@@ -427,7 +427,7 @@ Section ToSingleTape_bounds.
     refine (match k with
             | 0 => Vector.cast vs _
             | S k' => match vs with
-                     | [||] => Vector.cast [||] _
+                     | [| |] => Vector.cast [| |] _
                      | _ ::: vs' => Vector.cast (vector_drop _ _ vs' k') _
                      end
             end); abstract lia.

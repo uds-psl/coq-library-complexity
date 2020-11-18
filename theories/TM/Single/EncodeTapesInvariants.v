@@ -33,6 +33,13 @@ Proof.
 Qed.
 
 
+Lemma last_app_eq X A B (a:X) b :
+  A++[a] = B++[b] -> A = B /\ a = b.
+Proof.
+intros H%(f_equal (@rev X)). rewrite !rev_app_distr in H. split.
+- inv H. apply (f_equal (@rev X)) in H2. now rewrite !rev_involutive in H2.
+- now inv H.
+Qed.
 
 Lemma encode_tape_invariants_partial sig (x:tape sig) b t t__R:
   encode_tape x = LeftBlank b :: t ++t__R
@@ -48,12 +55,12 @@ Proof.
   rewrite Hx. intros [= <- Ht'] Hall.
   assert (H__R : t__R <> []). 1:{ destruct t__R. 2:easy. rewrite app_nil_r in Ht'. subst t. ediscriminate (Hall (RightBlank _)). now eauto. }
   apply exists_last in H__R as (init__R&last__R&->). 
-  rewrite !app_assoc in Ht';apply Prelim.last_app_eq in Ht' as [-> [= <-]]. 
+  rewrite !app_assoc in Ht';apply last_app_eq in Ht' as [-> [= <-]]. 
   split. 1:{ eexists _, _;split. reflexivity. intros. apply Hsymb. eauto. }
   destruct x;cbn in Hx,Hmarked;autorewrite with list in Hmarked,Hx;revert Hx. easy.
   all:intros [= <- H];revert H.
   2:rewrite (app_comm_cons' _ _ (UnmarkedSymbol _)).
-  all:rewrite ?app_comm_cons, <- !app_assoc_reverse. all:intros [H <-]%Prelim.last_app_eq;revert H.
+  all:rewrite ?app_comm_cons, <- !app_assoc_reverse. all:intros [H <-]%last_app_eq;revert H.
   all:intros H%(f_equal (fun l => length (filter (isMarked (sig:=sig)) l) )).
   all:repeat (autorewrite with list in Hmarked,H|-*;cbn in Hmarked,H|-* ).
   all:split;[ | now destruct t;[destruct init__R| ];cbn in *;try congruence;nia].

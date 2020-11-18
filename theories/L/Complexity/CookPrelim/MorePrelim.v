@@ -1,7 +1,7 @@
 Require Import Undecidability.Shared.Libs.PSL.Base.
 Require Import Lia. 
 From Undecidability.L Require Import L_facts.
-(*From Undecidability.Shared Require Import Prelim.*)
+Require Import Undecidability.Shared.ListAutomation.
 From Complexity.L.Complexity Require Export Tactics.
 
 (** * Various preliminaries for the TM -> SAT part of the Cook-Levin Theorem *)
@@ -299,7 +299,7 @@ Proof.
   - inv H. apply IHn in H2 as (z & H3 & H4). exists z. eauto.
 Qed. 
 
-Notation injective := Prelim.Injective.
+Notation injective := Bijection.injective.
 
 Lemma getPosition_map (X Y : eqType) (f : X -> Y) (l : list X) (x : X) : injective f -> getPosition (map f l) (f x) = getPosition l x. 
 Proof.
@@ -608,5 +608,5 @@ Lemma in_concat_map_iff (X Y : Type) (f : X -> list Y) (l : list X) y : y el con
 Proof. 
   split; intros. 
   - apply in_concat_iff in H as (? & H1 & (? & <- & H3)%in_map_iff). eauto. 
-  - apply in_concat_iff. destruct H as (x & H1 & H2). exists (f x). eauto. 
+  - apply in_concat_iff. destruct H as (x & H1 & H2). exists (f x). split;eauto. 
 Qed. 
