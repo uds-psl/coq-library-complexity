@@ -1,13 +1,8 @@
   
 name: build
 
-on:
-  push:
-    branches:
-    - 'coq-*'
-  pull_request:
-    branches:
-    - 'coq-*'
+on: [push, pull_request]
+
 
 jobs:
   build:
@@ -34,4 +29,4 @@ jobs:
           ocaml-version: 4.07.1
 
       - run: make depsopam -j2
-      - run: make all -j2
+      - run: opam exec -- make all -j2
