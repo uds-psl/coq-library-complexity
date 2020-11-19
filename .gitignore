@@ -10,3 +10,5 @@
 *.nia.cache
 *.vok
 *.vos
+
+._CoqProject.tmp
