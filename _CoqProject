@@ -1,4 +1,4 @@
--Q ./theories Complexity
+-Q theories Complexity
 -Q coq-library-undecidability/theories Undecidability
 
 -arg -w -arg -notation-overridden

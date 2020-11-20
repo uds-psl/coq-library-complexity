@@ -1,13 +1,8 @@
   
 name: build
 
-on:
-  push:
-    branches:
-    - 'coq-*'
-  pull_request:
-    branches:
-    - 'coq-*'
+on: [push, pull_request]
+
 
 jobs:
   build:
@@ -33,8 +28,5 @@ jobs:
         with:
           ocaml-version: 4.07.1
 
-      - run: opam repo add coq-released https://coq.inria.fr/opam/released
-      - run: opam repo add psl-opam-repository https://github.com/uds-psl/psl-opam-repository.git 
-      - run: opam install . --deps-only
-
-      - run: opam exec -- make -j 2 all TIMED=1
+      - run: make depsopam -j2
+      - run: opam exec -- make all -j2
