@@ -18,11 +18,11 @@ Install the [A Coq Library of Undecidability Proofs](https://github.com/uds-psl/
 --->
 ### Building from source
 
-This library depends on the Coq Library of Undecidability Proofs](https://github.com/uds-psl/coq-library-undecidability), and tehre are two ways to install that dependency:
+This library depends on the [Coq Library of Undecidability Proofs](https://github.com/uds-psl/coq-library-undecidability), and tehre are two ways to install that dependency:
 
 Either, initialize the submodule of this git repository and install the library there using `make depsopam`. This only compiles the files actually needed by the complexity library.
 
-Or use the `make depsopam` to install them using opam, which pins the undecidability library to a speciffic git hash. 
+Or use the `make depsopam` to install them using opam, which pins the undecidability library to a specific git hash. 
 
 
 Then, the [Coq Library of Undecidability Proofs](https://github.com/uds-psl/coq-library-undecidability)is included as a submodule in `./coq-library-undecidability`.
