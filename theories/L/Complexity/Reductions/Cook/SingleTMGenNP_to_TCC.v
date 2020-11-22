@@ -887,10 +887,10 @@ Section fixTM.
                           | [H : (?a, ?b) = (?c, ?d) |- _] => simple apply prod_eq in H as []
                           | [H : ?a = ?a |- _] => clear H
                           | [H : ?a = _ |- _] => is_var a; move a at bottom; subst a
-                          | [H : Some ?a = Some ?b |- _] => simple apply Some_injective in H
-                          | [H : inr ?a = inr ?b |- _] => simple apply inr_injective in H 
-                          | [H : inl ?a = inl ?b |- _] => simple apply inl_injective in H 
-                          | [H : ?h1 :: ?a = ?h2 :: ?b |- _] => simple apply Code.cons_injective in H as [? ?]
+                          | [H : Some ?a = Some ?b |- _] => apply Some_injective in H
+                          | [H : inr ?a = inr ?b |- _] => apply inr_injective in H 
+                          | [H : inl ?a = inl ?b |- _] => apply inl_injective in H 
+                          | [H : ?h1 :: ?a = ?h2 :: ?b |- _] => apply Code.cons_injective in H as [? ?]
                           | [H : rev ?A = _ |- _ ] => is_var A; apply involution_invert_eqn2 in H as ?; [ | involution_simpl]; clear H
                           | [H : _ = rev ?A |- _ ] => is_var A; symmetry in H; apply involution_invert_eqn2 in H; [ | involution_simpl]
                           | [H : _ = ?a |- _] => is_var a; symmetry in H;move H at bottom; subst a
@@ -1851,16 +1851,15 @@ Section fixTM.
 
   Ltac transRules_inv2 := repeat transRules_inv2_once;subst. 
 
-  Lemma transRules_semCasesLeft q q' m (γ2 γ3 γ4 γ5 γ6 : Gamma) :
+  Lemma transRules_semCasesLeft q q' m m' dir (γ2 γ3 γ4 γ5 γ6 : Gamma) :
   transRules (inl (q, m)) γ2 γ3 γ4 γ5 γ6
+  -> trans (q, m) = (q',(m',dir))
   -> match γ2 with
     | inr (inr (p2,m2)) =>
       match γ3 with
       | inr (inr (p3,m3)) =>
-        match trans (q, m) with
-        (q',(m',dir)) => 
         (match m,m' with None,None => m2 = |_| ->  m3 = |_| | _,_ => True end) /\
-          let effectiveMove :=
+          let effectiveMove := (* not at border *)
             match m,m' with
             | None,None =>
               match dir with
@@ -1887,14 +1886,105 @@ Section fixTM.
             | _,_ => False
             end
           end
-        end
       | _ => False
     end
     | _ => False
   end.
   Proof.
-    intros H; assert (H':=H);lock H'; transRules_inv2;match goal with H : trans _ = _ |- _ => rewrite H end;
+    intros H H2; assert (H':=H);lock H'; transRules_inv2;lazymatch goal with H2 : trans _ = _ , H' : trans _ = _ |- _ => rewrite H2 in H';injection H' as [= -> -> ->] end;
     (split;[solve [exact I |congruence]|]);intros ? ?;cbn;try solve [repeat esplit].
+  Qed.
+
+  
+  Lemma transRules_semCasesRight q q' m m' dir (γ1 γ2 γ4 γ5 γ6 : Gamma) :
+  transRules  γ1 γ2 (inl (q, m)) γ4 γ5 γ6
+  -> trans (q, m) = (q',(m',dir))
+  -> match γ2 with
+    | inr (inr (p2,m2)) =>
+      match γ1 with
+      | inr (inr (p1,m1)) =>
+        (match m,m' with None,None => m2 = |_| ->  m1 = |_| | _,_ => True end) /\
+          let effectiveMove := (* not at border *)
+            match m,m' with
+            | None,None =>
+              match dir with
+                neutral => Some neutral
+              | negative => match m2,m1 with
+                            | None,_ => None
+                            | _,None => None
+                            | _,_ => Some negative
+                            end
+              | _ => None
+              end
+            | _, _ => Some dir
+            end in
+          let mout :=  match m' with None => m | Some mout => m' end in
+          match effectiveMove with
+          | Some positive => γ4 = inr (inr (negative,m2)) /\ γ5 = inr (inr (negative,mout)) /\ (exists m3,γ6 = (inl (q', m3)))
+          | Some neutral => γ4 = inr (inr (∘ m1)) /\ γ5 = inr (inr (∘ m2)) /\ γ6 = (inl (q', mout))
+          | Some negative => (exists m1,γ4 = inr (inr (positive,m1))) /\ γ5 = inr (inr (positive,m1)) /\ γ6 = (inl (q', m2))
+          | None => (*TODO:flip *)
+            match dir,m2 with
+            | negative,None | positive, Some _ => (exists p', γ4 = inr (inr (p',m1)) /\  γ5 = inr (inr (p', m2))) /\ γ6 = (inl (q', None))
+            | negative,Some _ => (exists p', γ4 = inr (inr (p',m1)) /\ γ5 = inr (inr (p', m))) /\ γ6 = (inl (q', m2)) 
+            | positive,None =>  (exists p', γ4 = inr (inr (p',m1)) /\ γ5 = inr (inr (p', m))) /\ (exists m', γ6 = (inl (q', m')))
+            | _,_ => False
+            end
+          end
+      | _ => False
+    end
+    | _ => False
+  end.
+  Proof.
+    intros H H2; assert (H':=H);lock H'; transRules_inv2;lazymatch goal with H2 : trans _ = _ , H' : trans _ = _ |- _ => rewrite H2 in H';injection H' as [= -> -> ->] end;
+    (split;[solve [exact I |congruence]|]);intros ? ?;cbn;try solve [repeat esplit].
+  Qed.
+
+
+  Lemma transRules_semCasesCenter q q' m m' dir (γ1 γ3 γ4 γ5 γ6 : Gamma) :
+  transRules γ1 (inl (q, m)) γ3 γ4 γ5 γ6
+  -> trans (q, m) = (q',(m',dir))
+  -> match γ1 with
+    | inr (inr (p1,m1)) =>
+      match γ3 with
+      | inr (inr (p3,m3)) => 
+          let effectiveMove := (* not at border *)
+            match m,m' with
+            | None,None =>
+              match dir with
+              | positive => match m3 with
+                            | None => None
+                            | _ => Some dir
+                            end
+              | negative => match m1 with
+                            | None => None
+                            | _=> Some dir
+                            end
+              | _ => Some dir
+              end
+            | _, _ => Some dir
+            end in
+          let mout :=  match m' with None => m | Some mout => m' end in 
+          match effectiveMove with
+          | Some negative => (exists m0,γ4 = (inr (inr (positive, m0)))) /\ γ5 = inl (q', m1) /\ γ6 = inr (inr (positive,mout))
+          | Some neutral => γ4 = (inr (inr (∘ m1))) /\ γ5 = inl (q',mout)  /\ γ6 = inr (inr (∘m3))
+          | Some positive => γ4 = inr (inr (negative,mout)) /\ γ5 = inl (q', m3) /\ (exists m0,γ6 = (inr (inr (negative, m0))))
+          (*| Some positive => γ4 = (inl (q', m2)) /\ γ5 = inr (inr (negative,m3)) /\ (exists m4,γ6 = inr (inr (negative,m4)))*)
+          | None => 
+            match dir with
+            | positive => γ4 = inr (inr (∘ m1)) /\ γ5 = inl (q',mout) /\ γ6 = inr (inr (∘ m3))
+            | negative => γ4 = inr (inr (∘ m1)) /\ γ5 = inl (q',mout) /\ γ6 = inr (inr (∘ m3))
+            | _ => False
+            end 
+          end
+      | _ => False
+    end
+    | _ => False
+  end.
+  Proof.
+    intros H H2; assert (H':=H);lock H'; transRules_inv2;lazymatch goal with H2 : trans _ = _ , H' : trans _ = _ |- _ => rewrite H2 in H';
+    injection H' as [= -> -> ->] end;
+    (*(split;[solve [exact I |congruence]|]);*)intros;cbn;try solve [repeat esplit].
   Qed.
 
   (** manual inversion lemmas because of performance *) 
@@ -1965,22 +2055,27 @@ Section fixTM.
     let t:= type of H in
     match t with 
     | ?h = ?h' => is_var h ; subst h
-    | ?h = ?h' => is_var h'; symmetry in H;move H at bottom; subst h'
-      | _ => 
+    | ?h = ?h' => is_var h'; first [symmetry in H;move H at bottom; subst h' | is_var h;constr_eq h h';clear H]
+    | _ => 
       once lazymatch t with 
-      | None = None => clear H
+      | ?x = ?x => clear H
       | None = Some _ => discriminate H
       | Some _ = None => discriminate H
-      | Some _ = Some _ => simple apply Some_injective in H;inv_eqn H
+      | Some _ = Some _ => apply Some_injective in H;inv_eqn H
       | inl _ = inr _ => discriminate H
       | inr _ = inl _ => discriminate H
-      | inl _ = inl _ => simple apply inl_injective in H;inv_eqn H
-      | inr _ = inr _ => simple apply inr_injective in H;inv_eqn H
+      | inl _ = inl _ => apply inl_injective in H;inv_eqn H
+      | inr _ = inr _ => apply inr_injective in H;inv_eqn H
       | (_,_) = (_,_) =>
           let H1 := fresh in 
           let H2 := fresh in
           simple apply prod_eq in H as [H1 H2]; inv_eqn H1;inv_eqn H2
-          | _ => fail 1000 "inv_eqn" t
+      | _ /\ _ =>
+        let H1 := fresh in 
+        let H2 := fresh in destruct H as [H1 H2];inv_eqn H1;inv_eqn H2
+      | exists x, _ => destruct H as [? H];inv_eqn H
+      | True => first [clear H | destruct H]
+      | _ => fail 1000 "inv_eqn" t
       end
     end.  
 
@@ -2671,25 +2766,34 @@ Section fixTM.
     apply H1 in H. easy.  
   Qed.  
 
-  Ltac solve_stepsim_uniqueness H F1 F2 Z3 W3 :=  
-    cbn in H; rewrite <- !app_assoc in H; cbn in H;  
-    rewrite app_fold5 in H;  
-    let X1 := fresh "X1" in let X2 := fresh "X2" in  
-    destruct (valid_conc_inv H) as (? & ? & ? & ? & ? & ? & ? & -> & X1 & X2); 
-    normalise_conf_strings_in H;  
-    let K1 := fresh "K" in let K2 := fresh "K" in let K3 := fresh "K" in 
-    let K4 := fresh "K" in let K5 := fresh "K" in 
-    specialize (proj1 (valid_coversHeadInd_center simRules _  _ _ _ _ _ _ _ _ _ _ _ _ _) (conj H (conj X1 X2))) as (K1 & K2 & K3 & K4 & K5);  
-    eapply covHeadSim_trans in K3; [ | eauto | eassumption];  
-    eapply covHeadSim_trans in K4; [ | eauto | eassumption]; 
-    eapply covHeadSim_trans in K5; [ | eauto | eassumption];  
-    inv' K3 transRules_inv;  inv_trans_prim;inv' K4 transRules_inv; inv_trans_prim; inv' K5 transRules_inv; inv_trans_prim; 
-    inv_trans_sec; repeat (transRules_inv2_once;try congruence); simp_eqn;  
-    (specialize (covHeadSim_unique_left K1 F1 Z3) as ?; 
-    simp_eqn; 
-    eapply covHeadSim_tape in K2; [ | eapply F2]; apply W3 in K2;  
-    simp_eqn;  
-    cbn; try rewrite <- !app_assoc; cbn; reflexivity). 
+  
+Ltac transRules_semCases K H :=
+    let K' := fresh "K" in
+    let H' := fresh "H'" in
+    lazymatch type of K with
+    | transRules (inl _) _ _ _ _ _ => specialize (transRules_semCasesLeft) with (1:=K) (2:=H) as [H' K']
+    | transRules _ (inl _) _ _ _ _ => specialize (transRules_semCasesCenter) with (1:=K) (2:=H) as K'
+    | transRules _ _ (inl _)  _ _ _ => specialize (transRules_semCasesRight) with (1:=K) (2:=H) as [H' K']
+  end;cbn beta iota zeta in K';inv_eqn K';try (specialize (H' eq_refl);injection H' as [= ->]).
+
+Ltac solve_stepsim_uniqueness' H H2 F1 F2 Z3 W3 :=        
+  cbn in H; rewrite <- !app_assoc in H; cbn in H;  
+  rewrite app_fold5 in H;  
+  let X1 := fresh "X1" in let X2 := fresh "X2" in  
+  destruct (valid_conc_inv H) as (? & ? & ? & ? & ? & ? & ? & -> & X1 & X2); 
+  normalise_conf_strings_in H;  
+  let K1 := fresh "K1" in let K2 := fresh "K2" in let K3 := fresh "K3" in 
+  let K4 := fresh "K4" in let K5 := fresh "K5" in 
+  specialize (proj1 (valid_coversHeadInd_center simRules _  _ _ _ _ _ _ _ _ _ _ _ _ _) (conj H (conj X1 X2))) as (K1 & K2 & K3 & K4 & K5);  
+  eapply covHeadSim_trans in K3; [ | eauto | eassumption];  
+  eapply covHeadSim_trans in K4; [ | eauto | eassumption]; 
+  eapply covHeadSim_trans in K5; [ | eauto | eassumption];
+  transRules_semCases K3 H2; transRules_semCases K4 H2;transRules_semCases K5 H2;
+  specialize (covHeadSim_unique_left K1 F1 Z3) as ?;
+  simp_eqn; 
+  eapply covHeadSim_tape in K2; [ | eapply F2]; apply W3 in K2;  
+  simp_eqn;  
+  cbn; try rewrite <- !app_assoc; cbn; foldAbbrevs;simp_eqn;reflexivity.
 
   Notation "s '⇝' s'" := (valid covHeadSim s s') (at level 40). 
 
@@ -2718,7 +2822,6 @@ Section fixTM.
     try match type of F2 with _ :: ?l1 ≃t(_, _) _ => destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end. 
     (* 84 goals *)
 
-    Optimize Proof. 
     cbn in H1.
     foldAbbrevs. 
     time "main proof except uniqueness"
@@ -2733,7 +2836,6 @@ Section fixTM.
         let W1 := fresh "W1" in let W2 := fresh "W2" in let W3 := fresh "W3" in 
         let h1 := fresh "h1" in let h2 := fresh "h2" in 
         cbn in F1 ; cbn in F2;
-        idtac "dir" shiftdir;
         lazymatch shiftdir with
         | Rmove => lazymatch type of F1 with 
               | [] ≃t(?p, ?w) _ => specialize (E_cover_blank_rev p shiftdir w) as [Z1 Z3]; 
@@ -2779,58 +2881,14 @@ Section fixTM.
       (split; [ abstract (solve_stepsim_covering Z1 W1) | split; [  | abstract solve_stepsim_repr shiftdir Z2 W2]]) 
      end.
     (* 100 goals*)
-
-    Optimize Proof. 
     
     (*solve the uniqueness obligations - this is very expensive because of the needed inversions *)
     (*therefore abstract into opaque lemmas *)
     idtac "solving uniqueness".
-    unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1;foldAbbrevs. 
-    1:{ 
-      Set Ltac Profiling.
-      
-    cbn in H; rewrite <- !app_assoc in H; cbn in H;  
-    rewrite app_fold5 in H;  
-    let X1 := fresh "X1" in let X2 := fresh "X2" in  
-    destruct (valid_conc_inv H) as (? & ? & ? & ? & ? & ? & ? & -> & X1 & X2); 
-    normalise_conf_strings_in H;  
-    let K1 := fresh "K1" in let K2 := fresh "K2" in let K3 := fresh "K3" in 
-    let K4 := fresh "K4" in let K5 := fresh "K5" in 
-    specialize (proj1 (valid_coversHeadInd_center simRules _  _ _ _ _ _ _ _ _ _ _ _ _ _) (conj H (conj X1 X2))) as (K1 & K2 & K3 & K4 & K5);  
-    eapply covHeadSim_trans in K3; [ | eauto | eassumption];  
-    eapply covHeadSim_trans in K4; [ | eauto | eassumption]; 
-    eapply covHeadSim_trans in K5; [ | eauto | eassumption].
-
-    Print E.
-    
-    Lemma 
-
-
-    inv' K3 transRules_inv;  inv_trans_prim;inv' K4 transRules_inv; inv_trans_prim; inv' K5 transRules_inv; inv_trans_prim.
-    Lemma noTwo q : trans
-    1:admit. 1:admit.  inv H1.  
-    inv_trans_sec. repeat (transRules_inv2_once;try discriminate). 2:exfalso;congruence. } } ); simp_eqn;  
-    (specialize (covHeadSim_unique_left K1 F1 Z3) as ?; 
-    simp_eqn; 
-    eapply covHeadSim_tape in K2; [ | eapply F2]; apply W3 in K2;  
-    simp_eqn;  
-    cbn; try rewrite <- !app_assoc; cbn; reflexivity). 
-      Show Ltac Profile.
-
-    1-10:time "solving uniqueness - 10%" abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
-    1-10:time "solving uniqueness - 20%" abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
-    1-10:time "solving uniqueness - 30%" abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
-    1-10:time "solving uniqueness - 40%" abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
-    1-10:time "solving uniqueness - 50%" abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
-    1-10:time "solving uniqueness - 60%" abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
-    1-10:time "solving uniqueness - 70%" abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
-    1-10:time "solving uniqueness - 80%" abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
-    1-10:time "solving uniqueness - 90%" abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
-    1-10:time "solving uniqueness - 100%" abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
+    unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1;foldAbbrevs; 
+    abstract (solve_stepsim_uniqueness' H H2 F1 F2 Z3 W3).
     idtac "stepsim - done".
   Qed.
-
-  Optimize Heap.
 
   (** if we are in a halting state, we can only rewrite to the same string (identity), except for setting the polarity to neutral *)
   Lemma haltsim q tp s :
@@ -2880,8 +2938,6 @@ Section fixTM.
     cbn; try rewrite <- !app_assoc; cbn; reflexivity)). 
     Set Default Goal Selector "1".
   Qed. 
-
-  Check 0. Optimize Heap. Check true.
 
 
   Set Default Goal Selector "1". 
@@ -3438,8 +3494,6 @@ Section fixTM.
       destruct finp; [destruct s; [destruct n | ] | ]; cbn; eauto.
   Qed.
 
-  Check 1. Optimize Heap. Check true.
-
   Lemma prelude_left_covering_blank_unique finp j i u s: 
     (map inr (repEl u nblank ++ ninit :: map nsig finp ++ repEl j nstar ++ repEl (wo + i) nblank ++ [ndelimC])) ⇝{lpreludeRules} s 
     -> exists s', |s'| <= j /\ s = map inl (repEl u (inr (inr (neutral, |_|))) ++ inl (start, |_|) :: stringForTapeHalf' (wo + i + j - (|s'|)) (finp ++ s')).
@@ -3506,6 +3560,7 @@ Section fixTM.
     specialize (prelude_whole_string_covering fixedInput s' (k' - |s'|) z) as H3. 
     unfold z, k in *. rewrite app_length.
     replace (wo + (t + ((|fixedInput|) + k')) - ((|fixedInput|) + (|s'|))) with (wo + (k' - (|s'|)) + t)  by lia. 
+    Unset Keyed Unification.
     rewrite !map_app. cbn -[stringForTapeHalf' repEl wo]. 
     rewrite !map_rev, !map_repEl. rewrite map_map. 
     replace ((|s'|) + (k' - (|s'|))) with k' in H3 by lia. 
@@ -3970,7 +4025,7 @@ Section fixTM.
             end
       | [H : Some _ = Some _ |- _] => apply Some_injective in H; subst (*we do not use inversion as inversion does reduce finType wrappers, which breaks finRepr_simpl *)
     end; try congruence. 
-    all: try finRepr_simpl; eauto.
+    all: try finRepr_simpl; eauto. (* TODO: maybe smpl database is missing patterns to only try lemmas if they match syntactically? *)
   Qed. 
 
   (** *** Generation of covering cards *)
@@ -3998,8 +4053,6 @@ Section fixTM.
     split; intros ((F1 & F2 & F3) & (F4 & F5 & F6)); repeat split.
     all: now apply (isFlatEnvOf_bound_Alphabet_transfer _ H). 
   Qed.
-
-  Check 2. Optimize Heap. Check true.
 
 
   (** for canonical generation procedures, generateCard works as intended *)
@@ -4709,8 +4762,6 @@ Section fixTM.
 
   Notation ecovHeadSim := (coversHeadInd esimRules).   
 
-  Check 3. Optimize Heap. Check true.
-
 
   Ltac ecovHeadSim_inv := 
     repeat match goal with
@@ -4731,10 +4782,11 @@ Section fixTM.
   Proof. 
      split. 
      - intros. destruct H as [H | [H | H]].  
-       + transRules_inv2; eauto 7 with etrans nocore tmp.  
+       + left. once transRules_inv2; (eapply etransNonHaltC;[eassumption|]);once (econstructor;[eassumption|]); once [>constructor;constructor..]. 
        + haltRules_inv1; eauto 7 with etrans nocore tmp. 
        + eauto 3 with etrans nocore tmp.
-     - intros. ecovHeadSim_inv; try destruct m; eauto 7 with trans nocore tmp. 
+     - intros. ecovHeadSim_inv; try destruct m. 
+     all: first [simRulesAuto |right;right;assumption].
    Qed.   
 
   Section listDestructLength.
@@ -4814,13 +4866,13 @@ Section fixTM.
     split; intros. 
     - inv H. ecovHeadSim_inv; unfold generateCardsForFinNonHalt.
       1-18: try destruct m.
-      all: rewrite H; apply in_makeCards_iff, agreement_trans_unfold_env.
-      all: unfold makeSomeStay_rules, makeSomeLeft_rules, makeSomeRight_rules, makeNoneLeft_rules, makeNoneRight_rules, makeNoneStay_rules. 
+      all: foldAbbrevs;rewrite H; apply in_makeCards_iff, agreement_trans_unfold_env.
+      all: unfold makeSomeStay_rules, makeSomeLeft_rules, makeSomeRight_rules, makeNoneLeft_rules, makeNoneRight_rules, makeNoneStay_rules;foldAbbrevs. 
       (*some things are easy to automate, some aren't... *)
       * exists (Build_evalEnv [p] [] [m1; m2] []). abstract solve_agreement_transAt 1.
       * exists (Build_evalEnv [p] [] [m1; m2] []). abstract solve_agreement_transAt 1. 
       * exists (Build_evalEnv [p] [] [m1; m2] []). abstract solve_agreement_transAt 2.
-      * exists (Build_evalEnv [p] [] [m1; m2] []). time abstract solve_agreement_transAt 2. 
+      * exists (Build_evalEnv [p] [] [m1; m2] []). abstract solve_agreement_transAt 2. 
       * exists (Build_evalEnv [p] [] [m1; m2] []). abstract solve_agreement_trans. 
       * exists (Build_evalEnv [p] [] [m1; m2] []). abstract solve_agreement_trans. 
       * exists (Build_evalEnv [p] [] [m1; m2; m3] []). abstract solve_agreement_trans. 
@@ -4871,13 +4923,12 @@ Section fixTM.
       apply in_makeAllEvalEnv_iff in H2 as ((F1 & _) & (F2 & _) & (F3 & _) & (F4 & _));
       cbn in H1; destruct_or H1; try rewrite <- H1 in *; 
       list_destruct_length; cbn in *.
-      all: try match goal with
+      all: try lazymatch goal with
       | [H : Some _ = None |- _] => discriminate H
-      | [H : Some _ = optReturn _ |- _] => apply Some_injective in H; apply TCCCard_inj in H as [(?&?&?)%TCCCardP_inj (?&?&?)%TCCCardP_inj]; subst
+      | [H : Some _ = optReturn _ |- _] => foldAbbrevs;apply Some_injective in H; apply TCCCard_inj in H as [(?&?&?)%TCCCardP_inj (?&?&?)%TCCCardP_inj]; subst
       | [H : False |- _] => destruct H
       end. 
-      Optimize Proof. 
-      par: eauto 7 using liftOrig with etrans nocore tmp.
+      all:constructor;once (econstructor;[eassumption|]); once [>constructor;constructor..]. 
    Qed.  
           
   Lemma agreement_halt q: cards_list_ind_agree (@liftOrig Gamma (ehaltRules q) preludeSig') (generateCardsForFinHalt q). 
@@ -4899,7 +4950,7 @@ Section fixTM.
       | [H : Some _ = optReturn _ |- _] => apply Some_injective in H; apply TCCCard_inj in H as [(?&?&?)%TCCCardP_inj (?&?&?)%TCCCardP_inj]; subst
       | [H : False |- _] => destruct H
       end. 
-      par: eauto 7 using liftOrig with etrans nocore tmp.
+      all: constructor;constructor.
   Qed. 
 
   Lemma agreement_transition: cards_list_ind_agree (@liftOrig Gamma estateRules preludeSig') finStateCards. 
@@ -5216,8 +5267,6 @@ Section fixTM.
 
   (** those nice little singleton vectors have to go :) sorry *)
   Ltac destruct_vec1 := repeat match goal with [v : Vector.t _ 1 |- _] => specialize (vec_case1 v) as (? & ->) end. 
-
-  Check 4. Optimize Heap. Check true.
 
   Lemma fin_flat_nonhaltCards_agree q qflat m mflat : 
     finReprEl' qflat q -> opt_finReprEl' mflat m 
@@ -5587,3 +5636,4 @@ Proof.
       * cbn in H. now apply trivial_no_instance_is_no in H. 
     + cbn in H. now apply trivial_no_instance_is_no in H. 
 Qed. 
+(* theories/L/Complexity/Reductions/Cook/SingleTMGenNP_to_TCC.vo (real: 250.80, user: 247.10, sys: 5.64, mem: 2440784 ko) *)
