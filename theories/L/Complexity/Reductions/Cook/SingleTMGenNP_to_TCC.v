@@ -1923,7 +1923,7 @@ Section fixTM.
           | Some positive => γ4 = inr (inr (negative,m2)) /\ γ5 = inr (inr (negative,mout)) /\ (exists m3,γ6 = (inl (q', m3)))
           | Some neutral => γ4 = inr (inr (∘ m1)) /\ γ5 = inr (inr (∘ m2)) /\ γ6 = (inl (q', mout))
           | Some negative => (exists m1,γ4 = inr (inr (positive,m1))) /\ γ5 = inr (inr (positive,m1)) /\ γ6 = (inl (q', m2))
-          | None => (*TODO:flip *)
+          | None => 
             match dir,m2 with
             | negative,None | positive, Some _ => (exists p', γ4 = inr (inr (p',m1)) /\  γ5 = inr (inr (p', m2))) /\ γ6 = (inl (q', None))
             | negative,Some _ => (exists p', γ4 = inr (inr (p',m1)) /\ γ5 = inr (inr (p', m))) /\ γ6 = (inl (q', m2)) 
@@ -4025,7 +4025,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
             end
       | [H : Some _ = Some _ |- _] => apply Some_injective in H; subst (*we do not use inversion as inversion does reduce finType wrappers, which breaks finRepr_simpl *)
     end; try congruence. 
-    all: try finRepr_simpl; eauto. (* TODO: maybe smpl database is missing patterns to only try lemmas if they match syntactically? *)
+    all:try finRepr_simpl;eauto.
   Qed. 
 
   (** *** Generation of covering cards *)
