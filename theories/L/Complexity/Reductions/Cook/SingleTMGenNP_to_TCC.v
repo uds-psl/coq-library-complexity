@@ -2776,7 +2776,7 @@ Ltac transRules_semCases K H :=
     | transRules _ _ (inl _)  _ _ _ => specialize (transRules_semCasesRight) with (1:=K) (2:=H) as [H' K']
   end;cbn beta iota zeta in K';inv_eqn K';try (specialize (H' eq_refl);injection H' as [= ->]).
 
-Ltac solve_stepsim_uniqueness' H H2 F1 F2 Z3 W3 :=        
+Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=        
   cbn in H; rewrite <- !app_assoc in H; cbn in H;  
   rewrite app_fold5 in H;  
   let X1 := fresh "X1" in let X2 := fresh "X2" in  
@@ -2785,9 +2785,9 @@ Ltac solve_stepsim_uniqueness' H H2 F1 F2 Z3 W3 :=
   let K1 := fresh "K1" in let K2 := fresh "K2" in let K3 := fresh "K3" in 
   let K4 := fresh "K4" in let K5 := fresh "K5" in 
   specialize (proj1 (valid_coversHeadInd_center simRules _  _ _ _ _ _ _ _ _ _ _ _ _ _) (conj H (conj X1 X2))) as (K1 & K2 & K3 & K4 & K5);  
-  eapply covHeadSim_trans in K3; [ | eauto | eassumption];  
-  eapply covHeadSim_trans in K4; [ | eauto | eassumption]; 
-  eapply covHeadSim_trans in K5; [ | eauto | eassumption];
+  eapply covHeadSim_trans in K3; [ | (left + (right;(left + right)));eexists;reflexivity | eassumption];  
+  eapply covHeadSim_trans in K4; [ | (left + (right;(left + right)));eexists;reflexivity | eassumption]; 
+  eapply covHeadSim_trans in K5; [ | (left + (right;(left + right)));eexists;reflexivity | eassumption];
   transRules_semCases K3 H2; transRules_semCases K4 H2;transRules_semCases K5 H2;
   specialize (covHeadSim_unique_left K1 F1 Z3) as ?;
   simp_eqn; 
@@ -2798,7 +2798,7 @@ Ltac solve_stepsim_uniqueness' H H2 F1 F2 Z3 W3 :=
   Notation "s '⇝' s'" := (valid covHeadSim s s') (at level 40). 
 
   (** main simulation result: a single step of the Turing machine corresponds to a single step of the CC instance (if we are not in a halting state) *)
-  (** proof takes roughly 35mins + 4 gigs of RAM... *)
+  (** proof takes roughly 5 minutes and 1.7 GB ram ... *)
   Lemma stepsim q tp s q' tp' :
     (q, tp) ≃c s
     -> (q, tp) ≻ (q', tp')
@@ -2813,9 +2813,9 @@ Ltac solve_stepsim_uniqueness' H H2 F1 F2 Z3 W3 :=
     destruct H as (ls & qm & rs & -> & H). destruct H as (p & -> & F1 & F2). unfold embedState. 
     destruct p' as ([wsym | ] & []); destruct tp as [ | ? l1 | ? l0 | l0 ? l1]; cbn in *; destruct_tape_in_tidy F1; destruct_tape_in_tidy F2. 
 
-    idtac "proving stepsim lemma - this may take a few minutes".
+    (*idtac "proving stepsim lemma - this may take a few minutes".*)
 
-    time "case destinctions"
+    (*time "case destinctions"*)
     try match type of F1 with ?l0 ≃t(_, _) _ => is_var l0; destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end;
     try match type of F1 with _ :: ?l0 ≃t(_, _) _ => destruct l0 as [ | ? l0]; destruct_tape_in_tidy F1 end;
     try match type of F2 with ?l1 ≃t(_, _) _ => is_var l1; destruct l1 as [ | ? l1]; destruct_tape_in_tidy F2 end;
@@ -2823,8 +2823,8 @@ Ltac solve_stepsim_uniqueness' H H2 F1 F2 Z3 W3 :=
     (* 84 goals *)
 
     cbn in H1.
-    foldAbbrevs. 
-    time "main proof except uniqueness"
+    foldAbbrevs.
+    (* time "main proof except uniqueness" *)
     (*analyse what transition should be taken, instantiate the needed lemmas and solve all of the obligations except for uniqueness*)
     lazymatch type of H2 with 
       | trans (?q, ?csym) = (?q', (?wsym, ?dir)) => 
@@ -2884,10 +2884,10 @@ Ltac solve_stepsim_uniqueness' H H2 F1 F2 Z3 W3 :=
     
     (*solve the uniqueness obligations - this is very expensive because of the needed inversions *)
     (*therefore abstract into opaque lemmas *)
-    idtac "solving uniqueness".
-    unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1;foldAbbrevs; 
-    abstract (solve_stepsim_uniqueness' H H2 F1 F2 Z3 W3).
-    idtac "stepsim - done".
+    (* idtac "solving uniqueness". *)
+    unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1;foldAbbrevs;
+    solve_stepsim_uniqueness H H2 F1 F2 Z3 W3.
+    (* idtac "stepsim - done". *)
   Qed.
 
   (** if we are in a halting state, we can only rewrite to the same string (identity), except for setting the polarity to neutral *)
