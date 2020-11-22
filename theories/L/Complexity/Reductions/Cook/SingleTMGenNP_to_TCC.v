@@ -1851,6 +1851,52 @@ Section fixTM.
 
   Ltac transRules_inv2 := repeat transRules_inv2_once;subst. 
 
+  Lemma transRules_semCasesLeft q q' m (γ2 γ3 γ4 γ5 γ6 : Gamma) :
+  transRules (inl (q, m)) γ2 γ3 γ4 γ5 γ6
+  -> match γ2 with
+    | inr (inr (p2,m2)) =>
+      match γ3 with
+      | inr (inr (p3,m3)) =>
+        match trans (q, m) with
+        (q',(m',dir)) => 
+        (match m,m' with None,None => m2 = |_| ->  m3 = |_| | _,_ => True end) /\
+          let effectiveMove :=
+            match m,m' with
+            | None,None =>
+              match dir with
+                neutral => Some neutral
+              | positive => match m2,m3 with
+                            | None,_ => None
+                            | _,None => None
+                            | _,_ => Some positive
+                            end
+              | _ => None
+              end
+            | _, _ => Some dir
+            end in
+          let mout :=  match m' with None => m | Some mout => m' end in
+          match effectiveMove with
+          | Some negative => (exists m1,γ4 = (inl (q', m1))) /\ γ5 = inr (inr (positive,mout)) /\ γ6 = inr (inr (positive,m2))
+          | Some neutral => γ4 = (inl (q', mout)) /\ γ5 = inr (inr (∘ m2)) /\ γ6 = inr (inr (∘m3))
+          | Some positive => γ4 = (inl (q', m2)) /\ γ5 = inr (inr (negative,m3)) /\ (exists m4,γ6 = inr (inr (negative,m4)))
+          | None =>
+            match dir,m2 with
+            | positive,None | negative,Some _ => γ4 = (inl (q', None)) /\ (exists p', γ5 = inr (inr (p', m2)) /\ γ6 = inr (inr (p',m3)))
+            | positive,Some _ => γ4 = (inl (q', m2)) /\ (exists p', γ5 = inr (inr (p', m)) /\ γ6 = inr (inr (p',m3)))
+            | negative,None => (exists m', γ4 = (inl (q', m'))) /\ (exists p', γ5 = inr (inr (p', m)) /\ γ6 = inr (inr (p',m3)))
+            | _,_ => False
+            end
+          end
+        end
+      | _ => False
+    end
+    | _ => False
+  end.
+  Proof.
+    intros H; assert (H':=H);lock H'; transRules_inv2;match goal with H : trans _ = _ |- _ => rewrite H end;
+    (split;[solve [exact I |congruence]|]);intros ? ?;cbn;try solve [repeat esplit].
+  Qed.
+
   (** manual inversion lemmas because of performance *) 
   Lemma transSomeSome_inv1 q q0 m γ2 γ3 γ4 γ5 γ6 : transSomeSome q (inl (q0, m)) γ2 γ3 γ4 γ5 γ6 -> q0 = q /\ (exists σ, m = Some σ) /\ exists q' m', γ4 = inl (q', m') /\ transSomeSomeLeft q (inl (q, m)) γ2 γ3 (inl (q', m')) γ5 γ6. 
   Proof.
@@ -2675,7 +2721,6 @@ Section fixTM.
     Optimize Proof. 
     cbn in H1.
     foldAbbrevs. 
-    Set Ltac Profiling.
     time "main proof except uniqueness"
     (*analyse what transition should be taken, instantiate the needed lemmas and solve all of the obligations except for uniqueness*)
     lazymatch type of H2 with 
@@ -2734,8 +2779,6 @@ Section fixTM.
       (split; [ abstract (solve_stepsim_covering Z1 W1) | split; [  | abstract solve_stepsim_repr shiftdir Z2 W2]]) 
      end.
     (* 100 goals*)
-    Show Ltac Profile CutOff 1.
-    Reset Ltac Profile.
 
     Optimize Proof. 
     
@@ -2743,7 +2786,36 @@ Section fixTM.
     (*therefore abstract into opaque lemmas *)
     idtac "solving uniqueness".
     unfold wo; cbn [Nat.add]; clear_niltape_eqns; intros s H; clear Z1 W1 W2 Z2; clear H1;foldAbbrevs. 
-    Show Ltac Profile.
+    1:{ 
+      Set Ltac Profiling.
+      
+    cbn in H; rewrite <- !app_assoc in H; cbn in H;  
+    rewrite app_fold5 in H;  
+    let X1 := fresh "X1" in let X2 := fresh "X2" in  
+    destruct (valid_conc_inv H) as (? & ? & ? & ? & ? & ? & ? & -> & X1 & X2); 
+    normalise_conf_strings_in H;  
+    let K1 := fresh "K1" in let K2 := fresh "K2" in let K3 := fresh "K3" in 
+    let K4 := fresh "K4" in let K5 := fresh "K5" in 
+    specialize (proj1 (valid_coversHeadInd_center simRules _  _ _ _ _ _ _ _ _ _ _ _ _ _) (conj H (conj X1 X2))) as (K1 & K2 & K3 & K4 & K5);  
+    eapply covHeadSim_trans in K3; [ | eauto | eassumption];  
+    eapply covHeadSim_trans in K4; [ | eauto | eassumption]; 
+    eapply covHeadSim_trans in K5; [ | eauto | eassumption].
+
+    Print E.
+    
+    Lemma 
+
+
+    inv' K3 transRules_inv;  inv_trans_prim;inv' K4 transRules_inv; inv_trans_prim; inv' K5 transRules_inv; inv_trans_prim.
+    Lemma noTwo q : trans
+    1:admit. 1:admit.  inv H1.  
+    inv_trans_sec. repeat (transRules_inv2_once;try discriminate). 2:exfalso;congruence. } } ); simp_eqn;  
+    (specialize (covHeadSim_unique_left K1 F1 Z3) as ?; 
+    simp_eqn; 
+    eapply covHeadSim_tape in K2; [ | eapply F2]; apply W3 in K2;  
+    simp_eqn;  
+    cbn; try rewrite <- !app_assoc; cbn; reflexivity). 
+      Show Ltac Profile.
 
     1-10:time "solving uniqueness - 10%" abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
     1-10:time "solving uniqueness - 20%" abstract (solve_stepsim_uniqueness H F1 F2 Z3 W3).
