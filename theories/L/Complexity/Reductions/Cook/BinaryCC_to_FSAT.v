@@ -1056,8 +1056,8 @@ Definition BinaryCC_wf_dec_time x := 2 * c__length * (|init x|) + leb_time (widt
 Instance term_BinaryCC_wf_dec : computableTime' BinaryCC_wf_dec (fun bpr _ => (BinaryCC_wf_dec_time bpr, tt)). 
 Proof. 
   extract. solverec. 
-  unfold BinaryCC_wf_dec_time, c__BinaryCCWfDec, leb_time. rewrite !eqbTime_le_r. 
-  do 2 rewrite Nat.le_min_l. simp_comp_arith. leq_crossout. 
+  unfold BinaryCC_wf_dec_time, c__BinaryCCWfDec, leb_time. rewrite !eqbTime_le_r.
+   rewrite !Nat.le_min_l with (n:=1). simp_comp_arith. ring_simplify;reflexivity. 
 Qed. 
 
 Definition c__BinaryCCWfDecBound := 2*(2 * c__length + c__leb + FlatCC.c__prcardOfSizeDecBound + c__forallb + 2 * c__moduloBound + c__BinaryCCWfDec).

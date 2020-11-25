@@ -27,7 +27,7 @@ Proof.
     exists c. split.
     *rewrite Hle. cbn. set (size (enc x)). unfold mSize;reflexivity.
     *eapply evalIn_mono.
-     {Lsimpl. unfold f. erewrite complete__decInTime. now Lsimpl. easy. }
+     {Lsimpl. unfold f. erewrite complete__decInTime. Lreflexivity. easy. }
      cbn [fst snd]. ring_simplify.
      rewrite (mono_t__R _). 2:{rewrite size_prod. cbn [fst snd]. rewrite Hle. reflexivity. }
      unfold steps. reflexivity.
@@ -39,7 +39,7 @@ Proof.
     eapply evalLe_eval_subrelation, eval_star_subrelation in R'.
     apply star_equiv in R'. etransitivity. 2:exact R'. 
     symmetry. eapply star_equiv_subrelation. clear R'.
-    change (extT f) with (ext f). Lsimpl.
+    change (extT f) with (ext f). now Lsimpl.
   }
   -evar (f':nat -> nat). [f']:refine (fun x => _). subst mSize steps.   
    eexists (fun x => f' x). 

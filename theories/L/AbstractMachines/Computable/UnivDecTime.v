@@ -49,7 +49,6 @@ Proof.
   intros cs R. apply ResourceMeasures.timeBS_evalIn in R.
   apply correctTime in R as (g&H&rep&R). 2:easy.
   unfold univDecTime, univDecTime_time.
-  Lsimpl.
   eapply loopSum_sound_rel with (n:=1) (f:=univStep)in R as R'.
   2:{ intros ? ? R'. unfold univStep. cbn. repeat (let eq := fresh in destruct _ eqn:eq);inv R';try congruence. }
   cbn [loopSum univStep heapStep] in R'.

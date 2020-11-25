@@ -604,12 +604,10 @@ Definition FlatCC_wf_dec_time x := 2 * c__length * (|init x|) + leb_time (width 
 
 Instance term_FlatCC_wf_dec : computableTime' FlatCC_wf_dec (fun fpr _ => (FlatCC_wf_dec_time fpr, tt)).
 Proof. 
-  extract. solverec. unfold FlatCC_wf_dec_time, c__FlatCCWfDec, leb_time. rewrite !eqbTime_le_r. 
+  extract. solverec. unfold FlatCC_wf_dec_time, c__FlatCCWfDec, leb_time. rewrite !eqbTime_le_r.
   (*ring_simplify.*)
-  rewrite Nat.le_min_l. rewrite Nat.le_min_l. 
-  simp_comp_arith. 
-  (*nia. *)
-  leq_crossout.
+  rewrite !Nat.le_min_l with (n:=1). 
+  simp_comp_arith. ring_simplify. reflexivity.
 Defined.
 (*nia. *)
 (*zify. clear. nia.*)
