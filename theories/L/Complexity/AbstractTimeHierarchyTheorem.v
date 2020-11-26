@@ -16,9 +16,8 @@ From Undecidability.L Require Import AbstractMachines.LargestVar.
 Import Nat.
 (*Proof inspired by CS 172 handout 8 from 4/21/2015 from Luca Trevisan and Sipser's book  *)
 
-Import HOAS_Notations.
 Import L_Notations_app.
-
+Import HOAS_Notations.
 
 (** * Time Hierarchy theorem *)
 
@@ -131,8 +130,8 @@ Section TimeHierarchy_Parametric.
     change (@enc term _) with term_enc.
     change (@enc nat _) with nat_enc.
     extract. recRel_prettify2.
-    all:inv H. all:cbn [fst] in *.
-    1,4:now rewrite H0 in H2.
+    all:cbn in H1; rewrite H1 in H0.
+    all:try discriminate H0;clear H0.
     all:rewrite size_prod. all:cbn [fst snd].
     all:rewrite size_term_enc_r.
     2:rewrite (size_nat_enc_r b) at 1.
@@ -143,9 +142,9 @@ Section TimeHierarchy_Parametric.
   Qed.
   
   Definition U :term := Eval cbn [TH convert Nat.sub] in
-        (λ w, (!!(extT U_preproc)) w
+     [L_HOAS λ w, (!!(extT U_preproc)) w
                 (λ tmp, !!(extT negb) (tmp (λ start fuel, (!!E) fuel start)))
-                !!(enc true)).    
+                !!(enc true)].    
 
   Lemma U_spec_helper (s:term) (fuel:N) (padding:nat):
     closed s -> exists t : term, E (enc fuel) (enc (start (s,padding))) ⇓ t.
@@ -194,7 +193,7 @@ Section TimeHierarchy_Parametric.
       refineMatch w.  destruct w as [s padding].
       refineMatch (closedb s). destruct closedb_spec.
       all: cbn [negb].
-      2:now Lsimpl.
+      2:Lreflexivity.
       Lsimpl.
       edestruct E__spec as (res&E1&H__E).
       2:{

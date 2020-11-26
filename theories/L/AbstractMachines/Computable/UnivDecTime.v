@@ -31,7 +31,7 @@ Proof.
 Qed.
 
 Import HOAS_Notations L_Notations_app.
-Definition univDecTime :term := Eval cbn in λ s , !!(uiter univStep) (!!(extT init) s).
+Definition univDecTime :term := Eval cbn in [L_HOAS λ s , !!(uiter univStep) (!!(extT init) s)].
 
 Definition univDecTime_time maxVar size n0 :=
   108 * size + (n0+2) * (heapStep_timeBound maxVar (n0+1) + 42) + unfoldBool_time (n0+1) maxVar +87.
@@ -49,7 +49,6 @@ Proof.
   intros cs R. apply ResourceMeasures.timeBS_evalIn in R.
   apply correctTime in R as (g&H&rep&R). 2:easy.
   unfold univDecTime, univDecTime_time.
-  Lsimpl.
   eapply loopSum_sound_rel with (n:=1) (f:=univStep)in R as R'.
   2:{ intros ? ? R'. unfold univStep. cbn. repeat (let eq := fresh in destruct _ eqn:eq);inv R';try congruence. }
   cbn [loopSum univStep heapStep] in R'.

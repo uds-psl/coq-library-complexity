@@ -47,7 +47,7 @@ Proof.
     
     set (n0:= size (enc x)).
     assert (Ht0 : forall c, size (enc c) <= maxSize0 -> t0 (enc c) >(<= stepsInner n0) trueOrDiverge (enc (f x c))).
-    {intros c Hc. subst t0. eapply le_redLe_proper. 2,3:reflexivity. 2:Lsimpl.
+    {intros c Hc. subst t0. eapply le_redLe_proper. 2,3:reflexivity. 2:now  Lsimpl.
      cbn [fst snd]. ring_simplify.
      rewrite size_prod. cbn [fst snd]. unfold time.
      rewrite (mono__polyTC enumTerm). 2:now rewrite Hc.
@@ -57,7 +57,7 @@ Proof.
     }
     assert (Ht0' : forall c, t0 (enc c) >* trueOrDiverge (enc (f x c))).
     {intros c. subst t0. eapply redLe_star_subrelation.
-     eapply le_redLe_proper. 2,3:reflexivity. 2:Lsimpl. reflexivity.
+     eapply le_redLe_proper. 2,3:reflexivity. 2:now Lsimpl. reflexivity.
     }
     split.
     +repeat simple apply conj.
@@ -83,7 +83,7 @@ Proof.
       cbn [proj1_sig] in Hsizec'.
       specialize (complete__toTerm enumTerm tc') as (c'&<-&Hc').
       eexists c';split.
-      2:{ split. 2:now Lproc. Lsimpl. rewrite <- trueOrDiverge_true. apply star_trans_r.
+      2:{ Intern.infer_instances. Lsimpl. split. 2:now Lproc. rewrite <- trueOrDiverge_true. apply star_trans_r.
           enough (H':f x c' = true) by (rewrite H';reflexivity ).
           unfold f. rewrite <- correct__decInTime. hnf. easy.
       }
@@ -113,7 +113,7 @@ Proof.
         {subst maxSize0. rewrite le_c__X. rewrite (monoIn__toTerm enumTerm (x:=_)). 2:exact H'. unfold mSize. reflexivity. }
         eapply evalIn_mono.
         {Lsimpl. unfold f. rewrite eqf__term.
-         erewrite (complete__decInTime R__comp). 2:cbn;easy. Lsimpl. }
+         erewrite (complete__decInTime R__comp). 2:cbn;easy. Lsimpl. Lreflexivity. }
         subst steps0 steps. fold n0. easy.
      *intros (c&size__c&?&R'). eapply (sound__pCR R__spec).
       apply (sound__decInTime (P__dec:=R__comp) (x:=exist _ (x,_) _)). cbn.

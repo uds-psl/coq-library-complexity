@@ -1,5 +1,5 @@
 # The Coq Library of Complexity Theory
-![build](https://github.com/uds-psl/coq-library-complexity/workflows/build/badge.svg)
+[![build](https://github.com/uds-psl/coq-library-complexity/workflows/build/badge.svg?branch=coq-8.12)](https://github.com/uds-psl/coq-library-complexity/actions)
 
 This library contains complexity theory. It is build upon the [Coq Library of Undecidability Proofs](https://github.com/uds-psl/coq-library-undecidability).
 

@@ -55,7 +55,7 @@ Proof.
   cbn. [c]:exact (c__regP X + c__regP Y + 4). unfold c. nia.
 Qed.
 
-Import Lists.
+From Undecidability.L.Datatypes Require Import Lists.
 
 Instance regP_list X `{registeredP X}: registeredP (list X).
 Proof.

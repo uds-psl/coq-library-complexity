@@ -14,19 +14,28 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Try to restore opam cache
+      - name: Get submodule hash
+        id: submodule-hash-undec
+        run: |
+          echo "UNDEC_HASH=$(git ls-tree --abbrev performence-optimisation coq-library-undecidability | awk '{print $3}')" >> $GITHUB_ENV
+          echo $UNDEC_HASH
+
+      - name: Try to restore build cache
         id: opam-cache
         uses: actions/cache@v2
         with:
           path: |
             ~/.opam
             ~/bin
-          key: ${{ runner.os }}-${{ hashFiles('opam') }}
-
+          key: ${{ runner.os }}-${{ hashFiles('opam') }}-${{ env.UNDEC_HASH }}
+          restore-keys : |
+            ${{ runner.os }}-${{ hashFiles('opam') }}-
+            ${{ runner.os }}-
+            
       - name: Install OCaml
         uses: avsm/setup-ocaml@v1
         with:
           ocaml-version: 4.07.1
 
       - run: make depsopam -j2
-      - run: opam exec -- make all -j2
+      - run: opam exec -- make all -j2 TIMED=1

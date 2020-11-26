@@ -46,6 +46,8 @@ Definition flatPair (a b : nat) x y := x * b + y.
 Smpl Create finRepr. 
 Ltac finRepr_simpl := smpl finRepr; repeat smpl finRepr. 
 
+Smpl Add (match goal with |- finReprEl' _ _ => eapply finReprEl_finReprEl' end) : finRepr.
+
 Lemma finReprOption (X : finType) (n : nat) : finRepr X n -> finRepr (finType_CS (option X)) (flatOption n).
 Proof. 
   intros. unfold finRepr in *. unfold flatOption; cbn -[enum]. rewrite H; cbn.
@@ -59,7 +61,6 @@ Proof.
   - now apply finReprOption. 
   - rewrite getPosition_map. 2: unfold injective; congruence. now rewrite <- H2. 
 Qed. 
-Smpl Add (apply finReprElSome) : finRepr.
 
 Lemma finReprElNone (X : finType) n : finRepr X n -> @finReprEl (finType_CS (option X)) (flatOption n) flatNone None. 
 Proof. 
@@ -67,7 +68,15 @@ Proof.
   - now apply finReprOption.
   - now unfold flatNone. 
 Qed. 
-Smpl Add (apply finReprElNone) : finRepr. 
+
+Ltac finReprOption :=
+  lazymatch goal with
+  | |- finReprEl _ _ (Some _) => apply finReprElSome
+  | |- finReprEl _ _ None => apply finReprElNone
+  | |- finRepr (finType_CS (option _)) _ => apply finReprOption
+   end.
+
+Smpl Add 99 finReprOption : finRepr.
 
 Lemma finReprSum (A B: finType) (a b : nat) : finRepr A a -> finRepr B b -> finRepr (finType_CS (sum A B)) (flatSum a b). 
 Proof. 
@@ -89,7 +98,6 @@ Proof.
     + unfold index in H2. rewrite <- getPosition_map with (f := (@inl A B)) in H2. 2: now unfold injective.
       easy. 
 Qed. 
-Smpl Add (apply finReprElInl) : finRepr.
 
 Lemma finReprElInr (A B : finType) (a b : nat) k x : finRepr A a -> finReprEl b k x -> @finReprEl (finType_CS (sum A B)) (flatSum a b) (flatInr a k) (inr x). 
 Proof. 
@@ -103,7 +111,14 @@ Proof.
     + unfold index in H2. rewrite <- getPosition_map with (f := (@inr A B)) in H2. 2: now unfold injective. 
       easy. 
 Qed. 
-Smpl Add (apply finReprElInr) : finRepr. 
+
+Ltac finReprSum :=
+  lazymatch goal with
+  | |- finReprEl _ _ (inl _) => apply finReprElInl
+  | |- finReprEl _ _ (inr _) => apply finReprElInr
+  | |- finRepr (finType_CS (sum _ _)) _ => apply finReprSum
+  end.
+Smpl Add 99 finReprSum : finRepr.
 
 Lemma finReprProd (A B : finType) (a b : nat) : finRepr A a -> finRepr B b -> finRepr (finType_CS (prod A B)) (flatProd a b).  
 Proof. 
@@ -121,7 +136,13 @@ Proof.
     + rewrite <- H2; apply index_le.
     + rewrite <- F2; apply index_le.
 Qed. 
-Smpl Add (apply finReprElPair) : finRepr.
+
+Ltac finReprProd :=
+  lazymatch goal with
+  | |- finReprEl _ _ (pair _ _) => apply finReprElPair
+  | |- finRepr (finType_CS (prod _ _)) _ => apply finReprProd
+  end.
+Smpl Add 99 finReprProd : finRepr.
 
 (** flattened lists *)
 Definition isFlatListOf (X : finType) (l : list nat) (l' : list X) := l = map index l'.

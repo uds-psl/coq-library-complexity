@@ -44,7 +44,6 @@ Proof.
   unfold unfoldBoolean.
   unfold enc. cbn [registered_bool_enc bool_enc].
   extract.
-  clear used_term.
   recRel_prettify.
   intros H _. split. reflexivity.
   intros [s a] _. split. 2:now solverec.
@@ -91,7 +90,7 @@ Proof.
 
    repeat destruct _.
    all:unfold unfoldBool_time, largestVarC, EqBool.eqbTime. all:cbn [fst snd].
-   all:try rewrite -> !Nat.le_min_r. all:try nia.
+   all:try rewrite -> !Nat.le_min_r. all:lia.
 Qed.
 
 

@@ -102,23 +102,23 @@ Qed.
 (*   Unshelve. all:now try constructor;try exact _;try eauto;try exact 0. *)
 (* Qed. *)
 
-Import HOAS_Notations L_Notations_app.
+Import HOAS_Notations.
 
 Instance term_iterupN X `{H:registered X} :
   computable (iterupN (X:=X)).
 Proof.
   Import N.
-  pose (s := rho (λ F i max x f, (!!(ext N.ltb) i max) (λ _ , F (!!(ext N.succ) i) max (f i x) f) (λ _ , x) !!I)).
+  pose (s := rho [L_HOAS λ F i max x f, (!!(ext N.ltb) i max) (λ _ , F (!!(ext N.succ) i) max (f i x) f) (λ _ , x) !!I]).
   cbv [convert TH minus] in s.
   
   exists s. unfold s. Intern.recRem P.
   eapply computesExpStart. now Lproc.
   eexists.
-  eapply computesExpStep. now Lsimpl. now Lproc.
+  eapply computesExpStep. now Lreflexivity. now Lproc.
   intros i iExt iExts. cbn in iExts. subst iExt.
 
   eexists.
-  eapply computesExpStep. Intern.recStepUnnamed. now Lsimpl. now Lproc.
+  eapply computesExpStep. Intern.recStepNew P. now Lsimpl. now Lproc.
   intros max yExt yExts. cbn in yExts. subst yExt.
 
   
@@ -128,12 +128,12 @@ Proof.
   all:intros i max eqd.
   all:eexists.
   all:split.
-  1,3:now Intern.recStepUnnamed;Intern.extractCorrectCrush_new.
+  1,3:now Intern.recStepNew P;Intern.extractCorrectCrush.
 
   all:eapply computesTyArr;[Lproc| intros x xExt xExts].
   all:change xExt with (@ext _ _ x (Build_computable xExts)).
   all:eexists;split.
-  1,3:Intern.extractCorrectCrush_new.
+  1,3:Intern.extractCorrectCrush.
   all:intros.
 
   all:eapply computesTyArr;[Lproc| intros f fExt fExts].
@@ -141,9 +141,9 @@ Proof.
   2:  apply f_equal with (f:=N.pred) in eqd;rewrite N.pred_succ,<- N.sub_succ_r in eqd.
   all:eexists;split.
   1,2:assert (N.ltb i max = false) by (apply N.ltb_ge;Lia.lia).
-  1:{Intern.extractCorrectCrush_new. congruence. }
+  1:{Intern.extractCorrectCrush. congruence. }
   {rewrite H3. rewrite iterupN_geq. 2:Lia.lia. reflexivity. }
-  {Intern.extractCorrectCrush_new. }
+  {Intern.extractCorrectCrush. }
   intros.
   destruct (N.ltb_spec0 i max).
   rewrite iterupN_lt. 2:easy.

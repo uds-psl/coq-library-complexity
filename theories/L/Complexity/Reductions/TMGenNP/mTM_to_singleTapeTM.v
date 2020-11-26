@@ -266,13 +266,13 @@ Section LMGenNP_to_TMGenNP_mTM.
         extract. solverec.
         remember (L_facts.size (enc (a0, b0, b))) as n0 eqn:Hn0.
         rewrite !size_prod in Hn0. cbn [fst snd] in Hn0.
-        erewrite (mono__polyTC _ (x':=n0)). 2:{ subst n0. repeat set (L_facts.size _). nia. }
-        setoid_rewrite (mono__polyTC _ (x':=n0)) at 2. 2:{ subst n0. repeat set (L_facts.size _). nia. } 
+        erewrite (mono__polyTC X0 (x':=n0)). 2:{ subst n0. repeat set (L_facts.size _). nia. }
+        rewrite (mono__polyTC X1 (x':=n0)). 2:{ subst n0. repeat set (L_facts.size _). nia. } 
         set (c0 := 5+c__natsizeO +c__natsizeS). 
         assert (H'' : L_facts.size (enc (b, sizeOfmTapes a0, b0)) <= n0*c0).
         {  rewrite !size_prod. cbn [fst snd]. setoid_rewrite size_nat_enc at 2.
             rewrite TMEncoding.sizeOfmTapes_by_size. subst n0. repeat set (L_facts.size _). nia. }
-        setoid_rewrite (mono__polyTC _ (x':=n0*c0)) at 3. 2:exact H''. 
+        setoid_rewrite (mono__polyTC X (x':=n0*c0)). 2:exact H''. 
         specialize (bounds__rSP (f:=f__nice)) as H'. setoid_rewrite <- size_nat_enc_r in H'.
         unfold mult_time, add_time. 
         unshelve rewrite H'. now apply resSize__polyTC.
