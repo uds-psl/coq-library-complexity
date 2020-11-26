@@ -16,9 +16,8 @@ From Undecidability.L Require Import AbstractMachines.LargestVar.
 Import Nat.
 (*Proof inspired by CS 172 handout 8 from 4/21/2015 from Luca Trevisan and Sipser's book  *)
 
-Import HOAS_Notations.
 Import L_Notations_app.
-
+Import HOAS_Notations.
 
 (** * Time Hierarchy theorem *)
 
@@ -143,9 +142,9 @@ Section TimeHierarchy_Parametric.
   Qed.
   
   Definition U :term := Eval cbn [TH convert Nat.sub] in
-        (λ w, (!!(extT U_preproc)) w
+     [L_HOAS λ w, (!!(extT U_preproc)) w
                 (λ tmp, !!(extT negb) (tmp (λ start fuel, (!!E) fuel start)))
-                !!(enc true)).    
+                !!(enc true)].    
 
   Lemma U_spec_helper (s:term) (fuel:N) (padding:nat):
     closed s -> exists t : term, E (enc fuel) (enc (start (s,padding))) ⇓ t.

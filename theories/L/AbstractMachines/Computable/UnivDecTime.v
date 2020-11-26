@@ -31,7 +31,7 @@ Proof.
 Qed.
 
 Import HOAS_Notations L_Notations_app.
-Definition univDecTime :term := Eval cbn in λ s , !!(uiter univStep) (!!(extT init) s).
+Definition univDecTime :term := Eval cbn in [L_HOAS λ s , !!(uiter univStep) (!!(extT init) s)].
 
 Definition univDecTime_time maxVar size n0 :=
   108 * size + (n0+2) * (heapStep_timeBound maxVar (n0+1) + 42) + unfoldBool_time (n0+1) maxVar +87.

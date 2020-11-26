@@ -201,9 +201,13 @@ Proof.
   }
 Qed.    
 
-Import HOAS_Notations L_Notations_app.
+Import HOAS_Notations.
 
-Definition term_evalForTime : term := Eval cbn [convert TH]in (λ fuel s, (!!(extT (closedb)) s) (λ _, (!!(uiter evalForTime__step) (!!(extT (init__evalForTime)) fuel s))) (λ _, !!(enc (None (A:=clos * list heapEntry)))) !!I).
+Definition term_evalForTime : term := Eval cbn [convert TH]in
+  [L_HOAS λ fuel s, (!!(extT (closedb)) s)
+                  (λ _, (!!(uiter evalForTime__step)
+                          (!!(extT (init__evalForTime)) fuel s)))
+                  (λ _, !!(enc (None (A:=clos * list heapEntry)))) !!I ].
 
 Definition t__evalForTime maxVar (size:nat) fuel :=
   let fuel' := (4*fuel + 1) in

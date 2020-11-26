@@ -19,13 +19,13 @@ Notation "f $ x" := (f x) (at level 60, right associativity, only parsing).
   as Coq's section mechanism does not support multiple files
   (and it would be super tedious to explicitly pass in the fixed variables after leaving the section).*)
 Section fixTM. 
-  Variable (Sigma : finType).
-  Variable (fTM : TM Sigma 1).
+  Variable (Σ : finType).
+  Variable (fTM : TM Σ 1).
 
   Notation states := (state fTM).  
-  Notation trans := (@strans Sigma fTM). 
+  Notation trans := (@strans Σ fTM). 
   Notation start := (start fTM). 
-  Notation halt := (@halt Sigma 1 fTM). 
+  Notation halt := (@halt Σ 1 fTM). 
 
   (** ** Alphabet *)
 
@@ -33,7 +33,7 @@ Section fixTM.
   Variable (t : nat).
   (**maximum length of certificate*)
   Variable (k' : nat). 
-  Variable (fixedInput : list Sigma). 
+  Variable (fixedInput : list  Σ). 
 
   Notation sconfig := (sconfig fTM). 
   Implicit Type (c : sconfig). 
@@ -62,7 +62,7 @@ Section fixTM.
   Notation negative := Lmove. 
   Notation neutral := Nmove. 
 
-  Implicit Type σ : Sigma.
+  Implicit Type σ :  Σ.
 
   Declare Scope polscope. 
   Notation "'↓' σ" := ((negative, σ)) (at level 50) : polscope. 
@@ -81,7 +81,7 @@ Section fixTM.
 
   Notation "#" := (inl delimC). 
 
-  Definition stateSigma := (option Sigma). 
+  Definition stateSigma := (option Σ). 
   Definition polSigma := ((polarity * stateSigma)%type).
   Definition tapeSigma := (sum delim polSigma).
   Definition States := ((states * stateSigma)%type). 
@@ -163,7 +163,7 @@ Section fixTM.
   Smpl Add (apply polarityRev_involution) : involution. 
 
   (** ** Representation of tapes *)
-  Notation stape := (list Sigma). 
+  Notation stape := (list  Σ). 
 
   Notation halftape := (list Gamma).
 
@@ -232,8 +232,8 @@ Section fixTM.
   Qed.
 
   (**strings representing configs *)
-  Definition stringForTapeHalf (s : list Sigma) := mapPolarity neutral s ++ E neutral (z' - |s|).  
-  Definition stringForConfig (q : states) (s : tape Sigma) :=
+  Definition stringForTapeHalf (s : list  Σ) := mapPolarity neutral s ++ E neutral (z' - |s|).  
+  Definition stringForConfig (q : states) (s : tape  Σ) :=
     rev (stringForTapeHalf (left s)) ++ [inl (q, current s)] ++ stringForTapeHalf (right s). 
 
   Lemma stringForTapeHalf_reprTape s : |s| <= z -> s ≃t(neutral) stringForTapeHalf s.
@@ -277,15 +277,15 @@ Section fixTM.
     intros [H H1]. destruct u; now cbn in H1. 
   Qed. 
 
-  Lemma tape_repr_inv2 w p p' (σ : Sigma) a : [] ≃t(p, w) (@inr States tapeSigma (inr (p', Some σ)))::a -> False. 
+  Lemma tape_repr_inv2 w p p' (σ :  Σ) a : [] ≃t(p, w) (@inr States tapeSigma (inr (p', Some σ)))::a -> False. 
   Proof. 
     intros (H1 & H2). cbn in H2. congruence. 
   Qed. 
 
-  Lemma tape_repr_inv3 w p p' (u : Sigma) (us : list Sigma) h : u :: us ≃t(p, w) (inr (inr (p', |_|)) :: h) -> False. 
+  Lemma tape_repr_inv3 w p p' (u :  Σ) (us : list  Σ) h : u :: us ≃t(p, w) (inr (inr (p', |_|)) :: h) -> False. 
   Proof. intros (H1 & H2). cbn in H2. congruence. Qed. 
 
-  Lemma tape_repr_inv4 w p (u : list Sigma) h : u ≃t(p, w) (inr #) :: h -> False. 
+  Lemma tape_repr_inv4 w p (u : list  Σ) h : u ≃t(p, w) (inr #) :: h -> False. 
   Proof. intros (H1 & H2). cbn in H2. destruct u; cbn in H2; congruence. Qed. 
 
   Lemma tape_repr_inv5 w p u h e : u ≃t(p, w) (inr #) :: e:: h -> False. 
@@ -919,10 +919,10 @@ Section fixTM.
     | tsrc q q' (a b : stateSigma) (m1 m2 m3 : stateSigma) p : transSomeRightCenter q q' a b (inr (inr (p, m1))) (inl (q, a)) (inr (inr (p, m2))) (inr (inr (positive, m3))) (inl (q', m1)) (inr (inr (positive, b))).  
 
   Hint Constructors transSomeRightCenter : trans.
-  (** We generate the inversion schemes for performance reasons. Sadly, they do not work as intended in Sections, we thus explicetly copy them and fix the Sigma & fTM-Parameter by hand. We also remove the predicate itself from the assumptions for each inversion case, to allow easier implementation of an repeating tactic. *)
+  (** We generate the inversion schemes for performance reasons. Sadly, they do not work as intended in Sections, we thus explicetly copy them and fix the Σ & fTM-Parameter by hand. We also remove the predicate itself from the assumptions for each inversion case, to allow easier implementation of an repeating tactic. *)
   Derive Inversion transSomeRightCenter_inv' with (forall q q' a b γ1 γ2 γ3 γ4 γ5 γ6, transSomeRightCenter q q' a b γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
-  Definition transSomeRightCenter_inv (q q' : states) (a b : option Sigma) (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q q' a b γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
-       (forall (m1 m2 m3 : option Sigma) (p : polarity),
+  Definition transSomeRightCenter_inv (q q' : states) (a b : option  Σ) (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q q' a b γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
+       (forall (m1 m2 m3 : option  Σ) (p : polarity),
         inr (inr (p, m1)) = γ1 :> Gamma ->
         inl (q, a) = γ2 :> Gamma ->
         inr (inr (p, m2)) = γ3 :> Gamma ->
@@ -940,8 +940,8 @@ Section fixTM.
 
   Hint Constructors transSomeRightRight : trans.
   Derive Inversion transSomeRightRight_inv' with (forall q q' a γ1 γ2 γ3 γ4 γ5 γ6, transSomeRightRight q q' a γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
-  Definition transSomeRightRight_inv (q q' : states) (a : option Sigma) (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q q' a γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
-    (forall (m1 m2 m3 : option Sigma) (p : polarity),
+  Definition transSomeRightRight_inv (q q' : states) (a : option  Σ) (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q q' a γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
+    (forall (m1 m2 m3 : option  Σ) (p : polarity),
        inr (inr (p, m1)) = γ1 :> Gamma ->
        inr (inr (p, m2)) = γ2 :> Gamma ->
        inl (q, a) = γ3 :> Gamma ->
@@ -960,8 +960,8 @@ Section fixTM.
 
   Hint Constructors transSomeRightLeft : trans. 
   Derive Inversion transSomeRightLeft_inv' with (forall q q' a b γ1 γ2 γ3 γ4 γ5 γ6, transSomeRightLeft q q' a b γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
-  Definition transSomeRightLeft_inv (q q' : states) (a b: option Sigma) (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q q' a b γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
-    ( forall (m1 m2 m3 : option Sigma) (p : polarity),
+  Definition transSomeRightLeft_inv (q q' : states) (a b: option  Σ) (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q q' a b γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
+    ( forall (m1 m2 m3 : option  Σ) (p : polarity),
         inl (q, a) = γ1 :> Gamma ->
         inr (inr (p, m1)) = γ2 :> Gamma ->
         inr (inr (p, m2)) = γ3 :> Gamma ->
@@ -982,7 +982,7 @@ Section fixTM.
   Hint Constructors transSomeLeftCenter : trans.
   Derive Inversion transSomeLeftCenter_inv' with (forall q q' a b γ1 γ2 γ3 γ4 γ5 γ6, transSomeLeftCenter q q' a b γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
   Definition transSomeLeftCenter_inv (q q' : states) a b (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q q' a b γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
-     ( forall (m1 m2 m3 : option Sigma) (p : polarity),
+     ( forall (m1 m2 m3 : option  Σ) (p : polarity),
         inr (inr (p, m1)) = γ1 :> Gamma ->
         inl (q, a) = γ2 :> Gamma ->
         inr (inr (p, m2)) = γ3 :> Gamma ->
@@ -1001,8 +1001,8 @@ Section fixTM.
 
   Hint Constructors transSomeLeftLeft : trans.
   Derive Inversion transSomeLeftLeft_inv' with (forall q q' a γ1 γ2 γ3 γ4 γ5 γ6, transSomeLeftLeft q q' a γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
-  Definition transSomeLeftLeft_inv (q q' : states) (a : option Sigma) (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q q' a γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
-    (forall (m1 m2 m3 : option Sigma) (p : polarity),
+  Definition transSomeLeftLeft_inv (q q' : states) (a : option  Σ) (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q q' a γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
+    (forall (m1 m2 m3 : option  Σ) (p : polarity),
        inl (q, a) = γ1 :> Gamma ->
        inr (inr (p, m1)) = γ2 :> Gamma ->
        inr (inr (p, m2)) = γ3 :> Gamma ->
@@ -1023,7 +1023,7 @@ Section fixTM.
   Hint Constructors transSomeLeftRight : trans.
   Derive Inversion transSomeLeftRight_inv' with (forall q q' a b γ1 γ2 γ3 γ4 γ5 γ6, transSomeLeftRight q q' a b γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
   Definition transSomeLeftRight_inv (q q' : states) a b (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q q' a b γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
-    ( forall (m1 m2 m3 : option Sigma) (p : polarity),
+    ( forall (m1 m2 m3 : option  Σ) (p : polarity),
         inr (inr (p, m1)) = γ1 :> Gamma ->
         inr (inr (p, m2)) = γ2 :> Gamma ->
         inl (q, a) = γ3 :> Gamma ->
@@ -1045,7 +1045,7 @@ Section fixTM.
   Hint Constructors transSomeStayCenter : trans.
   Derive Inversion transSomeStayCenter_inv' with (forall q q' a b γ1 γ2 γ3 γ4 γ5 γ6, transSomeStayCenter q q' a b γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
   Definition transSomeStayCenter_inv (q q' : states) a b (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q q' a b γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
-    (forall (m1 m2 : option Sigma) (p : polarity),
+    (forall (m1 m2 : option  Σ) (p : polarity),
        inr (inr (p, m1)) = γ1 :> Gamma ->
        inl (q, a) = γ2 :> Gamma ->
        inr (inr (p, m2)) = γ3 :> Gamma ->
@@ -1065,7 +1065,7 @@ Section fixTM.
   Hint Constructors transSomeStayLeft : trans.
   Derive Inversion transSomeStayLeft_inv' with (forall q q' a b γ1 γ2 γ3 γ4 γ5 γ6, transSomeStayLeft q q' a b γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
   Definition transSomeStayLeft_inv (q q' : states) a b (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q q' a b γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
-    (forall (m1 m2 : option Sigma) (p : polarity),
+    (forall (m1 m2 : option  Σ) (p : polarity),
        inl (q, a) = γ1 :> Gamma ->
        inr (inr (p, m1)) = γ2 :> Gamma ->
        inr (inr (p, m2)) = γ3 :> Gamma ->
@@ -1085,7 +1085,7 @@ Section fixTM.
   Hint Constructors transSomeStayRight : trans.
   Derive Inversion transSomeStayRight_inv' with (forall q q' a b γ1 γ2 γ3 γ4 γ5 γ6, transSomeStayRight q q' a b γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
   Definition transSomeStayRight_inv (q q' : states) a b (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q q' a b γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
-    (forall (m1 m2 : option Sigma) (p : polarity),
+    (forall (m1 m2 : option  Σ) (p : polarity),
        inr (inr (p, m1)) = γ1 :> Gamma ->
        inr (inr (p, m2)) = γ2 :> Gamma ->
        inl (q, a) = γ3 :> Gamma ->
@@ -1107,22 +1107,22 @@ Section fixTM.
 
   (** Some, Some *)
   Inductive transSomeSomeLeft : states -> transRule :=
-  | transSSLeftLeftC q q' (a b : Sigma) γ2 γ3 γ4 γ5 γ6: trans (q, Some a) = (q', (Some b, Rmove)) -> transSomeLeftLeft q q' (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeSomeLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6
-  | transSSRightLeftC q q' (a b : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, Lmove)) ->  transSomeRightLeft q q' (Some a) (Some b) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeSomeLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6
-  | transSSStayLeftC q q' (a b : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, Nmove)) -> transSomeStayLeft q q' (Some a) (Some b) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeSomeLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6. 
+  | transSSLeftLeftC q q' (a b :  Σ) γ2 γ3 γ4 γ5 γ6: trans (q, Some a) = (q', (Some b, Rmove)) -> transSomeLeftLeft q q' (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeSomeLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6
+  | transSSRightLeftC q q' (a b :  Σ) γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, Lmove)) ->  transSomeRightLeft q q' (Some a) (Some b) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeSomeLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6
+  | transSSStayLeftC q q' (a b :  Σ) γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, Nmove)) -> transSomeStayLeft q q' (Some a) (Some b) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeSomeLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6. 
 
   Hint Constructors transSomeSomeLeft : trans.
   Derive Inversion transSomeSomeLeft_inv' with (forall q γ1 γ2 γ3 γ4 γ5 γ6, transSomeSomeLeft q γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
   Definition transSomeSomeLeft_inv (q : states) (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
-    (forall (q' : states) (a b : Sigma),
+    (forall (q' : states) (a b :  Σ),
        trans (q, Some a) = (q', (Some b, positive)) ->
        transSomeLeftLeft q q' (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 ->
        inl (q, Some a) = γ1 :> Gamma -> P q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6) ->
-    (forall (q' : states) (a b : Sigma),
+    (forall (q' : states) (a b :  Σ),
        trans (q, Some a) = (q', (Some b, negative)) ->
        transSomeRightLeft q q' (Some a) (Some b) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 ->
        inl (q, Some a) = γ1 :> Gamma -> P q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6) ->
-    (forall (q' : states) (a b : Sigma),
+    (forall (q' : states) (a b :  Σ),
        trans (q, Some a) = (q', (Some b, neutral)) ->
        transSomeStayLeft q q' (Some a) (Some b) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 ->
        inl (q, Some a) = γ1 :> Gamma -> P q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6) ->
@@ -1132,22 +1132,22 @@ Section fixTM.
   Qed.
 
   Inductive transSomeSomeRight : states -> transRule :=
-  | transSSLeftRightC q q' (a b: Sigma) γ1 γ2 γ4 γ5 γ6: trans (q, Some a) = (q', (Some b, Rmove)) -> transSomeLeftRight q q' (Some a) (Some b) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeSomeRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6
-  | transSSRightRightC q q' (a b : Sigma) γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, Lmove)) -> transSomeRightRight q q' (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeSomeRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6
-  | transSSStayRightC q q' (a b : Sigma)  γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, Nmove)) -> transSomeStayRight q q' (Some a) (Some b) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeSomeRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6. 
+  | transSSLeftRightC q q' (a b:  Σ) γ1 γ2 γ4 γ5 γ6: trans (q, Some a) = (q', (Some b, Rmove)) -> transSomeLeftRight q q' (Some a) (Some b) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeSomeRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6
+  | transSSRightRightC q q' (a b :  Σ) γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, Lmove)) -> transSomeRightRight q q' (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeSomeRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6
+  | transSSStayRightC q q' (a b :  Σ)  γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, Nmove)) -> transSomeStayRight q q' (Some a) (Some b) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeSomeRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6. 
 
   Hint Constructors transSomeSomeRight : trans.
   Derive Inversion transSomeSomeRight_inv' with (forall q γ1 γ2 γ3 γ4 γ5 γ6, transSomeSomeRight q γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
   Definition transSomeSomeRight_inv (q : states) (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
-    (forall (q' : states) (a b : Sigma),
+    (forall (q' : states) (a b :  Σ),
         trans (q, Some a) = (q', (Some b, positive)) ->
         transSomeLeftRight q q' (Some a) (Some b) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 ->
         inl (q, Some a) = γ3 :> Gamma -> P q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6) ->
-    (forall (q' : states) (a b : Sigma),
+    (forall (q' : states) (a b :  Σ),
        trans (q, Some a) = (q', (Some b, negative)) ->
        transSomeRightRight q q' (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 ->
        inl (q, Some a) = γ3 :> Gamma -> P q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6) ->
-    (forall (q' : states) (a b : Sigma),
+    (forall (q' : states) (a b :  Σ),
        trans (q, Some a) = (q', (Some b, neutral)) ->
        transSomeStayRight q q' (Some a) (Some b) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 ->
        inl (q, Some a) = γ3 :> Gamma -> P q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6) ->
@@ -1157,22 +1157,22 @@ Section fixTM.
   Qed.
 
   Inductive transSomeSomeCenter : states -> transRule :=
-  | transSSLeftCenterC q q' (a b: Sigma) γ1 γ3 γ4 γ5 γ6: trans (q, Some a) = (q', (Some b, Rmove)) -> transSomeLeftCenter q q' (Some a) (Some b) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeSomeCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6
-  | transSSRightCenterC q q' (a b: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, Lmove)) -> transSomeRightCenter q q' (Some a) (Some b) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeSomeCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6
-  | transSSStayCenterC q q' (a b: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, Nmove)) -> transSomeStayCenter q q' (Some a) (Some b) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeSomeCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6. 
+  | transSSLeftCenterC q q' (a b:  Σ) γ1 γ3 γ4 γ5 γ6: trans (q, Some a) = (q', (Some b, Rmove)) -> transSomeLeftCenter q q' (Some a) (Some b) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeSomeCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6
+  | transSSRightCenterC q q' (a b:  Σ) γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, Lmove)) -> transSomeRightCenter q q' (Some a) (Some b) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeSomeCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6
+  | transSSStayCenterC q q' (a b:  Σ) γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (Some b, Nmove)) -> transSomeStayCenter q q' (Some a) (Some b) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeSomeCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6. 
 
   Hint Constructors transSomeSomeCenter : trans.
   Derive Inversion transSomeSomeCenter_inv' with (forall q γ1 γ2 γ3 γ4 γ5 γ6, transSomeSomeCenter q γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
   Definition transSomeSomeCenter_inv (q : states) (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
-    ( forall (q' : states) (a b : Sigma),
+    ( forall (q' : states) (a b :  Σ),
         trans (q, Some a) = (q', (Some b, positive)) ->
         transSomeLeftCenter q q' (Some a) (Some b) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 ->
         inl (q, Some a) = γ2 :> Gamma -> P q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6) ->
-    ( forall (q' : states) (a b : Sigma),
+    ( forall (q' : states) (a b :  Σ),
        trans (q, Some a) = (q', (Some b, negative)) ->
        transSomeRightCenter q q' (Some a) (Some b) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 ->
        inl (q, Some a) = γ2 :> Gamma ->P q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6) ->
-    ( forall (q' : states) (a b : Sigma),
+    ( forall (q' : states) (a b :  Σ),
        trans (q, Some a) = (q', (Some b, neutral)) ->
        transSomeStayCenter q q' (Some a) (Some b) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 ->
        inl (q, Some a) = γ2 :> Gamma -> P q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6) ->
@@ -1183,22 +1183,22 @@ Section fixTM.
   
   (** None, Some *)
   Inductive transNoneSomeLeft : states -> transRule :=
-  | transNSLeftLeftC q q' (b : Sigma) γ2 γ3 γ4 γ5 γ6: trans (q, None) = (q', (Some b, Rmove)) -> transSomeLeftLeft q q' |_| (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneSomeLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6
-  | transNSRightLeftC q q' (b : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, Lmove)) ->  transSomeRightLeft q q' (|_|) (Some b) (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneSomeLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6
-  | transNSStayLeftC q q' (b : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, Nmove)) -> transSomeStayLeft q q' (|_|) (Some b) (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneSomeLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6. 
+  | transNSLeftLeftC q q' (b :  Σ) γ2 γ3 γ4 γ5 γ6: trans (q, None) = (q', (Some b, Rmove)) -> transSomeLeftLeft q q' |_| (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneSomeLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6
+  | transNSRightLeftC q q' (b :  Σ) γ2 γ3 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, Lmove)) ->  transSomeRightLeft q q' (|_|) (Some b) (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneSomeLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6
+  | transNSStayLeftC q q' (b :  Σ) γ2 γ3 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, Nmove)) -> transSomeStayLeft q q' (|_|) (Some b) (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6 -> transNoneSomeLeft q (inl (q, |_|)) γ2 γ3 γ4 γ5 γ6. 
 
   Hint Constructors transNoneSomeLeft : trans.
   Derive Inversion transNoneSomeLeft_inv' with (forall q γ1 γ2 γ3 γ4 γ5 γ6, transNoneSomeLeft q γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
   Definition transNoneSomeLeft_inv (q : states) (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
-    ( forall (q' : states) (b : Sigma),
+    ( forall (q' : states) (b :  Σ),
         trans (q, (|_|)) = (q', (Some b, positive)) ->
         transSomeLeftLeft q q' (|_|) (inl (q, (|_|))) γ2 γ3 γ4 γ5 γ6 ->
         inl (q, (|_|)) = γ1 :> Gamma -> P q (inl (q, (|_|))) γ2 γ3 γ4 γ5 γ6) ->
-    (forall (q' : states) (b : Sigma),
+    (forall (q' : states) (b :  Σ),
         trans (q, (|_|)) = (q', (Some b, negative)) ->
         transSomeRightLeft q q' (|_|) (Some b) (inl (q, (|_|))) γ2 γ3 γ4 γ5 γ6 ->
         inl (q, (|_|)) = γ1 :> Gamma -> P q (inl (q, (|_|))) γ2 γ3 γ4 γ5 γ6) ->
-    (forall (q' : states) (b : Sigma),
+    (forall (q' : states) (b :  Σ),
         trans (q, (|_|)) = (q', (Some b, neutral)) ->
         transSomeStayLeft q q' (|_|) (Some b) (inl (q, (|_|))) γ2 γ3 γ4 γ5 γ6 ->
         inl (q, (|_|)) = γ1 :> Gamma -> P q (inl (q, (|_|))) γ2 γ3 γ4 γ5 γ6) ->
@@ -1208,22 +1208,22 @@ Section fixTM.
   Qed.
 
   Inductive transNoneSomeRight : states -> transRule :=
-  | transNSLeftRightC q q' (b: Sigma) γ1 γ2 γ4 γ5 γ6: trans (q, |_|) = (q', (Some b, Rmove)) -> transSomeLeftRight q q' (|_|) (Some b) γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneSomeRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6
-  | transNSRightRightC q q' (b : Sigma) γ1 γ2 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, Lmove)) -> transSomeRightRight q q' (|_|) γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneSomeRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6
-  | transNSStayRightC q q' (b : Sigma)  γ1 γ2 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, Nmove)) -> transSomeStayRight q q' (|_|) (Some b) γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneSomeRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6. 
+  | transNSLeftRightC q q' (b:  Σ) γ1 γ2 γ4 γ5 γ6: trans (q, |_|) = (q', (Some b, Rmove)) -> transSomeLeftRight q q' (|_|) (Some b) γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneSomeRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6
+  | transNSRightRightC q q' (b :  Σ) γ1 γ2 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, Lmove)) -> transSomeRightRight q q' (|_|) γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneSomeRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6
+  | transNSStayRightC q q' (b :  Σ)  γ1 γ2 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, Nmove)) -> transSomeStayRight q q' (|_|) (Some b) γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6 -> transNoneSomeRight q γ1 γ2 (inl (q, |_|)) γ4 γ5 γ6. 
 
   Hint Constructors transNoneSomeRight : trans.
   Derive Inversion transNoneSomeRight_inv' with (forall q γ1 γ2 γ3 γ4 γ5 γ6, transNoneSomeRight q γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
   Definition transNoneSomeRight_inv (q : states) (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
-    (forall (q' : states) (b : Sigma),
+    (forall (q' : states) (b :  Σ),
         trans (q, (|_|)) = (q', (Some b, positive)) ->
         transSomeLeftRight q q' (|_|) (Some b) γ1 γ2 (inl (q, (|_|))) γ4 γ5 γ6 ->
         inl (q, (|_|)) = γ3 :> Gamma -> P q γ1 γ2 (inl (q, (|_|))) γ4 γ5 γ6) ->
-    (forall (q' : states) (b : Sigma),
+    (forall (q' : states) (b :  Σ),
         trans (q, (|_|)) = (q', (Some b, negative)) ->
         transSomeRightRight q q' (|_|) γ1 γ2 (inl (q, (|_|))) γ4 γ5 γ6 ->
         inl (q, (|_|)) = γ3 :> Gamma -> P q γ1 γ2 (inl (q, (|_|))) γ4 γ5 γ6) ->
-    (forall (q' : states) (b : Sigma),
+    (forall (q' : states) (b :  Σ),
         trans (q, (|_|)) = (q', (Some b, neutral)) ->
         transSomeStayRight q q' (|_|) (Some b) γ1 γ2 (inl (q, (|_|))) γ4 γ5 γ6 ->
         inl (q, (|_|)) = γ3 :> Gamma -> P q γ1 γ2 (inl (q, (|_|))) γ4 γ5 γ6) ->
@@ -1233,22 +1233,22 @@ Section fixTM.
   Qed.
 
   Inductive transNoneSomeCenter : states -> transRule :=
-  | transNSLeftCenterC q q' (b: Sigma) γ1 γ3 γ4 γ5 γ6: trans (q, |_|) = (q', (Some b, Rmove)) -> transSomeLeftCenter q q' (|_|) (Some b) γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneSomeCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6
-  | transNSRightCenterC q q' (b: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, Lmove)) -> transSomeRightCenter q q' (|_|) (Some b) γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneSomeCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6
-  | transNSStayCenterC q q' (b: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, Nmove)) -> transSomeStayCenter q q' (|_|) (Some b) γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneSomeCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6. 
+  | transNSLeftCenterC q q' (b:  Σ) γ1 γ3 γ4 γ5 γ6: trans (q, |_|) = (q', (Some b, Rmove)) -> transSomeLeftCenter q q' (|_|) (Some b) γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneSomeCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6
+  | transNSRightCenterC q q' (b:  Σ) γ1 γ3 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, Lmove)) -> transSomeRightCenter q q' (|_|) (Some b) γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneSomeCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6
+  | transNSStayCenterC q q' (b:  Σ) γ1 γ3 γ4 γ5 γ6 : trans (q, |_|) = (q', (Some b, Nmove)) -> transSomeStayCenter q q' (|_|) (Some b) γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6 -> transNoneSomeCenter q γ1 (inl (q, |_|)) γ3 γ4 γ5 γ6. 
 
   Hint Constructors transNoneSomeCenter : trans.
   Derive Inversion transNoneSomeCenter_inv' with (forall q γ1 γ2 γ3 γ4 γ5 γ6, transNoneSomeCenter q γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
   Definition transNoneSomeCenter_inv (q : states) (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
-    (forall (q' : states) (b : Sigma),
+    (forall (q' : states) (b :  Σ),
         trans (q, (|_|)) = (q', (Some b, positive)) ->
         transSomeLeftCenter q q' (|_|) (Some b) γ1 (inl (q, (|_|))) γ3 γ4 γ5 γ6 ->
         inl (q, (|_|)) = γ2 :> Gamma -> P q γ1 (inl (q, (|_|))) γ3 γ4 γ5 γ6) ->
-    ( forall (q' : states) (b : Sigma),
+    ( forall (q' : states) (b :  Σ),
         trans (q, (|_|)) = (q', (Some b, negative)) ->
         transSomeRightCenter q q' (|_|) (Some b) γ1 (inl (q, (|_|))) γ3 γ4 γ5 γ6 ->
         inl (q, (|_|)) = γ2 :> Gamma -> P q γ1 (inl (q, (|_|))) γ3 γ4 γ5 γ6) ->
-    ( forall (q' : states) (b : Sigma),
+    ( forall (q' : states) (b :  Σ),
         trans (q, (|_|)) = (q', (Some b, neutral)) ->
         transSomeStayCenter q q' (|_|) (Some b) γ1 (inl (q, (|_|))) γ3 γ4 γ5 γ6 ->
         inl (q, (|_|)) = γ2 :> Gamma -> P q γ1 (inl (q, (|_|))) γ3 γ4 γ5 γ6)  ->
@@ -1259,25 +1259,25 @@ Section fixTM.
 
   (** Some, None  *)
   Inductive transSomeNoneLeft : states -> transRule :=
-  | transSNLeftLeftC q q' (a : Sigma) γ2 γ3 γ4 γ5 γ6: trans (q, Some a) = (q', (None, Rmove)) -> transSomeLeftLeft q q' (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeNoneLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6
-  | transSNRightLeftC q q' (a : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, Lmove)) ->  transSomeRightLeft q q' (Some a) (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeNoneLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6
-  | transSNStayLeftC q q' (a : Sigma) γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, Nmove)) -> transSomeStayLeft q q' (Some a) (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeNoneLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6. 
+  | transSNLeftLeftC q q' (a :  Σ) γ2 γ3 γ4 γ5 γ6: trans (q, Some a) = (q', (None, Rmove)) -> transSomeLeftLeft q q' (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeNoneLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6
+  | transSNRightLeftC q q' (a :  Σ) γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, Lmove)) ->  transSomeRightLeft q q' (Some a) (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeNoneLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6
+  | transSNStayLeftC q q' (a :  Σ) γ2 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, Nmove)) -> transSomeStayLeft q q' (Some a) (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 -> transSomeNoneLeft q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6. 
 
   Hint Constructors transSomeNoneLeft : trans.
   Derive Inversion transSomeNoneLeft_inv' with (forall q γ1 γ2 γ3 γ4 γ5 γ6, transSomeNoneLeft q γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
   Definition transSomeNoneLeft_inv (q : states) (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
-    ( forall (q' : states) (a : Sigma),
+    ( forall (q' : states) (a :  Σ),
         trans (q, Some a) = (q', ((|_|), positive)) ->
         transSomeLeftLeft q q' (Some a) (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 ->
         inl (q, Some a) = γ1 :> Gamma ->
         P q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6) ->
-    (forall (q' : states) (a : Sigma),
+    (forall (q' : states) (a :  Σ),
         trans (q, Some a) = (q', ((|_|), negative)) ->
         transSomeRightLeft q q' (Some a) (Some a) 
                            (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 ->
         inl (q, Some a) = γ1 :> Gamma ->
         P q (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6) ->
-    (forall (q' : states) (a : Sigma),
+    (forall (q' : states) (a :  Σ),
         trans (q, Some a) = (q', ((|_|), neutral)) ->
         transSomeStayLeft q q' (Some a) (Some a) 
                           (inl (q, Some a)) γ2 γ3 γ4 γ5 γ6 ->
@@ -1289,22 +1289,22 @@ Section fixTM.
   Qed.
 
   Inductive transSomeNoneRight : states -> transRule :=
-  | transSNLeftRightC q q' (a : Sigma) γ1 γ2 γ4 γ5 γ6: trans (q, Some a) = (q', (None, Rmove)) -> transSomeLeftRight q q' (Some a) (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeNoneRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6
-  | transSNRightRightC q q' (a : Sigma) γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, Lmove)) -> transSomeRightRight q q' (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeNoneRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6
-  | transSNStayRightC q q' (a : Sigma)  γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, Nmove)) -> transSomeStayRight q q' (Some a) (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeNoneRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6. 
+  | transSNLeftRightC q q' (a :  Σ) γ1 γ2 γ4 γ5 γ6: trans (q, Some a) = (q', (None, Rmove)) -> transSomeLeftRight q q' (Some a) (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeNoneRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6
+  | transSNRightRightC q q' (a :  Σ) γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, Lmove)) -> transSomeRightRight q q' (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeNoneRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6
+  | transSNStayRightC q q' (a :  Σ)  γ1 γ2 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, Nmove)) -> transSomeStayRight q q' (Some a) (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 -> transSomeNoneRight q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6. 
 
   Hint Constructors transSomeNoneRight : trans.
   Derive Inversion transSomeNoneRight_inv' with (forall q γ1 γ2 γ3 γ4 γ5 γ6, transSomeNoneRight q γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
   Definition transSomeNoneRight_inv (q : states) (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
-    (forall (q' : states) (a : Sigma),
+    (forall (q' : states) (a :  Σ),
         trans (q, Some a) = (q', ((|_|), positive)) ->
         transSomeLeftRight q q' (Some a) (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 ->
         inl (q, Some a) = γ3 :> Gamma -> P q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6) ->
-    (forall (q' : states) (a : Sigma),
+    (forall (q' : states) (a :  Σ),
         trans (q, Some a) = (q', ((|_|), negative)) ->
         transSomeRightRight q q' (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 ->
         inl (q, Some a) = γ3 :> Gamma -> P q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6) ->
-    (forall (q' : states) (a : Sigma),
+    (forall (q' : states) (a :  Σ),
         trans (q, Some a) = (q', ((|_|), neutral)) ->
         transSomeStayRight q q' (Some a) (Some a) γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6 ->
         inl (q, Some a) = γ3 :> Gamma ->P q γ1 γ2 (inl (q, Some a)) γ4 γ5 γ6) -> 
@@ -1314,22 +1314,22 @@ Section fixTM.
   Qed.
 
   Inductive transSomeNoneCenter : states -> transRule :=
-  | transSNLeftCenterC q q' (a: Sigma) γ1 γ3 γ4 γ5 γ6: trans (q, Some a) = (q', (None, Rmove)) -> transSomeLeftCenter q q' (Some a) (Some a) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeNoneCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6
-  | transSNRightCenterC q q' (a: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, Lmove)) -> transSomeRightCenter q q' (Some a) (Some a) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeNoneCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6
-  | transSNStayCenterC q q' (a: Sigma) γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, Nmove)) -> transSomeStayCenter q q' (Some a) (Some a) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeNoneCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6. 
+  | transSNLeftCenterC q q' (a:  Σ) γ1 γ3 γ4 γ5 γ6: trans (q, Some a) = (q', (None, Rmove)) -> transSomeLeftCenter q q' (Some a) (Some a) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeNoneCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6
+  | transSNRightCenterC q q' (a:  Σ) γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, Lmove)) -> transSomeRightCenter q q' (Some a) (Some a) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeNoneCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6
+  | transSNStayCenterC q q' (a:  Σ) γ1 γ3 γ4 γ5 γ6 : trans (q, Some a) = (q', (None, Nmove)) -> transSomeStayCenter q q' (Some a) (Some a) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 -> transSomeNoneCenter q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6. 
 
   Hint Constructors transSomeNoneCenter : trans.
   Derive Inversion transSomeNoneCenter_inv' with (forall q γ1 γ2 γ3 γ4 γ5 γ6, transSomeNoneCenter q γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
   Definition transSomeNoneCenter_inv (q : states) (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
-    (forall (q' : states) (a : Sigma),
+    (forall (q' : states) (a :  Σ),
         trans (q, Some a) = (q', ((|_|), positive)) ->
         transSomeLeftCenter q q' (Some a) (Some a) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 ->
         inl (q, Some a) = γ2 :> Gamma -> P q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6) ->
-    ( forall (q' : states) (a : Sigma),
+    ( forall (q' : states) (a :  Σ),
         trans (q, Some a) = (q', ((|_|), negative)) ->
         transSomeRightCenter q q' (Some a) (Some a) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 ->
         inl (q, Some a) = γ2 :> Gamma -> P q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6) ->
-    (forall (q' : states) (a : Sigma),
+    (forall (q' : states) (a :  Σ),
         trans (q, Some a) = (q', ((|_|), neutral)) ->
         transSomeStayCenter q q' (Some a) (Some a) γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6 ->
         inl (q, Some a) = γ2 :> Gamma -> P q γ1 (inl (q, Some a)) γ3 γ4 γ5 γ6) ->
@@ -1393,12 +1393,12 @@ Section fixTM.
   (**shift right rules *)
   Inductive transNoneRightCenter :  states -> states -> transRule :=
   | tnrc1 q q' (m : stateSigma) p : transNoneRightCenter q q' (inr (inr (p, |_|))) (inl (q, |_|)) (inr (inr (p, m))) (inr (inr (neutral, |_|))) (inl (q', |_|)) (inr (inr (neutral, m)))
-  | tnrc2 q q' (σ : Sigma) (m: stateSigma) p : transNoneRightCenter q q' (inr (inr (p, Some σ))) (inl (q, |_|)) (inr (inr (p, |_|))) (inr (inr (positive, m))) (inl (q', Some σ)) (inr (inr (positive, |_|))). 
+  | tnrc2 q q' (σ :  Σ) (m: stateSigma) p : transNoneRightCenter q q' (inr (inr (p, Some σ))) (inl (q, |_|)) (inr (inr (p, |_|))) (inr (inr (positive, m))) (inl (q', Some σ)) (inr (inr (positive, |_|))). 
 
   Hint Constructors transNoneRightCenter : trans. 
   Derive Inversion transNoneRightCenter_inv' with (forall q q' γ1 γ2 γ3 γ4 γ5 γ6, transNoneRightCenter q q' γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
   Definition transNoneRightCenter_inv (q q' : states) (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q q' γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
-    (forall (m : option Sigma) (p : polarity),
+    (forall (m : option  Σ) (p : polarity),
         inr (inr (p, (|_|))) = γ1 :> Gamma ->
         inl (q, (|_|)) = γ2 :> Gamma ->
         inr (inr (p, m)) = γ3 :> Gamma ->
@@ -1407,7 +1407,7 @@ Section fixTM.
         inr (inr (∘ m)) = γ6 :> Gamma ->
         P q q' (inr (inr (p, (|_|)))) (inl (q, (|_|))) (inr (inr (p, m)))
           (inr (inr (∘ (|_|)))) (inl (q', (|_|))) (inr (inr (∘ m)))) ->
-    (forall (σ : Sigma) (m : option Sigma) (p : polarity),
+    (forall (σ :  Σ) (m : option  Σ) (p : polarity),
         inr (inr (p, Some σ)) = γ1 :> Gamma ->
         inl (q, (|_|)) = γ2 :> Gamma ->
         inr (inr (p, (|_|))) = γ3 :> Gamma ->
@@ -1438,7 +1438,7 @@ Section fixTM.
         inl (q', |_|) = γ6 :> Gamma ->
         P q q' (inr (inr (p, |_|))) (inr (inr (p, |_|))) (inl (q, |_|))
           (inr (inr (p', |_|))) (inr (inr (p', |_|))) (inl (q', |_|))) ->
-    (forall (σ : Sigma) (p p' : polarity),
+    (forall (σ :  Σ) (p p' : polarity),
         inr (inr (p, |_|)) = γ1 :> Gamma ->
         inr (inr (p, Some σ)) = γ2 :> Gamma ->
         inl (q, |_|) = γ3 :> Gamma ->
@@ -1447,7 +1447,7 @@ Section fixTM.
         inl (q', Some σ) = γ6 :> Gamma ->
         P q q' (inr (inr (p, |_|))) (inr (inr (p, Some σ))) 
           (inl (q, |_|)) (inr (inr (p', |_|))) (inr (inr (p', |_|))) (inl (q', Some σ))) ->
-    (forall (σ1 σ2 : Sigma) (m1 : option Sigma) (p : polarity),
+    (forall (σ1 σ2 :  Σ) (m1 : option  Σ) (p : polarity),
         inr (inr (p, Some σ1)) = γ1 :> Gamma ->
         inr (inr (p, Some σ2)) = γ2 :> Gamma ->
         inl (q, |_|) = γ3 :> Gamma ->
@@ -1468,7 +1468,7 @@ Section fixTM.
   Hint Constructors transNoneRightLeft : trans. 
   Derive Inversion transNoneRightLeft_inv' with (forall q q' γ1 γ2 γ3 γ4 γ5 γ6, transNoneRightLeft q q' γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
   Definition transNoneRightLeft_inv (q q' : states) (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q q' γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
-    (forall (m : option Sigma) (p p': polarity),
+    (forall (m : option  Σ) (p p': polarity),
         inl (q, |_|) = γ1 :> Gamma ->
         inr (inr (p, |_|)) = γ2 :> Gamma ->
         inr (inr (p, |_|)) = γ3 :> Gamma ->
@@ -1477,7 +1477,7 @@ Section fixTM.
         inr (inr (p', |_|)) = γ6 :> Gamma ->
         P q q' (inl (q, |_|)) (inr (inr (p, |_|))) (inr (inr (p, |_|))) 
           (inl (q', m)) (inr (inr (p', |_|))) (inr (inr (p', |_|)))) ->
-    (forall (m : option Sigma) (σ : Sigma) (p p' : polarity),
+    (forall (m : option  Σ) (σ :  Σ) (p p' : polarity),
         inl (q, |_|) = γ1 :> Gamma ->
         inr (inr (p, Some σ)) = γ2 :> Gamma ->
         inr (inr (p, m)) = γ3 :> Gamma ->
@@ -1499,7 +1499,7 @@ Section fixTM.
   Hint Constructors transNoneLeftCenter : trans. 
   Derive Inversion transNoneLeftCenter_inv' with (forall q q' γ1 γ2 γ3 γ4 γ5 γ6, transNoneLeftCenter q q' γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
   Definition transNoneLeftCenter_inv (q q' : states) (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q q' γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
-    (forall  (m : option Sigma) (p : polarity),
+    (forall  (m : option  Σ) (p : polarity),
         inr (inr (p, m)) = γ1 :> Gamma ->
         inl (q, |_|) = γ2 :> Gamma ->
         inr (inr (p, |_|)) = γ3 :> Gamma ->
@@ -1508,7 +1508,7 @@ Section fixTM.
         inr (inr (∘ |_|)) = γ6 :> Gamma ->
         P  q q' (inr (inr (p, m))) (inl (q, |_|)) (inr (inr (p, |_|))) 
            (inr (inr (∘ m))) (inl (q', |_|)) (inr (inr (∘ |_|)))) ->
-    ( forall (m : option Sigma) (σ : Sigma) (p : polarity),
+    ( forall (m : option  Σ) (σ :  Σ) (p : polarity),
         inr (inr (p, |_|)) = γ1 :> Gamma ->
         inl (q, |_|) = γ2 :> Gamma ->
         inr (inr (p, Some σ)) = γ3 :> Gamma ->
@@ -1539,7 +1539,7 @@ Section fixTM.
         inr (inr (p', |_|)) = γ6 :> Gamma ->
         P q q' (inl (q, |_|)) (inr (inr (p, |_|))) (inr (inr (p, |_|))) 
           (inl (q', |_|)) (inr (inr (p', |_|))) (inr (inr (p', |_|)))) ->
-    (forall (σ : Sigma) (p p' : polarity),
+    (forall (σ :  Σ) (p p' : polarity),
         inl (q, |_|) = γ1 :> Gamma ->
         inr (inr (p, Some σ)) = γ2 :> Gamma ->
         inr (inr (p, |_|)) = γ3 :> Gamma ->
@@ -1548,7 +1548,7 @@ Section fixTM.
         inr (inr (p', |_|)) = γ6 :> Gamma ->
         P q q' (inl (q, |_|)) (inr (inr (p, Some σ))) (inr (inr (p, |_|)))
           (inl (q', Some σ)) (inr (inr (p', |_|))) (inr (inr (p', |_|)))) ->
-    ( forall (σ1 σ2 : Sigma) (m : option Sigma) (p : polarity),
+    ( forall (σ1 σ2 :  Σ) (m : option  Σ) (p : polarity),
         inl (q, |_|) = γ1 :> Gamma ->
         inr (inr (p, Some σ1)) = γ2 :> Gamma ->
         inr (inr (p, Some σ2)) = γ3 :> Gamma ->
@@ -1569,7 +1569,7 @@ Section fixTM.
   Hint Constructors transNoneLeftRight : trans. 
   Derive Inversion transNoneLeftRight_inv' with (forall q q' γ1 γ2 γ3 γ4 γ5 γ6, transNoneLeftRight q q' γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
   Definition transNoneLeftRight_inv (q q' : states) (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q q' γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
-    (forall (m : option Sigma) (p p' : polarity),
+    (forall (m : option  Σ) (p p' : polarity),
         inr (inr (p, |_|)) = γ1 :> Gamma ->
         inr (inr (p, |_|)) = γ2 :> Gamma ->
         inl (q, |_|) = γ3 :> Gamma ->
@@ -1578,7 +1578,7 @@ Section fixTM.
         inl (q', m) = γ6 :> Gamma ->
         P q q' (inr (inr (p, |_|))) (inr (inr (p, |_|))) (inl (q, |_|))
           (inr (inr (p', |_|))) (inr (inr (p', |_|))) (inl (q', m))) ->
-    (forall (m1 : option Sigma) (σ : Sigma) (p : polarity),
+    (forall (m1 : option  Σ) (σ :  Σ) (p : polarity),
         inr (inr (p, m1)) = γ1 :> Gamma ->
         inr (inr (p, Some σ)) = γ2 :> Gamma ->
         inl (q, |_|) = γ3 :> Gamma ->
@@ -1600,7 +1600,7 @@ Section fixTM.
   Hint Constructors transNoneStayCenter : trans.
   Derive Inversion transNoneStayCenter_inv' with (forall q q' γ1 γ2 γ3 γ4 γ5 γ6, transNoneStayCenter q q' γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
   Definition transNoneStayCenter_inv (q q' : states) (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q q' γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
-    (forall  (m : option Sigma) (p : polarity),
+    (forall  (m : option  Σ) (p : polarity),
         inr (inr (p, m)) = γ1 :> Gamma ->
         inl (q, |_|) = γ2 :> Gamma ->
         inr (inr (p, |_|)) = γ3 :> Gamma ->
@@ -1609,7 +1609,7 @@ Section fixTM.
         inr (inr (∘ |_|)) = γ6 :> Gamma ->
         P q q' (inr (inr (p, m))) (inl (q, |_|)) (inr (inr (p, |_|))) 
           (inr (inr (∘ m))) (inl (q', |_|)) (inr (inr (∘ |_|)))) ->
-    (forall (m : option Sigma) (p : polarity),
+    (forall (m : option  Σ) (p : polarity),
         inr (inr (p, |_|)) = γ1 :> Gamma ->
         inl (q, |_|) = γ2 :> Gamma ->
         inr (inr (p, m)) = γ3 :> Gamma ->
@@ -1630,7 +1630,7 @@ Section fixTM.
   Hint Constructors transNoneStayLeft : trans.
   Derive Inversion transNoneStayLeft_inv' with (forall q q' γ1 γ2 γ3 γ4 γ5 γ6, transNoneStayLeft q q' γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
   Definition transNoneStayLeft_inv (q q' : states) (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q q' γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
-    (forall (σ : Sigma) (m : option Sigma) (p : polarity),
+    (forall (σ :  Σ) (m : option  Σ) (p : polarity),
         inl (q, |_|) = γ1 :> Gamma ->
         inr (inr (p, Some σ)) = γ2 :> Gamma ->
         inr (inr (p, m)) = γ3 :> Gamma ->
@@ -1660,7 +1660,7 @@ Section fixTM.
   Hint Constructors transNoneStayRight : trans. 
   Derive Inversion transNoneStayRight_inv' with (forall q q' γ1 γ2 γ3 γ4 γ5 γ6, transNoneStayRight q q' γ1 γ2 γ3 γ4 γ5 γ6) Sort Prop.
   Definition transNoneStayRight_inv (q q' : states) (γ1 γ2 γ3 γ4 γ5 γ6 : Gamma) (P : forall q q' γ1 γ2 γ3 γ4 γ5 γ6, Prop) :
-    (forall (σ : Sigma) (m : option Sigma) (p : polarity),
+    (forall (σ :  Σ) (m : option  Σ) (p : polarity),
         inr (inr (p, m)) = γ1 :> Gamma ->
         inr (inr (p, Some σ)) = γ2 :> Gamma ->
         inl (q, |_|) = γ3 :> Gamma ->
@@ -2944,7 +2944,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
 
   (** ** multi-step simulation *)
 
-  Notation "s '≻(' k ')' s'" := (relpower (@sstepRel Sigma fTM) k s s') (at level 40). 
+  Notation "s '≻(' k ')' s'" := (relpower (@sstepRel Σ fTM) k s s') (at level 40). 
 
   (** this is similar to what loopM does*)
   Notation "s '▷(' k ')' s'" := (s ≻(k) s' /\ halt (configState s') = true) (at level 40).
@@ -3115,8 +3115,8 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
 
 
   (** initial strings *)
-  Definition fullInput (c : list Sigma) := fixedInput ++ c.
-  Definition initialString (c : list Sigma) := stringForConfig start (initTape_singleTapeTM (fullInput c)). 
+  Definition fullInput (c : list  Σ) := fixedInput ++ c.
+  Definition initialString (c : list  Σ) := stringForConfig start (initTape_singleTapeTM (fullInput c)). 
 
   Definition isValidInitialString s := exists cert, isValidCert k' cert /\ s = initialString cert. 
 
@@ -3593,7 +3593,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
 
   Global Instance preludeSigP_finTypeC : finTypeC (EqType preludeSig'). 
   Proof. 
-    exists ([nblank; nstar; ndelimC; ninit] ++ (map nsig (elem Sigma))). 
+    exists ([nblank; nstar; ndelimC; ninit] ++ (map nsig (elem  Σ))). 
     intros []; simpl; try match goal with [ |- S ?a = 1] => enough (a = 0) by easy end. 
     1-4: apply notInZero; intros (x & H1 & H2)%in_map_iff; congruence. 
     apply dupfreeCount.
@@ -3618,7 +3618,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
   (*reduction using the propositional rewrite rules: we put together the prelude and the deterministic simulation *)
   Lemma SingleTMGenNP_to_PTCC: 
     PTCCLang (@Build_PTCC (FinType (EqType preludeSig)) (map inr preludeInitialString) allRules (map (map inl) finalSubstrings) (1 + t))
-    <-> SingleTMGenNP (existT _ Sigma (fTM, fixedInput, k', t)). 
+    <-> SingleTMGenNP (existT _ Σ (fTM, fixedInput, k', t)). 
   Proof. 
     rewrite <- prelude_reduction_from_ExPTCC. apply TM_reduction_to_ExPTCC.
   Qed. 
@@ -3633,7 +3633,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
   Definition Fpolarity := finType_CS polarity.
 
   (** *** list-based card infrastructure *)
-  (** We use a abstract representation of elements of the alphabet Gamma with holes where the elements of the abstract TM alphabets Sigma and states need to be placed. 
+  (** We use a abstract representation of elements of the alphabet Gamma with holes where the elements of the abstract TM alphabets Σ and states need to be placed. 
   The follocardg development is centered around the goal of easily being able to instantiate the abstract fGamma elements with finTypes and with the flat representation using natural numbers. 
   *)
   Inductive fstateSigma := blank | someSigmaVar : nat -> fstateSigma | stateSigmaVar : nat -> fstateSigma. 
@@ -3705,7 +3705,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
       end. 
   End fixEnv. 
 
-  Definition evalEnvFin := evalEnv Fpolarity Sigma FstateSigma states. 
+  Definition evalEnvFin := evalEnv Fpolarity Σ FstateSigma states. 
   Definition evalEnvFlat := evalEnv nat nat nat nat.
 
   (** a generation procedure is canonical if it uses exactly the bound variables *)
@@ -3916,7 +3916,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
     - destruct p; cbn; lia.
   Qed. 
 
-  Lemma Sigma_finRepr : finRepr Sigma flatSigma. 
+  Lemma Sigma_finRepr : finRepr Σ flatSigma. 
   Proof using flatTM_TM_compat. 
     destruct flatTM_TM_compat. rewrite eq__sig. unfold Cardinality. easy. 
   Qed. 
@@ -4189,7 +4189,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
     (forall envFlat, envFlat el envFlatList -> exists envFin, isFlatEnvOf envFlat envFin /\ envFin el envFinList)
     /\ (forall envFin, envFin el envFinList -> exists envFlat, isFlatEnvOf envFlat envFin /\ envFlat el envFlatList).
 
-  Lemma makeAllEvalEnv_isFlatEnvOf (Afin : list polarity) (Bfin : list Sigma) (Cfin : list stateSigma) (Dfin : list states) (Aflat Bflat Cflat Dflat : list nat) n1 n2 n3 n4:
+  Lemma makeAllEvalEnv_isFlatEnvOf (Afin : list polarity) (Bfin : list  Σ) (Cfin : list stateSigma) (Dfin : list states) (Aflat Bflat Cflat Dflat : list nat) n1 n2 n3 n4:
     isFlatListOf Aflat Afin 
     -> isFlatListOf Bflat Bfin
     -> isFlatListOf Cflat Cfin
@@ -4222,7 +4222,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
     eauto 10.
   Qed. 
 
-  Definition makeAllEvalEnvFin := makeAllEvalEnv (elem Fpolarity) (elem Sigma) (elem FstateSigma) (elem states).
+  Definition makeAllEvalEnvFin := makeAllEvalEnv (elem Fpolarity) (elem  Σ) (elem FstateSigma) (elem states).
   Definition makeAllEvalEnvFlat := makeAllEvalEnv (seq 0 flatPolarity) (seq 0 flatSigma) (seq 0 flatStateSigma) (seq 0 flatstates).
 
   Lemma makeAllEvalEnv_isFlatEnvOf' n1 n2 n3 n4 : list_isFlatEnvOf (makeAllEvalEnvFlat n1 n2 n3 n4) (makeAllEvalEnvFin n1 n2 n3 n4). 
@@ -4430,12 +4430,12 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
   Ltac solve_agreement_incl :=
     match goal with
       | [ |- [] <<= _] => intros ? [] 
-      | [ |- ?a <<= elem Sigma] => intros ? ?; solve [apply elem_spec]
+      | [ |- ?a <<= elem Σ] => intros ? ?; solve [apply elem_spec]
       | [ |- [?p] <<= [negative; positive; neutral]] => destruct p; force_In
       | [ |- ?p el [negative; positive; neutral]] => destruct p; force_In
       | [ |- [?a; ?b] <<= ?h] => apply duoton_incl; split; solve_agreement_incl 
       | [ |- ?a <<= elem FstateSigma] => apply stateSigma_incl 
-      | [ |- ?a <<= toOptionList (elem Sigma)] => apply stateSigma_incl
+      | [ |- ?a <<= toOptionList (elem Σ)] => apply stateSigma_incl
       | [ |- _ <= _] => lia
     end. 
 
@@ -5106,7 +5106,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
   (** the reduction using the list-based cards *)
   Lemma SingleTMGenNP_to_TCC : 
     TCCLang (@Build_TCC (FinType (EqType preludeSig)) (map inr preludeInitialString) allFinCards (map (map inl) finalSubstrings) (1 + t))
-    <-> SingleTMGenNP (existT _ Sigma (fTM, fixedInput, k', t)). 
+    <-> SingleTMGenNP (existT _ Σ (fTM, fixedInput, k', t)). 
   Proof. 
     rewrite tpr_ptpr_agree. 
     * apply SingleTMGenNP_to_PTCC. 
@@ -5463,7 +5463,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
   Qed. 
 
   (**We define the flattened initial string *)
-  (** We need to define k, z' in terms of the flat fixed input, otherwise Coq's generalisation pulls in fixedInput and Sigma as arguments of the reduction*)
+  (** We need to define k, z' in terms of the flat fixed input, otherwise Coq's generalisation pulls in fixedInput and Σ as arguments of the reduction*)
   Definition kflat := k' + |flatFixedInput|.
   Definition zflat := t + kflat.
   Definition zPflat := wo + zflat. 
@@ -5567,7 +5567,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
   Qed. 
 
   Lemma reduction_wf_correct : 
-    SingleTMGenNP (existT _ Sigma (fTM, fixedInput, k', t)) <-> FlatTCCLang reduction_wf.
+    SingleTMGenNP (existT _ Σ (fTM, fixedInput, k', t)) <-> FlatTCCLang reduction_wf.
   Proof using Type*. 
     rewrite <- SingleTMGenNP_to_TCC. symmetry. eapply isFlatTCCOf_equivalence, reduction_isFlatTCCOf.
   Qed. 
