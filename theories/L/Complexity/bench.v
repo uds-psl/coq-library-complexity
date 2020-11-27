@@ -26,7 +26,7 @@ Section explicit_bounds.
   (** extraction of list_in_decb *)
   Section fixXeq.
     Variable (X : Type).
-    Context {H : registered X}.
+    Context {H : encodable X}.
 
     Context (eqbX : X -> X -> bool).
     Context {Xeq : eqbClass eqbX}.
@@ -89,7 +89,7 @@ Section explicit_bounds.
   Smpl Add apply evalLiteral_poly : inO.
 
   Section fixX.
-    Context {X : Type} `{registered X}.
+    Context {X : Type} `{encodable X}.
 
     (* existsb *)
     Definition c__existsb := 15.
@@ -180,16 +180,16 @@ Section explicit_bounds.
 
   (** We obtain that SAT is in NP *)
   Import Complexity.L.Complexity.NP.
-  Lemma sat_NP : inNP (unrestrictedP SAT).
+  Lemma sat_NP : inNP SAT.
   Proof.
-    apply inNP_intro with (R:= fun (a : { cnf | True}) => sat_verifier (proj1_sig a)).
+    apply inNP_intro with (R:= sat_verifier).
     1 : apply linDec_polyTimeComputable.
     2 : {
       exists (fun n => n * (1 + c__listsizeCons + c__listsizeNil)).
       3, 4: smpl_inO.
       - unfold SAT, sat_verifier.
-        intros (cn & ?) a H.  cbn. exists a; tauto.
-      - unfold SAT, sat_verifier. intros (cn & ?) [a H]. exists (compressAssignment a cn). split.
+        intros cn  a H.  cbn. exists a; tauto.
+      - unfold SAT, sat_verifier. intros cn [a H]. exists (compressAssignment a cn). split.
         + apply compressAssignment_cnf_equiv in H. cbn. apply H.
         + apply assignment_small_size. cbn. apply compressAssignment_small.
     }
@@ -198,7 +198,7 @@ Section explicit_bounds.
     { exists (sat_verifierb).
       + eexists. eapply computesTime_timeLeq. 2: apply term_sat_verifierb.
         cbn. intros [N a] _. split; [ | easy]. apply sat_verifierb_time_bound.
-      + intros [N a] ?. cbn. apply sat_verifierb_correct.
+      + intros [N a]. cbn. apply sat_verifierb_correct.
     }
     all: apply sat_verifierb_poly.
   Qed.
@@ -215,7 +215,7 @@ Module uptoc_pure.
 Section uptoc_pure.
   Section fixXeq.
     Variable (X : Type).
-    Context {H : registered X}.
+    Context {H : encodable X}.
 
     (** An abstract size function giving the element of l with the maximum encoding size. In practice, we will instantiate it with nat below *)
     Definition maxSize (l : list X) := maxl (map (fun x => size (enc x)) l).
@@ -281,26 +281,26 @@ Section uptoc_pure.
   Instance term_evalLiteral : computableTime' evalLiteral _ := projT2 _term_evalLiteral.
 
   (* existsb *)
-  Definition existsb_time {X : Type} `{registered X} (p : (X -> nat) * list X) := let '(fT, l) := p in
+  Definition existsb_time {X : Type} `{encodable X} (p : (X -> nat) * list X) := let '(fT, l) := p in
     sumn (map fT l) + |l| + 1.
-  Fact _term_existsb (X : Type) `{registered X} : { time : UpToC existsb_time & computableTime' (existsb (A := X)) (fun f fT => (1, fun L _ => (time (callTime fT, L), tt)))}.
+  Fact _term_existsb (X : Type) `{encodable X} : { time : UpToC existsb_time & computableTime' (existsb (A := X)) (fun f fT => (1, fun L _ => (time (callTime fT, L), tt)))}.
   Proof.
     exists_const c1.
     { extract. solverec; cycle 1. instantiate (c1 := 15). all: lia. }
     smpl_upToC_solve.
   Qed.
-  Instance term_existsb (X : Type) `{registered X} : computableTime' (@existsb X) _ := projT2 _term_existsb.
+  Instance term_existsb (X : Type) `{encodable X} : computableTime' (@existsb X) _ := projT2 _term_existsb.
 
   (* forallb *)
-  Definition forallb_time {X : Type} `{registered X} (p : (X -> nat) * list X) := let '(fT, l) := p in
+  Definition forallb_time {X : Type} `{encodable X} (p : (X -> nat) * list X) := let '(fT, l) := p in
     sumn (map fT l) + |l| + 1.
-  Fact _term_forallb (X : Type) `{registered X} : { time : UpToC forallb_time & computableTime' (forallb (A := X)) (fun f fT => (1, fun L _ => (time (callTime fT, L), tt)))}.
+  Fact _term_forallb (X : Type) `{encodable X} : { time : UpToC forallb_time & computableTime' (forallb (A := X)) (fun f fT => (1, fun L _ => (time (callTime fT, L), tt)))}.
   Proof.
     exists_const c1.
     { extract. solverec; cycle 1. instantiate (c1 := 15). all: lia. }
     smpl_upToC_solve.
   Qed.
-  Instance term_forallb (X : Type) `{registered X} : computableTime' (@forallb X) _ := projT2 _term_forallb.
+  Instance term_forallb (X : Type) `{encodable X} : computableTime' (@forallb X) _ := projT2 _term_forallb.
 
   (* evalClause *)
   Definition evalClause_time (p : assgn * clause) := let (a, C) := p in (|C| + 1) * ((|a|) + 1) * (maxSize a + 1).
@@ -356,16 +356,16 @@ Section uptoc_pure.
 
   (** We obtain that SAT is in NP *)
   Import Complexity.L.Complexity.NP.
-  Lemma sat_NP : inNP (unrestrictedP SAT).
+  Lemma sat_NP : inNP SAT.
   Proof.
-    apply inNP_intro with (R:= fun (a : { cnf | True}) => sat_verifier (proj1_sig a)).
+    apply inNP_intro with (R:= sat_verifier).
     1 : apply linDec_polyTimeComputable.
     2 : {
       exists (fun n => n * (1 + c__listsizeCons + c__listsizeNil)).
       3, 4: smpl_inO.
       - unfold SAT, sat_verifier.
-        intros (cn & ?) a H.  cbn. exists a; tauto.
-      - unfold SAT, sat_verifier. intros (cn & ?) [a H]. exists (compressAssignment a cn). split.
+        intros cn a H.  cbn. exists a; tauto.
+      - unfold SAT, sat_verifier. intros cn [a H]. exists (compressAssignment a cn). split.
         + apply compressAssignment_cnf_equiv in H. cbn. apply H.
         + apply assignment_small_size. cbn. apply compressAssignment_small.
     }
@@ -381,7 +381,7 @@ Section uptoc_pure.
         replace_le (size (enc a)) with (size (enc (N, a))); cycle 1.
         [p]: intros n. set (size (enc _)). and_solve p.
         all: rewrite size_prod; cbn; lia.
-      + intros [N a] ?. cbn. apply sat_verifierb_correct.
+      + intros [N a]. cbn. apply sat_verifierb_correct.
     }
     all: subst p; smpl_inO.
   Qed.
@@ -397,7 +397,7 @@ Section uptoc_poly.
   (** extraction of list_in_decb *)
   Section fixXeq.
     Variable (X : Type).
-    Context {H : registered X}.
+    Context {H : encodable X}.
     Definition maxSize (l : list X) := maxl (map (fun x => size (enc x)) l).
     Lemma maxSize_enc_size (l : list X) : maxSize l<= size (enc l).
     Proof.
@@ -478,7 +478,7 @@ Section uptoc_poly.
 
   Section existsb.
     (* NOTE: whelp, the whole "exactness" approach doesn't work anymore after introducing upToC, because we can't support cascaded rt functions with upToC *)
-    Fail Fixpoint existsb_time {X : Type} `{registered X} (p : (X -> nat) * list X) := let '(fT, l) := p in
+    Fail Fixpoint existsb_time {X : Type} `{encodable X} (p : (X -> nat) * list X) := let '(fT, l) := p in
       match l with
       | [] => 1
       | (h :: l) => fT h + 1 + existsb_time (fT, l)
@@ -499,7 +499,7 @@ Section uptoc_mixed.
   (** extraction of list_in_decb *)
   Section fixXeq.
     Variable (X : Type).
-    Context {H : registered X}.
+    Context {H : encodable X}.
 
     Context (eqbX : X -> X -> bool).
     Context {Xeq : eqbClass eqbX}.
@@ -548,26 +548,26 @@ Section uptoc_mixed.
   Instance term_evalLiteral : computableTime' evalLiteral _ := projT2 _term_evalLiteral.
 
   (* existsb *)
-  Definition existsb_time {X : Type} `{registered X} (p : (X -> nat) * list X) := let '(fT, l) := p in
+  Definition existsb_time {X : Type} `{encodable X} (p : (X -> nat) * list X) := let '(fT, l) := p in
     sumn (map fT l) + |l| + 1.
-  Fact _term_existsb (X : Type) `{registered X} : { time : UpToC existsb_time & computableTime' (existsb (A := X)) (fun f fT => (1, fun L _ => (time (callTime fT, L), tt)))}.
+  Fact _term_existsb (X : Type) `{encodable X} : { time : UpToC existsb_time & computableTime' (existsb (A := X)) (fun f fT => (1, fun L _ => (time (callTime fT, L), tt)))}.
   Proof.
     exists_const c1.
     { extract. solverec; cycle 1. instantiate (c1 := 15). all: lia. }
     smpl_upToC_solve.
   Qed.
-  Instance term_existsb (X : Type) `{registered X} : computableTime' (@existsb X) _ := projT2 _term_existsb.
+  Instance term_existsb (X : Type) `{encodable X} : computableTime' (@existsb X) _ := projT2 _term_existsb.
 
   (* forallb *)
-  Definition forallb_time {X : Type} `{registered X} (p : (X -> nat) * list X) := let '(fT, l) := p in
+  Definition forallb_time {X : Type} `{encodable X} (p : (X -> nat) * list X) := let '(fT, l) := p in
     sumn (map fT l) + |l| + 1.
-  Fact _term_forallb (X : Type) `{registered X} : { time : UpToC forallb_time & computableTime' (forallb (A := X)) (fun f fT => (1, fun L _ => (time (callTime fT, L), tt)))}.
+  Fact _term_forallb (X : Type) `{encodable X} : { time : UpToC forallb_time & computableTime' (forallb (A := X)) (fun f fT => (1, fun L _ => (time (callTime fT, L), tt)))}.
   Proof.
     exists_const c1.
     { extract. solverec; cycle 1. instantiate (c1 := 15). all: lia. }
     smpl_upToC_solve.
   Qed.
-  Instance term_forallb (X : Type) `{registered X} : computableTime' (@forallb X) _ := projT2 _term_forallb.
+  Instance term_forallb (X : Type) `{encodable X} : computableTime' (@forallb X) _ := projT2 _term_forallb.
 
   (* evalClause *)
   Definition evalClause_time (p : assgn * clause) := let (a, C) := p in (|C| + 1) * ((|a|) + 1) * (maxSize a + 1).
@@ -644,16 +644,16 @@ Section uptoc_mixed.
 
   (** We obtain that SAT is in NP *)
   Import Complexity.L.Complexity.NP.
-  Lemma sat_NP : inNP (unrestrictedP SAT).
+  Lemma sat_NP : inNP SAT.
   Proof.
-    apply inNP_intro with (R:= fun (a : { cnf | True}) => sat_verifier (proj1_sig a)).
+    apply inNP_intro with (R:= sat_verifier).
     1 : apply linDec_polyTimeComputable.
     2 : {
       exists (fun n => n * (1 + c__listsizeCons + c__listsizeNil)).
       3, 4: smpl_inO.
       - unfold SAT, sat_verifier.
-        intros (cn & ?) a H.  cbn. exists a; tauto.
-      - unfold SAT, sat_verifier. intros (cn & ?) [a H]. exists (compressAssignment a cn). split.
+        intros cn a H.  cbn. exists a; tauto.
+      - unfold SAT, sat_verifier. intros cn [a H]. exists (compressAssignment a cn). split.
         + apply compressAssignment_cnf_equiv in H. cbn. apply H.
         + apply assignment_small_size. cbn. apply compressAssignment_small.
     }
@@ -664,7 +664,7 @@ Section uptoc_mixed.
         cbn. intros [N a] _. split; [ | easy]. rewrite !UpToC_le. unfold sat_verifierb_time.
         rewpoly evalCnf_poly. monopoly (evalCnf_poly). 2: { instantiate (1 := size (enc (N, a))). rewrite !size_prod. cbn; lia. }
         set (L_facts.size _). [p]: intros n. and_solve p.
-      + intros [N a] ?. cbn. apply sat_verifierb_correct.
+      + intros [N a]. cbn. apply sat_verifierb_correct.
     }
     all: subst p; smpl_inO.
   Qed.
@@ -715,7 +715,7 @@ Import GenericNary UpToCNary.
 Import CRelationClasses CMorphisms.
 
 (* TODO MOVE :tidy up *)
-Lemma pTC_length X `{registered X}: polyTimeComputable (@length X).
+Lemma pTC_length X `{encodable X}: polyTimeComputable (@length X).
 Proof.
   evar (time:nat -> nat).
   eexists time.
@@ -732,7 +732,7 @@ Smpl Add 1 simple apply pTC_length : polyTimeComputable.
 
 Section cons.
 
-  Lemma pTC_cons X Y `{regX:registered X} `{regY:registered Y} f (g : X -> list Y):
+  Lemma pTC_cons X Y `{regX:encodable X} `{regY:encodable Y} f (g : X -> list Y):
     polyTimeComputable f -> polyTimeComputable g -> polyTimeComputable (fun (x:X) => f x :: g x).
   Proof.
     intros. specialize termT_cons with (X:=Y) as H.
@@ -751,7 +751,7 @@ Smpl Add 5 lazymatch goal with
            end: polyTimeComputable.
 
 
-Lemma mono_map_time X `{registered X} (f: nat -> nat) (xs: list X):
+Lemma mono_map_time X `{encodable X} (f: nat -> nat) (xs: list X):
   monotonic f
   -> sumn (map (fun x => f (L_facts.size (enc x))) xs) <= length xs * f (L_facts.size (enc xs)).
 Proof.
@@ -762,7 +762,7 @@ Proof.
   rewrite (Hf (L_facts.size (enc xs)) (L_facts.size (enc a) + L_facts.size (enc xs) + 5)). 2:nia. reflexivity.
 Qed.
 
-Lemma pTC_map X Y `{registered X} `{registered Y} (f:X -> Y):
+Lemma pTC_map X Y `{encodable X} `{encodable Y} (f:X -> Y):
   polyTimeComputable f -> polyTimeComputable (map f).
 Proof.
   intros Hf.
@@ -786,7 +786,7 @@ Proof.
 Qed.
 
 Remove Hints PolyBounds.term_concat : typeclass_instances.
-Lemma pTC_concat X Y `{registered X} `{registered Y} (f:X -> list (list Y)):
+Lemma pTC_concat X Y `{encodable X} `{encodable Y} (f:X -> list (list Y)):
   polyTimeComputable f -> polyTimeComputable (fun x => concat (f x)).
 Proof.
   intros Hf.
@@ -830,7 +830,7 @@ Proof.
   1,2:unfold size;smpl_inO.
 Qed.
 
-Lemma pTC_app X Y `{registered X} `{registered Y} (f1 f2:X -> list Y):
+Lemma pTC_app X Y `{encodable X} `{encodable Y} (f1 f2:X -> list Y):
   polyTimeComputable f1 -> polyTimeComputable f2 -> polyTimeComputable (fun x => f1 x ++ f2 x).
 Proof.
   intros Hf1 Hf2.
@@ -858,7 +858,7 @@ Import Datatypes.LProd Datatypes.LBool Datatypes.Lists.
 Import Lists.
 Section fixX.
     Variable (X : Type).
-    Context {H : registered X}.
+    Context {H : encodable X}.
     (*Definition maxSize (l : list X) := maxl (map (fun x => size (enc x)) l). *)
     (*Lemma maxSize_enc_size (l : list X) : maxSize l<= size (enc l). *)
     (*Proof. *)
@@ -872,7 +872,7 @@ Section fixX.
     Context (eqbX : X -> X -> bool).
     Context {Xeq : eqbClass eqbX}.
     Context {XeqbComp : eqbCompT X}.
-    Lemma pTC_list_in_decb (Y : Type) `{registered Y} (f1 : Y -> list X) (f2 : Y -> X) :
+    Lemma pTC_list_in_decb (Y : Type) `{encodable Y} (f1 : Y -> list X) (f2 : Y -> X) :
       polyTimeComputable f1
       -> polyTimeComputable f2
       -> polyTimeComputable (fun y => @list_in_decb X eqbX (f1 y) (f2 y)).
@@ -900,7 +900,7 @@ Section fixX.
     Qed.
 
 
-    Lemma pTC_list_inc_decb (Y : Type) `{registered Y} (f1 f2: Y -> list X):
+    Lemma pTC_list_inc_decb (Y : Type) `{encodable Y} (f1 f2: Y -> list X):
       polyTimeComputable f1
       -> polyTimeComputable f2
       -> polyTimeComputable (fun y => @list_incl_decb X eqbX (f1 y) (f2 y)).
@@ -940,7 +940,7 @@ Section fixX.
   Import SAT.
 
   (* evalVar *)
-  Lemma pTC_evalVar (Y : Type) `{registered Y} (f1 : Y -> assgn) (f2 : Y -> var) :
+  Lemma pTC_evalVar (Y : Type) `{encodable Y} (f1 : Y -> assgn) (f2 : Y -> var) :
     polyTimeComputable f1
     -> polyTimeComputable f2
     -> polyTimeComputable (fun y => evalVar (f1 y) (f2 y)).
@@ -965,7 +965,7 @@ Section fixX.
 
 
   (* evalLiteral *)
-  Lemma pTC_evalLiteral (Y : Type) `{registered Y} (f1 : Y -> assgn) (f2 : Y -> literal) :
+  Lemma pTC_evalLiteral (Y : Type) `{encodable Y} (f1 : Y -> assgn) (f2 : Y -> literal) :
     polyTimeComputable f1
     -> polyTimeComputable f2
     -> polyTimeComputable (fun y => evalLiteral (f1 y) (f2 y)).
@@ -983,7 +983,7 @@ Section fixX.
   Smpl Add eapply pTC_evalLiteral : polyTimeComputable.
 
 
-  (*Lemma pTC_existsb (X : Type) `{registered X} (f : X -> bool) : *)
+  (*Lemma pTC_existsb (X : Type) `{encodable X} (f : X -> bool) : *)
     (*polyTimeComputable f *)
     (*-> polyTimeComputable (existsb f). *)
 
@@ -992,7 +992,7 @@ Section fixX.
     Naturally, we'd use a cascaded function, but that isn't possible with polyTimeComputable...
   *)
   (* thus, the following lemma will not suffice for pTC_evalClause below *)
-  Lemma pTC_existsb' (X : Type) `{registered X} (f : X -> bool) :
+  Lemma pTC_existsb' (X : Type) `{encodable X} (f : X -> bool) :
     polyTimeComputable f
     -> polyTimeComputable (existsb f).
   Abort.
@@ -1013,7 +1013,7 @@ Section fixX.
 
   (*-------*)
   Lemma polyTimeComputableHO
-    (X Y Z W E : Type) `{registered X} `{registered Y} `{registered Z} `{registered W} `{registered E}
+    (X Y Z W E : Type) `{encodable X} `{encodable Y} `{encodable Z} `{encodable W} `{encodable E}
     (g : (X -> Y) -> Z -> W)
     (f1 : E -> X -> Y)
     (f2 : E -> Z) :
@@ -1033,7 +1033,7 @@ Section fixX.
 
 
   Lemma polyTimeComputable_compositionHO
-    (X Y Z1 Z2 Z3 : Type) `{registered X} `{registered Y} `{registered Z1} `{registered Z2} `{registered Z3}
+    (X Y Z1 Z2 Z3 : Type) `{encodable X} `{encodable Y} `{encodable Z1} `{encodable Z2} `{encodable Z3}
     (f1 : X * Y -> Z1) (f2 : Y -> Z2) (g : (X -> Z1) -> Z2 -> Z3):
     polyTimeComputable f1
     -> polyTimeComputable f2
@@ -1052,7 +1052,7 @@ Section fixX.
 
 
   Import LBool.
-  Lemma pTC_existsb (X : Type) `{registered X} (Y: Type) `{registered Y} (f1 : X*Y -> bool) (f2 : Y -> list X) :
+  Lemma pTC_existsb (X : Type) `{encodable X} (Y: Type) `{encodable Y} (f1 : X*Y -> bool) (f2 : Y -> list X) :
     polyTimeComputable f1
     -> polyTimeComputable f2
     -> polyTimeComputable (fun y => existsb (A := X) (fun x => f1 (x, y)) (f2 y)).
@@ -1081,7 +1081,7 @@ Section fixX.
 
 
   (* NOTE: if we setup the pTC_existsb stuff + assisting lemmas correctly, this lemma here should ideally directly follow by composition! *)
-  Lemma pTC_evalClause (Y : Type) `{registered Y} (f1 : Y -> assgn) (f2 : Y -> clause) :
+  Lemma pTC_evalClause (Y : Type) `{encodable Y} (f1 : Y -> assgn) (f2 : Y -> clause) :
     polyTimeComputable f1
     -> polyTimeComputable f2
     -> polyTimeComputable (fun y => evalClause (f1 y) (f2 y)).

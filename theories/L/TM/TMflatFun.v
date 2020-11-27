@@ -11,12 +11,11 @@ From Undecidability Require Import Functions.FinTypeLookup.
 Lemma size_flatTape (sig : finType) (t' : tape sig):
   size (enc (mapTape index t')) <= sizeOfTape t' * (Cardinality.Cardinality sig * 4+9) + 17.
 Proof.
-  unfold enc, registered_tape_enc,sizeOfTape,tapeToList.
-  destruct t';cbn [mapTape tape_enc size length].
+  unfold enc, encodable_tape_enc,sizeOfTape,tapeToList.
+  destruct t';cbn [mapTape size length].
   all:ring_simplify. nia.
   all:setoid_rewrite size_nat_enc.
   all:simpl_list;cbn [length].
-  all:change (list_enc (X:=nat)) with (@enc (list nat) _).
   all:setoid_rewrite size_list.
   
   all: rewrite !sumn_le_bound with (c:=Cardinality.Cardinality sig*4 + 9).

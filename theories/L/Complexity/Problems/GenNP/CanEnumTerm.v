@@ -48,7 +48,8 @@ Proof.
      subst n0. rewrite size_list. rewrite <- Nat.le_add_r.
      apply sumn_map_le_pointwise. intros;now rewrite size_Tok_enc_r.
    }
-   all:unfold enc;cbn. all: change (list_enc (X:=Tok)) with (@enc (list Tok) _). all:rewrite (size_list x); now unfold c__listsizeNil.
+   all:unfold fsize.
+   all:do 2 (unfold enc at 1;cbn). all:rewrite (size_list x);cbn; unfold c__listsizeNil;easy.
   }
   all:unfold fsize;smpl_inO.
 Qed.

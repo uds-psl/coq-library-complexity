@@ -1,18 +1,18 @@
 From Undecidability.L Require Import L.
 From Undecidability.L.Datatypes Require Import LProd LTerm LBool.
-From Complexity.L.Complexity Require Import NP Synthetic Monotonic CanEnumTerm_def. 
+From Complexity.L.Complexity Require Import NP Synthetic Monotonic CanEnumTerm_def Subtypes. 
 From Complexity.L.Complexity.Problems.GenNP Require Import GenNP.
 From Undecidability.L.Functions Require Import Size.
 
 Import Nat.
 Import L_Notations.
 
-Lemma NPhard_GenNP X__cert `{R__cert : registered X__cert}:
+Lemma NPhard_GenNP X__cert `{R__cert : encodable X__cert}:
   canEnumTerms X__cert->  NPhard (restrictBy (LHaltsOrDiverges X__cert) (GenNP X__cert)).
 Proof.
   intros enumTerm'.
   destruct (canEnumTerms_compPoly enumTerm') as (enumTerm&[comp1]&[comp2]&[comp3]);clear enumTerm'.
-  intros X reg__X regP__X vX Q [R R__comp' R__spec'(*[p Rsound Rcomplete p__poly p__mono]*)].
+  intros X reg__X regP__X Q [R R__comp' R__spec'(*[p Rsound Rcomplete p__poly p__mono]*)].
   destruct (polyCertRel_compPoly R__spec') as (R__spec&[pR__comp]);clear R__spec'.
   destruct (inTimePoly_compTime R__comp') as (timeR&[timeR__comp]&[R__comp]&poly_t__R&mono_t__R);clear R__comp'.
   (*intros X reg__X regP__X vX Q [ R R__dec R__spec].
@@ -38,9 +38,9 @@ Proof.
   evar (mSize : nat -> nat). [mSize]:intros n0. evar (steps : nat -> nat). [steps]:intros n0.
   pose (g:= fun (x:X) => (lam (trueOrDiverge (extT f (enc x) 0)), mSize (size (enc x))(*f__Rbal' (size (enc x))*)
                    ,steps (size (enc x))(*t__R' (size (enc x) + f__Rbal' (size (enc x))+4)+9*))).
-  apply reducesPolyMO_intro with (f:= g);cbn [fst snd].
+  apply reducesPolyMO_intro_restrictBy_out with (f:= g);cbn [fst snd].
   2:{
-    intros x x__valid. remember (g x) as x0 eqn:eqx0. destruct x0 as ((t0,maxSize0),steps0).
+    intros x. remember (g x) as x0 eqn:eqx0. destruct x0 as ((t0,maxSize0),steps0).
     unfold g in eqx0. injection eqx0. intros Hx0 Hsize0 Hsteps0. clear eqx0.
     cbn [GenNP restrictBy fst snd].
     unfold LHaltsOrDiverges.
@@ -72,7 +72,7 @@ Proof.
       }
       rewrite eqb in Ht0''.
       assert (H:=eqb).
-      unfold f in H. unshelve rewrite <- correct__decInTime in H. now eassumption.
+      unfold f in H. unshelve rewrite <- correct__decInTime in H.
       hnf in H.
       replace t with I in *. clear t.
       2:{eapply eval_unique. 2:now eapply evalIn_eval_subrelation.
@@ -115,8 +115,8 @@ Proof.
         {Lsimpl. unfold f. rewrite eqf__term.
          erewrite (complete__decInTime R__comp). 2:cbn;easy. Lsimpl. Lreflexivity. }
         subst steps0 steps. fold n0. easy.
-     *intros (c&size__c&?&R'). eapply (sound__pCR R__spec).
-      apply (sound__decInTime (P__dec:=R__comp) (x:=exist _ (x,_) _)). cbn.
+     *intros (c&size__c&?&R'). eapply (sound__pCR R__spec). 
+      eapply (sound__decInTime (P__dec:=R__comp) (x:=(x,_))). cbn.
       eapply trueOrDiverge_eval with (t:=x0).
       eapply equiv_eval_proper. 2:reflexivity.
       {unfold f in Ht0. specialize (Ht0 _ size__c). apply redLe_star_subrelation in  Ht0.  rewrite <- Ht0.

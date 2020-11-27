@@ -120,13 +120,14 @@ Hint Resolve formula_enc_correct : Lrewrite.
 
 Lemma formula_enc_size f: size (enc f) = match f with 
   | Ftrue => 10
-  | Fvar v => 10 + size (LNat.nat_enc v )
+  | Fvar v => 10 + size (enc v )
   | Fand f1 f2 => 10 + size (enc f1) + size (enc f2) 
   | For f1 f2 => 9 + size (enc f1) + size (enc f2) 
   | Fneg f => 7 + size (enc f) 
   end. 
-Proof. 
-  unfold enc; destruct f; cbn; try lia. 
+Proof.
+  set (g:=enc (X:= formula)). unfold enc in g;cbn in g.
+  destruct f; cbn; try lia. 
 Qed. 
 
 Instance term_Fvar : computableTime' Fvar (fun v _ => (1, tt)). 

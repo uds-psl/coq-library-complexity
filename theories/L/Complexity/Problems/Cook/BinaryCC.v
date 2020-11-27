@@ -84,7 +84,7 @@ Defined.
 
 Lemma BinaryCC_enc_size (fpr : BinaryCC) : size (enc fpr) = size(enc (offset fpr)) + size (enc (width fpr)) + size (enc (init fpr)) + size (enc (cards fpr)) + size (enc (final fpr)) + size (enc (steps fpr)) + 8. 
 Proof. 
-  destruct fpr. cbn. unfold enc. cbn. nia.
+  destruct fpr. cbn. unfold enc at 1;cbn. nia.
 Qed. 
 
 

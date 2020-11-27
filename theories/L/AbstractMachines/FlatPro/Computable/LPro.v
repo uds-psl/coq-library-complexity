@@ -31,6 +31,6 @@ Lemma size_Tok_enc t: size (enc t) =
                         | retT => 5
                         end.
 Proof.
-  change (enc t) with (token_enc t).
+  unfold enc;cbn.
   destruct t;cbn. rewrite size_nat_enc; unfold c__natsizeO, c__natsizeS. all:ring_simplify. all:easy.
 Qed.

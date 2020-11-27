@@ -11,7 +11,7 @@ Definition initLMGen s c : (list (nat*list Tok)*list (nat*list Tok)*list (option
 
 Section fixX.
   Local Unset Implicit Arguments.
-  Context (X:Type) `{R__X : registered X}.   
+  Context (X:Type) `{R__X : encodable X}.   
 
   Definition LMGenNP : list Tok*nat*nat -> Prop:= 
                (fun '(P, maxSize, k (*in unary*)) =>

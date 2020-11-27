@@ -20,12 +20,12 @@ Da der simulierte Term evtl aber mit groesserer Schranke haelt muesste man dann 
 From Undecidability.TM Require Import TM CodeTM.
 From Undecidability Require Import LFinType.
 
-From Complexity Require Import NP L_to_LM LM_to_mTM mTM_to_singleTapeTM TMGenNP_fixed_mTM.
+From Complexity Require Import NP L_to_LM LM_to_mTM mTM_to_singleTapeTM TMGenNP_fixed_mTM Subtypes.
 
 Import LNat.
 Lemma GenNP_to_TMGenNP:
   restrictBy (LHaltsOrDiverges (list bool)) (GenNP (list bool))
-             ⪯p unrestrictedP (TMGenNP_fixed_singleTapeTM (projT1 (M_multi2mono.M__mono (projT1 M.M)))).
+             ⪯p TMGenNP_fixed_singleTapeTM (projT1 (M_multi2mono.M__mono (projT1 M.M))).
 Proof.
   eapply reducesPolyMO_transitive. now apply GenNP_to_LMGenNP.
   eapply reducesPolyMO_transitive. now apply LMGenNP_to_TMGenNP_mTM.

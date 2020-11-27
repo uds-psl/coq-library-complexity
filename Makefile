@@ -3,7 +3,7 @@ all: Makefile.coq
 
 depsopam:
 	opam repo add coq-released https://coq.inria.fr/opam/released
-	opam pin add -y coq-library-undecidability https://github.com/fakusb/coq-library-undecidability.git#6942e74eaa9f40dcccf19968c355e081768b0b1b
+	opam pin add -y coq-library-undecidability https://github.com/fakusb/coq-library-undecidability.git#620eb60d05f047691c49f13fb751dbdf15380cea
 	opam install . --deps-only
 
 VFILES_LIB_UNDEC = $(shell grep -P '^(TM|(L(?!\/Reductions\/)))(\/[^\/\s]+)*\.v' coq-library-undecidability/theories/_CoqProject 2> /dev/null)

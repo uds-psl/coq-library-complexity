@@ -3,7 +3,7 @@ From Undecidability.L Require Import Tactics.LTactics.
 From Complexity.L.Complexity Require Import Problems.kSAT PolyBounds NP Synthetic. 
 From Undecidability.L.Datatypes Require Import LBool LNat Lists LProd. 
 
-Lemma kSAT_to_SAT (k : nat): reducesPolyMO (unrestrictedP (kSAT k)) (unrestrictedP SAT). 
+Lemma kSAT_to_SAT (k : nat): reducesPolyMO (kSAT k) SAT. 
 Proof. 
   destruct k. 
   { (* always return a trivial no-instance if k = 0 *)
@@ -13,14 +13,14 @@ Proof.
       + smpl_inO. 
       + smpl_inO. 
       + exists (fun n => size (enc [[(true, 0)]; [(false, 0)]])); [solverec | smpl_inO | smpl_inO].
-    - intros N ?. cbn. exists Logic.I. unfold kSAT. 
+    - intros N. cbn. unfold kSAT. 
       split; [lia | ]. intros [a H]. 
       unfold satisfies, evalCnf in H; cbn in H. 
       destruct evalVar; cbn in H; congruence. 
   } 
 
   (*check if it is a kCNF. if so, the reduction the SAT instance is the identity. otherwise, return a negative SAT instance*)
-  apply reducesPolyMO_intro_unrestricted with (f := fun N => if kCNF_decb (S k) N then N else [[(true, 0)]; [(false, 0)]]) . 
+  apply reducesPolyMO_intro with (f := fun N => if kCNF_decb (S k) N then N else [[(true, 0)]; [(false, 0)]]) . 
   - evar (f : nat -> nat). exists f. 
     + extract. solverec.
       all: rewrite kCNF_decb_time_bound. 
@@ -43,9 +43,9 @@ Proof.
       destruct evalVar; cbn in H; congruence. 
 Qed. 
 
-Lemma inNP_kSAT (k : nat) : inNP (unrestrictedP (kSAT k)). 
+Lemma inNP_kSAT (k : nat) : inNP (kSAT k). 
 Proof.
-  eapply red_inNP with (Q := unrestrictedP SAT). 
+  eapply red_inNP with (Q := SAT). 
   - apply kSAT_to_SAT. 
   - apply sat_NP. 
 Qed. 

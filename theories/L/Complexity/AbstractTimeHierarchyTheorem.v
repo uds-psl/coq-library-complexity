@@ -21,7 +21,7 @@ Import HOAS_Notations.
 
 (** * Time Hierarchy theorem *)
 
-Lemma computesTime_evalLe X Y `(registered X) `(registered Y) (f:X -> Y) s__f (t__f : X -> unit -> (nat*unit)):
+Lemma computesTime_evalLe X Y `(encodable X) `(encodable Y) (f:X -> Y) s__f (t__f : X -> unit -> (nat*unit)):
   computesTime _ f s__f t__f
   -> forall (x:X), s__f (enc x) ⇓(<= fst (t__f x tt)) enc (f x).
 Proof.
@@ -43,8 +43,7 @@ Section TimeHierarchy_Parametric.
 
   Definition L__f (w : term * nat) :=~closed (fst w) \/ start w ⇓(<=f(size (enc w))) enc false.
 
-  
-  Lemma L_A_notIn_f : ~ (unrestrictedP L__f) ∈Timeo f.
+  Lemma L_A_notIn_f : ~ L__f ∈Timeo f.
   Proof.
     intros (t__o&[[fdec fdec__intT Hf]]&Ht__o).
     specialize (Ht__o 1) as (n0&Hn0). setoid_rewrite Nat.mul_1_l in Hn0.
@@ -61,7 +60,7 @@ Section TimeHierarchy_Parametric.
       unfold c__natsizeS, c__natsizeO. lia.
     }
     clear Hn0.
-    specialize (Hf w Logic.I) as f_dec_spec. cbn in f_dec_spec.
+    specialize (Hf w) as f_dec_spec. cbn in f_dec_spec.
     unfold L__f in f_dec_spec. cbn in *. unfold w in f_dec_spec at 1 3.  cbn [start fst snd] in *. fold w in f_dec_spec.
     clearbody w.
 
@@ -127,16 +126,12 @@ Section TimeHierarchy_Parametric.
                                                 else 0) + k * 221,tt)).
   Proof.
     unfold U_preproc.
-    change (@enc term _) with term_enc.
-    change (@enc nat _) with nat_enc.
     extract. recRel_prettify2.
     all:cbn in H1; rewrite H1 in H0.
     all:try discriminate H0;clear H0.
     all:rewrite size_prod. all:cbn [fst snd].
     all:rewrite size_term_enc_r.
     2:rewrite (size_nat_enc_r b) at 1.
-    2:change (@enc term _) with term_enc.
-    2:change (@enc nat _) with nat_enc.
     all: unfold add_time, c__add, c__add1. 
     all:try lia.
   Qed.
@@ -268,7 +263,7 @@ Section TimeHierarchy_Parametric.
     forall maxVar size x, x <= t__E maxVar size x. 
   
   Lemma LA_In_f_times_step:
-    unrestrictedP L__f ∈TimeO (fun n => t__E n (2*n) (f n)).
+    L__f ∈TimeO (fun n => t__E n (2*n) (f n)).
   Proof.
     (* intros H_t__E H_t__step. *)
     eexists (fun n => fT n + t__E n (2*n) (f n) + n * 221 + 12). split. split.
@@ -284,11 +279,11 @@ Section TimeHierarchy_Parametric.
       *Lia.lia.
       *rewrite largestVar_start. rewrite size_prod.
        rewrite largestVar_size.
-       rewrite size_term_enc_r. change (term_enc) with (@enc term _). cbn [fst].
+       rewrite size_term_enc_r. cbn [fst].
        Lia.lia.
       *rewrite size_prod. cbn [start fst snd size].
-       rewrite size_prod. cbn [fst snd]. rewrite size_term_enc_r with (s:=s). change (term_enc) with (@enc term _). Lia.lia. 
-    -intros w ?. cbn. rewrite <- spec_L__f.
+       rewrite size_prod. cbn [fst snd]. rewrite size_term_enc_r with (s:=s). Lia.lia. 
+    -intros w. cbn. rewrite <- spec_L__f.
      eapply reflect_iff. apply U_reflects_U_spec.
     -repeat apply inO_add_l.
      +etransitivity. exact f_TC.

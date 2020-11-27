@@ -446,7 +446,7 @@ Section extraction.
   (** extraction of list_in_decb *)
   Section fixXeq. 
     Variable (X : Type).
-    Context {H : registered X}.
+    Context {H : encodable X}.
 
     Context (eqbX : X -> X -> bool).
     Context {Xeq : eqbClass eqbX}. 
@@ -496,26 +496,26 @@ Section extraction.
   Instance term_evalLiteral : computableTime' evalLiteral _ := projT2 _term_evalLiteral. 
 
   (* existsb *)
-  Definition existsb_time {X : Type} `{registered X} (p : (X -> nat) * list X) := let '(fT, l) := p in 
+  Definition existsb_time {X : Type} `{encodable X} (p : (X -> nat) * list X) := let '(fT, l) := p in 
     sumn (map fT l) + |l| + 1. 
-  Fact _term_existsb (X : Type) `{registered X} : { time : UpToC existsb_time & computableTime' (existsb (A := X)) (fun f fT => (1, fun L _ => (time (callTime fT, L), tt)))}. 
+  Fact _term_existsb (X : Type) `{encodable X} : { time : UpToC existsb_time & computableTime' (existsb (A := X)) (fun f fT => (1, fun L _ => (time (callTime fT, L), tt)))}. 
   Proof. 
     exists_const c1. 
     { extract. solverec; cycle 1. instantiate (c1 := 15). all: lia. } 
     smpl_upToC_solve. 
   Qed.
-  Instance term_existsb (X : Type) `{registered X} : computableTime' (@existsb X) _ := projT2 _term_existsb. 
+  Instance term_existsb (X : Type) `{encodable X} : computableTime' (@existsb X) _ := projT2 _term_existsb. 
 
   (* forallb *)
-  Definition forallb_time {X : Type} `{registered X} (p : (X -> nat) * list X) := let '(fT, l) := p in 
+  Definition forallb_time {X : Type} `{encodable X} (p : (X -> nat) * list X) := let '(fT, l) := p in 
     sumn (map fT l) + |l| + 1. 
-  Fact _term_forallb (X : Type) `{registered X} : { time : UpToC forallb_time & computableTime' (forallb (A := X)) (fun f fT => (1, fun L _ => (time (callTime fT, L), tt)))}. 
+  Fact _term_forallb (X : Type) `{encodable X} : { time : UpToC forallb_time & computableTime' (forallb (A := X)) (fun f fT => (1, fun L _ => (time (callTime fT, L), tt)))}. 
   Proof. 
     exists_const c1. 
     { extract. solverec; cycle 1. instantiate (c1 := 15). all: lia. } 
     smpl_upToC_solve. 
   Qed.
-  Instance term_forallb (X : Type) `{registered X} : computableTime' (@forallb X) _ := projT2 _term_forallb. 
+  Instance term_forallb (X : Type) `{encodable X} : computableTime' (@forallb X) _ := projT2 _term_forallb. 
 
   (* evalClause *)
   Definition evalClause_time (p : assgn * clause) := let (a, C) := p in (|C| + 1) * ((|a|) + 1) * (maxSize a + 1). 
@@ -590,16 +590,16 @@ End extraction.
        
 (** We obtain that SAT is in NP *)
 Require Import Complexity.L.Complexity.NP. 
-Lemma sat_NP : inNP (unrestrictedP SAT).
+Lemma sat_NP : inNP SAT.
 Proof.
-  apply inNP_intro with (R:= fun (a : { cnf | True}) => sat_verifier (proj1_sig a)). 
+  apply inNP_intro with (R:= sat_verifier). 
   1 : apply linDec_polyTimeComputable.
   2 : {
     exists (fun n => n * (1 + c__listsizeCons + c__listsizeNil)). 
     3, 4: smpl_inO.
     - unfold SAT, sat_verifier.
-      intros (cn & ?) a H.  cbn. exists a; tauto.  
-    - unfold SAT, sat_verifier. intros (cn & ?) [a H]. exists (compressAssignment a cn). split. 
+      intros cn a H.  cbn. exists a; tauto.  
+    - unfold SAT, sat_verifier. intros cn [a H]. exists (compressAssignment a cn). split. 
       + apply compressAssignment_cnf_equiv in H. cbn. apply H.
       + apply assignment_small_size. cbn. apply compressAssignment_small. 
   }
@@ -610,7 +610,7 @@ Proof.
       cbn. intros [N a] _. split; [ | easy]. rewrite !UpToC_le. unfold sat_verifierb_time. 
       rewpoly evalCnf_poly. monopoly (evalCnf_poly). 2: { instantiate (1 := size (enc (N, a))). rewrite !size_prod. cbn; lia. }
       set (L_facts.size _). [p]: intros n. and_solve p.
-    + intros [N a] ?. cbn. apply sat_verifierb_correct.
+    + intros [N a]. cbn. apply sat_verifierb_correct.
   } 
   all: subst p; smpl_inO. 
 Qed.

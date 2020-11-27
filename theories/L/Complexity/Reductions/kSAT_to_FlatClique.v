@@ -555,9 +555,9 @@ Qed.
 (** full reduction statement *)
 (** This is the flat version of the statement, including the polynomial running time. 
 The correctness statement is Lemma [kSAT_reduces_to_Clique] *) 
-Lemma kSAT_to_FlatClique_poly k: (unrestrictedP (kSAT k)) ⪯p (unrestrictedP FlatClique). 
+Lemma kSAT_to_FlatClique_poly k: kSAT k ⪯p FlatClique. 
 Proof. 
-  eapply reducesPolyMO_intro_unrestricted with (f := (reduction k)). 
+  eapply reducesPolyMO_intro with (f := (reduction k)). 
   - evar (f : nat -> nat). exists f. 
     + eexists (extT (reduction k)). eapply computesTime_timeLeq; [ | apply term_reduction].
       cbn. intros N _. split; [ | easy]. unfold reduction_time. 

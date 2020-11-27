@@ -19,13 +19,13 @@ Unset Printing Coercions.
 
 (*From Undecidability Require Import MultiUnivTimeSpaceSimulation. *)
 
-From Complexity.L.Complexity Require Import TMGenNP_fixed_mTM M_multi2mono.
+From Complexity.L.Complexity Require Import TMGenNP_fixed_mTM M_multi2mono Subtypes.
 
 
 Section LMGenNP_to_TMGenNP_mTM.
 
 
-  Context (sig:finType) (n:nat) `{R__sig : registered sig}  (M : TM sig (S n)).
+  Context (sig:finType) (n:nat) `{R__sig : encodable sig}  (M : TM sig (S n)).
   Let M__mono := M__mono M.
   
   Local Arguments Canonical_Rel : simpl never. 
@@ -35,7 +35,7 @@ Section LMGenNP_to_TMGenNP_mTM.
   
   Lemma TMGenNP_mTM_to_TMGenNP_singleTM :
     restrictBy (HaltsOrDiverges_fixed_mTM M) (TMGenNP_fixed_mTM M)
-               ⪯p unrestrictedP (TMGenNP_fixed_singleTapeTM (projT1 M__mono)).
+               ⪯p TMGenNP_fixed_singleTapeTM (projT1 M__mono).
   Proof.
     subst M__mono.
     evar (f__steps : nat*nat*nat -> nat). evar (f__nice : nat*nat*nat -> nat).
@@ -43,13 +43,13 @@ Section LMGenNP_to_TMGenNP_mTM.
     unfold TMGenNP_fixed_mTM. unfold TMGenNP_fixed_singleTapeTM. cbn.
     set (t__start:=fun (ts : tapes sig n) => inl START::concat (map (fun t => inr (sigList_cons)::map (fun s => inr (sigList_X s)) (encode_tape t)) (Vector.to_list ts))++[inr (sigList_cons)]).
     set (t__size := fun maxSize => 3 + if eqb 0 maxSize then 0 else 1 + maxSize).
-    eapply reducesPolyMO_intro_restrictBy with
+    eapply reducesPolyMO_intro_restrictBy_in with
         (f:=fun '(ts,maxSize,steps) => (t__start ts
                                      ,t__size maxSize
                                      ,  c__leUpToC (H:=Hf__nice) * f__nice (steps,sizeOfmTapes ts,maxSize)+ 3)).
     2:{ unfold execTM.
         intros [[v maxSize] steps]. unfold HaltsOrDiverges_fixed_mTM. intros H_HaltOrDiv.
-        split. easy. split.
+        split.
         -intros (t1&Ht1&s__end&Hs__end).
          eexists (map (fun c => inr (sigList_X c)) (encode_tape t1) ++ [inr sigList_nil;inl STOP]). 
          split. 1:{ cbn - [plus]. autorewrite with list. rewrite sizeOfTape_encodeTape. cbn - [Nat.eqb].

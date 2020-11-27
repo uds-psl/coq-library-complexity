@@ -341,14 +341,14 @@ Qed.
 
 
 (** ** NP containment *)
-Lemma FlatClique_in_NP : inNP (unrestrictedP FlatClique). 
+Lemma FlatClique_in_NP : inNP FlatClique. 
 Proof. 
-  eapply inNP_intro with (R := fun (i : { p : fgraph * nat | True}) l => let (G, k) := proj1_sig i in fgraph_wf G /\ isfKClique k G l). 
+  eapply inNP_intro with (R := fun '(G, k) l =>  fgraph_wf G /\ isfKClique k G l). 
   1: apply linDec_polyTimeComputable. 
   2: { 
     eexists. 
-    - intros ((G & k) & ?) cert. cbn. firstorder.  
-    - intros ((G & k) & ?). cbn. intros (l & H1). exists l. split; [apply H1 | ]. 
+    - intros (G & k) cert. cbn. firstorder.  
+    - intros (G & k). cbn. intros (l & H1). exists l. split; [apply H1 | ]. 
       destruct G as (V & E). destruct H1 as [_ ((H1 & H2 & _) & _)].  
       enough (size (enc l) <= size (enc (seq 0 V))) as H3. 
       { rewrite H3. rewrite list_size_of_el. 
@@ -371,7 +371,7 @@ Proof.
       poly_mono isfKClique_decb_poly. 2: {instantiate (1 := size (enc (a, b1, b0, b))). rewrite !size_prod; cbn. lia. }
       poly_mono fgraph_wf_decb_poly. 2: {instantiate (1 := size (enc (a, b1, b0, b))). rewrite !size_prod; cbn. lia. }
       instantiate (1 := fun n => _). cbn. generalize (size (enc (a, b1, b0, b))). reflexivity. 
-    + intros ((G & k) & l) ?. cbn. rewrite andb_true_iff. rewrite fgraph_wf_decb_iff. 
+    + intros ((G & k) & l). cbn. rewrite andb_true_iff. rewrite fgraph_wf_decb_iff. 
       split. 
       * intros [H1 H2]; split; [apply H1 | rewrite isfKClique_decb_iff; easy]. 
       * intros [H1 H2]; split; [apply H1 | rewrite <- isfKClique_decb_iff; easy ]. 

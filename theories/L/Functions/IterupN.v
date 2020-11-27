@@ -31,7 +31,7 @@ Proof.
   intros H. rewrite iterupN_eq. destruct (N.ltb_spec0 i max). all:easy.
 Qed.
 
-(* Instance term_iterupN X `{H:registered X} : *)
+(* Instance term_iterupN X `{H:encodable X} : *)
 (*   computableTime' (iterupN (X:=X)) (fun i (_:unit) => *)
 (*                                      (5,fun max (_:unit) => *)
 (*                                           (1,fun x (_:unit) => *)
@@ -104,7 +104,7 @@ Qed.
 
 Import HOAS_Notations.
 
-Instance term_iterupN X `{H:registered X} :
+Instance term_iterupN X `{H:encodable X} :
   computable (iterupN (X:=X)).
 Proof.
   Import N.

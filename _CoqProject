@@ -106,13 +106,14 @@ theories/L/TM/TapeDecode.v
 theories/L/TM/TMflatten.v
 theories/L/Complexity/SpaceBoundsTime.v
 theories/L/Complexity/Synthetic.v
+theories/L/Complexity/Subtypes.v
 theories/L/Complexity/PolyTimeComputable.v
 theories/L/Complexity/AbstractTimeHierarchyTheorem.v
 theories/L/Complexity/TimeHierarchyTheorem.v
 theories/L/Complexity/Monotonic.v
 theories/L/Complexity/ONotation.v
 theories/L/Complexity/ONotationIsAppropriate.v
-theories/L/Complexity/RegisteredP.v
+theories/L/Complexity/EncodableP.v
 theories/L/Complexity/LinTimeDecodable.v
 theories/L/Complexity/NP.v
 theories/L/Complexity/Problems/GenNP/CanEnumTerm_def.v

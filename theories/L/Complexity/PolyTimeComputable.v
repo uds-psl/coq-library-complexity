@@ -2,7 +2,7 @@ From Complexity Require Import Complexity.Synthetic.
 From Undecidability.L Require Import L.
 From Undecidability.L.Tactics Require Import LTactics.
 
-Lemma resSizePoly_composition X Y Z `{registered X} `{registered Y} `{registered Z} (f:X-> Y) (g : Y -> Z):
+Lemma resSizePoly_composition X Y Z `{encodable X} `{encodable Y} `{encodable Z} (f:X-> Y) (g : Y -> Z):
   resSizePoly f -> resSizePoly g -> resSizePoly (fun x => g (f x)).
 Proof.
   intros Hf Hg.
@@ -14,7 +14,7 @@ Proof.
   1,2:now unfold fsize;smpl_inO;eapply inOPoly_comp;smpl_inO.
 Qed.
 
-Lemma polyTimeComputable_composition X Y Z `{registered X} `{registered Y} `{registered Z} (f:X-> Y) (g : Y -> Z):
+Lemma polyTimeComputable_composition X Y Z `{encodable X} `{encodable Y} `{encodable Z} (f:X-> Y) (g : Y -> Z):
   polyTimeComputable f -> polyTimeComputable g -> polyTimeComputable (fun x => g (f x)).
 Proof.
   intros Hf Hg. 
@@ -28,7 +28,7 @@ Proof.
 Qed.
 
 
-Lemma resSizePoly_composition2 X Y1 Y2 Z `{registered X} `{registered Y1} `{registered Y2} `{registered Z}
+Lemma resSizePoly_composition2 X Y1 Y2 Z `{encodable X} `{encodable Y1} `{encodable Y2} `{encodable Z}
       (f1:X-> Y1) (f2:X-> Y2) (g : Y1 -> Y2 -> Z):
   resSizePoly f1 -> resSizePoly f2 -> resSizePoly (fun y => g (fst y) (snd y)) -> resSizePoly (fun x => g (f1 x) (f2 x)).
 Proof.
@@ -42,7 +42,7 @@ Proof.
   1,2:now unfold fsize;smpl_inO;eapply inOPoly_comp;smpl_inO.
 Qed.
 
-Lemma polyTimeComputable_composition2 X Y1 Y2 Z `{registered X} `{registered Y1} `{registered Y2} `{registered Z}
+Lemma polyTimeComputable_composition2 X Y1 Y2 Z `{encodable X} `{encodable Y1} `{encodable Y2} `{encodable Z}
       (f1:X-> Y1) (f2:X-> Y2) (g : Y1 -> Y2 -> Z):
   polyTimeComputable f1 -> polyTimeComputable f2 -> polyTimeComputable (fun y => g (fst y) (snd y)) -> polyTimeComputable (fun x => g (f1 x) (f2 x)).
 Proof.
@@ -60,7 +60,7 @@ Proof.
 Qed.
 
 
-Lemma resSizePoly_prod X Y Z `{registered X} `{registered Y} `{registered Z} (f:X-> Y) (g : X -> Z):
+Lemma resSizePoly_prod X Y Z `{encodable X} `{encodable Y} `{encodable Z} (f:X-> Y) (g : X -> Z):
   resSizePoly f -> resSizePoly g -> resSizePoly (fun x => (f x, g x)).
 Proof.
   intros Hf Hg.
@@ -73,7 +73,7 @@ Proof.
   1,2:now unfold fsize;smpl_inO;eapply inOPoly_comp;smpl_inO.
 Qed.
 
-Lemma polyTimeComputable_prod X Y Z `{registered X} `{registered Y} `{registered Z} (f:X-> Y) (g : X -> Z):
+Lemma polyTimeComputable_prod X Y Z `{encodable X} `{encodable Y} `{encodable Z} (f:X-> Y) (g : X -> Z):
   polyTimeComputable f -> polyTimeComputable g -> polyTimeComputable (fun x => (f x, g x)).
 Proof.
   intros Hf Hg. 
@@ -89,7 +89,7 @@ Qed.
 From Coq Require Import CRelationClasses CMorphisms.
 Local Set Universe Polymorphism. 
 
-Instance polyTimeComputable_proper_eq X Y {_: registered X} {_ :  registered Y}:
+Instance polyTimeComputable_proper_eq X Y {_: encodable X} {_ :  encodable Y}:
   Proper ( Morphisms.pointwise_relation X eq ==> arrow) (@polyTimeComputable X Y _ _).
 Proof.
   intros ?? Heq [a b c d e].
@@ -98,7 +98,7 @@ Proof.
   -destruct e as [e H]. exists e. 2-3:easy. hnf in Heq. intros;rewrite <- Heq. apply H.
 Qed.
 
-Instance polyTimeComputable_proper_eq_flip X Y {_: registered X} {_ :  registered Y}:
+Instance polyTimeComputable_proper_eq_flip X Y {_: encodable X} {_ :  encodable Y}:
   Proper (Morphisms.pointwise_relation X eq ==> flip arrow) (@polyTimeComputable X Y _ _).
 Proof.
   repeat intro. eapply polyTimeComputable_proper_eq. 2:easy. now symmetry. 
@@ -109,7 +109,7 @@ Qed.
 
 Local Set Universe Polymorphism. 
 
-Lemma polyTimeComputable_eta X Y {_: registered X} {_ :  registered Y} (f:X -> Y) :
+Lemma polyTimeComputable_eta X Y {_: encodable X} {_ :  encodable Y} (f:X -> Y) :
   (polyTimeComputable f) = (polyTimeComputable (fun x => f x)).
 Proof. reflexivity. Qed.
 
@@ -118,7 +118,7 @@ Smpl Add 2 rewrite polyTimeComputable_eta in *: nary_prepare.
 
 Import GenericNary UpToCNary.
 
-Lemma polyTimeComputable_simpl (X:list Set) Y {_: registered (Rtuple X)} {_ :  registered Y} (f:Rtuple X -> Y) :
+Lemma polyTimeComputable_simpl (X:list Set) Y {_: encodable(Rtuple X)} {_ :  encodable Y} (f:Rtuple X -> Y) :
   iffT (polyTimeComputable (fun x => Fun' f x)) (polyTimeComputable f).
 Proof.
   split. (*Fail all:now setoid_rewrite Fun'_simpl. *)
@@ -168,7 +168,7 @@ Smpl Add polyTimeComputable_nary_setoid_rewrite_iffT_workaround : generic.
 
 
 (* MOVE *)    
-Lemma polyTimeComputable_prod_nary (X: list Type) (Y Z:Type) `{registered (Rtuple X)} `{registered Y} `{registered Z} (f: Rarrow X Y) (g : Rarrow X Z):
+Lemma polyTimeComputable_prod_nary (X: list Type) (Y Z:Type) `{encodable(Rtuple X)} `{encodable Y} `{encodable Z} (f: Rarrow X Y) (g : Rarrow X Z):
   
   polyTimeComputable (Uncurry f) -> polyTimeComputable (Uncurry g) -> polyTimeComputable (Fun' (fun x => (App f x, App g x))).
 Proof.
@@ -176,7 +176,7 @@ Proof.
 Qed. *)
 
 
-Lemma pTC_destructuringToProj (domain : list Set)  X (regD:registered (Rtuple domain)) (regX : registered X) (f : Rarrow domain X)
+Lemma pTC_destructuringToProj (domain : list Set)  X (regD:encodable(Rtuple domain)) (regX : encodable X) (f : Rarrow domain X)
   : polyTimeComputable (App f) -> polyTimeComputable (Fun' (App f)).
 Proof. apply polyTimeComputable_simpl.  Qed.
 
@@ -195,21 +195,21 @@ Local Ltac pTC_composition :=
 
 Smpl Add 10 pTC_composition : polyTimeComputable.
 
-Lemma pTC_fst X Y `{registered X} `{registered Y}: polyTimeComputable (@fst X Y).
+Lemma pTC_fst X Y `{encodable X} `{encodable Y}: polyTimeComputable (@fst X Y).
 Proof.
   eexists (fun _ => _). exact _. 1,2:now smpl_inO.
   eexists (fun x => x). 2,3:now smpl_inO. intros []. rewrite LProd.size_prod. cbn. lia.
 Qed.
 Smpl Add 0 simple apply pTC_fst : polyTimeComputable.
 
-Lemma pTC_snd X Y `{registered X} `{registered Y}: polyTimeComputable (@snd X Y).
+Lemma pTC_snd X Y `{encodable X} `{encodable Y}: polyTimeComputable (@snd X Y).
 Proof.
   eexists (fun _ => _). exact _. 1,2:now smpl_inO.
   eexists (fun x => x). 2,3:now smpl_inO. intros []. rewrite LProd.size_prod. cbn. lia.
 Qed.
 Smpl Add 0 simple apply pTC_snd : polyTimeComputable.
 
-Lemma pTC_cnst X Y `{registered X} `{registered Y} (c:Y): polyTimeComputable (fun (_:X) => c).
+Lemma pTC_cnst X Y `{encodable X} `{encodable Y} (c:Y): polyTimeComputable (fun (_:X) => c).
 Proof.
   eexists (fun _ => 1).
   { extract.  cbn. solverec. } 1,2:now smpl_inO.
@@ -217,7 +217,7 @@ Proof.
 Qed.
 Smpl Add 0 simple apply pTC_cnst : polyTimeComputable.
 
-Lemma pTC_id X `{registered X} : polyTimeComputable (fun (x:X) => x).
+Lemma pTC_id X `{encodable X} : polyTimeComputable (fun (x:X) => x).
 Proof.
   eexists (fun _ => 1).
   { extract.  cbn. solverec. } 1,2:now smpl_inO.
@@ -236,7 +236,7 @@ Smpl Add 0 simple apply pTC_S : polyTimeComputable.
 
 
 Import Nat LNat.
-Lemma pTC_mult X `{registered X} f g: polyTimeComputable f -> polyTimeComputable g -> polyTimeComputable (fun (x:X) => f x * g x).
+Lemma pTC_mult X `{encodable X} f g: polyTimeComputable f -> polyTimeComputable g -> polyTimeComputable (fun (x:X) => f x * g x).
 Proof.
   intros. eapply polyTimeComputable_composition2. 1,2:easy. 
   evar (time:nat -> nat).
@@ -251,7 +251,7 @@ Qed.
 Smpl Add 5 simple apply pTC_mult : polyTimeComputable.
 
 
-Lemma pTC_plus X `{registered X} f g: polyTimeComputable f -> polyTimeComputable g -> polyTimeComputable (fun (x:X) => f x + g x).
+Lemma pTC_plus X `{encodable X} f g: polyTimeComputable f -> polyTimeComputable g -> polyTimeComputable (fun (x:X) => f x + g x).
 Proof.
   intros. eapply polyTimeComputable_composition2. 1,2:easy. 
   evar (time:nat -> nat).
@@ -266,7 +266,7 @@ Qed.
 Smpl Add 5 simple apply pTC_plus : polyTimeComputable.
 
 
-Lemma pTC_max X `{registered X} f g: polyTimeComputable f -> polyTimeComputable g -> polyTimeComputable (fun (x:X) => max (f x) (g x)).
+Lemma pTC_max X `{encodable X} f g: polyTimeComputable f -> polyTimeComputable g -> polyTimeComputable (fun (x:X) => max (f x) (g x)).
 Proof.
   intros. eapply polyTimeComputable_composition2. 1,2:easy. 
   evar (time:nat -> nat).
@@ -283,7 +283,7 @@ Smpl Add 5 simple apply pTC_max : polyTimeComputable.
 
 Require Import smpl.Smpl.
 
-Lemma pTC_pow_c X `{registered X} f c: polyTimeComputable f -> polyTimeComputable (fun (x:X) => f x ^ c).
+Lemma pTC_pow_c X `{encodable X} f c: polyTimeComputable f -> polyTimeComputable (fun (x:X) => f x ^ c).
 Proof.
   intros. induction c. all: cbn [Nat.pow].
   all:repeat smpl polyTimeComputable. 

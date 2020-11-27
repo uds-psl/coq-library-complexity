@@ -8,10 +8,10 @@ Definition GenNPBool : term*nat*nat -> Prop:=
     (proc s'/\exists (c:term), size (enc c) <= maxSize
                          /\ s' (enc c) ⇓(<=steps) (enc true)).
 
-(** * The hardness proof of GewnNPHalt is prettier *)
-Lemma NPhard_GenNPBool : NPhard (unrestrictedP GenNPBool).
+(** * The hardness proof of GenNPHalt is prettier *)
+Lemma NPhard_GenNPBool : NPhard GenNPBool.
 Proof.
-  intros X reg__X regP__X vX Q [R R__comp' R__spec'(*[p Rsound Rcomplete p__poly p__mono]*)].
+  intros X reg__X regP__X Q [R R__comp' R__spec'(*[p Rsound Rcomplete p__poly p__mono]*)].
   destruct (polyCertRel_compPoly R__spec') as (R__spec&[pR__comp]);clear R__spec'.
   destruct (inTimePoly_compTime R__comp') as (timeR&[timeR__comp]&[R__comp]&poly_t__R&mono_t__R);clear R__comp'.
   pose (f x := fun c => f__decInTime R__comp (x,c)).
@@ -20,7 +20,7 @@ Proof.
   evar (mSize : X -> nat). [mSize]:intros n0. evar (steps : X -> nat). [steps]:intros n0.
   eapply reducesPolyMO_intro with  (f := fun x => (lam (extT f (enc x) 0), mSize x (*)f__Rbal' (size (enc x))*), steps x (*time__R' (size (enc x) + f__Rbal' (size (enc x))+4)+5*)));cbn [fst snd GenNPBool].
   2:{
-    cbn [unrestrictedP]. intros x ?. exists Logic.I. split.
+    intros x. split.
    +intros (c&HR & Hle)%(complete__pCR R__spec). cbn - [GenNPBool] in Hle|-*.
     unfold GenNPBool;cbn [snd].
     split. now Lproc.
@@ -33,7 +33,7 @@ Proof.
      unfold steps. reflexivity.
    +unfold GenNPBool.
     intros (?&c&size__c&R'). eapply (sound__pCR R__spec).
-    apply (correct__decInTime R__comp (x:=(x,c))).
+    apply (correct__decInTime R__comp (x,c)).
     eapply inj_enc.
     eapply unique_normal_forms. 1,2:now Lproc.
     eapply evalLe_eval_subrelation, eval_star_subrelation in R'.
@@ -61,9 +61,9 @@ From Complexity.L.AbstractMachines.Computable Require Import EvalForTimeBool.
 Import EvalForTime LargestVar.
 
 
-Lemma inNP_GenNPBool : inNP (unrestrictedP GenNPBool).
+Lemma inNP_GenNPBool : inNP GenNPBool.
 Proof.
-  eexists (fun '(exist x _) (c:term) => exists (s':term) (maxSize steps :nat), 
+  eexists (fun x (c:term) => exists (s':term) (maxSize steps :nat), 
                x = (s',maxSize,steps) /\ proc s' /\ size (enc c) <= maxSize 
                /\ s' (enc c) ⇓(<=steps) (enc true)).
   {
@@ -106,7 +106,6 @@ Proof.
      destruct (lambdab_spec s');cbn [andb]. 2:{ split;[|congruence];intros (?&?&?&[= -> -> ->]&?);tauto. }
 
      destruct (Nat.leb_spec0 (size (enc c)) maxSize);cbn [andb]. 2:{ split;[|congruence];intros (?&?&?&[= -> -> ->]&?);tauto. }
-     cbn [fst GenNPBool]. intros [].
      eapply reflect_iff.
      eapply ssrbool.equivP. eapply evalForTimeBool_spec.
      rewrite  !Nnat.Nat2N.id.
@@ -119,14 +118,14 @@ Proof.
      smpl_inO.
   }
   eexists (fun x => x). 3,4:smpl_inO.
-  all:intros [((?,?),?)]. all:cbn.
+  all:intros ((?,?),?). all:cbn.
   -intros ? (?&?&?&[= <- <- <-]&?&?&?). eauto 10.
   -intros (?&?&?&?). eexists.  split. eauto 10.  repeat setoid_rewrite size_prod. cbn [fst snd].
    rewrite <- !size_nat_enc_r. lia. 
 Qed.
 
 Lemma GenNPBool_complete :
-  NPcomplete (unrestrictedP GenNPBool).
+  NPcomplete GenNPBool.
 Proof.
   eauto using inNP_GenNPBool, NPhard_GenNPBool. 
 Qed.

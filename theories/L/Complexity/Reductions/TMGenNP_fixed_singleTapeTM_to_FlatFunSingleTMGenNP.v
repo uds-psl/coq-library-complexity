@@ -23,7 +23,7 @@ Section fixTM.
   Variable (sig : finType).
   Variable (M : TM sig 1).
   
-  Variable (reg__sig : registered sig).
+  Variable (reg__sig : encodable sig).
   Variable (index__comp : {c & computableTime' (index (F:=sig)) (fun _ _ => (c,tt))}).
 
   Definition index_const_Time : computableTime _ _:=  projT2 index__comp.
@@ -89,9 +89,9 @@ Section fixTM.
   Qed. 
 
   Lemma TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP : 
-    (unrestrictedP (TMGenNP_fixed_singleTapeTM M)) ⪯p (unrestrictedP FlatFunSingleTMGenNP). 
+    TMGenNP_fixed_singleTapeTM M ⪯p  FlatFunSingleTMGenNP. 
   Proof. 
-    apply reducesPolyMO_intro_unrestricted with (f := reduction). 
+    apply reducesPolyMO_intro with (f := reduction). 
     - evar (f : nat -> nat). exists f. 
       + eexists. eapply computesTime_timeLeq. 2: apply term_reduction. 
         cbn. intros ((ts & ?) & ?) _. split; [ | easy]. 

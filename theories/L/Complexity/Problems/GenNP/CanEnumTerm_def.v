@@ -2,7 +2,7 @@ From Undecidability.L Require Import L LTactics.
 From Complexity.L.Complexity Require Import NP Synthetic Monotonic.
 
 
-Record canEnumTerms (X__cert : Type) `{R__cert : registered X__cert} : Type :=
+Record canEnumTerms (X__cert : Type) `{R__cert : encodable X__cert} : Type :=
   {
     f__toTerm : X__cert -> term;
     comp__toTerm :> polyTimeComputable f__toTerm;
@@ -19,7 +19,7 @@ Hint Extern 2 (computableTime (f__toTerm _) _) => unshelve (simple apply @comp__
 Smpl Add 10 (simple apply polyIn__toTerm) : inO.
 Smpl Add 10 (simple apply monoIn__toTerm) : inO.
 
-Lemma canEnumTerms_compPoly (X__cert : Type) `{R__cert : registered X__cert}:
+Lemma canEnumTerms_compPoly (X__cert : Type) `{R__cert : encodable X__cert}:
   canEnumTerms X__cert -> exists H : canEnumTerms X__cert, inhabited (polyTimeComputable (time__polyTC H))
                                       /\ inhabited (polyTimeComputable (inSize__toTerm H))
                                       /\ inhabited (polyTimeComputable (resSize__rSP H)).

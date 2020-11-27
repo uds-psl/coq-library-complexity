@@ -110,19 +110,19 @@ Section TimeHierarchy.
   Qed.
   
   Lemma LA_In_f_times_step':
-    unrestrictedP L__f ∈TimeO (fun n : nat => t__E n (2 * n) (f n)).
+    L__f ∈TimeO (fun n : nat => t__E n (2 * n) (f n)).
   Proof.
     eapply LA_In_f_times_step.
     all:eauto using comp_t__E,E__spec,proc_extT,inO_time_t__E,mono_t__E,suplin_t__E.
   Qed.
   
-  Lemma L_A_notIn_f : ~ unrestrictedP L__f ∈Timeo f.
+  Lemma L_A_notIn_f : ~ L__f ∈Timeo f.
   Proof.
     apply L_A_notIn_f.
   Qed.
   
   Lemma LA_In_f_times_step:
-    unrestrictedP L__f ∈TimeO (fun n => n * f n * f n).
+    L__f ∈TimeO (fun n => n * f n * f n).
   Proof.
     eapply inTime_mono.
     apply in_O_t__E.
@@ -130,7 +130,7 @@ Section TimeHierarchy.
   Qed.
 
   Lemma TimeHierarchyTheorem :
-    exists (P : term * nat -> Prop), ~unrestrictedP P ∈Timeo f /\ unrestrictedP P ∈TimeO (fun n => n * f n * f n).
+    exists (P : term * nat -> Prop), ~P ∈Timeo f /\ P ∈TimeO (fun n => n * f n * f n).
   Proof.
     exists L__f;split. all:eauto using L_A_notIn_f, LA_In_f_times_step.
   Qed.

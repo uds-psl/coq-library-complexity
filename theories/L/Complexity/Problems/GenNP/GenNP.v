@@ -7,7 +7,7 @@ Local Unset Implicit Arguments.
 Import L_Notations.
 
 Section GenNP.
-  Context (X__cert : Type) `{R__cert : registered X__cert}.
+  Context (X__cert : Type) `{R__cert : encodable X__cert}.
 
   
   Definition GenNP : term*nat*nat -> Prop :=

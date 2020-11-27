@@ -55,12 +55,11 @@ Qed.
 Lemma size_boundary (l:boundary):
   size (enc l) = match l with START => 6 | STOP => 5 | UNKNOWN => 4 end.
 Proof.
-  change (enc l) with (boundary_enc l). 
-  destruct l;easy.
+  unfold enc;cbn;destruct l;easy.
 Qed.
 
 Section sigList.
-  Context (sig : Type) `{H:registered sig}.
+  Context (sig : Type) `{H:encodable sig}.
   MetaCoq Run (tmGenEncode "sigList_enc" (sigList sig)).
 
   Global Instance term_sigList_X : computableTime' (@sigList_X sig) (fun _ _ => (1,tt)).
@@ -72,12 +71,8 @@ Section sigList.
   Lemma size_sigList (l:sigList sig):
     size (enc l) = match l with sigList_X x => size (enc x) + 7 | sigList_nil => 5 | _ => 4 end.
   Proof.
-    change (enc l) with (sigList_enc l).
-    destruct l. all:cbn [sigList_enc map sumn size].
-    change ((match _ with
-             | @mk_registered _ enc _ _ => enc
-             end s)) with (enc s).
-    all:cbn;nia. 
+    unfold enc at 1;destruct l;cbn. 
+    all:try nia. 
   Qed.
 
 
@@ -109,7 +104,7 @@ End sigList_eqb.
 Section int.
 
   Variable X:Type.
-  Context {HX : registered X}.
+  Context {HX : encodable X}.
 (*
   Global Instance term_sigList_eqb : computableTime' (@sigList_eqb X)
                                                     (fun eqb eqbX => (1,fun a _ => (1,fun b _ => (match a,b with
@@ -128,18 +123,14 @@ Section int.
   Global Instance eqbComp_sigList `{H:eqbCompT X (R:=HX)} :
     eqbCompT (sigList X).
   Proof.
-    evar (c:nat). exists c. unfold sigList_eqb. 
+    evar (c:nat). exists c.
     unfold enc;cbn.
     change (eqb0) with (eqb (X:=X)).
     extract. unfold eqb,eqbTime.
-    fold (enc (X:=X)).  cbn.
     recRel_prettify2. easy.
     [c]:exact (c__eqbComp X + 10).
-    all:unfold c. all:cbn iota beta delta [CompCode.sigList_enc];cbn.
-    all:  change ((match HX with
-           | @mk_registered _ enc _ _ => enc
-                   end)) with (enc (X:=X)).
-    all:cbn [size]. all: try nia.
+    all:set (f:=enc (X:=sigList X)); unfold enc in f;subst f;cbn [size].
+    all:unfold c. all:nia. 
   Qed.
 
 End int.
@@ -214,7 +205,7 @@ Proof.
 Qed.
 
 Section sigSum.
-  Context X Y {R__X:registered X} {R__Y:registered Y}.
+  Context X Y {R__X:encodable X} {R__Y:encodable Y}.
   MetaCoq Run (tmGenEncode "sigSum_enc" (@sigSum X Y)).
   MetaCoq Run (tmGenEncode "sigPair_enc" (@sigPair X Y)).
   MetaCoq Run (tmGenEncode "sigOption_enc" (@sigOption X)).
@@ -263,7 +254,7 @@ Section int.
   Import Code.
 
   Variable X Y:Type.
-  Context {HX : registered X} {HY : registered Y}.
+  Context {HX : encodable X} {HY : encodable Y}.
   (*
   Global Instance term_sigPair_eqb : computableTime' (@sigPair_eqb X Y)
                                                     (fun eqb eqbX => (1, (fun _ eqbY => (1,fun a _ => (1,fun b _ => (match a,b with
@@ -284,23 +275,16 @@ Section int.
   Global Instance eqbComp_sigPair `{H:eqbCompT X (R:=HX)} `{H':eqbCompT Y (R:=HY)}:
     eqbCompT (sigPair X Y).
   Proof.
-    evar (c:nat). exists c. unfold sigPair_eqb. 
+    evar (c:nat). exists c. 
     unfold enc;cbn.
     change (eqb0) with (eqb (X:=X)).
     change (eqb1) with (eqb (X:=Y)).
     extract. unfold eqb,eqbTime.
-    fold (enc (X:=X)).  fold (enc (X:=Y)).
-    recRel_prettify2. easy. all:cbn.
+    recRel_prettify2. easy.
     [c]:exact (c__eqbComp X + c__eqbComp Y + 6).
-    all:unfold c. all:cbn iota beta delta [sigPair_enc].
-    all:  change ((match HX with
-           | @mk_registered _ enc _ _ => enc
-                   end)) with (enc (X:=X)).
-    all:  change ((match HY with
-           | @mk_registered _ enc _ _ => enc
-           end)) with (enc (X:=Y)).
-    all:cbn [size]. all: try nia.
-  Qed.
+    all:set (f:=enc (X:=prod X Y)); unfold enc in f;subst f;cbn [L_facts.size].
+    all:unfold c. all:try nia.
+  Qed. 
 
 End int.
 
@@ -330,7 +314,7 @@ End sigOption_eqb.
 Section int.
 
   Variable X:Type.
-  Context {HX : registered X}.
+  Context {HX : encodable X}.
 (*
   Global Instance term_sigOption_eqb : computableTime' (@sigOption_eqb X)
                                                     (fun eqb eqbX => (1,fun a _ => (1,fun b _ => (match a,b with
@@ -349,18 +333,14 @@ Section int.
   Global Instance eqbComp_sigOption `{H:eqbCompT X (R:=HX)} :
     eqbCompT (sigOption X).
   Proof.
-    evar (c:nat). exists c. unfold sigOption_eqb. 
+    evar (c:nat). exists c. 
     unfold enc;cbn.
     change (eqb0) with (eqb (X:=X)).
     extract. unfold eqb,eqbTime.
-    fold (enc (X:=X)).  cbn.
     recRel_prettify2. easy.
     [c]:exact (c__eqbComp X + 10).
-    all:unfold c. all:cbn iota beta delta [sigOption_enc];cbn.
-    all:  change ((match HX with
-           | @mk_registered _ enc _ _ => enc
-                   end)) with (enc (X:=X)).
-    all:cbn [size]. all: try nia.
+    all:set (f:=enc (X:=option X)); unfold enc in f;subst f;cbn [L_facts.size].
+    all:unfold c. all:try nia.
   Qed.
 
 End int.
@@ -396,7 +376,7 @@ Section int.
   Import Code.
 
   Variable X Y:Type.
-  Context {HX : registered X} {HY : registered Y}.
+  Context {HX : encodable X} {HY : encodable Y}.
 (*
   Global Instance term_sigSum_eqb : computableTime' (@sigSum_eqb X Y)
                                                     (fun eqb eqbX => (1, (fun _ eqbY => (1,fun a _ => (1,fun b _ => (match a,b with
@@ -417,27 +397,21 @@ Section int.
   Global Instance eqbComp_sigSum `{H:eqbCompT X (R:=HX)} `{H':eqbCompT Y (R:=HY)}:
     eqbCompT (sigSum X Y).
   Proof.
-    evar (c:nat). exists c.
+    evar (c:nat). exists c. 
+    unfold enc;cbn.
     change (eqb0) with (eqb (X:=X)).
     change (eqb1) with (eqb (X:=Y)).
-    extract. repeat (unfold enc,sigSum_enc;cbn). unfold eqb,eqbTime.
-    fold (enc (X:=X)).  fold (enc (X:=Y)).
-    recRel_prettify2. easy. 
-    [c]:exact (c__eqbComp X + c__eqbComp Y + 26).
-    all:unfold c,sigSum_enc.
-    all:  change ((match HX with
-           | @mk_registered _ enc _ _ => enc
-                   end)) with (enc (X:=X)).
-    all:  change ((match HY with
-           | @mk_registered _ enc _ _ => enc
-           end)) with (enc (X:=Y)).
-    all:cbn [L_facts.size]. all: try nia.
+    extract. unfold eqb,eqbTime.
+    recRel_prettify2. easy.
+    [c]:exact (c__eqbComp X + c__eqbComp Y + 6).
+    all:set (f:=enc (X:=sigSum X Y)); unfold enc in f;subst f;cbn [L_facts.size].
+    all:unfold c. all:try nia.
   Qed.
 
 End int.
 
 Section sigTape.
-  Context (sig : Type) `{H:registered sig}.
+  Context (sig : Type) `{H:encodable sig}.
   MetaCoq Run (tmGenEncode "sigTape_enc" (sigTape sig)).
 
   Global Instance term_LeftBlank_X : computableTime' (@LeftBlank sig) (fun _ _ => (1,tt)).
@@ -463,12 +437,7 @@ Section sigTape.
     | UnmarkedSymbol x => 7 + size (enc x)
     end.
   Proof.
-    change (enc l) with (sigTape_enc l).
-    destruct l. all:cbn [sigTape_enc map sumn size].
-    1-2:unfold enc;cbn.
-    4-5:change ((match _ with
-             | @mk_registered _ enc _ _ => enc
-             end s)) with (enc s).
+    unfold enc at 1;destruct l;cbn.
     all:cbn;try nia.
   Qed.
 
@@ -506,7 +475,7 @@ End sigTape_eqb.
 Section int.
 
   Variable X:Type.
-  Context {HX : registered X}.
+  Context {HX : encodable X}.
 (*
   Global Instance term_sigTape_eqb : computableTime' (@sigTape_eqb X)
                                                     (fun eqb eqbX => (1,fun a _ => (1,fun b _ => (match a,b with
@@ -528,24 +497,20 @@ Section int.
   Global Instance eqbComp_sigTape `{H:eqbCompT X (R:=HX)} :
     eqbCompT (sigTape X).
   Proof.
-    evar (c:nat). exists c. unfold sigTape_eqb. 
+    evar (c:nat). exists c.
     unfold enc;cbn.
     change (eqb0) with (eqb (X:=X)).
     extract. unfold eqb,eqbTime.
-    fold (enc (X:=X)).  cbn.
-    recRel_prettify2. easy. all:change bool_enc with (enc (X:=bool)).
-    [c]:exact (c__eqbComp X + c__eqbComp bool + 10 + c__sizeBool).
-    all:unfold c. all:cbn iota beta delta [CompCode.sigTape_enc];cbn.
-    all:  change ((match HX with
-           | @mk_registered _ enc _ _ => enc
-                   end)) with (enc (X:=X)).
-    all:cbn [size]. all:change bool_enc with (enc (X:=bool)). all:try rewrite !size_bool_enc. all: try nia.
+    recRel_prettify2. easy.
+    [c]:exact (c__eqbComp X + c__eqbComp bool +  10+c__sizeBool).
+    all:set (f:=enc (X:=sigList X)); unfold enc in f;subst f;cbn [size].
+    all:unfold c. all:try rewrite !size_bool_enc. all:try lia.
   Qed.
 
 End int.
 
 Section encTape.
-  Context X `{registered X}.
+  Context X `{encodable X}.
   Import Datatypes.
   Definition _term_encode_tape : 
     { time : UpToC (fun l => sizeOfTape l + 1)

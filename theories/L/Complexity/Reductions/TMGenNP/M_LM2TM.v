@@ -55,7 +55,7 @@ Module LMtoTM.
             false => ~ exists (bs:list bool), tin[@Fin0] ≃ bs
           | true => exists (bs : list bool),
                    tin[@Fin0] ≃ bs
-                   /\ exists sigma' k, ARS.evaluatesIn LM_heap_def.step k (initLMGen P (compile (Computable.enc (rev bs)))) sigma'
+                   /\ exists sigma' k, ARS.evaluatesIn LM_heap_def.step k (initLMGen P (compile (Extract.enc (rev bs)))) sigma'
           end.
 (* initLMGen = n s c : list Tok => ([(0, s ++ c ++ [appT])], [], []) *)
     Import Boollist_to_Enc ListTM Alphabets StepTM.
@@ -88,13 +88,13 @@ Module LMtoTM.
              \/
              exists (bs : list bool),
                tin[@Fin0] ≃ bs
-               /\ exists sigma', ARS.evaluatesIn LM_heap_def.step steps__LM (initLMGen P (compile (Computable.enc (rev bs)))) sigma')
+               /\ exists sigma', ARS.evaluatesIn LM_heap_def.step steps__LM (initLMGen P (compile (Extract.enc (rev bs)))) sigma')
            /\ time (steps__LM,sizeOfmTapes tin) <= k).
 
     Import MoreList.
 
     Lemma size_compile_list_bool:
-      (fun bs : list bool => Code.size (compile (Computable.enc (rev bs)))) <=c (fun bs => length bs + 1).
+      (fun bs : list bool => Code.size (compile (Extract.enc (rev bs)))) <=c (fun bs => length bs + 1).
     Proof.
       (* From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require  *)
       Import TM_LHeapInterpreter.SizeAnalysis TM_LHeapInterpreter.LMBounds_Loop.
@@ -168,17 +168,17 @@ Module LMtoTM.
           TMSimp.
           
           infTer 5.
-          {hnf;cbn. eexists _ (*(compile (Computable.enc (rev bs)))*),[appT]. repeat simple apply conj. 1-2:now simpl_surject;try contains_ext.
+          {hnf;cbn. eexists _ (*(compile (Extract.enc (rev bs)))*),[appT]. repeat simple apply conj. 1-2:now simpl_surject;try contains_ext.
            setoid_rewrite ((proj2_sig (BaseCode.App'_steps_nice _) _) : _ <= _).
            
            rewrite (correct__leUpToC size_compile_list_bool), Hlebs. reflexivity.
           }
-          intros t3_ _ (Ht3&Ht3Rem). specialize (Ht3 (compile (Computable.enc (rev bs))) [appT]). modpon Ht3;[]. TMSimp.
+          intros t3_ _ (Ht3&Ht3Rem). specialize (Ht3 (compile (Extract.enc (rev bs))) [appT]). modpon Ht3;[]. TMSimp.
           infTer 5.
           { hnf;cbn. eexists _, _. repeat simple apply conj. 1-2:now simpl_surject;try contains_ext.
             eassert (H':=proj2_sig (BaseCode.App'_steps_nice _) P).
             hnf in H'. rewrite H'. reflexivity. }
-          intros t4_ _ (Ht4&Ht4Rem). specialize (Ht4 P (compile (Computable.enc (rev bs)) ++ [appT])). TMSimp.
+          intros t4_ _ (Ht4&Ht4Rem). specialize (Ht4 P (compile (Extract.enc (rev bs)) ++ [appT])). TMSimp.
           modpon Ht4; [].
           infTer 5. intros t5_ _ (Ht5&Ht5Rem). modpon Ht5;[].
           infTer 5. intros t6_ _ (Ht6&Ht6Rem). TMSimp. modpon Ht6;[].
@@ -274,7 +274,7 @@ Module LMtoTM.
       modpon H18;[].
       modpon H20;[].
       rename H11 into H11',H22 into H11.
-      specialize (H11 (fst (fst (initLMGen P (compile (Computable.enc (rev bs)))))) [] []).
+      specialize (H11 (fst (fst (initLMGen P (compile (Extract.enc (rev bs)))))) [] []).
       cbn in H11. TMSimp. 
       modpon H11.
       1:{ instantiate (1:= [| _;_;_;_;_;_;_;_|]). 

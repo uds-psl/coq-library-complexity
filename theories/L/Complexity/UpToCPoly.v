@@ -42,7 +42,7 @@ Ltac inst_with c c' :=
   subst c.
 Tactic Notation "inst" ident(c) "with" constr(t) := let c' := fresh "c" in set (c' := t); inst_with c c'.
 
-Record isPoly (X : Type) `{registered X} (f : X -> nat) : Set := 
+Record isPoly (X : Type) `{encodable X} (f : X -> nat) : Set := 
   { 
     isP__poly : nat -> nat; 
     isP__bounds : forall x, f x <= isP__poly (size (enc x)); 
@@ -115,7 +115,7 @@ Proof.
   intros a b H d e ->. unfold Basics.flip in H. unfold Basics.impl. lia.  
 Qed.
 
-Lemma list_el_size_bound {X : Type} `{registered X} (l : list X) (a : X) :
+Lemma list_el_size_bound {X : Type} `{encodable X} (l : list X) (a : X) :
   a el l -> size(enc a) <= size(enc l). 
 Proof. 
   intros H1. 
@@ -126,32 +126,32 @@ Proof.
     solverec. 
 Qed. 
 
-Definition maxSize {X : Type} `{registered X} (l : list X) := maxl (map (fun x => size (enc x)) l). 
-Lemma maxSize_enc_size {X : Type} `{registered X} (l : list X) : maxSize l<= size (enc l). 
+Definition maxSize {X : Type} `{encodable X} (l : list X) := maxl (map (fun x => size (enc x)) l). 
+Lemma maxSize_enc_size {X : Type} `{encodable X} (l : list X) : maxSize l<= size (enc l). 
 Proof. 
   unfold maxSize. rewrite maxl_leq_l. 
   2: { intros n (x & <- & Hel)%in_map_iff. apply list_el_size_bound, Hel. }
   easy.
 Qed. 
 
-Lemma list_app_size {X : Type} `{registered X} (l l' : list X) :
+Lemma list_app_size {X : Type} `{encodable X} (l l' : list X) :
   size(enc (l ++ l')) + c__listsizeNil = size(enc l) + size(enc l').
 Proof.
   repeat rewrite size_list. 
   rewrite map_app. rewrite sumn_app. lia. 
 Qed. 
 
-Lemma list_size_at_least {X : Type} {H: registered X} (l : list X) : size(enc l) >= c__listsizeNil. 
+Lemma list_size_at_least {X : Type} {H: encodable X} (l : list X) : size(enc l) >= c__listsizeNil. 
 Proof. rewrite size_list. lia. Qed.
 
-Lemma list_app_size_l {X : Type} {H : registered X} (l l' : list X) :
+Lemma list_app_size_l {X : Type} {H : encodable X} (l l' : list X) :
   size(enc (l ++ l')) >= size (enc l). 
 Proof. 
   enough (size(enc (l++l')) + c__listsizeNil >= size(enc l) + c__listsizeNil) by lia. 
   rewrite list_app_size. specialize (list_size_at_least l'). lia. 
 Qed. 
 
-Lemma list_app_size_r {X : Type} `{registered X} (l l' : list X) :
+Lemma list_app_size_r {X : Type} `{encodable X} (l l' : list X) :
   size(enc (l ++ l')) >= size (enc l'). 
 Proof. 
   enough (size(enc (l++l')) + c__listsizeNil >= size(enc l') + c__listsizeNil) by lia. 
@@ -160,7 +160,7 @@ Qed.
 
 
 Require Import Complexity.L.Complexity.CookPrelim.MorePrelim. 
-Lemma list_subsequence_size_bound {X : Type} `{registered X} (l l': list X) :
+Lemma list_subsequence_size_bound {X : Type} `{encodable X} (l l': list X) :
   subsequence l l' -> size (enc l) <= size (enc l').
 Proof. 
   intros (C & D & ->). 
@@ -171,33 +171,33 @@ Proof.
   specialize (list_app_size_l l D). lia. 
 Qed. 
 
-Lemma list_size_cons {X : Type} `{registered X} (l : list X) (a : X) : size(enc (a::l)) = size(enc a) + size(enc l) + c__listsizeCons.
+Lemma list_size_cons {X : Type} `{encodable X} (l : list X) (a : X) : size(enc (a::l)) = size(enc a) + size(enc l) + c__listsizeCons.
 Proof. repeat rewrite size_list. cbn.  lia. Qed. 
 
-Lemma list_size_app (X : Type) (l1 l2 : list X) `{registered X} : size (enc (l1 ++ l2)) <= size (enc l1) + size (enc l2). 
+Lemma list_size_app (X : Type) (l1 l2 : list X) `{encodable X} : size (enc (l1 ++ l2)) <= size (enc l1) + size (enc l2). 
 Proof. 
   rewrite <- list_app_size. lia. 
 Qed. 
 
-Lemma list_size_concat (X : Type) (l : list (list X)) `{registered X} : size (enc (concat l)) <= size (enc l). 
+Lemma list_size_concat (X : Type) (l : list (list X)) `{encodable X} : size (enc (concat l)) <= size (enc l). 
 Proof. 
   induction l; cbn; [easy | ]. 
   now rewrite list_size_app, list_size_cons, IHl. 
 Qed. 
 
-Lemma list_size_length {X : Type} `{registered X} (l : list X) : |l| <= size(enc l). 
+Lemma list_size_length {X : Type} `{encodable X} (l : list X) : |l| <= size(enc l). 
 Proof. 
   rewrite size_list. induction l.
   - cbn; lia. 
   - cbn. rewrite IHl. unfold c__listsizeCons; lia. 
 Qed. 
 
-Lemma list_size_enc_length {X : Type} `{registered X} (l : list X) : size (enc (|l|)) <= size (enc l). 
+Lemma list_size_enc_length {X : Type} `{encodable X} (l : list X) : size (enc (|l|)) <= size (enc l). 
 Proof. 
   rewrite size_list. rewrite size_nat_enc. unfold c__natsizeS, c__natsizeO, c__listsizeNil, c__listsizeCons. induction l; cbn; lia. 
 Qed. 
 
-Lemma list_size_of_el {X : Type} `{registered X} (l : list X) (k : nat) : (forall a, a el l -> size(enc a) <= k) -> size(enc l) <= (k * (|l|)) + c__listsizeCons * (|l|) +  c__listsizeNil . 
+Lemma list_size_of_el {X : Type} `{encodable X} (l : list X) (k : nat) : (forall a, a el l -> size(enc a) <= k) -> size(enc l) <= (k * (|l|)) + c__listsizeCons * (|l|) +  c__listsizeNil . 
 Proof.
   intros H1. induction l. 
   - cbn. rewrite size_list. cbn.  lia.
@@ -253,14 +253,14 @@ Proof.
   - fold (rem (l1 ++ l2) x). now rewrite IHl1. 
 Qed. 
 
-Lemma list_rem_size_le (X : eqType) `{H : registered X} (l : list X) x : size (enc (rem l x)) <= size (enc l). 
+Lemma list_rem_size_le (X : eqType) `{H : encodable X} (l : list X) x : size (enc (rem l x)) <= size (enc l). 
 Proof. 
   induction l. 
   - cbn. lia. 
   - cbn. destruct Dec; cbn; rewrite !list_size_cons, IHl; lia. 
 Qed. 
 
-Lemma list_incl_dupfree_size (X : eqType) `{registered X} (a b : list X) : a <<= b -> dupfree a -> size (enc a) <= size (enc b). 
+Lemma list_incl_dupfree_size (X : eqType) `{encodable X} (a b : list X) : a <<= b -> dupfree a -> size (enc a) <= size (enc b). 
 Proof. 
   intros H1 H2.  revert b H1.
   induction H2 as [ | a0 a H1 H2 IH]; intros. 

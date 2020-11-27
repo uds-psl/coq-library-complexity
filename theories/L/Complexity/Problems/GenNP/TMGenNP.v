@@ -21,14 +21,13 @@ Definition TMGenNP: flatTM*nat*nat -> Prop:=
   fun '(M,maxSize, steps (*in unary*)) =>
     (exists sig n (M':TM sig n), isFlatteningTMOf M M' /\ TMGenNP' (M',maxSize,steps)).
 
-Definition TM1GenNP := restrictBy (fun '(M,_,_) => M.(TMflat.tapes) = 1)
-  (fun '(M,maxSize, steps (*in unary*)) => exists sig (M':TM sig 1), isFlatteningTMOf M M' /\ TMGenNP' (M', maxSize, steps)).
+Definition TM1GenNP : {'(M,_,_) | M.(TMflat.tapes) = 1} -> Prop :=
+  (fun '(exist (M,maxSize, steps (*in unary*)) _) => exists sig (M':TM sig 1), isFlatteningTMOf M M' /\ TMGenNP' (M', maxSize, steps)).
 
 
-Lemma inNP_TMgenericNPCompleteProblem:
-  inNP (unrestrictedP TMGenNP).
+Lemma inNP_TMgenericNPCompleteProblem: inNP TMGenNP.
 Proof.
-  pose (R := fun '(exist (M,maxSize, steps (*in unary*)) _ : {x | True}) t =>
+  pose (R := fun '(M,maxSize, steps (*in unary*)) t =>
                sizeOfmTapesFlat t <= maxSize /\  
                exists sig n (M':TM sig n),
                  isFlatteningTMOf M M'
@@ -48,7 +47,7 @@ Proof.
                      end
                 else false).
      repeat eapply conj.
-     2:{intros [[[M maxSize] steps] t] []. cbn.
+     2:{intros [[[M maxSize] steps] t]. cbn.
         destruct (Nat.leb_spec0 (sizeOfmTapesFlat t) (maxSize));cbn [negb andb].
         2:{ split. 2:easy. intros (?&?&?&?&?&?&?&?). easy. }
         specialize (execFlatTM_correct M t steps) as H.
@@ -97,10 +96,10 @@ Proof.
    all:smpl_inO.
   -evar (f:nat -> nat). [f]:intro x.
    exists f.
-   +intros [[[TM maxSize] steps]] y.  cbn.
+   +intros [[TM maxSize] steps] y.  cbn.
     intros (?&sig&n&M'&HM&t' & Ht' & HHalt) .
     eexists _,_,_. split. easy. eexists. split. now erewrite <- sizeOfmTapesFlat_eq. easy.
-   +intros [[[TM maxSize] steps]]. cbn.
+   +intros [[TM maxSize] steps]. cbn.
     intros (sig&n&M'&HM&t' & Ht' & HHalt) .
     eexists _. split.
     *split. now erewrite sizeOfmTapesFlat_eq.

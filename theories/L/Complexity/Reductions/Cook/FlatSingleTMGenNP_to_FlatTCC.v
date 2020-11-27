@@ -305,8 +305,8 @@ Qed.
 (*option_map *)
 Section fix_option_map.
   Variable (A B : Type).
-  Context `{A_int : registered A}.
-  Context `{B_int : registered B}. 
+  Context `{A_int : encodable A}.
+  Context `{B_int : encodable B}. 
 
   Definition c__optionMap := 6.
   Definition optionMap_time (fT : A -> nat) (a : option A) := match a with None => 0 | Some a => fT a end + c__optionMap.
@@ -365,7 +365,7 @@ Qed.
 (*optReturn*)
 Section fix_optReturn.
   Variable (X : Type).
-  Context `{intX : registered X}.
+  Context `{intX : encodable X}.
 
   Global Instance term_optReturn : computableTime' (@optReturn X) (fun a _ => (1, tt)). 
   Proof. 
@@ -709,7 +709,7 @@ Set Default Proof Using "Type".
 (** listProd *)
 Section fixListProd. 
   Variable (X : Type).
-  Context `{intX : registered X}.
+  Context `{intX : encodable X}.
 
   Definition c__listProd1 := 22 + c__map + c__app. 
   Definition c__listProd2 := 18. 
@@ -755,7 +755,7 @@ Qed.
 (** it *)
 Section fixIt. 
   Variable (X : Type). 
-  Context `{intX : registered X}.
+  Context `{intX : encodable X}.
 
   Definition c__it := 10.
   Fixpoint it_time f (fT: X -> nat) (n : nat) (acc : X) :=   
@@ -824,7 +824,7 @@ Qed.
 
 Section fixprodLists. 
   Variable (X Y : Type).
-  Context `{Xint : registered X} `{Yint : registered Y}.
+  Context `{Xint : encodable X} `{Yint : encodable Y}.
 
   Definition c__prodLists1 := 22 + c__map + c__app. 
   Definition c__prodLists2 := 2 * c__map + 39 + c__app.
@@ -960,7 +960,7 @@ Qed.
 (** filterSome *)
 Section fixfilterSome.
   Variable (X : Type).
-  Context `{intX : registered X}.
+  Context `{intX : encodable X}.
   Definition c__filterSome := 16. 
   Definition filterSome_time (l : list (option X)) := (|l| + 1) * c__filterSome.
   Global Instance term_filterSome : computableTime' (@filterSome X) (fun l _ => (filterSome_time l, tt)). 
@@ -2087,7 +2087,7 @@ Qed.
 (** repEl *)
 Section fixXrepEl. 
   Variable (X : Type).
-  Context `{registered X}. 
+  Context `{encodable X}. 
   Definition c__repEl := 12.
   Global Instance term_repEl : computableTime' (@repEl X) (fun n _ => (5, fun e _ => ((n +1) * c__repEl, tt))). 
   Proof. 
@@ -2305,7 +2305,7 @@ Qed.
 
 Section fixX. 
   Variable (X : Type). 
-  Context `{registered X}. 
+  Context `{encodable X}. 
 
   Definition c__nth := 20.
   Global Instance term_nth : computableTime' (@nth X) (fun n _ => (5,fun l lT => (1,fun d _ => ((n+1) * c__nth,tt)))). 
@@ -2541,7 +2541,7 @@ Qed.
 
 Section fixEqBoolT. 
   Variable (X Y : Type). 
-  Context `{registered X}. 
+  Context `{encodable X}. 
   Variable (eqbX : X -> X -> bool). 
   Context {Hx :eqbClass eqbX}.
   Context `{eqbCompT X}. 
@@ -2554,8 +2554,8 @@ End fixEqBoolT.
 
 Section fixIsInjFinfuncTable. 
   Variable (X Y : Type). 
-  Context `{registered X}. 
-  Context `{registered Y}. 
+  Context `{encodable X}. 
+  Context `{encodable Y}. 
   Variable (eqbX : X -> X -> bool). 
   Variable (eqbY : Y -> Y -> bool). 
   Context {Hx :eqbClass eqbX}.
@@ -2872,9 +2872,9 @@ From Complexity.L.Complexity.Problems.Cook Require Import SingleTMGenNP.
 (** This is the polynomial-time analysis of the reduction. 
   For the proof of correctness, see [SingleTMGenNP_to_TCC]. For the proof of correctness using the flattened problems, see [FlatSingleTMGenNP_to_FlatTCC]. 
 *)
-Theorem FlatSingleTMGenNP_to_FlatTCCLang_poly : (unrestrictedP FlatSingleTMGenNP) ⪯p (unrestrictedP FlatTCCLang). 
+Theorem FlatSingleTMGenNP_to_FlatTCCLang_poly : FlatSingleTMGenNP ⪯p FlatTCCLang. 
 Proof. 
-  apply reducesPolyMO_intro_unrestricted with (f := reduction). 
+  apply reducesPolyMO_intro with (f := reduction). 
   - exists poly__reduction.
     + exists (extT reduction). eapply computesTime_timeLeq. 2: apply term_reduction.
       cbn. intros p _. split; [ | easy]. destruct p as (((tm & fixed) & t) & k').

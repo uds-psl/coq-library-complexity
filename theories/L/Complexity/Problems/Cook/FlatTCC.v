@@ -336,7 +336,7 @@ From Undecidability.L.Datatypes Require Import  LProd LOptions.
 
 Section fix_X.
   Variable (X:Type).
-  Context `{X_registered : registered X}.
+  Context `{X_encodable: encodable X}.
 
   (** TCCCardP *)
   MetaCoq Run (tmGenEncode "TCCCardP_enc" (TCCCardP X)).
@@ -368,7 +368,7 @@ Section fix_X.
   Definition c__sizeTCCCardP := 5. 
   Lemma TCCCardP_enc_size (w : TCCCardP X) : size (enc w) = size (enc (cardEl1 w)) + size (enc (cardEl2 w)) + size (enc (cardEl3 w)) + c__sizeTCCCardP. 
   Proof. 
-    destruct w. cbn. unfold enc, c__sizeTCCCardP; cbn. nia. 
+    destruct w. cbn. unfold enc at 1; unfold c__sizeTCCCardP; cbn. nia. 
   Qed. 
 
   (** extraction of TCCCardP_to_list *)
@@ -402,7 +402,7 @@ Section fix_X.
   Definition c__sizeTCCCard := 4.
   Lemma TCCCard_enc_size (card : TCCCard X) : size (enc card) = size (enc (prem card)) + size (enc (conc card)) + c__sizeCCCard.
   Proof. 
-    destruct card. cbn. unfold enc, c__sizeCCCard. cbn. nia.
+    destruct card. cbn. unfold enc at 1;unfold  c__sizeCCCard. cbn. nia.
   Qed. 
 End fix_X. 
 
@@ -452,7 +452,7 @@ Defined.
 Definition c__sizeFlatTCC := 7.
 Lemma FlatTCC_enc_size (fpr : FlatTCC) : size (enc fpr) = size (enc (Sigma fpr)) + size (enc (init fpr)) + size (enc (cards fpr)) + size (enc (final fpr)) + size (enc (steps fpr)) + c__sizeFlatTCC.
 Proof. 
-  destruct fpr. cbn. unfold enc. cbn. unfold c__sizeFlatTCC. nia.
+  destruct fpr. cbn. unfold enc at 1. cbn. unfold c__sizeFlatTCC. nia.
 Qed. 
 
 

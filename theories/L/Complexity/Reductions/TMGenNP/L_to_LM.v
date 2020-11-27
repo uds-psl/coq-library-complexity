@@ -4,15 +4,15 @@ From Complexity.L.Complexity.Problems.GenNP Require Import GenNP.
 From Complexity.L.Complexity.Reductions Require Import LMGenNP.
 
 From Undecidability.L Require Import LM_heap_def LM_heap_correct LBool ResourceMeasures LNat LTerm.
-From Complexity.L Require Import Compile.
+From Complexity.L Require Import Compile Subtypes.
 
 Import Nat.
-Lemma GenNP_to_LMGenNP (X:Type) `{R__X : registered X}:
+Lemma GenNP_to_LMGenNP (X:Type) `{R__X : encodable X}:
   restrictBy (LHaltsOrDiverges X) (GenNP X) ⪯p restrictBy (LMHaltsOrDiverges X) (LMGenNP X).
 Proof.
   evar (f__steps : nat -> nat). [f__steps]:intros n0.
   pose (f := (fun '(s, maxSize, steps) => (compile s,maxSize : nat, f__steps steps))).
-  eapply reducesPolyMO_intro_restrictBy with (f:=f).
+  eapply reducesPolyMO_intro_restrictBy_both with (f:=f).
   2:{
     intros [[s' maxSize] steps].
     intros (cs&Hsmall&Hk). assert (lambda s') as [s0 eq] by Lproc. set (s:=lam s0) in *. subst s'.
@@ -72,7 +72,7 @@ Proof.
 Qed.
 
 (*
-Lemma NPhard_LMGenNP X__cert `{R__cert : registered X__cert}:
+Lemma NPhard_LMGenNP X__cert `{R__cert : encodable X__cert}:
   canEnumTerms X__cert->  NPhard (LMGenNP X__cert).
 Proof.
   intros ?%NPhard_GenNP. now eapply (red_NPhard GenNP_to_LMGenNP).

@@ -42,7 +42,7 @@ Instance term_unfoldBool : computableTime' unfoldBoolean
                                           (fun H _ => (1,fun q _ => (unfoldBool_time (length H) (max (largestVarH H) (largestVarC q)),tt))).
 Proof.
   unfold unfoldBoolean.
-  unfold enc. cbn [registered_bool_enc bool_enc].
+  unfold enc; cbn [encodable_bool_enc].
   extract.
   recRel_prettify.
   intros H _. split. reflexivity.
@@ -105,7 +105,7 @@ Lemma unfoldBool_time_leq lengthH largestVar :
   unfoldBool_time lengthH largestVar <= (largestVar + 1) * (lengthH * 15 + 41 + 28) * 7 + EqBool.c__eqbComp term * 46 + 1245.
 Proof.
   unfold unfoldBool_time. unfold lookupTime.
-  unfold enc,registered_term_enc. cbn [size term_enc LNat.nat_enc]. cbn [plus].
+  unfold enc,encodable_term_enc. all:unfold enc;cbn.
   Lia.nia.
 Qed.
 

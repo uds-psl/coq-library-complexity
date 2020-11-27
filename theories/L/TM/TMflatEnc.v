@@ -78,7 +78,7 @@ Proof.
    all:intros [= <-].
    +easy.
    +cbn. change (match H with
-                | @mk_registered _ enc _ _ => enc
+                | @mk_encodable_ enc _ _ => enc
                  end x) with (enc x). erewrite decode_correct2. 2:easy.
     erewrite IHt.
     *reflexivity.
@@ -102,20 +102,19 @@ Qed.
 Lemma size_TM (M:flatTM):
   size (enc M) = let (a,b,c,d,e,f) := M in size (enc a) + size (enc b) +size (enc c) +size (enc d) + size (enc e) + size (enc f) + 8.
 Proof.
-  change (enc M) with (flatTM_enc M).
-  destruct M as []. cbn. solverec.
+  unfold enc;cbn. destruct M as []. cbn. solverec.
 Qed.
 
-From Complexity.L.Complexity Require Export RegisteredP LinTimeDecodable.
+From Complexity.L.Complexity Require Export EncodableP LinTimeDecodable.
 
 
 Instance term_move_enc
-  :computableTime' (TMEncoding.move_enc) (fun x _ => (15,tt)).
+  :computableTime' (enc (X:=move)) (fun x _ => (15,tt)).
 Proof.
-  extract. solverec.
+  unfold enc;cbn. extract. solverec.
 Qed.
 
-Instance regP_move : registeredP TM.move.
+Instance regP_move : encodableP TM.move.
 Proof.
   evar (c:nat).
   exists c.
@@ -123,34 +122,29 @@ Proof.
   eapply computesTime_timeLeq.
   2:now apply term_move_enc.
   intros l _. split. 2:easy.
-  change (enc l) with (TMEncoding.move_enc l).
   cbn.
   [c]:exact (4). unfold c.
-  destruct l;cbn [size TMEncoding.move_enc]. all:lia.
+  destruct l;cbv. all:lia.
 Qed.
 
 
 Definition c__encTM := max (c__regP (list (nat * list (option nat) * (nat * list (option nat * TM.move))))) (max (c__regP nat) (max (c__regP (list bool)) 4)).
 
 Instance term_TM_enc
-  :computableTime' (flatTM_enc) (fun x _ => (size (enc x) * c__encTM,tt)).
+  :computableTime' (enc (X:=flatTM)) (fun x _ => (size (enc x) * c__encTM,tt)).
 Proof.
-  unfold flatTM_enc.
-  change (@list_enc (nat * list (option nat) * (nat * list (option nat * TM.move))) _) with (enc (X:=list (nat * list (option nat) * (nat * list (option nat * TM.move))))).
-  change (@list_enc bool _) with (enc (X:=list bool)).
-  change (LNat.nat_enc) with (enc (X:=nat)).
+  unfold enc;cbn.
   extract.
   intros _ M [].
-  rewrite size_TM.
-  recRel_prettify2.
+  recRel_prettify2. cbn [size].
   repeat (lazymatch goal with |- context C [ @size ?a] => generalize (@size a);intro end).
   assert (H':c__encTM <= c__encTM) by easy.
   repeat setoid_rewrite Nat.max_lub_iff in H'.
   destruct H' as (H1&H2&H3&H4).
-  repeat rewrite H1. repeat rewrite H2. repeat rewrite H3. rewrite <- H4 at 13. lia.
+  repeat rewrite H1. repeat rewrite H2. repeat rewrite H3. lia.
 Qed.
 
-Instance regP_TM : registeredP flatTM.
+Instance regP_TM : encodableP flatTM.
 Proof.
   exists c__encTM.
   eexists _. 

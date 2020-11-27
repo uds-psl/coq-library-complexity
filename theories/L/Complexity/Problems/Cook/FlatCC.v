@@ -489,7 +489,7 @@ From Undecidability.L.Datatypes Require Import  LProd LOptions.
 
 Section fix_X.
   Variable (X:Type).
-  Context `{X_registered : registered X}.
+  Context `{X_encodable: encodable X}.
 
   MetaCoq Run (tmGenEncode "CCCard_enc" (CCCard X)).
   Hint Resolve CCCard_enc_correct : Lrewrite.
@@ -514,7 +514,7 @@ Section fix_X.
   Definition c__sizeCCCard := 4.
   Lemma CCCard_enc_size (card : CCCard X) : size (enc card) = size (enc (prem card)) + size (enc (conc card)) + c__sizeCCCard.
   Proof. 
-    destruct card. cbn. unfold enc, c__sizeCCCard. cbn. nia.
+    destruct card. cbn. unfold enc at 1, c__sizeCCCard. cbn. nia.
   Qed. 
 End fix_X. 
 
@@ -574,13 +574,14 @@ Defined.
 
 Lemma FlatCC_enc_size (fpr : FlatCC) : size (enc fpr) = size (enc (Sigma fpr)) + size(enc (offset fpr)) + size (enc (width fpr)) + size (enc (init fpr)) + size (enc (cards fpr)) + size (enc (final fpr)) + size (enc (steps fpr)) + 9. 
 Proof. 
-  destruct fpr. cbn. unfold enc. cbn. nia.
+  destruct fpr. cbn.  
+  unfold enc at 1. cbn. nia.
 Qed. 
 
 (** extraction of CCCard_of_size_dec *)
 Section CCCard_of_size. 
   Variable ( X : Type). 
-  Context `{X_registered : registered X}.
+  Context `{X_encodable: encodable X}.
 
   Definition c__prcardOfSizeDec := 2 * (cnst_prem + 2 * 5 + cnst_conc + 6 + c__length).
   Definition CCCard_of_size_dec_time (width : nat) (card : CCCard X) := c__prcardOfSizeDec * (1 + |prem card| + |conc card|) + eqbTime (X := nat) (size (enc (|prem card|))) (size (enc width)) + eqbTime (X := nat) (size (enc (|conc card|))) (size (enc width)).

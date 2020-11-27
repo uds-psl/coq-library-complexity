@@ -333,7 +333,7 @@ From Complexity.L.Complexity Require Import PolyBounds.
 From Undecidability.L.Functions Require Import EqBool.
 Require Import Nat. 
 
-Instance term_id (X : Type) `{registered X}: computableTime' (@id X) (fun a _ => (1, tt)). 
+Instance term_id (X : Type) `{encodable X}: computableTime' (@id X) (fun a _ => (1, tt)). 
 Proof. 
   extract. solverec. 
 Qed.

@@ -75,7 +75,7 @@ Module M.
     Arguments LMtoTM.M : clear implicits.
     Definition sig := (finType_CS (M_LHeapInterpreter.sigStep + sigList bool)).
 
-    Definition sig__reg : registered sig := LFinType.registered_finType.
+    Definition sig__reg : encodable sig := LFinType.encodable_finType.
 
     Definition Retr1 : Retract _ sig := (Retract_inl _ (Retract_id _)).
     Definition Retr2 : Retract _ sig := (Retract_inr _ (Retract_id _)).
@@ -165,7 +165,7 @@ Import GenericNary UpToCNary.
 From Coq Require Import CRelationClasses CMorphisms.
 
 (* TODO MOVE :tidy up *)
-Lemma pTC_length X `{registered X}: polyTimeComputable (@length X).
+Lemma pTC_length X `{encodable X}: polyTimeComputable (@length X).
 Proof.
   evar (time:nat -> nat).
   eexists time.
@@ -181,7 +181,7 @@ Qed.
 Smpl Add 1 simple apply pTC_length : polyTimeComputable.
 
 
-Lemma pTC_Code_size X sig `{registered X} `{registered sig}  (cX : codable sig X):
+Lemma pTC_Code_size X sig `{encodable X} `{encodable sig}  (cX : codable sig X):
   polyTimeComputable cX -> polyTimeComputable (@Code.size sig X cX).
 Proof.
   intros. 
@@ -192,7 +192,7 @@ Smpl Add 5 simple eapply pTC_Code_size : polyTimeComputable.
 
 Section cons.
 
-  Lemma pTC_cons X Y `{regX:registered X} `{regY:registered Y} f (g : X -> list Y):
+  Lemma pTC_cons X Y `{regX:encodable X} `{regY:encodable Y} f (g : X -> list Y):
     polyTimeComputable f -> polyTimeComputable g -> polyTimeComputable (fun (x:X) => f x :: g x).
   Proof.
     intros. specialize termT_cons with (X:=Y) as H.
@@ -214,14 +214,14 @@ Section Vcons.
   Import Undecidability.Shared.Libs.PSL.Vectors.Vectors.
   Import Vector.
   Local Arguments VectorDef.to_list : simpl never.
-  Global Instance termT_cons n X {regX : registered X} : computableTime' (fun x => @Vector.cons X x n) (fun a aT => (1,fun A AT => (4,tt))).
+  Global Instance termT_cons n X {regX : encodable X} : computableTime' (fun x => @Vector.cons X x n) (fun a aT => (1,fun A AT => (4,tt))).
   Proof. 
     computable_casted_result.
     change (fun (x : X) (x0 : Vector.t X n) => VectorDef.to_list (x ::: x0)) with (fun (x : X) (x0 : Vector.t X n) => x :: Vector.to_list x0).
     extract. solverec.
   Qed.
 
-  Lemma pTC_Vector_cons X Y `{regX:registered X} `{regY:registered Y} n f (g : X -> Vector.t Y n):
+  Lemma pTC_Vector_cons X Y `{regX:encodable X} `{regY:encodable Y} n f (g : X -> Vector.t Y n):
     polyTimeComputable f -> polyTimeComputable g -> polyTimeComputable (fun (x:X) => f x ::: g x).
   Proof.
     intros. specialize termT_cons with (n:=n) (X:=Y) as H.
@@ -246,7 +246,7 @@ Smpl Add 5 lazymatch goal with
            end: polyTimeComputable.
 
 
-Lemma mono_map_time X `{registered X} (f: nat -> nat) (xs: list X):
+Lemma mono_map_time X `{encodable X} (f: nat -> nat) (xs: list X):
   monotonic f
   -> sumn (map (fun x => f (L_facts.size (enc x))) xs) <= length xs * f (L_facts.size (enc xs)).
 Proof.
@@ -257,7 +257,7 @@ Proof.
   rewrite (Hf (L_facts.size (enc xs)) (L_facts.size (enc a) + L_facts.size (enc xs) + 5)). 2:nia. reflexivity.
 Qed.
 
-Lemma pTC_map X Y `{registered X} `{registered Y} (f:X -> Y):
+Lemma pTC_map X Y `{encodable X} `{encodable Y} (f:X -> Y):
   polyTimeComputable f -> polyTimeComputable (map f).
 Proof.
   intros Hf.
@@ -281,7 +281,7 @@ Proof.
 Qed.
 
 
-Lemma pTC_concat X Y `{registered X} `{registered Y} (f:X -> list (list Y)):
+Lemma pTC_concat X Y `{encodable X} `{encodable Y} (f:X -> list (list Y)):
   polyTimeComputable f -> polyTimeComputable (fun x => concat (f x)).
 Proof.
   intros Hf.
@@ -325,7 +325,7 @@ Proof.
   1,2:unfold size;smpl_inO.
 Qed.
 
-Lemma pTC_app X Y `{registered X} `{registered Y} (f1 f2:X -> list Y):
+Lemma pTC_app X Y `{encodable X} `{encodable Y} (f1 f2:X -> list Y):
   polyTimeComputable f1 -> polyTimeComputable f2 -> polyTimeComputable (fun x => f1 x ++ f2 x).
 Proof.
   intros Hf1 Hf2.
@@ -348,7 +348,7 @@ Proof.
 Qed.
   
 
-Lemma pTC_initValue X  sig tau `{registered X} `{registered sig} `{registered tau} (cX : codable sig X) (r:Retract sig tau) :
+Lemma pTC_initValue X  sig tau `{encodable X} `{encodable sig} `{encodable tau} (cX : codable sig X) (r:Retract sig tau) :
   polyTimeComputable cX -> polyTimeComputable (Retr_f (Retract:=r)) ->  polyTimeComputable (initValue cX r).
 Proof.
   unfold initValue. intros cX_pTC r_pTC. 
@@ -356,7 +356,8 @@ Proof.
   2:{ refine (_ : polyTimeComputable (fun x => (midtape [] (inl START)) x)).
       exists (fun _ => 5). extract.
       Unshelve. solverec. 1,2:now smpl_inO.
-      evar (size : nat -> nat). exists size. unfold enc;cbn;intros x. refine (_:23 + _ <= _). set (n0:=L_facts.size (list_enc x)). [size]: intros n0. unfold size;reflexivity.
+      evar (size : nat -> nat). exists size. unfold enc at 1;cbn;intros x.
+      set (n0:=L_facts.size (enc x)). [size]:intros n0. repeat (unfold enc,size; cbn). reflexivity.
       all:unfold size. all:smpl_inO.
   }
   eapply pTC_app.
@@ -392,9 +393,8 @@ Proof.
     nia. }
   1,2:now smpl_inO.
   eexists (fun x => x*5 + 33).
-  { intros [];cbn. all:rewrite size_list.
-    2-4:now unfold enc, c__listsizeCons, c__listsizeNil;cbn.
-    cbn.
+  { intros [];cbn. 2-4:now cbv.
+    rewrite size_list;unfold enc;cbn - ["+"].
     rewrite map_app,map_repeat,sumn_map_add,sumn_map_c,map_app,sumn_app,map_repeat, map_map,app_length,repeat_length,map_length,sumn_repeat.
     unfold enc. cbn;ring_simplify. rewrite LNat.size_nat_enc. unfold LNat.c__natsizeS, LNat.c__natsizeO, c__listsizeNil, c__listsizeCons. nia.
   }
@@ -418,7 +418,7 @@ Qed.
 
 Smpl Add 1 simple eapply pTC_Encode_Prog : polyTimeComputable.
 
-Lemma pTC_inl X Y `{registered X} `{registered Y} : polyTimeComputable (@inl X Y). 
+Lemma pTC_inl X Y `{encodable X} `{encodable Y} : polyTimeComputable (@inl X Y). 
 Proof. 
   eexists (fun x => _). eapply term_inl. 1, 2: smpl_inO. 
   eexists (fun x => _). intros x. rewrite size_sum. set (L_facts.size (enc x)). reflexivity. 
@@ -426,7 +426,7 @@ Proof.
 Qed.
 Smpl Add 1 eapply pTC_inl : polyTimeComputable. 
 
-
+From Complexity.L.Complexity Require Import Subtypes.
 Lemma LMGenNP_to_TMGenNP_mTM:
   restrictBy (LMHaltsOrDiverges (list bool)) (LMGenNP (list bool)) ⪯p (restrictBy (HaltsOrDiverges_fixed_mTM (projT1 M.M)) (TMGenNP_fixed_mTM (projT1 M.M))).
 Proof.
@@ -443,7 +443,7 @@ Proof.
 
   
   
-  eapply @reducesPolyMO_intro_restrictBy with
+  eapply @reducesPolyMO_intro_restrictBy_both with
       (f:=fun '(P,maxSize,steps) => (M.ts__start P,f__size maxSize,S (f__steps (steps,P,maxSize)))).
   2:intros [[P maxSize] steps] H; split.
   2:{ hnf in H|-*. destruct H as ((s&->&s__proc)&HsmallCert&Hk).
@@ -532,7 +532,7 @@ Proof.
           eexists (fun x => _). intros x. rewrite size_sigList. set (size _). reflexivity. all:smpl_inO.
       }
       { eexists (fun x' => _). now apply (term_sigPair_Y).  1,2:now smpl_inO.
-        eexists (fun x => 4 + _). intros x. unfold enc,sigPair_enc;cbn. set (size _). reflexivity. all:smpl_inO.
+        eexists (fun x => 4 + _). intros x. unfold enc;cbn. set (size _). reflexivity. all:smpl_inO.
       }
     }
     -unfold f__steps. nary apply pTC_destructuringToProj.

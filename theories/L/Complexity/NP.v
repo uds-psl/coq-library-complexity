@@ -1,4 +1,4 @@
-From Complexity.L.Complexity Require Export Synthetic RegisteredP.
+From Complexity.L.Complexity Require Export Synthetic EncodableP.
 From Undecidability.L.Complexity Require Export LTD_def.
 From Undecidability.L.Tactics Require Import LTactics.
 
@@ -12,27 +12,24 @@ From Undecidability.L Require Export Functions.Decoding.
 
 Section NP_certificate_fix.
   Variable X Y : Type.
-
-  Definition curryRestrRel vX (R : {x : X | vX x} -> Y -> Prop) : restrictedP (fun '(x,_) => vX x) :=
-  (fun '(exist (x,y) Hx) => (R (exist vX x Hx) y)).
   
-  Context `{Reg__X : registered X}.
-  Context `{RegY : registered Y}.
+  Context `{Reg__X : encodable X}.
+  Context `{RegY : encodable Y}.
 
-  Definition inTimePoly {X} `{registered X} `(P:restrictedP (X:=X) vX):=
+  Definition inTimePoly {X} `{encodable X} `(P: X -> Prop):=
     exists f, inhabited (decInTime P f) /\ inOPoly f /\ monotonic f.
 
-  Record polyCertRel {vX : X -> Prop} (P:restrictedP vX) (R: {x | vX x} -> Y -> Prop) : Type :=
+  Record polyCertRel (P: X -> Prop) (R: X -> Y -> Prop) : Type :=
     polyBoundedWitness_introSpec
       {
         p__pCR : nat -> nat;
         sound__pCR : forall x y, R x y -> P x;
-        complete__pCR : forall x, P x -> exists (y:Y), R x y /\ size (enc y) <= p__pCR (size (enc (proj1_sig x)));
+        complete__pCR : forall x, P x -> exists (y:Y), R x y /\ size (enc y) <= p__pCR (size (enc x));
         poly__pCR : inOPoly p__pCR ;
         mono__pCR : monotonic p__pCR;
       }.
 
-  Lemma polyCertRel_compPoly vX (P:restrictedP vX) R:
+  Lemma polyCertRel_compPoly (P:X -> Prop) R:
     polyCertRel P R -> exists H : polyCertRel P R , inhabited (polyTimeComputable (p__pCR H)).
   Proof.
     intros R__spec.  destruct (inOPoly_computable (poly__pCR R__spec)) as (p'&?&Hbounds&?&?).
@@ -46,7 +43,7 @@ Section NP_certificate_fix.
   Qed.
 
   
-  Lemma inTimePoly_compTime  `(P:restrictedP (X:=X) vX):
+  Lemma inTimePoly_compTime  (P:X -> Prop):
     inTimePoly P -> exists f, inhabited (polyTimeComputable f) /\ inhabited (decInTime P f) /\ inOPoly f /\ monotonic f.
   Proof.
     intros (time&[P__dec]&t__poly&t__mono).
@@ -59,7 +56,7 @@ Section NP_certificate_fix.
   Qed.
 
   (*
-  Lemma polyCertRel_equiv {vX : X -> Prop} (P P' : restrictedP vX) R :
+  Lemma polyCertRel_equiv {vX : X -> Prop} (P P' : X -> Prop) R :
     (forall x, P x <-> P' x)
     -> polyCertRel P R -> polyCertRel P' R.
   Proof.
@@ -68,28 +65,25 @@ Section NP_certificate_fix.
     all:firstorder.
   Qed.*)
 
-  (*TODO: here and below, specify the lemmas using restrictBy, as this is main intend in use. *)
   
 End NP_certificate_fix.
 Smpl Add 10 (simple apply poly__pCR) : inO.
 Smpl Add 10 (simple apply mono__pCR) : inO.
 
 Local Set Warnings "-cannot-define-projection".
-Record inNP {X} `{registered X} `(P:restrictedP (X:=X) vX) : Prop :=
+Record inNP {X} `{encodable X} (P : X -> Prop) : Prop :=
   inNP_introSpec
     {
-      R_NP : {x | vX x} -> term -> Prop; (* certificate fixed to term for simplicity *)
-      R_NP__comp : inTimePoly (curryRestrRel R_NP);
-      R_NP__correct : polyCertRel P (R_NP) (*TODO: What if moved to spec__R(better: move condition externally)? and only require that some small certificate satisfies condition? It seems that we might want that every certificate is valid, but there must exist a small one? *)
+      R_NP : X  -> term -> Prop; (* certificate fixed to term for simplicity *)
+      R_NP__comp : inTimePoly (fun '(x,y) => R_NP x y);
+      R_NP__correct : polyCertRel P R_NP (*TODO: What if moved to spec__R(better: move condition externally)? and only require that some small certificate satisfies condition? It seems that we might want that every certificate is valid, but there must exist a small one? *)
     }.
 
 
 
-Arguments curryRestrRel {_ _ _} R !x.
-
-Lemma inNP_intro {X Y} `{_:registered X} `{registered Y} {_:decodable Y} `(P:@restrictedP X vX) (R : _ -> Y -> Prop):
+Lemma inNP_intro {X Y} `{_:encodable X} `{encodable Y} `{@encInj Y _} {_:decodable Y} `(P:X -> Prop) (R : _ -> Y -> Prop):
   polyTimeComputable (decode Y)
-  -> inTimePoly (curryRestrRel R)
+  -> inTimePoly (fun '(x,y) => R x y)
   -> polyCertRel P R
   -> inNP P.
 Proof.
@@ -118,14 +112,14 @@ Proof.
      +unfold f'. extract.
       solverec.
       all:rewrite !size_prod. all:cbn [fst snd].
-      *eapply decode_correct2 in H2 as <-.
+      *eapply decode_correct2 in H3 as <-.
        remember (size (enc a) + size (enc (enc y)) + 4) as n eqn:eqn.
        rewrite (mono_t__f _ n). 2:subst n;rewrite <- size_term_enc_r;lia.
        rewrite (mono__polyTC _ (x':=n)). 2:lia.
        unfold t__f';reflexivity.
       *rewrite (mono__polyTC _ (x':=(size (enc a) + size (enc b) + 4))). 2:lia.
        unfold t__f'. lia.
-     +unfold f'. intros [x] Hx. cbn.
+     +unfold f'. intros [x]. cbn.
       destruct decode  as [y| ] eqn:H'.
       *etransitivity. 2:unshelve eapply correct__decInTime;easy. cbn.
        eapply decode_correct2 in H'. symmetry in H'.
@@ -140,16 +134,16 @@ Proof.
 Qed.
 
 (** P *)
-Definition inP (X : Type) `{_: registered X} (vX : X -> Prop) (P : restrictedP vX) := inTimePoly P. 
+Definition inP (X : Type) `{_: encodable X}  (P : X -> Prop) := inTimePoly P. 
 
 (** P <<= NP *)
 
-Lemma P_NP_incl (X : Type) `{registered X} (vX : X -> Prop) (P : restrictedP vX) : 
+Lemma P_NP_incl (X : Type) `{encodable X}  (P : X -> Prop) : 
   inP P -> inNP P. 
 Proof. 
   intros H1. unfold inP in H1. 
-  eapply (inNP_intro (Y:= unit)) with (R := fun x _ => P x). 
-  - apply linDec_polyTimeComputable.
+  eapply (inNP_intro (Y:= unit)) with (R := fun x _ => P x).
+  - eapply linDec_polyTimeComputable.
   - destruct H1 as (f & H1 & H2 & H3). evar (f' : nat -> nat). exists f'. 
     split. 
     { destruct H1 as [H1]. destruct H1. 
@@ -158,89 +152,56 @@ Proof.
         rewrite H3 with (x' := size (enc (a, tt))). 2: { rewrite size_prod; cbn; lia. }  
         [f']: intros n. subst f'. cbn. 
         generalize (size (enc (a, tt))). intros; reflexivity.
-      + intros [x ?] Hx. cbn. apply correct__decInTime. 
+      + intros [x ?]. cbn. apply correct__decInTime. 
     } 
     split; subst f'; smpl_inO. 
   - exists (fun n => size (enc tt)). 
     3, 4: smpl_inO. 
-    + intros [x Hx] _. easy.
-    + intros [x Hx] H2. exists tt. easy. 
+    + intros x _. easy.
+    + intros x H2. exists tt. easy. 
 Qed. 
 
 (** ** Poly Time Reduction s*)
 
 Generalizable Variable vY.
-Record reducesPolyMO X Y `{registered X} `{registered Y} `(P : restrictedP vX) `(Q : restrictedP vY) :Prop :=
-  reducesPolyMO_introSpec {
+Record reducesPolyMO X Y `{encodable X} `{encodable Y} `(P : X -> Prop) `(Q : Y -> Prop) :Prop :=
+  reducesPolyMO_intro {
       f : X -> Y;
       f__comp : polyTimeComputable f;
-      f__condition : forall x, vX x -> vY (f x);
-      f__correct : forall x Hx,  P (exist vX x Hx) <-> Q (exist vY (f x) (f__condition Hx))
+      f__correct : forall x, P x <-> Q (f x) 
     }.
 
 Notation "P ⪯p Q" := (reducesPolyMO P Q) (at level 50).
 
+From Complexity.L.Datatypes Require Import LDepPair.
 
-Lemma reducesPolyMO_intro X Y `{RX: registered X} `{RY:registered Y} `(P : restrictedP vX) `(Q : restrictedP vY) (f:X -> Y):
-  polyTimeComputable f
-  -> (forall x (Hx : vX x), {Hy : vY (f x) | (P (exist vX x Hx)) <-> (Q (exist vY (f x) Hy))})
-  -> P ⪯p Q.
-Proof.
-  intros H H'. econstructor. eassumption. all:intros ? ?. apply (proj2_sig (H' _ Hx)).
-Qed.
 
-Lemma reducesPolyMO_intro_unrestricted X Y `{RX: registered X} `{RY:registered Y} (P : X -> Prop) (Q : Y -> Prop) (f:X -> Y):
-  polyTimeComputable f
-  -> (forall x , P x <-> Q (f x))
-  -> (unrestrictedP P) ⪯p (unrestrictedP Q).
-Proof.
-  intros H H'. 
-  eapply reducesPolyMO_intro; [apply H | ].  
-  cbn. intros x _. exists Logic.I. apply H'. 
-Qed.
 
-Lemma reducesPolyMO_intro_restrictBy X Y `{RX: registered X} `{RY:registered Y} (vP P : X -> Prop) (vQ Q:Y->Prop) (f:X -> Y):
-  polyTimeComputable f
-  -> (forall x (Hx : vP x), {Hfx : vQ (f x) | (P x <-> Q (f x))})
-  -> restrictBy vP P ⪯p restrictBy vQ Q.
-Proof.
-  intros H H'. econstructor. eassumption. Unshelve. all:intros ? ?. all:now edestruct H'. 
-Qed.
-
-Lemma reducesPolyMO_elim X Y `{RX: registered X} `{RY:registered Y} `(P : restrictedP (X:=X) vX) `(Q : restrictedP (X:=Y) vY):
+Lemma reducesPolyMO_elim X Y `{RX: encodable X} `{RY:encodable Y} `(P : X -> Prop) `(Q : Y -> Prop):
   P ⪯p Q ->
   exists f, inhabited (polyTimeComputable f)
-  /\ (forall x (Hx : vX x), {Hy : vY (f x) | (P (exist vX x Hx)) <-> (Q (exist vY (f x) Hy))}).
+  /\ (forall x , P x <-> Q (f x)).
 Proof.
-  intros [f ? ? ?]. eexists;split. easy.
-  intros. eexists. easy.
+  intros [f ? ?]. eexists;split. all:easy.
 Qed.
 
-Lemma reducesPolyMO_restriction_antimonotone X `{R :registered X} {vP} (P:restrictedP vP) {vQ} (Q:restrictedP vQ):
-  (forall (x:X) Hx, {Hy | P (exist vP x Hx) <-> Q (exist vQ x Hy)})
-  -> P ⪯p Q.
+
+Lemma reducesPolyMO_reflexive X {regX : encodable X} (P : X -> Prop) : P ⪯p P.
 Proof.
-  intros f . 
-  eapply reducesPolyMO_intro with (f := fun x => x). 2:easy.  
+  eapply reducesPolyMO_intro with (f := fun x => x). 2:easy. 
   exists (fun _ => 1). 4:exists (fun x => x).
   2,3,5,6:solve [ smpl_inO].
   -extract. solverec.
   -reflexivity.
 Qed.
 
-Lemma reducesPolyMO_reflexive X {regX : registered X} `(P : restrictedP (X:=X) vX) : P ⪯p P.
-Proof.
-  eapply reducesPolyMO_restriction_antimonotone. intros ? H. exists H. reflexivity. 
-Qed.
-
-Lemma reducesPolyMO_transitive X Y Z {vX vY vZ} {regX : registered X} {regY : registered Y} {regZ : registered Z} (P : restrictedP (X:=X)vX) (Q : restrictedP (X:=Y)vY) (R : restrictedP (X:=Z)vZ) :
+Lemma reducesPolyMO_transitive X Y Z {regX : encodable X} {regY : encodable Y} {regZ : encodable Z}
+  (P : X -> Prop) (Q : Y -> Prop) (R : Z -> Prop) :
   P ⪯p Q -> Q ⪯p R -> P ⪯p R.
 Proof.
-  intros [f f__c Hf Hf'] [g g__c Hg Hg'].
+  intros [f f__c  Hf] [g g__c Hg ].
   eapply reducesPolyMO_intro with (f:= fun x =>g (f x)).
-  2:{intros ?. eexists. now rewrite Hf',Hg'. 
-  }
-  clear dependent Hf. clear dependent Hg.
+  2:{intros ?. now rewrite Hf,Hg. }
   (*destruct Cf as [t__f ? ? f__mono (sizef&H__sizef&?&?)] , Cg as [t__g ? ? g__mono (size__g&?&?&?)]. *)
   exists (fun x => time__polyTC f__c x + time__polyTC g__c (resSize__rSP f__c x) + 1).
   -extract. solverec.
@@ -253,11 +214,11 @@ Proof.
    +eapply monotonic_comp. all:smpl_inO.
 Qed.
 
-Lemma red_inNP X Y `{regX : registered X} `{regY : registered Y} `(P : restrictedP (X:=X) vX) `(Q : restrictedP (X:=Y) vY) :
+Lemma red_inNP X Y `{regX : encodable X} `{regY : encodable Y} (P : X -> Prop) `(Q : Y -> Prop) :
   P ⪯p Q -> inNP Q -> inNP P.
 Proof.
-  intros [f f__comp Hf] [R polyR certR]. 
-  unshelve eexists (fun '(exist x Hx) z => R (exist vY _ _) z). 1,2:easy. 
+  intros [f f__comp f__correct] [R polyR certR]. 
+  exists (fun x z => R (f x) z).  
   -(* destruct (polyRes__polyTC f__comp) as (size__f&Hsize__f&?&mono__sizef). *)
    destruct polyR as (time__R&[R__comp]&inO__timeR&mono__timeR).
    evar (time : nat -> nat). [time]:intros n.
@@ -270,13 +231,13 @@ Proof.
      erewrite (mono__timeR _ _).
      2:{ rewrite (bounds__rSP f__comp), (mono__rSP f__comp (x':=n0)). 2:unfold n0;lia. instantiate (1:=resSize__rSP f__comp n0 + n0). unfold n0;try lia. }
      unfold time. reflexivity. 
-    *intros [x c] Hx. cbn. rewrite <- correct__decInTime;cbn. easy.   
+    *intros [x c]. cbn. rewrite <- correct__decInTime;cbn. easy.   
    +unfold time;split;smpl_inO.
     { eapply inOPoly_comp. all:smpl_inO. }
   -clear - certR f__correct f__comp.
    exists (fun x =>  p__pCR certR (resSize__rSP f__comp x)). 
-   +intros [] ? ?%(sound__pCR certR);cbn. now apply f__correct.
-   +intros [] Hx;cbn. apply f__correct in Hx. edestruct (complete__pCR certR) as (?&?&?). eauto. eexists;split. easy.
+   +intros ? ? ?%(sound__pCR certR);cbn. now apply f__correct.
+   +intros x Hx;cbn. apply f__correct in Hx. edestruct (complete__pCR certR) as (?&?&?). eauto. eexists;split. easy.
     rewrite H0. cbn. apply mono__pCR. apply bounds__rSP.
    +apply inOPoly_comp;smpl_inO.
    +smpl_inO.
@@ -286,37 +247,31 @@ Qed.
 
 
 (** ** NP Hardness and Completeness *)
-Definition NPhard X `{registered X} `(P:restrictedP (X:=X) vX) :=
-  forall Y `(registeredP Y) vY (Q:restrictedP (X:=Y) vY),
+Definition NPhard X `{encodable X} (P : X -> Prop) :=
+  forall Y `(encodableP Y) (Q:Y -> Prop),
     inNP Q -> Q ⪯p P.
 
-Lemma red_NPhard X Y `{registered X} `{registered Y} `(P:restrictedP (X:=X) vX) `(Q:restrictedP (X:=Y) vY)
+Lemma red_NPhard X Y `{encodable X} `{encodable Y} (P : X -> Prop) `(Q:Y -> Prop)
   : P ⪯p Q -> NPhard P -> NPhard Q.
 Proof.
   intros R hard.
-  intros ? ? ? ? Q' H'. apply hard in H'. 2:easy. 
+  intros ? ? ? Q' H'. apply hard in H'. 2:easy. 
   eapply reducesPolyMO_transitive  with (1:=H'). all:eassumption.
 Qed.
 
-Corollary NPhard_traditional X `{registered X} vX `(P : X -> Prop):
-  NPhard (fun (x:{x | vX x}) => P (proj1_sig x)) -> NPhard (unrestrictedP P).
+
+Corollary NPhard_sig X `{encodable X} vX `(P : X -> Prop):
+  NPhard (fun (x:{x | vX x}) => P (proj1_sig x)) -> NPhard P.
 Proof.
   eapply red_NPhard.
-  eapply reducesPolyMO_restriction_antimonotone.
-  all: cbn. all:easy.
+  eapply reducesPolyMO_intro with (f := fun x => proj1_sig x). 2:easy. 
+  exists (fun _ => 2). 4:exists (fun x => x).
+  2,3,5,6:solve [ smpl_inO].
+  -extract. solverec.
+  -reflexivity.
 Qed.
 
-Corollary NPhard_traditional2 X `{registered X} `{Pv : restrictedP vX} (P : X -> Prop):
-  (forall (x : X) (Hv : vX x), Pv (exist vX x Hv) <-> P x)
-  -> NPhard Pv -> NPhard (unrestrictedP P).
-Proof.
-  intros H'.
-  eapply red_NPhard.
-  eapply reducesPolyMO_restriction_antimonotone.
-  all: cbn. all:easy.
-Qed.
-
-Definition NPcomplete X `{registered X} `(P : restrictedP (X:=X) vX) :=
+Definition NPcomplete X `{encodable X} (P : X -> Prop) :=
   NPhard P /\ inNP P.
 
 Hint Unfold NPcomplete : core.

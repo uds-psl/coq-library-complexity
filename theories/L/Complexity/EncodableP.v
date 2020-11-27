@@ -4,23 +4,23 @@ From Undecidability.L.Datatypes Require Import LProd LTerm.
 From Undecidability.L Require Import Functions.Encoding.
 From Complexity Require Import Complexity.Monotonic .
 
-Class registeredP `(X:Type) `{registered X}: Type :=
+Class encodableP `(X:Type) `{encodable X}: Type :=
   {
     c__regP : nat;
     comp_enc_lin : computableTime' (enc (X:=X)) (fun x _ => (size (enc x) *c__regP,tt));
   }.
 
-Arguments registeredP : clear implicits.
-Arguments registeredP _ {_}.
+Arguments encodableP : clear implicits.
+Arguments encodableP _ {_}.
 Arguments c__regP : clear implicits.
 Arguments c__regP _ {_ _} : simpl never.
-Hint Mode registeredP + + : typeclass_instances. (* treat argument as input and force evar-freeness*)
+Hint Mode encodableP + + : typeclass_instances. (* treat argument as input and force evar-freeness*)
 
 Existing Instance comp_enc_lin.
 Typeclasses Opaque enc.
 
 
-Instance regP_nat : registeredP nat.
+Instance regP_nat : encodableP nat.
 Proof.
   evar (c:nat).
   exists c.
@@ -32,7 +32,7 @@ Proof.
 Qed.
 
 
-Instance regP_term : registeredP term.
+Instance regP_term : encodableP term.
 Proof.
   evar (c:nat).
   exists c.
@@ -43,7 +43,7 @@ Proof.
   cbn [fst]. rewrite -> size_term_enc_r. [c]:exact 30. unfold c. nia.
 Qed.
 
-Instance regP_Prod X Y `{registeredP X} `{registeredP Y}: registeredP (X*Y).
+Instance regP_Prod X Y `{encodableP X} `{encodableP Y}: encodableP (X*Y).
 Proof.
   evar (c:nat).
   exists c.
@@ -57,7 +57,7 @@ Qed.
 
 From Undecidability.L.Datatypes Require Import Lists.
 
-Instance regP_list X `{registeredP X}: registeredP (list X).
+Instance regP_list X `{encodableP X}: encodableP (list X).
 Proof.
   evar (c:nat).
   exists c.
@@ -72,7 +72,7 @@ Qed.
 
 Import LOptions.
 
-Instance regP_option X `{registeredP X}: registeredP (option X).
+Instance regP_option X `{encodableP X}: encodableP (option X).
 Proof.
   evar (c:nat).
   exists c.
@@ -85,24 +85,15 @@ Proof.
   now destruct l.
 Qed.
 
-Import LBool.
-Instance term_bool_enc
-  :computableTime' (LBool.bool_enc) (fun x _ => (12,tt)).
-Proof.
-  extract. solverec.
-Qed.
-
-
-Instance regP_bool : registeredP bool.
+Instance regP_bool : encodableP bool.
 Proof.
   evar (c:nat).
   exists c.
   eexists _. 
   eapply computesTime_timeLeq.
-  2:now apply term_bool_enc.
+  2:now apply bool_enc.
   intros l _. split. 2:easy.
-  change (enc l) with (LBool.bool_enc l).
-  cbn.
+  unfold enc;cbn.
   [c]:exact (4). unfold c.
-  destruct l;cbn [size LBool.bool_enc]. all:lia.
+  destruct l;cbn [size ]. all:lia.
 Qed.

@@ -160,7 +160,7 @@ From Complexity.L.Complexity Require Import PolyBounds.
 (** repEl *)
 Section fixX. 
   Context {X : Type}.
-  Context `{H: registered X}. 
+  Context `{H: encodable X}. 
 
   Definition c__repEl2 := 5.
   Definition c__repEl := c__repEl2 + 7.
@@ -503,9 +503,9 @@ Qed.
 (** This is the polynomial-time result of the reduction. 
 For the proof of correctness, see the lemma [CC_to_BinaryCC] and the lemma [FlatCC_to_BinaryCC] for the flat version.
 *)
-Lemma FlatCC_to_BinaryCC_poly : (unrestrictedP FlatCCLang) ⪯p (unrestrictedP BinaryCCLang).
+Lemma FlatCC_to_BinaryCC_poly : FlatCCLang ⪯p BinaryCCLang.
 Proof. 
-  apply reducesPolyMO_intro_unrestricted with (f := reduction).
+  apply reducesPolyMO_intro with (f := reduction).
   - exists poly__reduction. 
     + extract. solverec. 
       all: specialize (reduction_time_bound x) as H1; unfold reduction_time, c__reduction in H1; lia.

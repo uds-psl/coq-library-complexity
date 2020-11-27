@@ -70,7 +70,7 @@ Proof.
     split. 
     - intros C n. unfold clause_length_decb_time. 
       rewrite eqbTime_le_r. rewrite list_size_length at 1. rewrite list_size_enc_length. 
-      instantiate (1 := registered_nat_enc).
+      instantiate (1 := encodable_nat_enc).
       instantiate (1 := fun n => (c__length + c__eqbComp nat) * (n + 1) + c__clauseLengthDecb). 
       cbn -[Nat.add Nat.mul]. solverec. 
     - smpl_inO. 

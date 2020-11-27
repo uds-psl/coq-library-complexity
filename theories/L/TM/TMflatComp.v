@@ -19,7 +19,7 @@ Qed.
 
 
 Definition zipWith_time {X Y} (fT : X -> Y -> nat) (xs:list X) (ys:list Y) := sumn (zipWith (fun x y => fT x y + 18) xs ys) + 9.
-Instance term_zipWith A B C `{registered A} `{registered B} `{registered C}:
+Instance term_zipWith A B C `{encodable A} `{encodable B} `{encodable C}:
   computableTime' (@zipWith A B C) (fun _ fT => (1, fun xs _ => (5,fun ys _ => (zipWith_time (callTime2 fT) xs ys, tt)))).
 Proof.
   extract. unfold zipWith_time. solverec.
@@ -185,7 +185,7 @@ Qed.
 Definition sizeOfmTapesFlat_time sig (t : list (tape sig))
   := sumn (map (@sizeOfTape _) t) * 55 + length t * 95 + 8.
 
-Instance term_sizeOfmTapesFlat sig {H:registered sig}:
+Instance term_sizeOfmTapesFlat sig {H:encodable sig}:
   computableTime' (@sizeOfmTapesFlat sig) (fun t _ => (sizeOfmTapesFlat_time t,tt)).
 Proof.
   assert (H' : extEq
@@ -203,7 +203,7 @@ Proof.
 Qed.
 
 Definition sizeOfmTapesFlat_timeSize n := n * 57.
-Lemma sizeOfmTapesFlat_timeBySize {sig} `{registered sig} (t:list (tape sig)) :
+Lemma sizeOfmTapesFlat_timeBySize {sig} `{encodable sig} (t:list (tape sig)) :
   sizeOfmTapesFlat_time t <= sizeOfmTapesFlat_timeSize (size (enc t)).
 Proof.
   unfold sizeOfmTapesFlat_time,sizeOfmTapesFlat_timeSize.
@@ -218,7 +218,7 @@ Qed.
 Definition allSameEntry_helper {X Y} eqbX eqbY `{_:eqbClass (X:=X) eqbX} `{eqbClass (X:=Y) eqbY}
   := fun x y '(x', y') => implb (eqbX x (x':X)) (eqbY y (y':Y)).
 
-Instance term_allSameEntry_helper {X Y} {HX:registered X} {HY:registered Y}
+Instance term_allSameEntry_helper {X Y} {HX:encodable X} {HY:encodable Y}
          `{eqbCompT X (R:=HX)} `{eqbCompT Y (R:=HY)}
   :
     computableTime' (@allSameEntry_helper X Y _ _ _ _)
@@ -227,7 +227,7 @@ Proof.
   unfold allSameEntry_helper. unfold implb. extract. solverec.
 Qed.
 
-Definition allSameEntry_time X Y {HX:registered X} {HY:registered Y}
+Definition allSameEntry_time X Y {HX:encodable X} {HY:encodable Y}
            `{eqbCompT X (R:=HX)} `{eqbCompT Y (R:=HY)} l x y :=
            l * (x*c__eqbComp X + y* c__eqbComp Y + 42 + c__forallb) + c__forallb + 4.
 
@@ -235,14 +235,14 @@ Arguments allSameEntry_time : clear implicits.
 Arguments allSameEntry_time _ _ {_ _ _ _ _ _ _ _} _ _.
 
 
-Lemma allSameEntry_time_le X Y {HX:registered X} {HY:registered Y}
+Lemma allSameEntry_time_le X Y {HX:encodable X} {HY:encodable Y}
            `{eqbCompT X (R:=HX)} `{eqbCompT Y (R:=HY)} l l' x x' y y' :
   l <= l' -> x <= x' -> y <= y'
   -> allSameEntry_time X Y l x y <= allSameEntry_time X Y l' x' y'.
 Proof. unfold allSameEntry_time. intros -> -> ->. nia. Qed.
 
 
-Instance term_allSameEntry X Y {HX:registered X} {HY:registered Y}
+Instance term_allSameEntry X Y {HX:encodable X} {HY:encodable Y}
          `{eqbCompT X (R:=HX)} `{eqbCompT Y (R:=HY)}:
   computableTime' (@allSameEntry X Y _ _ _ _) (
                     fun x _ => (1,
@@ -269,11 +269,11 @@ Proof.
 Qed.
 
 
-Definition isInjFinfuncTable_time X Y {HX:registered X} {HY:registered Y}
+Definition isInjFinfuncTable_time X Y {HX:encodable X} {HY:encodable Y}
            `{eqbCompT X (R:=HX)} `{eqbCompT Y (R:=HY)} l sf :=
   l * (allSameEntry_time X Y l sf sf + 21) + 8.
 
-Instance term_isInjFinfuncTable X Y {HX:registered X} {HY:registered Y}
+Instance term_isInjFinfuncTable X Y {HX:encodable X} {HY:encodable Y}
          `{eqbCompT X (R:=HX)} `{eqbCompT Y (R:=HY)}:
   computableTime' (@isInjFinfuncTable X Y _ _ _ _) (fun f _ => (isInjFinfuncTable_time (X:=X) (Y:=Y) (length f) (size (enc f)),tt)).
 Proof.

@@ -18,7 +18,7 @@ Lemma compile_enc_size s: size (enc (compile s)) <= size s * c__size.
 Proof.
   rewrite size_list. unfold enc;cbn.
   induction s;cbn [compile].
-  all:repeat (cbn [map size sumn token_enc];autorewrite with list).
+  all:repeat (cbn [map size sumn];autorewrite with list).
   all:ring_simplify.
   rewrite size_nat_enc.
   all:repeat first[rewrite <- IHs1,<- IHs2 | rewrite <- IHs]. all:ring_simplify.
@@ -125,9 +125,9 @@ Qed.
 
 
 Lemma sizeT_compile_list_bool:
-  (fun bs : list bool => sumn (map sizeT (compile (Computable.enc (rev bs))))) <=c (fun bs => length bs + 1).
+  (fun bs : list bool => sumn (map sizeT (compile (enc (rev bs))))) <=c (fun bs => length bs + 1).
 Proof.
-  evar (c:nat). exists c. intros xs. transitivity (sizeP (compile (Computable.enc   (rev xs)))).
+  evar (c:nat). exists c. intros xs. transitivity (sizeP (compile (enc   (rev xs)))).
   now unfold sizeP. unfold sizeP;rewrite sizeP_size,Lists.size_list.
   rewrite map_rev,<-sumn_rev. rewrite MoreBase.sumn_le_bound.
   2:{ intros ? ([]&<-&?)%in_map_iff. all:cbv. reflexivity. nia. }

@@ -48,7 +48,7 @@ Definition tape_decode X `{decodable X} (s : term) : option (tape X) :=
 Arguments tape_decode : clear implicits.
 Arguments tape_decode _ {_ _} _.
 
-Instance decode_tape X {Hreg:registered X} {Hdec:decodable X}: decodable (tape X).
+Instance decode_tape X {Hreg:encodable X} {Hdec:decodable X}: decodable (tape X).
 Proof.
   exists (tape_decode X).
   all:unfold enc at 1. all:cbn.
@@ -59,10 +59,6 @@ Proof.
    all:intros ? [= <-].
    easy.
    all:cbn.
-   all:change (match Hreg with
-               | @mk_registered _ enc _ _ => enc
-               end x) with (enc x).
-   all: change (list_enc (intX:=Hreg)) with (@enc _ _ : list X -> term) in *.
    all: (setoid_rewrite @decode_correct2;[ |try eassumption..]).
    all:reflexivity.
 Defined.

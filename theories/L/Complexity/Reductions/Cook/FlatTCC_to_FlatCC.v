@@ -73,7 +73,7 @@ From Complexity.L.Complexity Require Import PolyBounds.
 
 Section fixX. 
   Variable (X : Type).
-  Context `{X_registered : registered X}.
+  Context `{X_encodable: encodable X}.
 
   (** extraction of TCCCard_to_CCCard *)
   Definition c__TCCCardToCCCard := FlatTCC.cnst_prem + 2 * c__TCCCardPToList + FlatTCC.cnst_conc + 3.
@@ -137,9 +137,9 @@ Proof.
   extract. solverec. unfold FCC_instance_time, c__FCC_instance. solverec. 
 Defined. 
 
-Lemma FlatTCC_to_FlatCC_poly : (unrestrictedP FlatTCCLang) ⪯p (unrestrictedP FlatCCLang).
+Lemma FlatTCC_to_FlatCC_poly : FlatTCCLang ⪯p FlatCCLang.
 Proof. 
-  apply reducesPolyMO_intro_unrestricted with (f := FCC_instance).
+  apply reducesPolyMO_intro with (f := FCC_instance).
   - exists (fun n => c__FCC_instance + poly__CCCards n).  
     + extract. solverec. rewrite CC_cards_time_bound. 
       poly_mono CCCards_poly. 
