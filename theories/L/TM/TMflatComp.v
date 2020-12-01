@@ -3,7 +3,7 @@ From Undecidability.L.TM Require Import TMEncoding TapeFuns.
 From Complexity.L.TM Require Import TMflat TMflatEnc TMflatFun TapeDecode TMunflatten.
 From Undecidability.L.Datatypes Require Import LNat LProd Lists LOptions.
  
-From Complexity.L.Complexity Require Import ONotation Monotonic.
+From Complexity.Complexity Require Import ONotation Monotonic.
 From Undecidability.L Require Import Tactics.LTactics.
 From Undecidability Require Import Functions.Decoding .
 From Complexity Require Import TMflatFun.

@@ -105,7 +105,7 @@ Proof.
   unfold enc;cbn. destruct M as []. cbn. solverec.
 Qed.
 
-From Complexity.L.Complexity Require Export EncodableP LinTimeDecodable.
+From Complexity.Complexity Require Export EncodableP LinTimeDecodable.
 
 
 Instance term_move_enc

@@ -2,11 +2,10 @@ From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import LNat Lists LProd LFinType.
 From Undecidability.L Require Import TM.TMEncoding.
 
-
 From Undecidability Require Import TM.TM.
 
 From Undecidability.L Require Import Functions.Decoding.
-From Complexity.L Require Import Complexity.Synthetic Complexity.LinTimeDecodable.
+From Complexity.Complexity Require Import Definitions LinTimeDecodable.
 
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import LNat Lists LProd LFinType LVector.
