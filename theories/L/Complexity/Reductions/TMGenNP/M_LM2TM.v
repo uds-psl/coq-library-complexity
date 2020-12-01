@@ -61,7 +61,7 @@ Module LMtoTM.
     Import Boollist_to_Enc ListTM Alphabets StepTM.
 
     Definition M : pTM sig ^+ bool 11 :=
-      If (CheckTapeContains.M (CheckEncodeList.M (I:=_)) @ [|Fin0|])
+      If (CheckEncodesBoolList.M _ @ [|Fin0|])
          (Return (F:=FinType (EqType unit)) (LiftTapes (BoollistToEnc.M _ retr__pro) [|Fin0;Fin2;Fin3;Fin4 |];; (* 0:right, 2:compile (enc (rev b)), 3,4:right*)
                   LiftTapes (ChangeAlphabet (WriteValue ([appT])) retr__pro) [| Fin3|];; (*3:[appT]*)
                   LiftTapes (ChangeAlphabet (App' _ ) retr__pro) [|Fin2;Fin3|];; (*3:compile (rev b)++[appT]*)         
@@ -132,8 +132,8 @@ Module LMtoTM.
         all: try now (notypeclasses refine (@Reset_Realise _ _ _ _ _);shelve).
         1:notypeclasses refine (CheckTapeContains.Realise _ _).
         3:notypeclasses refine (CheckTapeContains.Terminates _ _).
-        4:apply CheckEncodeList.Terminates.
-        1,3:apply CheckEncodeList.Realise;now destruct x.
+        4:apply CheckEncodesBoolList.Terminates'.
+        1,3:apply CheckEncodesBoolList.Realise';now destruct x.
         now apply list_encode_prefixInjective,DecodeBool.bool_encode_prefixInjective.
         apply BoollistToEnc.Terminates. 
       }
@@ -247,7 +247,7 @@ Module LMtoTM.
       unfold M. eapply Realise_monotone.
       { TM_Correct.
         1:{  notypeclasses refine (CheckTapeContains.Realise _ _).
-             eapply CheckEncodeList.Realise. now destruct x.
+             eapply CheckEncodesBoolList.Realise'. now destruct x.
              now eapply list_encode_prefixInjective,DecodeBool.bool_encode_prefixInjective. }
         now apply BoollistToEnc.Realise.
         all:try now simple apply App'_Realise.

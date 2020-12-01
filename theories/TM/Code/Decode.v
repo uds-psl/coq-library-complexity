@@ -120,10 +120,8 @@ Module CheckTapeContains.
          (Return Nop false)
     .
 
-    Hypothesis Realises_M_checkX : M_checkX ⊨ ContainsEncoding.Rel (X:=X) encode Retr_f.
-    Hypothesis (prefInj : prefixInjective cX).
-
-    Lemma Realise : M ⊨ Rel.
+    Lemma Realise (Realises_M_checkX : M_checkX ⊨ ContainsEncoding.Rel (X:=X) encode Retr_f) (prefInj : prefixInjective cX) 
+        : M ⊨ Rel.
     Proof.
       Local Set Printing Depth 30.
       unfold M,Rel.
@@ -181,10 +179,13 @@ Module CheckTapeContains.
        unfold retract_inr_f. autorewrite with list. unfold id. rewrite map_map , <- map_rev,rev_involutive. easy.
     Qed.
 
-    Context {T__X} (Terminates_M_checkX : projT1 M_checkX ↓ T__X).
+    Import Ring Arith.
 
-    Lemma Terminates: projT1 M ↓ (fun t k => exists k', T__X ([|tape_move_right t[@Fin0]|]) k'
-                                                /\ k' + 4 * S(| right t[@Fin0] |) + 19 <= k ).
+    Lemma Terminates
+      (Realises_M_checkX : M_checkX ⊨ ContainsEncoding.Rel (X:=X) encode Retr_f)
+      {T__X} (Terminates_M_checkX : projT1 M_checkX ↓ T__X):
+        projT1 M ↓ (fun t k => exists k', T__X ([|tape_move_right t[@Fin0]|]) k'
+        /\ k' + 4 * S(| right t[@Fin0] |) + 19 <= k ).
     Proof.
       eapply TerminatesIn_monotone.
       { unfold M. TM_Correct. all:eassumption. }
@@ -218,7 +219,6 @@ Module CheckTapeContains.
       rewrite tape_local_move_right' in Ht1. subst t__R. autorewrite with list in *. cbn - [mult plus] in *.
       instantiate (1 := k - k' - 15). Lia.nia.
       Unshelve.
-      Import Ring Arith.
       ring_simplify. Lia.nia.
     Qed.
 
