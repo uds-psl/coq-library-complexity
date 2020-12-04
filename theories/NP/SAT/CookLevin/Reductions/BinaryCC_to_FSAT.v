@@ -48,7 +48,7 @@ Section fixInstance.
 
   Lemma encodeCardAt_encodesPredicate start len card : 
     card el cards -> encodesPredicateAt start (len + width) (encodeCardAt start (start + len) card) (fun m => projVars 0 width m = prem card /\ projVars len width m = conc card). 
-  Proof. 
+  Proof using A. 
     intros H0. 
     specialize (encodesPredicate_and (encodeListAt_encodesPredicate start (prem card)) (encodeListAt_encodesPredicate (start + len) (conc card))) as H. 
     destruct A as (_ & _ & _ & A0 & A1 & _). apply A1 in H0 as (H0 & H0').
@@ -64,7 +64,7 @@ Section fixInstance.
   Definition encodeCardsAt (startA startB : nat) := listOr (map (encodeCardAt startA startB) cards). 
 
   Lemma encodeCardsAt_encodesPredicate len start : len >= width -> encodesPredicateAt start (len + width) (encodeCardsAt start (start + len)) (fun m => exists card, card el cards /\ projVars 0 width m = prem card /\ projVars len width m = conc card). 
-  Proof. 
+  Proof using A. 
     intros F0. apply encodesPredicate_listOr_map. 
     intros card Hel. apply encodeCardAt_encodesPredicate, Hel. 
   Qed.
@@ -80,7 +80,7 @@ Section fixInstance.
                     end.
 
   Lemma encodeCardsInLineP_stepindex_monotone' index startA startB : forall n, n <= index -> encodeCardsInLine' index n startA startB = encodeCardsInLine' (S index) n startA startB. 
-  Proof. 
+  Proof using A. 
     destruct A as (A1 & A2 & _).
     revert startA startB.
     induction index as [ | index IH]; intros. 
@@ -90,7 +90,7 @@ Section fixInstance.
   Qed. 
 
   Lemma encodeCardsInLineP_stepindex_monotone index index' startA startB : index' >= index -> encodeCardsInLine' index index startA startB = encodeCardsInLine' index' index startA startB. 
-  Proof. 
+  Proof using A. 
     intros. revert index H.
     induction index' as [ | index' IH]; intros. 
     - assert (index = 0) as -> by lia. easy.
@@ -100,7 +100,7 @@ Section fixInstance.
   Qed.
 
   Lemma encodeCardsInLineP_encodesPredicate start l : l <= llength -> (exists k, l = k * offset) -> encodesPredicateAt start (l + llength) (encodeCardsInLine' l l start (start + llength)) (fun m => valid offset width cards (projVars 0 l m) (projVars llength l m)). 
-  Proof. 
+  Proof using A. 
     intros A0.
     (*need strong induction *)
     destruct A as (A1 & A4 & A2 & A5 & A7 & A3). 
@@ -191,7 +191,7 @@ Section fixInstance.
   (** the above construction specialised to the setting we need: the conclusion starts exactly one line after the premise *)
   Definition encodeCardsInLine start := encodeCardsInLine' llength llength start (start + llength). 
   Lemma encodeCardsInLine_encodesPredicate start : encodesPredicateAt start (llength + llength) (encodeCardsInLine start) (fun m => valid offset width cards (projVars 0 llength m) (projVars llength llength m)). 
-  Proof. 
+  Proof using A. 
     unfold encodeCardsInLine.
     apply (@encodeCardsInLineP_encodesPredicate start llength); [easy | apply A].
   Qed. 
@@ -200,7 +200,7 @@ Section fixInstance.
   Definition encodeCardsInAllLines := listAnd (tabulate_formula 0 llength steps encodeCardsInLine). 
   Lemma encodeCardsInAllLines_encodesPredicate : encodesPredicateAt 0 ((S steps) * llength) encodeCardsInAllLines 
     (fun m => (forall i, 0 <= i < steps -> valid offset width cards (projVars (i * llength) llength m) (projVars (S i * llength) llength m))). 
-  Proof. 
+  Proof using A. 
     eapply encodesPredicateAt_extensional. 
     2: { unfold encodeCardsInAllLines. 
          replace (S steps * llength) with (llength * steps + ((llength + llength) -llength)) by lia. 
@@ -226,7 +226,7 @@ Section fixInstance.
 
   (** the requirement |s| > 0 is needed for monotonicity *)
   Lemma encodeSubstringInLineP_stepindex_monotone' s index start : forall n, |s| > 0 -> n <= index -> encodeSubstringInLine' s index n start = encodeSubstringInLine' s (S index) n start. 
-  Proof. 
+  Proof using A. 
     destruct A as (A1 & A2 & _).
     revert start.
     induction index as [ | index IH]; intros. 
@@ -237,7 +237,7 @@ Section fixInstance.
 
   Lemma encodeSubstringInLineP_stepindex_monotone s index1 index2 start : 
     |s| > 0 -> index2 >= index1 -> encodeSubstringInLine' s index1 index1 start = encodeSubstringInLine' s index2 index1 start.
-  Proof. 
+  Proof using A. 
     intros. revert index1 H0. 
     induction index2 as [ | index2 IH]; intros.
     - assert (index1 = 0) as -> by lia. easy.
@@ -248,7 +248,7 @@ Section fixInstance.
 
   Lemma encodeSubstringInLineP_encodesPredicate s start l : |s| > 0 -> l <= llength 
     -> (exists k, l = k * offset) -> encodesPredicateAt start l (encodeSubstringInLine' s l l start) (fun m => (exists k, k * offset <= l /\ projVars (k * offset) (|s|) m = s)). 
-  Proof. 
+  Proof using A. 
     intros F.
     (*need strong induction *)
     destruct A as (A1 & A4 & A2 & A5 & A7 & A3). 
@@ -314,7 +314,7 @@ Section fixInstance.
   Definition encodeSubstringInLine s start l := match s with [] => Ftrue | _ => encodeSubstringInLine' s l l start end.
 
   Lemma encodeSubstringInLine_encodesPredicate s start l : l <= llength -> (exists k, l = k * offset) -> encodesPredicateAt start l (encodeSubstringInLine s start l) (fun m => (exists k, k * offset <= l /\ projVars (k * offset) (|s|) m = s)). 
-  Proof. 
+  Proof using A. 
     intros. unfold encodeSubstringInLine. destruct s eqn:H1. 
     - unfold satisfies. cbn. intros; split.
       + intros _. exists 0; cbn; firstorder nia.
@@ -326,7 +326,7 @@ Section fixInstance.
   Definition encodeFinalConstraint (start : nat) := listOr (map (fun s => encodeSubstringInLine s start llength) final). 
 
   Lemma encodeFinalConstraint_encodesPredicate start : encodesPredicateAt start llength (encodeFinalConstraint start) (fun m => satFinal offset llength final m).
-  Proof. 
+  Proof using A. 
     unfold encodeFinalConstraint. 
     eapply encodesPredicateAt_extensional; [ | apply encodesPredicate_listOr_map].
     2: { intros. apply encodeSubstringInLine_encodesPredicate; [easy | apply A]. }
@@ -345,7 +345,7 @@ Section fixInstance.
 
   Definition encodeFinalConstraint' := encodeFinalConstraint (steps *llength).
   Lemma encodeFinalConstraint_encodesPredicate' : encodesPredicateAt (steps * llength) llength encodeFinalConstraint' (fun m => satFinal offset llength final m). 
-  Proof. 
+  Proof using A. 
     apply encodeFinalConstraint_encodesPredicate. 
   Qed.
 
@@ -356,7 +356,7 @@ Section fixInstance.
     (fun m => projVars 0 llength m = init 
       /\ (forall i, 0 <= i < steps -> valid offset width cards (projVars (i * llength) llength m) (projVars (S i * llength) llength m)) 
       /\ satFinal offset llength final (projVars (steps * llength) llength m)). 
-  Proof. 
+  Proof using A. 
     specialize (encodesPredicate_and (encodeListAt_encodesPredicate 0 init) encodeCardsInAllLines_encodesPredicate) as H. 
     encodesPredicateAt_comp_simp H.  
     specialize (encodesPredicate_and H encodeFinalConstraint_encodesPredicate') as H1.
@@ -403,7 +403,7 @@ Section fixInstance.
   
   (*the reduction equivalence for the wellformed BinaryCC instance *)
   Lemma reduction_wf : FSAT encodeTableau <-> exists sf, relpower (valid offset width cards) steps init sf /\ satFinal offset llength final sf. 
-  Proof with (try (solve [rewrite explicitAssignment_length; cbn; nia | cbn; lia])). 
+  Proof using A with (try (solve [rewrite explicitAssignment_length; cbn; nia | cbn; lia])). 
     specialize (encodeTableau_encodesPredicate) as H1. split; intros. 
     - destruct H as (a & H). apply H1 in H as (H3 & H4 & H5). 
       exists (projVars (steps * llength) llength (explicitAssignment a 0 (S steps * llength))). 

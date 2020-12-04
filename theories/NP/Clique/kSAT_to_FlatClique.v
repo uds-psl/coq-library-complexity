@@ -21,7 +21,7 @@ Section fixSAT.
   Definition allPositions := list_prod (seq 0 Ncl) (seq 0 k). 
 
   Proposition allPositions_sound : forall ci li, (ci, li) el allPositions -> exists l, cnfGetLiteral N ci li = Some l.
-  Proof. 
+  Proof using Hkcnf. 
     intros ci li Hel. apply in_prod_iff in Hel as (Hel1 & Hel2).
     apply in_seq in Hel1 as (_ & Hel1). apply in_seq in Hel2 as (_ & Hel2). cbn in Hel1, Hel2. 
     unfold cnfGetLiteral, cnfGetClause, clauseGetLiteral.
@@ -79,7 +79,7 @@ Section fixSAT.
   Definition makeEdges := concat (map makeEdge (list_prod allPositions allPositions)). 
 
   Lemma in_makeEdges_iff v1 v2: (v1, v2) el makeEdges <-> (exists ci1 li1 ci2 li2, (ci1 < Ncl /\ li1 < k) /\ (ci2 < Ncl /\ li2 < k) /\ v1 = toVertex (ci1, li1) /\ v2 = toVertex (ci2, li2) /\ ci1 <> ci2 /\ not (opt_literalsConflict (cnfGetLiteral N ci1 li1) (cnfGetLiteral N ci2 li2))). 
-  Proof. 
+  Proof using Hkcnf. 
     unfold makeEdges. rewrite in_concat_map_iff. 
     split. 
     - intros (((ci1 & li1) & (ci2 & li2)) & (H1 & H2)%in_prod_iff & H3). 
@@ -138,7 +138,7 @@ Section fixSAT.
   Qed. 
 
   Lemma flat_edges : @isFlatEdgesOf makeEdges Vf (@Vcnf k N) (@Ecnf k N).
-  Proof. 
+  Proof using Hkcnf. 
     split. 
     - intros v1 v2 H%in_makeEdges_iff. 
       destruct H as (ci1 & li1 & ci2 & li2 & H1 & H2 & -> & -> & H3 & H4).
@@ -166,7 +166,7 @@ Section fixSAT.
   Qed. 
 
   Lemma flat_graph : isFlatGraphOf Gflat (Gcnf k N).
-  Proof. 
+  Proof using Hkcnf. 
     split. 
     - apply vertices_repr.
     - apply flat_edges.
@@ -175,7 +175,7 @@ Section fixSAT.
 
   Context (Hkgt : k > 0).
   Lemma SAT_implies_FlatClique : SAT N -> FlatClique (Gflat, Ncl). 
-  Proof. 
+  Proof using Hkgt Hkcnf. 
     intros (a & H).
     specialize (exists_clique Hkgt Hkcnf H) as (L & [H1 H2]). 
     destruct (clique_flatten flat_graph H2) as (l & H3 & H4). 
@@ -186,7 +186,7 @@ Section fixSAT.
   Qed. 
 
   Lemma FlatClique_implies_SAT : FlatClique (Gflat, Ncl) -> SAT N. 
-  Proof. 
+  Proof using Hkgt Hkcnf. 
     intros (l & [_ [H1 H2]]). 
     specialize (clique_unflatten flat_graph H1) as (L & H3 & H4). 
     eapply (exists_assignment Hkgt Hkcnf). 
@@ -196,7 +196,7 @@ Section fixSAT.
   Qed. 
 
   Theorem SAT_equiv_FlatClique : SAT N <-> FlatClique (Gflat, Ncl). 
-  Proof. 
+  Proof using Hkgt Hkcnf. 
     split; [apply SAT_implies_FlatClique | apply FlatClique_implies_SAT].
   Qed. 
 End fixSAT.

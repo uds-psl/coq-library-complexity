@@ -103,7 +103,7 @@ Section TimeHierarchy_Parametric.
 
   
   Instance term_start : computableTime' start (fun w _ => (size (fst w) *30 + snd w * 14 + 36,tt)).
-  Proof.
+  Proof using E start.
     unfold start. extract. solverec.
   Qed.
 
@@ -124,7 +124,7 @@ Section TimeHierarchy_Parametric.
                                                (if closedb s
                                                 then fT k 
                                                 else 0) + k * 221,tt)).
-  Proof.
+  Proof using termT_f E.
     unfold U_preproc.
     extract. recRel_prettify2.
     all:cbn in H1; rewrite H1 in H0.
@@ -143,7 +143,7 @@ Section TimeHierarchy_Parametric.
 
   Lemma U_spec_helper (s:term) (fuel:N) (padding:nat):
     closed s -> exists t : term, E (enc fuel) (enc (start (s,padding))) ⇓ t.
-  Proof.
+  Proof using E E__spec start t__E.
     intros ?.
     edestruct E__spec as (res &H'&?). 
     2:{
@@ -169,7 +169,7 @@ Section TimeHierarchy_Parametric.
                                            let fuel := f n in
                                            fT n + t__E (largestVar (start w)) (size (start w)) fuel
                                            + n * 221 + 11,tt)).
-  Proof.
+  Proof using E__proc.
     cbn [timeComplexity].
     eapply computesTimeTyArr_helper with (time := (fun w _ => _)).
     { unfold U. Lproc. }
@@ -210,7 +210,7 @@ Section TimeHierarchy_Parametric.
 
   Lemma U_reflects_U_spec w:
     reflect (U (enc w) ⇓ enc true) (U_spec w).
-  Proof.
+  Proof using E__proc.
     unfold L__f.
     assert ((U (enc w)) ⇓ (enc (U_spec w))).
     { destruct U_correct as (?&H').
@@ -226,7 +226,7 @@ Section TimeHierarchy_Parametric.
  
   Lemma spec_L__f w :
     U (enc w) ⇓ enc true <-> L__f w.
-  Proof.
+  Proof using t__E E__spec E__proc.
     unfold L__f.
     specialize (U_reflects_U_spec w) as H.
     unfold U_spec in H.
@@ -264,7 +264,7 @@ Section TimeHierarchy_Parametric.
   
   Lemma LA_In_f_times_step:
     L__f ∈TimeO (fun n => t__E n (2*n) (f n)).
-  Proof.
+  Proof using termT_f suplin_t__E n_leq_tn mono_t__E f_TC fT E__spec E__proc.
     (* intros H_t__E H_t__step. *)
     eexists (fun n => fT n + t__E n (2*n) (f n) + n * 221 + 12). split. split.
     exists U_spec.

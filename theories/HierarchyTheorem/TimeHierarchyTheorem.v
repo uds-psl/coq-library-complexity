@@ -79,7 +79,7 @@ Section TimeHierarchy.
   Lemma inO_size_nat f' g:
     f' ∈O g ->
     (fun n => N.size_nat (N.of_nat (f' n))) ∈O g.
-  Proof.
+  Proof using fT f TC__f.
     intros (c0&n0&H).
     eexists c0,n0.
     intros. rewrite N_size_nat_leq. easy.
@@ -89,7 +89,7 @@ Section TimeHierarchy.
   
   Lemma in_O_t__E :
     (fun n : nat => t__E n (2 * n) (f n)) ∈O (fun n => n * f n * f n).
-  Proof.
+  Proof using f_geq_n fT TC__f.
     unfold t__E,t__evalForTimeBool,t__evalForTime.
 
     all:unfold unfoldBool_time.
@@ -111,7 +111,7 @@ Section TimeHierarchy.
   
   Lemma LA_In_f_times_step':
     L__f ∈TimeO (fun n : nat => t__E n (2 * n) (f n)).
-  Proof.
+  Proof using f_geq_n fT TC__f.
     eapply LA_In_f_times_step.
     all:eauto using comp_t__E,E__spec,proc_extT,inO_time_t__E,mono_t__E,suplin_t__E.
   Qed.
@@ -123,7 +123,7 @@ Section TimeHierarchy.
   
   Lemma LA_In_f_times_step:
     L__f ∈TimeO (fun n => n * f n * f n).
-  Proof.
+  Proof using f_geq_n fT TC__f.
     eapply inTime_mono.
     apply in_O_t__E.
     apply LA_In_f_times_step'.
@@ -131,7 +131,7 @@ Section TimeHierarchy.
 
   Lemma TimeHierarchyTheorem :
     exists (P : term * nat -> Prop), ~P ∈Timeo f /\ P ∈TimeO (fun n => n * f n * f n).
-  Proof.
+  Proof using f_geq_n fT TC__f.
     exists L__f;split. all:eauto using L_A_notIn_f, LA_In_f_times_step.
   Qed.
 End TimeHierarchy.

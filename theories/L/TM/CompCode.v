@@ -95,7 +95,7 @@ Section sigList_eqb.
     end.
 
   Lemma sigList_eqb_spec A B : reflect (A = B) (sigList_eqb A B).
-  Proof.
+  Proof using spec__X.
     destruct A, B; (try now econstructor);cbn.
     -destruct (spec__X s s0); econstructor;congruence.
   Qed.
@@ -243,7 +243,7 @@ Section sigPair_eqb.
     end.
 
   Lemma sigPair_eqb_spec A B : reflect (A = B) (sigPair_eqb A B).
-  Proof.
+  Proof using spec__X spec__Y.
     destruct A, B; (try now econstructor);cbn.
     -destruct (spec__X s s0); econstructor;congruence.
     -destruct (spec__Y s s0); constructor;congruence.
@@ -305,7 +305,7 @@ Section sigOption_eqb.
     end.
 
   Lemma sigOption_eqb_spec A B : reflect (A = B) (sigOption_eqb A B).
-  Proof.
+  Proof using spec__X.
     destruct A, B; (try now econstructor);cbn.
     -destruct (spec__X s s0); econstructor;congruence.
   Qed.
@@ -365,7 +365,7 @@ Section sigSum_eqb.
     end.
 
   Lemma sigSum_eqb_spec A B : reflect (A = B) (sigSum_eqb A B).
-  Proof.
+  Proof using spec__X spec__Y.
     destruct A, B; (try now econstructor);cbn.
     -destruct (spec__X s s0); econstructor;congruence.
     -destruct (spec__Y s s0); constructor;congruence.
@@ -465,7 +465,7 @@ Section sigTape_eqb.
     end.
 
   Lemma sigTape_eqb_spec A B : reflect (A = B) (sigTape_eqb A B).
-  Proof.
+  Proof using spec__X.
     destruct A, B; (try now econstructor);cbn.
     1,2:destruct (eqb_spec marked marked0); econstructor;congruence.
     all:destruct (spec__X s s0); econstructor;congruence.

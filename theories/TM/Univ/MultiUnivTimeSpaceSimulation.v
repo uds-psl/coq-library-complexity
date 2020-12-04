@@ -11,8 +11,6 @@ From Complexity Require UnivSpaceBounds.
 From Complexity Require M2MBounds.
 From Undecidability Require Import TM.Util.VectorPrelim.
 
-Require Import Derive.
-
 
 Local Arguments loopM {_ _} _ _ _.
 Local Arguments halt {_ _} _ _.
@@ -127,11 +125,12 @@ Section InitUniv.
   Variable (retr_sigGraph_sig : Retract sigGraph sig).
   Variable retr_sigTape_sig : Retract sigM sig.
 
-  Derive makeUnivWorkingTape SuchThat (forall (T : tape sigM), containsWorkingTape retr_sigTape_sig (makeUnivWorkingTape T : tape sig^+) T) As makeUnivWorkingTape_correct.
+  Definition makeUnivWorkingTape (T : tape sigM) : tape (sig) ^+
+    := mapTape (fun s : sigM => inr (Retr_f (Retract:=retr_sigTape_sig) s)) T.
+
+  Lemma makeUnivWorkingTape_correct : (forall (T : tape sigM), containsWorkingTape retr_sigTape_sig (makeUnivWorkingTape T : tape sig^+) T).
   Proof.
-    subst makeUnivWorkingTape. cbn. intros.
-    instantiate (1 := fun T => _). cbn.
-    hnf. reflexivity.
+    reflexivity.
   Qed.
 
   Lemma containsWorkingTape_iff (tp : tape sig^+) (T : tape sigM) :
@@ -142,21 +141,25 @@ Section InitUniv.
     - intros ->. apply makeUnivWorkingTape_correct.
   Qed.
 
-  Derive makeUnivGraphTape SuchThat (forall (M : TM sigM 1), containsTrans_size retr_sigGraph_sig (makeUnivGraphTape M : tape sig^+) M 0) As makeUnivGraphTape_correct_size.
+  Definition makeUnivGraphTape : TM sigM 1 -> tape (sig) ^+ :=
+    fun M : TM sigM 1 => initValue (Encode_graph sigM) retr_sigGraph_sig (graph_of_TM M).
+
+  Lemma makeUnivGraphTape_correct_size : (forall (M : TM sigM 1), containsTrans_size retr_sigGraph_sig (makeUnivGraphTape M : tape sig^+) M 0).
   Proof.
-    subst makeUnivGraphTape. cbn. intros.
-    instantiate (1 := fun M => _). cbn.
-    unfold containsTrans. apply initValue_contains_size.
+    cbn. intros. cbn. unfold containsTrans. apply initValue_contains_size.
   Qed.
 
   Lemma makeUnivGraphTape_correct M : containsTrans _ (makeUnivGraphTape M) M.
   Proof. eapply containsTrans_size_containsTrans. apply makeUnivGraphTape_correct_size. Qed.
 
-  Derive makeUnivStartStateTape SuchThat (forall (M : TM sigM 1), containsState_size retr_sigGraph_sig (makeUnivStartStateTape M : tape sig^+) (start M) 0) As makeUnivStartStateTape_correct_size.
+  Definition makeUnivStartStateTape : TM sigM 1 -> tape (sig) ^+ := 
+    fun M : TM sigM 1 =>
+    initValue (Encode_pair Encode_bool Encode_nat)
+      (LowLevel.retr_sigCurrentState_sig retr_sigGraph_sig)
+      (halt M (start M), index (start M)).
+  Lemma makeUnivStartStateTape_correct_size : (forall (M : TM sigM 1), containsState_size retr_sigGraph_sig (makeUnivStartStateTape M : tape sig^+) (start M) 0).
   Proof.
-    subst makeUnivStartStateTape. cbn. intros.
-    instantiate (1 := fun M => _). cbn.
-    unfold containsState. apply initValue_contains_size.
+    cbn. intros. unfold containsState. apply initValue_contains_size.
   Qed.
 
   Lemma makeUnivStartStateTape_correct M : containsState _ (makeUnivStartStateTape M) (start M).
@@ -269,10 +272,11 @@ Section MakeSingleTape.
 
   Variable (sigM : finType) (n : nat). (* We need [finType] here, because [contains_tapes] is defined over [finType] (bug) *)
 
-  Derive makeSingleTape SuchThat (forall (T : tapes sigM n), contains_tapes (makeSingleTape T : tape _) T) As makeSingleTape_correct.
+  Definition makeSingleTape : tapes sigM n -> tape (sigList (sigTape sigM)) ^+ := 
+    fun T : tapes sigM n => midtape [] (inl START) (map inr (encode_tapes T) ++ [inl STOP]).
+     
+  Lemma makeSingleTape_correct : (forall (T : tapes sigM n), contains_tapes (makeSingleTape T : tape _) T).
   Proof.
-    subst makeSingleTape.
-    instantiate (1 := fun T => _). cbn.
     intros. hnf. reflexivity.
   Qed.
 
@@ -1102,7 +1106,7 @@ Section UnivMultiTimeSpaceTheorem.
         let T' := makeSingleTape T in
         let k' := (size (vector_to_list T) + n * k) * (size (vector_to_list T) + n * k) * k in
         Mfp T k <=(c) (sizeOfTape T' + k' + 1) * (sizeOfTape T' + k' + 1) * (k' + 1)}.
-  Proof.
+  Proof using n_ge1.
     eexists. intros. eapply dominatedWith_trans. apply (proj2_sig Mfp_nice1).
     apply dominatedWith_mult3.
     - domWith_approx.
@@ -1131,7 +1135,7 @@ Section UnivMultiTimeSpaceTheorem.
     {c : nat | forall (T : tapes sigM n) (k : nat),
         let k' := (size (vector_to_list T) + n * k) * (size (vector_to_list T) + n * k) * k in
         Mfp T k <=(c) (sizeOfmTapes T + k' + 1) * (sizeOfmTapes T + k' + 1) * (k' + 1)}.
-  Proof.
+  Proof using n_ge1.
     eexists. intros. eapply dominatedWith_trans. apply (proj2_sig Mfp_nice2).
     apply dominatedWith_mult3.
     - subst k'. domWith_approx. setoid_rewrite makeSingleTape_sizeOfmTapes. domWith_approx.
@@ -1146,7 +1150,7 @@ Section UnivMultiTimeSpaceTheorem.
     {c : nat | forall (T : tapes sigM n) (k : nat),
         let k' := (sizeOfmTapes T + k + 1) * (sizeOfmTapes T + k + 1) * k in
         Mfp T k <=(c) (sizeOfmTapes T + k' + 1) * (sizeOfmTapes T + k' + 1) * (k' + 1)}.
-  Proof.
+  Proof using n_ge1.
     eexists. intros. eapply dominatedWith_trans. apply (proj2_sig Mfp_nice3).
     apply dominatedWith_mult3.
     - subst k'. apply dominatedWith_add'. 2: apply dominatedWith_refl; constructor. apply dominatedWith_add'. 1: apply dominatedWith_refl; constructor. apply dominatedWith_mult3.
@@ -1267,7 +1271,7 @@ Section UnivMultiTimeSpaceTheorem.
   (** Complement lemma to [tape_size_nice] *)
   Lemma tape_sizeOfTape_nice (sig : finType) :
     { c : nat | forall (T : tape sig), sizeOfTape T <=(c) size T }.
-  Proof.
+  Proof using n_ge1.
     eexists. intros.
     eapply dominatedWith_trans with (y := Encode_tape_size T).
     - unfold Encode_tape_size. destruct T; cbn.
@@ -1279,7 +1283,7 @@ Section UnivMultiTimeSpaceTheorem.
 
   Lemma makeUnivWorkingTape_sizeOfTape_nice :
     { c | forall (T : tapes sigM n), sizeOfTape (makeUnivWorkingTape (retr_sigSimTape_sigUniv sigM') (makeSingleTape T)) <=(c) sizeOfmTapes T + 1 }.
-  Proof.
+  Proof using n_ge1.
     eexists. intros. eapply dominatedWith_trans. apply (proj2_sig (@tape_sizeOfTape_nice _)).
     eapply dominatedWith_trans. 
     rewrite makeUnivWorkingTape_size.
@@ -1312,7 +1316,7 @@ Section UnivMultiTimeSpaceTheorem.
   Lemma containsState_size_hasSize tp s (q : state M') :
     containsState_size (retr_sigSimGraph_sigUniv sigM') tp q s ->
     Encode_tape_size tp <= index q + s + 6.
-  Proof.
+  Proof using n_ge1.
     intros (ls&->&Hs). repeat (cbn -[graph_of_TM encode]; simpl_list).
     progress eenough ((| ls |) + S ((| encode (halt M' q, index q) |) + 1) + 2 <= _) as H. (* magic *)
     { cbn -[graph_of_TM] in H|-*. rewrite map_length. apply H. }
@@ -1331,7 +1335,7 @@ Section UnivMultiTimeSpaceTheorem.
     forall (tp : tape sigMU) T_univ (q : state M') (T : tapes sigM n) (s_Univ : Vector.t nat 6),
       contains_conf_MU'_size tp T_univ q T s_Univ ->
       sizeOfTape tp <= contains_conf_MU_size_exact_size T T_univ q s_Univ.
-  Proof.
+  Proof using n_ge1.
     intros tp T_univ q T s_Univ. intros (H_univ&HT0&HT1&HT2&HT3).
     apply (proj1 (@contains_tapes_iff _ _ _ _)) in H_univ as ->.
     (* Destruct and name the tapes and size vector entries *)
@@ -1357,7 +1361,7 @@ Section UnivMultiTimeSpaceTheorem.
     { c : nat | forall (tp : tape sigMU) (q : state M') (T : tapes sigM n),
         contains_conf_MU_size tp q T (Vector.const 0 6) ->
         sizeOfTape tp <=(c) sizeOfmTapes T + 1 }.
-  Proof.
+  Proof using n_ge1.
     eexists. intros tp q T. intros (T_Univ&Univ_contains).
     setoid_rewrite contains_conf_MU_size_eq; eauto.
     unfold contains_conf_MU_size_exact_size.

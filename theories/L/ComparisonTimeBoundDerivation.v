@@ -241,7 +241,7 @@ Section uptoc_pure.
       - the rare cases where the time functions for a partially-applied cascaded function are not 1 (like below...)
     *)
     Fact _term_list_in_decb : { time : UpToC list_in_decb_time & computableTime' (@list_in_decb X eqbX) (fun L _ => (5, fun e _ => (time L, tt))) }.
-    Proof.
+    Proof using XeqbComp Xeq.
       exists_const c.
       { extract. solverec; cycle 1.
         + unfold eqbTime. rewrite Nat.le_min_l.
@@ -413,7 +413,7 @@ Section uptoc_poly.
 
     Definition list_in_decb_time (L : list X) := ((|L|) + 1) * (maxSize L + 1) + 1.
     Fact _term_list_in_decb : { time : UpToC list_in_decb_time & computableTime' (@list_in_decb X eqbX) (fun L _ => (5, fun e _ => (time L, tt))) }.
-    Proof.
+    Proof using XeqbComp Xeq.
       exists_const c.
       { extract. solverec; cycle 1.
         + unfold eqbTime. rewrite Nat.le_min_l.
@@ -508,7 +508,7 @@ Section uptoc_mixed.
 
     Definition list_in_decb_time (L : list X) := ((|L|) + 1) * (maxSize L + 1) + 1.
     Fact _term_list_in_decb : { time : UpToC list_in_decb_time & computableTime' (@list_in_decb X eqbX) (fun L _ => (5, fun e _ => (time L, tt))) }.
-    Proof.
+    Proof using XeqbComp Xeq.
       exists_const c.
       { extract. solverec; cycle 1.
         + unfold eqbTime. rewrite Nat.le_min_l.
@@ -877,7 +877,7 @@ Section fixX.
       polyTimeComputable f1
       -> polyTimeComputable f2
       -> polyTimeComputable (fun y => @list_in_decb X eqbX (f1 y) (f2 y)).
-    Proof.
+    Proof using XeqbComp Xeq.
       intros. eapply polyTimeComputable_composition2. 1-2: eauto.
       exists_poly p.
       { extract. solverec.

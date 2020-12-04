@@ -45,5 +45,7 @@ Makefile.coq: _CoqProject
 
 dummy:
 
-%.vo: Makefile.coq dummy
-	$(MAKE) -f Makefile.coq $@
+force _CoqProject Makefile: ;
+
+%: Makefile.coq force
+	@+$(MAKE) -f Makefile.coq $@

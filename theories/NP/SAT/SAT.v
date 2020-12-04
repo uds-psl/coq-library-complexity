@@ -214,7 +214,7 @@ Section fixX.
   end. 
 
   Lemma in_intersect_iff (a b : list X) : forall x, x el intersect a b <-> x el a /\ x el b. 
-  Proof. 
+  Proof using H. 
     intros x. induction a; cbn; [tauto | ].
     destruct list_in_decb eqn:H1. 
     - apply list_in_decb_iff in H1; [ | apply H]. 
@@ -229,7 +229,7 @@ Section fixX.
   end. 
 
   Lemma in_dedup_iff (a : list X) : forall x, x el dedup a <-> x el a. 
-  Proof. 
+  Proof using H. 
     intros x. induction a; cbn; [easy | ]. 
     destruct list_in_decb eqn:H1. 
     - apply list_in_decb_iff in H1; [ | apply H]. 
@@ -241,7 +241,7 @@ Section fixX.
   Qed. 
 
   Lemma dupfree_dedup (a : list X) : dupfree (dedup a). 
-  Proof. 
+  Proof using H. 
     induction a; cbn; [ eauto using dupfree | ]. 
     destruct list_in_decb eqn:H1. 
     - apply list_in_decb_iff in H1; easy. 
@@ -455,7 +455,7 @@ Section extraction.
 
     Definition list_in_decb_time (L : list X) := ((|L|) + 1) * (maxSize L + 1) + 1.
     Fact _term_list_in_decb : { time : UpToC list_in_decb_time & computableTime' (@list_in_decb X eqbX) (fun L _ => (5, fun e _ => (time L, tt))) }. 
-    Proof. 
+    Proof using XeqbComp. 
       exists_const c.  
       { extract. solverec; cycle 1. 
         + unfold eqbTime. rewrite Nat.le_min_l. 

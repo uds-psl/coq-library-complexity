@@ -106,7 +106,7 @@ Section fixSAT.
     Definition verticesClauseGe (L : list (V Gcnf)) (i : nat) := forall ci li, (ci, li) el L -> index ci >= i.
 
     Proposition Vcnf_inhabitated : |N| > 0 -> exists (v : Vcnf), True.
-    Proof. 
+    Proof using Hkgt Hkcnf. 
       clear H_sat.
       unfold Vcnf, Ncl.
       intros H1. destruct k, N; cbn in *; try lia.
@@ -125,7 +125,7 @@ Section fixSAT.
     Lemma literalInClause_exists_vertex l C i: 
       l el C -> cnfGetClause N i = Some C -> exists (v : V Gcnf), 
       let (ci, li) := v in index ci = i /\ clauseGetLiteral C (index li) = Some l.
-    Proof.
+    Proof using Hkgt Hkcnf.
       clear H_sat.
       intros H1 H2. 
       destruct Vcnf_inhabitated as ((cdef & ldef) & _).
@@ -159,7 +159,7 @@ Section fixSAT.
     Hint Constructors dupfree : core.
     Lemma exists_clique' N' i : (exists N'', N = N'' ++ N') -> |N'| + i = |N| -> 
         exists L, isKClique (|N'|) L /\ verticesClauseGe L i /\ (forall v, v el L -> vertexSatisfied a__sat v).
-    Proof. 
+    Proof using Hkgt Hkcnf H_sat. 
       revert i. induction N'; cbn; intros. 
       - exists []. unfold isKClique, verticesClauseGe. cbn. split; [split; [lia | ] | split; [intros ? _ [] | tauto]].
         unfold isClique. split; [ intros ? ? [] | eauto].
@@ -194,7 +194,7 @@ Section fixSAT.
     Qed.
 
     Lemma exists_clique: exists (L : list (V Gcnf)), isKClique Ncl L.
-    Proof. 
+    Proof using a__sat Hkgt Hkcnf H_sat. 
       specialize (@exists_clique' N 0 ltac:(exists []; firstorder) ltac:(lia)) as (L & H & _). 
       unfold Ncl. exists L; apply H.
     Qed.
@@ -235,11 +235,11 @@ Section fixSAT.
     Qed. 
 
     Fact lt_le_rew (a b c : nat) : a < b -> b <= c -> a < c. 
-    Proof. lia. Qed.
+    Proof using Hkgt. lia. Qed.
 
     Definition ofClause (v : V Gcnf) i := match v with (ci, li) => index ci = i end.  
     Lemma clique_vertex_for_all_clauses : forall i, i < Ncl -> exists v, v el L /\ ofClause v i.
-    Proof. 
+    Proof using Hkgt Hclique.
       intros i Hi. eapply contradiction_dec_bipredicate with (p := fun i L => exists v : Vcnf, v el L /\ ofClause v i).
       1: { clear i L Hclique Hi. intros i L. 
            induction L. 
@@ -279,7 +279,7 @@ Section fixSAT.
     Definition satPositions := toPos L.
 
     Lemma satPositions_dupfree : dupfree satPositions. 
-    Proof. 
+    Proof using Hclique. 
       unfold satPositions, toPos. 
       apply dupfree_map. 2: apply Hclique.
       intros (ci1 & li1) (ci2 & li2) _ _ [=]. 
@@ -287,7 +287,7 @@ Section fixSAT.
     Qed. 
 
     Lemma satPositions_for_all_clauses : forall i, i < Ncl -> exists li, (i, li) el satPositions. 
-    Proof. 
+    Proof using Hkgt Hclique. 
       intros i (v & H1 & H2)%clique_vertex_for_all_clauses. 
       destruct v as (ci & li).
       exists (index li). unfold toPos. apply in_map_iff.  
@@ -303,7 +303,7 @@ Section fixSAT.
       -> (ci1, li1) <> (ci2, li2) 
       -> exists l1 l2, cnfGetLiteral N ci1 li1 = Some l1 
           /\ cnfGetLiteral N ci2 li2 = Some l2 /\ not (literalsConflict l1 l2). 
-    Proof. 
+    Proof using Hkcnf Hclique. 
       intros H1 H2 Hneq. unfold satPositions, toPos in *. 
       apply in_map_iff in H1 as ((Ci1 & Li1) & H1' & H1). inv H1'.
       apply in_map_iff in H2 as ((Ci2 & Li2) & H2' & H2). inv H2'. 
@@ -341,7 +341,7 @@ Section fixSAT.
     Qed. 
 
     Proposition satPositions_valid ci li : (ci, li) el satPositions -> exists l, cnfGetLiteral N ci li = Some l. 
-    Proof. 
+    Proof using Hkcnf. 
       unfold satPositions, toPos. intros ((Ci & Li) & H1' & H1)%in_map_iff. inv H1'.
       unfold cnfGetLiteral, cnfGetClause, clauseGetLiteral. 
 
@@ -364,7 +364,7 @@ Section fixSAT.
     Definition satLiterals := toLiterals satPositions. 
 
     Lemma satLiterals_for_all_clauses : forall C, C el N -> exists l, l el C /\ l el satLiterals.
-    Proof. 
+    Proof using Hkgt Hkcnf Hclique. 
       intros C Hel. apply In_nth_error in Hel as (i & Hel). 
       specialize (nth_error_Some_lt Hel) as Hel'.
       specialize (satPositions_for_all_clauses Hel') as (li & H1). 
@@ -377,7 +377,7 @@ Section fixSAT.
     Qed. 
 
     Lemma satLiterals_sat a : (forall l, l el satLiterals -> evalLiteral a l = true) -> evalCnf a N = true. 
-    Proof. 
+    Proof using Hkgt Hkcnf Hclique. 
       intros H. apply evalCnf_clause_iff. setoid_rewrite evalClause_literal_iff. 
       intros C (l & Hl & Hsat)%satLiterals_for_all_clauses.  
       exists l. split; [apply Hl | ]. 
@@ -385,7 +385,7 @@ Section fixSAT.
     Qed. 
 
     Lemma satLiterals_not_conflicting : forall l1 l2, l1 el satLiterals -> l2 el satLiterals -> not(literalsConflict l1 l2).
-    Proof. 
+    Proof using Hkcnf Hclique.
       intros l1 l2 Hel1 Hel2. 
       unfold satLiterals, toLiterals in *. 
       apply in_filterSome_iff, in_map_iff in Hel1 as ((ci1 & li1) & Hel1' & Hel1). 
@@ -418,7 +418,7 @@ Section fixSAT.
     Definition satAssgn := toAssignment satLiterals.
 
     Lemma satAssgn_sat_literals : forall l, l el satLiterals -> evalLiteral satAssgn l = true. 
-    Proof. 
+    Proof using Hkcnf Hclique. 
       intros l Hel. destruct l as (b & v). apply evalLiteral_var_iff. 
       destruct b. 
       - apply evalVar_in_iff. apply in_toAssignment_iff, Hel. 
@@ -429,20 +429,20 @@ Section fixSAT.
     Qed. 
 
     Lemma satAssgn_sat_cnf : satisfies satAssgn N. 
-    Proof. 
+    Proof using Hkgt Hkcnf Hclique. 
       unfold satisfies. 
       apply satLiterals_sat, satAssgn_sat_literals.  
     Qed. 
 
     Corollary exists_assignment : exists a, satisfies a N. 
-    Proof. 
+    Proof using Hkgt Hkcnf Hclique. 
       exists satAssgn; apply satAssgn_sat_cnf. 
     Qed. 
 
   End Clique_implies_SAT. 
 
   Corollary reduction_to_Clique : kSAT k N <-> Clique (Gcnf, Ncl).
-  Proof. 
+  Proof using Hkgt Hkcnf. 
     split.
     - intros (_ & _ & (a & H)). eapply exists_clique, H. 
     - intros (L & H). split; [ | split]. 

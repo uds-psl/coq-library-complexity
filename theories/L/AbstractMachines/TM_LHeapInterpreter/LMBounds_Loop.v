@@ -110,7 +110,7 @@ Section FixInit.
       forall P0 (T V : list HClos) (H : Heap) i,
         pow step i ([(0,P0)],[],H__init) (T,V,H)
         -> Step_steps T V H <=(c) (length H__init + i +1 + sizeP P0 )^3}.
-  Proof.
+  Proof using empty_H__init.
     eexists. intros P0 T V H i H0. eapply dominatedWith_trans. eapply (proj2_sig LM.Step_steps_nice).
     destruct T as [ | [a P] T].
     2:{
@@ -150,7 +150,7 @@ Section FixInit.
       forall P0 (T V : list HClos) (H : Heap) k i,
        pow step i ([(0,P0)],[],H__init) (T,V,H)
         -> Loop_steps T V H k <=(c) (k + 1) * (length H__init + (i+k) +1 + sizeP P0 )^3}.
-  Proof.
+  Proof using empty_H__init.
     evar (c:nat).
     eexists c. intros P0 T V H k.
     induction k in T,V,H |-*.
@@ -191,7 +191,7 @@ Section FixInit.
   Lemma Loop_steps_nice :
     (fun '(P0,k) => Loop_steps [(0,P0)] [] H__init k)
     <=c (fun '(P0,k) => (k + 1) * (length H__init + k +1 + sizeP P0 )^3).
-  Proof.
+  Proof using empty_H__init.
     eexists. intros [? ?].
     assert (H':= proj2_sig Loop_steps_nice'). cbn beta in H'. unfold dominatedWith in H'. 
     specialize H' with (i:=0). cbn [plus] in H'.

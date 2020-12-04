@@ -74,7 +74,7 @@ Section fixGraph.
  
   (** We require dupfreeness as list_finReprEl' does not enforce any order or how often an element appears *)
   Lemma clique_flat_agree l (L: list (V UG)): dupfree l -> dupfree L -> list_finReprEl' l L -> isfClique G l <-> isClique L. 
-  Proof. 
+  Proof using H. 
     destruct G as (fV & fE). destruct H as (Hv & He). inv He.
     intros Hdup1 Hdup2 [H1 H2]. unfold isfClique, isClique. split. 
     - intros (F1 & F2 & F3). split; [ | easy]. 
@@ -96,7 +96,7 @@ Section fixGraph.
 
   (** Constructively flatten and unflatten a clique. *)
   Lemma clique_flatten (L : list (V UG)) : isClique L -> {l : list fvertex & isfClique G l /\ |l| = |L| }. 
-  Proof. 
+  Proof using H. 
     intros Hc. exists (map index L). split; [ | now rewrite map_length].
     eapply clique_flat_agree. 
     - apply dupfree_map. 2: apply Hc. intros. now apply injective_index. 
@@ -106,7 +106,7 @@ Section fixGraph.
   Defined. 
 
   Lemma clique_unflatten (l : list nat) : isfClique G l -> { L : list (V UG) & isClique L /\ |L| = |l| }. 
-  Proof. 
+  Proof using H. 
     intros Hc. destruct G as (Vf & Ef) eqn:Heq. 
     unfold isfClique in Hc. 
     edestruct (finRepr_exists_list (proj1 H) (proj1 Hc)) as (L & H1). 

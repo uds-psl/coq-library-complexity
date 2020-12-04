@@ -6,7 +6,7 @@ Section sig.
 
   
   Global Instance encodable_sig : encodable(sig P).
-  Proof.
+  Proof using reg_A.
     apply (registerAs (proj1_sig (P:=P))). 
   Defined.
 

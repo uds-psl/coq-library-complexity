@@ -90,7 +90,7 @@ Section fixTM.
 
   Lemma TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP : 
     TMGenNP_fixed_singleTapeTM M ⪯p  FlatFunSingleTMGenNP. 
-  Proof. 
+  Proof using index__comp. 
     apply reducesPolyMO_intro with (f := reduction). 
     - evar (f : nat -> nat). exists f. 
       + eexists. eapply computesTime_timeLeq. 2: apply term_reduction. 
