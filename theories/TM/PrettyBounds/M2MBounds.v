@@ -431,7 +431,7 @@ Section ToSingleTape_bounds.
                      | _ ::: vs' => Vector.cast (vector_drop _ _ vs' k') _
                      end
             end); abstract lia.
-  Defined.
+  Defined (* because informative *).
 
   (* Generalisation of the lemma [map_vect_list_app] *)
   Lemma map_vect_list_app_drop (X Y : Type) (f : X -> Y -> X) (n : nat) (vs : Vector.t Y n) (xs ys : list X)

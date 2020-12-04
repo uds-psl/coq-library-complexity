@@ -40,7 +40,7 @@ Section fixTM.
   Proof. 
     extract. solverec. 
     rewrite map_time_const. unfold reduction_time, c__reduction. ring_simplify.  nia. 
-  Defined.  
+  Qed.  
 
   Lemma reduction_correct p : TMGenNP_fixed_singleTapeTM M p <-> FlatFunSingleTMGenNP (reduction p). 
   Proof. 

@@ -73,10 +73,10 @@ Section fixTM.
   Inductive delim : Set := delimC. 
   Hint Constructors delim : core.
   Global Instance delim_eqTypeC : eq_dec delim.
-  Proof. unfold dec. decide equality. Defined. 
+  Proof. unfold dec. decide equality. Defined (* because informative *). 
 
   Global Instance delim_finTypeC : finTypeC (EqType delim). 
-  Proof. exists [delimC]. intros []. simpl. dec; congruence. Defined. 
+  Proof. exists [delimC]. intros []. simpl. dec; congruence. Defined (* because informative *). 
 
   Notation "#" := (inl delimC). 
 
@@ -3588,7 +3588,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
   Definition allRules := combP simRules preludeRules. 
 
   Global Instance preludeSigP_eqTypeC : eq_dec preludeSig'.
-  Proof. unfold dec. decide equality. now destruct (eqType_dec σ σ0). Defined. 
+  Proof. unfold dec. decide equality. now destruct (eqType_dec σ σ0). Defined (* because informative *). 
 
   Global Instance preludeSigP_finTypeC : finTypeC (EqType preludeSig'). 
   Proof. 
@@ -3598,7 +3598,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
     apply dupfreeCount.
     - apply dupfree_map; [intros; congruence | apply dupfree_elements]. 
     - apply in_map_iff. exists σ. split; easy. 
-  Defined. 
+  Defined (* because informative *). 
   
   (** The reduction from ExPTCC to PTCC which is provided by the prelude*)
   Lemma prelude_reduction_from_ExPTCC : @ExPTCC (FinType (EqType Gamma)) simRules finalSubstrings t isValidInitialString l 
@@ -5086,7 +5086,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
       | [H : Some _ = optReturn _ |- _] => apply Some_injective in H; apply TCCCard_inj in H as [(?&?&?)%TCCCardP_inj (?&?&?)%TCCCardP_inj]; subst
       | [H : False |- _] => destruct H
       end. 
-      par: auto 5 using liftPrelude with core.
+      all:auto 5 using liftPrelude with core.
   Qed. 
 
   Definition allFinCards := finPreludeCards ++ allFinSimCards. 
@@ -5593,7 +5593,7 @@ Proof.
   intros. rewrite <- H0. 
   exists (unflattenTM tm).
   apply unflattenTM_correct, H. 
-Defined. 
+Defined (* because informative *). 
 
 Lemma FlatSingleTMGenNP_to_FlatTCC (f : TMflat.flatTM * list nat * nat * nat) : FlatSingleTMGenNP f <-> FlatTCCLang (reduction f). 
 Proof. 

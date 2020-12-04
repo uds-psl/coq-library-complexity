@@ -17,7 +17,7 @@ Instance termT_S : computableTime' closT (fun _ _ => (1,tt)).
 Proof.
   extract constructor.
   solverec.
-Defined.
+Qed.
 
 Instance TermT_init : computableTime' init (fun s _ => (108 * size s + 44,tt)).
 Proof. extract. solverec. Qed.

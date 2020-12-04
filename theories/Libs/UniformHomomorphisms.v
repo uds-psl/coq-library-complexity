@@ -128,6 +128,6 @@ Proof.
     + rewrite homo_nil by auto; easy.
     + rewrite homo_cons by auto. rewrite app_length, IH. cbn. enough (|h[a]| = |h[e]|) as -> by lia.
       apply H2. 
-Defined. 
+Defined. (* because informative ? *)
       
 

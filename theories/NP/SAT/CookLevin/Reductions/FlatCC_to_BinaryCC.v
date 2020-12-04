@@ -167,7 +167,7 @@ Section fixX.
   Global Instance term_repEl : computableTime' (@repEl X) (fun n _ => (c__repEl2, fun e _ => (repEl_time n, tt))). 
   Proof. 
     extract. solverec. all: unfold repEl_time, c__repEl, c__repEl2; solverec.
-  Defined. 
+  Qed. 
 
   Lemma repEl_time_mono : monotonic repEl_time. 
   Proof. 
@@ -298,7 +298,7 @@ Definition hcard_time (fpr : FlatCC) (card : CCCard nat) := hflat_time fpr (prem
 Instance term_hcard : computableTime' hcard (fun fpr _ => (1, fun card _ => (hcard_time fpr card, tt))). 
 Proof. 
   extract. solverec. unfold hcard_time, c__hcard. solverec. 
-Defined. 
+Qed. 
 
 Definition poly__hcard n := poly__hflat n + poly__hflat n + c__hcard. 
 Lemma hcard_time_bound fpr card : hcard_time fpr card <= poly__hcard (size (enc fpr) + size (enc card)).
@@ -332,7 +332,7 @@ Definition hcards_time (fpr : FlatCC) := map_time (fun w => hcard_time fpr w) (c
 Instance term_hcards : computableTime' hcards (fun fpr _ => (hcards_time fpr, tt)). 
 Proof. 
   extract. solverec. unfold hcards_time, c__hcards. solverec. 
-Defined. 
+Qed. 
 
 Definition c__hcardsBound := (c__hcards + 1) * (c__map + 1).
 Definition poly__hcards n :=  ((n + 1) * (poly__hcard (n+ n) + 1) + 1) * c__hcardsBound.
@@ -372,7 +372,7 @@ Definition hfinal_time (fpr : FlatCC) := map_time (fun l => hflat_time fpr l) (f
 Instance term_hfinal : computableTime' hfinal (fun fpr _ => (hfinal_time fpr, tt)). 
 Proof. 
   extract. solverec. unfold hfinal_time, c__hfinal; solverec. 
-Defined.
+Qed.
 
 Definition c__hfinalBound := (c__hfinal + 1) * (c__map + 1).
 Definition poly__hfinal n :=  ((n + 1) * (poly__hflat (n+ n) + 1) + 1) * c__hfinalBound.
@@ -413,7 +413,7 @@ Proof.
   unfold hBinaryCC. unfold hoffset, hwidth, hsteps, hinit.  
   extract. solverec. unfold mult_time. 
   unfold hBinaryCC_time, c__hBinaryCC, c__hBinaryCC2. lia. 
-Defined. 
+Qed. 
 
 Definition poly__hBinaryCC n := c__hBinaryCC2 * (2 * n * n + n + poly__hflat (n +n) + poly__hcards n + poly__hfinal n) + c__hBinaryCC. 
 Lemma hBinaryCC_time_bound fpr : hBinaryCC_time fpr <= poly__hBinaryCC (size (enc fpr)). 
@@ -471,7 +471,7 @@ Definition reduction_time (fpr : FlatCC) := FlatCC_wf_dec_time fpr + isValidFlat
 Local Instance term_reduction : computableTime' reduction (fun fpr _ => (reduction_time fpr, tt)).
 Proof. 
   extract. solverec. all: unfold reduction_time, c__reduction; solverec. 
-Defined.  
+Qed.  
 
 Definition poly__reduction n := poly__FlatCCWfDec n + poly__isValidFlatteningDec n + poly__hBinaryCC n + c__reduction. 
 Lemma reduction_time_bound fpr : reduction_time fpr <= poly__reduction (size (enc fpr)). 

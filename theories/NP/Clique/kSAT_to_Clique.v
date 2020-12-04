@@ -68,7 +68,7 @@ Section fixSAT.
     destruct (nat_eq_dec n n0).
     - destruct (bool_eq_dec b b0); tauto.
     - now right.
-  Defined. 
+  Defined (* because informative*). 
 
   Lemma Ecnf_dec v1 v2 : {Ecnf (v1, v2) } + {not (Ecnf (v1, v2))}. 
   Proof. 
@@ -81,7 +81,7 @@ Section fixSAT.
     - destruct cnfGetLiteral; [ | now left].
       destruct cnfGetLiteral; [ | now left].
       destruct (literalsConflict_dec p p0); tauto.
-  Defined.
+  Defined (* because informative*). 
 
   Definition Gcnf := Build_UGraph Ecnf_dec Ecnf_symm.
 

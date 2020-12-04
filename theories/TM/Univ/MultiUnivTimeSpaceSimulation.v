@@ -437,10 +437,10 @@ Section M2M_Retract.
   Notation M' := (projT1 pM').
 
   Definition ToSingleTape_Loop_inj (q q' : state (projT1 pM)) : state (projT1 (Loop q')).
-  Proof. apply StateWhile.liftState with (l := q). apply start. Defined.
+  Proof. apply StateWhile.liftState with (l := q). apply start. Defined (* because informative *).
 
   Definition ToSingleTape_inj (q : state (projT1 pM)) : state (projT1 pM').
-  Proof. apply ToSingleTape_Loop_inj. apply q. Defined.
+  Proof. apply ToSingleTape_Loop_inj. apply q. Defined (* because informative *).
 
   Lemma ToSingleTape_Loop_graph (q q' : state (projT1 pM)) :
     graph_of_TM (projT1 (Loop q)) = graph_of_TM (projT1 (Loop q')).

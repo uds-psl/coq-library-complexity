@@ -1031,7 +1031,7 @@ Proof.
     instantiate (1 := fun n => _). cbn -[Nat.add Nat.mul]. generalize (size (enc bpr)). reflexivity. 
   - smpl_inO. 
   - smpl_inO. 
-Defined. 
+Qed. 
 
 Lemma encodeTableau_enc_size : {f : nat -> nat & (forall bpr, BinaryCC_wellformed bpr -> size (enc (encodeTableau bpr)) <= f (size (enc bpr))) /\ inOPoly f /\ monotonic f}.
 Proof. 

@@ -16,38 +16,38 @@ Hint Resolve flatTM_enc_correct : Lrewrite.
 Instance term_Build_TM : computableTime' (Build_flatTM) (fun _ _ => (1,fun _ _ => (1,fun _ _ => (1,fun _ _ => (1,fun _ _ => (1,fun _ _ => (1,tt))))))).
 Proof.
   extract constructor. solverec. 
-Defined.
+Qed.
 
 Instance term_sig : computableTime' sig (fun _ _ => (9,tt)).
 Proof.
   extract. solverec.
-Defined.
+Qed.
 
 
 Instance term_tapes : computableTime' tapes (fun _ _ => (9,tt)).
 Proof.
   extract. solverec.
-Defined.
+Qed.
 
 Instance term_states : computableTime' states (fun _ _ => (9,tt)).
 Proof.
   extract. solverec.
-Defined.
+Qed.
 
 Instance term_trans : computableTime' trans (fun _ _ => (9,tt)).
 Proof.
   extract. solverec.
-Defined.
+Qed.
 
 Instance term_start : computableTime' start (fun _ _ => (9,tt)).
 Proof.
   extract. solverec.
-Defined.
+Qed.
 
 Instance term_halt : computableTime' halt (fun _ _ => (9,tt)).
 Proof.
   extract. solverec.
-Defined.
+Qed.
 
 
 (*
@@ -84,7 +84,7 @@ Proof.
     *reflexivity.
     *cbn;lia.
     *easy.
-Defined.
+Qed.
 
 
 Instance linDec_TM : linTimeDecodable TM.

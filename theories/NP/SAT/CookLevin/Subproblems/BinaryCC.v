@@ -44,43 +44,43 @@ From Complexity.Libs.CookPrelim Require Import PolyBounds.
 Instance term_Build_BinaryCC : computableTime' Build_BinaryCC (fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, tt))))))).
 Proof.
   extract constructor. solverec. 
-Defined. 
+Qed. 
 
 Definition c__offset := 9.
 Instance term_BinaryCC_offset : computableTime' offset (fun _ _ => (c__offset, tt)). 
 Proof. 
   extract. unfold c__offset. solverec. 
-Defined. 
+Qed. 
 
 Definition c__width := 9.
 Instance term_BinaryCC_width : computableTime' width (fun _ _ => (c__width, tt)). 
 Proof. 
   extract. unfold c__width. solverec. 
-Defined. 
+Qed. 
 
 Definition c__init := 9.
 Instance term_BinaryCC_init : computableTime' init (fun _ _ => (c__init, tt)). 
 Proof. 
   extract. unfold c__init. solverec. 
-Defined. 
+Qed. 
 
 Definition c__cards := 9.
 Instance term_BinaryCC_cards : computableTime' cards (fun _ _ => (c__cards, tt)). 
 Proof. 
   extract. unfold c__cards. solverec. 
-Defined. 
+Qed. 
 
 Definition c__final := 9.
 Instance term_BinaryCC_final : computableTime' final (fun _ _ => (c__final, tt)). 
 Proof. 
   extract. unfold c__final. solverec. 
-Defined. 
+Qed. 
 
 Definition c__steps := 9.
 Instance term_BinaryCC_steps : computableTime' steps (fun _ _ => (c__steps, tt)). 
 Proof. 
   extract. unfold c__steps. solverec. 
-Defined. 
+Qed. 
 
 Lemma BinaryCC_enc_size (fpr : BinaryCC) : size (enc fpr) = size(enc (offset fpr)) + size (enc (width fpr)) + size (enc (init fpr)) + size (enc (cards fpr)) + size (enc (final fpr)) + size (enc (steps fpr)) + 8. 
 Proof. 

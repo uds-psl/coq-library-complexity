@@ -758,7 +758,7 @@ Instance term_eliminateOR : computableTime' eliminateOR (fun f _ => (eliminateOR
 Proof. 
   extract. solverec. 
   all: unfold eliminateOR_time, c__eliminateOR; solverec.
-Defined. 
+Qed. 
 
 Definition poly__eliminateOR n := c__eliminateOR * n.
 Lemma eliminateOR_time_bound f : eliminateOR_time f <= poly__eliminateOR (size (enc f)). 

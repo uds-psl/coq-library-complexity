@@ -52,7 +52,7 @@ Local Definition def n : Fin.t (max 1 n).
 Proof.
   destruct n;cbn.
   all:now constructor.
-Defined.
+Defined (* because ?*).
 
 Program Definition unflattenTM (M:flatTM) : TM (finType_CS (Fin.t (sig M))) (tapes M) :=
   let d := def _ in

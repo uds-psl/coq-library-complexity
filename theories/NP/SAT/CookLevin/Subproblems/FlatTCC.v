@@ -346,25 +346,25 @@ Section fix_X.
   Global Instance term_Build_TCCCardP : computableTime' (@Build_TCCCardP X) (fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, tt)))). 
   Proof. 
     extract constructor. solverec. 
-  Defined. 
+  Qed. 
 
   Definition cnst_cardEl1 := 6. 
   Global Instance term_cardEl1 : computableTime' (@cardEl1 X) (fun _ _ => (cnst_cardEl1, tt)). 
   Proof. 
     extract. unfold cnst_cardEl1. solverec. 
-  Defined. 
+  Qed. 
 
   Definition cnst_cardEl2 := 6. 
   Global Instance term_cardEl2 : computableTime' (@cardEl2 X) (fun _ _ => (cnst_cardEl2, tt)). 
   Proof. 
     extract. unfold cnst_cardEl2. solverec. 
-  Defined. 
+  Qed. 
 
   Definition cnst_cardEl3 := 6. 
   Global Instance term_cardEl3 : computableTime' (@cardEl3 X) (fun _ _ => (cnst_cardEl3, tt)). 
   Proof. 
     extract. unfold cnst_cardEl3. solverec. 
-  Defined. 
+  Qed. 
 
   Definition c__sizeTCCCardP := 5. 
   Lemma TCCCardP_enc_size (w : TCCCardP X) : size (enc w) = size (enc (cardEl1 w)) + size (enc (cardEl2 w)) + size (enc (cardEl3 w)) + c__sizeTCCCardP. 
@@ -377,7 +377,7 @@ Section fix_X.
   Global Instance term_TCCCardP_to_list : computableTime' (@TCCCardP_to_list X) (fun _ _ => (c__TCCCardPToList, tt)).
   Proof. 
     extract. unfold c__TCCCardPToList. solverec. 
-  Defined. 
+  Qed. 
 
   (** TCCCard*)
   MetaCoq Run (tmGenEncode "TCCCard_enc" (TCCCard X)). 
@@ -386,19 +386,19 @@ Section fix_X.
   Global Instance term_Build_TCCCard : computableTime' (@Build_TCCCard X) (fun _ _ => (1, fun _ _ => (1, tt))).
   Proof.
     extract constructor. solverec. 
-  Defined. 
+  Qed. 
 
   Definition cnst_prem := 5. 
   Global Instance term_prem : computableTime' (@prem X) (fun _ _ => (cnst_prem, tt)).
   Proof.
     extract. unfold cnst_prem. solverec.
-  Defined. 
+  Qed. 
 
   Definition cnst_conc := 5.
   Global Instance term_conc : computableTime' (@conc X) (fun _ _ => (cnst_conc, tt)). 
   Proof.
     extract. unfold cnst_conc. solverec. 
-  Defined.
+  Qed.
 
   Definition c__sizeTCCCard := 4.
   Lemma TCCCard_enc_size (card : TCCCard X) : size (enc card) = size (enc (prem card)) + size (enc (conc card)) + c__sizeCCCard.
@@ -418,37 +418,37 @@ From Complexity.Libs.CookPrelim Require Import PolyBounds.
 Instance term_Build_FlatTCC : computableTime' Build_FlatTCC (fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, tt)))))).
 Proof.
   extract constructor. solverec. 
-Defined. 
+Qed. 
 
 Definition c__Sigma := 8.
 Instance term_FlatTCC_Sigma : computableTime' Sigma (fun _ _ => (c__Sigma, tt)). 
 Proof.
   extract. unfold c__Sigma. solverec. 
-Defined. 
+Qed. 
 
 Definition c__init := 8.
 Instance term_FlatTCC_init : computableTime' init (fun _ _ => (c__init, tt)). 
 Proof. 
   extract. unfold c__init. solverec. 
-Defined. 
+Qed. 
 
 Definition c__cards := 10.
 Instance term_FlatTCC_cards : computableTime' cards (fun _ _ => (c__cards, tt)). 
 Proof. 
   extract. unfold c__cards. solverec. 
-Defined. 
+Qed. 
 
 Definition c__final := 10.
 Instance term_FlatTCC_final : computableTime' final (fun _ _ => (c__final, tt)). 
 Proof. 
   extract. unfold c__final. solverec. 
-Defined. 
+Qed. 
 
 Definition c__steps := 10.
 Instance term_FlatTCC_steps : computableTime' steps (fun _ _ => (c__steps, tt)). 
 Proof. 
   extract. unfold c__steps. solverec. 
-Defined. 
+Qed. 
 
 Definition c__sizeFlatTCC := 7.
 Lemma FlatTCC_enc_size (fpr : FlatTCC) : size (enc fpr) = size (enc (Sigma fpr)) + size (enc (init fpr)) + size (enc (cards fpr)) + size (enc (final fpr)) + size (enc (steps fpr)) + c__sizeFlatTCC.

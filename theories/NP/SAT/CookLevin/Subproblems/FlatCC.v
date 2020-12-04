@@ -498,19 +498,19 @@ Section fix_X.
   Global Instance term_Build_CCCard : computableTime' (@Build_CCCard X) (fun _ _ => (1, fun _ _ => (1, tt))).
   Proof.
     extract constructor. solverec. 
-  Defined. 
+  Qed. 
 
   Definition cnst_prem := 5. 
   Global Instance term_prem : computableTime' (@prem X) (fun _ _ => (cnst_prem, tt)).
   Proof.
     extract. unfold cnst_prem. solverec.
-  Defined. 
+  Qed. 
 
   Definition cnst_conc := 5.
   Global Instance term_conc : computableTime' (@conc X) (fun _ _ => (cnst_conc, tt)). 
   Proof.
     extract. unfold cnst_conc. solverec. 
-  Defined.
+  Qed.
 
   Definition c__sizeCCCard := 4.
   Lemma CCCard_enc_size (card : CCCard X) : size (enc card) = size (enc (prem card)) + size (enc (conc card)) + c__sizeCCCard.
@@ -529,49 +529,49 @@ From Complexity.Libs.CookPrelim Require Import PolyBounds.
 Instance term_Build_FlatCC : computableTime' Build_FlatCC (fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, tt)))))))).
 Proof.
   extract constructor. solverec. 
-Defined. 
+Qed. 
 
 Definition c__Sigma := 10.
 Instance term_FlatCC_Sigma : computableTime' Sigma (fun _ _ => (c__Sigma, tt)). 
 Proof.
   extract. unfold c__Sigma. solverec. 
-Defined. 
+Qed. 
 
 Definition c__offset := 10.
 Instance term_FlatCC_offset : computableTime' offset (fun _ _ => (c__offset, tt)). 
 Proof. 
   extract. unfold c__offset. solverec. 
-Defined. 
+Qed. 
 
 Definition c__width := 10.
 Instance term_FlatCC_width : computableTime' width (fun _ _ => (c__width, tt)). 
 Proof. 
   extract. unfold c__width. solverec. 
-Defined. 
+Qed. 
 
 Definition c__init := 10.
 Instance term_FlatCC_init : computableTime' init (fun _ _ => (c__init, tt)). 
 Proof. 
   extract. unfold c__init. solverec. 
-Defined. 
+Qed. 
 
 Definition c__cards := 10.
 Instance term_FlatCC_cards : computableTime' cards (fun _ _ => (c__cards, tt)). 
 Proof. 
   extract. unfold c__cards. solverec. 
-Defined. 
+Qed. 
 
 Definition c__final := 10.
 Instance term_FlatCC_final : computableTime' final (fun _ _ => (c__final, tt)). 
 Proof. 
   extract. unfold c__final. solverec. 
-Defined. 
+Qed. 
 
 Definition c__steps := 10.
 Instance term_FlatCC_steps : computableTime' steps (fun _ _ => (c__steps, tt)). 
 Proof. 
   extract. unfold c__steps. solverec. 
-Defined. 
+Qed. 
 
 Lemma FlatCC_enc_size (fpr : FlatCC) : size (enc fpr) = size (enc (Sigma fpr)) + size(enc (offset fpr)) + size (enc (width fpr)) + size (enc (init fpr)) + size (enc (cards fpr)) + size (enc (final fpr)) + size (enc (steps fpr)) + 9. 
 Proof. 
@@ -589,7 +589,7 @@ Section CCCard_of_size.
   Global Instance term_CCCard_of_size_dec : computableTime' (@CCCard_of_size_dec X) (fun width _ => (1, fun card _ => (CCCard_of_size_dec_time width card, tt))). 
   Proof. 
     extract. solverec. unfold CCCard_of_size_dec_time, c__prcardOfSizeDec. nia.  
-  Defined. 
+  Qed. 
 
   Definition c__prcardOfSizeDecBound := c__prcardOfSizeDec + c__eqbComp nat. 
   Lemma CCCard_of_size_dec_time_bound width (card : CCCard X) : CCCard_of_size_dec_time width card <= (size(enc card) + 1) * c__prcardOfSizeDecBound. 
@@ -610,7 +610,7 @@ Proof.
   (*ring_simplify.*)
   rewrite !Nat.le_min_l with (n:=1). 
   simp_comp_arith. ring_simplify. reflexivity.
-Defined.
+Qed.
 (*nia. *)
 (*zify. clear. nia.*)
 
@@ -650,7 +650,7 @@ Definition CCCard_ofFlatType_dec_time (sig : nat) (w : CCCard nat):= list_ofFlat
 Instance term_CCCard_ofFlatType_dec : computableTime' CCCard_ofFlatType_dec (fun sig _ => (1, fun w _ => (CCCard_ofFlatType_dec_time sig w, tt))). 
 Proof.
   extract. solverec. unfold CCCard_ofFlatType_dec_time, c__CCCardOfFlatTypeDec. nia.
-Defined. 
+Qed. 
 
 Definition c__CCCardOfFlatTypeDecBound := 2 * (c__CCCardOfFlatTypeDec + 1).
 Definition poly__CCCardOfFlatTypeDec n := (poly__listOfFlatTypeDec n + 1) * c__CCCardOfFlatTypeDecBound.
@@ -676,7 +676,7 @@ Instance term_isValidFlattening_dec : computableTime' isValidFlattening_dec (fun
 Proof.
   extract. solverec. unfold isValidFlattening_dec_time, c__isValidFlatteningDec.
   repeat change (fun x => ?h x) with h. solverec. 
-Defined. 
+Qed. 
 
 Definition c__isValidFlatteningDecBound := 2 * c__forallb + c__isValidFlatteningDec. 
 Definition poly__isValidFlatteningDec n :=(n + 2) * poly__listOfFlatTypeDec n + (n + 1) * poly__CCCardOfFlatTypeDec n + (n + 1) * c__isValidFlatteningDecBound. 

@@ -51,14 +51,14 @@ Definition clause_length_decb_time (k : nat) (C : clause) := c__length * (|C|) +
 Instance term_clause_length_decb : computableTime' clause_length_decb (fun k _ => (1, fun C _ => (clause_length_decb_time k C, tt))). 
 Proof. 
   extract. solverec. unfold clause_length_decb_time, c__clauseLengthDecb. solverec. 
-Defined. 
+Qed.
 
 Definition c__kCNFDecb := 3. 
 Definition kCNF_decb_time (k : nat) (N : cnf) := forallb_time (fun C => clause_length_decb_time k C) N + c__kCNFDecb.
 Instance term_kCNF_decb : computableTime' kCNF_decb (fun k _ => (1, fun N _ => (kCNF_decb_time k N, tt))). 
 Proof. 
   extract. solverec. unfold kCNF_decb_time, c__kCNFDecb. solverec. 
-Defined. 
+Qed.
 
 Definition c__kCNFDecbBound1 := c__length + c__eqbComp nat.
 Definition c__kCNFDecbBound2 := c__clauseLengthDecb + c__forallb + c__kCNFDecb.

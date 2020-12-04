@@ -255,16 +255,6 @@ Section int.
 
   Variable X Y:Type.
   Context {HX : encodable X} {HY : encodable Y}.
-  (*
-  Global Instance term_sigPair_eqb : computableTime' (@sigPair_eqb X Y)
-                                                    (fun eqb eqbX => (1, (fun _ eqbY => (1,fun a _ => (1,fun b _ => (match a,b with
-                                                                                            sigPair_X a, sigPair_X b => callTime2 eqbX a b + 10
-                                                                                          | sigPair_Y a, sigPair_Y b => callTime2 eqbY a b + 10
-
-                                                                                          | _,_ => 9 end,tt)))))). 
-  Proof.
-    extract. solverec.
-  Defined. *)
 
   Global Instance eqbSigPair f g `{eqbClass (X:=X) f} `{eqbClass (X:=Y) g}:
     eqbClass (sigPair_eqb f g).

@@ -133,22 +133,22 @@ Qed.
 Instance term_Fvar : computableTime' Fvar (fun v _ => (1, tt)). 
 Proof. 
   extract constructor. solverec. 
-Defined. 
+Qed. 
 
 Instance term_Fand : computableTime' Fand (fun f1 _ => (1, fun f2 _ => (1, tt))).
 Proof. 
   extract constructor. solverec. 
-Defined. 
+Qed. 
 
 Instance term_For : computableTime' For (fun f1 _ => (1, fun f2 _ => (1, tt))). 
 Proof. 
   extract constructor. solverec. 
-Defined. 
+Qed. 
 
 Instance term_Fneg : computableTime' Fneg (fun f _ => (1, tt)). 
 Proof. 
   extract constructor. solverec. 
-Defined. 
+Qed. 
 
 (** the encoding size of a formula is bounded linearly by formula_size f * formula_maxVar f *)
 Definition c__formulaBound1 := c__natsizeS. 
@@ -203,7 +203,7 @@ Proof.
   - fold formula_maxVar. unfold c__formulaMaxVar; solverec. 
   - fold formula_maxVar. unfold c__formulaMaxVar; solverec. 
   - unfold c__formulaMaxVar; solverec. 
-Defined. 
+Qed. 
 
 Definition c__formulaMaxVarBound1 := c__formulaMaxVar + c__max2.
 Definition poly__formulaMaxVar n := (n+1) * (n + 1) * c__formulaMaxVarBound1.

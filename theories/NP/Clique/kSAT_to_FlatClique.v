@@ -124,7 +124,7 @@ Section fixSAT.
     finRepr_simpl.
     - split; [now rewrite <- Fin_cardinality | apply H1].
     - split; [now rewrite <- Fin_cardinality | apply H2].
-  Defined. 
+  Defined (* because informative*).
 
   Proposition index_pair (f1 f2 : finType) n1 n2 (v1 : f1) (v2 : f2) : finRepr f1 n1 -> finRepr f2 n2 -> index (v1, v2) = flatPair n1 n2 (index v1) (index v2).
   Proof. 

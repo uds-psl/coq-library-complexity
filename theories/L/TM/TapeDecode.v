@@ -60,7 +60,7 @@ Proof.
    all:cbn.
    all: (setoid_rewrite @decode_correct2;[ |try eassumption..]).
    all:reflexivity.
-Defined.
+Defined (*because instance*).
 
 
 Instance linDec_tape X `{_:linTimeDecodable X}: linTimeDecodable (tape X).

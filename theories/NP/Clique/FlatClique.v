@@ -103,7 +103,7 @@ Section fixGraph.
     - apply Hc. 
     - apply isFlatListOf_list_finReprEl'. reflexivity. 
     - apply Hc. 
-  Defined. 
+  Defined (* because informative*). 
 
   Lemma clique_unflatten (l : list nat) : isfClique G l -> { L : list (V UG) & isClique L /\ |L| = |l| }. 
   Proof using H. 
@@ -116,7 +116,7 @@ Section fixGraph.
     - apply Hc. 
     - eapply map_dupfree. rewrite <- H1. apply Hc. 
     - apply isFlatListOf_list_finReprEl', H1. 
-  Defined. 
+  Defined (* because informative*). 
 End fixGraph.
 
 (** ** extraction *)

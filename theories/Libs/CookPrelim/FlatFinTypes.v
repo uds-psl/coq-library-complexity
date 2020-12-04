@@ -286,7 +286,7 @@ Proof.
   specialize (nth_error_nth H1) as <-. apply getPosition_nth. 
   + apply Cardinality.dupfree_elements. 
   + eapply nth_error_Some_length, H1.
-Defined. 
+Defined. (* because sigma? *)
 
 Lemma finRepr_exists_list (X : finType) (x : nat) (l : list nat) : 
   finRepr X x -> list_ofFlatType x l -> sigT (fun (L : list X) => isFlatListOf l L). 
@@ -297,7 +297,7 @@ Proof.
     specialize (finRepr_exists H H0) as (a' & (_ &  H2)). 
     exists (a' :: L). unfold isFlatListOf. 
     now rewrite H1, <- H2. 
-Defined. 
+Defined. (* because sigma? *)
 
 (** deciders for isValidFlattening*)
 Definition ofFlatType_dec (b a : nat) := leb (S a) b.
@@ -343,7 +343,7 @@ Definition flatPair_time x b := mult_time x b + add_time (x * b) + c__flatPair.
 Instance term_flatPair : computableTime' flatPair (fun a _ => (1, fun b _ => (1, fun x _ => (1, fun y _ => (flatPair_time x b, tt))))). 
 Proof. 
   extract. solverec. unfold flatPair_time, c__flatPair; solverec. 
-Defined. 
+Qed. 
 
 (*ofFlatTypeDec *)
 Definition c__ofFlatTypeDec := c__leb2 + 2. 
@@ -351,7 +351,7 @@ Definition ofFlatType_dec_time (sig e : nat) := leb_time (1 + e) sig + c__ofFlat
 Instance term_ofFlatType_dec : computableTime' ofFlatType_dec (fun sig _ => (1, fun e _ => (ofFlatType_dec_time sig e, tt))). 
 Proof. 
   extract. solverec. unfold ofFlatType_dec_time, c__ofFlatTypeDec. solverec. 
-Defined. 
+Qed. 
 Definition c__ofFlatTypeDecBound := c__ofFlatTypeDec + c__leb. 
 Definition poly__ofFlatTypeDec n := (n +1) * c__ofFlatTypeDecBound. 
 Lemma ofFlatType_dec_time_bound sig e: ofFlatType_dec_time sig e <= poly__ofFlatTypeDec (size (enc sig)). 

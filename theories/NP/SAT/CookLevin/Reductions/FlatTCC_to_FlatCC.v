@@ -82,7 +82,7 @@ Section fixX.
   Global Instance term_TCCCard_to_CCCard : computableTime' (@TCCCard_to_CCCard X) (fun _ _ => (c__TCCCardToCCCard, tt)). 
   Proof. 
     extract. unfold c__TCCCardToCCCard. solverec. 
-  Defined. 
+  Qed. 
 
   Definition c__TCCCardToCCCardSize := c__listsizeCons * 6 + c__listsizeNil *2. 
   Lemma TCCCard_to_CCCard_size (w : TCCCard X): size (enc (TCCCard_to_CCCard w)) <= size (enc (w)) + c__TCCCardToCCCardSize. 
@@ -98,7 +98,7 @@ Section fixX.
   Global Instance term_CC_cards : computableTime' (@CC_cards X) (fun w _ => (CC_cards_time w, tt)).
   Proof. 
     extract. solverec. unfold CC_cards_time, c__CCCards; solverec.
-  Defined. 
+  Qed. 
 
   Definition c__CCCardsBound := (c__TCCCardToCCCard + 1) * (c__map + 1).
   Definition poly__CCCards n := (n+1) * c__CCCardsBound + c__CCCards. 
@@ -137,7 +137,7 @@ Definition FCC_instance_time (fpr : FlatTCC) := c__FCC_instance + CC_cards_time 
 Instance term_FCC_instance : computableTime' FCC_instance (fun fpr _ => (FCC_instance_time fpr, tt)). 
 Proof. 
   extract. solverec. unfold FCC_instance_time, c__FCC_instance. solverec. 
-Defined. 
+Qed. 
 
 Lemma FlatTCC_to_FlatCC_poly : FlatTCCLang ⪯p FlatCCLang.
 Proof. 

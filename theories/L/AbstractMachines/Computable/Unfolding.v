@@ -19,7 +19,7 @@ Instance termT_S : computableTime' closT (fun _ _ => (1,fun _ _ => (1,tt))).
 Proof.
   extract constructor.
   solverec.
-Defined.
+Qed.
 
 Definition time_unfoldTailRecStep : (list task * list heapEntry * list term ) -> _ :=
   fun '(stack,H,res) => match stack with

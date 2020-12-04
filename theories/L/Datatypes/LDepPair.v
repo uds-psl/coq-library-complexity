@@ -8,7 +8,7 @@ Section sig.
   Global Instance encodable_sig : encodable(sig P).
   Proof using reg_A.
     apply (registerAs (proj1_sig (P:=P))). 
-  Defined.
+  Defined. (* because encodable *)
 
   Lemma enc_sig_eq (x:sig P):
   enc x = enc (proj1_sig x).
