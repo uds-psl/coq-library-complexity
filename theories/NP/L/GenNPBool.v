@@ -59,7 +59,7 @@ Qed.
 From Undecidability.L.Functions Require Import Proc.
 From Complexity.L.AbstractMachines.Computable Require Import EvalForTimeBool.
 Import EvalForTime LargestVar.
-
+Import N. Import L_facts. Import Nat.
 
 Lemma inNP_GenNPBool : inNP GenNPBool.
 Proof.
@@ -74,7 +74,7 @@ Proof.
                then
                  evalForTimeBool true (N.of_nat steps) (s' (enc c))
                else false).
-    -Import N. Import L_facts. Import Nat.  extract. intros [[[s' maxSize] steps] c].
+    -  extract. intros [[[s' maxSize] steps] c].
      remember (size (enc (s', maxSize, steps, c))) as n.
      assert (H1 : ( L_facts.size (enc s') <= n)) by (subst n;rewrite !size_prod;cbn;lia).
      assert (H2 : ( size (enc maxSize) <= n)) by (subst n;rewrite !size_prod;cbn;lia).

@@ -18,10 +18,9 @@ Unset Printing Coercions.
 
 
 (*From Undecidability Require Import MultiUnivTimeSpaceSimulation. *)
-
 From Complexity.NP Require Import TMGenNP_fixed_mTM M_multi2mono.
 
-
+Set Default Proof Using "Type".
 Section LMGenNP_to_TMGenNP_mTM.
 
 
@@ -31,6 +30,7 @@ Section LMGenNP_to_TMGenNP_mTM.
   Local Arguments Canonical_Rel : simpl never. 
   Local Arguments loopM : clear implicits.
   Local Arguments loopM {_ _ } _ _ _.
+  Import L_facts.
   Import EqBool.
   
   Lemma TMGenNP_mTM_to_TMGenNP_singleTM :
@@ -76,7 +76,7 @@ Section LMGenNP_to_TMGenNP_mTM.
           unfold PrettyBounds.dominatedWith in H'.
           rewrite H'. rewrite vector_to_list_correct, putFirstAtEnd_to_list.
           rewrite BaseCode.encodeList_size_app,size_list, to_list_length.
-          unfold size. cbn - [mult plus]. 
+          unfold Code.size. cbn - [mult plus]. 
           autorewrite with list. cbn [length]. rewrite sizeOfTape_encodeTape_le.
           erewrite sumn_map_le_pointwise with (f2:=fun x => _).
           2:{ intros. rewrite sizeOfTape_encodeTape_le. rewrite sizeOfmTapes_upperBound. 2:now eapply tolist_In. reflexivity. }
@@ -164,7 +164,7 @@ Section LMGenNP_to_TMGenNP_mTM.
     { 
       evar (time : nat -> nat). [time]:intros n0.
       eexists (fun x => time x).
-      { unfold f__nice. Import Nat. extract. solverec.
+      { unfold f__nice. extract. solverec.
         set (n0:=(L_facts.size (enc (a0, b0, b)))).
         assert (a0+b0+b+1 <= n0). 1:{ unfold n0. rewrite !size_prod. cbn [fst snd]. rewrite !size_nat_enc. 
           unfold c__natsizeS, c__natsizeO; nia. }
@@ -191,13 +191,12 @@ Section LMGenNP_to_TMGenNP_mTM.
     { 
       evar (c0 : nat).
       eexists (fun _ => c0).
-      { unfold t__size. Import Init.Nat. Import EqBool LNat Equality. Import Equality. Import EqBool. set (WorkAround := Nat.eqb).
-        extract. unfold WorkAround. solverec. all:rewrite eqbTime_le_l.
-        all:set (c:=size (enc 0)). all:cbv in c;subst c. all:subst c0. 2:easy. nia. }
+      { unfold t__size. extract. solverec. all:rewrite eqbTime_le_l.
+        all:set (c:=L_facts.size (enc 0)). all:cbv in c;subst c. all:subst c0. 2:easy. nia. }
       1,2:smpl_inO.
       { evar (f__size : nat -> nat). [f__size]:intros n0. exists f__size.
         { intros x. unfold t__size.
-          set (n0:=(size (enc x))).
+          set (n0:=(L_facts.size (enc x))).
           assert (Hx:x<=n0) by apply size_nat_enc_r.
           rewrite size_nat_enc. destruct _. 2:rewrite Hx;unfold f__size;reflexivity. unfold f__size. nia.
         }
@@ -221,7 +220,7 @@ Section LMGenNP_to_TMGenNP_mTM.
       
       evar (time : nat -> nat). [time]:intros n0.
       eexists (fun x => time x).
-      { unfold t__start. Import Datatypes. set (WorkAround:=Vector.to_list). extract. solverec. rewrite (UpToC_le _).
+      { unfold t__start. extract. solverec. rewrite (UpToC_le _).
         rewrite (correct__leUpToC (mapTime_upTo _)). 
         rewrite length_concat,map_map. subst g. cbn -[plus mult]. setoid_rewrite map_length. rewrite to_list_length.
         erewrite sumn_map_le_pointwise  with (f2:=fun _ => _).
@@ -231,7 +230,7 @@ Section LMGenNP_to_TMGenNP_mTM.
             reflexivity. }
         rewrite sumn_map_c,to_list_length.
         rewrite sumn_map_c,to_list_length.
-        rewrite TMEncoding.sizeOfmTapes_by_size. set (size _).
+        rewrite TMEncoding.sizeOfmTapes_by_size. set (L_facts.size _).
         unfold time. reflexivity.
       }
       1,2:now unfold time;change S with (plus 1);smpl_inO.

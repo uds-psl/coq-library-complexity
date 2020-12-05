@@ -23,7 +23,8 @@ From Complexity Require GenNP_is_hard CanEnumTerm.
 (** * Overview of the results proved in the paper. *)
 
 Import LNat.
-Lemma GenNP_to_LMGenNP : restrictBy (LHaltsOrDiverges (list bool)) (GenNP (list bool)) ⪯p restrictBy (LMGenNP.LMHaltsOrDiverges (list bool)) (LMGenNP.LMGenNP (list bool)).  
+Lemma GenNP_to_LMGenNP : restrictBy (LHaltsOrDiverges (list bool)) (GenNP (list bool)) ⪯p restrictBy (LMGenNP.LMHaltsOrDiverges (list bool)) (LMGenNP.LMGenNP (list bool)).
+Proof.
 apply GenNP_to_LMGenNP. 
 Qed.
 
@@ -31,6 +32,7 @@ Lemma LMGenNP_to_TMGenNP : restrictBy (LMGenNP.LMHaltsOrDiverges (list bool))
          (LMGenNP.LMGenNP (list bool))
        ⪯p restrictBy (HaltsOrDiverges_fixed_mTM (projT1 M.M))
             (TMGenNP_fixed_mTM (projT1 M.M)).
+Proof.
 apply LMGenNP_to_TMGenNP_mTM. 
 Qed.
 
@@ -38,6 +40,7 @@ Lemma TMGenNP_to_TMGenNP_fixed_singleTapeTM :
   restrictBy (HaltsOrDiverges_fixed_mTM (projT1 M.M))
             (TMGenNP_fixed_mTM (projT1 M.M))
              ⪯p TMGenNP_fixed_singleTapeTM (projT1 (M_multi2mono.M__mono (projT1 M.M))).
+Proof.
 apply TMGenNP_mTM_to_TMGenNP_singleTM.
 Qed.
 
@@ -77,30 +80,37 @@ Qed.
 
 (** reduction from TM to SAT *)
 Lemma FlatSingleTMGenNP_to_FlatTCC : FlatSingleTMGenNP ⪯p FlatTCC.FlatTCCLang. 
+Proof.
 exact FlatSingleTMGenNP_to_FlatTCCLang_poly. 
 Qed. 
 
 Lemma FlatTCC_to_FlatCC : FlatTCC.FlatTCCLang ⪯p FlatCCLang. 
+Proof.
 exact FlatTCC_to_FlatCC_poly. 
 Qed. 
 
 Lemma FlatCC_to_BinaryCC : FlatCCLang ⪯p BinaryCCLang. 
+Proof.
 exact FlatCC_to_BinaryCC_poly.
 Qed.
 
 Lemma BinaryCC_to_FSAT : BinaryCCLang ⪯p FSAT. 
+Proof.
 exact BinaryCC_to_FSAT_poly. 
 Qed.
 
 Lemma FSAT_to_SAT : FSAT ⪯p SAT. 
+Proof.
 exact FSAT_to_SAT_poly. 
 Qed. 
 
 Lemma FSAT_to_3SAT : FSAT ⪯p kSAT 3. 
+Proof.
 exact FSAT_to_3SAT_poly. 
 Qed. 
 
 Lemma kSAT_to_FlatClique k: kSAT k ⪯p FlatClique.
+Proof.
 apply kSAT_to_FlatClique_poly. 
 Qed.
 

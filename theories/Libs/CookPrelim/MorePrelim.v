@@ -229,6 +229,7 @@ Proof.
 Qed. 
 
 Lemma map_firstn (X Y : Type) i (h : list X) (f : X -> Y) : map f (firstn i h) = firstn i (map f h). 
+Proof.
   revert i; induction h; intros; cbn. 
   - now rewrite !firstn_nil. 
   - destruct i; cbn; [reflexivity | now rewrite IHh].

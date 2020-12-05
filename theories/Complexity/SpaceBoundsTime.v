@@ -1,6 +1,7 @@
 From Undecidability.L Require Import L_facts Complexity.ResourceMeasures AbstractMachines.FlatPro.Programs.
 Require Import Undecidability.Shared.Libs.PSL.Lists.BaseLists.
 
+Set Default Proof Using "Type".
 Fixpoint L_Pro n {struct n}: list Pro :=
   match n with
     0 => []

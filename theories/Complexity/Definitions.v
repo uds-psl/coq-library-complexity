@@ -18,11 +18,13 @@ Hint Extern 1 (computableTime (f__decInTime _) _) => solve [unshelve (simple app
 
 Lemma complete__decInTime {X} `{R :encodable X} P (fT : nat -> nat) (P__dec:decInTime P fT) :
   forall (x:X), P x -> f__decInTime P__dec x  = true.
+Proof.
   apply correct__decInTime.
 Qed.
 
 Lemma sound__decInTime X {R : encodable X} (P : X -> Prop) (fT : nat -> nat) (P__dec:decInTime P fT) :
   forall x, f__decInTime P__dec x = true -> P x.
+Proof.
    apply correct__decInTime.
 Qed.
 

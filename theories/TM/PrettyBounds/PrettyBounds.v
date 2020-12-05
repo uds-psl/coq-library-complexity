@@ -15,6 +15,7 @@ Notation "x '<=(' c ')' y" := (dominatedWith c x y) (at level 70, format "x  '<=
 
 (** Short example *)
 Goal { c | forall x, 3*x*x + 4 <=(c) x*x + 1}.
+Proof.
   exists 4. intros. unfold dominatedWith. lia.
 Qed.
 

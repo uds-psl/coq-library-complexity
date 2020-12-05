@@ -19,6 +19,7 @@ MetaCoq Run (tmGenEncode "N_enc" N).
 Hint Resolve N_enc_correct : Lrewrite.
 
 Instance termT_N_NPos : computableTime' Npos (fun x _ => (1,tt)).
+Proof.
   extract constructor. solverec.
 Qed.
 
@@ -83,11 +84,13 @@ Local Arguments Nat.log2 : simpl never.
 Section pos.
   Import Pos.
   Global Instance termT_Pos_succ : computableTime' Pos.succ (fun x _ => (Pos.size_nat x*11,tt)).
+  Proof.
   extract. solverec.
   Qed.
 
 
   Global Instance term_Pos_of_succ_nat : computableTime' Pos.of_succ_nat (fun n _ => (time_N_of_nat n +8,tt)).
+  Proof.
   extract. solverec. fold Pos.of_succ_nat. unfold time_N_of_nat.
   rewrite pos_size_eq_log2,SuccNat2Pos.id_succ.
   change (1 + n) with (S n).

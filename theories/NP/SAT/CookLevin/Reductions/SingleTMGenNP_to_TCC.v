@@ -8,7 +8,6 @@ Require Import Undecidability.Shared.Libs.PSL.FiniteTypes.BasicDefinitions.
 Require Import Undecidability.Shared.Libs.PSL.FiniteTypes.FinTypes.
 From Undecidability.TM Require Import TM_facts.
 
-
 (** * Reduction of single-tape Turing machines to 3-CC *)
 
 Notation "f $ x" := (f x) (at level 60, right associativity, only parsing).

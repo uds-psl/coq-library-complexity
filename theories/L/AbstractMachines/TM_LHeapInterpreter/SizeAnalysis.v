@@ -1,6 +1,7 @@
 From Undecidability Require Import TM.Util.TM_facts TM.Util.Relations.
 From Undecidability.L Require Import LM_heap_def.
 
+Set Default Proof Using "Type".
 Require Import FunInd.
 
 Lemma lookup_el H alpha x c: lookup H alpha x = Some c -> exists beta, Some (c,beta) el H.
@@ -53,7 +54,7 @@ Section Analysis.
   
   Lemma size_clos P a : ((a,P) el (T++V) -> sizeP P <= sizeP P0 /\ a <= length H)
                         /\ (forall beta, Some ((a,P),beta) el H -> sizeP P <= sizeP P0 /\ a <= length H /\ beta <= length H).
-  Proof.
+  Proof using empty_H__init R.
     unfold sizeP.
     induction i in T,V,H,R,P,a|-*.
     -inv R. split.
@@ -138,7 +139,7 @@ Section Analysis.
   Qed.
 
   Lemma length_H : length H <= length H__init+i.
-  Proof.
+  Proof using empty_H__init R.
     induction i in T,V,H,R|-*.
     -inv R. cbn;lia.
     -replace (S n) with (n + 1) in R by lia.
@@ -151,7 +152,7 @@ Section Analysis.
   Qed.
 
   Lemma length_TV : length T + length V <= 1+i.
-  Proof.
+  Proof using empty_H__init R.
     induction i in T,V,H,R|-*.
     -inv R. cbn;lia.
     -replace (S n) with (n + 1) in R by lia.

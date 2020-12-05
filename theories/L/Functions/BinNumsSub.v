@@ -54,39 +54,48 @@ Section pos_sub.
   Qed.
 
   Global Instance termT_isPos : computableTime' IsPos (fun x _ => (1,tt)).
-  extract constructor. solverec.
+  Proof.  
+    extract constructor. solverec.
   Qed.
 
   
   Global Instance termT_Pos_double_mask: computableTime' double_mask (fun x _ => (8,tt)).
-  extract. solverec.
+  Proof.  
+    extract. solverec.
   Qed.
 
   Global Instance termT_Pos_succ_double_mask: computableTime' succ_double_mask (fun x _ => (8,tt)).
-  extract. solverec.
+  Proof.  
+    extract. solverec.
   Qed.
 
   Global Instance termT_Pos_pred_double: computableTime' pred_double (fun x _ => (size_nat x * 12 + 9,tt)).
-  extract. solverec.
+  Proof.  
+    extract. solverec.
   Qed.
   
   Global Instance termT_Pos_double_pred_mask: computableTime' double_pred_mask (fun x _ => (size_nat x * 12 + 5,tt)).
-  extract. solverec.
+  Proof.  
+    extract. solverec.
   Qed.
 
   Global Instance termT_Pos_pred : computableTime' pred (fun x _ => (size_nat x * 12 + 3,tt)).
-  extract. solverec.
+  Proof.  
+    extract. solverec.
   Qed.
 
   Global Instance termT_Pos_predN : computableTime' pred_N (fun x _ => (size_nat x * 12 + 4,tt)).
-  extract. solverec.
+  Proof.  
+    extract. solverec.
   Qed.
   
   Global Instance termT_Pos_sub_maskC: computableTime' sub_maskC (fun b _ => (5%nat,fun x _ => (1%nat,fun y _ => (size_nat x*32,tt)))).
-  extract. solverec.
+  Proof.  
+    extract. solverec.
   Qed.
 
   Global Instance termT_Pos_sub_mask: computableTime' sub_mask (fun x _ => (7%nat,fun y _ => (size_nat x*32,tt))).
+  Proof.
   eapply computableTimeExt with (x:= fun x => sub_maskC false x).
   -repeat intro. hnf. eapply sub_maskC_ext_eq.
   -extract. solverec.
@@ -100,9 +109,11 @@ Section pos_sub.
 End pos_sub.
 
 Instance termT_N_sub: computableTime' N.sub (fun x _ => (1,fun y _ => (N.size_nat x*32 + 22 ,tt))).
+Proof.
 extract. solverec.
 Qed.
 
 Instance termT_N_pred: computableTime' N.pred (fun x _ => (N.size_nat x*12 + 9 ,tt)).
+Proof.
 extract. solverec.
 Qed.

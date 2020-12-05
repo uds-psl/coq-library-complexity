@@ -8,6 +8,7 @@ From Complexity.NP Require Import LMGenNP TMGenNP_fixed_mTM M_LM2TM.
 
 From Undecidability.TM.L Require M_LHeapInterpreter.
 
+Set Default Proof Using "Type".
 
 (* Check LMtoTM.M. *)
 
@@ -426,11 +427,11 @@ Qed.
 Smpl Add 1 eapply pTC_inl : polyTimeComputable. 
 
 From Complexity.Complexity Require Import Subtypes.
+Import Datatypes.Lists Datatypes.LBool.
 Lemma LMGenNP_to_TMGenNP_mTM:
   restrictBy (LMHaltsOrDiverges (list bool)) (LMGenNP (list bool)) ⪯p (restrictBy (HaltsOrDiverges_fixed_mTM (projT1 M.M)) (TMGenNP_fixed_mTM (projT1 M.M))).
 Proof.
   evar (f__size:nat -> nat).
-  Import Datatypes.Lists Datatypes.LBool.
   enough (Hcert_f__size : forall maxSize (bs : list bool) sig R, size (enc bs) <= maxSize -> sizeOfTape (initValue (sig:=sig) _ R bs) <= f__size maxSize).
 
   

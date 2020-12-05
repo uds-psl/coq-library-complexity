@@ -83,12 +83,12 @@ Module LtoTM.
            /\ time (steps__LM,sizeOfmTapes tin) <= k).
 
     Import MoreList.
+    Import TM_LHeapInterpreter.SizeAnalysis TM_LHeapInterpreter.LMBounds_Loop.
 
     Lemma size_compile_list_bool:
       (fun bs : list bool => Code.size (compile (Extract.enc (rev bs)))) <=c (fun bs => length bs + 1).
     Proof.
       (* From Undecidability.L.AbstractMachines.TM_LHeapInterpreter Require  *)
-      Import TM_LHeapInterpreter.SizeAnalysis TM_LHeapInterpreter.LMBounds_Loop.
       evar (c:nat). exists c. intros xs.
       rewrite size_le_sizeP. unfold sizeP;rewrite sizeP_size,Lists.size_list.
       rewrite map_rev,<-sumn_rev. rewrite MoreBase.sumn_le_bound.

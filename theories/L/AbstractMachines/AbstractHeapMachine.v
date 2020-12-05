@@ -470,6 +470,7 @@ Section Analysis.
   Qed.
 
   Lemma largestVarH_leq : largestVarH H <= largestVar s0.
+  Proof.
     edestruct subterm_property as (_&_&H').
     apply largestVarH_bound. intros [] ? H''%(H' _ _).
     eapply subterm_lam_inv in H''.
@@ -477,6 +478,7 @@ Section Analysis.
   Qed.
 
   Lemma largestVarC_V_leq : forall g, g el V -> largestVarC g <= largestVar s0.
+  Proof.
     edestruct subterm_property as (_&H'&_).
     intros [] H''. apply H' in H''.  eapply subterm_lam_inv in H''. eapply subterm_largestVar. easy.
   Qed.

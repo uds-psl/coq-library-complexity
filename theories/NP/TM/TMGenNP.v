@@ -24,7 +24,6 @@ Definition TMGenNP: flatTM*nat*nat -> Prop:=
 Definition TM1GenNP : {'(M,_,_) | M.(TMflat.tapes) = 1} -> Prop :=
   (fun '(exist (M,maxSize, steps (*in unary*)) _) => exists sig (M':TM sig 1), isFlatteningTMOf M M' /\ TMGenNP' (M', maxSize, steps)).
 
-
 Lemma inNP_TMgenericNPCompleteProblem: inNP TMGenNP.
 Proof.
   pose (R := fun '(M,maxSize, steps (*in unary*)) t =>
@@ -52,7 +51,7 @@ Proof.
         2:{ split. 2:easy. intros (?&?&?&?&?&?&?&?). easy. }
         specialize (execFlatTM_correct M t steps) as H.
         destruct execFlatTM as [c| ] eqn:Hexec. all:split. 1,4:easy.
-        -intros. specialize (H c). destruct H as [H _]. specialize (H eq_refl) as (?&?&?&?&?&?&Hc&?&?).
+        -intros. specialize (H c). destruct H as [H _]. specialize H with (1:= Logic.eq_refl) as (?&?&?&?&?&?&Hc&?&?).
          split. easy.
          do 4 esplit. eauto.
             inv Hc. cbn in *.
@@ -65,7 +64,7 @@ Proof.
                    split. now eauto using initFlat_correct.
                    split. eauto. instantiate (1 := (_,_)).
                    split;cbn. constructor.
-     } Import Nat.
+     } 
      extract. 
      recRel_prettify.
      intros [[[M maxSize] steps] t] [].

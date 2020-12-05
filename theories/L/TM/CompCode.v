@@ -10,7 +10,7 @@ From Undecidability Require Import TMEncoding EqBool.
 
 (* TODO: seperate general TM-related stuff from the specific alphabets from sUniversalTM (sigTape) and L-simulation TM *)
 
-
+Set Default Proof Using "Type".
 Import GenEncode.  
 MetaCoq Run (tmGenEncode "boundary_enc" boundary).
 Hint Resolve boundary_enc_correct : Lrewrite.
