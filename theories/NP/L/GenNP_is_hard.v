@@ -8,7 +8,7 @@ Import Nat.
 Import L_Notations.
 
 Lemma NPhard_GenNP X__cert `{R__cert : encodable X__cert}:
-  canEnumTerms X__cert->  NPhard (restrictBy (LHaltsOrDiverges X__cert) (GenNP X__cert)).
+  canEnumTerms X__cert -> NPhard (GenNP X__cert).
 Proof.
   intros enumTerm'.
   destruct (canEnumTerms_compPoly enumTerm') as (enumTerm&[comp1]&[comp2]&[comp3]);clear enumTerm'.

@@ -52,8 +52,8 @@ Section Analysis.
 
   Import Lia.
   
-  Lemma size_clos P a : ((a,P) el (T++V) -> sizeP P <= sizeP P0 /\ a <= length H)
-                        /\ (forall beta, Some ((a,P),beta) el H -> sizeP P <= sizeP P0 /\ a <= length H /\ beta <= length H).
+  Lemma size_clos P a : ((a,P) el (T++V) -> sizeP P <= sizeP P0 /\ a <= length H /\ largestVarP P <= largestVarP P0)
+                        /\ (forall beta, Some ((a,P),beta) el H -> sizeP P <= sizeP P0 /\ a <= length H /\ beta <= length H /\ largestVarP P <= largestVarP P0).
   Proof using empty_H__init R.
     unfold sizeP.
     induction i in T,V,H,R,P,a|-*.
@@ -77,54 +77,47 @@ Section Analysis.
        3:specialize (proj1 (IHn _ a0) ltac:(eauto)).
        
        1,3:repeat (autorewrite with list in *;cbn in * ).
-       1,2:split;try nia.
 
-       1:specialize (proj1 (IHn P a) ltac:(eauto)).
-       2:specialize (proj1 (IHn P a) ltac:(eauto)).
+       3:specialize (proj1 (IHn P a) ltac:(eauto)).
+       4:specialize (proj1 (IHn P a) ltac:(eauto)).
 
-       all:lia.
+       1,2:intros (?&?&H');rewrite maxl_app in H';cbn in H';unfold largestVarP in *.
 
-      *inv H2.
-       destruct Hel as [[[= <- <-] | ]| ].
-       2:apply tailRecursion_incl in H as [[= <- <-]| ].
-       all:repeat ((try setoid_rewrite in_app_iff in IHn);cbn in IHn).
-       1:specialize (proj1(IHn Q _) ltac:(eauto)).
-       1:repeat (autorewrite with list in *;cbn in * ).
-       1:now lia.
-
-       1:specialize (proj1(IHn _ a0) ltac:(eauto)).
-       1:repeat (autorewrite with list in *;cbn in * ).
-       1:now lia.
-
-       1:specialize (proj1(IHn P a) ltac:(eauto)).
-       1:autorewrite with list in IHn.
-       1:repeat (autorewrite with list in *;cbn in * ).
-       1:now lia.
-
-       1:specialize (proj1(IHn P a) ltac:(eauto)).
-       1:autorewrite with list in IHn.
-       1:repeat (autorewrite with list in *;cbn in * ).
-       1:try now lia.
-      *destruct Hel as [ |[-> | ]].
-       apply tailRecursion_incl in H0 as [[= <- <-]| ].
-
-       all:repeat ((try setoid_rewrite in_app_iff in IHn);cbn in IHn).
-       1:specialize (proj1(IHn _ a0) ltac:(eauto)).
-       1:repeat (autorewrite with list in *;cbn in * ).
-       1:now lia.
-
-       1:specialize (proj1(IHn _ a) ltac:(eauto)).
-       1:repeat (autorewrite with list in *;cbn in * ).
-       1:now lia.
-
-       1:apply lookup_el in H2 as (?&?).
-       1:specialize (proj2 (IHn _ a) _ ltac:(eauto)).
-       1:repeat (autorewrite with list in *;cbn in * ).
-       1:now lia.
-
-       1:specialize (proj1(IHn _ a) ltac:(eauto)).
-       1:repeat (autorewrite with list in *;cbn in * ).
-       1:now lia.
+       all:split;[|split];try lia.
+      * inv H2.
+        destruct Hel as [[[= <- <-] | ]| ].
+        2:apply tailRecursion_incl in H as [[= <- <-]| ].
+        all:repeat ((try setoid_rewrite in_app_iff in IHn);cbn in IHn).
+        --specialize (proj1(IHn Q _) ltac:(eauto)).
+          repeat (autorewrite with list in *;cbn in * ).
+          now lia.
+        --specialize (proj1(IHn _ a0) ltac:(eauto)).
+          repeat (autorewrite with list in *;cbn in * ). unfold largestVarP in *.
+          now lia.
+       --specialize (proj1(IHn P a) ltac:(eauto)).
+         autorewrite with list in IHn.
+         repeat (autorewrite with list in *;cbn in * ).
+         now lia.
+       --specialize (proj1(IHn P a) ltac:(eauto)).
+         autorewrite with list in IHn.
+         repeat (autorewrite with list in *;cbn in * ).
+         try now lia.
+      * destruct Hel as [ |[-> | ]].
+        apply tailRecursion_incl in H0 as [[= <- <-]| ].
+        all:repeat ((try setoid_rewrite in_app_iff in IHn);cbn in IHn).
+        --specialize (proj1(IHn _ a0) ltac:(eauto)).
+          repeat (autorewrite with list in *;cbn in * ). unfold largestVarP in *.
+          now lia.
+        --specialize (proj1(IHn _ a) ltac:(eauto)).
+          repeat (autorewrite with list in *;cbn in * ).
+          now lia.
+        --apply lookup_el in H2 as (?&?).
+          specialize (proj2 (IHn _ a) _ ltac:(eauto)).
+          repeat (autorewrite with list in *;cbn in * ).
+          now lia.
+        --specialize (proj1(IHn _ a) ltac:(eauto)).
+          repeat (autorewrite with list in *;cbn in * ).
+          now lia.
      +intros ? Hel. inv R2.
       1,3:now apply IHn.
       inv H2.
@@ -149,7 +142,7 @@ Section Analysis.
      inv R2.
      1,3:now lia.
      inv H2. autorewrite with list. cbn. lia.
-  Qed.
+  Qed.  
 
   Lemma length_TV : length T + length V <= 1+i.
   Proof using empty_H__init R.

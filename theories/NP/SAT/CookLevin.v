@@ -23,14 +23,14 @@ From Complexity Require GenNP_is_hard CanEnumTerm.
 (** * Overview of the results proved in the paper. *)
 
 Import LNat.
-Lemma GenNP_to_LMGenNP : restrictBy (LHaltsOrDiverges (list bool)) (GenNP (list bool)) ⪯p restrictBy (LMGenNP.LMHaltsOrDiverges (list bool)) (LMGenNP.LMGenNP (list bool)).
+Lemma GenNP_to_LMGenNP :
+  GenNP (list bool) ⪯p LMGenNP.LMGenNP (list bool).
 Proof.
 apply GenNP_to_LMGenNP. 
 Qed.
 
-Lemma LMGenNP_to_TMGenNP : restrictBy (LMGenNP.LMHaltsOrDiverges (list bool))
-         (LMGenNP.LMGenNP (list bool))
-       ⪯p restrictBy (HaltsOrDiverges_fixed_mTM (projT1 M.M))
+Lemma LMGenNP_to_TMGenNP :
+  LMGenNP.LMGenNP (list bool) ⪯p restrictBy (HaltsOrDiverges_fixed_mTM (projT1 M.M))
             (TMGenNP_fixed_mTM (projT1 M.M)).
 Proof.
 apply LMGenNP_to_TMGenNP_mTM. 
@@ -64,7 +64,7 @@ Proof.
 Qed. 
 
 Corollary GenNP_to_SingleTMGenNP : 
-  restrictBy (LHaltsOrDiverges (list bool)) (GenNP (list bool)) ⪯p FlatSingleTMGenNP. 
+  GenNP (list bool) ⪯p FlatSingleTMGenNP. 
 Proof. 
   eapply reducesPolyMO_transitive. 
   apply GenNP_to_LMGenNP. 
@@ -127,7 +127,7 @@ Proof.
   apply FlatSingleTMGenNP_to_FlatTCC. 
 Qed. 
 
-Corollary GenNP_to_3SAT : restrictBy (LHaltsOrDiverges (list bool)) (GenNP (list bool)) ⪯p kSAT 3.
+Corollary GenNP_to_3SAT : GenNP (list bool) ⪯p kSAT 3.
 Proof. 
   eapply reducesPolyMO_transitive. 
   apply GenNP_to_SingleTMGenNP. 

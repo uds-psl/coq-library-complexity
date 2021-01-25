@@ -6,36 +6,31 @@ From Complexity.NP.L  Require Import LMGenNP.
 From Undecidability.L.AbstractMachines Require Import FlatPro.Programs.
 From Complexity.L.AbstractMachines Require Import FlatPro.Computable.Compile.
 Unset Printing Coercions.
-From Undecidability.TM.L Require Alphabets M_LHeapInterpreter.
+From Undecidability.TM.L Require Import Eval.
 From Coq Require Import Lia Ring Arith.
 From Undecidability.TM.L Require Import Boollist_to_Enc.
 From Complexity.L.AbstractMachines.TM_LHeapInterpreter Require SizeAnalysis LMBounds_Loop.
 
 Set Default Proof Using "Type".
 Import DecodeList Decode.
+Import ProgrammingTools Combinators M_LHeapInterpreter.
+
+(* MOVE *)
+Lemma CodeSize_contains sig X sigX (cX: codable sigX X) (x: X) t (r:Retract _ sig) :
+  t ≃(r) x -> Code.size x <= length (right t).
+Proof.
+  intros [? ->];cbn. unfold size. autorewrite with list. nia.
+Qed.
 
 Module LtoTM.
   Section sec.
-    Import ProgrammingTools Combinators M_LHeapInterpreter.
 
     Variable (sig : finType).
     
-    Context `{retr__LAM : Retract sigStep sig}
-            `{retr__list : Retract (sigList bool) sig}.
+    Context `{retr__Eval : Retract EvalL.Σintern sig}
+            `{retr__pro : Retract Alphabets.sigPro sig}  
+            `{retr__bools : Retract (sigList bool) sig}.
 
-    
-    Definition retr__listHClos : Retract (sigList Alphabets.sigHClos) sig
-      := ComposeRetract retr__LAM retr_closures_step.
-
-    Definition retr__Heap : Retract Alphabets.sigHeap sig
-    := ComposeRetract retr__LAM retr_heap_step.
-
-    Definition retr__HClos : Retract Alphabets.sigHClos sig :=
-      ComposeRetract retr__listHClos _.
-        
-    Definition retr__pro : Retract Alphabets.sigPro sig := ComposeRetract retr__HClos _.
-
-    Definition retr__nat : Retract sigNat sig:= ComposeRetract retr__pro _.
     
     Definition Rel : pRel (sig ^+) bool 11 :=
       fun tin '(y,tout) =>
@@ -53,21 +48,87 @@ Module LtoTM.
 
     Definition M : pTM sig ^+ bool 11 :=
       If (CheckEncodesBoolList.M _ @ [|Fin0|])
-         (Return (F:=FinType (EqType unit)) (LiftTapes (BoollistToEnc.M _ retr__pro) [|Fin0;Fin2;Fin3;Fin4 |];; (* 0:right, 2:compile (enc (rev b)), 3,4:right*)
-                  LiftTapes (ChangeAlphabet (WriteValue ([appT])) retr__pro) [| Fin3|];; (*3:[appT]*)
-                  LiftTapes (ChangeAlphabet (App' _ ) retr__pro) [|Fin2;Fin3|];; (*3:compile (rev b)++[appT]*)         
-                  LiftTapes (ChangeAlphabet (App' _) retr__pro) [|Fin1;Fin3|];; (*3:P++compile (rev b)++[appT]*)
-                  LiftTapes (ChangeAlphabet (WriteValue ((@nil (LM_heap_def.HClos)))) retr__listHClos) [| Fin0|];; (*0:[]*)
-                  LiftTapes (ChangeAlphabet (WriteValue (0)) (StepTM.retr_nat_step_clos_ad retr__listHClos)) [| Fin5|];; (*5:0*)
-                  LiftTapes (StepTM.ConsClos retr__listHClos) [|Fin0;Fin5;Fin3 |];; (* 0: initLMGen, 5,3:right *)
-                  LiftTapes (Reset _) [|Fin1|];;
-                  LiftTapes (Reset _) [|Fin2|];;(*1,2: right*)
-(*1,2: empty*)
-                  LiftTapes (ChangeAlphabet (WriteValue ((@nil (LM_heap_def.HClos)))) retr__listHClos) [| Fin1|];; (*1:[]*)
-                  LiftTapes (ChangeAlphabet (WriteValue ((@nil (LM_heap_def.HEntr)))) retr__Heap) [| Fin2|];; (*2:[]*)
-                  ChangeAlphabet M_LHeapInterpreter.Loop retr__LAM )
-                 true)
-         (Return Nop false).
+         (
+          BoollistToEnc.M _ retr__pro @ [|Fin0;Fin2;Fin3;Fin4 |];; (* 0:right, 2:compile (enc (rev b)), 3,4:right*)
+          WriteValue ([appT]) ⇑ retr__pro @ [| Fin0|];; (*3:[appT]*)
+          App' _ ⇑ retr__pro @ [|Fin2;Fin0|];; (*3:compile (rev b)++[appT]*)         
+          App' _ ⇑ retr__pro @ [|Fin1;Fin0|];; (*3:P++compile (rev b)++[appT]*)
+          LiftTapes (Reset _) [|Fin1|];;
+          LiftTapes (Reset _) [|Fin2|];;(*1,2: right*)
+          EvalL.M retr__Eval retr__pro;;
+          Return Nop true)
+        (Return Nop false).
+
+    Import Hoare L_facts LTactics.
+
+    Infix "++" := Vector.append : vector_scope.
+
+
+
+    Lemma SpecT :
+      {time & forall (s:L.term) (Hcl : closed s) tape__cert steps__L,
+        TripleT ≃≃([ forall bs, tape__cert ≃(retr__bools) bs -> exists s', L.app s (enc (rev bs)) ⇓(steps__L) s'] 
+                   ,[|Custom (eq tape__cert);Contains _ (compile s)|]++Vector.const Void _)
+          (time (length (right tape__cert),steps__L))
+          M
+          (fun y => if y then fun t => exists bs s', t ≃≃ ([tape__cert ≃(retr__bools) bs;L.app s (enc (rev bs)) ⇓(steps__L) s']
+                                              , ([|Contains _ (compile s')|]++Vector.const Void _)%vector)
+                else ≃≃([~exists bs, tape__cert ≃(retr__bools) bs],Vector.const (Custom (fun _ => True)) _))
+      }.
+    Proof.
+      eexists (fun '(right_cert,steps__L) =>_). unfold M.
+      hintros s Hcl tape__cert steps__L Hhalts.
+      eapply If_SpecT. 
+      { hstep. eapply CheckEncodesBoolList.SpecT. }
+      2:{
+        cbn. hintros [Hcert].
+        hsteps_cbn. inv Hcert. now tspec_ext.
+      }
+      2:{ intros ? b ? ? ?. shelve. }
+      cbn. hintros [Hcert']; inversion Hcert' as [[bs Hbs]|];clear Hcert'.
+      specialize (Hhalts _ Hbs) as (s'&Hs').
+      eapply ConsequenceT_pre. 2:reflexivity.
+      hstep_seq.
+      { eapply ConsequenceT_pre. now eapply BoollistToEnc.SpecT. { tspec_ext. now subst. } reflexivity. }
+      cbn.
+      do 5 (hstep_seq;[]).
+      hstep.
+      {
+        eapply ConsequenceT_pre.
+        { specialize EvalL.SpecT with (HR := Hs') as H'. cbn - ["+"] in H'. refine (H' _ _ _ _). abstract Lproc. }
+        2:reflexivity.
+        tspec_ext.
+      }
+      cbn;intro.
+      { hsteps_cbn. do 2 (eapply Entails_exists_con;eexists). change (fun x => ?f x) with f. tspec_ext. all:eassumption. }
+      reflexivity.
+      rewrite UpToC_le.
+      do 2 rewrite (correct__leUpToC (App'_steps_nice _)). unfold Reset_steps.
+      
+      Search Reset_steps.
+      Search App'_steps.
+      (correct__leUpToC BoollistEnc.boollist_length),(CodeSize_contains Hbs). reflexivity.
+
+      rewr
+      reflexivity.
+      { hstep. 2:intro;tsreflexivity. Search TripleT ex. hsteps_cbn. Search Entails "ex". tspec_ext.
+        Typeclasses eauto := debug.  
+      refine (EvalL.SpecT _ _ _ _ (s:= L.app s (enc (rev bs)))). Search EvalL.M.  }
+      hstep_seq.
+      hstep_seq. { cbn. refine (TripleT_RemoveSpace (Q:=fun y => _) (Q':=fun y => _) _). intros. refine (App'_SpecT _ _ _ _).
+       hstep_Spec hstep_user. } { Search withSpace. refine (App'_SpecT _ _ _ _);shelve. } { cbn. tspec_ext;cbn. reflexivity.  Search App' TripleT.  hsteps_cbn. } 
+        set (length _) at 1 2.
+        Unshelve. 2:{ exact 0. }  reflexivity. Search Code.size tape_contains. right. Search tape_contains (length (right _)).  "size".
+      Search f__UpToC c__leUpToC.  {rewrite correct__leUpToC. } 
+      Search "<=c" "c".
+       unshelve rewrite correct__leUpToC at 1.
+      Search tape_contains Code.size.  "≃(". ) Search size "contains". reflexivity.
+      { Search BoollistToEnc.M. } now hsteps_cbn.
+        hstep_seq.
+           inv Hcert. }  eps_cbn. hstep_seq. Search CheckEncodesBoolList.M. hstep. } 
+      
+      4:cbn;try reflexivity.
+      TripleT 
  
     
     Definition Ter time: tRel sig^+ 11 :=

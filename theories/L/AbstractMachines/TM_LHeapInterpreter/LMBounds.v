@@ -8,7 +8,7 @@ From Undecidability.TM.L  Require Import CaseCom Alphabets JumpTargetTM LookupTM
 
 
 From Undecidability.TM.L Require Import StepTM M_LHeapInterpreter.
-From Complexity.L.AbstractMachines.TM_LHeapInterpreter Require Import SizeAnalysis.
+From Complexity.L.AbstractMachines.FlatPro Require Import SizeAnalysisStep.
 
 (** ** LM step functions *)
 
