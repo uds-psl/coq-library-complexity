@@ -34,13 +34,12 @@ Section LMGenNP_to_TMGenNP_mTM.
   Import EqBool.
   
   Lemma TMGenNP_mTM_to_TMGenNP_singleTM :
-    restrictBy (HaltsOrDiverges_fixed_mTM M) (TMGenNP_fixed_mTM M)
-               ⪯p TMGenNP_fixed_singleTapeTM (projT1 M__mono).
+    mTMGenNP_fixed M ⪯p TMGenNP_fixed (projT1 M__mono).
   Proof.
     subst M__mono.
     evar (f__steps : nat*nat*nat -> nat). evar (f__nice : nat*nat*nat -> nat).
     enough (Hf__nice : f__steps <=c f__nice).
-    unfold TMGenNP_fixed_mTM. unfold TMGenNP_fixed_singleTapeTM. cbn.
+    unfold mTMGenNP_fixed,mTMGenNP_fixed',TMGenNP_fixed. cbn.
     set (t__start:=fun (ts : tapes sig n) => inl START::concat (map (fun t => inr (sigList_cons)::map (fun s => inr (sigList_X s)) (encode_tape t)) (Vector.to_list ts))++[inr (sigList_cons)]).
     set (t__size := fun maxSize => 3 + if eqb 0 maxSize then 0 else 1 + maxSize).
     eapply reducesPolyMO_intro_restrictBy_in with
@@ -48,7 +47,7 @@ Section LMGenNP_to_TMGenNP_mTM.
                                      ,t__size maxSize
                                      ,  c__leUpToC (H:=Hf__nice) * f__nice (steps,sizeOfmTapes ts,maxSize)+ 3)).
     2:{ unfold execTM.
-        intros [[v maxSize] steps]. unfold HaltsOrDiverges_fixed_mTM. intros H_HaltOrDiv.
+        intros [[v maxSize] steps]. unfold HaltsOrDiverges_mTM_fixed. intros H_HaltOrDiv.
         split.
         -intros (t1&Ht1&s__end&Hs__end).
          eexists (map (fun c => inr (sigList_X c)) (encode_tape t1) ++ [inr sigList_nil;inl STOP]). 

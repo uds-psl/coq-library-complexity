@@ -42,9 +42,9 @@ Section fixTM.
     rewrite map_time_const. unfold reduction_time, c__reduction. ring_simplify.  nia. 
   Qed.  
 
-  Lemma reduction_correct p : TMGenNP_fixed_singleTapeTM M p <-> FlatFunSingleTMGenNP (reduction p). 
+  Lemma reduction_correct p : TMGenNP_fixed M p <-> FlatFunSingleTMGenNP (reduction p). 
   Proof. 
-    unfold TMGenNP_fixed_singleTapeTM, FlatFunSingleTMGenNP. destruct p as ((ts & maxSize) & steps). split.
+    unfold TMGenNP_fixed, FlatFunSingleTMGenNP. destruct p as ((ts & maxSize) & steps). split.
     - intros (certfin & H1 & (res & H2)). 
       cbn. split; [ | split; [easy | ]]. 
       { unfold list_ofFlatType. intros a (a' & <- & H4)%in_map_iff. apply index_le. }
@@ -89,7 +89,7 @@ Section fixTM.
   Qed. 
 
   Lemma TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP : 
-    TMGenNP_fixed_singleTapeTM M ⪯p  FlatFunSingleTMGenNP. 
+    TMGenNP_fixed M ⪯p  FlatFunSingleTMGenNP. 
   Proof using index__comp. 
     apply reducesPolyMO_intro with (f := reduction). 
     - evar (f : nat -> nat). exists f. 

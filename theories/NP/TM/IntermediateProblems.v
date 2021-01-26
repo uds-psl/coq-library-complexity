@@ -25,7 +25,7 @@ From Complexity Require Import NP L_to_LM LM_to_mTM mTM_to_singleTapeTM TMGenNP_
 
 Import LNat.
 Lemma GenNP_to_TMGenNP:
-  GenNP (list bool) ⪯p TMGenNP_fixed_singleTapeTM (projT1 (M_multi2mono.M__mono (projT1 M.M))).
+  GenNP (list bool) ⪯p TMGenNP_fixed (projT1 (M_multi2mono.M__mono (projT1 M.M))).
 Proof.
   eapply reducesPolyMO_transitive. now apply GenNP_to_LMGenNP.
   eapply reducesPolyMO_transitive. now apply LMGenNP_to_TMGenNP_mTM.
