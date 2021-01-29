@@ -8,7 +8,7 @@ Definition GenNPBool : term*nat*nat -> Prop:=
     (proc s'/\exists (c:term), size (enc c) <= maxSize
                          /\ s' (enc c) ⇓(<=steps) (enc true)).
 
-(** * The hardness proof of GenNPHalt is prettier *)
+(** * The hardness proof of GenNP is prettier *)
 Lemma NPhard_GenNPBool : NPhard GenNPBool.
 Proof.
   intros X reg__X regP__X Q [R R__comp' R__spec'(*[p Rsound Rcomplete p__poly p__mono]*)].

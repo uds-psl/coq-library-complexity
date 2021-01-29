@@ -18,7 +18,7 @@ From Coq Require Import Lia Ring Arith.
 
 From Undecidability.TM.L Require Import Boollist_to_Enc.
 
-From Complexity.L.AbstractMachines.TM_LHeapInterpreter Require SizeAnalysis LMBounds_Loop.
+From Complexity.L.AbstractMachines Require SizeAnalysisStep LMBounds_Loop.
 
 Set Default Proof Using "Type".
 
@@ -92,7 +92,7 @@ Module LMtoTM.
            /\ time (steps__LM,sizeOfmTapes tin) <= k).
 
     Import MoreList.
-    Import TM_LHeapInterpreter.SizeAnalysis TM_LHeapInterpreter.LMBounds_Loop.
+    Import FlatPro.SizeAnalysisStep TM_LHeapInterpreter.LMBounds_Loop.
 
     Lemma size_compile_list_bool:
       (fun bs : list bool => Code.size (compile (Extract.enc (rev bs)))) <=c (fun bs => length bs + 1).

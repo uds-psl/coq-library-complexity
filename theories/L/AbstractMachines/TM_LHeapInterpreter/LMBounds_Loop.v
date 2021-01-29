@@ -4,7 +4,7 @@ From Complexity Require Import TM.PrettyBounds.BaseCode.
 From Undecidability Require Import LM_heap_def TM.PrettyBounds.MaxList.
 
 From Undecidability.TM.L Require Import Alphabets CaseCom StepTM M_LHeapInterpreter.
-From Complexity.L.AbstractMachines.TM_LHeapInterpreter Require Import SizeAnalysis LMBounds.
+From Complexity.L.AbstractMachines Require Import SizeAnalysisStep LMBounds.
 
 From Undecidability Require Import UpToC UpToCNary.
 
@@ -115,23 +115,23 @@ Section FixInit.
     destruct T as [ | [a P] T].
     2:{
       set (lH := length H__init + i). cbn zeta.
-      specialize SizeAnalysis.size_clos with (1:=H0) (2:=empty_H__init)as Hsize.
+      specialize SizeAnalysisStep.size_clos with (1:=H0) (2:=empty_H__init)as Hsize.
       repeat setoid_rewrite size_le_sizeP. rewrite !Encode_nat_hasSize.
       erewrite size_list_le_bound with (xs:=V).
       2:{ intros [a' P'] ?. rewrite size_HClos_le. cbn.
           rewrite size_le_sizeP.
-          edestruct (Hsize P' a') as [[-> ->] _]. now eauto. reflexivity.
+          edestruct (Hsize P' a') as [(->&->&_) _]. now eauto. reflexivity.
       }
       unfold Encode_Heap, sigHeap. erewrite size_list_le_bound with (xs:=H).
       2:{ intros [[[a' P'] beta] | ] ?. 2:cbv.  
           -apply Hsize in H1. unfold sigHEntr,HEntr,Encode_HEntr,sigHEntr',Encode_HEntr'. rewrite Encode_option_hasSize.
            cbn. rewrite Encode_pair_hasSize;cbn. rewrite size_HClos_le. cbn.
-           rewrite size_le_sizeP, Encode_nat_hasSize. destruct H1 as (->&->&->). reflexivity.
+           rewrite size_le_sizeP, Encode_nat_hasSize. destruct H1 as (->&->&->&_). reflexivity.
           -nia. 
       }
       rewrite heap_greatest_address2_bound.
       2:{ intros [] ?. edestruct Hsize as [_ H']. apply H'. }
-      specialize Hsize with (P1:=P) (a0 := a) as [(-> & -> ) _]. easy.
+      specialize Hsize with (P1:=P) (a0 := a) as [(-> & -> &_) _]. easy.
       rewrite Nat.max_id.
       specialize length_TV  with (1:=H0) (2:=empty_H__init) as H_TV. cbn in H_TV.
       assert (length V <= i) as -> by nia.

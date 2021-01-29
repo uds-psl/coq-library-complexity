@@ -23,25 +23,22 @@ From Complexity Require GenNP_is_hard CanEnumTerm.
 (** * Overview of the results proved in the paper. *)
 
 Import LNat.
-Lemma GenNP_to_LMGenNP : restrictBy (LHaltsOrDiverges (list bool)) (GenNP (list bool)) ⪯p restrictBy (LMGenNP.LMHaltsOrDiverges (list bool)) (LMGenNP.LMGenNP (list bool)).
+Lemma GenNP_to_LMGenNP :
+  GenNP (list bool) ⪯p LMGenNP.LMGenNP (list bool).
 Proof.
-apply GenNP_to_LMGenNP. 
+  apply GenNP_to_LMGenNP. 
 Qed.
 
-Lemma LMGenNP_to_TMGenNP : restrictBy (LMGenNP.LMHaltsOrDiverges (list bool))
-         (LMGenNP.LMGenNP (list bool))
-       ⪯p restrictBy (HaltsOrDiverges_fixed_mTM (projT1 M.M))
-            (TMGenNP_fixed_mTM (projT1 M.M)).
+Lemma LMGenNP_to_TMGenNP :
+  LMGenNP.LMGenNP (list bool) ⪯p mTMGenNP_fixed (projT1 M.M).
 Proof.
-apply LMGenNP_to_TMGenNP_mTM. 
+  apply LMGenNP_to_TMGenNP_mTM. 
 Qed.
 
 Lemma TMGenNP_to_TMGenNP_fixed_singleTapeTM : 
-  restrictBy (HaltsOrDiverges_fixed_mTM (projT1 M.M))
-            (TMGenNP_fixed_mTM (projT1 M.M))
-             ⪯p TMGenNP_fixed_singleTapeTM (projT1 (M_multi2mono.M__mono (projT1 M.M))).
+  mTMGenNP_fixed (projT1 M.M) ⪯p TMGenNP_fixed (projT1 (M_multi2mono.M__mono (projT1 M.M))).
 Proof.
-apply TMGenNP_mTM_to_TMGenNP_singleTM.
+  apply TMGenNP_mTM_to_TMGenNP_singleTM.
 Qed.
 
 
@@ -49,7 +46,7 @@ Qed.
 Import Specif.
 Lemma fixedTM_to_FlatSingleTMGenNP (sig : finType) (M : TM sig 1)
       (reg__sig : encodable sig) (index__comp : {c & computableTime' (index (F:=sig)) (fun _ _ => (c,tt))}):
-  TMGenNP_fixed_singleTapeTM M ⪯p FlatSingleTMGenNP. 
+  TMGenNP_fixed M ⪯p FlatSingleTMGenNP. 
 Proof. 
   eapply reducesPolyMO_transitive with (Q := FlatFunSingleTMGenNP). 
   apply (TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP M).  eassumption.
@@ -64,7 +61,7 @@ Proof.
 Qed. 
 
 Corollary GenNP_to_SingleTMGenNP : 
-  restrictBy (LHaltsOrDiverges (list bool)) (GenNP (list bool)) ⪯p FlatSingleTMGenNP. 
+  GenNP (list bool) ⪯p FlatSingleTMGenNP. 
 Proof. 
   eapply reducesPolyMO_transitive. 
   apply GenNP_to_LMGenNP. 
@@ -127,7 +124,7 @@ Proof.
   apply FlatSingleTMGenNP_to_FlatTCC. 
 Qed. 
 
-Corollary GenNP_to_3SAT : restrictBy (LHaltsOrDiverges (list bool)) (GenNP (list bool)) ⪯p kSAT 3.
+Corollary GenNP_to_3SAT : GenNP (list bool) ⪯p kSAT 3.
 Proof. 
   eapply reducesPolyMO_transitive. 
   apply GenNP_to_SingleTMGenNP. 

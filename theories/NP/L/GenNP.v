@@ -1,6 +1,6 @@
 From Undecidability.L Require Import L.
 From Undecidability.L.Datatypes Require Import LProd LTerm LBool.
-From Complexity.Complexity Require Import NP Definitions Monotonic.
+From Complexity.Complexity Require Import NP Definitions Monotonic Subtypes.
 From Undecidability.L.Functions Require Import Size.
 
 Local Unset Implicit Arguments.
@@ -10,7 +10,7 @@ Section GenNP.
   Context (X__cert : Type) `{R__cert : encodable X__cert}.
 
   
-  Definition GenNP : term*nat*nat -> Prop :=
+  Definition GenNP' : term*nat*nat -> Prop :=
                (fun '(s, maxSize, steps (*in unary*)) =>
                   exists (c:X__cert), size (enc c) <= maxSize
                                /\ exists t, app s (enc c) ⇓(<=steps) t).
@@ -25,6 +25,9 @@ Section GenNP.
       proc s
       /\ (forall (c:X__cert) k t, s (enc c) ⇓(k) t -> exists (c':X__cert), size (enc c') <= maxSize /\ s (enc c') ⇓ t)
       /\ (forall (c:X__cert), size (enc c) <= maxSize -> forall k t, s (enc c) ⇓(k) t -> k <= steps).  
+
+  Definition GenNP : {x | LHaltsOrDiverges x} -> Prop :=
+    restrictBy LHaltsOrDiverges GenNP'.
 
 End GenNP.
 

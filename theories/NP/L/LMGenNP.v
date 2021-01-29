@@ -1,5 +1,5 @@
 From Undecidability.L Require Import Tactics.LTactics Prelim.MoreList Prelim.MoreBase.
-From Complexity.Complexity Require Import Definitions.
+From Complexity.Complexity Require Import Definitions Subtypes.
 
 From Undecidability.L Require Import LM_heap_def.
 
@@ -13,7 +13,7 @@ Section fixX.
   Local Unset Implicit Arguments.
   Context (X:Type) `{R__X : encodable X}.   
 
-  Definition LMGenNP : list Tok*nat*nat -> Prop:= 
+  Definition LMGenNP' : list Tok*nat*nat -> Prop:= 
                (fun '(P, maxSize, k (*in unary*)) =>
                   exists (c:X), size (enc c) <= maxSize /\ (exists sigma k', k' <= k /\ evaluatesIn step k' (initLMGen P (compile (enc c))) sigma)).
 
@@ -28,5 +28,7 @@ Section fixX.
                                             /\ evaluates step (initLMGen P (compile (enc c'))) sigma')
       /\ forall (c : X), size (enc c) <= maxSize -> forall k sigma, evaluatesIn step k (initLMGen P (compile (enc c))) sigma -> k <= steps.
 
+  Definition LMGenNP : {x | LMHaltsOrDiverges x} -> Prop :=
+    restrictBy LMHaltsOrDiverges LMGenNP'.
 End fixX.
 

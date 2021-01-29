@@ -7,7 +7,7 @@ From Complexity.L Require Import Compile.
 
 Import Nat.
 Lemma GenNP_to_LMGenNP (X:Type) `{R__X : encodable X}:
-  restrictBy (LHaltsOrDiverges X) (GenNP X) ⪯p restrictBy (LMHaltsOrDiverges X) (LMGenNP X).
+  GenNP X ⪯p LMGenNP X.
 Proof.
   evar (f__steps : nat -> nat). [f__steps]:intros n0.
   pose (f := (fun '(s, maxSize, steps) => (compile s,maxSize : nat, f__steps steps))).
