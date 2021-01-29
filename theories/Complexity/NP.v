@@ -133,10 +133,10 @@ Proof.
   }
 Qed.
 
-(** P *)
+(* P *)
 Definition inP (X : Type) `{_: encodable X}  (P : X -> Prop) := inTimePoly P. 
 
-(** P <<= NP *)
+(* P <<= NP *)
 
 Lemma P_NP_incl (X : Type) `{encodable X}  (P : X -> Prop) : 
   inP P -> inNP P. 
@@ -161,7 +161,7 @@ Proof.
     + intros x H2. exists tt. easy. 
 Qed. 
 
-(** ** Poly Time Reduction s*)
+(** ** Poly Time Reduction*)
 
 Generalizable Variable vY.
 Record reducesPolyMO X Y `{encodable X} `{encodable Y} `(P : X -> Prop) `(Q : Y -> Prop) :Prop :=
