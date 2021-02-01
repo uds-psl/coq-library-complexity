@@ -103,7 +103,7 @@ function foldProofs() {
     nodes = document.getElementsByClassName("id");
   }
   toArray(nodes).forEach(function(node){
-    if(isProofStart(node.textContent)) {
+    if(isProofStart(node.textContent) && node.previousSibling.previousSibling.textContent != "Default") {
       var proof = document.createElement("span");
       proof.setAttribute("class", "proof");
 
