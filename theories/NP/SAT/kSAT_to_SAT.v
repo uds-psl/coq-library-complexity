@@ -1,5 +1,5 @@
 From Undecidability.L Require Import Tactics.LTactics.
-From Complexity Require Import SAT kSAT CookPrelim.PolyBounds Complexity.NP Complexity.Definitions. 
+From Complexity Require Import SAT SAT_inNP kSAT CookPrelim.PolyBounds Complexity.NP Complexity.Definitions. 
 From Undecidability.L.Datatypes Require Import LBool LNat Lists LProd. 
 
 Lemma kSAT_to_SAT (k : nat): reducesPolyMO (kSAT k) SAT. 

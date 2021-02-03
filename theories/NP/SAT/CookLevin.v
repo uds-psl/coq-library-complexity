@@ -144,7 +144,7 @@ Qed.
 (** The Cook-Levin-Theorem: SAT is NP-complete. *)
 Lemma CookLevin : NPcomplete SAT.
 Proof.
-  split. 2:apply SAT.sat_NP.
+  split. 2:apply SAT_inNP.sat_NP.
   eapply red_NPhard. eapply kSAT_to_SAT. apply CookLevin0. 
 Qed.
 

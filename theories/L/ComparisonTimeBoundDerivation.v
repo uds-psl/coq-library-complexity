@@ -5,7 +5,7 @@ From Undecidability.L.Functions Require Import EqBool.
 From Complexity.Complexity Require Import NP Definitions PolyTimeComputable.
 From Complexity.Libs.CookPrelim Require Import Tactics.
 
-From Complexity.NP Require Import SharedSAT SAT.
+From Complexity.NP Require Import SharedSAT SAT SAT_inNP.
 
 (** * Comparison of techniques for deriving resource bounds we explored *)
 

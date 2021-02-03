@@ -1,7 +1,7 @@
 From Undecidability.Shared.Libs.PSL Require Import Base. 
 From Undecidability.L.Datatypes Require Import Lists.
 From Complexity.Libs Require Import MorePrelim.
-From Complexity.NP.SAT Require Import FSAT SAT kSAT.
+From Complexity.NP.SAT Require Import FSAT SAT SAT_inNP kSAT.
 Require Import Lia. 
 
 (** * FSAT to SAT via Tseytin transformation*)

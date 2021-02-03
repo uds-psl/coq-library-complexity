@@ -100,6 +100,7 @@ theories/NP/L/LMGenNP.v
 theories/NP/SAT/CookLevin.v
 theories/NP/SAT/SharedSAT.v
 theories/NP/SAT/SAT.v
+theories/NP/SAT/SAT_inNP.v
 theories/NP/SAT/kSAT.v
 theories/NP/SAT/kSAT_to_SAT.v
 

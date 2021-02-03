@@ -3,7 +3,7 @@ From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import Lists LNat LProd.
 From Undecidability.Shared.Libs.PSL.FiniteTypes Require Import FinTypes Cardinality VectorFin.
 From Complexity.NP.Clique Require Import FlatUGraph FlatClique kSAT_to_Clique.
-From Complexity.NP.SAT Require Import kSAT.
+From Complexity.NP.SAT Require Import kSAT SAT_inNP.
 From Complexity.Libs.CookPrelim Require Import FlatFinTypes MorePrelim.
 
 (** * k-SAT to FlatClique *)
