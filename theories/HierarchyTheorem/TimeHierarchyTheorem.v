@@ -1,4 +1,4 @@
-From Undecidability.L Require Import L Tactics.LTactics AbstractMachines.LargestVar.
+From Undecidability.L Require Import L Tactics.LTactics AbstractMachines.LargestVar Util.Subterm.
 
 From Complexity.L Require Import AbstractHeapMachineDef UnfoldTailRec AbstractHeapMachine.
 From Complexity.L.AbstractMachines.Computable Require Import Unfolding HeapMachine Shared EvalForTime EvalForTimeBool.

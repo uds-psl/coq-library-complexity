@@ -44,6 +44,7 @@ theories/L/AbstractMachines/Computable/EvalForTimeBool.v
 theories/L/AbstractMachines/FlatPro/Computable/Compile.v
 theories/L/AbstractMachines/FlatPro/Computable/Decompile.v
 theories/L/AbstractMachines/FlatPro/SizeAnalysisStep.v
+theories/L/AbstractMachines/FlatPro/SubtermProperty.v
 theories/L/AbstractMachines/FlatPro/SizeAnalysisUnfoldClos.v
 #L/AbstractMachines/FlatPro/Computable/JumpTarget.v
 #L/AbstractMachines/FlatPro/Computable/HeapStep.v

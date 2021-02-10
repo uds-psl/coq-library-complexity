@@ -1,4 +1,4 @@
-From Undecidability.L Require Import L_facts  Complexity.ResourceMeasures AbstractMachines.LargestVar.
+From Undecidability.L Require Import L_facts Util.Subterm Complexity.ResourceMeasures AbstractMachines.LargestVar.
 From Complexity.L Require Export AbstractMachines.AbstractHeapMachineDef.
 Import AbstractHeapMachineDef.clos_notation.
 
@@ -357,43 +357,6 @@ Proof.
   intros ? ([]&<-&?). eauto.
 Qed.
 
-
-Inductive subterm (s:term) : term -> Prop :=
-  subtermR : subterm s s
-| subtermAppL (s' t:term) : subterm s s' -> subterm s (s' t)
-| subtermAppR (t s':term) : subterm s s' -> subterm s (t s')
-| subtermLam s': subterm s s' -> subterm s (lam s').
-
-Instance subtermPO : PreOrder subterm.
-Proof.
-  split. now constructor.
-  intros x y z H1 H2.
-  induction H2 in H1,x|-*. all:eauto using subterm.
-Qed.
-
-Lemma subterm_lam_inv s s0 :
-  subterm (lam s) s0 -> subterm s s0.
-Proof.
-  intros.  rewrite <- H. eauto using subterm.
-Qed.
-
-Lemma subterm_app_l s t s0 :
-  subterm (app s t) s0 -> subterm s s0.
-Proof.
-  intros. rewrite <- H. eauto using subterm.
-Qed.
-
-Lemma subterm_app_r s t s0 :
-  subterm (app s t) s0 -> subterm t s0.
-Proof.
-  intros. rewrite <- H. eauto using subterm.
-Qed.
-
-Lemma subterm_largestVar s s' :
-  subterm s s' -> largestVar s <= largestVar s'.
-Proof.
-  induction 1;cbn;Lia.nia.
-Qed.
 
 Section Analysis.
 

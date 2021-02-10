@@ -161,6 +161,4 @@ Section Analysis.
   Qed.
   
 (* Damit: länge eines zustandes beschränkt durch (i+i)*(3*(i+1)+2*|s|)*)
-  
-
 End Analysis.

@@ -131,6 +131,7 @@ Proof.
   erewrite (proj2_sig Private_UnfoldClos_steps_loop_nice' _ _ _ _ _ _).
   2,3,4:eassumption.
   {
+  remember (size H * S maxVar + maxPro + maxDepth + 1) as c0 eqn:Hc0.
   [c]: exact (3*proj1_sig Private_UnfoldClos_steps_loop_nice' + 2 * WriteValue_steps 1 + 3). 
   set (c':=proj1_sig _);clearbody c'. lia.
   }
@@ -141,9 +142,9 @@ Lemma UnfoldClos_steps_nice' :
   boundHeap H maxPro maxVar maxDepth
   -> LM_heap_correct.unfolds H a 1 s t
   -> sizeP (compile s) <= maxPro /\ a <= length H /\ LargestVar.largestVar s<= maxVar /\ 1 + lambdaDepth s <= maxDepth
-  -> UnfoldClos.steps H (a,compile s) (L.lam t) <= c*L_facts.size t * (Code.size H * S maxVar + maxPro + maxDepth)  }.
+  -> UnfoldClos.steps H (a,compile s) (L.lam t) <= c*(L_facts.size t + 1) * (Code.size H * S maxVar + maxPro + maxDepth + 1)  }.
 Proof.
-  eexists ?[c]. intros ? ? ? ? ? ? ? ? ? (Hs&Ha&Hvar&Hk). unfold UnfoldClos.steps.
+  evar (c:nat). eexists c. intros ? ? ? ? ? ? ? ? ? (Hs&Ha&Hvar&Hk). unfold UnfoldClos.steps.
   assert (Hlength:length H <= size H) by (rewrite Encode_Heap_hasSize_ge_length,Code.Encode_list_hasSize;easy ).
   rewrite decompile_correct.
   unfold CasePair_steps,Translate_steps.
@@ -151,21 +152,61 @@ Proof.
   repeat (rewrite Code.Encode_pair_hasSize;unfold Code.Encode_pair_size).
   rewrite !Code.Encode_nat_hasSize.
   cbn [L_facts.size fst].
-  rewrite (proj2_sig Private_UnfoldClos_steps_nice' _),Ha,Hlength,!size_rev. 2-4:easy.
+  rewrite (proj2_sig Private_UnfoldClos_steps_nice' _),Ha,Hlength. 2-4:easy.
+  remember (size H * S maxVar + maxPro + maxDepth) as c0 eqn:Hc0.
+
   set (tmp:=WriteValue_steps (size [retT]));cbv in tmp;subst tmp.
   set (tmp:=Cons_constant.Cons_constant.time lamT);cbv in tmp;subst tmp.
   set (tmp:=WriteValue_steps 2);cbv in tmp;subst tmp.
-  rewrite !size_le_sizeP. Search sizeP . 
-  [c]:exact (proj1_sig Private_UnfoldClos_steps_nice' + WriteValue_steps (size [retT]) + 99).
-  ring_simplify.  
-  Import mixedTactics.
-  leq_crossout.
-  ring_simplify.
-Qed
-End UnfoldClos.
+  rewrite !size_le_sizeP,!Hs.
+  replace (sizeP (rev (compile t))) with (sizeP (compile t)).
+  2:{ unfold sizeP. now rewrite map_rev,<- sumn_rev. }
+  unfold sizeP;rewrite sizeP_size. ring_simplify.
+  unshelve erewrite ( _ : size H <= c0);[nia|].   unshelve erewrite ( _ : maxPro <= c0);[nia|].
+  [c]:exact (proj1_sig Private_UnfoldClos_steps_nice' + 6*c__leUpToC (Rev.Rev_Append_steps_nice Alphabets.Encode_Com) + 126). unfold c.
+  cbn - ["+" "*"].
+  set (x:=proj1_sig Private_UnfoldClos_steps_nice'). change (proj1_sig Private_UnfoldClos_steps_nice') with x.
+  set (y:=c__leUpToC (Rev.Rev_Append_steps_nice Alphabets.Encode_Com)). ring_simplify. lia.
+Qed.
 
 Lemma EvalL_steps_nice' :
 { c | forall s k t Hcl Hr, @EvalL.steps s k t Hcl Hr <= c }.
 Proof.
-eexists. intros. unfold EvalL.steps.
-ring_simplify.
+  evar (c:nat). eexists c. intros ? ? ? ? ?.
+  unfold EvalL.steps.
+  destruct completenessTimeInformative as ((a&s')&H&(t'&Hrep&Hrep2)%reprC_elim&HR). cbn [fst snd] in *. inv Hrep.
+  inv Hrep2.
+
+  repeat (set (n:=WriteValue_steps _);cbv in n;subst n).
+  set (n:=Reset_steps 0);cbv in n;subst n.
+  set (n:=Constr_pair_steps 0);cbv in n;subst n.
+  set (n:=Reset_steps []);cbv in n;subst n.
+  unfold Translate_steps,CopyValue_steps,Reset_steps,Constr_cons_steps,CaseList_steps,CaseList_steps_cons .
+  rewrite Encode_pair_hasSize; unfold Encode_pair_size.
+  set (size (X:=HAdd) 0);cbv in n; subst n.
+  ring_simplify.
+
+  unfold init in HR.
+
+  edestruct Loop_steps_nice with (H__init:=[]:Heap) as (c0&HLoop). easy.
+  specialize HLoop with (x:=(compile s,3*k+1));cbn beta iota in HLoop.
+  cbn [length] in HLoop. rewrite Nat.add_0_l in HLoop.
+
+  unshelve eassert (Hclos:=SizeAnalysisStep.size_clos HR _). easy. cbn in Hclos.
+  unshelve eassert (HHlength:=SizeAnalysisStep.length_H HR _). easy. cbn - ["*"] in HHlength.
+
+  edestruct UnfoldClos_steps_nice' as (c1&Hunf).
+  specialize Hunf with (2:=H2).
+  
+  
+  unfold boundHeap in Hunf. 
+
+  setoid_rewrite Hunf.
+  2:{ intros ? ? ? H'. eapply Hclos in H' as (?&?&?&?). repeat simple apply conj. 1,2,3,5:eassumption. Search lambdaDepth.   } 3:easy.
+  Search boundHeap. 
+  specialize (HUnf H).
+
+  Search M_LHeapInterpreter.Loop_steps.
+
+  d
+  ring_simplify.
