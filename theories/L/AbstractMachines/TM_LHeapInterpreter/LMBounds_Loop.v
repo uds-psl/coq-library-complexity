@@ -105,6 +105,45 @@ Section FixInit.
   (*Hypothesis R: pow step i ([(0,P0)],[],H__init) (T,V,H).*)
   Hypothesis empty_H__init: forall c, c el H__init -> c = None.
 
+  Lemma Heap_size_nicer P0 (T V : list HClos) (H : Heap) i :
+    pow step i ([(0,P0)],[],H__init) (T,V,H)
+    -> size H <= (length H__init + i) * (S ((length H__init + i) + 3 * sizeP P0 + 1 + S (length H__init + i)) + 1) + 1.
+  Proof using empty_H__init.
+    intros H0.
+    specialize SizeAnalysisStep.size_clos with (1:=H0) (2:=empty_H__init)as Hsize.
+    unfold Encode_Heap, sigHeap. erewrite size_list_le_bound with (xs:=H).
+    2:{
+      intros [[[a' P'] beta] | ] H1. 2:cbv.  
+      -apply Hsize in H1. unfold sigHEntr,HEntr,Encode_HEntr,sigHEntr',Encode_HEntr'. rewrite Encode_option_hasSize.
+      cbn. rewrite Encode_pair_hasSize;cbn. rewrite size_HClos_le. cbn.
+      rewrite size_le_sizeP, Encode_nat_hasSize. destruct H1 as (->&->&->&_). reflexivity.
+      -nia. 
+    }
+    rewrite length_H. 2:eassumption. 2:easy. reflexivity. 
+  Qed.
+
+  Lemma Heap_size_nicer2:
+    {c : nat |
+      forall P0 (T V : list HClos) (H : Heap) i,
+        pow step i ([(0,P0)],[],H__init) (T,V,H)
+      -> size H <=(c) (length H__init + i + 1 + sizeP P0) * (length H__init + i + 1)}.
+  Proof using empty_H__init.
+    eexists ?[c]. intros P0 T V H i H0.
+    specialize SizeAnalysisStep.size_clos with (1:=H0) (2:=empty_H__init)as Hsize.
+    unfold Encode_Heap, sigHeap. erewrite size_list_le_bound with (xs:=H).
+    2:{
+      intros [[[a' P'] beta] | ] H1. 2:cbv.  
+      -apply Hsize in H1. unfold sigHEntr,HEntr,Encode_HEntr,sigHEntr',Encode_HEntr'. rewrite Encode_option_hasSize.
+      cbn. rewrite Encode_pair_hasSize;cbn. rewrite size_HClos_le. cbn.
+      rewrite size_le_sizeP, Encode_nat_hasSize. destruct H1 as (->&->&->&_). reflexivity.
+      -nia. 
+    }
+    rewrite length_H. 2:eassumption. 2:easy.
+    [c]:exact 4. cbn;hnf. ring_simplify. nia.  
+  Qed.
+
+  Import ZArith.
+
   Lemma Step_steps_nicer :
     {c : nat |
       forall P0 (T V : list HClos) (H : Heap) i,
@@ -122,13 +161,7 @@ Section FixInit.
           rewrite size_le_sizeP.
           edestruct (Hsize P' a') as [(->&->&_) _]. now eauto. reflexivity.
       }
-      unfold Encode_Heap, sigHeap. erewrite size_list_le_bound with (xs:=H).
-      2:{ intros [[[a' P'] beta] | ] ?. 2:cbv.  
-          -apply Hsize in H1. unfold sigHEntr,HEntr,Encode_HEntr,sigHEntr',Encode_HEntr'. rewrite Encode_option_hasSize.
-           cbn. rewrite Encode_pair_hasSize;cbn. rewrite size_HClos_le. cbn.
-           rewrite size_le_sizeP, Encode_nat_hasSize. destruct H1 as (->&->&->&_). reflexivity.
-          -nia. 
-      }
+      assert (Htmp:=proj2_sig Heap_size_nicer2 _ _ _ _ _ H0). hnf in Htmp. rewrite Htmp. clear Htmp.
       rewrite heap_greatest_address2_bound.
       2:{ intros [] ?. edestruct Hsize as [_ H']. apply H'. }
       specialize Hsize with (P1:=P) (a0 := a) as [(-> & -> &_) _]. easy.
@@ -138,9 +171,9 @@ Section FixInit.
       specialize length_H  with (1:=H0) (2:=empty_H__init) as ->. fold lH.
       clear dependent T. clear dependent V. clear dependent H.  clear dependent P. clear dependent a.
       assert (i<=lH) as -> by nia.
-      clearbody lH. clear dependent H__init.
-      cbn [Nat.pow].
-      ring_simplify. instantiate (1:=9). hnf. lia.
+      clearbody lH. instantiate (1:=3 + 2*proj1_sig Heap_size_nicer2). 
+      generalize (proj1_sig Heap_size_nicer2). intro. clear dependent H__init. 
+      cbn [Nat.pow]. hnf. lia. 
     }
     cbn. hnf. lia.
   Qed.

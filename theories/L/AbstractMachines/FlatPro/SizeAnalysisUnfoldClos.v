@@ -133,3 +133,36 @@ Proof.
    +exfalso.  change (S fuel') with (1+fuel') in *. eapply pow_add in H' as (stack''&Hstep%(rcomp_1)&_). easy.
   -easy.
 Qed.
+
+From Complexity.L.AbstractMachines Require Import SizeAnalysisStep SubtermProperty.
+
+
+Lemma abstractMachine_boundHeap k s a s0 H :
+  ARS.pow step k (LM_heap_def.init s) ([], [(a, compile s0)], H) -> 
+  boundHeap H (sizeP (compile s)) (LargestVar.largestVar s) (lambdaDepth s).
+Proof.
+  intros H'. unfold boundHeap. intros ? ? ? HH.
+  specialize subterm_property with (1:=H') as (_&_&Hsub). specialize Hsub with (1:=HH) as (?&?&tmp);cbn in tmp;subst P.
+  specialize size_clos with (1:=H') as (_&Hlength). easy. specialize Hlength with (1:=HH) as (?&?&?&?).
+  repeat simple apply conj;try eassumption.
+  -apply lambdaDepth_subterm in H0 as <-. cbn. now rewrite lambdaDepthP_compile.
+  -now rewrite <- largestVar_compile.
+Qed.
+
+Lemma abstractMachine_boundRes k s a s0 H :
+  ARS.pow step k (LM_heap_def.init s) ([], [(a, compile s0)], H) -> 
+  sizeP (compile s0) <= sizeP (compile s) /\
+  a <= | H | /\
+  LargestVar.largestVar s0 <= LargestVar.largestVar s /\
+  1 + lambdaDepth s0 <= lambdaDepth s.
+Proof.
+  intros H'. 
+  specialize subterm_property with (1:=H') as (_&Hsub&_). specialize Hsub as (?&?&tmp). now left.
+  apply compile_inj in tmp as <-.
+  specialize size_clos with (1:=H') as (Hlength&_). easy. specialize Hlength as (?&?&?). now left.
+  repeat simple apply conj;try eassumption.
+  -now rewrite <- !largestVar_compile.
+  -apply lambdaDepth_subterm in H0 as <-. cbn. easy.
+Qed.
+
+

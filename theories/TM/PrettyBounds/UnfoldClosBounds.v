@@ -182,7 +182,7 @@ Proof.
   set (n:=Constr_pair_steps 0);cbv in n;subst n.
   set (n:=Reset_steps []);cbv in n;subst n.
   unfold Translate_steps,CopyValue_steps,Reset_steps,Constr_cons_steps,CaseList_steps,CaseList_steps_cons .
-  rewrite Encode_pair_hasSize; unfold Encode_pair_size.
+  do 2 (rewrite Encode_pair_hasSize; unfold Encode_pair_size).
   set (size (X:=HAdd) 0);cbv in n; subst n.
   ring_simplify.
 
@@ -192,21 +192,25 @@ Proof.
   specialize HLoop with (x:=(compile s,3*k+1));cbn beta iota in HLoop.
   cbn [length] in HLoop. rewrite Nat.add_0_l in HLoop.
 
-  unshelve eassert (Hclos:=SizeAnalysisStep.size_clos HR _). easy. cbn in Hclos.
-  unshelve eassert (HHlength:=SizeAnalysisStep.length_H HR _). easy. cbn - ["*"] in HHlength.
+  (* unshelve eassert (Hclos:=SizeAnalysisStep.size_clos HR _). easy. cbn in Hclos.
+  unshelve eassert (HHlength:=SizeAnalysisStep.length_H HR _). easy. cbn - ["*"] in HHlength.*)
 
   edestruct UnfoldClos_steps_nice' as (c1&Hunf).
   specialize Hunf with (2:=H2).
-  
-  
-  unfold boundHeap in Hunf. 
 
   setoid_rewrite Hunf.
-  2:{ intros ? ? ? H'. eapply Hclos in H' as (?&?&?&?). repeat simple apply conj. 1,2,3,5:eassumption. Search lambdaDepth.   } 3:easy.
-  Search boundHeap. 
-  specialize (HUnf H).
+  2: now eapply abstractMachine_boundHeap.
+  2: now eapply abstractMachine_boundRes.
 
-  Search M_LHeapInterpreter.Loop_steps.
+  unshelve erewrite (_ : size a <= (3*k+1 + 1)).
+  {
+    rewrite Encode_nat_hasSize. transitivity (1 + length H). 2:now rewrite SizeAnalysisStep.length_H;try easy;cbn;nia.
+    unshelve edestruct SizeAnalysisStep.size_clos with (1:=HR) as [(?&H'&?) _]. 3,4:cbn;easy. nia.
+  }
 
-  d
-  ring_simplify.
+  unshelve eassert (tmp:=proj2_sig (Heap_size_nicer2 _) _ _ _ _ _ HR). easy. hnf in tmp. rewrite tmp. clear tmp.
+  rewrite Nat.add_0_l. set (cHeap:=proj1_sig _).
+  rewrite HLoop. set (k':= 3*k+1).
+  
+  (* IDEA: use <=(c) and name the polynomial. *)
+Abort.

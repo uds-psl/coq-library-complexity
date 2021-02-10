@@ -1,7 +1,7 @@
 From Coq Require Import List.
 Import ListNotations.
 From Undecidability.L Require Import MoreBase.
-From Undecidability.L Require Import L FlatPro.Programs.
+From Undecidability.L Require Import L FlatPro.Programs Util.Subterm.
 
 Fixpoint lambdaDepth s :=
   match s with
@@ -41,3 +41,11 @@ Proof.
   specialize (lambdaDepthP_compile' s [] k) as H'. rewrite app_nil_r in H'. cbn in *.
   specialize (lambdaDepthP_min k (compile s)). nia.
 Qed. 
+
+
+Lemma lambdaDepth_subterm s s' :
+  subterm s s' -> lambdaDepth s <= lambdaDepth s'.
+Proof.
+  induction 1;cbn. all:nia. 
+Qed. 
+
