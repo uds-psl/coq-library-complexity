@@ -170,7 +170,8 @@ Proof.
 Qed.
 
 Lemma EvalL_steps_nice' :
-{ c | forall s k t Hcl Hr, @EvalL.steps s k t Hcl Hr <= c }.
+{ c | forall s k t Hcl Hr, @EvalL.steps s k t Hcl Hr
+  <=(c) (k+1)*(k+L_facts.size s)* ( L_facts.size s * (k+1) + L_facts.size t * (LargestVar.largestVar s+ 1) ) }.
 Proof.
   evar (c:nat). eexists c. intros ? ? ? ? ?.
   unfold EvalL.steps.
@@ -184,18 +185,20 @@ Proof.
   unfold Translate_steps,CopyValue_steps,Reset_steps,Constr_cons_steps,CaseList_steps,CaseList_steps_cons .
   do 2 (rewrite Encode_pair_hasSize; unfold Encode_pair_size).
   set (size (X:=HAdd) 0);cbv in n; subst n.
-  ring_simplify.
+
+  evar (c':nat). evar (tmp:nat).
+  eapply dominatedWith_trans with (c:=c') (y:=tmp).
+  ring_simplify. 2:unfold tmp;eapply dominatedWith_refl with (c:=1). 2:nia. 
+  subst c'. subst tmp.
 
   unfold init in HR.
 
-  edestruct Loop_steps_nice with (H__init:=[]:Heap) as (c0&HLoop). easy.
-  specialize HLoop with (x:=(compile s,3*k+1));cbn beta iota in HLoop.
-  cbn [length] in HLoop. rewrite Nat.add_0_l in HLoop.
 
-  (* unshelve eassert (Hclos:=SizeAnalysisStep.size_clos HR _). easy. cbn in Hclos.
-  unshelve eassert (HHlength:=SizeAnalysisStep.length_H HR _). easy. cbn - ["*"] in HHlength.*)
+  unshelve eassert (Hclos:=SizeAnalysisStep.size_clos HR _). easy. cbn in Hclos. 
+  unshelve eassert (HHlength:=SizeAnalysisStep.length_H HR _). easy. cbn - ["*"] in HHlength.
 
-  edestruct UnfoldClos_steps_nice' as (c1&Hunf).
+  specialize (proj2_sig UnfoldClos_steps_nice') as Hunf.
+  set (c1:= proj1_sig _) in Hunf.  cbn beta in Hunf.
   specialize Hunf with (2:=H2).
 
   setoid_rewrite Hunf.
@@ -208,9 +211,91 @@ Proof.
     unshelve edestruct SizeAnalysisStep.size_clos with (1:=HR) as [(?&H'&?) _]. 3,4:cbn;easy. nia.
   }
 
-  unshelve eassert (tmp:=proj2_sig (Heap_size_nicer2 _) _ _ _ _ _ HR). easy. hnf in tmp. rewrite tmp. clear tmp.
-  rewrite Nat.add_0_l. set (cHeap:=proj1_sig _).
-  rewrite HLoop. set (k':= 3*k+1).
-  
-  (* IDEA: use <=(c) and name the polynomial. *)
-Abort.
+  unshelve eassert (tmp:=proj2_sig Heap_size_nicer2' _ _ _ _  _ HR); hnf in tmp; rewrite tmp; clear tmp.
+  do 3 rewrite size_le_sizeP.
+
+  unshelve erewrite (_ : sizeP (compile s0) <= sizeP (compile s)). now eapply (proj1 (Hclos _ _)).
+
+  set (cHeap:=proj1_sig _).
+  setoid_rewrite (correct__leUpToC Loop_steps_nice) with (x:=(compile s,3*k+1));cbn beta iota.
+  set (c0:=c__leUpToC Loop_steps_nice).
+
+  set (k':= 3*k+1).
+
+  rewrite lambdaDepth_size.
+
+  repeat (unfold sizeP;rewrite sizeP_size). cbn [L_facts.size].
+  set (m_s := L_facts.size s). set (m_s' := L_facts.size s'). set (var_s := LargestVar.largestVar s).
+
+  (*
+   m_s
+  + (k+1)*(k+1)*(k+m_s)* m_s
+  + k + m_s
+  + m_s' * ((k+1) * (k + m_s) * (var_s + 1) + m_s)
+  + (k+1)*(k+m_s) + m_s'
+
+  simplified using m_s > 0
+
+  (k+1)*(k+1)*(k+m_s)* m_s
+  + m_s' * (k+1) * (k + m_s) * (var_s + 1)
+  = (k+1)*(k+m_s)* ( m_s * (k+1) + m_s' * (var_s + 1) )
+  *)
+  assert (Hs : m_s = (m_s - 1) + 1) by now (subst m_s;clear;destruct s;cbn).
+  assert (Hs' : m_s' = (m_s' - 1) + 1) by now (subst m_s';clear;destruct s';cbn).
+
+  assert (Hk : k' <=(3) k + 1). { subst k'. hnf. nia. }
+  assert (Hk' : k' + 1 <=(3) k + 1). { subst k'. hnf. nia. }
+
+  repeat simple apply dominatedWith_add.
+  -repeat apply dominatedWith_mult_l;apply dominatedWith_solve.
+   transitivity (k + m_s). easy. generalize (k + m_s);intro. destruct m_s. now exfalso. lia.
+  -apply dominatedWith_mult_l. rewrite <- !mult_assoc.
+   replace ((k' + 1) * ((k' + 1) * ((k' + 2 * m_s) * (2 * m_s))))
+    with ((k' + 1) * ((k' + 2 * m_s) * (2 * (m_s * (k' + 1))))) by nia.
+    eapply dominatedWith_mult. exact Hk'.
+    eapply dominatedWith_mult. {instantiate (1:=3). hnf. subst k'. rewrite Hs at 2. clear. nia. }
+    eapply dominatedWith_mult_l. {instantiate (1:=3). hnf. subst k'. rewrite Hs at 2. clear. nia. }
+  -eapply dominatedWith_mult_l, dominatedWith_trans. eassumption.
+  eapply dominatedWith_solve. rewrite <- !mult_assoc.  etransitivity. 2:eapply Nat.mul_le_mono_nonneg_l;[|].
+   2:nia. now rewrite Nat.mul_1_r. clear - Hs. eapply LM_Lookup_nice.ge1_mul. nia. nia.
+   -repeat eapply dominatedWith_mult_l. instantiate (1:=1). hnf. ring_simplify.
+    transitivity (m_s * m_s'). now nia. repeat first [eapply le_plus_r|etransitivity;[|eapply le_plus_l]].
+  -eapply dominatedWith_mono_c with (c:=3+8*c1+18*c1*cHeap).
+  2:now unfold c1, cHeap;reflexivity. destruct m_s,m_s'. 1,2,3:exfalso;nia. hnf. unfold k'. ring_simplify.
+  ring_simplify.
+  repeat match goal with
+    | |- _ + ?x <= _ + ?x => eapply plus_le_compat_r
+    | |- _ + ?x <= _ + ?c' * ?x => eapply plus_le_compat;[|clear;lia]
+    | |- _ + ?c * ?x <= _ + ?c' * ?x => eapply plus_le_compat;[|clear;lia]
+    | |- _ + _ <= _ => etransitivity;[|eapply le_plus_l]
+  end. all:clear;try lia.
+  -do 2 eapply dominatedWith_mult_l.
+  eapply dominatedWith_mono_c with (c:=9).
+  2:now unfold c1, cHeap;reflexivity. destruct m_s,m_s'. 1,2,3:exfalso;nia. hnf. unfold k'. ring_simplify.
+  ring_simplify.
+  eapply plus_le_compat. 2:nia.
+  repeat lazymatch goal with
+    | |- _ + ?x <= _ + ?x => eapply plus_le_compat_r
+    | |- _ + ?x <= _ + ?c' * ?x => eapply plus_le_compat;[|clear;lia]
+    | |- _ + ?c * ?x <= _ + ?c' * ?x => eapply plus_le_compat;[|clear;lia]
+    | |- _ + _ <= _ => etransitivity;[|eapply le_plus_l]
+    | |- ?x <= _ + ?x => eapply plus_le_compat_r
+    | |- ?x <= _ + ?c' * ?x => eapply plus_le_l;[|clear;lia]
+    | |- ?c * ?x <= _ + ?c' * ?x => eapply plus_le_compat;[|clear;lia]
+    | |- _ => etransitivity;[|eapply Nat.le_add_r]
+  end. lia.
+  -do 3 eapply dominatedWith_mult_l. instantiate (1:=1). destruct m_s. exfalso;nia. hnf. 
+  ring_simplify.
+  repeat lazymatch goal with
+    | |- _ + ?x <= _ + ?x => eapply plus_le_compat_r
+    | |- _ + ?x <= _ + ?c' * ?x => eapply plus_le_compat;[|clear;lia]
+    | |- _ + ?c * ?x <= _ + ?c' * ?x => eapply plus_le_compat;[|clear;lia]
+    | |- _ + _ <= _ => etransitivity;[|eapply le_plus_l]
+    | |- ?x <= _ + ?x => eapply plus_le_compat_r
+    | |- ?x <= _ + ?c' * ?x => eapply plus_le_l;[|clear;lia]
+    | |- ?c * ?x <= _ + ?c' * ?x => eapply plus_le_compat;[|clear;lia]
+    | |- _ => etransitivity;[|eapply Nat.le_add_r]
+  end. lia.
+  -eapply dominatedWith_const. hnf.  destruct m_s,m_s'. 1,2,3:exfalso;nia. hnf. unfold k'. ring_simplify.
+  etransitivity. 2:eapply le_plus_r. nia.
+Qed.

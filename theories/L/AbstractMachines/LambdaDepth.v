@@ -49,3 +49,10 @@ Proof.
   induction 1;cbn. all:nia. 
 Qed. 
 
+Lemma lambdaDepth_size s :
+  lambdaDepth s <= L_facts.size s.
+Proof. induction s;cbn. all:nia. Qed. 
+
+Lemma lambdaDepthP_sizeP k P :
+  lambdaDepthP k P <= (pred k) + sizeP P.
+Proof. unfold sizeP. induction P as [|[]] in k|-*;cbn. nia. all:rewrite IHP. all:nia. Qed.  

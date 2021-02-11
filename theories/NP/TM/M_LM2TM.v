@@ -117,8 +117,7 @@ Module LMtoTM.
         assert (H:= fun i => tmp (Fin.FS i));clear tmp;
         fin_inst_all H
       end.
-
-    
+   
     Local Arguments sizeOfmTapes : simpl never.
     Definition _Terminates :
       { time : UpToC ((fun '(steps, size) => (steps + 1) * (steps + size + 1) ^3 ))
@@ -210,12 +209,17 @@ Module LMtoTM.
           -cbn. simpl_surject. TMSimp_goal. contains_ext. 
           -cbn. simpl_surject. TMSimp_goal. contains_ext.
           -intros i. cbn. destruct_fin i;cbn. all:simpl_surject. all:isVoid_mono.
-          -unshelve erewrite (correct__leUpToC (Loop_steps_nice _) (_,_)). easy. 
+          -unshelve erewrite (correct__leUpToC Loop_steps_nice (_,_)). 
            cbn [length]. unfold sizeP. rewrite !map_app,!sumn_app.
          
            rewrite (correct__leUpToC sizeT_compile_list_bool bs).
-           set (c:= sumn (map sizeT [appT])). cbv in c. subst c.
-           rewrite !Nat.add_assoc.  replace (0 + steps__LM + 1 + (sumn (map sizeT P))) with (steps__LM + sizeP P) by (unfold sizeP;lia).
+           set (c:= sumn (map sizeT [appT])); cbv in c; subst c.
+           rewrite !Nat.add_assoc.
+           set (c':= c__leUpToC) at 3.
+           replace ((sumn (map sizeT P) + c' * ((| bs |) + 1) + 1 + 1))
+              with (sizeP P + c' * ((| bs |) + 1) + 1) by (unfold sizeP;lia).
+          replace (steps__LM + sumn (map sizeT P) + c__leUpToC * ((| bs |) + 1) + 1 + 1)
+            with (steps__LM + sizeP P + c' * ((| bs |) + 1) + 1) by (unfold sizeP;lia).
            rewrite Hlebs. reflexivity.
       }
       ring_simplify.
@@ -225,18 +229,12 @@ Module LMtoTM.
       repeat rewrite sizeOfmTapes_upperBound with (tps:=tin). 2-3:now eapply vect_nth_In. 
       [time]:refine (fun '(steps__LM,sizeM) => _).
       set (sizeM := sizeOfmTapes _). unfold time. reflexivity.
-      unfold time.
+      unfold time. clear time.
+      set (c':=c__leUpToC). set (c'':=c__leUpToC). set (c''':=c__leUpToC).
+      clearbody c'. clearbody c''. clearbody  c'''.
+      (* nary simple apply (upToC_mul_c_r__out_nary (c:=(c''+1)^2*((c'''+1)^2))). nia. *)
       smpl_upToC.
-      1-15,18:cbn [Nat.pow];now smpl_upToC_solve.
-      2:{ transitivity (fun '(steps, size) => (steps + size + 1) ^ 3).
-          2:now smpl_upToC_solve.
-          
-      nary apply upToC_pow_le_compat_nary. 1-2:nia. smpl_upToC_solve.
-      }
-
-      nary apply upToC_mul_nary.
-      2:nary apply  upToC_pow_le_compat_nary. 2,3:easy.
-      all:try smpl_upToC_solve.
+      all:cbn [Nat.pow];try now smpl_upToC_solve.
     Qed.
 
     Definition Terminates := projT2 _Terminates.

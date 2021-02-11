@@ -95,140 +95,163 @@ Proof.
   -eauto.
 Qed.
 
-Section FixInit.
-  Variable H__init: list HEntr.
 
-  (*Variable T V : list HClos.
-  Variable H H__init: list HEntr.
-  Variable i : nat.
-  *)
-  (*Hypothesis R: pow step i ([(0,P0)],[],H__init) (T,V,H).*)
-  Hypothesis empty_H__init: forall c, c el H__init -> c = None.
+Lemma Heap_size_nicer P0 (T V : list HClos) (H : Heap) i :
+  pow step i ([(0,P0)],[],[]) (T,V,H)
+  -> size H <= i * (6*i + 3*sizeP P0 + 4*i) + 1.
+Proof.
+  intros H0.
+  specialize SizeAnalysisStep.size_clos with (1:=H0) as Hsize.
+  unfold Encode_Heap, sigHeap. erewrite size_list_le_bound with (xs:=H).
+  2:{
+    intros [[[a' P'] beta] | ] H1. 2:cbv.  
+    -apply Hsize in H1. 2:easy. unfold sigHEntr,HEntr,Encode_HEntr,sigHEntr',Encode_HEntr'. rewrite Encode_option_hasSize.
+    cbn. rewrite Encode_pair_hasSize;cbn. rewrite size_HClos_le. cbn.
+    rewrite size_le_sizeP, Encode_nat_hasSize. destruct H1 as (->&->&->&_). reflexivity.
+    -nia. 
+  }
+  rewrite length_H. 2:eassumption. 2:easy. cbn [length]. nia. 
+Qed.
 
-  Lemma Heap_size_nicer P0 (T V : list HClos) (H : Heap) i :
-    pow step i ([(0,P0)],[],H__init) (T,V,H)
-    -> size H <= (length H__init + i) * (S ((length H__init + i) + 3 * sizeP P0 + 1 + S (length H__init + i)) + 1) + 1.
-  Proof using empty_H__init.
-    intros H0.
-    specialize SizeAnalysisStep.size_clos with (1:=H0) (2:=empty_H__init)as Hsize.
-    unfold Encode_Heap, sigHeap. erewrite size_list_le_bound with (xs:=H).
-    2:{
-      intros [[[a' P'] beta] | ] H1. 2:cbv.  
-      -apply Hsize in H1. unfold sigHEntr,HEntr,Encode_HEntr,sigHEntr',Encode_HEntr'. rewrite Encode_option_hasSize.
-      cbn. rewrite Encode_pair_hasSize;cbn. rewrite size_HClos_le. cbn.
-      rewrite size_le_sizeP, Encode_nat_hasSize. destruct H1 as (->&->&->&_). reflexivity.
-      -nia. 
+
+Lemma Heap_size_nicer2':
+  {c : nat |
+    forall P0 (T V : list HClos) (H : Heap) i,
+      pow step i ([(0,P0)],[],[]) (T,V,H)
+    -> size H <=(c) i * (i + sizeP P0) + 1}.
+Proof.
+  eexists ?[c]. intros P0 T V H i H0.
+  specialize SizeAnalysisStep.size_clos with (1:=H0) as Hsize.
+  unfold Encode_Heap, sigHeap. erewrite size_list_le_bound with (xs:=H).
+  2:{
+    intros [[[a' P'] beta] | ] H1. 2:cbv.  
+    -apply Hsize in H1. 2:easy. unfold sigHEntr,HEntr,Encode_HEntr,sigHEntr',Encode_HEntr'. rewrite Encode_option_hasSize.
+    cbn. rewrite Encode_pair_hasSize;cbn. rewrite size_HClos_le. cbn.
+    rewrite size_le_sizeP, Encode_nat_hasSize. destruct H1 as (->&->&->&_). reflexivity.
+    -nia. 
+  }
+  rewrite length_H. 2:eassumption. 2:easy.
+  unfold sizeP.
+  [c]:exact 8. cbn;hnf. ring_simplify. nia.  
+Qed.
+
+(*
+Lemma Heap_size_nicer2:
+  {c : nat |
+    forall P0 (T V : list HClos) (H : Heap) i,
+      pow step i ([(0,P0)],[],[]) (T,V,H)
+    -> size H <=(c) (i + 1 + sizeP P0) * (i + 1)}.
+Proof.
+  eexists ?[c]. intros P0 T V H i H0.
+  specialize SizeAnalysisStep.size_clos with (1:=H0) as Hsize.
+  unfold Encode_Heap, sigHeap. erewrite size_list_le_bound with (xs:=H).
+  2:{
+    intros [[[a' P'] beta] | ] H1. 2:cbv.  
+    -apply Hsize in H1. 2:easy. unfold sigHEntr,HEntr,Encode_HEntr,sigHEntr',Encode_HEntr'. rewrite Encode_option_hasSize.
+    cbn. rewrite Encode_pair_hasSize;cbn. rewrite size_HClos_le. cbn.
+    rewrite size_le_sizeP, Encode_nat_hasSize. destruct H1 as (->&->&->&_). reflexivity.
+    -nia. 
+  }
+  rewrite length_H. 2:eassumption. 2:easy.
+  [c]:exact 4. cbn;hnf. ring_simplify. nia.  
+Qed. *)
+
+Import ZArith.
+
+Lemma dominatedWith_mult_into_r c c' x y:
+  x <=(c) (c' * y) ->
+  x <=(c'*c) y.
+Proof.
+  intros. unfold dominatedWith in *. rewrite H. lia.
+Qed.
+
+Lemma Step_steps_nicer :
+  {c : nat |
+    forall P0 (T V : list HClos) (H : Heap) i,
+      pow step i ([(0,P0)],[],[]) (T,V,H)
+      -> Step_steps T V H <=(c) (i + 1) * (i + sizeP P0 ) * sizeP P0}.
+Proof.
+  eexists. intros P0 T V H i H0. eapply dominatedWith_trans with (c':=?[c]). eapply (proj2_sig LM.Step_steps_nice).
+  destruct T as [ | [a P] T].
+  2:{
+    specialize SizeAnalysisStep.size_clos with (1:=H0) as Hsize.
+    repeat setoid_rewrite size_le_sizeP. rewrite !Encode_nat_hasSize.
+    erewrite size_list_le_bound with (xs:=V).
+    2:{ intros [a' P'] ?. rewrite size_HClos_le. cbn.
+        rewrite size_le_sizeP.
+        edestruct Hsize with (P1:=P') (a0:=a') as [(->&->&_) _]. easy. now eauto. reflexivity.
     }
-    rewrite length_H. 2:eassumption. 2:easy. reflexivity. 
-  Qed.
+    assert (Htmp:=proj2_sig Heap_size_nicer2' _ _ _ _ _ H0). hnf in Htmp. rewrite Htmp. clear Htmp.
+    rewrite heap_greatest_address2_bound.
+    2:{ intros [] ?. edestruct Hsize as [_ H']. easy. apply H'. }
+    specialize Hsize with (P1:=P) (a0 := a) as [(-> & -> &_) _]. 1,2:easy.
+    rewrite Nat.max_id.
+    specialize length_TV with (1:=H0) (2:=ltac:(easy) : forall c : _, False -> c = None) as H_TV. cbn in H_TV.
+    assert (length V <= i) as -> by nia.
+    specialize length_H  with (1:=H0) as ->. 2:easy.
+    cbn [length]. rewrite Nat.add_0_l.
+    unfold sizeP. set (sP:= sumn _).
+    clear dependent T. clear dependent V. clear dependent H.  clear dependent P. clear dependent a.
+    ring_simplify.
+    eapply dominatedWith_mult_into_r with (c':=proj1_sig Heap_size_nicer2' + 1).
+    set (c0:=proj1_sig _).
+    repeat simple eapply dominatedWith_add. all:instantiate (1:=14);hnf. all:lia.
+  }
+  cbn. unfold sizeP. hnf. lia.
+Qed.
 
-  Lemma Heap_size_nicer2:
-    {c : nat |
-      forall P0 (T V : list HClos) (H : Heap) i,
-        pow step i ([(0,P0)],[],H__init) (T,V,H)
-      -> size H <=(c) (length H__init + i + 1 + sizeP P0) * (length H__init + i + 1)}.
-  Proof using empty_H__init.
-    eexists ?[c]. intros P0 T V H i H0.
-    specialize SizeAnalysisStep.size_clos with (1:=H0) (2:=empty_H__init)as Hsize.
-    unfold Encode_Heap, sigHeap. erewrite size_list_le_bound with (xs:=H).
-    2:{
-      intros [[[a' P'] beta] | ] H1. 2:cbv.  
-      -apply Hsize in H1. unfold sigHEntr,HEntr,Encode_HEntr,sigHEntr',Encode_HEntr'. rewrite Encode_option_hasSize.
-      cbn. rewrite Encode_pair_hasSize;cbn. rewrite size_HClos_le. cbn.
-      rewrite size_le_sizeP, Encode_nat_hasSize. destruct H1 as (->&->&->&_). reflexivity.
-      -nia. 
-    }
-    rewrite length_H. 2:eassumption. 2:easy.
-    [c]:exact 4. cbn;hnf. ring_simplify. nia.  
-  Qed.
+Lemma dominatedWith_add_split (c x1 x2 y1 y2 : nat) :
+  x1 <=(c) y1 -> x2 <=(c) y2 -> x1 + x2 <=(c) y1 + y2.
+Proof.
+  unfold dominatedWith. nia.
+Qed.
 
-  Import ZArith.
+Lemma Loop_steps_nice' :
+  {c : nat |
+    forall P0 (T V : list HClos) (H : Heap) k i,
+    pow step i ([(0,P0)],[],[]) (T,V,H)
+      -> Loop_steps T V H k <=(c) (k + 1) * ((k + i + 1) * (k + i + sizeP P0 ) * sizeP P0)}.
+Proof.
+  evar (c:nat).
+  eexists c. intros P0 T V H k.
+  induction k in T,V,H |-*.
+  all:intros i Hi.
+  all:cbn - [Step_steps Nat.pow step_fun plus].
+  -eapply dominatedWith_mono_c. eapply dominatedWith_trans. now apply (proj2_sig Step_steps_nicer). apply dominatedWith_solve. now cbn.
+  ring_simplify. shelve. 
+  -destruct (step_fun (T, V, H)) as [[[T' V'] H'] | ]  eqn:Hstep.
+  2:{ eapply dominatedWith_mono_c. eapply dominatedWith_trans. now apply (proj2_sig Step_steps_nicer). apply dominatedWith_solve. now cbn.
+      ring_simplify. shelve. }
+  destruct is_halt_state.
+  1:{ eapply dominatedWith_mono_c. all:repeat simple apply dominatedWith_add.
+      1: apply dominatedWith_solve; now unfold sizeP;cbn.
+      1,2: eapply dominatedWith_trans;[eapply (proj2_sig Step_steps_nicer) | ].
+      easy. 2:{eapply pow_add. eexists;split. easy. rewrite <- rcomp_1. now apply step_fun_step. }
+      1,2: apply dominatedWith_solve;now cbn. ring_simplify. shelve.
+  }
+  
+  set (tmp:= (S k + i + 1) * (S k + i + sizeP P0) * sizeP P0).
+  replace ( (S k + 1) * tmp) with (tmp + (k+1) * tmp) by nia.
+  apply dominatedWith_add_split;subst tmp.
+  { eapply dominatedWith_mono_c. eapply dominatedWith_add.
+    -apply dominatedWith_solve. now unfold sizeP;cbn.
+    -eapply dominatedWith_trans. now apply (proj2_sig Step_steps_nicer). apply dominatedWith_solve. now cbn.
+    -ring_simplify. shelve.
+  }
+  replace (S k + i) with (k + (i+1)) by nia.
+  eapply IHk.
+  eapply pow_add. eexists;split. easy. rewrite <- rcomp_1. now apply step_fun_step.
+  Unshelve.
+  [c]:exact (2 * proj1_sig Step_steps_nicer + 1). all:subst c;nia.
+Qed.
 
-  Lemma Step_steps_nicer :
-    {c : nat |
-      forall P0 (T V : list HClos) (H : Heap) i,
-        pow step i ([(0,P0)],[],H__init) (T,V,H)
-        -> Step_steps T V H <=(c) (length H__init + i +1 + sizeP P0 )^3}.
-  Proof using empty_H__init.
-    eexists. intros P0 T V H i H0. eapply dominatedWith_trans. eapply (proj2_sig LM.Step_steps_nice).
-    destruct T as [ | [a P] T].
-    2:{
-      set (lH := length H__init + i). cbn zeta.
-      specialize SizeAnalysisStep.size_clos with (1:=H0) (2:=empty_H__init)as Hsize.
-      repeat setoid_rewrite size_le_sizeP. rewrite !Encode_nat_hasSize.
-      erewrite size_list_le_bound with (xs:=V).
-      2:{ intros [a' P'] ?. rewrite size_HClos_le. cbn.
-          rewrite size_le_sizeP.
-          edestruct (Hsize P' a') as [(->&->&_) _]. now eauto. reflexivity.
-      }
-      assert (Htmp:=proj2_sig Heap_size_nicer2 _ _ _ _ _ H0). hnf in Htmp. rewrite Htmp. clear Htmp.
-      rewrite heap_greatest_address2_bound.
-      2:{ intros [] ?. edestruct Hsize as [_ H']. apply H'. }
-      specialize Hsize with (P1:=P) (a0 := a) as [(-> & -> &_) _]. easy.
-      rewrite Nat.max_id.
-      specialize length_TV  with (1:=H0) (2:=empty_H__init) as H_TV. cbn in H_TV.
-      assert (length V <= i) as -> by nia.
-      specialize length_H  with (1:=H0) (2:=empty_H__init) as ->. fold lH.
-      clear dependent T. clear dependent V. clear dependent H.  clear dependent P. clear dependent a.
-      assert (i<=lH) as -> by nia.
-      clearbody lH. instantiate (1:=3 + 2*proj1_sig Heap_size_nicer2). 
-      generalize (proj1_sig Heap_size_nicer2). intro. clear dependent H__init. 
-      cbn [Nat.pow]. hnf. lia. 
-    }
-    cbn. hnf. lia.
-  Qed.
-
-  Lemma Loop_steps_nice' :
-    {c : nat |
-      forall P0 (T V : list HClos) (H : Heap) k i,
-       pow step i ([(0,P0)],[],H__init) (T,V,H)
-        -> Loop_steps T V H k <=(c) (k + 1) * (length H__init + (i+k) +1 + sizeP P0 )^3}.
-  Proof using empty_H__init.
-    evar (c:nat).
-    eexists c. intros P0 T V H k.
-    induction k in T,V,H |-*.
-    all:intros i Hi.
-    all:cbn - [Step_steps Nat.pow step_fun plus].
-    -eapply dominatedWith_mono_c. eapply dominatedWith_trans. now apply (proj2_sig Step_steps_nicer). apply dominatedWith_solve. now cbn.
-     ring_simplify. shelve. 
-    -destruct (step_fun (T, V, H)) as [[[T' V'] H'] | ]  eqn:Hstep.
-     2:{ eapply dominatedWith_mono_c. eapply dominatedWith_trans. now apply (proj2_sig Step_steps_nicer). apply dominatedWith_solve. now cbn.
-         ring_simplify. shelve. }
-     destruct is_halt_state.
-     1:{ eapply dominatedWith_mono_c. all:repeat simple apply dominatedWith_add.
-         1: apply dominatedWith_solve; now cbn.
-         1,2: eapply dominatedWith_trans;[eapply (proj2_sig Step_steps_nicer) | ].
-         easy. 2:{eapply pow_add. eexists;split. easy. rewrite <- rcomp_1. now apply step_fun_step. }
-         1,2: apply dominatedWith_solve;now cbn. ring_simplify. shelve.
-     }
-     Set Nested Proofs Allowed.
-     Lemma dominatedWith_add_split (c x1 x2 y1 y2 : nat) :
-       x1 <=(c) y1 -> x2 <=(c) y2 -> x1 + x2 <=(c) y1 + y2.
-     Proof.
-       unfold dominatedWith. nia.
-     Qed.
-     set (tmp:= _ ^ 3). replace ( (S k + 1) * tmp) with (tmp + (k+1) * tmp) by nia.
-     apply dominatedWith_add_split;subst tmp.
-     { eapply dominatedWith_mono_c. eapply dominatedWith_add.
-       -apply dominatedWith_solve. now cbn.
-       -eapply dominatedWith_trans. now apply (proj2_sig Step_steps_nicer). apply dominatedWith_solve. now cbn.
-       -ring_simplify. shelve.
-     }
-     replace (i + S k) with (i+1+k) by nia.
-     eapply IHk.
-     eapply pow_add. eexists;split. easy. rewrite <- rcomp_1. now apply step_fun_step.
-     Unshelve.
-     [c]:exact (2 * proj1_sig Step_steps_nicer + 1). all:subst c;nia.
-  Qed.
-
-  Lemma Loop_steps_nice :
-    (fun '(P0,k) => Loop_steps [(0,P0)] [] H__init k)
-    <=c (fun '(P0,k) => (k + 1) * (length H__init + k +1 + sizeP P0 )^3).
-  Proof using empty_H__init.
-    eexists. intros [? ?].
-    assert (H':= proj2_sig Loop_steps_nice'). cbn beta in H'. unfold dominatedWith in H'. 
-    specialize H' with (i:=0). cbn [plus] in H'.
-    rewrite H'. 2:reflexivity. reflexivity.
-  Qed.
-End FixInit.
+Lemma Loop_steps_nice :
+  (fun '(P0,k) => Loop_steps [(0,P0)] [] [] k)
+  <=c (fun '(P0,k) => (k + 1) * (k + 1) * (k + sizeP P0 ) * sizeP P0).
+Proof.
+  eexists. intros [? ?].
+  assert (H':= proj2_sig Loop_steps_nice'). cbn beta in H'. unfold dominatedWith in H'. 
+  specialize H' with (i:=0). cbn [plus] in H'.
+  rewrite H'. 2:reflexivity. rewrite !mult_assoc,Nat.add_0_r. reflexivity.
+Qed.
 
