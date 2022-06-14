@@ -146,7 +146,8 @@ Section LMGenNP_to_TMGenNP_mTM.
       
       unfold f__steps.
       enough ((fun _ => 1) <=c f__nice).
-      smpl_upToC.
+      smpl upToC.
+      1,2:smpl_upToC.
       3:{ [f__nice]: exact (fun '(x,y,z) => (fun s => s*s*S x) (S x + y + z)).
           subst f__nice.
           set (c:= 5*(S n) + 1).

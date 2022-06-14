@@ -25,7 +25,7 @@ Install the [A Coq Library of Undecidability Proofs](https://github.com/uds-psl/
 
 There are two documented ways to install the dependencies of this library. This library depends on the [Coq Library of Undecidability Proofs](https://github.com/uds-psl/coq-library-undecidability), which is either provided as a git submodule or as opam package.
 
-The recommended way to install dependencies is to checkout the submodules of this git repository with `git submodule update --init --recursive` and install all dependencies of the complexity library using `make depssubmodule`. This has the benefit of only compiles the files od the undecidability library actually needed by the complexity library.
+The recommended way to install dependencies is to checkout the submodules of this git repository with `git submodule update --init --recursive` and install all dependencies of the complexity library using `make depssubmodule`. This has the benefit of only compiles the files of the undecidability library actually needed by the complexity library.
 
 Or use the `make depsopam` to install all dependencies using opam. The undecidability library is then automatically `opam pin`ned to a specific git hash. 
 
@@ -54,7 +54,7 @@ Be careful that this branch only compiles under Coq 8.12.
 
 We make heavy use of the following results, which for technical reasons are oursourced to the Library of Undecidability Proofs.
 
-We use two frameworks they ease computability proofs with resource analysis for call-by-value lambda-calculus and Turing machines:
+We use two frameworks which ease computability proofs with resource analysis for call-by-value lambda-calculus and Turing machines:
 - A certifying extraction with time bounds from Coq to call-by-value lambda-calculus. ITP '19. https://github.com/uds-psl/certifying-extraction-with-time-bounds
 - Verified Programming of Turing Machines in Coq. Yannick Forster, Fabian Kunze, Maximilian Wuttke. Technical report. https://github.com/uds-psl/tm-verification-framework/
 

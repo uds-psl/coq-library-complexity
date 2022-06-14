@@ -16,6 +16,9 @@ depssubmodule:
 	$(MAKE) -C coq-library-undecidability/theories -f Makefile Makefile.coq
 	$(MAKE) -C coq-library-undecidability/theories -f Makefile.coq only TGTS="$(VOFILES_LIB_UNDEC)"
 
+depssubmodule_makeonly:
+	$(MAKE) -C coq-library-undecidability/theories -f Makefile Makefile.coq
+	$(MAKE) -C coq-library-undecidability/theories -f Makefile.coq only TGTS="$(VOFILES_LIB_UNDEC)"
 
 html: Makefile.coq
 	$(MAKE) -f Makefile.coq html

@@ -261,41 +261,13 @@ Proof.
    -repeat eapply dominatedWith_mult_l. instantiate (1:=1). hnf. ring_simplify.
     transitivity (m_s * m_s'). now nia. repeat first [eapply le_plus_r|etransitivity;[|eapply le_plus_l]].
   -eapply dominatedWith_mono_c with (c:=3+8*c1+18*c1*cHeap).
-  2:now unfold c1, cHeap;reflexivity. destruct m_s,m_s'. 1,2,3:exfalso;nia. hnf. unfold k'. ring_simplify.
-  ring_simplify.
-  repeat match goal with
-    | |- _ + ?x <= _ + ?x => eapply plus_le_compat_r
-    | |- _ + ?x <= _ + ?c' * ?x => eapply plus_le_compat;[|clear;lia]
-    | |- _ + ?c * ?x <= _ + ?c' * ?x => eapply plus_le_compat;[|clear;lia]
-    | |- _ + _ <= _ => etransitivity;[|eapply le_plus_l]
-  end. all:clear;try lia.
+  2:now unfold c1, cHeap;reflexivity. destruct m_s,m_s'. 1,2,3:exfalso;nia. hnf. unfold k'.
+  clear. lia.
   -do 2 eapply dominatedWith_mult_l.
   eapply dominatedWith_mono_c with (c:=9).
-  2:now unfold c1, cHeap;reflexivity. destruct m_s,m_s'. 1,2,3:exfalso;nia. hnf. unfold k'. ring_simplify.
-  ring_simplify.
-  eapply plus_le_compat. 2:nia.
-  repeat lazymatch goal with
-    | |- _ + ?x <= _ + ?x => eapply plus_le_compat_r
-    | |- _ + ?x <= _ + ?c' * ?x => eapply plus_le_compat;[|clear;lia]
-    | |- _ + ?c * ?x <= _ + ?c' * ?x => eapply plus_le_compat;[|clear;lia]
-    | |- _ + _ <= _ => etransitivity;[|eapply le_plus_l]
-    | |- ?x <= _ + ?x => eapply plus_le_compat_r
-    | |- ?x <= _ + ?c' * ?x => eapply plus_le_l;[|clear;lia]
-    | |- ?c * ?x <= _ + ?c' * ?x => eapply plus_le_compat;[|clear;lia]
-    | |- _ => etransitivity;[|eapply Nat.le_add_r]
-  end. lia.
-  -do 3 eapply dominatedWith_mult_l. instantiate (1:=1). destruct m_s. exfalso;nia. hnf. 
-  ring_simplify.
-  repeat lazymatch goal with
-    | |- _ + ?x <= _ + ?x => eapply plus_le_compat_r
-    | |- _ + ?x <= _ + ?c' * ?x => eapply plus_le_compat;[|clear;lia]
-    | |- _ + ?c * ?x <= _ + ?c' * ?x => eapply plus_le_compat;[|clear;lia]
-    | |- _ + _ <= _ => etransitivity;[|eapply le_plus_l]
-    | |- ?x <= _ + ?x => eapply plus_le_compat_r
-    | |- ?x <= _ + ?c' * ?x => eapply plus_le_l;[|clear;lia]
-    | |- ?c * ?x <= _ + ?c' * ?x => eapply plus_le_compat;[|clear;lia]
-    | |- _ => etransitivity;[|eapply Nat.le_add_r]
-  end. lia.
+  2:now unfold c1, cHeap;reflexivity. destruct m_s,m_s'. 1,2,3:exfalso;nia. hnf. unfold k'. lia.
+  -do 3 eapply dominatedWith_mult_l. instantiate (1:=1). destruct m_s. exfalso;nia. hnf.
+  lia.
   -eapply dominatedWith_const. hnf.  destruct m_s,m_s'. 1,2,3:exfalso;nia. hnf. unfold k'. ring_simplify.
   etransitivity. 2:eapply le_plus_r. nia.
 Qed.

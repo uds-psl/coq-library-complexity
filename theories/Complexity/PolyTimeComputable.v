@@ -118,7 +118,7 @@ Smpl Add 2 rewrite polyTimeComputable_eta in *: nary_prepare.
 
 Import GenericNary UpToCNary.
 
-Lemma polyTimeComputable_simpl (X:list Set) Y {_: encodable(Rtuple X)} {_ :  encodable Y} (f:Rtuple X -> Y) :
+Lemma polyTimeComputable_simpl (X:list Type) Y {_: encodable(Rtuple X)} {_ :  encodable Y} (f:Rtuple X -> Y) :
   iffT (polyTimeComputable (fun x => Fun' f x)) (polyTimeComputable f).
 Proof.
   split. (*Fail all:now setoid_rewrite Fun'_simpl. *)
@@ -129,9 +129,11 @@ Qed.
 Smpl Add 2 rewrite polyTimeComputable_simpl in *: generic.
 
 Ltac polyTimeComputable_domain G :=
+  let universe := fresh in
+  evar (universe:Type);
   match G with
   | @polyTimeComputable ?F _ _ _ _ =>
-    let L := domain_of_prod F in
+    let L := domain_of_prod universe F in
     let L := constr:(L) in
     exact (Mk_domain_of_goal L)
   end.
@@ -176,7 +178,7 @@ Proof.
 Qed. *)
 
 
-Lemma pTC_destructuringToProj (domain : list Set)  X (regD:encodable(Rtuple domain)) (regX : encodable X) (f : Rarrow domain X)
+Lemma pTC_destructuringToProj (domain : list Type)  X (regD:encodable(Rtuple domain)) (regX : encodable X) (f : Rarrow domain X)
   : polyTimeComputable (App f) -> polyTimeComputable (Fun' (App f)).
 Proof. apply polyTimeComputable_simpl.  Qed.
 

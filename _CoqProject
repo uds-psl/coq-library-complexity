@@ -160,6 +160,7 @@ theories/TM/PrettyBounds/M2MBounds.v
 theories/TM/PrettyBounds/SpaceBounds.v
 theories/TM/PrettyBounds/BaseCodeSpace.v
 theories/TM/PrettyBounds/UnivSpaceBounds.v
+theories/TM/PrettyBounds/UnfoldClosBounds.v
 
 # Multi-Univ Simulation Theorem
 theories/TM/Univ/MultiUnivTimeSpaceSimulation.v

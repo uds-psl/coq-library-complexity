@@ -267,7 +267,7 @@ Section uptoc_pure.
           replace_le (size (enc x)) with g by (subst g; apply Nat.le_max_l) at 1.
           replace_le (maxSize l) with g by (subst g; apply Nat.le_max_r) at 1 2.
           cbn. fold (maxSize l) g.
-          instantiate (c := c__eqbComp X + 21). subst c. leq_crossout.
+          instantiate (c := c__eqbComp X + 21). subst c. lia.
         + subst c. unfold list_in_decb_time. cbn. lia. }
       smpl_upToC_solve.
     Qed.
@@ -282,7 +282,7 @@ Section uptoc_pure.
   Proof.
     exists_const c1.
     { extract. solverec. erewrite !UpToC_le. unfold list_in_decb_time. set_consts.
-      unfold evalVar_time. inst c1 with (2*C + 6). leq_crossout. }
+      unfold evalVar_time. inst c1 with (2*C + 6). lia. }
     smpl_upToC_solve.
   Qed.
   Instance term_evalVar : computableTime' evalVar _ := projT2 _term_evalVar.
