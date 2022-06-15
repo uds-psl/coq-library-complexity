@@ -240,7 +240,7 @@ Proof.
     clear. unfold unflatten_acts,unflatten_acts'.
     rewrite map_repeat. cbn.
     (*Set Printing Implicit.*)
-    pattern n at 1 2 4 5 6 7 8.
+    pattern n at 1 2 4 5 6 7.
     replace n with (length (@repeat (option (Fin.t sig) * move) (@None (Fin.t sig), Nmove) n)) at 1.
     2:now rewrite repeat_length.
     rewrite Vector_of_list_length_eq.

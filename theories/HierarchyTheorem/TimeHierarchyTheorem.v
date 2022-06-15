@@ -29,7 +29,8 @@ Section TimeHierarchy.
   Definition E (fuel:N) (s:term) := negb (evalForTimeBool false fuel s).
                                       
   
-  Instance term_t__E : computableTime' E (fun fuel _ => (1, fun s _ => (t__evalForTimeBool (largestVar s) (size s) (N.to_nat fuel) + 7, tt))).
+#[export]
+Instance term_t__E : computableTime' E (fun fuel _ => (1, fun s _ => (t__evalForTimeBool (largestVar s) (size s) (N.to_nat fuel) + 7, tt))).
   Proof.
     extract. solverec.
   Qed.

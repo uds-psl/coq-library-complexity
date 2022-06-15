@@ -62,7 +62,8 @@ Inductive varInFormula (v : var) : formula -> Prop :=
   | varInFormulaOrL f1 f2 : varInFormula v f1 -> varInFormula v (f1 ∨ f2)
   | varInFormulaOrR f1 f2 : varInFormula v f2 -> varInFormula v (f1 ∨ f2)
   | varInFormulaNot f : varInFormula v f -> varInFormula v (¬ f).
-Hint Constructors varInFormula : core.
+#[export]
+  Hint Constructors varInFormula : core.
 
 Definition formula_varsIn (p : nat -> Prop) f := forall v, varInFormula v f -> p v. 
 
@@ -116,6 +117,7 @@ From Undecidability.L.Datatypes Require Import  LProd LOptions LBool LUnit.
 From Complexity.Libs.CookPrelim Require Import PolyBounds. 
 
 MetaCoq Run (tmGenEncode "formula_enc" formula).
+#[export]
 Hint Resolve formula_enc_correct : Lrewrite.
 
 Lemma formula_enc_size f: size (enc f) = match f with 
@@ -130,21 +132,25 @@ Proof.
   destruct f; cbn; try lia. 
 Qed. 
 
+#[export]
 Instance term_Fvar : computableTime' Fvar (fun v _ => (1, tt)). 
 Proof. 
   extract constructor. solverec. 
 Qed. 
 
+#[export]
 Instance term_Fand : computableTime' Fand (fun f1 _ => (1, fun f2 _ => (1, tt))).
 Proof. 
   extract constructor. solverec. 
 Qed. 
 
+#[export]
 Instance term_For : computableTime' For (fun f1 _ => (1, fun f2 _ => (1, tt))). 
 Proof. 
   extract constructor. solverec. 
 Qed. 
 
+#[export]
 Instance term_Fneg : computableTime' Fneg (fun f _ => (1, tt)). 
 Proof. 
   extract constructor. solverec. 
@@ -159,9 +165,9 @@ Proof.
   - unfold c__formulaBound2. cbn. nia.
   - rewrite size_nat_enc. unfold c__formulaBound1, c__formulaBound2. cbn -[Nat.add Nat.mul]. lia. 
   - cbn -[Nat.mul Nat.add].
-    rewrite IHf1, IHf2. unfold c__formulaBound2. nia.
+    rewrite IHf1, IHf2. unfold c__formulaBound2. cbn. nia.
   - cbn -[Nat.mul Nat.add].
-    rewrite IHf1, IHf2. unfold c__formulaBound2. nia.
+    rewrite IHf1, IHf2. unfold c__formulaBound2. cbn. nia.
   - cbn -[Nat.mul Nat.add]. 
     rewrite IHf. unfold c__formulaBound2. nia. 
 Qed. 
@@ -195,6 +201,7 @@ Fixpoint formula_maxVar_time (f : formula) := match f with
   | For f1 f2 => formula_maxVar_time f1 + formula_maxVar_time f2 + max_time (formula_maxVar f1) (formula_maxVar f2)
   | Fneg f => formula_maxVar_time f 
   end + c__formulaMaxVar. 
+#[export]
 Instance term_formula_maxVar : computableTime' formula_maxVar (fun f _ => (formula_maxVar_time f, tt)). 
 Proof. 
   extract. solverec. 

@@ -13,8 +13,10 @@ Import UnfoldTailRec.task.
 
 Import GenEncode.
 MetaCoq Run (tmGenEncode "task_enc" task).
+#[export]
 Hint Resolve task_enc_correct : Lrewrite.
 
+#[export]
 Instance termT_S : computableTime' closT (fun _ _ => (1,fun _ _ => (1,tt))).
 Proof.
   extract constructor.
@@ -27,6 +29,7 @@ Definition time_unfoldTailRecStep : (list task * list heapEntry * list term ) ->
                      | _ => 0
                      end + 96.
 
+#[export]
 Instance term_unfoldTailRecStep : computableTime' unfoldTailRecStep (fun x _ => (time_unfoldTailRecStep x,tt)).
 Proof.
 extract. unfold time_unfoldTailRecStep. solverec.
@@ -38,6 +41,7 @@ Qed.
 Definition unfoldBool_time lengthH largestVar :=
   lookupTime lengthH largestVar * 7 + largestVar *196+ EqBool.c__eqbComp term * (size (enc (lam (lam # 0))) + size (enc (lam (lam # 1)))) + 1245.
 
+#[export]
 Instance term_unfoldBool : computableTime' unfoldBoolean
                                           (fun H _ => (1,fun q _ => (unfoldBool_time (length H) (max (largestVarH H) (largestVarC q)),tt))).
 Proof.

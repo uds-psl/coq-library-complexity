@@ -27,7 +27,8 @@ Section fixTM.
   Variable (index__comp : {c & computableTime' (index (F:=sig)) (fun _ _ => (c,tt))}).
 
   Definition index_const_Time : computableTime _ _:=  projT2 index__comp.
-  Existing Instance index_const_Time.
+#[export]
+Existing Instance index_const_Time.
   
   Definition flatM := flattenTM M. 
 
@@ -36,7 +37,8 @@ Section fixTM.
 
   Definition c__reduction := (16 + c__map + projT1 index__comp).
   Definition reduction_time (ts : list sig) := (|ts| + 1) * c__reduction.
-  Instance term_reduction : computableTime' reduction (fun p _ => (let '(ts, maxSize, steps) := p in reduction_time ts, tt)). 
+#[export]
+Instance term_reduction : computableTime' reduction (fun p _ => (let '(ts, maxSize, steps) := p in reduction_time ts, tt)). 
   Proof. 
     extract. solverec. 
     rewrite map_time_const. unfold reduction_time, c__reduction. ring_simplify.  nia. 

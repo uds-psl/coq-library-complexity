@@ -4,6 +4,7 @@ Require Import Undecidability.L.Tactics.GenEncode.
 
 (** ** Encoding of positive binary numbers *)
 MetaCoq Run (tmGenEncode "positive_enc" positive).
+#[export]
 Hint Resolve positive_enc_correct : Lrewrite.
 
 Global Instance termT_Pos_xI : computableTime' xI (fun x _ => (1,tt)).
@@ -16,8 +17,10 @@ Qed.
 
 (** ** Encoding of natural binary numbers *)
 MetaCoq Run (tmGenEncode "N_enc" N).
+#[export]
 Hint Resolve N_enc_correct : Lrewrite.
 
+#[export]
 Instance termT_N_NPos : computableTime' Npos (fun x _ => (1,tt)).
 Proof.
   extract constructor. solverec.

@@ -95,6 +95,7 @@ Section encodeList_size_eq.
 End encodeList_size_eq.
 
 Create HintDb size_eqs.
+#[export]
 Hint Rewrite encodeList_size_app encodeList_size_cons encodeList_size_nil encodeList_size_app: size_eqs.
 
 Ltac rewrite_sizes := rewrite_strat (innermost (hints size_eqs)).

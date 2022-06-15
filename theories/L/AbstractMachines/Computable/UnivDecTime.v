@@ -1,4 +1,4 @@
-From Undecidability.L.Datatypes Require Import LNat LBool.
+From Undecidability.L.Datatypes Require Import LNat LBool Lists LProd.
 From Undecidability.L Require Import Util.Subterm Tactics.LTactics  Prelim.LoopSum Functions.UnboundIteration AbstractMachines.LargestVar.
 From Complexity.L Require Import AbstractMachines.Computable.Unfolding.
 From Complexity.L.AbstractMachines Require Import AbstractHeapMachine FunctionalDefinitions UnfoldHeap UnfoldTailRec. 
@@ -17,6 +17,7 @@ Definition univStep '(T,V,H) : _ + bool :=
     end
   end.
 Import Nat. Import ARS.
+#[export]
 Instance termT_univStep : computableTime' univStep (fun x _ => 
                                                      (let '(T,V,H):=x in
                                                       heapStep_time T H +

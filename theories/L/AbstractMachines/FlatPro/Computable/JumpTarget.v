@@ -48,11 +48,13 @@ Proof.
 Qed. *)
 
 
+#[export]
 Instance term_jumpTarget' : computableTime' jumpTarget' (fun k _ => (5,fun Q _ => (1,fun P _ => (time_jumpTarget' k (length Q) P,tt)))).
 Proof.
   extract. solverec.
 Qed.
 
+#[export]
 Instance term_jumpTarget : computableTime' (jumpTarget 0 []) (fun P _ =>  (time_jumpTarget' 0 0 P,tt)).
 Proof.
   apply computableTimeExt with (x:=fun x => jumpTarget' 0 [] x). now cbn;intros;rewrite jumpTarget'_eq.

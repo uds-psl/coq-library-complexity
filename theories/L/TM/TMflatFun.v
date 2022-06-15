@@ -52,7 +52,7 @@ Proof.
    unfold c__listsizeNil, c__listsizeCons in *. 
    repeat eapply Nat.max_case_strong;intros ?. 
    + nia. 
-   + Unset Simplex. rewrite H.  nia.
+   + rewrite H.  nia.
 Qed.
 
 

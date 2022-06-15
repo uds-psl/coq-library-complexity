@@ -14,6 +14,7 @@ Record decInTime {X} `{R :encodable X} P (fT : nat -> nat) :Type :=
     correct__decInTime : forall x, P x <-> f__decInTime x  = true
   }.
 
+#[export]
 Hint Extern 1 (computableTime (f__decInTime _) _) => solve [unshelve (simple apply @compIn__decInTime)] :typeclass_instances.
 
 Lemma complete__decInTime {X} `{R :encodable X} P (fT : nat -> nat) (P__dec:decInTime P fT) :
@@ -94,6 +95,7 @@ Record polyTimeComputable X Y `{encodable X} `{encodable Y} (f : X -> Y) :=
     resSize__polyTC :> resSizePoly f;
   }.
 
+#[export]
 Hint Extern 1 (computableTime _ _) => unshelve (simple apply @comp__polyTC);eassumption :typeclass_instances.
 
 Smpl Add 10 (simple apply poly__polyTC) : inO.

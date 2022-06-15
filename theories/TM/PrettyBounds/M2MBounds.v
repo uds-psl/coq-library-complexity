@@ -218,7 +218,7 @@ Section ToSingleTape_bounds.
   Qed.
 
   Lemma DoWrite_steps_nice' :
-    { c | forall {sig : finType} (d : option move) (tps1 tps2 : list (tape sig)),
+    { c | forall (sig : finType) (d : option move) (tps1 tps2 : list (tape sig)),
         DoWrite_steps d tps1 tps2
         <=(c)
            match d with
@@ -411,7 +411,8 @@ Section ToSingleTape_bounds.
       enough (1 <= size (tps1 ++ tp :: tp' :: tps2)) by nia. apply size_tapes_ge1.
   Qed.
 
-  Instance sub_le_mono : Proper (le ==> ge ==> le) minus.
+#[export]
+Instance sub_le_mono : Proper (le ==> ge ==> le) minus.
   Proof. repeat intro. nia. Qed.
 
   Lemma le_ge (n m : nat) : n <= m -> m >= n. Proof. nia. Qed.

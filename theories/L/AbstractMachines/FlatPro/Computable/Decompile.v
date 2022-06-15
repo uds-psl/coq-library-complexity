@@ -39,6 +39,7 @@ Proof.
   all:try rewrite IHP;nia.
 Qed.
 
+#[export]
 Instance term_decompile : computableTime' decompile (fun l _ => (5,fun P _ => (1, fun A _ =>  (time_decompile l P A,tt)))).
 Proof.
   extract. solverec.

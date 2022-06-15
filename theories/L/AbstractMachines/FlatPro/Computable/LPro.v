@@ -6,8 +6,10 @@ From Undecidability.L.Datatypes Require Import LNat.
 
 
 MetaCoq Run (tmGenEncode "token_enc" Tok).
+#[export]
 Hint Resolve token_enc_correct : Lrewrite.
 
+#[export]
 Instance term_varT : computableTime' varT (fun _ _ => (1,tt)).
 extract constructor. solverec.
 Qed.

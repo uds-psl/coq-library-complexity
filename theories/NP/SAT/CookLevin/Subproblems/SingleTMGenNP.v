@@ -32,7 +32,7 @@ Definition FlatFunSingleTMGenNP : flatTM * list nat * nat * nat -> Prop :=
 
 Lemma vec_case1 (X : Type) (v : Vector.t X 1) : exists x, v = [|x|].
 Proof. 
-  eapply Vector.caseS' with (v0:=v).
+  eapply Vector.caseS' with (v:=v).
   intros. revert t. apply Vector.case0. easy.
 Qed. 
 

@@ -102,7 +102,8 @@ Section TimeHierarchy_Parametric.
   
 
   
-  Instance term_start : computableTime' start (fun w _ => (size (fst w) *30 + snd w * 14 + 36,tt)).
+#[export]
+Instance term_start : computableTime' start (fun w _ => (size (fst w) *30 + snd w * 14 + 36,tt)).
   Proof using E start.
     unfold start. extract. solverec.
   Qed.
@@ -116,7 +117,8 @@ Section TimeHierarchy_Parametric.
     then None
     else Some (start w,n).
 
-  Instance term_U_preproc: computableTime' U_preproc
+#[export]
+Instance term_U_preproc: computableTime' U_preproc
                                           (fun (w:term*nat) _ =>
                                              (let s := fst w in
                                                let k := size (enc w) in
@@ -214,7 +216,7 @@ Section TimeHierarchy_Parametric.
     unfold L__f.
     assert ((U (enc w)) ⇓ (enc (U_spec w))).
     { destruct U_correct as (?&H').
-      unshelve edestruct (H' w) as (x&?&?). 2:easy. 2:reflexivity. cbn in c. subst x.
+      unshelve edestruct (H' w) as (x&?&?HH). 2:easy. 2:reflexivity. cbn in HH. subst x.
       esplit. now eapply redLe_star_subrelation. Lproc.
     }
     destruct (U_spec w). all:cbn [negb].

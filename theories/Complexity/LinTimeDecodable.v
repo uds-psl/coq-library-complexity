@@ -6,6 +6,7 @@ From Undecidability.L.Complexity.LinDecode Require Export LTD_def LTDbool LTDlis
 From Undecidability.L Require Import Functions.Decoding.
 
 
+#[export]
 Instance linDec_unit : linTimeDecodable unit.
 Proof. 
   evar (c : nat). exists c. 
@@ -13,6 +14,7 @@ Proof.
   solverec. [c]: exact 5. all: unfold c; lia. 
 Qed. 
 
+#[export]
 Instance linDec_term : linTimeDecodable term.
 Proof.
   evar (c:nat). exists c.
@@ -22,6 +24,7 @@ Proof.
   all:unfold c;try nia.
 Qed.
 
+#[export]
 Instance linDec_prod X Y `{_ : linTimeDecodable X} `{_:linTimeDecodable Y} : linTimeDecodable (X * Y). 
 Proof. 
   evar (c : nat). exists c. 
@@ -30,6 +33,7 @@ Proof.
   [c]: exact (max (max (c__linDec X) (c__linDec Y)) 14). all: unfold c; try nia. 
 Qed. 
 
+#[export]
 Instance linDec_sum X Y `{_ : linTimeDecodable X} `{_:linTimeDecodable Y} : linTimeDecodable (X + Y). 
 Proof. 
   evar (c : nat). exists c. 

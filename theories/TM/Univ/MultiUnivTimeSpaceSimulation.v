@@ -531,9 +531,11 @@ Section U.
   Definition sigUniv : finType :=  sigUniv' ^+.
   Definition retr_sigSimGraph_sigUniv : Retract (sigList (sigPair (sigPair (option sigM) sigState) (sigPair (option (sigM) * move) sigState))) sigUniv' :=
     Retract_id _.
-  Existing Instance retr_sigSimGraph_sigUniv.
+#[export]
+Existing Instance retr_sigSimGraph_sigUniv.
   Definition retr_sigSimTape_sigUniv : Retract sigM sigUniv' := ltac:(eauto).
-  Existing Instance retr_sigSimTape_sigUniv.
+#[export]
+Existing Instance retr_sigSimTape_sigUniv.
   Definition Univ : pTM sigUniv unit 6 := @Univ sigM sigUniv' retr_sigSimGraph_sigUniv retr_sigSimTape_sigUniv.
 
   (*
@@ -1249,7 +1251,7 @@ Section UnivMultiTimeSpaceTheorem.
       }
       subst M'_outc'.
       hnf in M'_real. cbn in M'_real.
-      specialize M'_real with (T0 := T).
+      specialize M'_real with (T := T).
       spec_assert M'_real as (M_finalConf&M_k&M_halts&M_finalContained&tam) by apply makeSingleTape_correct.
       destruct M_finalConf as (M_finalState&M_finalTapes). cbn in M'_finalContains. cbn in tam.
 

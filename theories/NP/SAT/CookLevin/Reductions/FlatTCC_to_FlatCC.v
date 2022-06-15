@@ -134,6 +134,7 @@ End fixX.
 
 Definition c__FCC_instance :=  FlatTCC.c__Sigma + FlatTCC.c__init + FlatTCC.c__cards + FlatTCC.c__final + FlatTCC.c__steps + 12.
 Definition FCC_instance_time (fpr : FlatTCC) := c__FCC_instance + CC_cards_time (FlatTCC.cards fpr).
+#[export]
 Instance term_FCC_instance : computableTime' FCC_instance (fun fpr _ => (FCC_instance_time fpr, tt)). 
 Proof. 
   extract. solverec. unfold FCC_instance_time, c__FCC_instance. solverec. 

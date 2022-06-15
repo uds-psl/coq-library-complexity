@@ -407,44 +407,53 @@ Section fix_X.
   Qed. 
 End fix_X. 
 
+#[export]
 Hint Resolve TCCCardP_enc_correct : Lrewrite.
+#[export]
 Hint Resolve TCCCard_enc_correct : Lrewrite.
 
 MetaCoq Run (tmGenEncode "FlatTCC_enc" (FlatTCC)).
+#[export]
 Hint Resolve FlatTCC_enc_correct : Lrewrite. 
 
 From Complexity.Libs.CookPrelim Require Import PolyBounds. 
 
+#[export]
 Instance term_Build_FlatTCC : computableTime' Build_FlatTCC (fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, tt)))))).
 Proof.
   extract constructor. solverec. 
 Qed. 
 
 Definition c__Sigma := 8.
+#[export]
 Instance term_FlatTCC_Sigma : computableTime' Sigma (fun _ _ => (c__Sigma, tt)). 
 Proof.
   extract. unfold c__Sigma. solverec. 
 Qed. 
 
 Definition c__init := 8.
+#[export]
 Instance term_FlatTCC_init : computableTime' init (fun _ _ => (c__init, tt)). 
 Proof. 
   extract. unfold c__init. solverec. 
 Qed. 
 
 Definition c__cards := 10.
+#[export]
 Instance term_FlatTCC_cards : computableTime' cards (fun _ _ => (c__cards, tt)). 
 Proof. 
   extract. unfold c__cards. solverec. 
 Qed. 
 
 Definition c__final := 10.
+#[export]
 Instance term_FlatTCC_final : computableTime' final (fun _ _ => (c__final, tt)). 
 Proof. 
   extract. unfold c__final. solverec. 
 Qed. 
 
 Definition c__steps := 10.
+#[export]
 Instance term_FlatTCC_steps : computableTime' steps (fun _ _ => (c__steps, tt)). 
 Proof. 
   extract. unfold c__steps. solverec. 

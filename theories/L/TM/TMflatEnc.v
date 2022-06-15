@@ -10,40 +10,48 @@ Import Nat TM_facts.
 Import TMflat.
 Import GenEncode.
 MetaCoq Run (tmGenEncode "flatTM_enc" flatTM).
+#[export]
 Hint Resolve flatTM_enc_correct : Lrewrite.
 
 
+#[export]
 Instance term_Build_TM : computableTime' (Build_flatTM) (fun _ _ => (1,fun _ _ => (1,fun _ _ => (1,fun _ _ => (1,fun _ _ => (1,fun _ _ => (1,tt))))))).
 Proof.
   extract constructor. solverec. 
 Qed.
 
+#[export]
 Instance term_sig : computableTime' sig (fun _ _ => (9,tt)).
 Proof.
   extract. solverec.
 Qed.
 
 
+#[export]
 Instance term_tapes : computableTime' tapes (fun _ _ => (9,tt)).
 Proof.
   extract. solverec.
 Qed.
 
+#[export]
 Instance term_states : computableTime' states (fun _ _ => (9,tt)).
 Proof.
   extract. solverec.
 Qed.
 
+#[export]
 Instance term_trans : computableTime' trans (fun _ _ => (9,tt)).
 Proof.
   extract. solverec.
 Qed.
 
+#[export]
 Instance term_start : computableTime' start (fun _ _ => (9,tt)).
 Proof.
   extract. solverec.
 Qed.
 
+#[export]
 Instance term_halt : computableTime' halt (fun _ _ => (9,tt)).
 Proof.
   extract. solverec.
@@ -65,6 +73,7 @@ Definition TM_decode (s : term) : option TM :=
 Arguments list_decode : clear implicits.
 Arguments list_decode _ {_ _} _.
 
+#[export]
 Instance decode_TM : decodable TM.
 Proof.
   exists (list_decode X).
@@ -87,6 +96,7 @@ Proof.
 Qed.
 
 
+#[export]
 Instance linDec_TM : linTimeDecodable TM.
 Proof.
   exists c__encTM.
@@ -108,12 +118,14 @@ Qed.
 From Complexity.Complexity Require Export EncodableP LinTimeDecodable.
 
 
+#[export]
 Instance term_move_enc
   :computableTime' (enc (X:=move)) (fun x _ => (15,tt)).
 Proof.
   unfold enc;cbn. extract. solverec.
 Qed.
 
+#[export]
 Instance regP_move : encodableP TM.move.
 Proof.
   evar (c:nat).
@@ -130,6 +142,7 @@ Qed.
 
 Definition c__encTM := max (c__regP (list (nat * list (option nat) * (nat * list (option nat * TM.move))))) (max (c__regP nat) (max (c__regP (list bool)) 4)).
 
+#[export]
 Instance term_TM_enc
   :computableTime' (enc (X:=flatTM)) (fun x _ => (size (enc x) * c__encTM,tt)).
 Proof.
@@ -144,6 +157,7 @@ Proof.
   repeat rewrite H1. repeat rewrite H2. repeat rewrite H3. lia.
 Qed.
 
+#[export]
 Instance regP_TM : encodableP flatTM.
 Proof.
   exists c__encTM.

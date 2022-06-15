@@ -9,6 +9,7 @@ From Complexity.L Require Import LBinNums.
 Import GenEncode. 
 MetaCoq Run (tmGenEncode "mask_enc" Pos.mask).
 
+#[export]
 Hint Resolve mask_enc_correct : Lrewrite.
   
 Section pos_sub.
@@ -108,11 +109,13 @@ Section pos_sub.
 
 End pos_sub.
 
+#[export]
 Instance termT_N_sub: computableTime' N.sub (fun x _ => (1,fun y _ => (N.size_nat x*32 + 22 ,tt))).
 Proof.
 extract. solverec.
 Qed.
 
+#[export]
 Instance termT_N_pred: computableTime' N.pred (fun x _ => (N.size_nat x*12 + 9 ,tt)).
 Proof.
 extract. solverec.

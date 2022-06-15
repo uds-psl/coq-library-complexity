@@ -9,6 +9,7 @@ Inductive kCNF (k : nat) : cnf -> Prop :=
 | kCNFB : kCNF k []
 | kCNFS (N : cnf) (C : clause) : (|C|) = k -> kCNF k N -> kCNF k (C ::  N).               
 
+#[export]
 Hint Constructors kCNF : core.
 
 Lemma kCNF_clause_length (k : nat) (N : cnf) : kCNF k N <-> forall C, C el N -> |C| =k.
@@ -48,6 +49,7 @@ From Complexity.Libs.CookPrelim Require Import PolyBounds.
 
 Definition c__clauseLengthDecb :=  c__length + 5 + 1.
 Definition clause_length_decb_time (k : nat) (C : clause) := c__length * (|C|) + eqbTime (X := nat) (size (enc k)) (size (enc (|C|))) + c__clauseLengthDecb.
+#[export]
 Instance term_clause_length_decb : computableTime' clause_length_decb (fun k _ => (1, fun C _ => (clause_length_decb_time k C, tt))). 
 Proof. 
   extract. solverec. unfold clause_length_decb_time, c__clauseLengthDecb. solverec. 
@@ -55,6 +57,7 @@ Qed.
 
 Definition c__kCNFDecb := 3. 
 Definition kCNF_decb_time (k : nat) (N : cnf) := forallb_time (fun C => clause_length_decb_time k C) N + c__kCNFDecb.
+#[export]
 Instance term_kCNF_decb : computableTime' kCNF_decb (fun k _ => (1, fun N _ => (kCNF_decb_time k N, tt))). 
 Proof. 
   extract. solverec. unfold kCNF_decb_time, c__kCNFDecb. solverec. 

@@ -512,7 +512,7 @@ Proof.
     clear Hf__steps Hcert_f__size.
 
     nary apply pTC_destructuringToProj.
-
+(*     specialize pTC_destructuringToProj with (domain:=[nat;nat;list Tok]) as h. cbn in h. refine ( h _ _ _ _ _). *)
     enough (polyTimeComputable f__size).
     enough (polyTimeComputable f__steps).
     repeat smpl polyTimeComputable.
@@ -536,6 +536,7 @@ Proof.
       }
     }
     -unfold f__steps. nary apply pTC_destructuringToProj.
+    (*     specialize pTC_destructuringToProj with (domain:=[nat;nat;list Tok]) as h. cbn in h. refine ( h _ _ _ _ _). *)
      repeat smpl polyTimeComputable.
     -unfold f__size.
      repeat smpl polyTimeComputable.

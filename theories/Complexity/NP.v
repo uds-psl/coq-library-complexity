@@ -274,4 +274,5 @@ Qed.
 Definition NPcomplete X `{encodable X} (P : X -> Prop) :=
   NPhard P /\ inNP P.
 
+#[export]
 Hint Unfold NPcomplete : core.

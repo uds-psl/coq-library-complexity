@@ -22,7 +22,7 @@ depends: [
   "coq" {>= "8.12" & < "8.13~"}
   "coq-equations" {= "1.2.3+8.12"}
   "ocaml"
-  "coq-smpl" {= "8.12"}
+  "coq-smpl" {>= "8.12"}
   "coq-library-undecidability" {>= "dev+8.12" }
 ]
 

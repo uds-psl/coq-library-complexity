@@ -145,6 +145,7 @@ Section abstractDefs.
 End abstractDefs. 
 
 Arguments valid {X}. 
+#[export]
 Hint Constructors valid : core. 
 
 Ltac inv_valid := match goal with
@@ -318,6 +319,7 @@ Section fixRulePred.
  
 End fixRulePred. 
 
+#[export]
 Hint Constructors coversHeadInd : core. 
 
 Definition cardPred_subs (X : Type) (p1 p2 : cardPred X) := forall x1 x2 x3 x4 x5 x6, p1 x1 x2 x3 x4 x5 x6 -> p2 x1 x2 x3 x4 x5 x6.
@@ -330,6 +332,7 @@ Qed.
 Lemma coversHeadInd_congruent (X : Type) (p1 p2 : cardPred X) : (forall x1 x2 x3 x4 x5 x6, p1 x1 x2 x3 x4 x5 x6 <-> p2 x1 x2 x3 x4 x5 x6) -> forall x y, coversHeadInd p1 x y <-> coversHeadInd p2 x y.
 Proof.  intros H; intros. split; apply coversHeadInd_monotonous; unfold cardPred_subs; apply H. Qed. 
 
+#[export]
 Hint Constructors coversHeadInd : core.
 
 Definition PTCCLang (C : PTCC) := 

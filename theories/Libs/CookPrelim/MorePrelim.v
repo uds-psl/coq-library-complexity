@@ -138,7 +138,7 @@ Definition optBind {X Y : Type} (x : option X) (f : X -> option Y) :=
 
 (*notations from https://pdp7.org/blog/2011/01/the-maybe-monad-in-coq/ *)
 Notation "A >>= F" := (optBind A F) (at level 40, left associativity).
-Notation "'do' X <- A ; B" := (optBind A (fun X => B)) (at level 200, X ident, A at level 100, B at level 200).
+Notation "'do' X <- A ; B" := (optBind A (fun X => B)) (at level 200, X name, A at level 100, B at level 200).
 
 
 (* involutions *)
@@ -250,11 +250,13 @@ Qed.
 Inductive relpowerRev (X : Type) (R : X -> X -> Prop) : nat -> X -> X -> Prop :=
 | relpowerRevB x : relpowerRev R 0 x x
 | relpowerRevS x y y' n: relpowerRev R n x y -> R y y' -> relpowerRev R (S n) x y'. 
+#[export]
 Hint Constructors relpowerRev : core. 
 
 Inductive relpower (A : Type) (R : A -> A -> Prop) : nat -> A -> A -> Prop :=
 | relpowerB (a : A) : relpower R 0 a a
 | relpowerS (a b c : A) n : R a b -> relpower R n b c -> relpower R (S n) a c. 
+#[export]
 Hint Constructors relpower : core. 
 
 Lemma relpower_trans A R n m (x y z : A) : relpower R n x y -> relpower R m y z -> relpower R (n + m) x z.

@@ -237,6 +237,7 @@ From Undecidability.L.Datatypes Require Import LBool Lists LNat LProd LOptions.
 (** allPositions *)
 Definition c__allPositions := c__length + 16.
 Definition allPositions_time (k : nat) (N : cnf) := c__length * (|N|) + seq_time (|N|) + seq_time k + prodLists_time (seq 0 (|N|)) (seq 0 k) + c__allPositions. 
+#[export]
 Instance term_allPositions : computableTime' allPositions (fun k _ => (1, fun N _ => (allPositions_time k N, tt))). 
 Proof. 
   extract. solverec. 
@@ -271,6 +272,7 @@ Qed.
 Definition c__literalsConflictDecb := c__eqbBool + 24. 
 Definition literalsConflict_decb_time (l1 l2 : literal) := 
   let (_, v1) := l1 in let (_, v2) := l2 in EqBool.eqbTime (X := nat) (size (enc v1)) (size (enc v2)) + c__literalsConflictDecb. 
+#[export]
 Instance term_literalsConflict_decb : computableTime' literalsConflict_decb (fun l1 _ => (1, fun l2 _ => (literalsConflict_decb_time l1 l2, tt))). 
 Proof. 
   extract. solverec. 
@@ -284,6 +286,7 @@ Definition opt_literalsConflict_decb_time (o1 o2 : option literal) :=
   | Some l1, Some l2 => literalsConflict_decb_time l1 l2 
   | _, _ => 0
   end + c__optLiteralsConflictDecb. 
+#[export]
 Instance term_opt_literalsConflict_decb : computableTime' opt_literalsConflict_decb (fun o1 _ => (1, fun o2 _ => (opt_literalsConflict_decb_time o1 o2, tt))). 
 Proof. 
   extract. solverec. 
@@ -307,6 +310,7 @@ Qed.
 (** toVertex *)
 Definition c__toVertex := c__length + 8.
 Definition toVertex_time (k : nat) (N : cnf) (p : nat *nat) := let (ci, li) := p in c__length * (|N|) + flatPair_time ci k + c__toVertex.
+#[export]
 Instance term_toVertex : computableTime' toVertex (fun k _ => (1, fun N _ => (1, fun p _ => (toVertex_time k N p, tt)))). 
 Proof. 
   unfold toVertex, Ncl. extract. solverec. 
@@ -338,6 +342,7 @@ Definition cnfGetLiteral_time (N : cnf) (ci li : nat) :=
   | Some C => nth_error_time C li 
   | None => 0
   end + c__cnfGetLiteral. 
+#[export]
 Instance term_cnfGetLiteral : computableTime' cnfGetLiteral (fun N _ => (1, fun ci _ => (1, fun li _ => (cnfGetLiteral_time N ci li, tt)))). 
 Proof. 
   unfold cnfGetLiteral, optBind, cnfGetClause, clauseGetLiteral. 
@@ -376,6 +381,7 @@ Qed.
 Definition c__makeEdge := 43.
 Definition makeEdge_time (k : nat) (N : cnf) (p : (nat * nat) * (nat * nat)) := 
   let '((ci1, li1), (ci2, li2)) := p in EqBool.eqbTime (X := nat) (size (enc ci1)) (size (enc ci2)) + cnfGetLiteral_time N ci1 li1 + cnfGetLiteral_time N ci2 li2 + opt_literalsConflict_decb_time (cnfGetLiteral N ci1 li1) (cnfGetLiteral N ci2 li2) + toVertex_time k N (ci1, li1) + toVertex_time k N (ci2, li2) + c__makeEdge.
+#[export]
 Instance term_makeEdge : computableTime' makeEdge (fun k _ => (1, fun N _ => (1, fun p _ => (makeEdge_time k N p, tt)))). 
 Proof. 
   extract. recRel_prettify2. 1-2: nia. 
@@ -407,6 +413,7 @@ Qed.
 (** makeEdges *)
 Definition c__makeEdges := 11. 
 Definition makeEdges_time (k : nat) (N : cnf) := 2 * allPositions_time k N + prodLists_time (allPositions k N) (allPositions k N) + map_time (makeEdge_time k N) (list_prod (allPositions k N) (allPositions k N))+ concat_time (map (makeEdge k N) (list_prod (allPositions k N) (allPositions k N))) + c__makeEdges.
+#[export]
 Instance term_makeEdges : computableTime' makeEdges (fun k _ => (1, fun N _ => (makeEdges_time k N, tt))). 
 Proof. 
   extract. solverec. 
@@ -499,6 +506,7 @@ Qed.
 (** Gflat *)
 Definition c__Gflat := 4. 
 Definition Gflat_time (k : nat) (N : cnf) :=c__length * (|N|) + c__length + c__mult1 + mult_time (|N|) k + makeEdges_time k N + c__Gflat. 
+#[export]
 Instance term_Gflat : computableTime' Gflat (fun k _ => (1, fun N _ => (Gflat_time k N, tt))). 
 Proof. 
   unfold Gflat, Vf.
@@ -545,6 +553,7 @@ Qed.
 (** reduction *)
 Definition c__reduction := 14. 
 Definition reduction_time (k : nat) (N : cnf) := kCNF_decb_time k N + Gflat_time k N + c__length * (|N|) + c__length + (c__leb * 2 + c__ltb) + c__reduction.
+#[export]
 Instance term_reduction (k : nat): computableTime' (reduction k) (fun N _ => (reduction_time k N, tt)). 
 Proof. 
   extract. solverec. 

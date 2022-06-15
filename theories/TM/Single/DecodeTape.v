@@ -379,7 +379,8 @@ Module CheckEncodesTape.
           all:intros [= <- ->%retract_f_injective ->]. all:easy. }
       destruct s;inv H__LB.
       destruct t__R. 1:{ cbn. rewrite f'_equation. cbn. intros [= <- <-]. split. 2:{now exists 1. } intros ? x ?.
-                       destruct x;cbn;eexists _,_;(split;[reflexivity | ]). all:intros [= <- ?%retract_f_injective ?]. easy. all:revert H0. all:length_not_eq. }
+                       destruct x;cbn;eexists _,_;(split;[reflexivity | ]). all:intros [= <- ?%retract_f_injective HH]. easy. all:revert HH.
+                       all:length_not_eq. }
       intros H';symmetry in H'. assert (H:=H'). revert H. eintros [H Hres]%(f'_spec (t__L':=[])). 5:reflexivity. 
       2:now destruct marked;cbn;nia. 2:easy. 2:now constructor.
         split. 2:{ cbn in Hres;destruct Hres as (k&->). exists (S k). now rewrite nat_rect_succ_r. } clear Hres.

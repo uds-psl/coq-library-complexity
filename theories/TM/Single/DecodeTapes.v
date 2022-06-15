@@ -29,6 +29,7 @@ Module CheckEncodesTapes.
     Context (tau:finType) `{I : Retract (sigList (sigTape sig)) tau}.
 
     Let I__X : Retract (sigTape sig) tau := ComposeRetract I _. 
+
     Existing Instance I__X.
     Local Arguments ComposeRetract : simpl never.
     

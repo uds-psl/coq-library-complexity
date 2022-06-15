@@ -1,5 +1,5 @@
 From Undecidability.L Require Import L Tactics.LTactics.
-From Undecidability.L.Datatypes Require Import LNat LProd Lists LOptions. 
+From Undecidability.L.Datatypes Require Import LNat LProd Lists LTerm LOptions. 
 
 From Complexity.L.AbstractMachines Require Import FunctionalDefinitions AbstractHeapMachineDef.
 
@@ -8,6 +8,7 @@ Require Import Undecidability.L.AbstractMachines.LargestVar.
 From Undecidability.L Require Import Prelim.LoopSum Functions.LoopSum Functions.UnboundIteration.
 Import Nat.
 
+#[export]
 Instance termT_max : computableTime' max (fun x _ => (5,fun y _ => (min x y * 15 + 8,tt))).
 Proof.
   extract. fold max. solverec.
@@ -50,6 +51,7 @@ Proof.
   rewrite largestVarTR'_correct. cbn. easy.
 Qed.
 
+#[export]
 Instance termT_largestVarTR' : computableTime' largestVarTR'
                                            (fun x _ => (let '(stack,res) := x in
                                                     match stack with
@@ -65,14 +67,14 @@ Proof.
   induction s;cbn [size largestVarTR'_fuel];try Lia.lia.
 Qed.
 
+#[export]
 Instance termT_largestVar : computableTime' largestVar (fun s _ => ((40 * size s) +46,tt)).
 Proof.
   eexists.
   eapply computesTime_timeLeq.
   
   2:{ unshelve (eapply uiter_total_instanceTime with (1 := largestVarTR_correct) (preprocessT:=(fun _ _ => (5,tt)))).
-      4:{ extract. solverec. }
-      2:{ apply termT_largestVarTR'. }
+      { extract. solverec. }
   }
   split. 2:exact Logic.I.
   cbn [fst].

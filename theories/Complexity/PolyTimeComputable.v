@@ -89,6 +89,7 @@ Qed.
 From Coq Require Import CRelationClasses CMorphisms.
 Local Set Universe Polymorphism. 
 
+#[export]
 Instance polyTimeComputable_proper_eq X Y {_: encodable X} {_ :  encodable Y}:
   Proper ( Morphisms.pointwise_relation X eq ==> arrow) (@polyTimeComputable X Y _ _).
 Proof.
@@ -98,6 +99,7 @@ Proof.
   -destruct e as [e H]. exists e. 2-3:easy. hnf in Heq. intros;rewrite <- Heq. apply H.
 Qed.
 
+#[export]
 Instance polyTimeComputable_proper_eq_flip X Y {_: encodable X} {_ :  encodable Y}:
   Proper (Morphisms.pointwise_relation X eq ==> flip arrow) (@polyTimeComputable X Y _ _).
 Proof.
@@ -138,6 +140,7 @@ Ltac polyTimeComputable_domain G :=
     exact (Mk_domain_of_goal L)
   end.
 
+#[export]
 Hint Extern 0 Domain_of_goal => (mk_domain_getter polyTimeComputable_domain) : domain_of_goal.
 
 (*

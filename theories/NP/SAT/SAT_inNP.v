@@ -313,6 +313,7 @@ Require Import Complexity.Complexity.UpToCPoly.
 
 (* we overwrite the already extracted version (eqbCompT instance) because we use that it is constant-time *)
 Definition c__eqbBool := 7.
+#[export]
 Instance term_bool_eqb : computableTime' Bool.eqb (fun _ _ => (1, fun _ _ => (c__eqbBool, tt))). 
 Proof.
   extract. unfold c__eqbBool.
@@ -338,15 +339,17 @@ Section extraction.
           unfold list_in_decb_time.
           pose (g := max (size (enc x)) (maxSize l)). 
           replace_le (size (enc x)) with g by (subst g; apply Nat.le_max_l) at 1. 
-          replace_le (maxSize l) with g by (subst g; apply Nat.le_max_r) at 1 2. 
+          replace_le (maxSize l) with g by (subst g; apply Nat.le_max_r) at 1. 
           cbn. fold (maxSize l) g. 
           instantiate (c := c__eqbComp X + 21). subst c. leq_crossout. 
         + subst c. unfold list_in_decb_time. cbn. lia. }
       smpl_upToC_solve. 
     Qed.
-    Instance term_list_in_decb : computableTime' (@list_in_decb X eqbX) _ := projT2 _term_list_in_decb. 
+#[export]
+Instance term_list_in_decb : computableTime' (@list_in_decb X eqbX) _ := projT2 _term_list_in_decb. 
   End fixXeq. 
-  Existing Instance term_list_in_decb. 
+#[export]
+Existing Instance term_list_in_decb. 
 
   (** extraction of evalVar *)
   (* evalVar *)
@@ -359,7 +362,8 @@ Section extraction.
       nia. }
     smpl_upToC_solve. 
   Qed.
-  Instance term_evalVar : computableTime' evalVar _ := projT2 _term_evalVar. 
+#[export]
+Instance term_evalVar : computableTime' evalVar _ := projT2 _term_evalVar. 
 
   (* evalLiteral*)
   Definition evalLiteral_time (a : assgn) := ((|a|) + 1) * (maxSize a + 1) + 1.
@@ -370,7 +374,8 @@ Section extraction.
       set_consts. set (c1' := C + c__eqbBool + 7). unfold evalLiteral_time. inst_with c1 c1'. lia. } 
     smpl_upToC_solve. 
   Qed.
-  Instance term_evalLiteral : computableTime' evalLiteral _ := projT2 _term_evalLiteral. 
+#[export]
+Instance term_evalLiteral : computableTime' evalLiteral _ := projT2 _term_evalLiteral. 
 
   (* existsb *)
   Definition existsb_time {X : Type} `{encodable X} (p : (X -> nat) * list X) := let '(fT, l) := p in 
@@ -381,7 +386,8 @@ Section extraction.
     { extract. solverec; cycle 1. instantiate (c1 := 15). all: lia. } 
     smpl_upToC_solve. 
   Qed.
-  Instance term_existsb (X : Type) `{encodable X} : computableTime' (@existsb X) _ := projT2 _term_existsb. 
+#[export]
+Instance term_existsb (X : Type) `{encodable X} : computableTime' (@existsb X) _ := projT2 _term_existsb. 
 
   (* forallb *)
   Definition forallb_time {X : Type} `{encodable X} (p : (X -> nat) * list X) := let '(fT, l) := p in 
@@ -392,7 +398,8 @@ Section extraction.
     { extract. solverec; cycle 1. instantiate (c1 := 15). all: lia. } 
     smpl_upToC_solve. 
   Qed.
-  Instance term_forallb (X : Type) `{encodable X} : computableTime' (@forallb X) _ := projT2 _term_forallb. 
+#[export]
+Instance term_forallb (X : Type) `{encodable X} : computableTime' (@forallb X) _ := projT2 _term_forallb. 
 
   (* evalClause *)
   Definition evalClause_time (p : assgn * clause) := let (a, C) := p in (|C| + 1) * ((|a|) + 1) * (maxSize a + 1). 
@@ -406,7 +413,8 @@ Section extraction.
       set (c1' := C + 2*C * C0 + 3). inst_with c1 c1'. lia. } 
     smpl_upToC_solve. 
   Qed.
-  Instance term_evalClause : computableTime' evalClause _ := projT2 _term_evalClause.
+#[export]
+Instance term_evalClause : computableTime' evalClause _ := projT2 _term_evalClause.
 
   Lemma evalClause_poly : isPoly evalClause_time. 
   Proof. 
@@ -436,7 +444,8 @@ Section extraction.
     } 
     smpl_upToC_solve. 
   Qed.
-  Instance term_evalCnf : computableTime' evalCnf _ := projT2 _term_evalCnf. 
+#[export]
+Instance term_evalCnf : computableTime' evalCnf _ := projT2 _term_evalCnf. 
   Arguments evalCnf_time : simpl never. 
 
   (* again: we would not want to use the above bound explicitly, so we give at least a polynomial bound which can be used. *)
@@ -462,7 +471,8 @@ Section extraction.
     } 
     smpl_upToC_solve. 
   Qed.
-  Instance term_sat_verifierb : computableTime' sat_verifierb _ := projT2 _term_sat_verifierb. 
+#[export]
+Instance term_sat_verifierb : computableTime' sat_verifierb _ := projT2 _term_sat_verifierb. 
 End extraction.
        
 (** We obtain that SAT is in NP *)

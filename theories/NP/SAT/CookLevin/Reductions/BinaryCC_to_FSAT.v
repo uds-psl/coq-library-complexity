@@ -498,6 +498,7 @@ From Undecidability.L.Functions Require Import EqBool.
 (** encodeCardAt *)
 Definition c__encodeCardAt := FlatCC.cnst_prem + FlatCC.cnst_conc + 13.
 Definition encodeCardAt_time (card : CCCard bool) := encodeListAt_time (prem card) + encodeListAt_time (conc card) + c__encodeCardAt.
+#[export]
 Instance term_encodeCardAt : computableTime' encodeCardAt (fun s1 _ => (1, fun s2 _ => (1, fun card _ => (encodeCardAt_time card, tt)))). 
 Proof. 
   extract. solverec. 
@@ -531,6 +532,7 @@ Qed.
 (** encodeCardsAt *)
 Definition c__encodeCardsAt := 4 + c__cards.
 Definition encodeCardsAt_time (bpr : BinaryCC) (s1 s2 : nat) := map_time encodeCardAt_time (cards bpr) + listOr_time (map (encodeCardAt s1 s2) (cards bpr)) + c__encodeCardsAt.
+#[export]
 Instance term_encodeCardsAt : computableTime' encodeCardsAt (fun bpr _ => (1, fun s1 _ => (1, fun s2 _ => (encodeCardsAt_time bpr s1 s2, tt)))). 
 Proof. 
   extract. solverec. 
@@ -585,6 +587,7 @@ Fixpoint encodeCardsInLineP_time (bpr : BinaryCC) (stepindex l startA startB : n
   | 0 => 0 
   | S stepi => encodeCardsAt_time bpr startA startB + sub_time l (offset bpr) + add_time startA + add_time startB + encodeCardsInLineP_time bpr stepi (l - offset bpr) (startA + offset bpr) (startB + offset bpr)
   end + ltb_time l (width bpr) + c__encodeCardsInLineP.
+#[export]
 Instance term_encodeCardsInLine': computableTime' encodeCardsInLine' (fun bpr _ => (1, fun stepi _ => (5, fun l _ => (1, fun s1 _ => (5, fun s2 _ => (encodeCardsInLineP_time bpr stepi l s1 s2, tt)))))). 
 Proof. 
   extract. 
@@ -676,6 +679,7 @@ Definition c__encodeCardsInLine := 3 * c__init + 3 * c__length + c__add1 + 13.
 Definition encodeCardsInLine_time (bpr : BinaryCC) (s : nat) := 
   3 * c__length * (| init bpr |) + add_time s +
   encodeCardsInLineP_time bpr (| init bpr |) (| init bpr |) s (s + (| init bpr |)) + c__encodeCardsInLine.
+#[export]
 Instance term_encodeCardsInLine :computableTime' encodeCardsInLine (fun bpr _ => (1, fun s _ => (encodeCardsInLine_time bpr s, tt))). 
 Proof. 
   extract. solverec. 
@@ -723,6 +727,7 @@ Proof.  apply encodeCardsInLineP_size.  Qed.
 (** encodeCardsInAllLines *)
 Definition c__encodeCardsInAllLines := c__init + c__length + c__steps + 5.
 Definition encodeCardsInAllLines_time (bpr : BinaryCC) := c__length * (|init bpr|) + tabulate_formula_time 0 (|init bpr|) (steps bpr) (encodeCardsInLine_time bpr) + listAnd_time (tabulate_formula 0 (|init bpr|) (steps bpr) (encodeCardsInLine bpr)) + c__encodeCardsInAllLines.
+#[export]
 Instance term_encodeCardsInAllLines : computableTime' encodeCardsInAllLines (fun bpr _ => (encodeCardsInAllLines_time bpr, tt)). 
 Proof. 
   extract. solverec. 
@@ -800,6 +805,7 @@ Fixpoint encodeSubstringInLineP_time (bpr : BinaryCC) (s : list bool) (stepindex
   | 0 => 0 
   | S stepi => encodeListAt_time s +  sub_time l (offset bpr) + c__add1 + add_time start + encodeSubstringInLineP_time bpr s stepi (l - offset bpr) (start + offset bpr)
  end + c__length * (|s|) + ltb_time l (|s|) + c__encodeSubstringInLine'. 
+#[export]
 Instance term_encodeSubstringInLine' : computableTime' encodeSubstringInLine' (fun bpr _ => (1, fun s _ => (5, fun stepi _ => (1, fun l _ => (1, fun start _ => (encodeSubstringInLineP_time bpr s stepi l start, tt)))))). 
 Proof. 
   extract. solverec. 
@@ -880,6 +886,7 @@ Qed.
 (** encodeSubstringInLine *)
 Definition c__encodeSubstringInLine := 14. 
 Definition encodeSubstringInLine_time (bpr : BinaryCC) (s : list bool) (start l : nat) := encodeSubstringInLineP_time bpr s l l start + c__encodeSubstringInLine. 
+#[export]
 Instance term_encodeSubstringInLine : computableTime' encodeSubstringInLine (fun bpr _ => (1, fun s _ => (1, fun start _ => (1, fun l _ => (encodeSubstringInLine_time bpr s start l, tt))))). 
 Proof. 
   extract. solverec. all: unfold encodeSubstringInLine_time, c__encodeSubstringInLine; solverec. 
@@ -904,6 +911,7 @@ Definition encodeFinalConstraint_step (bpr : BinaryCC) (start : nat) (s : list b
 
 Definition c__encodeFinalConstraintStep := c__init + c__length + 4.
 Definition encodeFinalConstraint_step_time (bpr : BinaryCC) (start : nat) (s : list bool) := c__length * (|init bpr|) + encodeSubstringInLine_time bpr s start (|init bpr|) + c__encodeFinalConstraintStep.
+#[export]
 Instance term_encodeFinalConstraint_step : computableTime' encodeFinalConstraint_step (fun bpr _ => (1, fun start _ => (1, fun s _ => (encodeFinalConstraint_step_time bpr start s, tt)))). 
 Proof. 
   extract. solverec. 
@@ -912,6 +920,7 @@ Qed.
 
 Definition c__encodeFinalConstraint := c__final + 4. 
 Definition encodeFinalConstraint_time (bpr : BinaryCC) (start : nat) :=  map_time (encodeFinalConstraint_step_time bpr start) (final bpr) + listOr_time (map (encodeFinalConstraint_step bpr start) (final bpr)) + c__encodeFinalConstraint.
+#[export]
 Instance term_encodeFinalConstraint : computableTime' encodeFinalConstraint (fun bpr _ => (1, fun start _ => (encodeFinalConstraint_time bpr start, tt))). 
 Proof. 
   apply computableTimeExt with (x := fun bpr start => listOr (map (encodeFinalConstraint_step bpr start) (final bpr))). 
@@ -967,6 +976,7 @@ Qed.
 (**encodeTableau *)
 Definition c__encodeTableau := 2 * c__init + c__steps + c__mult1 + c__length + 11.
 Definition encodeTableau_time (bpr : BinaryCC) := encodeListAt_time (init bpr) + encodeCardsInAllLines_time bpr + c__length * (|init bpr|) + mult_time (steps bpr) (|init bpr|) + encodeFinalConstraint_time bpr (steps bpr * (|init bpr|)) + c__encodeTableau. 
+#[export]
 Instance term_encodeTableau : computableTime' encodeTableau (fun bpr _ => (encodeTableau_time bpr, tt)). 
 Proof. 
   unfold encodeTableau, encodeFinalConstraint'. extract. solverec. 
@@ -1052,6 +1062,7 @@ Qed.
 
 Definition c__BinaryCCWfDec := 3 * c__leb2 + 4 * c__width + 3 * c__offset + 2 * 5 + 2 * c__init + 2 * c__length + c__cards + 32 + 4 * c__leb + 2 * c__eqbComp nat * size (enc 0).
 Definition BinaryCC_wf_dec_time x := 2 * c__length * (|init x|) + leb_time (width x) (|init x|) + forallb_time (@FlatCC.CCCard_of_size_dec_time bool (width x)) (cards x) + modulo_time (|init x|) (offset x) + modulo_time (width x) (offset x) + c__BinaryCCWfDec.  
+#[export]
 Instance term_BinaryCC_wf_dec : computableTime' BinaryCC_wf_dec (fun bpr _ => (BinaryCC_wf_dec_time bpr, tt)). 
 Proof. 
   extract. solverec. 
@@ -1089,6 +1100,7 @@ Qed.
 (** reduction *)
 Definition c__reduction := 4. 
 Definition reduction_time (bpr : BinaryCC) := (if BinaryCC_wf_dec bpr then  encodeTableau_time bpr else 0) +BinaryCC_wf_dec_time bpr + c__reduction. 
+#[export]
 Instance term_reduction : computableTime' reduction (fun bpr _ => (reduction_time bpr, tt)). 
 Proof. 
   extract. unfold reduction_time, c__reduction; solverec. 

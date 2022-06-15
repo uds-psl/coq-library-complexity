@@ -7,7 +7,8 @@ Require Import Lia.
 (** We introduce preludes for TCC instances (for simplicity, we restrict ourselves to the propositional variant PTCC) *)
 
 (** Preludes allow us to reduce the problem "∃ init, P init ∧ PTCCLang (instance(init))" to "PTCCLang (instance')", where 
-  instance is a PTCC instance which lacks an initial string and P is an arbitrary predicate on initial strings. 
+#[export]
+Instance is a PTCC instance which lacks an initial string and P is an arbitrary predicate on initial strings. 
   A prelude is a set of covering cards together with a new initial string which generates a new string.
   
   If we can find a set of covering cards and an initial string as well as a number of steps t' such that the initial string

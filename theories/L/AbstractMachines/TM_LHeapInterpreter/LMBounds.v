@@ -566,10 +566,10 @@ Module LM_Lookup_nice.
     - rewrite Lookup_steps_eq. cbn -[mult plus].
       destruct (nth_error H a) as [ [ (g,b) | ] | ] eqn:E.
       + (* Recursion case *)
-        hnf. unfold dominatedWith in IH. setoid_rewrite IH. rewrite Hc_step.
-        enough (1 + c_step * (size H + size a) + (1 + c_step) * (size n' * (size H + size (heap_greatest_address H b n'))) <=
-                (1 + c_step) * (size (S n') * (size H + size (Init.Nat.max a (heap_greatest_address H b n'))))) by auto.
-        ring_simplify. rewrite !Encode_nat_hasSize. ring_simplify. nia.
+        hnf. unfold dominatedWith in IH. setoid_rewrite IH. rewrite Hc_step. unfold HAdd in *.
+        ring_simplify. rewrite !Encode_nat_hasSize. ring_simplify.
+        eapply Max.max_case_strong;intro hh. 2:nia. ring_simplify. 
+        rewrite hh at 1. nia.
       + hnf. rewrite Hc_step. rewrite !Encode_nat_hasSize. lia.
       + hnf. rewrite Hc_step. rewrite !Encode_nat_hasSize. lia.
   Qed.
@@ -1012,7 +1012,6 @@ Module LM.
       setoid_rewrite Encode_list_hasSize. setoid_rewrite <- Encode_list_hasSize_ge1. lia.
     - eapply dominatedWith_trans. apply (proj2_sig Step_steps_CaseCom_nice). domWith_match.
       + subst. domWith_approx.
-        * specialize (Encode_Pro_hasSize_ge1 xs) as ?. domWith_approx.
         * apply dominatedWith_solve.
           rewrite size_length_heap. setoid_rewrite Encode_list_hasSize. nia.
       + subst. apply dominatedWith_solve. nia.

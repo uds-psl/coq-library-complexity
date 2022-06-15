@@ -5,6 +5,7 @@ From Complexity.L.AbstractMachines Require Import AbstractHeapMachineDef Computa
 
 Definition lookupTime l x := (x+1) * (l*15 + 41).
 
+#[export]
 Instance term_lookup : computableTime' lookup (fun H _ => (5,fun alpha _ => (1,fun x _ => (lookupTime (length H) x ,tt)))).
 extract. unfold lookupTime. solverec.
 Qed.

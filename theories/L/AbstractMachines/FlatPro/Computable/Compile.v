@@ -1,5 +1,5 @@
 From Undecidability.L Require Import L Tactics.LTactics Prelim.LoopSum Functions.LoopSum.
-From Undecidability.L.Datatypes Require Import LSum LBool LNat Lists.
+From Undecidability.L.Datatypes Require Import LSum LBool LNat Lists LProd LTerm.
 
 From Undecidability.L.AbstractMachines  Require Import FlatPro.Programs.
 From Complexity.L.AbstractMachines  Require Import Computable.LPro.
@@ -64,6 +64,7 @@ Proof.
 Qed.
 
 Definition c__compileTR' := 32.
+#[export]
 Instance termT_compileTR' : computableTime' compileTR'
                                            (fun x _ => (c__compileTR',tt)).
 Proof.
@@ -83,16 +84,16 @@ Local Definition c1 := (c__compileTR' * 2 + 44 + 2 * c__rev).
 Local Definition c2 := 59 + c__rev.
 Definition time_compile x := c1*x +c2.
 
+#[export]
 Instance termT_compile : computableTime' compile (fun s _ => (time_compile (size s),tt)).
 Proof.
   evar (time : nat -> nat). [time]:intros n0.
-  set (f:=(fun s : term => rev (compile s))) in .
+  set (f:=(fun s : term => rev (compile s))).
   eassert (computableTime' f (fun s _ => (time (size s),tt))).
   eexists.
   eapply computesTime_timeLeq.
   2:{ unshelve (eapply uiter_total_instanceTime with (1 := compileTR_correct) (preprocessT:=(fun _ _ => (6,tt)))).
-      4:{ extract. solverec. }
-      2:{ apply termT_compileTR'. }
+      extract. solverec.
   }
   {
     intros s _;cbn [fst snd]. split. 2:easy.

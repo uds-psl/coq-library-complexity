@@ -13,9 +13,13 @@ Fixpoint L_Pro n {struct n}: list Pro :=
      ++ [[]]
   end.
 
+#[export]
 Hint Rewrite in_concat_iff : list.
+#[export]
 Hint Rewrite in_app_iff : list.
+#[export]
 Hint Rewrite in_map_iff : list.
+#[export]
 Hint Rewrite filter_In : list.
 
 Lemma L_Pro_in_iff n P :

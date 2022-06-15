@@ -14,12 +14,15 @@ Arguments encodableP : clear implicits.
 Arguments encodableP _ {_}.
 Arguments c__regP : clear implicits.
 Arguments c__regP _ {_ _} : simpl never.
-Hint Mode encodableP + + : typeclass_instances. (* treat argument as input and force evar-freeness*)
+Global Hint Mode encodableP + + : typeclass_instances. (* treat argument as input and force evar-freeness*)
 
+#[export]
 Existing Instance comp_enc_lin.
+#[export]
 Typeclasses Opaque enc.
 
 
+#[export]
 Instance regP_nat : encodableP nat.
 Proof.
   evar (c:nat).
@@ -32,6 +35,7 @@ Proof.
 Qed.
 
 
+#[export]
 Instance regP_term : encodableP term.
 Proof.
   evar (c:nat).
@@ -43,6 +47,7 @@ Proof.
   cbn [fst]. rewrite -> size_term_enc_r. [c]:exact 30. unfold c. nia.
 Qed.
 
+#[export]
 Instance regP_Prod X Y `{encodableP X} `{encodableP Y}: encodableP (X*Y).
 Proof.
   evar (c:nat).
@@ -57,6 +62,7 @@ Qed.
 
 From Undecidability.L.Datatypes Require Import Lists.
 
+#[export]
 Instance regP_list X `{encodableP X}: encodableP (list X).
 Proof.
   evar (c:nat).
@@ -72,6 +78,7 @@ Qed.
 
 Import LOptions.
 
+#[export]
 Instance regP_option X `{encodableP X}: encodableP (option X).
 Proof.
   evar (c:nat).
@@ -85,6 +92,7 @@ Proof.
   now destruct l.
 Qed.
 
+#[export]
 Instance regP_bool : encodableP bool.
 Proof.
   evar (c:nat).

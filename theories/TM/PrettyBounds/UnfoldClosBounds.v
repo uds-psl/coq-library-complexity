@@ -58,13 +58,13 @@ Proof.
       rewrite LMBounds.size_Var;cbv [CaseCom.CaseCom_steps CopyValue_steps ].
       rewrite Code.Encode_nat_hasSize. unshelve erewrite ( _ : n - k <= maxVar). nia.
       change (Pos.to_nat 3) with 3.
-      rewrite Hn. ring_simplify. enough (c__leUpToC (projT1 NatSub.Subtract_SpecT) +245 <= c) by nia. shelve.
+      rewrite Hn. ring_simplify. enough (c__leUpToC (projT1 NatSub.Subtract_SpecT) +245 <= c) as H1 by (rewrite <- H1; nia ). shelve.
     }
     destruct lookup as [[]|]eqn: Hlookup.
     2:{ 
       unfold  CaseCom.Constr_varT_steps, Constr_cons_steps , Reset_steps.
       rewrite Code.Encode_nat_hasSize. rewrite Hn.
-       ring_simplify. enough (c__leUpToC (projT1 NatSub.Subtract_SpecT) +215 <= c) by nia. shelve.
+       ring_simplify. enough (c__leUpToC (projT1 NatSub.Subtract_SpecT) +215 <= c)as H1 by (rewrite <- H1; nia ). shelve.
      }
      specialize (proj2_sig LMBounds.LM_Lookup_nice.Lookup_steps_nice H a (n-k)) as H'. hnf in H'.
      rewrite H',!Code.Encode_nat_hasSize.
@@ -85,8 +85,9 @@ Proof.
      rewrite Ha, Hk2,Hn.
      set (tmp:=Code.size lamT);cbv in tmp;subst tmp.
      rewrite Hlength, <- HeqsH,size_le_sizeP,Hlk1.
-     assert (proj1_sig LM_Lookup_nice.Lookup_steps_nice * 3 + c__leUpToC (projT1 NatSub.Subtract_SpecT) + 570 <= c) by shelve.
-     ring_simplify. zify;nia.
+     assert (proj1_sig LM_Lookup_nice.Lookup_steps_nice * 3 + c__leUpToC (projT1 NatSub.Subtract_SpecT) + 570 <= c) as H1 by shelve.
+     rewrite <- H1.
+     Zify.zify;nia.
      Unshelve.
      9: unfold c;reflexivity. all:unfold c;lia.
 Qed.

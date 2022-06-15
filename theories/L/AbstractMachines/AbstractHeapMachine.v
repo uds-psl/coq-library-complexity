@@ -106,12 +106,14 @@ Proof.
 Qed.
 
 
+#[export]
 Instance extended_PO :
   PreOrder extended.
 Proof.
   unfold extended;split;repeat intro. all:eauto.
 Qed.
 
+#[export]
 Typeclasses Opaque extended.
 
 Lemma lookup_extend H H' a x g:
@@ -135,6 +137,7 @@ Proof.
   all:econstructor. 1-2,4-7:now eauto. erewrite lookup_extend;eauto.
 Qed.
 
+#[export]
 Instance unfold_extend_Proper : Proper (extended ==> eq ==> eq ==> eq ==> eq ==>Basics.impl) unfolds.
 Proof.
   repeat intro. subst. eapply unfolds_extend.  all:eassumption.
@@ -159,6 +162,7 @@ Proof.
   apply H1 in H2. eauto using nth_error_In.
 Qed.
 
+#[export]
 Instance reprC_extend_Proper : Proper (extended ==> eq ==> eq ==>Basics.impl) reprC.
 Proof.
   repeat intro. subst. eapply reprC_extend.  all:eassumption.
@@ -604,7 +608,8 @@ Section Analysis.
   
   Definition isCA P : Prop := exists s', (s0=s' \/ subterm (lam s') s0) /\  isSuffix P (compile s').
 
-  Instance isSuffix_PO X: PreOrder (@isSuffix X).
+#[export]
+Instance isSuffix_PO X: PreOrder (@isSuffix X).
   Proof.
     split.
     -exists []. reflexivity.

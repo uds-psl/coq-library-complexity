@@ -62,6 +62,7 @@ Fixpoint largestVar P :=
   | [] => 0
   end.
 
+#[export]
 Instance time_N_of_nat_mono: Proper (le ==> le) time_N_of_nat.
 Admitted.
 (*
@@ -104,6 +105,7 @@ Proof.
 Require Import Functions.BinNums BinNumsCompare.
 Require Import AbstractMachines.Computable.Shared.
 
+#[export]
 Instance cubstP_keepTrack' :
   computableTime' substP_keepTrack'
                  (fun m _ =>

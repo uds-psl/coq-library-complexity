@@ -2,6 +2,7 @@ From Undecidability.L Require Import L_facts.
 From Complexity.L.AbstractMachines Require AbstractHeapMachineDef AbstractSubstMachine.
 Import AbstractHeapMachineDef.clos_notation.
 Import Programs.
+Import BinNat.
 
 (** ** Functional definitions of the abstract machines *)
 

@@ -32,7 +32,7 @@ Proof.
                  isFlatteningTMOf M M'
                  /\ exists t', isFlatteningTapesOf t t'
                          /\ (exists f, loopM (initc M' t') steps = Some f)).
-  apply inNP_intro with (R0:= R).
+  apply inNP_intro with (R:= R).
   now apply linDec_polyTimeComputable.
   -destruct execFlat_poly as (f''&Hf''&polyf''&monof'').
    evar (f':nat -> nat). [f']:intro x.

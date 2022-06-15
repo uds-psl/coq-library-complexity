@@ -76,7 +76,8 @@ Module smallo_equiv.
   Qed.
 
  
-  Hint Resolve NtoQ_pos : core.
+#[export]
+Hint Resolve NtoQ_pos : core.
   Lemma ino_agree_real f g (fNonZero : (exists n0, forall x, n0 <= x -> 0 < f x)%nat) :
     f ∈o g <-> inoR (liftR f) (liftR g).
   Proof.

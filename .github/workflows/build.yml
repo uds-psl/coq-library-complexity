@@ -8,7 +8,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      
+
       - name: Checkout code
         uses: actions/checkout@v2
         with:
@@ -31,11 +31,11 @@ jobs:
           restore-keys : |
             ${{ runner.os }}-${{ hashFiles('opam') }}-
             ${{ runner.os }}-
-            
+
       - name: Install OCaml
         uses: avsm/setup-ocaml@v1
         with:
-          ocaml-version: 4.07.1
+          ocaml-version: 4.07.1+flambda
 
       - run: make depsopam -j2
       - run: opam exec -- make all -j2 TIMED=1

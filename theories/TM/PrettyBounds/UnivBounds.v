@@ -202,7 +202,7 @@ Module Univ_nice.
   Proof.
     destruct (enum X) eqn:E.
     - left. split; eauto. intros.
-      enough (BasicDefinitions.count (enum X) x = 0).
+      enough (FinTypesDef.count (enum X) x = 0).
       { rewrite enum_ok in H. congruence. }
       rewrite E. cbn. reflexivity.
     - right. exists e. congruence.
@@ -328,7 +328,8 @@ Module Univ_nice.
       rewrite prodLists_length. simpl_list. ring_simplify. now rewrite Nat.mul_comm.
     Qed.
 
-    Instance tam (x : nat) : Proper (lt --> Basics.flip Basics.impl) (le x).
+#[export]
+Instance tam (x : nat) : Proper (lt --> Basics.flip Basics.impl) (le x).
     Proof. hnf. intros. cbn in *. hnf in *. intros. lia. Qed.
 
     (*)Lemma Encode_graph_ge_number_of_states (M : TM sigM 1):

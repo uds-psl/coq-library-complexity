@@ -64,10 +64,12 @@ Section explicit_bounds.
       | [] => c__listInDecb
       | x :: l => eqbTime (X := X) (size (enc x)) (size (enc e)) + c__listInDecb + list_in_decb_time l e
       end.
-    Instance term_list_in_decb : computableTime' (@list_in_decb X eqbX) (fun l _ => (5, fun x _ => (list_in_decb_time l x, tt))).
+#[export]
+Instance term_list_in_decb : computableTime' (@list_in_decb X eqbX) (fun l _ => (5, fun x _ => (list_in_decb_time l x, tt))).
     Proof.  extract. solverec.  all: unfold c__listInDecb; solverec. Qed.
   End fixXeq.
-  Existing Instance term_list_in_decb.
+#[export]
+Existing Instance term_list_in_decb.
 
   Definition TODO {Y:Type} : Y. Admitted.
 
@@ -76,7 +78,8 @@ Section explicit_bounds.
   (** extraction of evalVar *)
   Definition c__evalVar := 6.
   Definition evalVar_time (a : assgn) (v : var) := list_in_decb_time a v + c__evalVar.
-  Instance term_evalVar : computableTime' evalVar (fun a _ => (1, fun v _ => (evalVar_time a v, tt))).
+#[export]
+Instance term_evalVar : computableTime' evalVar (fun a _ => (1, fun v _ => (evalVar_time a v, tt))).
   Proof. extract. solverec. unfold evalVar_time, c__evalVar; solverec. Qed.
 
   (* One would really like to do this all nicer, in one single record.
@@ -100,7 +103,8 @@ Section explicit_bounds.
   Definition c__evalLiteral := c__eqbBool + 7.
   Definition evalLiteral_time (a : assgn) (l : literal) :=
     match l with | (s, v) => evalVar_time a v + c__evalLiteral end.
-  Instance term_evalLiteral : computableTime' evalLiteral (fun a _ => (1, fun l _ => (evalLiteral_time a l, tt))).
+#[export]
+Instance term_evalLiteral : computableTime' evalLiteral (fun a _ => (1, fun l _ => (evalLiteral_time a l, tt))).
   Proof. extract. solverec. unfold c__evalLiteral; lia. Qed.
 
   Implicit Type (n : nat).
@@ -124,7 +128,8 @@ Section explicit_bounds.
       | [] => c__existsb
       | h :: l' => c__existsb + fT h + existsb_time fT l'
       end.
-    Instance term_existsb : computableTime' (@existsb X) (fun f fT => (1, fun l _ => (existsb_time (callTime fT) l, tt))).
+#[export]
+Instance term_existsb : computableTime' (@existsb X) (fun f fT => (1, fun l _ => (existsb_time (callTime fT) l, tt))).
     Proof. extract. solverec; unfold c__existsb; solverec. Qed.
 
     (* forallb *)
@@ -134,17 +139,20 @@ Section explicit_bounds.
       | [] => c__forallb
       | h :: l' => c__forallb + fT h + forallb_time fT l'
       end.
-    Instance term_forallb : computableTime' (@forallb X) (fun f fT => (1, fun l _ => (forallb_time (callTime fT) l, tt))).
+#[export]
+Instance term_forallb : computableTime' (@forallb X) (fun f fT => (1, fun l _ => (forallb_time (callTime fT) l, tt))).
     Proof. extract. solverec; unfold c__forallb; solverec. Qed.
   End fixX.
-  Existing Instances term_forallb term_existsb.
+#[export]
+Existing Instances term_forallb term_existsb.
 
   Implicit Types (a : assgn) (C : clause) (N : cnf).
 
   (* evalClause *)
   Definition c__evalClause := 3.
   Definition evalClause_time a C := existsb_time (evalLiteral_time a) C + c__evalClause.
-  Instance term_evalClause : computableTime' evalClause (fun a _ => (1, fun C _ => (evalClause_time a C, tt))).
+#[export]
+Instance term_evalClause : computableTime' evalClause (fun a _ => (1, fun C _ => (evalClause_time a C, tt))).
   Proof. extract. solverec. unfold evalClause_time, c__evalClause; simp_comp_arith; solverec. Qed.
 
   Lemma existsb_time_explicit {X : Type} fT (l : list X) : existsb_time fT l <= sumn (map fT l) + (|l| + 1) * c__existsb.
@@ -166,7 +174,8 @@ Section explicit_bounds.
   (* evalCnf *)
   Definition c__evalCnf := 3.
   Definition evalCnf_time a N := forallb_time (evalClause_time a) N + c__evalCnf.
-  Instance term_evalCnf : computableTime' evalCnf (fun a _ => (1, fun N _ => (evalCnf_time a N, tt))).
+#[export]
+Instance term_evalCnf : computableTime' evalCnf (fun a _ => (1, fun N _ => (evalCnf_time a N, tt))).
   Proof. extract. solverec. unfold evalCnf_time, c__evalCnf; simp_comp_arith; solverec. Qed.
 
   Lemma forallb_time_explicit {X : Type} fT (l : list X) : forallb_time fT l <= sumn (map fT l) + (|l| + 1) * c__forallb.
@@ -177,7 +186,7 @@ Section explicit_bounds.
   Proof.
     unfold evalCnf_time. rewrite forallb_time_explicit.
     rewrite sumn_map_mono. 2:{ intros. rewrite evalClause_time_bound at 1.
-      poly_mono evalClause_poly at 1. 2: { rewrite list_el_size_bound with (a0 := x). 2: apply H. reflexivity. }
+      poly_mono evalClause_poly at 1. 2: { rewrite list_el_size_bound with (a := x). 2: apply H. reflexivity. }
       instantiate (1 := fun _ => _); cbn; reflexivity. }
     rewrite sumn_map_const. rewrite list_size_length.
     unfold poly__evalCnf; lia.
@@ -189,7 +198,8 @@ Section explicit_bounds.
   (** sat_verifierb *)
   Definition c__satVerifierb := 6.
   Definition sat_verifierb_time (p : cnf * assgn) := let (N, a) := p in evalCnf_time a N + c__satVerifierb.
-  Instance term_sat_verifierb : computableTime' sat_verifierb (fun p _ => (sat_verifierb_time p, tt)).
+#[export]
+Instance term_sat_verifierb : computableTime' sat_verifierb (fun p _ => (sat_verifierb_time p, tt)).
   Proof. extract. solverec. unfold c__satVerifierb; solverec. Qed.
 
   Definition poly__satVerifierb n := poly__evalCnf n + c__satVerifierb.
@@ -265,15 +275,17 @@ Section uptoc_pure.
           unfold list_in_decb_time.
           pose (g := max (size (enc x)) (maxSize l)).
           replace_le (size (enc x)) with g by (subst g; apply Nat.le_max_l) at 1.
-          replace_le (maxSize l) with g by (subst g; apply Nat.le_max_r) at 1 2.
+          replace_le (maxSize l) with g by (subst g; apply Nat.le_max_r) at 1.
           cbn. fold (maxSize l) g.
           instantiate (c := c__eqbComp X + 21). subst c. lia.
         + subst c. unfold list_in_decb_time. cbn. lia. }
       smpl_upToC_solve.
     Qed.
-    Instance term_list_in_decb : computableTime' (@list_in_decb X eqbX) _ := projT2 _term_list_in_decb.
+#[export]
+Instance term_list_in_decb : computableTime' (@list_in_decb X eqbX) _ := projT2 _term_list_in_decb.
   End fixXeq.
-  Existing Instance term_list_in_decb.
+#[export]
+Existing Instance term_list_in_decb.
 
   (** extraction of evalVar *)
   (* evalVar *)
@@ -285,7 +297,8 @@ Section uptoc_pure.
       unfold evalVar_time. inst c1 with (2*C + 6). lia. }
     smpl_upToC_solve.
   Qed.
-  Instance term_evalVar : computableTime' evalVar _ := projT2 _term_evalVar.
+#[export]
+Instance term_evalVar : computableTime' evalVar _ := projT2 _term_evalVar.
 
   (* evalLiteral*)
   Definition evalLiteral_time (a : assgn) := ((|a|) + 1) * (maxSize a + 1).
@@ -296,7 +309,8 @@ Section uptoc_pure.
       set_consts. unfold evalLiteral_time. inst c1 with (C + c__eqbBool + 7). lia. }
     smpl_upToC_solve.
   Qed.
-  Instance term_evalLiteral : computableTime' evalLiteral _ := projT2 _term_evalLiteral.
+#[export]
+Instance term_evalLiteral : computableTime' evalLiteral _ := projT2 _term_evalLiteral.
 
   (* existsb *)
   Definition existsb_time {X : Type} `{encodable X} (p : (X -> nat) * list X) := let '(fT, l) := p in
@@ -307,7 +321,8 @@ Section uptoc_pure.
     { extract. solverec; cycle 1. instantiate (c1 := 15). all: lia. }
     smpl_upToC_solve.
   Qed.
-  Instance term_existsb (X : Type) `{encodable X} : computableTime' (@existsb X) _ := projT2 _term_existsb.
+#[export]
+Instance term_existsb (X : Type) `{encodable X} : computableTime' (@existsb X) _ := projT2 _term_existsb.
 
   (* forallb *)
   Definition forallb_time {X : Type} `{encodable X} (p : (X -> nat) * list X) := let '(fT, l) := p in
@@ -318,7 +333,8 @@ Section uptoc_pure.
     { extract. solverec; cycle 1. instantiate (c1 := 15). all: lia. }
     smpl_upToC_solve.
   Qed.
-  Instance term_forallb (X : Type) `{encodable X} : computableTime' (@forallb X) _ := projT2 _term_forallb.
+#[export]
+Instance term_forallb (X : Type) `{encodable X} : computableTime' (@forallb X) _ := projT2 _term_forallb.
 
   (* evalClause *)
   Definition evalClause_time (p : assgn * clause) := let (a, C) := p in (|C| + 1) * ((|a|) + 1) * (maxSize a + 1).
@@ -332,7 +348,8 @@ Section uptoc_pure.
       inst c1 with (C + 2*C * C0 + 3). lia. }
     smpl_upToC_solve.
   Qed.
-  Instance term_evalClause : computableTime' evalClause _ := projT2 _term_evalClause.
+#[export]
+Instance term_evalClause : computableTime' evalClause _ := projT2 _term_evalClause.
 
   Lemma sumn_map_mult_c_l (X : Type) (f : X -> nat) (c : nat) (l : list X):
     sumn (map (fun x : X => c * f x) l) = c * sumn (map f l).
@@ -354,7 +371,8 @@ Section uptoc_pure.
     }
     smpl_upToC_solve.
   Qed.
-  Instance term_evalCnf : computableTime' evalCnf _ := projT2 _term_evalCnf.
+#[export]
+Instance term_evalCnf : computableTime' evalCnf _ := projT2 _term_evalCnf.
   Arguments evalCnf_time : simpl never.
 
   (** sat_verifierb *)
@@ -368,7 +386,8 @@ Section uptoc_pure.
     }
     smpl_upToC_solve.
   Qed.
-  Instance term_sat_verifierb : computableTime' sat_verifierb _ := projT2 _term_sat_verifierb.
+#[export]
+Instance term_sat_verifierb : computableTime' sat_verifierb _ := projT2 _term_sat_verifierb.
 
   (** We obtain that SAT is in NP *)
   Import NP.
@@ -428,13 +447,14 @@ Section uptoc_mixed.
           unfold list_in_decb_time.
           pose (g := max (size (enc x)) (maxSize l)).
           replace_le (size (enc x)) with g by (subst g; apply Nat.le_max_l) at 1.
-          replace_le (maxSize l) with g by (subst g; apply Nat.le_max_r) at 1 2.
+          replace_le (maxSize l) with g by (subst g; apply Nat.le_max_r) at 1.
           cbn. fold (maxSize l) g.
           inst c with (c__eqbComp X + 21). lia.
         + subst c. unfold list_in_decb_time. cbn. lia. }
       smpl_upToC_solve.
     Qed.
-    Instance term_list_in_decb : computableTime' (@list_in_decb X eqbX) _ := projT2 _term_list_in_decb.
+#[export]
+Instance term_list_in_decb : computableTime' (@list_in_decb X eqbX) _ := projT2 _term_list_in_decb.
   End fixXeq.
   Local Existing Instance term_list_in_decb.
 
@@ -448,7 +468,8 @@ Section uptoc_mixed.
       unfold evalVar_time. inst c1 with (C + 6). lia. }
     smpl_upToC_solve.
   Qed.
-  Instance term_evalVar : computableTime' evalVar _ := projT2 _term_evalVar.
+#[export]
+Instance term_evalVar : computableTime' evalVar _ := projT2 _term_evalVar.
 
   (* evalLiteral*)
   Definition evalLiteral_time (a : assgn) := ((|a|) + 1) * (maxSize a + 1) + 1.
@@ -459,7 +480,8 @@ Section uptoc_mixed.
       set_consts. unfold evalLiteral_time. inst c1 with (C + c__eqbBool + 7). lia. }
     smpl_upToC_solve.
   Qed.
-  Instance term_evalLiteral : computableTime' evalLiteral _ := projT2 _term_evalLiteral.
+#[export]
+Instance term_evalLiteral : computableTime' evalLiteral _ := projT2 _term_evalLiteral.
 
   (* existsb *)
   Definition existsb_time {X : Type} `{encodable X} (p : (X -> nat) * list X) := let '(fT, l) := p in
@@ -470,7 +492,8 @@ Section uptoc_mixed.
     { extract. solverec; cycle 1. instantiate (c1 := 15). all: lia. }
     smpl_upToC_solve.
   Qed.
-  Instance term_existsb (X : Type) `{encodable X} : computableTime' (@existsb X) _ := projT2 _term_existsb.
+#[export]
+Instance term_existsb (X : Type) `{encodable X} : computableTime' (@existsb X) _ := projT2 _term_existsb.
 
   (* forallb *)
   Definition forallb_time {X : Type} `{encodable X} (p : (X -> nat) * list X) := let '(fT, l) := p in
@@ -481,7 +504,8 @@ Section uptoc_mixed.
     { extract. solverec; cycle 1. instantiate (c1 := 15). all: lia. }
     smpl_upToC_solve.
   Qed.
-  Instance term_forallb (X : Type) `{encodable X} : computableTime' (@forallb X) _ := projT2 _term_forallb.
+#[export]
+Instance term_forallb (X : Type) `{encodable X} : computableTime' (@forallb X) _ := projT2 _term_forallb.
 
   (* evalClause *)
   Definition evalClause_time (p : assgn * clause) := let (a, C) := p in (|C| + 1) * ((|a|) + 1) * (maxSize a + 1).
@@ -495,7 +519,8 @@ Section uptoc_mixed.
       inst c1 with (C + 2*C * C0 + 3). lia. }
     smpl_upToC_solve.
   Qed.
-  Instance term_evalClause : computableTime' evalClause _ := projT2 _term_evalClause.
+#[export]
+Instance term_evalClause : computableTime' evalClause _ := projT2 _term_evalClause.
 
   (** Now we notice that the above bound would be quite ugly to use in the evalCnf bound below -- thus we prove a polynomial bound here. *)
   Lemma evalClause_poly : isPoly evalClause_time.
@@ -526,7 +551,8 @@ Section uptoc_mixed.
     }
     smpl_upToC_solve.
   Qed.
-  Instance term_evalCnf : computableTime' evalCnf _ := projT2 _term_evalCnf.
+#[export]
+Instance term_evalCnf : computableTime' evalCnf _ := projT2 _term_evalCnf.
   Arguments evalCnf_time : simpl never.
 
   (** again: we would not want to use the above bound explicitly, so we give at least a polynomial bound which can be used. *)
@@ -554,7 +580,8 @@ Section uptoc_mixed.
     }
     smpl_upToC_solve.
   Qed.
-  Instance term_sat_verifierb : computableTime' sat_verifierb _ := projT2 _term_sat_verifierb.
+#[export]
+Instance term_sat_verifierb : computableTime' sat_verifierb _ := projT2 _term_sat_verifierb.
 
   (** We obtain that SAT is in NP *)
   Import NP.

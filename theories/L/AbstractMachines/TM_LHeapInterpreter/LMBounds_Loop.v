@@ -179,12 +179,12 @@ Proof.
     erewrite size_list_le_bound with (xs:=V).
     2:{ intros [a' P'] ?. rewrite size_HClos_le. cbn.
         rewrite size_le_sizeP.
-        edestruct Hsize with (P1:=P') (a0:=a') as [(->&->&_) _]. easy. now eauto. reflexivity.
+        edestruct Hsize with (P:=P') (a:=a') as [(->&->&_) _]. easy. now eauto. reflexivity.
     }
     assert (Htmp:=proj2_sig Heap_size_nicer2' _ _ _ _ _ H0). hnf in Htmp. rewrite Htmp. clear Htmp.
     rewrite heap_greatest_address2_bound.
     2:{ intros [] ?. edestruct Hsize as [_ H']. easy. apply H'. }
-    specialize Hsize with (P1:=P) (a0 := a) as [(-> & -> &_) _]. 1,2:easy.
+    specialize Hsize with (P:=P) (a := a) as [(-> & -> &_) _]. 1,2:easy.
     rewrite Nat.max_id.
     specialize length_TV with (1:=H0) (2:=ltac:(easy) : forall c : _, False -> c = None) as H_TV. cbn in H_TV.
     assert (length V <= i) as -> by nia.

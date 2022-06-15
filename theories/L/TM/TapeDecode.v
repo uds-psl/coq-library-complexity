@@ -1,5 +1,5 @@
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import LNat Lists LProd LFinType.
+From Undecidability.L.Datatypes Require Import LNat Lists LProd LFinType LOptions LTerm.
 From Undecidability.L Require Import TM.TMEncoding.
 
 From Undecidability Require Import TM.TM.
@@ -47,6 +47,7 @@ Definition tape_decode X `{decodable X} (s : term) : option (tape X) :=
 Arguments tape_decode : clear implicits.
 Arguments tape_decode _ {_ _} _.
 
+#[export]
 Instance decode_tape X {Hreg:encodable X} {Hdec:decodable X}: decodable (tape X).
 Proof.
   exists (tape_decode X).
@@ -63,6 +64,7 @@ Proof.
 Defined (*because instance*).
 
 
+#[export]
 Instance linDec_tape X `{_:linTimeDecodable X}: linTimeDecodable (tape X).
 Proof.
   evar (c:nat). exists c.

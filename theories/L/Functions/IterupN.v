@@ -1,4 +1,4 @@
-From Undecidability.L.Datatypes Require Import LProd LOptions.
+From Undecidability.L.Datatypes Require Import LProd LOptions LBool.
 From Undecidability.L Require Import Tactics.LTactics.
 From Complexity.L Require Import Datatypes.LBinNums Functions.BinNums Functions.BinNumsCompare.
 
@@ -104,6 +104,7 @@ Qed.
 
 Import HOAS_Notations.
 Import N.
+#[export]
 Instance term_iterupN X `{H:encodable X} :
   computable (iterupN (X:=X)).
 Proof.

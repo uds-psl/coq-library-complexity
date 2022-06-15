@@ -20,6 +20,7 @@ Proof.
 Qed.
 
 (* [flip] doesn't work here. We could flip it in the definition of [max_list_rec], but this would look a bit weird. *)
+#[export]
 Instance max_list_rec_proper (xs : list nat) : Proper (le ==> le) (Basics.flip max_list_rec xs).
 Proof. hnf. intros. cbv [Basics.flip]. now apply max_list_rec_monotone. Qed.
   

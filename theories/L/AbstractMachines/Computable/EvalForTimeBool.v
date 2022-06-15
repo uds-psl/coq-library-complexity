@@ -3,7 +3,7 @@ From Undecidability.L Require Import L Tactics.LTactics AbstractMachines.Largest
 From Complexity.L Require Import AbstractHeapMachineDef UnfoldTailRec AbstractHeapMachine.
 From Complexity.L.AbstractMachines.Computable Require Import Unfolding HeapMachine Shared EvalForTime.
 
-From Undecidability.L.Datatypes Require Import Lists.
+From Undecidability.L.Datatypes Require Import Lists LProd.
 From Complexity.L.Datatypes Require Import LBinNums.
 From Undecidability.L.Functions Require Import UnboundIteration Proc.
 From Complexity.L.Functions Require Import BinNums BinNumsCompare.
@@ -40,6 +40,7 @@ Proof.
    eapply unfoldBoolean_complete in H'. easy.
 Qed.
 
+#[export]
 Instance evalForTimeBool__comp : computableTime' evalForTimeBool (fun _ _ => (1,fun fuel _ => (1,fun s _ => (t__evalForTimeBool (largestVar s) (size s) (N.to_nat fuel),tt)))).
 Proof.
   unfold evalForTimeBool. extract. solverec.

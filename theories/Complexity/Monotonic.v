@@ -60,6 +60,7 @@ Smpl Add 20 (lazymatch goal with
                end)
              end) : monotonic.
 
+#[export]
 Instance monotonic_pointwise_eq: Proper ((pointwise_relation _ eq)  ==> iff) monotonic.
 Proof.
   intros ? ? R1. unfold monotonic. setoid_rewrite R1. all:easy.
@@ -72,6 +73,7 @@ Inductive TTnat: Type -> Type :=
 
 Arguments TTnatArr _ _ {_ _}.
 Existing Class TTnat.
+#[export]
 Existing Instances TTnatBase TTnatArr.
 
 
@@ -83,6 +85,7 @@ Fixpoint leHO {ty} {tt : TTnat ty} : ty -> ty -> Prop :=
 Arguments leHO : simpl never.
 
 (*
+#[export]
 Instance leHO_Pointwise_le X Y (ttx : TTnat X) (tty : TTnat Y) (f g : X -> Y):
   Proper 
   Pointwise (@leHO _ ttx ==> leqHO _ tty).*)

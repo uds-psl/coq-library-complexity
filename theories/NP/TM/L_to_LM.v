@@ -2,7 +2,7 @@ From Undecidability.L Require Import Tactics.LTactics Prelim.MoreList Prelim.Mor
 From Complexity.Complexity Require Import NP Definitions Monotonic Subtypes.
 From Complexity.NP.L Require Import GenNP LMGenNP. 
 
-From Undecidability.L Require Import LM_heap_def LM_heap_correct LBool ResourceMeasures LNat LTerm.
+From Undecidability.L Require Import LM_heap_def LM_heap_correct LBool ResourceMeasures LNat LTerm LProd.
 From Complexity.L Require Import Compile.
 
 Import Nat.

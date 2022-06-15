@@ -1,5 +1,5 @@
 From Undecidability.L Require Import L_facts.
-From Undecidability.L.Datatypes Require Import LTerm Lists.
+From Undecidability.L.Datatypes Require Import LTerm Lists LSum.
 From Complexity.Complexity Require Import NP Monotonic PolyTimeComputable.
 From Complexity.NP.L Require Import CanEnumTerm_def.
 From Undecidability.L.AbstractMachines Require Import FlatPro.Programs.

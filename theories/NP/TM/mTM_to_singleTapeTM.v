@@ -243,8 +243,8 @@ Section LMGenNP_to_TMGenNP_mTM.
           setoid_rewrite size_sum. rewrite size_boundary. setoid_rewrite size_sigList.
           repeat setoid_rewrite <- plus_assoc.  ring_simplify. ring_simplify (7 + (4 + 5)).
           repeat setoid_rewrite sumn_map_add. repeat setoid_rewrite sumn_map_c. setoid_rewrite sumn_map_mult_c_r.
-          setoid_rewrite sumn_map_le_pointwise with (f2:=fun x => _)at 2 3 4.
-          2,3,4: (setoid_rewrite sizeOfTape_encodeTape_le at 1;intros;rewrite sizeOfmTapes_upperBound at 1; [ | now apply tolist_In]; reflexivity).
+          setoid_rewrite sumn_map_le_pointwise with (f2:=fun x => _) at  3 4 5.
+          2,3,4: (setoid_rewrite sizeOfTape_encodeTape_le;intros;rewrite sizeOfmTapes_upperBound at 1; [ | now apply tolist_In]; reflexivity).
           rewrite sumn_map_c.
           setoid_rewrite sumn_map_le_pointwise with (f2:=fun x => _).
           2:{ intros. setoid_rewrite sumn_map_le_pointwise with (f2:=fun x => _).

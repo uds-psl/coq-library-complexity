@@ -9,6 +9,7 @@ Definition inO (f g : nat -> nat) : Prop := exists c n0, forall n, n0 <= n -> f 
 
 Notation " f ∈O g" := (inO f g) (at level 70).
 
+#[export]
 Instance inO_PreOrder : PreOrder inO.
 Proof.
   split.
@@ -20,12 +21,14 @@ Proof.
 Qed.
 
 
+#[export]
 Instance inO_pointwise_leq : Proper ( Basics.flip (pointwise_relation _ le)  ==>  (pointwise_relation _ le) ==> Basics.impl) inO.
 Proof.
   intros ? ? R1 ? ? R2. unfold inO. hnf in R1,R2|-*.
   setoid_rewrite R1. setoid_rewrite R2. easy. 
 Qed.
 
+#[export]
 Instance inO_pointwise_eq: Proper ((pointwise_relation _ eq) ==> (pointwise_relation _ eq) ==> iff) inO.
 Proof.
   intros ? ? R1 ? ? R2. hnf in R1,R2.
@@ -135,7 +138,7 @@ Proof.
   intros n.
   decide (n0<=n).
   -rewrite H. all:Lia.nia.
-  -rewrite (@maxl_leq (f n) (map f (natsLess n0))). Lia.nia. apply in_map_iff. setoid_rewrite natsLess_in_iff. exists n. intuition.
+  -rewrite (@maxl_leq (f n) (map f (natsLess n0))). Lia.nia. apply in_map_iff. setoid_rewrite natsLess_in_iff. exists n. lia.
 Qed.
 
 (** *** smallO *)
@@ -237,18 +240,21 @@ Qed.
 Smpl Add 10 (first [ simple eapply inOPoly_add | simple eapply inOPoly_S | simple eapply inOPoly_mul | simple eapply inOPoly_c | simple eapply inOPoly_pow | simple eapply inOPoly_x | eassumption])  : inO.
 
 
+#[export]
 Instance inO_inOPoly_trans : Proper (Basics.flip inO ==> Basics.impl) inOPoly.
 Proof.
   intros ? ? ? [? R2]. unfold inOPoly. eexists. setoid_rewrite <- R2. easy.
 Qed.
 
 
+#[export]
 Instance inOPoly_pointwise_leq: Proper (Basics.flip (pointwise_relation _ le) ==> Basics.impl) inOPoly.
 Proof.
   unfold inOPoly.
   intros ? ? R1. hnf in |-*. setoid_rewrite R1. easy.
 Qed.
 
+#[export]
 Instance inOPoly_pointwise_eq: Proper ((pointwise_relation _ eq) ==> iff) inOPoly.
 Proof.
   unfold inOPoly. intros ? ? R1. hnf. setoid_rewrite R1. easy.

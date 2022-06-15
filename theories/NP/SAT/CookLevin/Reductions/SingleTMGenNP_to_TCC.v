@@ -2373,7 +2373,7 @@ Section fixTM.
           destruct H1 as (_ & H2). cbn in H2. inv H2. cbn in H1'; destruct w.   
           -- apply valid_length_inv in H0. 
              do 3 (destruct b; try now cbn in H0). repeat constructor. 
-          -- apply IH with (u := []) (w0 := w). apply niltape_repr.  
+          -- apply IH with (u := []) (w := w). apply niltape_repr.  
         * apply tape_repr_step in H1. now apply IH with (u := u) (w := w). 
       + now eapply covHeadTrans_tape'. 
   Qed.  
@@ -4460,7 +4460,8 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
         | [ |- ex (fun r => r el ?h /\ _) ] => rec_exists h 0 ltac:(solve_agreement_in_env)
         end.
 
-  Hint Extern 2 => exfalso; assumption : tmp.
+#[export]
+Hint Extern 2 => exfalso; assumption : tmp.
   Lemma agreement_mtr: cards_list_ind_agree (@liftOrig Gamma shiftRightRules preludeSig') finMTRCards. 
   Proof.
     unfold cards_list_ind_agree; intros; split. 
@@ -5190,7 +5191,8 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
   (** we need to use the Boolean version of lookup for it to be extractable *)
   Import Undecidability.L.Functions.FinTypeLookup Undecidability.L.Functions.EqBool.
   Definition inp_eqb := LProd.prod_eqb Nat.eqb (List_eqb.list_eqb (LOptions.option_eqb Nat.eqb)).
-  Instance eqBool_inp_eqb : eqbClass inp_eqb. 
+#[export]
+Instance eqBool_inp_eqb : eqbClass inp_eqb. 
   Proof. 
     apply LProd.eqbProd. 
     - apply LNat.eqbNat_inst. 

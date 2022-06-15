@@ -133,6 +133,7 @@ Proof.
   rewrite H' in H. lia.
 Qed.
 
+#[export]
 Instance dominatedWith_leq_Proper c:
   Proper (Basics.flip le ==> le ==> Basics.impl) (dominatedWith c).
 Proof.

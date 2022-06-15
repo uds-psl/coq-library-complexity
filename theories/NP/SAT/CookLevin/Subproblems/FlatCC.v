@@ -519,55 +519,65 @@ Section fix_X.
   Qed. 
 End fix_X. 
 
+#[export]
 Hint Resolve CCCard_enc_correct : Lrewrite.
 
 MetaCoq Run (tmGenEncode "FlatCC_enc" (FlatCC)).
+#[export]
 Hint Resolve FlatCC_enc_correct : Lrewrite. 
 
 From Complexity.Libs.CookPrelim Require Import PolyBounds. 
 
+#[export]
 Instance term_Build_FlatCC : computableTime' Build_FlatCC (fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, fun _ _ => (1, tt)))))))).
 Proof.
   extract constructor. solverec. 
 Qed. 
 
 Definition c__Sigma := 10.
+#[export]
 Instance term_FlatCC_Sigma : computableTime' Sigma (fun _ _ => (c__Sigma, tt)). 
 Proof.
   extract. unfold c__Sigma. solverec. 
 Qed. 
 
 Definition c__offset := 10.
+#[export]
 Instance term_FlatCC_offset : computableTime' offset (fun _ _ => (c__offset, tt)). 
 Proof. 
   extract. unfold c__offset. solverec. 
 Qed. 
 
 Definition c__width := 10.
+#[export]
 Instance term_FlatCC_width : computableTime' width (fun _ _ => (c__width, tt)). 
 Proof. 
   extract. unfold c__width. solverec. 
 Qed. 
 
 Definition c__init := 10.
+#[export]
 Instance term_FlatCC_init : computableTime' init (fun _ _ => (c__init, tt)). 
 Proof. 
   extract. unfold c__init. solverec. 
 Qed. 
 
 Definition c__cards := 10.
+#[export]
 Instance term_FlatCC_cards : computableTime' cards (fun _ _ => (c__cards, tt)). 
 Proof. 
   extract. unfold c__cards. solverec. 
 Qed. 
 
 Definition c__final := 10.
+#[export]
 Instance term_FlatCC_final : computableTime' final (fun _ _ => (c__final, tt)). 
 Proof. 
   extract. unfold c__final. solverec. 
 Qed. 
 
 Definition c__steps := 10.
+#[export]
 Instance term_FlatCC_steps : computableTime' steps (fun _ _ => (c__steps, tt)). 
 Proof. 
   extract. unfold c__steps. solverec. 
@@ -604,6 +614,7 @@ Definition c__FlatCCWfDec := 3 * c__leb2 + 4 * c__width + 3 * c__offset + 2 * 5 
 Definition FlatCC_wf_dec_time x := 2 * c__length * (|init x|) + leb_time (width x) (|init x|) + forallb_time (@CCCard_of_size_dec_time nat (width x)) (cards x) + modulo_time (|init x|) (offset x) + modulo_time (width x) (offset x) + c__FlatCCWfDec.  
 
 
+#[export]
 Instance term_FlatCC_wf_dec : computableTime' FlatCC_wf_dec (fun fpr _ => (FlatCC_wf_dec_time fpr, tt)).
 Proof. 
   extract. solverec. unfold FlatCC_wf_dec_time, c__FlatCCWfDec, leb_time. rewrite !eqbTime_le_r.
@@ -647,6 +658,7 @@ Qed.
 (** CCCard_ofFlatType_dec *)
 Definition c__CCCardOfFlatTypeDec := cnst_prem + cnst_conc +8.
 Definition CCCard_ofFlatType_dec_time (sig : nat) (w : CCCard nat):= list_ofFlatType_dec_time sig (prem w) + list_ofFlatType_dec_time sig (conc w) + c__CCCardOfFlatTypeDec. 
+#[export]
 Instance term_CCCard_ofFlatType_dec : computableTime' CCCard_ofFlatType_dec (fun sig _ => (1, fun w _ => (CCCard_ofFlatType_dec_time sig w, tt))). 
 Proof.
   extract. solverec. unfold CCCard_ofFlatType_dec_time, c__CCCardOfFlatTypeDec. nia.
@@ -672,6 +684,7 @@ Qed.
 (** isValidFlattening_dec *)
 Definition c__isValidFlatteningDec := 3 * c__Sigma + c__init + c__final + c__cards + 16.
 Definition isValidFlattening_dec_time x := list_ofFlatType_dec_time (Sigma x) (init x) + forallb_time (list_ofFlatType_dec_time (Sigma x)) (final x)+ forallb_time (CCCard_ofFlatType_dec_time (Sigma x)) (cards x) + c__isValidFlatteningDec.
+#[export]
 Instance term_isValidFlattening_dec : computableTime' isValidFlattening_dec (fun fpr _ => (isValidFlattening_dec_time fpr, tt)).
 Proof.
   extract. solverec. unfold isValidFlattening_dec_time, c__isValidFlatteningDec.

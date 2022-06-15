@@ -12,6 +12,7 @@ From Undecidability Require Import L.Functions.EqBool.
 
 Definition haltConfFlat_time (c : nat) := 20 * c + 21.
 
+#[export]
 Instance term_haltConfFlat : computableTime' haltConfFlat (fun f _ => (1, fun c _ => (haltConfFlat_time (fst c),tt))).
 Proof.
   extract. unfold haltConfFlat_time. solverec.
@@ -19,6 +20,7 @@ Qed.
 
 
 Definition zipWith_time {X Y} (fT : X -> Y -> nat) (xs:list X) (ys:list Y) := sumn (zipWith (fun x y => fT x y + 18) xs ys) + 9.
+#[export]
 Instance term_zipWith A B C `{encodable A} `{encodable B} `{encodable C}:
   computableTime' (@zipWith A B C) (fun _ fT => (1, fun xs _ => (5,fun ys _ => (zipWith_time (callTime2 fT) xs ys, tt)))).
 Proof.
@@ -38,6 +40,7 @@ Qed.
 From Undecidability.L Require Import Functions.FinTypeLookup.
 Definition stepFlat_time (f : nat) (c:mconfigFlat) := 153 * (| snd c |) + f * size (enc (fst c, map (current (Σ:=nat)) (snd c))) * c__eqbComp (nat * list (option nat)) + 24 * f + 96.
 Import Nat.
+#[export]
 Instance term_stepFlat : computableTime' stepFlat (fun f _ => (1, fun c _ => (stepFlat_time (length f) c,tt))).
 Proof.
   unfold stepFlat.
@@ -54,6 +57,7 @@ Definition loopMflat_time M c k := loopTime (stepFlat (trans M)) (fun (c0 : mcon
     (fun (c0 : nat * list (tape nat)) (_ : unit) => (haltConfFlat_time (fst c0), tt)) c k.
 
 
+#[export]
 Instance term_loopMflat : computableTime' loopMflat (fun M _ => (23,fun c  _ => (5, fun k _ => (loopMflat_time M c k,tt)))).
 Proof.
   unfold loopMflat,loopMflat_time.
@@ -185,6 +189,7 @@ Qed.
 Definition sizeOfmTapesFlat_time sig (t : list (tape sig))
   := sumn (map (@sizeOfTape _) t) * 55 + length t * 95 + 8.
 
+#[export]
 Instance term_sizeOfmTapesFlat sig {H:encodable sig}:
   computableTime' (@sizeOfmTapesFlat sig) (fun t _ => (sizeOfmTapesFlat_time t,tt)).
 Proof.
@@ -218,6 +223,7 @@ Qed.
 Definition allSameEntry_helper {X Y} eqbX eqbY `{_:eqbClass (X:=X) eqbX} `{eqbClass (X:=Y) eqbY}
   := fun x y '(x', y') => implb (eqbX x (x':X)) (eqbY y (y':Y)).
 
+#[export]
 Instance term_allSameEntry_helper {X Y} {HX:encodable X} {HY:encodable Y}
          `{eqbCompT X (R:=HX)} `{eqbCompT Y (R:=HY)}
   :
@@ -242,6 +248,7 @@ Lemma allSameEntry_time_le X Y {HX:encodable X} {HY:encodable Y}
 Proof. unfold allSameEntry_time. intros -> -> ->. nia. Qed.
 
 
+#[export]
 Instance term_allSameEntry X Y {HX:encodable X} {HY:encodable Y}
          `{eqbCompT X (R:=HX)} `{eqbCompT Y (R:=HY)}:
   computableTime' (@allSameEntry X Y _ _ _ _) (
@@ -273,6 +280,7 @@ Definition isInjFinfuncTable_time X Y {HX:encodable X} {HY:encodable Y}
            `{eqbCompT X (R:=HX)} `{eqbCompT Y (R:=HY)} l sf :=
   l * (allSameEntry_time X Y l sf sf + 21) + 8.
 
+#[export]
 Instance term_isInjFinfuncTable X Y {HX:encodable X} {HY:encodable Y}
          `{eqbCompT X (R:=HX)} `{eqbCompT Y (R:=HY)}:
   computableTime' (@isInjFinfuncTable X Y _ _ _ _) (fun f _ => (isInjFinfuncTable_time (X:=X) (Y:=Y) (length f) (size (enc f)),tt)).
@@ -298,6 +306,7 @@ Definition isBoundWrite sig := (fun a : option nat * move => match fst a with
 
 
 
+#[export]
 Instance term_isBoundRead:
   computableTime' isBoundRead (fun sig _ => (1, fun s _ => (size (enc s) * 5,tt))).
 Proof.
@@ -308,6 +317,7 @@ Proof.
   unfold c__leb2, leb_time, c__leb, c__natsizeS, c__natsizeO. nia. 
 Qed.
 
+#[export]
 Instance term_isBoundWrite:
   computableTime' isBoundWrite (fun sig _ => (1, fun s _ => (size (enc s) * 4,tt))).
 Proof.
@@ -326,6 +336,7 @@ Definition isBoundEntry sig n states: (nat * list (option nat) * (nat * list (op
        forallb (isBoundWrite sig) v').
 
 
+#[export]
 Instance term_isBoundEntry:
   computableTime' isBoundEntry (fun sig _ => (1,
                                            fun n _ => (1,
@@ -351,6 +362,7 @@ Proof.
   all:zify. all:clear; nia. 
 Qed.
 
+#[export]
 Instance term_isBoundTransTable:
   computableTime' isBoundTransTable (fun _ _ => (1,
                                               fun _ _ => (1,
@@ -373,6 +385,7 @@ Qed.
 
 Definition time_isValidFlatTrans lf sf := isInjFinfuncTable_time (X:=nat * list (option nat)) (Y:=(nat * list (option nat * move))) lf sf + sf * (c__eqbComp nat + 8) + 9.
 
+#[export]
 Instance term_isValidFlatTrans:
   computableTime' (isValidFlatTrans)
                   (fun _ _ => (1,
@@ -387,6 +400,7 @@ Qed.
 
 Definition isValidFlatTM_time lf sf st:= time_isValidFlatTrans lf sf+ st*c__leb + 64 + c__leb + c__leb2.
 
+#[export]
 Instance term_isValidFlatTM : computableTime' isValidFlatTM (fun M _ => (isValidFlatTM_time (length (trans M)) (size (enc (trans M))) (states M),tt)).
 Proof.
   unfold isValidFlatTM. unfold Nat.ltb.
@@ -402,6 +416,7 @@ Lemma isValidFlatTape_time_le sig t t' :
 Proof. unfold isValidFlatTape_time. intros ->. nia. Qed. 
 
 
+#[export]
 Instance term_isValidFlatTape : computableTime' isValidFlatTape
             (fun sig _ => (1, fun t _ => (isValidFlatTape_time sig (sizeOfTape t),tt))).
 Proof.
@@ -423,6 +438,7 @@ Qed.
 Definition  isValidFlatTapes_time (sig lt mt :nat) := lt*(isValidFlatTape_time sig mt + 15 + c__forallb) + 20 + c__forallb.
 
 
+#[export]
 Instance term_isValidFlatTapes : computableTime' isValidFlatTapes (fun sig _ => (1, fun n _ => (1,fun t _ => (isValidFlatTapes_time sig n (sizeOfmTapesFlat t),tt)))).
 Proof.
   unfold isValidFlatTapes.
@@ -445,6 +461,7 @@ Qed.
 Definition execFlatTM_time (M:flatTM) (t:nat) (k:nat) :=
  isValidFlatTM_time (length M.(trans)) (size (enc M.(trans))) M.(states) + isValidFlatTapes_time M.(sig) M.(tapes) t + loopMflat_timeNice M k + 66 .
 
+#[export]
 Instance term_execFlatTM: computableTime' execFlatTM (fun M _ => (1,fun t _ => (1,fun k _ => (execFlatTM_time M (sizeOfmTapesFlat t) k,tt)))).
 Proof.
   extract. unfold execFlatTM_time. recRel_prettify.

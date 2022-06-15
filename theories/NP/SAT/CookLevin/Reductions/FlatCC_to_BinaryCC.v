@@ -197,6 +197,7 @@ Qed.
 (** hNat *)
 Definition c__hNat := 2 * (c__leb2 + 2 * c__repEl2 + 18 + 2* c__app + 2 * c__sub + 2 * c__sub1).
 Definition hNat_time sig n := (leb_time (S n) sig + repEl_time sig + sig + 1) * c__hNat. 
+#[export]
 Instance term_hNat : computableTime' hNat (fun sig _ => (1, fun n _ => (hNat_time sig n, tt))). 
 Proof. 
   specialize (repEl_time_mono) as H1. unfold monotonic in H1. 
@@ -226,6 +227,7 @@ Qed.
 (** hflat *)
 Definition c__hflat := c__Sigma + 3. 
 Definition hflat_time (fpr : FlatCC) (l : list nat) := map_time (fun m => hNat_time (Sigma fpr) m) l + concat_time (map (hNat (Sigma fpr)) l) + c__hflat.
+#[export]
 Instance term_hflat : computableTime' hflat (fun fpr _ => (1, fun l _ => (hflat_time fpr l, tt))).  
 Proof. 
   unfold hflat. unfold canonicalHom. extract. solverec. 
@@ -295,6 +297,7 @@ Qed.
 (** hcard *)
 Definition c__hcard := 9. 
 Definition hcard_time (fpr : FlatCC) (card : CCCard nat) := hflat_time fpr (prem card) + hflat_time fpr (conc card) + c__hcard. 
+#[export]
 Instance term_hcard : computableTime' hcard (fun fpr _ => (1, fun card _ => (hcard_time fpr card, tt))). 
 Proof. 
   extract. solverec. unfold hcard_time, c__hcard. solverec. 
@@ -329,6 +332,7 @@ Qed.
 (** hcards *)
 Definition c__hcards := c__cards + 3. 
 Definition hcards_time (fpr : FlatCC) := map_time (fun w => hcard_time fpr w) (cards fpr) + c__hcards.
+#[export]
 Instance term_hcards : computableTime' hcards (fun fpr _ => (hcards_time fpr, tt)). 
 Proof. 
   extract. solverec. unfold hcards_time, c__hcards. solverec. 
@@ -369,6 +373,7 @@ Qed.
 (** hfinal *)
 Definition c__hfinal := c__final + 3. 
 Definition hfinal_time (fpr : FlatCC) := map_time (fun l => hflat_time fpr l) (final fpr) + c__hfinal. 
+#[export]
 Instance term_hfinal : computableTime' hfinal (fun fpr _ => (hfinal_time fpr, tt)). 
 Proof. 
   extract. solverec. unfold hfinal_time, c__hfinal; solverec. 
@@ -408,6 +413,7 @@ Qed.
 Definition c__hBinaryCC := 2 * c__Sigma + c__offset + c__width + c__init + c__cards + c__steps + 2 * c__mult1 + 2 * c__mult + 8.
 Definition c__hBinaryCC2 := 2 * c__mult + 1.
 Definition hBinaryCC_time (fpr : FlatCC) := c__hBinaryCC2 * (Sigma fpr * offset fpr + Sigma fpr * width fpr + Sigma fpr + hflat_time fpr (init fpr) + hcards_time fpr + hfinal_time fpr) + c__hBinaryCC.
+#[export]
 Instance term_hBinaryCC : computableTime' hBinaryCC (fun fpr _ => (hBinaryCC_time fpr, tt)).
 Proof. 
   unfold hBinaryCC. unfold hoffset, hwidth, hsteps, hinit.  

@@ -101,7 +101,7 @@ Proof.
      rewrite H3. unfold f__t.
      reflexivity.
      unfold f__t. lia.
-    -intros [[[s' maxSize] steps] c]. cbn [fst snd prod_curry]. unfold proc. 
+    -intros [[[s' maxSize] steps] c]. cbn [fst snd uncurry]. unfold proc. 
      destruct (closedb_spec s');cbn [andb]. 2:{ split;[|congruence];intros (?&?&?&[= -> -> ->]&?);tauto. }
      destruct (lambdab_spec s');cbn [andb]. 2:{ split;[|congruence];intros (?&?&?&[= -> -> ->]&?);tauto. }
 

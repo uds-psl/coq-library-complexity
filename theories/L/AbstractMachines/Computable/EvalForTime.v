@@ -3,7 +3,7 @@ From Undecidability.L Require Import L_facts Tactics.LTactics.
 From Complexity.L.AbstractMachines Require Import AbstractHeapMachineDef UnfoldTailRec FunctionalDefinitions.
 From Complexity.L.AbstractMachines.Computable Require Import Unfolding HeapMachine Shared.
 
-From Undecidability.L.Datatypes Require Import Lists.
+From Undecidability.L.Datatypes Require Import Lists LProd.
 From Complexity.L.Datatypes Require Import LBinNums.
 From Undecidability.L.Functions Require Import UnboundIteration Proc.
 From Complexity.L.Functions Require Import BinNums BinNumsCompare.
@@ -82,6 +82,7 @@ Proof.
   all:easy.
 Qed.
 
+#[export]
 Instance termT_extractRes : computableTime' extractRes (fun _ _ => (23,tt)).
 Proof.
   unfold state.
@@ -99,6 +100,7 @@ Definition time_evalForTime__step x :=
           else 0
   end + 81.
 Import N.
+#[export]
 Instance termT_evalForTime__step : computableTime' evalForTime__step (fun x _ => (time_evalForTime__step x,tt)).
 Proof.
   unfold state.
@@ -122,6 +124,7 @@ Arguments evalForTime__step : simpl never.
 
 Import L_facts ARS. Import AbstractMachines.AbstractHeapMachineDef.
 
+#[export]
 Instance termT_init__evalForTime : computableTime' init__evalForTime (fun fuel (_:unit) => (1,fun s (_:unit) => (size s * 108 + N.size_nat fuel * 84 + 244,tt))).
 Proof.
   eapply computableTimeExt with (x:=fun fuel s => ((fuel + fuel + fuel + fuel +1)%N,init s)).
@@ -215,6 +218,7 @@ Definition t__evalForTime maxVar (size:nat) fuel :=
   (fuel' + 1) * (N.size_nat (N.of_nat fuel') * 12
                  + heapStep_timeBound maxVar fuel' +90) +264.
 
+#[export]
 Instance evalForTime_comp : computableTime' evalForTime (fun fuel _ => (1,fun s _ => (t__evalForTime (largestVar s)(size s) (N.to_nat fuel),tt))).
 Proof.
   exists term_evalForTime. unfold term_evalForTime,evalForTime.

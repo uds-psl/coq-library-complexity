@@ -402,6 +402,7 @@ Implicit Type (p : nat -> Prop).
 (** listAnd *)
 Definition c__listAnd := 12. 
 Definition listAnd_time (l : list formula) := (|l| + 1) * c__listAnd.
+#[export]
 Instance term_listAnd : computableTime' listAnd (fun l _ => (listAnd_time l, tt)). 
 Proof. 
   extract. solverec. all: unfold listAnd_time, c__listAnd; solverec. 
@@ -422,6 +423,7 @@ Qed.
 (** listOr *)
 Definition c__listOr := 12.
 Definition listOr_time (l : list formula) := (|l| + 1) * c__listOr.
+#[export]
 Instance term_listOr : computableTime' listOr (fun l _ => (listOr_time l, tt)). 
 Proof. 
   extract. solverec. all: unfold listOr_time, c__listOr; solverec. 
@@ -442,6 +444,7 @@ Qed.
 (** tabulate_step *)
 Definition c__tabulateStep := 13 + c__add1.
 Definition tabulate_step_time (step n : nat) := n * (add_time step + c__tabulateStep) + c__tabulateStep.
+#[export]
 Instance term_tabulate_step : computableTime' tabulate_step (fun step _ => (5, fun s _ => (1, fun n _ => (tabulate_step_time step n, tt)))). 
 Proof. 
   extract. solverec. 
@@ -468,6 +471,7 @@ Qed.
 (** tabulate_formula *)
 Definition c__tabulateFormula := 8. 
 Definition tabulate_formula_time (s step n : nat) (tf : nat -> nat) := tabulate_step_time step n + map_time tf (tabulate_step step s n) + c__tabulateFormula.
+#[export]
 Instance term_tabulate_formula : computableTime' tabulate_formula (fun s _ => (1, fun step _ => (1, fun n _ => (1, fun t tf => (tabulate_formula_time s step n (callTime tf), tt))))). 
 Proof. 
   extract. solverec. 
@@ -499,6 +503,7 @@ Qed.
 
 (** encodeLiteral *)
 Definition c__encodeLiteral := 6. 
+#[export]
 Instance term_encodeLiteral : computableTime' encodeLiteral (fun n _ => (1, fun b _ => (c__encodeLiteral, tt))). 
 Proof. 
   extract. solverec. all: unfold c__encodeLiteral; solverec. 
@@ -523,6 +528,7 @@ Qed.
 (** encodeListAt *)
 Definition c__encodeListAt := c__encodeLiteral + c__add1 + add_time 1 + 15.
 Definition encodeListAt_time (l : list bool) := (|l| + 1) * c__encodeListAt. 
+#[export]
 Instance term_encodeListAt : computableTime' encodeListAt (fun s _ => (5, fun l _ => (encodeListAt_time l, tt))). 
 Proof. 
   extract. solverec. 

@@ -14,6 +14,7 @@ Record canEnumTerms (X__cert : Type) `{R__cert : encodable X__cert} : Type :=
 Arguments canEnumTerms : clear implicits.
 Arguments canEnumTerms _ {_}.
 
+#[export]
 Hint Extern 2 (computableTime (f__toTerm _) _) => unshelve (simple apply @comp__polyTC);simple apply @comp__toTerm :typeclass_instances.
 Smpl Add 10 (simple apply polyIn__toTerm) : inO.
 Smpl Add 10 (simple apply monoIn__toTerm) : inO.

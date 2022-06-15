@@ -128,6 +128,7 @@ From Undecidability.L.Functions Require Import EqBool.
 (** fedges_edge_in_decb *)
 Definition c__fedgesEdgeInDecb := 6. 
 Definition fedges_edge_in_decb_time (E : list fedge) (e : fedge) := list_in_decb_time E e + c__fedgesEdgeInDecb. 
+#[export]
 Instance term_fedges_edge_in_decb : computableTime' fedges_edge_in_decb (fun E _ => (1, fun e _ => (fedges_edge_in_decb_time E e, tt))). 
 Proof. 
   extract. solverec. 
@@ -139,6 +140,7 @@ Definition allPairsOfEdges_decb_step (E : list fedge) (v1 : fvertex) (v2 : fvert
 
 Definition c__allPairsOfEdgesDecbStep := 4. 
 Definition allPairsOfEdges_decb_step_time (E : list fedge) (v1 : fvertex) (v2 : fvertex) := fedges_edge_in_decb_time E (v1, v2) + c__allPairsOfEdgesDecbStep.
+#[export]
 Instance term_allPairsOfEdges_decb_step : computableTime' allPairsOfEdges_decb_step (fun E _ => (1, fun v1 _ => (1, fun v2 _ => (allPairsOfEdges_decb_step_time E v1 v2, tt)))). 
 Proof. 
   extract. solverec. unfold allPairsOfEdges_decb_step_time, c__allPairsOfEdgesDecbStep. solverec. 
@@ -150,6 +152,7 @@ Fixpoint allPairsOfEdges_decb_time (l : list fvertex) (E : list fedge) :=
   | [] => 0
   | v1 :: l => forallb_time (allPairsOfEdges_decb_step_time E v1) l + allPairsOfEdges_decb_time l E
   end + c__allPairsOfEdgesDecb.
+#[export]
 Instance term_allPairsOfEdges_decb : computableTime' allPairsOfEdges_decb (fun l _ => (5, fun E _ => (allPairsOfEdges_decb_time l E, tt))). 
 Proof. 
   apply computableTimeExt with (x := 
@@ -201,6 +204,7 @@ Qed.
     
 Definition c__isfCliqueDecb := 21. 
 Definition isfClique_decb_time (G : fgraph) (l : list fvertex) := let (V, E) := G in list_ofFlatType_dec_time V l + dupfreeb_time l + allPairsOfEdges_decb_time l E + c__isfCliqueDecb.
+#[export]
 Instance term_isfClique_decb : computableTime' isfClique_decb (fun G _ => (1, fun l _ => (isfClique_decb_time G l, tt))). 
 Proof. 
   extract. solverec. unfold c__isfCliqueDecb; solverec. 
@@ -229,6 +233,7 @@ Definition c__isfKCliqueDecb := 12 + c__length.
 Definition isfKClique_decb_time (k : nat) (G : fgraph) (l : list fvertex) := 
   isfClique_decb_time G l + c__length * (|l|) + eqbTime (X := nat) (size (enc (|l|))) (size (enc k))
   + c__isfKCliqueDecb. 
+#[export]
 Instance term_isfKClique_decb : computableTime' isfKClique_decb (fun k _ => (1, fun G _ => (1, fun l _ => (isfKClique_decb_time k G l, tt)))).
 Proof. 
   extract. solverec. 
@@ -253,6 +258,7 @@ Definition fedges_symmetric_decb_step (E : list fedge) (e : fedge) := let (v1, v
 
 Definition c__fedgesSymmetricDecbStep := 8. 
 Definition fedges_symmetric_decb_step_time (E : list fedge) (e : fedge) := let (v1, v2) := e in fedges_edge_in_decb_time E (v2, v1) + c__fedgesSymmetricDecbStep.
+#[export]
 Instance term_fedges_symmetric_decb_step : computableTime' fedges_symmetric_decb_step (fun E _ => (1, fun e _ => (fedges_symmetric_decb_step_time E e, tt))). 
 Proof. 
   extract. solverec. unfold c__fedgesSymmetricDecbStep; solverec. 
@@ -260,6 +266,7 @@ Qed.
 
 Definition c__fedgesSymmetricDecb := 3. 
 Definition fedges_symmetric_decb_time (E : list fedge) := forallb_time (fedges_symmetric_decb_step_time E) E + c__fedgesSymmetricDecb. 
+#[export]
 Instance term_fedges_symmetric_decb : computableTime' fedges_symmetric_decb (fun E _ => (fedges_symmetric_decb_time E, tt)). 
 Proof. 
   apply computableTimeExt with (x := fun E => forallb (fedges_symmetric_decb_step E) E). 
@@ -287,6 +294,7 @@ Qed.
 (** fedge_wf_decb *)
 Definition c__fedgeWfDecb := 2 * c__ltb + 12. 
 Definition fedge_wf_decb_time (V : nat) := 2 * c__leb * (1 + V) + c__fedgeWfDecb. 
+#[export]
 Instance term_fedge_wf : computableTime' fedge_wf_decb (fun V _ => (1, fun e _ => (fedge_wf_decb_time V, tt))). 
 Proof. 
   extract. solverec. 
@@ -297,6 +305,7 @@ Qed.
 (** fedges_wf_decb *)
 Definition c__fedgesWfDecb := c__forallb + 3.
 Definition fedges_wf_decb_time (V : nat) (E : list fedge) := (|E|) * (fedge_wf_decb_time V + c__forallb) + c__fedgesWfDecb.
+#[export]
 Instance term_fedges_wf : computableTime' fedges_wf_decb (fun V _ => (1, fun E _ => (fedges_wf_decb_time V E, tt))). 
 Proof. 
   extract. solverec. 
@@ -319,6 +328,7 @@ Qed.
 (** fgraph_wf_decb *)
 Definition c__fgraphWfDecb := 11. 
 Definition fgraph_wf_decb_time (G : fgraph) := let (V, E) := G in fedges_symmetric_decb_time E + fedges_wf_decb_time V E + c__fgraphWfDecb.
+#[export]
 Instance term_fgraph_wf_decb : computableTime' fgraph_wf_decb (fun G _ => (fgraph_wf_decb_time G, tt)). 
 Proof. 
   extract. solverec. unfold c__fgraphWfDecb; solverec. 

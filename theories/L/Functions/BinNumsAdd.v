@@ -60,6 +60,7 @@ Proof.
   -extract. solverec.
 Qed.
 
+#[export]
 Instance termT_N_add: computableTime' N.add (fun x _ => (1,fun y _ => (12*(N.size_nat x + N.size_nat y) + 27 ,tt))).
 Proof.
 unfold N.add.

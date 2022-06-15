@@ -16,6 +16,7 @@ Inductive orFree : formula -> Prop :=
   | orFreeAnd f1 f2 : orFree f1 -> orFree f2 -> orFree (f1 ∧ f2)
   | orFreeNot f : orFree f -> orFree (¬ f). 
 
+#[export]
 Hint Constructors orFree : core. 
 
 Fixpoint eliminateOR f := match f with
@@ -542,6 +543,7 @@ Proof.
 Qed.  
 
 (** The produced CNF is even a 3-CNF, so we directly get a reduction to 3-SAT, too. *)
+#[export]
 Hint Constructors kCNF : core.
 Fact tseytinTrue_3CNF v : kCNF 3 (tseytinTrue v).
 Proof. 
@@ -754,6 +756,7 @@ Fixpoint eliminateOR_time (f : formula) := match f with
 | For f1 f2 => eliminateOR_time f1 + eliminateOR_time f2
 | Fneg f => eliminateOR_time f
 end + c__eliminateOR.
+#[export]
 Instance term_eliminateOR : computableTime' eliminateOR (fun f _ => (eliminateOR_time f, tt)). 
 Proof. 
   extract. solverec. 
@@ -777,6 +780,7 @@ Qed.
 
 (** tseytinAnd *)
 Definition c__tseytinAnd := 43.
+#[export]
 Instance term_tseytinAnd : computableTime' tseytinAnd (fun v _ => (1, fun v1 _ => (1, fun v2 _ => (c__tseytinAnd, tt)))). 
 Proof. 
   extract. solverec. unfold c__tseytinAnd; solverec. 
@@ -784,6 +788,7 @@ Qed.
 
 (** tseytinOr *)
 Definition c__tseytinOr := 43.
+#[export]
 Instance term_tseytinOr : computableTime' tseytinOr (fun v _ => (1, fun v1 _ => (1, fun v2 _ => (c__tseytinOr, tt)))). 
 Proof. 
   extract. solverec. unfold c__tseytinOr; solverec. 
@@ -791,6 +796,7 @@ Qed.
 
 (** tseytinNot *)
 Definition c__tseytinNot := 29.
+#[export]
 Instance term_tseytinNot : computableTime' tseytinNot (fun v _ => (1, fun v' _ => (c__tseytinNot, tt))). 
 Proof. 
   extract. solverec. unfold c__tseytinNot; solverec. 
@@ -798,6 +804,7 @@ Qed.
 
 (** tseytinEquiv *)
 Definition c__tseytinEquiv := 29.
+#[export]
 Instance term_tseytinEquiv : computableTime' tseytinEquiv (fun v _ => (1, fun v' _ => (c__tseytinEquiv, tt))). 
 Proof. 
   extract. solverec. unfold c__tseytinEquiv; solverec. 
@@ -805,6 +812,7 @@ Qed.
 
 (** tseytinTrue *)
 Definition c__tseytinTrue := 15.
+#[export]
 Instance term_tseytinTrue : computableTime' tseytinTrue (fun v _ => (c__tseytinTrue, tt)). 
 Proof. 
   extract. solverec. unfold c__tseytinTrue. solverec. 
@@ -827,6 +835,7 @@ Proof.
   now unfold size_cnf. 
 Qed. 
 
+#[export]
 Instance term_tseytin' : computableTime' tseytin' (fun nf _ => (5, fun f _ => (tseytinP_time f, tt))). 
 Proof. 
   extract. solverec. 
@@ -867,6 +876,7 @@ Qed.
 (** tseytin *)
 Definition c__tseytin := 17. 
 Definition tseytin_time (f : formula) := formula_maxVar_time f + tseytinP_time f + c__tseytin.
+#[export]
 Instance term_tseytin : computableTime' tseytin (fun f _ => (tseytin_time f, tt)). 
 Proof. 
   extract. solverec. 
@@ -898,6 +908,7 @@ Qed.
 
 Definition c__reduction := 19. 
 Definition reduction_time (f : formula) := eliminateOR_time f + tseytin_time (eliminateOR f) + c__reduction.
+#[export]
 Instance term_reduction : computableTime' reduction (fun f _ => (reduction_time f, tt)). 
 Proof. 
   extract. solverec. unfold reduction_time, c__reduction. solverec. 

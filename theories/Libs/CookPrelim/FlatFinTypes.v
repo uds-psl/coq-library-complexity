@@ -333,6 +333,7 @@ From Complexity.Libs.CookPrelim Require Import PolyBounds.
 From Undecidability.L.Functions Require Import EqBool.
 Require Import Nat. 
 
+#[export]
 Instance term_id (X : Type) `{encodable X}: computableTime' (@id X) (fun a _ => (1, tt)). 
 Proof. 
   extract. solverec. 
@@ -340,6 +341,7 @@ Qed.
 
 Definition c__flatPair := c__add1 + 2 + c__mult1. 
 Definition flatPair_time x b := mult_time x b + add_time (x * b) + c__flatPair.
+#[export]
 Instance term_flatPair : computableTime' flatPair (fun a _ => (1, fun b _ => (1, fun x _ => (1, fun y _ => (flatPair_time x b, tt))))). 
 Proof. 
   extract. solverec. unfold flatPair_time, c__flatPair; solverec. 
@@ -348,6 +350,7 @@ Qed.
 (*ofFlatTypeDec *)
 Definition c__ofFlatTypeDec := c__leb2 + 2. 
 Definition ofFlatType_dec_time (sig e : nat) := leb_time (1 + e) sig + c__ofFlatTypeDec. 
+#[export]
 Instance term_ofFlatType_dec : computableTime' ofFlatType_dec (fun sig _ => (1, fun e _ => (ofFlatType_dec_time sig e, tt))). 
 Proof. 
   extract. solverec. unfold ofFlatType_dec_time, c__ofFlatTypeDec. solverec. 
@@ -366,6 +369,7 @@ Qed.
 (*list_ofFlatType_dec *)
 Definition c__listOfFlatTypeDec := 3.
 Definition list_ofFlatType_dec_time (sig : nat) (l : list nat) := forallb_time (fun x1 => ofFlatType_dec_time sig x1) l + c__listOfFlatTypeDec. 
+#[export]
 Instance term_list_ofFlatType_dec : computableTime' list_ofFlatType_dec (fun sig _ => (1, fun l _ => (list_ofFlatType_dec_time sig l, tt))). 
 Proof. 
   extract. solverec. unfold list_ofFlatType_dec_time, c__listOfFlatTypeDec. solverec. 

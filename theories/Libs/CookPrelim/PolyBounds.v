@@ -6,36 +6,43 @@ From Undecidability.L Require Export Datatypes.Lists Datatypes.LNat.
 From Undecidability.L.Functions Require Import EqBool. 
 
 (** why the heck isn't this in the standard library? no one knows... *)
+#[export]
 Instance proper_lt_mul : Proper (lt ==> eq ==> le) Nat.mul. 
 Proof. 
   intros a b c d e f. nia.
 Qed. 
 
+#[export]
 Instance proper_lt_add : Proper (lt ==> eq ==> le) Nat.add.
 Proof. 
   intros a b c d e f. nia. 
 Qed. 
 
+#[export]
 Instance proper_le_pow : Proper (le ==> eq ==> le) Nat.pow.
 Proof. 
   intros a b H1 d e ->. apply Nat.pow_le_mono_l, H1. 
 Qed. 
 
+#[export]
 Instance mult_lt_le : Proper (eq ==> lt ==> le) mult. 
 Proof. 
   intros a b -> d e H. nia. 
 Qed.
 
+#[export]
 Instance add_lt_lt : Proper (eq ==> lt ==> lt) Nat.add. 
 Proof. 
   intros a b -> c d H. lia.
 Qed.
 
+#[export]
 Instance le_lt_impl : Proper (le --> eq ==> Basics.impl) lt. 
 Proof. 
   intros a b H d e ->. unfold Basics.flip in H. unfold Basics.impl. lia. 
 Qed.
 
+#[export]
 Instance lt_le_impl : Proper (lt --> eq ==> Basics.impl) le. 
 Proof. 
   intros a b H d e ->. unfold Basics.flip in H. unfold Basics.impl. lia.  

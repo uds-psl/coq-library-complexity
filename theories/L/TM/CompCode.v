@@ -13,6 +13,7 @@ From Undecidability Require Import TMEncoding EqBool.
 Set Default Proof Using "Type".
 Import GenEncode.  
 MetaCoq Run (tmGenEncode "boundary_enc" boundary).
+#[export]
 Hint Resolve boundary_enc_correct : Lrewrite.
 
 
@@ -77,6 +78,7 @@ Section sigList.
 
 
 End sigList.
+#[export]
 Hint Resolve sigList_enc_correct : Lrewrite.
 
 
@@ -138,6 +140,7 @@ End int.
 
 From Undecidability Require Import GenEncode Alphabets.
 MetaCoq Run (tmGenEncode "sigNat_enc" sigNat).
+#[export]
 Hint Resolve sigNat_enc_correct : Lrewrite.
 
 
@@ -172,6 +175,7 @@ Qed.
 
 Import GenEncode.
 MetaCoq Run (tmGenEncode "ACom_enc" ACom).
+#[export]
 Hint Resolve ACom_enc_correct : Lrewrite.
 
 
@@ -223,8 +227,11 @@ Section sigSum.
   Proof. extract constructor. solverec. Qed.
   
 End sigSum.
+#[export]
 Hint Resolve sigSum_enc_correct : Lrewrite.
+#[export]
 Hint Resolve sigPair_enc_correct : Lrewrite.
+#[export]
 Hint Resolve sigOption_enc_correct : Lrewrite.
 
 
@@ -434,6 +441,7 @@ Section sigTape.
   
 
 End sigTape.
+#[export]
 Hint Resolve sigTape_enc_correct : Lrewrite.
 
 

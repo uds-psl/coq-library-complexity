@@ -85,6 +85,8 @@ Module clos_notation.
   Notation clos := (term * nat)%type (only parsing).
 End clos_notation.
 Import clos_notation.
+
+#[export]
 Hint Transparent state : core.
 
 Definition largestVarC : clos -> nat := (fun '(s,_) => largestVar s).
