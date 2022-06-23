@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "dev+8.12"
+version: "dev+8.15"
 maintainer: "kunze@ps.uni-saarland.de"
 homepage: "https://github.com/uds-psl/coq-library-complexity/"
 dev-repo: "git+https://github.com/uds-psl/coq-library-complexity/"
@@ -19,15 +19,15 @@ remove: [
   ["rm" "-R" "%{lib}%/coq/user-contrib/Complexity"]
 ]
 depends: [
-  "coq" {>= "8.12" & < "8.13~"}
-  "coq-equations" {= "1.2.3+8.12"}
+  "coq" {= "8.15.0"}
+  "coq-equations" {= "1.3+8.15"}
   "ocaml"
-  "coq-smpl" {>= "8.12"}
-  "coq-library-undecidability" {>= "dev+8.12" }
+  "coq-smpl" {>= "8.15"}
+  "coq-library-undecidability" {>= "dev+8.15" }
 ]
 
 synopsis: "A Coq Library of Complexity Theory"
 flags: light-uninstall
 url {
-  git: "https://github.com/uds-psl/coq-library-complexity#coq-8.12"
+  git: "https://github.com/uds-psl/coq-library-complexity#coq-8.15"
 }

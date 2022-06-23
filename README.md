@@ -1,5 +1,5 @@
 # The Coq Library of Complexity Theory
-[![build](https://github.com/uds-psl/coq-library-complexity/workflows/build/badge.svg?branch=coq-8.12)](https://github.com/uds-psl/coq-library-complexity/actions)
+[![build](https://github.com/uds-psl/coq-library-complexity/workflows/build/badge.svg?branch=coq-8.15)](https://github.com/uds-psl/coq-library-complexity/actions)
 
 This library contains complexity theory. It is built upon the [Coq Library of Undecidability Proofs](https://github.com/uds-psl/coq-library-undecidability).
 
@@ -43,7 +43,7 @@ Or use the `make depsopam` to install all dependencies using opam. The undecidab
 
 #### Coq version
 
-Be careful that this branch only compiles under Coq 8.12.
+Be careful that this branch only compiles under Coq 8.15.
 
 ## Published work and technical reports
 
