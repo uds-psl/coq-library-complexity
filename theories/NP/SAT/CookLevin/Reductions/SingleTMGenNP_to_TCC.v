@@ -4326,7 +4326,8 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
       apply H0 in H as (w' & F1 & F2). exists w'.  
       split; [  | apply F2 ]. 
       unfold makeCardsFin, makeCards. apply in_concat_iff. 
-      eauto 10.
+      setoid_rewrite in_map_iff.
+      eauto 12.
     - intros. unfold makeCardsFin, makeCards in H. 
       apply in_concat_iff in H as (cards & H & H1). 
       apply in_map_iff in H1 as (rule & <- & H2). 
@@ -4334,6 +4335,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
       apply H0 in H as (w & F1 & F2). exists w.  
       split; [ |apply F2 ]. 
       unfold makeCardsFin, makeCardsFlat, makeCards. apply in_concat_iff. 
+      setoid_rewrite in_map_iff.
       eauto 10. 
   Qed. 
  
@@ -4413,7 +4415,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
   Proof. 
     unfold elem. cbn. 
     intros [] _.
-    - right. eauto.  
+    - right. eauto using in_map.  
     - now left. 
   Qed. 
 
@@ -4460,8 +4462,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
         | [ |- ex (fun r => r el ?h /\ _) ] => rec_exists h 0 ltac:(solve_agreement_in_env)
         end.
 
-#[export]
-Hint Extern 2 => exfalso; assumption : tmp.
+  Hint Extern 2 => exfalso; assumption : tmp.
   Lemma agreement_mtr: cards_list_ind_agree (@liftOrig Gamma shiftRightRules preludeSig') finMTRCards. 
   Proof.
     unfold cards_list_ind_agree; intros; split. 
@@ -5191,8 +5192,7 @@ Hint Extern 2 => exfalso; assumption : tmp.
   (** we need to use the Boolean version of lookup for it to be extractable *)
   Import Undecidability.L.Functions.FinTypeLookup Undecidability.L.Functions.EqBool.
   Definition inp_eqb := LProd.prod_eqb Nat.eqb (List_eqb.list_eqb (LOptions.option_eqb Nat.eqb)).
-#[export]
-Instance eqBool_inp_eqb : eqbClass inp_eqb. 
+  Instance eqBool_inp_eqb : eqbClass inp_eqb. 
   Proof. 
     apply LProd.eqbProd. 
     - apply LNat.eqbNat_inst. 

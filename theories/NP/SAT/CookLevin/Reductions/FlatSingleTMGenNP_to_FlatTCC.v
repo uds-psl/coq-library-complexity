@@ -1625,9 +1625,10 @@ Proof.
 Qed.
 
 (** inp_eqb *)
-#[export]
-Instance eqbComp_inp : EqBool.eqbCompT (nat * list (option nat)).
-Proof. 
+Import LProd List.List_eqb LOptions LNat.
+From Complexity Require Import CompCode.
+Lemma eqbComp_inp : EqBool.eqbCompT (nat * list (option nat)).
+Proof.
   easy.
 Qed.
 
