@@ -3,6 +3,7 @@ all: Makefile.coq
 
 depsopam:
 	opam repo add coq-released https://coq.inria.fr/opam/released
+	opam pin add -n -y -k git coq-metacoq-template.dev+8.15 "https://github.com/MetaCoq/metacoq.git#9493bb6"
 	opam pin add -y coq-library-undecidability https://github.com/fakusb/coq-library-undecidability.git#9a499d688e920bbe0485578e41ad9dde48e32551
 	opam install . --deps-only
 
