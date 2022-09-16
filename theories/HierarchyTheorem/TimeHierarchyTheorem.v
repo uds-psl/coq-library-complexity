@@ -27,8 +27,7 @@ Section TimeHierarchy.
 
 
   Definition E (fuel:N) (s:term) := negb (evalForTimeBool false fuel s).
-                                      
-  
+
 #[export]
 Instance term_t__E : computableTime' E (fun fuel _ => (1, fun s _ => (t__evalForTimeBool (largestVar s) (size s) (N.to_nat fuel) + 7, tt))).
   Proof.
@@ -49,7 +48,7 @@ Instance term_t__E : computableTime' E (fun fuel _ => (1, fun s _ => (t__evalFor
   Proof.
     intros. eexists. split.
     {
-      eapply le_evalLe_proper, evalLe_trans. 2,3:reflexivity.
+      eapply le_evalLe_proper, evalle_trans. 2,3:reflexivity.
       2:now Lsimpl.
       2:Lreflexivity.
       solverec. reflexivity.
@@ -66,8 +65,8 @@ Instance term_t__E : computableTime' E (fun fuel _ => (1, fun s _ => (t__evalFor
     unfold t__E,t__evalForTimeBool.
     rewrite mono_t__evalForTime. 2-4:eassumption.
     repeat (lazymatch goal with
-              |- _ + _ <= _ + _ => eapply plus_le_compat
-            | |- _ * _ <= _ * _ => eapply mult_le_compat
+              |- _ + _ <= _ + _ => eapply Nat.add_le_mono
+            | |- _ * _ <= _ * _ => eapply Nat.mul_le_mono
             | |- _ => first [eassumption | reflexivity | eapply N_size_nat_monotone | eapply unfoldBool_time_mono | Lia.nia |eapply heapStep_timeBound_mono'] 
             end).
   Qed.

@@ -225,7 +225,7 @@ Section Nth'_nice.
     exists c.
     intros xs. induction xs as [ | x xs' IH]; intros.
     - eapply dominatedWith_mono_c. cbn [Nth'_Loop_steps].
-      destruct n; apply HStep_nil. constructor; apply Max.le_max_l || auto with arith. (* Why is [rewrite Max.le_max_l] not working? *)
+      destruct n; apply HStep_nil. constructor; apply Nat.le_max_l || auto with arith. (* Why is [rewrite Nat.le_max_l] not working? *)
     - cbn [Nth'_Loop_steps]. eapply dominatedWith_mono_c; [..|shelve]. eapply dominatedWith_match_nat.
       + intros ->. hnf.
         specialize (HStep_cons x xs' 0).

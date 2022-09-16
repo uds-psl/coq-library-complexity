@@ -266,7 +266,7 @@ Proof.
   clear.
   rename x1 into f. unfold allSameEntry_time.
   
-  eapply plus_le_compat_r.
+  apply Nat.add_le_mono_r.
   
   induction f as [ | [x' y'] f].
   { cbn. easy. }
@@ -446,7 +446,7 @@ Proof.
   {intros ? ? ?;hnf. now rewrite lengthEq_spec. }
   extract. unfold isValidFlatTapes_time,lengthEq_time.
   solverec.
-  rewrite <- lengthEq_spec in H. apply beq_nat_true in H. subst.
+  rewrite <- lengthEq_spec in H. apply Nat.eqb_eq in H. subst.
   evar (c:nat).
   rename x1 into t.
   rewrite forallb_time_eq,sumn_le_bound with (c:=c).

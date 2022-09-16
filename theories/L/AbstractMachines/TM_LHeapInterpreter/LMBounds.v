@@ -25,7 +25,7 @@ Lemma dominatedWith_match_Tok com y1 y2 y3 y4 z c1 c2 c3 c4:
   | retT => y3
   | varT x => y4 x
   end <=(max c1 (max c2 (max c3 c4))) z .
-Proof with reflexivity + apply Nat.mul_le_mono; eauto 4 using le_trans, Nat.le_max_r,Nat.le_max_l.
+Proof with reflexivity + apply Nat.mul_le_mono; eauto 4 using Nat.le_trans, Nat.le_max_r,Nat.le_max_l.
   intros H1 H2 H3 H4. unfold dominatedWith in *.
   destruct com.
   - rewrite H4...
@@ -568,7 +568,7 @@ Module LM_Lookup_nice.
       + (* Recursion case *)
         hnf. unfold dominatedWith in IH. setoid_rewrite IH. rewrite Hc_step. unfold HAdd in *.
         ring_simplify. rewrite !Encode_nat_hasSize. ring_simplify.
-        eapply Max.max_case_strong;intro hh. 2:nia. ring_simplify. 
+        eapply Nat.max_case_strong;intro hh. 2:nia. ring_simplify. 
         rewrite hh at 1. nia.
       + hnf. rewrite Hc_step. rewrite !Encode_nat_hasSize. lia.
       + hnf. rewrite Hc_step. rewrite !Encode_nat_hasSize. lia.

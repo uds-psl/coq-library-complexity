@@ -241,7 +241,7 @@ Section LMGenNP_to_TMGenNP_mTM.
           assert (H' : forall l, sumn (concat l) = sumn (map sumn l)). 1:{induction l;cbn;now autorewrite with list. }
           rewrite H',map_map. cbn. set (tmp:=size (enc (inr sigList_cons)));cbv in tmp;subst tmp.
           setoid_rewrite size_sum. rewrite size_boundary. setoid_rewrite size_sigList.
-          repeat setoid_rewrite <- plus_assoc.  ring_simplify. ring_simplify (7 + (4 + 5)).
+          repeat setoid_rewrite <- Nat.add_assoc.  ring_simplify. ring_simplify (7 + (4 + 5)).
           repeat setoid_rewrite sumn_map_add. repeat setoid_rewrite sumn_map_c. setoid_rewrite sumn_map_mult_c_r.
           setoid_rewrite sumn_map_le_pointwise with (f2:=fun x => _) at  3 4 5.
           2,3,4: (setoid_rewrite sizeOfTape_encodeTape_le;intros;rewrite sizeOfmTapes_upperBound at 1; [ | now apply tolist_In]; reflexivity).

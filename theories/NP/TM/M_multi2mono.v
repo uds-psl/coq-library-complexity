@@ -134,12 +134,14 @@ Section putFirst.
       cbn. 1:do 2 destruct lt_dec. 2,3:easy.
       2:{ intros _. apply Fin.to_nat_inj. rewrite eqi. rewrite eqj. cbn. clear eqi eqj. nia. }
       intros H%Fin.FS_inj. apply Fin.to_nat_inj.
-      rewrite eqi,eqj. cbn. specialize (lt_S_n _ _ l) as H1. specialize (lt_S_n _ _ l0) as H2.
+      rewrite eqi,eqj. cbn.
+      assert (H1 : i' < m) by now apply Nat.succ_lt_mono.
+      assert (H2 : j' < m) by now apply Nat.succ_lt_mono.
       erewrite <- (Fin.of_nat_ext H1), <- (Fin.of_nat_ext H2) in H.
       apply(f_equal Fin.to_nat) in H. rewrite !Fin.to_nat_of_nat in H.
       now inv H.
     Qed.
-    
+
     Lemma putEndAtFirst_dupfree m: VectorDupfree.dupfree (putEndAtFirst m).
     Proof.
       clear_all. apply dupfree_tabulate_injective.

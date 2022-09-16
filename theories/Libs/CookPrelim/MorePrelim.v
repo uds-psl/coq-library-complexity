@@ -611,5 +611,7 @@ Lemma in_concat_map_iff (X Y : Type) (f : X -> list Y) (l : list X) y : y el con
 Proof. 
   split; intros. 
   - apply in_concat_iff in H as (? & H1 & (? & <- & H3)%in_map_iff). eauto. 
-  - apply in_concat_iff. destruct H as (x & H1 & H2). exists (f x). split;eauto. 
+  - apply in_concat_iff. destruct H as (x & H1 & H2). exists (f x). split.
+    + exact H2.
+    + apply in_map. exact H1.
 Qed. 

@@ -250,17 +250,17 @@ Proof.
   repeat simple apply dominatedWith_add.
   -repeat apply dominatedWith_mult_l;apply dominatedWith_solve.
    transitivity (k + m_s). easy. generalize (k + m_s);intro. destruct m_s. now exfalso. lia.
-  -apply dominatedWith_mult_l. rewrite <- !mult_assoc.
+  -apply dominatedWith_mult_l. rewrite <- !Nat.mul_assoc.
    replace ((k' + 1) * ((k' + 1) * ((k' + 2 * m_s) * (2 * m_s))))
     with ((k' + 1) * ((k' + 2 * m_s) * (2 * (m_s * (k' + 1))))) by nia.
     eapply dominatedWith_mult. exact Hk'.
     eapply dominatedWith_mult. {instantiate (1:=3). hnf. subst k'. rewrite Hs at 2. clear. nia. }
     eapply dominatedWith_mult_l. {instantiate (1:=3). hnf. subst k'. rewrite Hs at 2. clear. nia. }
   -eapply dominatedWith_mult_l, dominatedWith_trans. eassumption.
-  eapply dominatedWith_solve. rewrite <- !mult_assoc.  etransitivity. 2:eapply Nat.mul_le_mono_nonneg_l;[|].
+  eapply dominatedWith_solve. rewrite <- !Nat.mul_assoc.  etransitivity. 2:eapply Nat.mul_le_mono_nonneg_l;[|].
    2:nia. now rewrite Nat.mul_1_r. clear - Hs. eapply LM_Lookup_nice.ge1_mul. nia. nia.
    -repeat eapply dominatedWith_mult_l. instantiate (1:=1). hnf. ring_simplify.
-    transitivity (m_s * m_s'). now nia. repeat first [eapply le_plus_r|etransitivity;[|eapply le_plus_l]].
+    transitivity (m_s * m_s'). now nia. repeat first [eapply Nat.le_add_l|etransitivity;[|eapply Nat.le_add_r]].
   -eapply dominatedWith_mono_c with (c:=3+8*c1+18*c1*cHeap).
   2:now unfold c1, cHeap;reflexivity. destruct m_s,m_s'. 1,2,3:exfalso;nia. hnf. unfold k'.
   clear. lia.
@@ -270,5 +270,5 @@ Proof.
   -do 3 eapply dominatedWith_mult_l. instantiate (1:=1). destruct m_s. exfalso;nia. hnf.
   lia.
   -eapply dominatedWith_const. hnf.  destruct m_s,m_s'. 1,2,3:exfalso;nia. hnf. unfold k'. ring_simplify.
-  etransitivity. 2:eapply le_plus_r. nia.
+  etransitivity. 2:eapply Nat.le_add_l. nia.
 Qed.

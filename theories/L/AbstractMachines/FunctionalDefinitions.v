@@ -47,7 +47,7 @@ Section SubstMachine.
      -cbn. all:repeat (let eq := fresh "eq" in destruct _ eqn:eq;try congruence);intros H.
       all:try inv eq.
       all:try (eapply IH in H). all:cbn in *. all:autorewrite with list in *. all:cbn in *.
-      all:pose minus_n_O.
+      all:pose Nat.sub_0_r.
       all:try congruence.
    Qed.
 
@@ -72,17 +72,11 @@ Section SubstMachine.
 
      all:try inv eq.
      all:idtac;rev_smpl.
-     all:try rewrite <- !minus_n_O in *.
+     all:try rewrite ->! Nat.sub_0_r in *.
      1-6:rewrite IH;[rev_smpl;try reflexivity| rev_smpl;try Lia.lia].
      all:try easy.
-     all:exfalso. 
-     all:rewrite !Nnat.Nat2N.inj_add in *.
-     all:rewrite !Nnat.Nat2N.inj_succ in *.
-     all:change (N.of_nat 0)%N with 0%N in *.
-     all:try rewrite <- !N.add_1_l in *.
-     all:try Lia.lia.
    Qed.
-   
+
    Definition substP_keepTrack (m:N) curSize P k Q : option Pro:=
      substP_keepTrack' m (N.of_nat (sumn (map sizeT Q))) P k (rev Q) [] curSize.
 
@@ -94,9 +88,9 @@ Section SubstMachine.
      unfold substP_keepTrack.
      rewrite substP_keepTrack'_keepsTrack.
      -reflexivity.
-     -Lia.lia.
-   Qed.   
-   
+     -lia.
+   Qed.
+
    (*** Todo: track size of T,V*)
 
    Definition sizeTN (t : Tok) : N :=
@@ -184,5 +178,3 @@ Section HeapMachine.
   Qed.
 
 End HeapMachine.
-  
-

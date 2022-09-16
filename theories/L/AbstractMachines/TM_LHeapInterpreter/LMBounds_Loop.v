@@ -252,6 +252,6 @@ Proof.
   eexists. intros [? ?].
   assert (H':= proj2_sig Loop_steps_nice'). cbn beta in H'. unfold dominatedWith in H'. 
   specialize H' with (i:=0). cbn [plus] in H'.
-  rewrite H'. 2:reflexivity. rewrite !mult_assoc,Nat.add_0_r. reflexivity.
+  rewrite H'. 2:reflexivity. rewrite !Nat.mul_assoc,Nat.add_0_r. reflexivity.
 Qed.
 

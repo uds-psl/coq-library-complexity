@@ -123,7 +123,7 @@ Proof.
   {hnf. setoid_rewrite L_Pro_in_iff. eauto. }
   eapply NoDup_incl_length in H. 2:eassumption.
   rewrite L_Pro_length in H.
-  eapply lt_not_le. 2:eassumption. rewrite <- Hlong.
+  eapply Nat.lt_nge. 2:eassumption. rewrite <- Hlong.
   destruct n. cbn. lia.
   replace (2*S n) with (S (S (2*n))) by lia.
   eapply Nat.pow_lt_mono_r. all:lia.
@@ -223,7 +223,7 @@ Proof.
    exists (s'::A);repeat split.
    +eauto using trace.
    +cbn;lia.
-   +cbn;intuition. all:subst. all:eauto using star,le_trans.
+   +cbn;intuition. all:subst. all:eauto using star,Nat.le_trans.
 Qed.
 
 Lemma maxSize_bounds_time k s m:

@@ -9,7 +9,7 @@ Import L_Notations.
 Lemma get_current H m H' alpha : put H m = (H', alpha) -> get H' alpha = Some m.
 Proof.
   unfold put, get. intros [= <- <-].
-  rewrite nth_error_app2. now rewrite <- minus_n_n. reflexivity.
+  now rewrite nth_error_app2, Nat.sub_diag.
 Qed.
 
 Lemma put_extends H H' m b: put H m = (H',b) -> extended H H'.

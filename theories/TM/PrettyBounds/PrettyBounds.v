@@ -63,7 +63,7 @@ Lemma dominatedWith_mult_l c c' x y:
   x <=(c) y ->
   (c'*x) <=(c'*c) y.
 Proof.
-  unfold dominatedWith. intros ?. rewrite <- mult_assoc. eapply Nat.mul_le_mono; eauto.
+  unfold dominatedWith. intros ?. rewrite <- Nat.mul_assoc. eapply Nat.mul_le_mono; eauto.
 Qed.
 
 Lemma dominatedWith_mult_r c c' x y:
