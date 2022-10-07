@@ -1,6 +1,6 @@
 From Undecidability.Shared.Libs.PSL Require Import Base FiniteTypes.
 Require Import Lia.
-From Complexity.Libs Require Import MorePrelim.
+From Complexity.Libs Require Import MorePrelim PSLCompat.
 
 (** * Covering Cards *)
 (*

@@ -3595,7 +3595,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
     intros []; simpl; try match goal with [ |- S ?a = 1] => enough (a = 0) by easy end. 
     1-4: apply notInZero; intros (x & H1 & H2)%in_map_iff; congruence. 
     apply dupfreeCount.
-    - apply dupfree_map; [intros; congruence | apply dupfree_elements]. 
+    - apply FinFun.Injective_map_NoDup; [intros; congruence | apply dupfree_elements]. 
     - apply in_map_iff. exists σ. split; easy. 
   Defined (* because informative *). 
   
@@ -3916,12 +3916,12 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
 
   Lemma Sigma_finRepr : finRepr Σ flatSigma. 
   Proof using flatTM_TM_compat. 
-    destruct flatTM_TM_compat. rewrite eq__sig. unfold Cardinality. easy. 
+    destruct flatTM_TM_compat. now rewrite eq__sig. 
   Qed. 
 
   Lemma states_finRepr : finRepr states flatstates. 
   Proof using flatTM_TM_compat. 
-    destruct flatTM_TM_compat. rewrite eq__states. unfold Cardinality. easy. 
+    destruct flatTM_TM_compat. now rewrite eq__states. 
   Qed. 
 
   Lemma preludeSigP_finRepr : finRepr (FinType (EqType preludeSig')) flatPreludeSig'. 
@@ -4143,7 +4143,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
       + intros (H1 & H2).
         destruct (nat_eq_dec (|l'|) (S n)). 
         * destruct l'; cbn in *; [congruence | ].
-          apply incl_lcons in H2 as (H2 & H3).
+          apply incl_cons_inv in H2 as (H2 & H3).
           assert (|l'| <= n) as H1' by lia. clear H1. 
           specialize (proj2 (IH l') (conj H1' H3)) as H4.
           left. exists x, l'. eauto. 
@@ -5197,7 +5197,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
     apply LProd.eqbProd. 
     - apply LNat.eqbNat_inst. 
     - apply List_eqb.eqbList. apply LOptions.eqbOption. apply LNat.eqbNat_inst. 
-  Qed. 
+  Qed.
 
   (** generate cards for all states*)
   Definition generateCardsForFlatNonHalt (q : nat) (m : option nat) : (list (card nat)) :=

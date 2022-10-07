@@ -207,6 +207,16 @@ Proof.
   unfold max_time, c__max1, c__max2.  nia. 
 Qed.
 
+(* from L/TM/TMEncoding.v *)
+Lemma sizeOfTape_by_size {sig} `{encodable sig} (t:(tape sig)) :
+  sizeOfTape t <= size (enc t).
+Proof.
+  unfold enc;cbn.
+  destruct t;cbn [tapeToList sizeOfTape length size].
+  all:rewrite ?app_length,?rev_length. all:cbn [length].
+  all:ring_simplify. all:try rewrite !size_list_enc_r. all:try nia.
+Qed.
+
 Definition sizeOfmTapesFlat_timeSize n := n * 57.
 Lemma sizeOfmTapesFlat_timeBySize {sig} `{encodable sig} (t:list (tape sig)) :
   sizeOfmTapesFlat_time t <= sizeOfmTapesFlat_timeSize (size (enc t)).
@@ -269,7 +279,7 @@ Proof.
   apply Nat.add_le_mono_r.
   
   induction f as [ | [x' y'] f].
-  { cbn. easy. }
+  { now cbn. }
   cbn - [mult]. cbn. rewrite <- Nat.add_assoc. rewrite IHf.
   do 2 rewrite eqbTime_le_l.  clear. ring_simplify. 
   nia.

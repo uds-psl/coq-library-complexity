@@ -7,6 +7,7 @@ From Undecidability.TM.Single Require EncodeTapes StepTM.
 From Complexity.TM.Single Require DecodeTapes.
 
 From Undecidability Require Import TM.Util.VectorPrelim.
+From Complexity.Libs Require Import PSLCompat.
 
 Unset Printing Coercions.
 
@@ -127,7 +128,7 @@ Section putFirst.
     Local Arguments Fin.F1 : clear implicits.
     Local Arguments Vector.cast : clear implicits.
 
-    Lemma putFirstAtEnd_dupfree m: dupfree (putFirstAtEnd m).
+    Lemma putFirstAtEnd_dupfree m: VectorDupfree.dupfree (putFirstAtEnd m).
     Proof.
       clear_all. apply dupfree_tabulate_injective.
       intros i j. destruct (Fin.to_nat i) as [i' Hi] eqn:eqi. destruct (Fin.to_nat j) as [j' Hj] eqn:eqj .
@@ -164,11 +165,11 @@ Section putFirst.
 
 
   Import LiftTapes.
-      
+
   Lemma putFirstAtEnd_to_list X n' (x:X) xs:
     (Vector.to_list (select (putFirstAtEnd n') (x ::: xs))) = Vector.to_list xs ++ [x].
   Proof.
-    clear. apply list_eq_nth_error. intros i.
+    apply nth_error_inj. intros i.
     rewrite !vector_nth_error_nat. destruct lt_dec.
     { rewrite select_nth. unfold putFirstAtEnd. rewrite nth_tabulate,Fin.to_nat_of_nat;cbn.
       destruct lt_dec.
@@ -201,7 +202,7 @@ Section putFirst.
     Vector.to_list v ++ [ts] = Vector.to_list v0 ->
     select (putEndAtFirst n') v0 = ts ::: v.
   Proof using.
-    intros H. rewrite <- putFirstAtEnd_to_list in H. apply Vectors.vector_to_list_inj in H.
+    intros H. rewrite <- putFirstAtEnd_to_list in H. apply vector_to_list_inj in H.
     subst v0. now setoid_rewrite putEnd_invL.
   Qed.
   

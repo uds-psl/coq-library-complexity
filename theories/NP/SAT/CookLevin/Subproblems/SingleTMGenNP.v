@@ -82,12 +82,12 @@ Proof.
     rewrite <- F5 in eq__start. now apply injective_index in eq__start. 
   - intros (fsig & M' & sfin & F1 & F2 & (certfin & F3 & (f & F4))). 
     split. 
-    { destruct F1. rewrite eq__sig. unfold Cardinality.Cardinality. eapply isFlatListOf_list_ofFlatType, F2. } 
+    { destruct F1. rewrite eq__sig. eapply isFlatListOf_list_ofFlatType, F2. } 
     split. 
     { destruct F1. apply eq__tapes. }
     exists (map index certfin), (flattenConfig f). 
     split. 
-    { destruct F1. rewrite eq__sig. unfold Cardinality.Cardinality. eapply isFlatListOf_list_ofFlatType. reflexivity. }
+    { destruct F1. rewrite eq__sig. eapply isFlatListOf_list_ofFlatType. reflexivity. }
     split; [now rewrite map_length | ].
     apply execFlatTM_correct. 
     exists fsig, 1, M', (initc M' [|initTape_singleTapeTM (sfin ++ certfin)|]), f. 

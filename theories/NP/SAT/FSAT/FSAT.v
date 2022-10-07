@@ -45,7 +45,13 @@ Lemma evalFormula_or_iff a f1 f2 : evalFormula a (f1 ∨ f2) = true <-> evalForm
 Proof. cbn. now rewrite orb_true_iff. Qed. 
 
 Lemma evalFormula_not_iff a f : evalFormula a (¬ f) = true <-> not (evalFormula a f = true).
-Proof. cbn. rewrite negb_true_iff. split; eauto. Qed. 
+Proof.
+  cbn. rewrite negb_true_iff. split; intro H.
+  - rewrite H. discriminate.
+  - destruct (evalFormula a f).
+    + now contradiction H.
+    + reflexivity.
+Qed. 
 
 Lemma evalFormula_prim_iff a v : evalFormula a v = true <-> v el a. 
 Proof. cbn. unfold evalVar. rewrite list_in_decb_iff; [easy | intros ]. now rewrite Nat.eqb_eq. Qed. 

@@ -2,7 +2,6 @@ From Undecidability Require Import TM.Util.Prelim.
 From Undecidability Require Import TM.Util.TM_facts TM.Compound.MoveToSymbol.
 
 Require Import ssrbool Lia.
-
 Lemma last_not_default X (d d':X) A :
   A <> [] -> last A d = last A d'.
 Proof. induction A. easy. destruct A;cbn. easy. intros ?. now apply IHA. Qed.
@@ -10,7 +9,7 @@ Proof. induction A. easy. destruct A;cbn. easy. intros ?. now apply IHA. Qed.
 
 Lemma removelast_as_tail X (x:list X): removelast x = rev (tail (rev x)).
 Proof.
-  rewrite tl_rev. now autorewrite with list.
+  rewrite tl_rev. symmetry. apply rev_involutive.
 Qed.
 
 Local Arguments removelast : simpl nomatch.
@@ -40,6 +39,7 @@ Proof.
   { destruct t;inv eq. all:cbn. split.
     -intros <-. right. eexists _,_,[],_.
      repeat split;eauto.
+     intros x Hx. destruct Hx.
     -intros [ | (t__L&c&t__R1&t__R2&[= -> -> -> ]&Hfalse&Hc&H'')];[ easy | ].
      destruct t__R1 as [ | c__R t__R1].
      2:{exfalso. cbn in *. rewrite Hfalse in Hf;auto. }

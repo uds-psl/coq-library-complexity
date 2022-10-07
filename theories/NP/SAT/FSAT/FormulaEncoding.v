@@ -106,8 +106,8 @@ Section encodings.
       (*we do a case analysis, thus we do not need XM *)
       destruct (nth_error b k) eqn:H3. 
       + destruct b0; [ | easy]. exfalso; apply H2. apply H. 
-        replace (s + k - s) with k by lia. easy.
-      + apply nth_error_none in H3. lia.
+        now replace (s + k - s) with k by lia.
+      + apply nth_error_None in H3. lia.
   Qed.
 
   (*we define what it means for a formula to encode a predicate *)

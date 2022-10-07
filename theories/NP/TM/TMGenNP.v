@@ -106,7 +106,7 @@ Proof.
     *remember (size (enc (TM, maxSize, steps))) as x eqn:Hn.
      rewrite size_flatTapes. 2:now apply mkIsFlatteningTapeOf.
      rewrite Ht'.
-     assert (n <= x /\ maxSize <= x /\ Cardinality.Cardinality sig <= x) as (->&->&->).
+     assert (n <= x /\ maxSize <= x /\ | elem sig | <= x) as (->&->&->).
      {inv HM;destruct TM; cbn in *. rewrite !size_prod,size_TM;cbn [fst snd].
       repeat apply conj.
       all:rewrite size_nat_enc_r at 1; subst;nia.

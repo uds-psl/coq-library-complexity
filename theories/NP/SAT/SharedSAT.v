@@ -1,5 +1,6 @@
 From Undecidability.L Require Import L.
-From Undecidability.L.Datatypes Require Import Lists LNat. 
+From Undecidability.L.Datatypes Require Import Lists LNat.
+From Complexity.Libs Require Export PSLCompat.
 Require Import Lia. 
 
 (** * Shared Definitions for SAT and FSAT *)
@@ -17,7 +18,7 @@ Qed.
 Lemma evalVar_monotonic a a' v : a <<= a' -> evalVar a v = true -> evalVar a' v = true.
 Proof. 
   intros H1 H2. rewrite evalVar_in_iff in *. firstorder.
-Qed. 
+Qed.
 
 Lemma evalVar_assgn_equiv a a' v : a === a' -> evalVar a v = evalVar a' v. 
 Proof. 

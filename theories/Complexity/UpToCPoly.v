@@ -240,58 +240,55 @@ Proof.
   intros H. rewrite !size_nat_enc. unfold c__natsizeS; nia. 
 Qed.
 
-Lemma le_add_l n m : m <= n + m. 
-Proof. lia. Qed. 
+(* Lemma le_add_l n m : m <= n + m. *)
+(* use Nat.le_add_l *)
 
 
 (** Facts we need to prove that a small assignment has an encoding size which is polynomial in the CNF's encoding size *)
 Lemma list_dupfree_incl_length (X : eqType) (a b : list X) : a <<= b -> dupfree a -> |a| <= |b|. 
 Proof. 
-  intros H1 H2. eapply NoDup_incl_length. 
-  - apply dupfree_Nodup, H2.
-  - apply H1. 
+  intros H1 H2. eapply NoDup_incl_length; assumption.
 Qed. 
 
-Lemma rem_app_eq (X : eqType) (l1 l2 : list X) (x : X) : rem (l1 ++ l2) x = rem l1 x ++ rem l2 x. 
-Proof. 
-  induction l1; cbn; [easy | ].
-  destruct Dec; cbn. 
-  - fold (rem (l1 ++ l2) x). rewrite IHl1. easy.
-  - fold (rem (l1 ++ l2) x). now rewrite IHl1. 
-Qed. 
+Definition rem {X: eqType} := remove (@eqType_dec X).
 
-Lemma list_rem_size_le (X : eqType) `{H : encodable X} (l : list X) x : size (enc (rem l x)) <= size (enc l). 
-Proof. 
+Lemma list_rem_size_le (X : eqType) `{H : encodable X} (l : list X) x : size (enc (rem x l)) <= size (enc l).
+Proof.
   induction l. 
-  - cbn. lia. 
-  - cbn. destruct Dec; cbn; rewrite !list_size_cons, IHl; lia. 
-Qed. 
+  - reflexivity.
+  - cbn. destruct eqType_dec; cbn; rewrite !list_size_cons, IHl; lia.
+Qed.
+
+Lemma remove_cons {X} {dec: eq_dec X} (a: X) l: remove dec a (a :: l) = remove dec a l.
+Proof.
+  cbn. destruct (dec a a) as [|H].
+  - reflexivity.
+  - now contradiction H.
+Qed.
 
 Lemma list_incl_dupfree_size (X : eqType) `{encodable X} (a b : list X) : a <<= b -> dupfree a -> size (enc a) <= size (enc b). 
 Proof. 
   intros H1 H2.  revert b H1.
   induction H2 as [ | a0 a H1 H2 IH]; intros. 
   - cbn. rewrite !size_list. cbn. lia.
-  - specialize (IH (rem b a0)). 
+  - specialize (IH (rem a0 b)).
     rewrite list_size_cons.
     cbn. rewrite IH. 
     2: { 
-      assert (rem (a0 :: a) a0 = a).  
-      { cbn. destruct Dec; [congruence | ]. cbn. 
-       fold (rem a a0). now rewrite rem_id. 
-      } 
-      rewrite <- H3. now apply rem_mono. 
+      assert (rem a0 (a0 :: a) = a).
+      { unfold rem. rewrite remove_cons. now apply notin_remove. } 
+      rewrite <- H3. now apply remove_incl.
     } 
     specialize (H0 a0 (or_introl eq_refl)). apply In_explicit in H0 as (b1 & b2 & ->).
-    rewrite !size_list, !rem_app_eq, !map_app, !sumn_app. cbn. 
-    destruct Dec; cbn; [congruence | ]. 
+    unfold rem. rewrite !size_list, !remove_app, !map_app, !sumn_app. cbn. 
+    destruct (eqType_dec a0 a0) as [|E]; [|now contradiction E].
     pose (elem_size := fun (x : X) => size (enc x) + c__listsizeCons). 
     fold elem_size.
-    enough (sumn (map elem_size (rem b1 a0)) <= sumn (map elem_size b1) /\ sumn (map elem_size (rem b2 a0)) <= sumn (map elem_size b2)) as H0.
+    enough (sumn (map elem_size (rem a0 b1)) <= sumn (map elem_size b1) /\ sumn (map elem_size (rem a0 b2)) <= sumn (map elem_size b2)) as H0.
     { destruct H0 as [-> ->]. nia. }
     specialize (list_rem_size_le b1 a0) as F1. 
     specialize (list_rem_size_le b2 a0) as F2. 
     rewrite !size_list in F1. rewrite !size_list in F2. 
     fold elem_size in F1. fold elem_size in F2.
-    split; nia. 
-Qed. 
+    split; nia.
+Qed.

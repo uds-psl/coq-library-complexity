@@ -1,5 +1,6 @@
 From Undecidability.L Require Import L_facts Complexity.ResourceMeasures AbstractMachines.FlatPro.Programs.
 Require Import Undecidability.Shared.Libs.PSL.Lists.BaseLists.
+Require Import ListDec.
 
 Set Default Proof Using "Type".
 Fixpoint L_Pro n {struct n}: list Pro :=
@@ -115,10 +116,9 @@ Proof.
   clear HallSmall'.
   erewrite <- map_length with (f:=compile) in Hlong. fold A' in Hlong.
   assert (Hdupfree : dupfree A').
-  {eapply dupfree_map. intros. now eapply compile_inj. eauto. }
+  {apply FinFun.Injective_map_NoDup. intros x y. apply compile_inj. exact Hdupfree'. }
   clear Hdupfree'.
   clearbody A'. clear A.
-  eapply dupfree_Nodup in Hdupfree.
   assert (H:A' <<= L_Pro (2*n)).
   {hnf. setoid_rewrite L_Pro_in_iff. eauto. }
   eapply NoDup_incl_length in H. 2:eassumption.
@@ -150,17 +150,32 @@ Section TraceArgument.
 
 End TraceArgument.
 
+(* TODO: remove for Coq 8.17 *)
+Lemma not_NoDup {X : eqType} (l: list X):
+    ~ NoDup l -> exists a l1 l2 l3, l = l1++a::l2++a::l3.
+Proof.
+intro H0. induction l as [|a l IHl].
+- contradiction H0; constructor.
+- destruct (NoDup_dec (@eqType_dec X) l) as [H1|H1].
+  + destruct (In_dec (@eqType_dec X) a l) as [H2|H2].
+    * destruct (in_split _ _ H2) as (l1 & l2 & ->).
+      now exists a, nil, l1, l2.
+    * now contradiction H0; constructor.
+  + destruct (IHl H1) as (b & l1 & l2 & l3 & ->).
+    now exists b, (a::l1), l2, l3.
+Qed.
+
 Lemma trace_not_dupfree_loop (X : eqType) (R: X -> X -> Prop) s (A:list X) :
   trace R (s::A) -> (~dupfree (s::A)) -> exists s' k, star R s s' /\ pow R (S k) s' s'.
 Proof.
-  intros tr (a&A1&A2&A3&eqA) % not_dupfree.
+  intros tr (a&A1&A2&A3&eqA) % not_NoDup.
   induction A1 in tr, s, A, eqA |- *.
   -inv eqA. eapply trace_app in tr. eauto using star. 
   -inv eqA. inv tr. now exfalso;induction A1;inv H1.
    edestruct IHA1 as (s0&k&R1&R2). 1,2:eassumption.
    exists s0, k. split. 2:eassumption.
    eauto using star.
-Qed.  
+Qed.
 
 
 Lemma time_Leftmost_space_trace s t k m:

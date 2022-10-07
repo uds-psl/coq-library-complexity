@@ -1,8 +1,9 @@
-From Undecidability.Shared.Libs.PSL Require Import FiniteTypes.
-Require Import Undecidability.Shared.Libs.PSL.FiniteTypes.BasicDefinitions.
 Require Import Lia.
+Require Export smpl.Smpl.
+Require Import Undecidability.Shared.Libs.PSL.FiniteTypes.BasicDefinitions.
+From Complexity.Libs Require Export PSLCompat.
 From Complexity.Libs.CookPrelim Require Import MorePrelim.
-Require Export smpl.Smpl. 
+ 
 
 (** * Representation of finite types by natural numbers *)
 (** This is needed as working with the direct extraction of finite types to L is not pleasant *)
@@ -191,7 +192,7 @@ Lemma isFlatListOf_incl1 (X : finType) (fin : list X) flat l:
 Proof.
   intros. revert fin H. induction l; cbn in *; intros. 
   - exists []; split; eauto. unfold isFlatListOf. now cbn.
-  - apply incl_lcons in H0 as (H0 & H1).
+  - apply incl_cons_inv in H0 as (H0 & H1).
     apply IHl with (fin := fin) in H1 as (l' & H2 & H3). 
     2: apply H. 
     rewrite H in H0. apply in_map_iff in H0 as (a' & H4 & H5).
@@ -208,7 +209,7 @@ Proof.
   - reflexivity.
   - induction l'; cbn. 
     + eauto.
-    + apply incl_lcons in H0 as (H0 & H1).
+    + apply incl_cons_inv in H0 as (H0 & H1).
       apply IHl' in H1. intros ? [<- | H2].
       * rewrite H. apply in_map_iff; eauto. 
       * now apply H1.  
@@ -269,22 +270,21 @@ Proof.
   intros. unfold ofFlatType in H0. 
   assert (sigT (fun a' =>nth_error (elem X) a = Some a')) as (a' & H2).
   { 
-    unfold ofFlatType in H0. rewrite H in H0.
-    unfold Cardinality in H0. apply nth_error_Some in H0. destruct nth_error; easy. 
+    rewrite H in H0. apply nth_error_Some in H0. now destruct nth_error.
   } 
   exists a'. split; [ easy | ].
   unfold index. specialize (nth_error_nth H2) as <-.
   apply getPosition_nth. 
-  + apply Cardinality.dupfree_elements. 
+  + apply dupfree_elements. 
   + eapply nth_error_Some_length, H2. 
 Qed.
 
-Lemma finReprElP_exists (X : finType) n : ofFlatType (Cardinality X) n -> { e:X | finReprEl' n e}.
+Lemma finReprElP_exists (X : finType) n : ofFlatType (| elem X |) n -> { e:X | finReprEl' n e}.
 Proof. 
-  intros. unfold ofFlatType,Cardinality in H. apply nth_error_Some in H. destruct (nth_error (elem X) n) eqn:H1; [ | congruence ].
+  intros. unfold ofFlatType in H. apply nth_error_Some in H. destruct (nth_error (elem X) n) eqn:H1; [ | congruence ].
   exists e. unfold finReprEl'. clear H.
   specialize (nth_error_nth H1) as <-. apply getPosition_nth. 
-  + apply Cardinality.dupfree_elements. 
+  + apply dupfree_elements. 
   + eapply nth_error_Some_length, H1.
 Defined. (* because sigma? *)
 
@@ -322,7 +322,7 @@ Lemma unflattenString (f : list nat) k : list_ofFlatType k f -> {f' : list (finT
 Proof. 
   intros H. 
   eapply finRepr_exists_list with (X := finType_CS (Fin.t k)) in H as (a' & H). 
-  2: { unfold finRepr. specialize (Fin_cardinality k). unfold Cardinality. easy. }
+  2: { unfold finRepr. symmetry. apply Fin_cardinality. }
   eauto.
 Qed. 
 
@@ -384,7 +384,7 @@ Proof.
   2: {
     split; [ intros | ]. 
     - rewrite (ofFlatType_dec_time_bound y a). poly_mono ofFlatType_dec_poly.
-      2: apply le_add_l with (n := size(enc a)). reflexivity.
+      2: apply Nat.le_add_l with (n := size(enc y)). reflexivity.
     - apply ofFlatType_dec_poly.
   }
   rewrite list_size_length.

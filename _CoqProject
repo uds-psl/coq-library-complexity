@@ -69,6 +69,8 @@ theories/L/TM/TapeDecode.v
 theories/L/TM/TMflatten.v
 
 
+theories/Libs/PSLCompat.v
+
 
 theories/Libs/Pigeonhole.v
 theories/Libs/UniformHomomorphisms.v
@@ -159,6 +161,7 @@ theories/TM/PrettyBounds/UnivBounds.v
 theories/TM/PrettyBounds/M2MBounds.v
 
 theories/TM/PrettyBounds/SpaceBounds.v
+theories/TM/PrettyBounds/SizeBounds.v
 theories/TM/PrettyBounds/BaseCodeSpace.v
 theories/TM/PrettyBounds/UnivSpaceBounds.v
 theories/TM/PrettyBounds/UnfoldClosBounds.v

@@ -432,14 +432,13 @@ Qed.
 (** ** Unflattening *)
 (** given a well-formed flat instance, we can derive a "canonical" (up to bijections of the finite type) CC instance *)
 (** we use Fin.t as the canonical finite type *)
-
-Require Import Undecidability.Shared.Libs.PSL.FiniteTypes.VectorFin Undecidability.Shared.Libs.PSL.FiniteTypes.Cardinality. 
+ 
 Import Coq.Init.Specif.
 Lemma unflattenString (f : list nat) k : list_ofFlatType k f -> {f' : list (finType_CS (Fin.t k)) & isFlatListOf f f'}.
 Proof. 
   intros H. 
   eapply finRepr_exists_list with (X := finType_CS (Fin.t k)) in H as (a' & H). 
-  2: { unfold finRepr. specialize (Fin_cardinality k). unfold Cardinality. easy. }
+  2: { unfold finRepr. specialize (Fin_cardinality k). easy. }
   eauto.
 Qed. 
 

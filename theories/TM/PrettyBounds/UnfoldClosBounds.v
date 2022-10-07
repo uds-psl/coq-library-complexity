@@ -70,7 +70,7 @@ Proof.
      rewrite H',!Code.Encode_nat_hasSize.
      rewrite LM_Lookup_nice.heap_greatest_address_leq, heap_greatest_address2_bound with (c:= length H).
      2:{ intros [] ? ?. now eapply HH. }
-     rewrite Ha at 1 2. rewrite Max.max_idempotent.
+     rewrite Ha at 1 2. rewrite Nat.max_id.
      cbv [Cons_constant.Cons_constant.time CaseNat.Constr_S_steps].
      set (tmp:=Code.size retT);cbv in tmp;subst tmp.
      unfold CaseList_steps_cons ,CasePair_steps,Constr_pair_steps ,Translate_steps,MoveValue_steps,Constr_cons_steps,Reset_steps,WriteValue_steps  .

@@ -146,11 +146,13 @@ Module CheckEncodesTapes.
       -destruct IHn as (v&t__Lv&t__Rv&(x__hd'&x__tl'&eq__hd'&Ht)&(x__init'&x__last'&eq__last'&->)).
        destruct t__R' as [ |? t__R'];inv Ht. cbn in Ht1.
        eexists (t0:::v),_,_;split.
-       +cbn. do 3 eexists. reflexivity. rewrite eq__hd, eq__hd'. unfold retr_comp_f. cbn;autorewrite with list;cbn. rewrite map_map. easy.
-       +cbn. rewrite eq__last, eq__last'. unfold retr_comp_f. cbn;autorewrite with list;cbn.
+       + do 3 eexists.
+        * rewrite Vector.to_list_cons. cbn. reflexivity.
+        * rewrite eq__hd, eq__hd'. unfold retr_comp_f. cbn;autorewrite with list;cbn. rewrite map_map. reflexivity.
+       + rewrite Vector.to_list_cons. cbn. rewrite eq__last, eq__last'. unfold retr_comp_f. cbn;autorewrite with list;cbn.
         eexists (_::_++_::_),_. split. 1:{ repeat (cbn;autorewrite with list). easy. }
         f_equal. repeat (cbn;autorewrite with list;try rewrite map_rev;try rewrite map_map). easy.
-      -intros ? v ?. destruct (destruct_vector_cons v) as (t0'&b'&->). cbn.
+      -intros ? v ?. destruct (destruct_vector_cons v) as (t0'&b'&->). rewrite Vector.to_list_cons. cbn.
        do 3 eexists. reflexivity. intros [= <- H]. revert H. unfold retr_comp_f;autorewrite with list;rewrite map_map.
        rewrite app_comm_cons,<-(map_cons (fun a : sigTape sig => Retr_f (sigList_X a))). rewrite <- eq__hd.
        intros H. assert (H':=H).

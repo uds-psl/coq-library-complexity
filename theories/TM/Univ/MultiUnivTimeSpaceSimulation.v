@@ -4,7 +4,7 @@ From Undecidability Require Import TM.Code.ProgrammingTools.
 From Undecidability Require Import TM.Univ.Univ. (* [Univ] for single-tape Turing machines *)
 From Undecidability Require Import TM.Single.EncodeTapes TM.Single.StepTM. (* Compiler for multi-tape Turing machines to single-tape Turing machines *)
 
-From Complexity Require Import PrettyBounds.
+From Complexity Require Import PrettyBounds PrettyBounds.SizeBounds.
 From Undecidability Require Import MaxList PrettyBounds.SizeBounds.
 From Complexity Require UnivBounds.
 From Complexity Require UnivSpaceBounds.
@@ -16,15 +16,14 @@ Local Arguments loopM {_ _} _ _ _.
 Local Arguments halt {_ _} _ _.
 Local Arguments step {_ _} _ _.
 
-(*
-Lemma vector_const_nil (X : Type) (x : X) :co
-  Vector.const x 0 = Vector.nil _.
-Proof. reflexivity. Qed.
-
-Lemma vector_const_cons (X : Type) (n : nat) (x : X) :
-  Vector.const x (S n) = x ::: Vector.const x n.
-Proof. cbn. reflexivity. Qed.
-*)
+(* From PSL/Lists/BaseLists.v *)
+Lemma map_repeat (X Y : Type) (f : X -> Y) (n : nat) (a : X) :
+  map f (repeat a n) = repeat (f a) n.
+Proof.
+  induction n as [|n IHn].
+  - reflexivity.
+  - cbn. now rewrite IHn.
+Qed.
 
 
 Lemma max_list_rec_repeat (a : nat) (s : nat) (n : nat) :
@@ -311,9 +310,9 @@ Section MakeSingleTape.
     intros T.
     unfold size. cbn. unfold encode_tapes. cbn.
     setoid_rewrite Encode_list_hasSize with (cX := Encode_tape sigM).
-    induction T as [ | t n T IH]; cbn; intros.
-    - lia.
-    - rewrite Encode_tape_hasSize. rewrite vector_sum_shift. rewrite IH. lia.
+    induction T as [ | t n T IH]; intros.
+    - reflexivity.
+    - rewrite vector_to_list_cons. cbn. rewrite Encode_tape_hasSize. rewrite vector_sum_shift. rewrite IH. lia.
   Qed.
 
   Lemma makeSingleTape_sizeOfTape (T : tapes sigM n) :
@@ -717,7 +716,7 @@ Existing Instance retr_sigSimTape_sigUniv.
         fp M T k
         <=(c)
            let x := (size (vector_to_list (makeUnivTapes retr_sigSimGraph_sigUniv retr_sigSimTape_sigUniv M T)) + size k * size (graph_of_TM M)) in
-           x * x * (size k * size (graph_of_TM M) * size (Cardinality.Cardinality (state M)))
+           x * x * (size k * size (graph_of_TM M) * size (| elem (state M) |))
     }.
   Proof.
     eexists. intros. eapply dominatedWith_trans. apply (proj2_sig (fp_nice1 M)). apply dominatedWith_mult.
@@ -917,11 +916,10 @@ Section MakeSingleTape_Bounded_by_sizeOfmTapes.
     rewrite Encode_tapes_hasSize.
     setoid_rewrite <- vector_to_list_sum.
     rewrite list_sum_le_max_times_length.
-    rewrite vector_to_list_length.
+    rewrite Vector.length_to_list.
     apply add_le_mono; auto.
     rewrite tam.
-    ring_simplify.
-    nia.
+    now ring_simplify.
   Qed.
 
   Lemma tamtam (T : tapes sig n) :
@@ -940,10 +938,10 @@ Section MakeSingleTape_Bounded_by_sizeOfmTapes.
     rewrite makeSingleTape_sizeOfTape.
     rewrite <- vector_to_list_sum.
     rewrite list_sum_le_max_times_length.
-    rewrite vector_to_list_length.
+    rewrite Vector.length_to_list.
     apply add_le_mono; auto.
     rewrite tamtam.
-    ring_simplify. nia.
+    now ring_simplify.
   Qed.
 
 End MakeSingleTape_Bounded_by_sizeOfmTapes.

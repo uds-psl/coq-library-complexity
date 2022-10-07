@@ -1,6 +1,5 @@
 From Undecidability Require Import TM.Util.TM_facts.
 Require Import Undecidability.Shared.Libs.PSL.FiniteTypes.
-From Undecidability.Shared.Libs.PSL.FiniteTypes Require Import VectorFin Cardinality.
 
 (** A firstorder encoding and the connection to an arbitrary TM *)
 Inductive flatTM : Type :=
@@ -34,12 +33,11 @@ Inductive isFlatteningHaltOf {st:finType} (f : list bool) (f' : st -> bool) : Pr
     (R__halt : forall (p:st),
         nth (index p) f false = f' p) : isFlatteningHaltOf f f'.
 
-
 Inductive isFlatteningTMOf {sig' n} (M:flatTM) (M': TM sig' n) : Prop :=
   mkIsFlatteningTMOf
     (eq__tapes : tapes M = n)
-    (eq__sig : sig M = Cardinality sig')
-    (eq__states : (states M) = Cardinality (TM.state M'))
+    (eq__sig : sig M = |elem sig'|)
+    (eq__states : (states M) = |elem (TM.state M')| )
     (R__trans : isFlatteningTransOf (trans M) (TM.trans (m:=M')))
     (eq__start : start M = index (TM.start M'))
     (R__halt : isFlatteningHaltOf (halt M) (TM.halt (m:=M')))

@@ -380,10 +380,6 @@ Import M_LHeapInterpreter.
 
 From Complexity Require Import PolyTimeComputable.
 
-Lemma sumn_repeat n c : sumn (repeat c n) = n*c.
-Proof. induction n;cbn;nia.
-Qed.
-
 Lemma pTC_Encode_Com : polyTimeComputable (Encode_Com).
 Proof.
   unfold Encode_Com;cbn. unfold Com_to_sum.
@@ -395,8 +391,9 @@ Proof.
   eexists (fun x => x*5 + 33).
   { intros [];cbn. 2-4:now cbv.
     rewrite size_list;unfold enc;cbn - ["+"].
-    rewrite map_app,map_repeat,sumn_map_add,sumn_map_c,map_app,sumn_app,map_repeat, map_map,app_length,repeat_length,map_length,sumn_repeat.
-    unfold enc. cbn;ring_simplify. rewrite LNat.size_nat_enc. unfold LNat.c__natsizeS, LNat.c__natsizeO, c__listsizeNil, c__listsizeCons. nia.
+    rewrite map_app,MCList.map_repeat,sumn_map_add,sumn_map_c,map_app,sumn_app,MCList.map_repeat,map_map,app_length,repeat_length,map_length,sumn_repeat.
+    unfold enc. cbn;ring_simplify. rewrite LNat.size_nat_enc. unfold LNat.c__natsizeS, LNat.c__natsizeO, c__listsizeNil, c__listsizeCons.
+ nia.
   }
   1,2:now smpl_inO.
 Qed.

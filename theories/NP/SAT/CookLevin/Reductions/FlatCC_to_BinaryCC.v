@@ -4,6 +4,19 @@ From Complexity.Libs Require Import CookPrelim.MorePrelim UniformHomomorphisms F
 From Complexity.NP.SAT.CookLevin Require Import BinaryCC FlatCC CC_to_BinaryCC. 
 Require Import Lia.
 
+#[export] Instance equi_equivalence X: Equivalence (@equi X).
+Proof.
+  eexists.
+  - intro l. split; apply incl_refl.
+  - intros l l' H. split; apply H.
+  - intros l l' l'' [] []. split; eapply incl_tran; eassumption.
+Qed.
+
+#[export] Instance in_equi_proper X x: Proper (@equi X ==> Basics.impl) (In x).
+Proof.
+  intros ??[H]?. now apply H.
+Qed.
+
 (** * Reduction of FlatCC to BinaryCC *)
 (** logically, we reduce FlatCC to CC and use the reduction of CC to BinaryCC *)
 (** but in order to make the reduction extractable, we give a shortcut reduction which produces instances which are the same up to syntax (like reordering)*)
@@ -78,7 +91,7 @@ Section fixInstanceA.
     split; intros a H; [unfold hfinal in H | unfold CC_homomorphisms.hfinal in H]; 
     apply in_map_iff in H as (subs & <- & H); apply isFlattening in H as (subs' & H & H1);
       apply isFlatListOf_hom_agree in H1; apply in_map_iff; eauto. 
-  Qed. 
+  Qed.
 
   (** equivalence of well-formedness *)
   Lemma BinaryCC_instances_wf_equivalent : BinaryCC_wellformed finhBinaryCC <-> BinaryCC_wellformed hBinaryCC. 
@@ -88,12 +101,12 @@ Section fixInstanceA.
     rewrite <- !HSigma, <- !HWidth, <- !HOffset. 
     split; intros (H1 & H2 & H3 & H4 &H5 & H6); repeat match goal with [ |- _ /\ _] => split end; try easy.
     - unfold hinit. erewrite isFlatListOf_hom_agree; [ | easy]. apply H4. 
-    - intros. rewrite (isFlatCardsOf_hom_agree) in H. easy.
+    - intros. now rewrite (isFlatCardsOf_hom_agree) in H.
     - unfold hinit. erewrite isFlatListOf_hom_agree; [ | easy]. apply H6. 
     - unfold hinit in H4. erewrite isFlatListOf_hom_agree in H4; [ | easy]. apply H4. 
-    - intros. rewrite <- (isFlatCardsOf_hom_agree) in H. easy.
+    - intros. now rewrite <- (isFlatCardsOf_hom_agree) in H.
     - unfold hinit in H6. erewrite isFlatListOf_hom_agree in H6; [ | easy]. apply H6. 
-  Qed. 
+  Qed.
 
   (** now the instances are in fact equivalent *)
   Lemma BinaryCC_instances_equivalent : BinaryCCLang finhBinaryCC <-> BinaryCCLang hBinaryCC. 

@@ -33,7 +33,7 @@ Lemma dominatedWith_match_tape (sig : Type) (c0 c1 c2 c3 z : nat)
   | rightof l ls => f2 l ls
   | midtape ls m rs => f3 ls m rs
   end <=(max c0 (max c1 (max c2 c3) )) z.
-Proof with reflexivity + apply Nat.mul_le_mono; eauto 4 using le_trans, Nat.le_max_r,Nat.le_max_l.
+Proof with reflexivity + apply Nat.mul_le_mono; eauto 4 using Nat.le_trans, Nat.le_max_r,Nat.le_max_l.
   intros H1 H2 H3 H4. unfold dominatedWith in *.
   destruct tp.
   - rewrite H1...
@@ -60,7 +60,7 @@ Lemma dominatedWith_match_move (c0 c1 c2 z : nat)
   | Rmove => f1
   | Nmove => f2
   end <=(max c0 (max c1 c2)) z.
-Proof with reflexivity + apply Nat.mul_le_mono; eauto 4 using le_trans, Nat.le_max_r,Nat.le_max_l.
+Proof with reflexivity + apply Nat.mul_le_mono; eauto 4 using Nat.le_trans, Nat.le_max_r,Nat.le_max_l.
   intros H1 H2 H3. unfold dominatedWith in *.
   destruct m.
   - rewrite H1...
@@ -186,12 +186,11 @@ Section ToSingleTape_bounds.
     match goal with [ |- ?x <=(?c) ?y ] => enough (match n with 0 => x | S n' => x end <=(c) y) by (destruct n; auto) end.
     domWith_match; subst.
     - rewrite (destruct_vector_nil T). domWith_approx.
-    - pose proof (destruct_vector_cons T) as (tp&T'&->). cbn. domWith_approx.
+    - pose proof (destruct_vector_cons T) as (tp&T'&->). domWith_approx.
       eapply dominatedWith_trans.
       + apply (proj2_sig ReadCurrentSymbols_Loop_steps_cons_nice).
-      + cbn. domWith_approx.
+      + rewrite Vector.to_list_cons. domWith_approx.
   Qed.
-
 
   Lemma Encode_tapes_hasSize {sig : Type} (tps : list (tape sig)) :
     size tps <= length tps * (3 + greatest_tape tps) + 1.
@@ -589,12 +588,12 @@ Instance sub_le_mono : Proper (le ==> ge ==> le) minus.
       enough (size (vector_to_list T) <= size (vector_to_list (doAct_multi T act))) by nia.
       unfold doAct_multi. rewrite <- map_vect_list_eq. apply size_doActions'.
     - eapply dominatedWith_trans. apply (proj2_sig DoActions_steps_nice).
-      + apply vector_to_list_length.
+      + apply Vector.length_to_list.
       + apply dominatedWith_add_r. 2: now rewrite <- size_tapes_ge1.
         apply dominatedWith_solve. unfold doAct_multi. rewrite <- map_vect_list_eq.
         enough ((| vector_to_list T |) <= size (map_vect_list (doAct (sig:=eqType_X (type sig))) act (vector_to_list T))) by nia.
-        rewrite vector_to_list_length.
-        rewrite Encode_list_hasSize. rewrite <- Encode_list_hasSize_ge_length. now rewrite map_vect_list_length, vector_to_list_length.
+        rewrite Vector.length_to_list.
+        rewrite Encode_list_hasSize. rewrite <- Encode_list_hasSize_ge_length. now rewrite map_vect_list_length, Vector.length_to_list.
     - eapply dominatedWith_trans. apply (proj2_sig MoveToStart_steps_nice). apply dominatedWith_solve. nia.
     - enough (1 <= size (vector_to_list (doAct_multi T act))) by nia. apply size_tapes_ge1.
   Qed.
@@ -611,9 +610,9 @@ Instance sub_le_mono : Proper (le ==> ge ==> le) minus.
     - apply dominatedWith_solve. unfold doAct_multi. rewrite <- map_vect_list_eq. rewrite !size_doActions. reflexivity.
     - ring_simplify. domWith_approx.
       + rewrite (Nat.mul_comm 4), <- Nat.mul_comm, !Nat.mul_assoc. apply dominatedWith_mult_r.
-        apply dominatedWith_solve. enough (n <= size (vector_to_list T)) by nia. now rewrite Encode_list_hasSize, <- Encode_list_hasSize_ge_length, vector_to_list_length.
+        apply dominatedWith_solve. enough (n <= size (vector_to_list T)) by nia. now rewrite Encode_list_hasSize, <- Encode_list_hasSize_ge_length, Vector.length_to_list.
       + rewrite (Nat.mul_comm 4), <- Nat.mul_comm, !Nat.mul_assoc. apply dominatedWith_mult_r.
-        apply dominatedWith_solve. enough (n <= size (vector_to_list T)) by nia. now rewrite Encode_list_hasSize, <- Encode_list_hasSize_ge_length, vector_to_list_length.
+        apply dominatedWith_solve. enough (n <= size (vector_to_list T)) by nia. now rewrite Encode_list_hasSize, <- Encode_list_hasSize_ge_length, Vector.length_to_list.
   Qed.
 
 

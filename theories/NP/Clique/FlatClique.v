@@ -99,11 +99,11 @@ Section fixGraph.
   Proof using H. 
     intros Hc. exists (map index L). split; [ | now rewrite map_length].
     eapply clique_flat_agree. 
-    - apply dupfree_map. 2: apply Hc. intros. now apply injective_index. 
+    - apply FinFun.Injective_map_NoDup. 2: apply Hc. unfold injective. apply injective_index. 
     - apply Hc. 
     - apply isFlatListOf_list_finReprEl'. reflexivity. 
-    - apply Hc. 
-  Defined (* because informative*). 
+    - exact Hc. 
+  Defined. (* because informative*)
 
   Lemma clique_unflatten (l : list nat) : isfClique G l -> { L : list (V UG) & isClique L /\ |L| = |l| }. 
   Proof using H. 
@@ -116,7 +116,7 @@ Section fixGraph.
     - apply Hc. 
     - eapply map_dupfree. rewrite <- H1. apply Hc. 
     - apply isFlatListOf_list_finReprEl', H1. 
-  Defined (* because informative*). 
+  Defined. (* because informative*)
 End fixGraph.
 
 (** ** extraction *)

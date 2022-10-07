@@ -265,13 +265,12 @@ Qed.
 (** ** Mapping FlatTCC instances to canonical TCC instances *)
 (** from a flat instance, we can restore a canonical non-flat instance *)
 
-Require Import Undecidability.Shared.Libs.PSL.FiniteTypes.VectorFin Undecidability.Shared.Libs.PSL.FiniteTypes.Cardinality. 
 Lemma unflattenTCCCardP (w : TCCCardP nat) k : 
   TCCCardP_ofFlatType w k -> sigT (fun (w' : TCCCardP (finType_CS (Fin.t k))) => isFlatTCCCardPOf w w'). 
 Proof. 
   intros. destruct w. destruct H as (H1 & H2 & H3). cbn in *.
   assert (finRepr (finType_CS (Fin.t k)) k). 
-  { unfold finRepr. specialize (Fin_cardinality k) as H4. unfold Cardinality in H4. easy. }
+  { unfold finRepr. now specialize (Fin_cardinality k) as H4. }
   eapply (finRepr_exists H) in H1 as (a1 & H1).  
   eapply (finRepr_exists H) in H2 as (a2 & H2). 
   eapply (finRepr_exists H) in H3 as (a3 & H3). 

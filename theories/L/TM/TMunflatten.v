@@ -1,11 +1,8 @@
-Require Import Undecidability.Shared.Libs.PSL.FiniteTypes.
-From Undecidability Require Import L.Functions.EqBool.
-From Undecidability.Shared.Libs.PSL.FiniteTypes Require Import VectorFin Cardinality.
-
-From Undecidability Require Import TM.Util.TM_facts.
-From Complexity Require Import L.TM.TMflat.
+From Undecidability Require Import L.Functions.EqBool TM.Util.TM_facts.
 From Undecidability Require L.TM.TMEncoding.
-
+From Undecidability.L.Functions Require Import FinTypeLookup.
+From Complexity Require Import L.TM.TMflat.
+From Complexity.Libs Require Export PSLCompat.
 
 Definition Vector_of_list_length A n (l:list A) : option (Vector.t A n) :=
   match Nat.eq_dec (length l) n with
@@ -37,11 +34,11 @@ Definition unflatten_acts (sig:finType) n (l__r : list (option nat * move)) : (V
   | Some l__r => l__r
   | _ => Vector.const (None,Nmove) n
   end.
-  
+
 Definition unflatten_trans (states:finType) (sig:finType) d n (f:list (nat * list (option nat) * (nat * list (option nat * move))))
   : states * Vector.t (option sig) n -> states * Vector.t (option sig * move) n :=
   fun '(st,l) =>
-    let (st__o,l__r) := lookup f (index st,map (option_map (fun x => index x)) (Vector.to_list l)) (index st,repeat (None,Nmove) n) in
+    let (st__o,l__r) := lookup (index st,map (option_map (fun x => index x)) (Vector.to_list l)) f (index st,repeat (None,Nmove) n) in
     (nth st__o (elem _) d, unflatten_acts sig n l__r).
 
 
@@ -52,7 +49,7 @@ Local Definition def n : Fin.t (max 1 n).
 Proof.
   destruct n;cbn.
   all:now constructor.
-Defined (* because ?*).
+Defined. (* because ?*)
 
 Program Definition unflattenTM (M:flatTM) : TM (finType_CS (Fin.t (sig M))) (tapes M) :=
   let d := def _ in
@@ -63,29 +60,28 @@ Program Definition unflattenTM (M:flatTM) : TM (finType_CS (Fin.t (sig M))) (tap
   |}.
 
 Lemma index_nth_elem (X:finType) i d:
-  i < Cardinality X
+  i < | elem X |
   -> index (nth (A:=X) i (elem _) d) = i.
 Proof.
   intros. unfold index. apply getPosition_nth.
-  -eapply dupfree_elements.
-  -refine (_:_ < Cardinality _). easy.
+  - eapply dupfree_elements.
+  - assumption.
 Qed.
 
 Lemma index_nth_elem_fint i n d:
   i < n
   -> index (nth (A:=Fin.t n)i (elem _) d) = i.
 Proof.
-  intros. 
-  eapply index_nth_elem.
-  refine (_:_ < Cardinality _);setoid_rewrite Fin_cardinality at 1. easy.
+  intros. eapply index_nth_elem.
+  now rewrite Fin_cardinality.
 Qed.
 
 Definition defFin (X:finType):
-  0 < Cardinality X
-  -> X.
+  0 < | elem X | -> X.
 Proof.
-  unfold Cardinality.
-  destruct (elem X). cbn. intros. lia. easy.
+  destruct (elem X); intro H.
+  - exfalso. eapply Nat.lt_irrefl. exact H.
+  - exact e.
 Qed.
 
 Definition unflatten_in (sig:finType) n (l__r : list (option nat)) : (Vector.t (option sig) n) :=
@@ -96,22 +92,21 @@ Definition unflatten_in (sig:finType) n (l__r : list (option nat)) : (Vector.t (
 
 Lemma unflatten_in_correct (sig:finType) n v:
   length v = n ->
-  (forall a : nat, Some a el v -> a < Cardinality sig) ->
+  (forall a : nat, Some a el v -> a < | elem sig |) ->
   map (option_map index) (Vector.to_list (unflatten_in sig n v)) = v.
 Proof.
   intros <-.
   unfold unflatten_in.
-  erewrite <- map_length.
-  rewrite Vector_of_list_length_eq,VectorSpec.to_list_of_list_opp.
+  erewrite <- (map_length (unflatten_symb sig) v).
+  rewrite Vector_of_list_length_eq, VectorSpec.to_list_of_list_opp.
   rewrite MCList.map_map_compose.
   intros. 
   erewrite map_ext_in with (g:=fun x => x). now apply map_id.
   
   intros. destruct a. 2:easy.
-  apply H in H0. 
-  unfold Basics.compose. cbn.
+  apply H in H0. cbn.
   unshelve erewrite nth_indep with (d':= Some _).
-  -eapply defFin. lia.
+  -eapply defFin. apply (Nat.lt_lt_0 _ _ H0).
   -rewrite map_nth. cbn.
    erewrite index_nth_elem. all:try easy.
   -rewrite map_length. easy.
@@ -161,12 +156,12 @@ Admitted.*)
 
 Lemma unflatten_acts_correct (sig:finType) n v':
   length v' = n ->
-  (forall a m , (Some a,m) el v' -> a < Cardinality sig) ->
+  (forall a m , (Some a,m) el v' -> a < | elem sig |) ->
   map (map_fst (option_map index)) (Vector.to_list (unflatten_acts sig n v')) = v'.
 Proof.
   intros <-.
   unfold unflatten_acts,unflatten_acts'.
-  erewrite <- map_length.
+  erewrite <- (map_length _ v').
   rewrite Vector_of_list_length_eq,VectorSpec.to_list_of_list_opp.
   rewrite MCList.map_map_compose.
   intros. 
@@ -187,20 +182,6 @@ Lemma vector_to_list_length X n (l: Vector.t X n):
   length (Vector.to_list l) = n.
 Proof.
   induction l;cbn. easy. rewrite IHl at 1. reflexivity.
-Qed.
-
-Lemma lookup_sound' (A: eqType) (B: Type) (L : list (prod A B)) a b def :
-  (forall a' b1 b2, (a',b1) el L -> (a',b2) el L -> b1=b2) -> ( (a,b) el L \/ ((forall b', ~ (a,b') el L) /\ b = def) ) -> lookup L a def = b.
-Proof.
-  intros H1 H2. unfold lookup.
-  destruct filter eqn:E.
-  - destruct H2 as [H2|H2].
-    +assert ((a,b) el filter (fun p : A * B => Dec (fst p = a)) L) by ( rewrite in_filter_iff ; eauto).
-     now rewrite E in H.
-    +easy.
-  - destruct p. assert ((e,b0) el (filter (fun p : A * B => Dec (fst p = a)) L)) by now rewrite E.
-    rewrite in_filter_iff in H. 
-    dec; cbn in *; subst; firstorder.
 Qed.
 
 Lemma unflatten_trans_correct st sig n d trans0:
@@ -238,19 +219,18 @@ Proof.
     cbn -[finType_CS]. right.
     setoid_rewrite index_nth. split. easy.
     clear. unfold unflatten_acts,unflatten_acts'.
-    rewrite map_repeat. cbn.
+    rewrite MCList.map_repeat. cbn.
     (*Set Printing Implicit.*)
     pattern n at 1 2 4 5 6 7.
     replace n with (length (@repeat (option (Fin.t sig) * move) (@None (Fin.t sig), Nmove) n)) at 1.
     2:now rewrite repeat_length.
     rewrite Vector_of_list_length_eq.
-    induction n;cbn. easy.
-    rewrite <- IHn. easy. 
+    now induction n;cbn.
 Qed.
 
 Lemma isFlatteningTrans_validFlatTrans n sig' (M' : TM sig' n) f:
 isFlatteningTransOf f (TM.trans (m:=M'))
--> validFlatTrans (Cardinality sig') n (Cardinality (TM.state M')) f.
+-> validFlatTrans (| elem sig' |) n (| elem (TM.state M')|) f.
 Proof.
   intros [H'].
   split.
@@ -259,7 +239,7 @@ Proof.
    enough (x1=x5) by congruence.
    clear - eq2.
    eapply map_injective in eq2.
-   +now apply vector_to_list_inj.
+   + now apply vector_to_list_inj.
    +intros [] [] [=]. 2:easy.
     f_equal;eauto using injective_index.
   -intros. eapply H' in H as (?&?&?&?&?&->&->&->&->).
@@ -290,10 +270,8 @@ Proof.
    rewrite H_st. intros ?.
    unfold index. setoid_rewrite getPosition_nth. easy.
    +apply dupfree_elements.
-   +refine (_:_ < Cardinality _).
-    setoid_rewrite Fin_cardinality at 1. easy.
-  -cbn -[max]. rewrite H_st.
-   econstructor. reflexivity.
+   +now setoid_rewrite Fin_cardinality at 1.
+  - now econstructor.
 Qed.
 
 Lemma isFlattening_is_valid M sig n (M':TM sig n):
@@ -455,7 +433,7 @@ Qed.
 
 Lemma flatteningTapeIsValid (sig:finType) n t (t' : TM_facts.tapes sig n):
   isFlatteningTapesOf t t' ->
-  isValidFlatTapes (Cardinality.Cardinality sig) n t = true.
+  isValidFlatTapes (| elem sig |) n t = true.
 Proof.
   intros H. inv H.
   unfold isValidFlatTapes.
@@ -473,7 +451,7 @@ Qed.
 
 
 Lemma isUnflattableTape sig t:
-  isValidFlatTape (Cardinality sig) t = true -> {t' & t = (mapTape (index (F:=sig)) t')}.
+  isValidFlatTape (| elem sig |) t = true -> {t' & t = (mapTape (index (F:=sig)) t')}.
 Proof.
   cbn. unfold isValidFlatTape.
   intros H. rewrite forallb_forall in H. setoid_rewrite Nat.ltb_lt in H.
@@ -501,7 +479,7 @@ Proof.
 Qed.
    
 Lemma isUnflattableTapes sig n t :
-  isValidFlatTapes (Cardinality sig) n t = true -> {t' & isFlatteningTapesOf (sig:=sig) (n:=n) t t'}.
+  isValidFlatTapes (| elem sig |) n t = true -> {t' & isFlatteningTapesOf (sig:=sig) (n:=n) t t'}.
 Proof.
   cbn. unfold isValidFlatTapes.
   intros H. destruct (Nat.eqb_spec (length t) n). 2:easy. subst n.

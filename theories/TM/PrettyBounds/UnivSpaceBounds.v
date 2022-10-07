@@ -223,14 +223,14 @@ Section Univ_nice.
   Proof.
     intros def.
     unfold graph_of_fun.
-    intros H % map_eq_nil.
+    intros H % List.map_eq_nil.
     eapply enum_not_nil with (X := X); eauto.
   Qed.
 
   Lemma graph_of_TM_not_nil : graph_of_TM M <> nil.
   Proof.
     unfold graph_of_TM.
-    intros H % map_eq_nil.
+    intros H % List.map_eq_nil.
     apply (graph_of_fun_not_empty (f := graph_function (M:=M))) in H; eauto.
     cbn. split. now constructor. apply start.
   Qed.
@@ -669,7 +669,7 @@ Fixpoint Univ_size_bound2_fix
       + rewrite Encode_state_hasSize. nia.
       + intros ? (?&<-&?)%in_map_iff; cbn.
         destruct x0. cbn in *. clear H0.
-        apply le_plus_trans.
+        eapply Nat.le_trans. 2: apply Nat.le_add_r.
         rewrite <- Nat.le_max_l.
         enough (index e + 2 <= size (graph_of_TM M)) by nia.
         apply tamtam.
@@ -679,14 +679,14 @@ Fixpoint Univ_size_bound2_fix
       + intros ? (?&<-&?)%in_map_iff.
         setoid_rewrite Encode_list_hasSize.
         rewrite <- Nat.le_max_l.
-        apply le_plus_trans. apply tam. now apply BaseCode.Encode_list_hasSize_el.
+        eapply Nat.le_trans. 2: apply Nat.le_add_r. apply tam. now apply BaseCode.Encode_list_hasSize_el.
     - rewrite H4. unfold Univ_size_bound, Univ_size_bound4.
       apply max_list_rec_lower_bound.
       + enough (2 <= size (graph_of_TM M)) by nia. apply Encode_graph_hasSize_ge2.
       + intros ? (?&<-&?)%in_map_iff.
         setoid_rewrite Encode_list_hasSize.
         rewrite <- Nat.le_max_l.
-        apply le_plus_trans. apply tam.
+        eapply Nat.le_trans. 2: apply Nat.le_add_r. apply tam.
         rewrite <- BaseCode.Encode_list_hasSize_el; eauto.
         destruct x0. cbn. destruct p.
         repeat (setoid_rewrite Encode_pair_hasSize; cbn). setoid_rewrite <- Encode_pair_hasSize.

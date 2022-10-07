@@ -35,7 +35,7 @@ Proof.
   specialize encode_tape_invariants with (t0:=x') as [-> | (b__L'&b__R'&t__x'&Hx'&Hsymb__x'&Hmark__x'&neq__x')]. now destruct x;inv H.
   assert (Hl_eq:| encode_tape x | = | encode_tape x' |).
   { decide (| encode_tape x | < | encode_tape x' |) as [Hlt | Hlt]. 2:nia. exfalso.
-    rewrite Hx, Hx' in Hlt. cbn in Hlt. apply lt_S_n in Hlt. autorewrite with list in Hlt. apply Nat.add_lt_mono_r in Hlt.
+    rewrite Hx, Hx' in Hlt. cbn in Hlt. apply Nat.succ_lt_mono in Hlt. autorewrite with list in Hlt. apply Nat.add_lt_mono_r in Hlt.
     assert (Hlast:nth_error (encode_tape x ++ t) (1 +  | t__x |) = Some (RightBlank b__R)).
     { rewrite Hx. rewrite nth_error_app1. 2:now cbn;autorewrite with list;cbn;nia.
       setoid_rewrite (nth_error_app2 (LeftBlank b__L :: t__x)). 2:cbn;nia.

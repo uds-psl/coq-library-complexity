@@ -1,8 +1,7 @@
 From Undecidability.L Require Import L.
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import Lists LNat LProd.
-From Undecidability.Shared.Libs.PSL.FiniteTypes Require Import FinTypes Cardinality VectorFin.
-From Complexity.Libs Require Import CookPrelim.MorePrelim Pigeonhole.
+From Complexity.Libs Require Import PSLCompat CookPrelim.MorePrelim Pigeonhole.
 From Complexity.NP.Clique Require Import Clique UGraph.
 From Complexity.NP.SAT Require Import SAT kSAT.
 
@@ -24,7 +23,7 @@ Section fixSAT.
 
   (** We start by defining the graph *)
 
-  Definition Ncl := (|N|). 
+  Definition Ncl := |N|.
 
   Definition literalsConflict l1 l2 := 
     let (b1, v1) := l1 in 
@@ -81,7 +80,7 @@ Section fixSAT.
     - destruct cnfGetLiteral; [ | now left].
       destruct cnfGetLiteral; [ | now left].
       destruct (literalsConflict_dec p p0); tauto.
-  Defined (* because informative*). 
+  Defined. (* because informative*)
 
   Definition Gcnf := Build_UGraph Ecnf_dec Ecnf_symm.
 
@@ -113,12 +112,12 @@ Section fixSAT.
       exists (@Fin.F1 (|l0|), @Fin.F1 n). easy.
     Qed.
 
-    Lemma nth_index (t : finType) (def : t) i: i < (Cardinality t) -> index (nth i (elem t) def) = i.
+    Lemma nth_index (t : finType) (def : t) i: i < (| elem t |) -> index (nth i (elem t) def) = i.
     Proof. 
       intros H. 
       unfold index. apply getPosition_nth. 
-      - apply Cardinality.dupfree_elements.
-      - apply H.
+      - apply dupfree_elements.
+      - exact H.
     Qed.
   
     (*we fix the index of the clause: the same clause might appear twice, but for the proof, we really need to work on a particular clause given by an index *)
@@ -268,7 +267,7 @@ Section fixSAT.
         + apply remove_length_el. apply elem_spec. 
         + rewrite map_length. destruct Hclique as (H1 & _).
           setoid_rewrite H1.
-          specialize (Fin_cardinality Ncl). unfold Cardinality. intros Heq. setoid_rewrite Heq. lia.
+          specialize (Fin_cardinality Ncl). intros Heq. now setoid_rewrite Heq.
     Qed.
 
 
@@ -281,9 +280,9 @@ Section fixSAT.
     Lemma satPositions_dupfree : dupfree satPositions. 
     Proof using Hclique. 
       unfold satPositions, toPos. 
-      apply dupfree_map. 2: apply Hclique.
-      intros (ci1 & li1) (ci2 & li2) _ _ [=]. 
-      apply injective_index in H0. apply injective_index in H1. congruence. 
+      apply FinFun.Injective_map_NoDup. 2: apply Hclique.
+      unfold injective. intros (ci1 & li1) (ci2 & li2) [=].
+      apply injective_index in H0, H1. congruence.
     Qed. 
 
     Lemma satPositions_for_all_clauses : forall i, i < Ncl -> exists li, (i, li) el satPositions. 
@@ -294,9 +293,6 @@ Section fixSAT.
       exists (ci, li). unfold ofClause in H2. rewrite <- H2.  easy.
     Qed. 
 
-    Fact Fin_cardinality' n : |elem (finType_CS (Fin.t n))| = n.
-    Proof. specialize (Fin_cardinality n). now unfold Cardinality. Qed. 
-      
     Lemma satPositions_non_conflicting ci1 ci2 li1 li2 : 
       (ci1, li1) el satPositions 
       -> (ci2, li2) el satPositions 
@@ -309,12 +305,12 @@ Section fixSAT.
       apply in_map_iff in H2 as ((Ci2 & Li2) & H2' & H2). inv H2'. 
       unfold cnfGetLiteral, cnfGetClause, clauseGetLiteral. 
 
-      specialize (index_le Ci1) as H3. rewrite Fin_cardinality' in H3. 
+      specialize (index_le Ci1) as H3. rewrite Fin_cardinality in H3. 
       apply (proj2 (nth_error_Some N (index Ci1))) in H3.
       destruct (nth_error N (index Ci1)) as [ C1 | ] eqn:H3'; [clear H3 | congruence].
       specialize (nth_error_In _ _ H3') as H5'.
 
-      specialize (index_le Ci2) as H4. rewrite Fin_cardinality' in H4. 
+      specialize (index_le Ci2) as H4. rewrite Fin_cardinality in H4. 
       apply (proj2 (nth_error_Some N (index Ci2))) in H4. 
       destruct (nth_error N (index Ci2)) as [ C2 | ] eqn:H4'; [clear H4 | congruence].
       specialize (nth_error_In _ _ H4') as H6'.
@@ -322,11 +318,11 @@ Section fixSAT.
       cbn -[index]. rewrite kCNF_clause_length in Hkcnf. 
       apply Hkcnf in H5'. apply Hkcnf in H6'. 
 
-      specialize (index_le Li1) as H5. rewrite Fin_cardinality', <- H5' in H5. clear H5'.
+      specialize (index_le Li1) as H5. rewrite Fin_cardinality, <- H5' in H5. clear H5'.
       apply (proj2 (nth_error_Some C1 (index Li1))) in H5. 
       destruct (nth_error C1 (index Li1)) as [l1 | ] eqn:H5'; [clear H5 | congruence].
 
-      specialize (index_le Li2) as H6. rewrite Fin_cardinality', <- H6' in H6. clear H6'.
+      specialize (index_le Li2) as H6. rewrite Fin_cardinality, <- H6' in H6. clear H6'.
       apply (proj2 (nth_error_Some C2 (index Li2))) in H6. 
       destruct (nth_error C2 (index Li2)) as [l2 | ] eqn:H6'; [clear H6 | congruence].
       
@@ -345,14 +341,14 @@ Section fixSAT.
       unfold satPositions, toPos. intros ((Ci & Li) & H1' & H1)%in_map_iff. inv H1'.
       unfold cnfGetLiteral, cnfGetClause, clauseGetLiteral. 
 
-      specialize (index_le Ci) as H2. rewrite Fin_cardinality' in H2. 
+      specialize (index_le Ci) as H2. rewrite Fin_cardinality in H2. 
       apply (proj2 (nth_error_Some N (index Ci))) in H2.
       destruct (nth_error N (index Ci)) as [ C | ] eqn:H2'; [clear H2 | congruence].
       apply nth_error_In in H2'.
 
       cbn -[index]. rewrite kCNF_clause_length in Hkcnf. 
       apply Hkcnf in H2'.
-      specialize (index_le Li) as H3. rewrite Fin_cardinality', <- H2' in H3. clear H2'.
+      specialize (index_le Li) as H3. rewrite Fin_cardinality, <- H2' in H3. clear H2'.
       apply (proj2 (nth_error_Some C (index Li))) in H3. 
       destruct (nth_error C (index Li)) as [l | ]; [clear H3 | congruence].
       eauto.

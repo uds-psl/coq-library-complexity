@@ -4,12 +4,10 @@ From Complexity Require Import TMflat.
 From Undecidability Require Import TM_facts TM.TMEncoding.
 From Complexity Require Import L.TM.TMunflatten.
 
-From Undecidability.Shared.Libs.PSL.FiniteTypes Require FiniteFunction.
 From Undecidability Require Import Functions.FinTypeLookup.
 
-
 Lemma size_flatTape (sig : finType) (t' : tape sig):
-  size (enc (mapTape index t')) <= sizeOfTape t' * (Cardinality.Cardinality sig * 4+9) + 17.
+  size (enc (mapTape index t')) <= sizeOfTape t' * (| elem sig| * 4+9) + 17.
 Proof.
   unfold enc, encodable_tape_enc,sizeOfTape,tapeToList.
   destruct t';cbn [mapTape size length].
@@ -18,21 +16,19 @@ Proof.
   all:simpl_list;cbn [length].
   all:setoid_rewrite size_list.
   
-  all: rewrite !sumn_le_bound with (c:=Cardinality.Cardinality sig*4 + 9).
-  
+  all: rewrite !sumn_le_bound with (c:=|elem sig|*4 + 9).
   2,4,6,7:now intros ? (?&<-&(?&<-&?)%in_map_iff)%in_map_iff;
-    rewrite size_nat_enc,index_leq;
-    unfold Cardinality.Cardinality, c__listsizeNil, c__listsizeCons, c__natsizeS, c__natsizeO; easy.
+    rewrite size_nat_enc, index_leq;
+    unfold c__listsizeNil, c__listsizeCons, c__natsizeS, c__natsizeO; easy.
   all:rewrite !map_length.
-  all:rewrite index_leq; unfold Cardinality.Cardinality.
-  all: unfold c__natsizeS, c__natsizeO, c__listsizeNil.
+  all:rewrite index_leq.
+  all:unfold c__natsizeS, c__natsizeO, c__listsizeNil.
   all:nia.
 Qed.
 
-
 Lemma size_flatTapes (sig : finType) (n : nat) (t:list (tape nat)) (t' : Vector.t (tape sig) n):
   isFlatteningTapesOf t t'
-  -> size (enc t) <= n * sizeOfmTapes t' * (Cardinality.Cardinality sig * 4 + 9) + n * 22 + 4.
+  -> size (enc t) <= n * sizeOfmTapes t' * (| elem sig | * 4 + 9) + n * 22 + 4.
 Proof.
   intro R__tapes. inv R__tapes.
   unfold sizeOfmTapes,mapTapes.
@@ -45,7 +41,7 @@ Proof.
    cbn - [mult]. fold (Vector.to_list (Vector.map (mapTape index) x0)).
    specialize (IHn x0).
    rewrite size_flatTape.
-   set (a := sumn _) in *. set (b := VectorDef.fold_right _ _ _) in *. set (c := Cardinality.Cardinality _) in *.
+   set (a := sumn _). set (b := VectorDef.fold_right _ _ _). set (c := | _ |).
    set (d:=sizeOfTape _).
    enough (a <= n * b * (c * 4 + 9) + n * 22) as ->. 
    2: { unfold c__listsizeCons, c__listsizeNil in *. nia. }

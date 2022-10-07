@@ -1666,7 +1666,7 @@ Proof.
    | [succ] => opt_generateCardsForFlatNonHalt flatTM q m (q', succ)
    | succ :: _ :: _ => []
    end). 
-  { easy. }
+  { reflexivity. }
   extract. solverec. 
   all: unfold generateCardsForFlatNonHalt_time, c__generateCardsForFlatNonHalt; rewrite H; solverec. 
 Qed.
@@ -1801,10 +1801,10 @@ Definition generateCardsForFlatHalt_time tm q := makeAllEvalEnvFlat_time tm 1 0 
 Instance term_generateCardsForFlatHalt : computableTime' generateCardsForFlatHalt (fun tm _ => (1, fun q _ => (generateCardsForFlatHalt_time tm q, tt))). 
 Proof. 
   apply computableTimeExt with (x := fun tm q => makeHaltFlat tm q (flat_baseEnvHalt tm)). 
-  { unfold generateCardsForFlatHalt, makeHaltFlat. easy. }
+  { reflexivity. }
   extract. recRel_prettify2. 
   - reflexivity. 
-  - unfold generateCardsForFlatHalt_time. lia. 
+  - now unfold generateCardsForFlatHalt_time. 
 Qed. 
 
 Definition poly__generateCardsForFlatHalt n := poly__makeAllEvalEnvFlat 1 0 3 0 n + c__flatBaseEnv + poly__makeHaltFlat (n + 3 + poly__makeAllEvalEnvFlatLength 1 0 3 0 n) + 3.
@@ -2642,7 +2642,7 @@ Section fixIsInjFinfuncTable.
   Context `{eqbCompT Y}. 
 
   (** allSameEntry *)
-  Definition allSameEntry_step (x : X) (y : Y) (p : X * Y) := let (x', y') := p in implb (eqb x x') (eqb y y'). 
+  Definition allSameEntry_step (x : X) (y : Y) (p : X * Y) := let (x', y') := p in implb (eqb0 x x') (eqb1 y y'). 
 
   Definition c__allSameEntryStep := c__implb + 16.
   Definition allSameEntry_step_time (x : X) (y : Y) (p : X * Y) := let (x', y') := p in eqbTime (X := X) (size (enc x)) (size (enc x')) + eqbTime (X := Y) (size (enc y)) (size (enc y')) + c__allSameEntryStep.
@@ -2657,7 +2657,7 @@ Section fixIsInjFinfuncTable.
   Global Instance term_allSameEntry : computableTime' (@allSameEntry X Y _ _ _ _) (fun a _ => (1, fun b _ => (1, fun l _ => (allSameEntry_time a b l, tt)))). 
   Proof. 
     apply computableTimeExt with (x := fun (x : X) (y : Y) (l : list (X * Y)) => forallb (allSameEntry_step x y) l). 
-    { easy. }
+    { reflexivity. }
     extract. solverec. 
     unfold allSameEntry_time, c__allSameEntry. simp_comp_arith; lia.  
   Qed.

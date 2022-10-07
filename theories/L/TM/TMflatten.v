@@ -1,11 +1,11 @@
 From Undecidability Require Import TM.Util.TM_facts.
 Require Import Undecidability.Shared.Libs.PSL.FiniteTypes.
-From Undecidability.Shared.Libs.PSL.FiniteTypes Require Import VectorFin Cardinality.
 From Complexity.L.TM Require Import TMflat.
 Require Import Lia. 
 
 (** For every TM, there exists a flattening. *)
 
+(* TODO: replace with in_prod_iff from stdlib *)
 Lemma in_prodLists_iff (X Y : Type) (A : list X) (B : list Y) a b : (a, b) el prodLists A B <-> a el A /\ b el B. 
 Proof. 
   induction A; cbn.

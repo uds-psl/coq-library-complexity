@@ -1,7 +1,6 @@
 From Undecidability.L Require Import L.
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import Lists LNat LProd.
-From Undecidability.Shared.Libs.PSL.FiniteTypes Require Import FinTypes Cardinality VectorFin.
 From Complexity.NP.Clique Require Import FlatUGraph FlatClique kSAT_to_Clique.
 From Complexity.NP.SAT Require Import kSAT SAT_inNP.
 From Complexity.Libs.CookPrelim Require Import FlatFinTypes MorePrelim.
@@ -108,8 +107,8 @@ Section fixSAT.
   Proposition vertices_repr : finRepr (Vcnf k N) Vf. 
   Proof. 
     finRepr_simpl. 
-    - unfold finRepr. rewrite Fin_cardinality'. easy.
-    - unfold finRepr. rewrite Fin_cardinality'. easy.
+    - unfold finRepr. now rewrite Fin_cardinality.
+    - unfold finRepr. now rewrite Fin_cardinality.
   Qed.
 
   Proposition unflattenVertex ci li: ci < Ncl -> li < k -> { Va : Fin.t Ncl & { Vb : Fin.t k & finReprEl' ci Va /\ finReprEl' li Vb /\ finReprEl' (toVertex (ci, li)) (Va, Vb)}}. 
@@ -155,14 +154,14 @@ Section fixSAT.
       apply in_makeEdges_iff. 
       exists (index Va1), (index Va2), (index Vb1), (index Vb2). 
       repeat split. 
-      + specialize (index_le Va1). now rewrite Fin_cardinality'. 
-      + specialize (index_le Va2). now rewrite Fin_cardinality'.
-      + specialize (index_le Vb1). now rewrite Fin_cardinality'. 
-      + specialize (index_le Vb2). now rewrite Fin_cardinality'.
-      + unfold toVertex. apply index_pair; now rewrite <- Fin_cardinality'. 
-      + setoid_rewrite index_pair; [reflexivity | rewrite <- Fin_cardinality'; reflexivity | rewrite <- Fin_cardinality'; reflexivity].
+      + specialize (index_le Va1). now rewrite Fin_cardinality.
+      + specialize (index_le Va2). now rewrite Fin_cardinality.
+      + specialize (index_le Vb1). now rewrite Fin_cardinality.
+      + specialize (index_le Vb2). now rewrite Fin_cardinality.
+      + unfold toVertex. apply index_pair; now rewrite <- Fin_cardinality.
+      + setoid_rewrite index_pair; [reflexivity | rewrite <- Fin_cardinality; reflexivity | rewrite <- Fin_cardinality; reflexivity].
       + contradict H2. now apply injective_index in H2. 
-      + apply H1. 
+      + apply H1.
   Qed. 
 
   Lemma flat_graph : isFlatGraphOf Gflat (Gcnf k N).
