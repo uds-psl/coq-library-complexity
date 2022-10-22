@@ -47,7 +47,7 @@ Section fixInstance.
   Proof using A0 A1 A2. 
     revert l2. induction l1; intros l2 H0. 
     - destruct l2; [cbn in *; reflexivity | ]. 
-      cbn in H0. apply list_eqn_length in H0. rewrite app_length in H0. cbn in H0. 
+      cbn in H0. apply (f_equal (@length _)) in H0. rewrite app_length in H0. cbn in H0. 
       specialize (A0 e). lia. 
     - destruct l2; [ apply h_length_inv' in H0; cbn in *; auto; congruence | ]. 
       rewrite homo_cons in H0; [ | apply h_unifHom ]. 

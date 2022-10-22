@@ -5,20 +5,6 @@ Require Import Lia.
 
 (** For every TM, there exists a flattening. *)
 
-(* TODO: replace with in_prod_iff from stdlib *)
-Lemma in_prodLists_iff (X Y : Type) (A : list X) (B : list Y) a b : (a, b) el prodLists A B <-> a el A /\ b el B. 
-Proof. 
-  induction A; cbn.
-  - tauto.
-  - split; intros.
-    + apply in_app_iff in H. destruct H as [H | H].
-      * apply in_map_iff in H; destruct H as (? & H1 & H2). inv H1. auto. 
-      * apply IHA in H. tauto. 
-    + destruct H as [[H1 | H1] H2].
-      * apply in_app_iff. left. apply in_map_iff. exists b. rewrite H1. firstorder. 
-      * apply in_app_iff. right. now apply IHA. 
-Qed. 
-
 Section fixSig. 
   Variable (fsig fstates : finType).
   Variable (n : nat).
@@ -143,7 +129,7 @@ Section fixSig.
     apply in_mkArgList_iff. intros ? _. apply elem_spec. 
   Qed. 
 
-  Definition allArgs := prodLists (elem fstates) allnVecs. 
+  Definition allArgs := list_prod (elem fstates) allnVecs. 
   
   Variable (ftrans : fstates * Vector.t (option fsig) n -> fstates * Vector.t (option fsig * move) n). 
 
@@ -166,7 +152,7 @@ Section fixSig.
       unfold flattenTrans. apply in_map_iff. 
       exists (S, Sym). split. 
       + unfold genTrans. rewrite H2. easy.
-      + unfold allArgs. apply in_prodLists_iff. split; [apply elem_spec | apply in_allnVecs].
+      + unfold allArgs. apply in_prod; [apply elem_spec | apply in_allnVecs].
   Qed.  
 
 End fixSig. 
@@ -175,11 +161,7 @@ Definition flattenTM (sig : finType) (n : nat) (tm : TM sig n) :=
   Build_flatTM (|elem sig|) n (|elem (TM.state tm)|) (flattenTrans (@TM.trans sig n tm)) (index (TM.start tm)) (flattenHalt (@TM.halt sig n tm)). 
 Lemma flattenTM_isFlatteningTMOf sig n (tm : TM sig n) : isFlatteningTMOf (flattenTM tm) tm.
 Proof. 
-  constructor. 
-  - now cbn.
-  - cbn. easy.
-  - cbn. easy.
-  - apply flattenTrans_isFlatteningTransOf. 
-  - cbn. easy.
-  - apply flattenHalt_isFlatteningHaltOf. 
+  constructor; try now cbn.
+  - apply flattenTrans_isFlatteningTransOf.
+  - apply flattenHalt_isFlatteningHaltOf.
 Qed. 

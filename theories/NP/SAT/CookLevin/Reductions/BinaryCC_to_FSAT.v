@@ -142,8 +142,8 @@ Section fixInstance.
         * rewrite H0 in H1. clear H0. 
           rewrite !projVars_add in H1. inv H1.
           (*the first two cases are contradictory *)
-          2 : { exfalso. apply list_eq_length in H0. rewrite !app_length in H0. rewrite !projVars_length in H0; [ | easy | easy]. lia. }
-          1: { exfalso. apply list_eq_length in H3. rewrite !app_length in H3. rewrite projVars_length in H3; [ | cbn; nia]. cbn in H3. lia. } 
+          2 : { exfalso. apply (f_equal (@length _)) in H0. rewrite !app_length in H0. rewrite !projVars_length in H0; [ | easy | easy]. lia. }
+          1: { exfalso. apply (f_equal (@length _)) in H3. rewrite !app_length in H3. rewrite projVars_length in H3; [ | cbn; nia]. cbn in H3. lia. } 
 
           apply app_eq_length in H2 as (-> & ->); [ | rewrite projVars_length; [easy | nia] ].
           apply app_eq_length in H0 as (-> & ->); [ | rewrite projVars_length; [easy | nia]]. 
@@ -298,14 +298,14 @@ Section fixInstance.
 
           enough (|s| <= l - offset - k0 * S offset).
           { rewrite Nat.min_l in H4 by lia. cbn [Nat.mul]. rewrite <- Nat.add_comm. apply H4. }
-          apply list_eq_length in H4. 
+          apply (f_equal (@length _)) in H4. 
           match type of H4 with (|projVars ?a ?b ?c| = _) => specialize (projVars_length_le2 a b c) as H2 end.
           lia. 
     + (*the case where the remaining string is too short in order to place the substring constraint *)
       clear IH. assert ( (S l) < (|s|)) as H3%Nat.ltb_lt by lia. cbn -[projVars]; setoid_rewrite H3.
       intros a. unfold satisfies; cbn [negb evalFormula].
       split; [congruence | ]. 
-      intros (k & H1 & H2). apply list_eq_length in H2. specialize (projVars_length_le (k * offset) (|s|) (explicitAssignment a start (S l))) as H4.
+      intros (k & H1 & H2). apply (f_equal (@length _)) in H2. specialize (projVars_length_le (k * offset) (|s|) (explicitAssignment a start (S l))) as H4.
       rewrite explicitAssignment_length in H4. lia. 
   Qed.
 

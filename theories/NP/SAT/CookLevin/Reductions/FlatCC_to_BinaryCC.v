@@ -169,32 +169,32 @@ From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import  LProd LOptions LBool.
 From Complexity.Libs.CookPrelim Require Import PolyBounds. 
 
-(** repEl *)
+(** repeat *)
 Section fixX. 
   Context {X : Type}.
   Context `{H: encodable X}. 
 
-  Definition c__repEl2 := 5.
-  Definition c__repEl := c__repEl2 + 7.
-  Definition repEl_time (n: nat) := (n +1) * c__repEl. 
-  Global Instance term_repEl : computableTime' (@repEl X) (fun n _ => (c__repEl2, fun e _ => (repEl_time n, tt))). 
+  Definition c__repeat2 := 5.
+  Definition c__repeat := c__repeat2 + 7.
+  Definition repeat_time (n: nat) := (n +1) * c__repeat. 
+  Global Instance term_repEl : computableTime' (@repeat X) (fun e _ => (c__repeat2, fun n _ => (repeat_time n, tt))). 
   Proof. 
-    extract. solverec. all: unfold repEl_time, c__repEl, c__repEl2; solverec.
+    extract. solverec. all: unfold repeat_time, c__repeat, c__repeat2; solverec.
   Qed. 
 
-  Lemma repEl_time_mono : monotonic repEl_time. 
+  Lemma repeat_time_mono : monotonic repeat_time. 
   Proof. 
-    unfold repEl_time; smpl_inO. 
+    unfold repeat_time; smpl_inO. 
   Qed. 
 
-  Definition poly__repEl n := (n+1) * c__repEl.
-  Lemma repEl_time_bound n : repEl_time n <= poly__repEl (size (enc n)). 
+  Definition poly__repeat n := (n+1) * c__repeat.
+  Lemma repeat_time_bound n : repeat_time n <= poly__repeat (size (enc n)). 
   Proof. 
-    unfold repEl_time, poly__repEl. replace_le n with (size (enc n)) by (apply size_nat_enc_r) at 1. lia. 
+    unfold repeat_time, poly__repeat. replace_le n with (size (enc n)) by (apply size_nat_enc_r) at 1. lia. 
   Qed. 
-  Lemma repEl_poly : monotonic poly__repEl /\ inOPoly poly__repEl. 
+  Lemma repEl_poly : monotonic poly__repeat /\ inOPoly poly__repeat. 
   Proof. 
-    unfold poly__repEl; split; smpl_inO. 
+    unfold poly__repeat; split; smpl_inO. 
   Qed. 
 End fixX. 
 
@@ -208,28 +208,28 @@ Proof.
 Qed.
 
 (** hNat *)
-Definition c__hNat := 2 * (c__leb2 + 2 * c__repEl2 + 18 + 2* c__app + 2 * c__sub + 2 * c__sub1).
-Definition hNat_time sig n := (leb_time (S n) sig + repEl_time sig + sig + 1) * c__hNat. 
+Definition c__hNat := 2 * (c__leb2 + 2 * c__repeat2 + 18 + 2* c__app + 2 * c__sub + 2 * c__sub1).
+Definition hNat_time sig n := (leb_time (S n) sig + repeat_time sig + sig + 1) * c__hNat. 
 #[export]
 Instance term_hNat : computableTime' hNat (fun sig _ => (1, fun n _ => (hNat_time sig n, tt))). 
 Proof. 
-  specialize (repEl_time_mono) as H1. unfold monotonic in H1. 
+  specialize repeat_time_mono as H1. unfold monotonic in H1. 
   extract. solverec. 
-  - setoid_rewrite sub_time_bound_r at 2. rewrite repEl_length. 
+  - setoid_rewrite sub_time_bound_r at 2. rewrite repeat_length. 
     apply leb_iff in H. rewrite H1 with (x' := x) by lia. setoid_rewrite H1 with (x' := x) at 2. 2: lia. 
     replace_le x0 with x by lia at 3. 
     rewrite sub_time_bound_l.
     unfold hNat_time, c__hNat. cbn[Nat.add]. unfold c__sub1, c__sub. nia.
   - cbn[Nat.add]. unfold hNat_time, c__hNat. apply Nat.leb_gt in H. 
-    unfold repEl_time. lia.
+    unfold repeat_time. lia.
 Qed. 
 
 Definition c__hNatBound := (c__leb + 1) * (c__hNat + 1).
-Definition poly__hNat n := (poly__repEl n + n + 1) * c__hNatBound.
+Definition poly__hNat n := (poly__repeat n + n + 1) * c__hNatBound.
 Lemma hNat_time_bound sig n: hNat_time sig n <= poly__hNat (size (enc sig)). 
 Proof. 
   unfold hNat_time. rewrite leb_time_bound_r. 
-  unfold poly__hNat, c__hNatBound. rewrite repEl_time_bound. rewrite size_nat_enc_r with (n := sig) at 3.
+  unfold poly__hNat, c__hNatBound. rewrite repeat_time_bound. rewrite size_nat_enc_r with (n := sig) at 3.
   lia. 
 Qed. 
 Lemma hNat_poly : monotonic poly__hNat /\ inOPoly poly__hNat. 

@@ -21,11 +21,6 @@ Unset Printing Coercions.
 (*From Undecidability Require Import MultiUnivTimeSpaceSimulation. *)
 From Complexity.NP Require Import TMGenNP_fixed_mTM M_multi2mono.
 
-(* From TM/Util/VectorPrelim.v *)
-Lemma vector_to_list_cast (X : Type) (n1 n2 : nat) (H : n1 = n2) (v : Vector.t X n1) :
-  vector_to_list (Vector.cast v H) = vector_to_list v.
-Proof. subst. rename n2 into n. induction v as [ | x n v IH]; cbn; f_equal; auto. Qed.
-
 Set Default Proof Using "Type".
 Section LMGenNP_to_TMGenNP_mTM.
 

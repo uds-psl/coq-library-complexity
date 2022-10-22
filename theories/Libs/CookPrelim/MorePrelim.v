@@ -314,30 +314,9 @@ Proof.
   - apply H1. 
   - destruct Dec; [ exfalso ; auto | ]. 
     erewrite IHA; eauto. 
-Qed. 
+Qed.
 
-
-Lemma prodLists_length (X Y : Type) (A : list X) (B : list Y) : |prodLists A B| = |A| * |B|. 
-Proof.
-  induction A; cbn. 
-  - reflexivity.
-  - rewrite app_length. rewrite map_length, IHA. lia. 
-Qed. 
-
-Lemma in_prodLists_iff (X Y : Type) (A : list X) (B : list Y) a b : (a, b) el prodLists A B <-> a el A /\ b el B. 
-Proof. 
-  induction A; cbn.
-  - tauto.
-  - split; intros.
-    + apply in_app_iff in H. destruct H as [H | H].
-      * apply in_map_iff in H; destruct H as (? & H1 & H2). inv H1. auto. 
-      * apply IHA in H. tauto. 
-    + destruct H as [[H1 | H1] H2].
-      * apply in_app_iff. left. apply in_map_iff. exists b. firstorder congruence. 
-      * apply in_app_iff. right. now apply IHA. 
-Qed. 
-
-Lemma getPosition_prodLists (X Y : eqType) (A : list X) (B : list Y) x1 x2 k1 k2 : getPosition A x1 = k1 -> k1 < |A| -> getPosition B x2 = k2 -> k2 < |B| -> getPosition (prodLists A B) (x1, x2) = (k1 * |B|) + k2. 
+Lemma getPosition_prodLists (X Y : eqType) (A : list X) (B : list Y) x1 x2 k1 k2 : getPosition A x1 = k1 -> k1 < |A| -> getPosition B x2 = k2 -> k2 < |B| -> getPosition (list_prod A B) (x1, x2) = (k1 * |B|) + k2. 
 Proof. 
   revert k1. induction A; intros; cbn in *. 
   - lia. 
@@ -348,9 +327,9 @@ Proof.
     + destruct Dec; [ congruence | ]. 
       rewrite getPosition_app2 with (k := (k1 * |B|) + k2). 
       * rewrite map_length. lia. 
-      * setoid_rewrite prodLists_length. nia. 
+      * setoid_rewrite prod_length. nia. 
       * intros (? & ? &?)%in_map_iff. congruence. 
-      * apply IHA; eauto. lia.  
+      * apply IHA; eauto. now apply Nat.succ_lt_mono.  
 Qed. 
 
 Fixpoint filterSome (X : Type) (l : list (option X)) := match l with
@@ -427,26 +406,6 @@ Proof.
         exists l0, s2. eauto. 
 Qed. 
 
-(*repeat an element *)
-Section repEl_fixX. 
-  Variable (X : Type). 
-
-  Fixpoint repEl n (e : X) := 
-   match n with 
-   | 0 => []
-   | S n => e :: repEl n e
-  end. 
-
-  Lemma repEl_length n (e : X) : |repEl n e| = n. 
-  Proof. induction n; cbn; eauto. Qed. 
-
-  Lemma repEl_add (a : X) n1 n2: repEl (n1 + n2) a = repEl n1 a ++ repEl n2 a.
-  Proof.  induction n1; cbn; [eauto | congruence]. Qed. 
-End repEl_fixX. 
-
-Lemma map_repEl (X Y : Type) (f : X -> Y) n (e : X) : map f (repEl n e) = repEl n (f e). 
-Proof. induction n; cbn; [eauto | congruence]. Qed. 
-
 Lemma list_length_split1 (X : Type) (s : list X) n : n <= |s| -> exists s1 s2, |s1| = n /\ |s2| = |s| - n /\ s = s1 ++ s2. 
 Proof. 
   revert s. induction n; intros. 
@@ -472,11 +431,6 @@ Proof.
   - destruct w1; cbn in *; [congruence | ]. inv H0. inv H. 
     specialize (IHs1 w1 H1 H3) as (-> & ->). eauto. 
 Qed. 
-
-Lemma list_eq_length (X : Type) (l1 l2 : list X) : l1 = l2 -> |l1| = |l2|. 
-Proof. 
-  congruence. 
-Qed.
 
 Lemma nth_error_step (X : Type) x s (l : list X) a y : x >= S s -> nth_error l (x - S s) = Some a <-> nth_error (y :: l) (x - s) = Some a.
 Proof. 
@@ -565,7 +519,7 @@ Proof.
   intros a H1. destruct (Dec (a = x)); [ congruence | lia ].  
 Qed. 
 
-Lemma repEl_app_inv (X : Type) (a : X) s1 s2 n : repEl n a = s1 ++ s2 -> exists n1 n2, s1 = repEl n1 a /\ s2 = repEl n2 a /\ n1 + n2 = n. 
+Lemma repEl_app_inv (X : Type) (a : X) s1 s2 n : repeat a n = s1 ++ s2 -> exists n1 n2, s1 = repeat a n1 /\ s2 = repeat a n2 /\ n1 + n2 = n. 
 Proof. 
   revert s1 s2.  induction n. 
   - cbn. destruct s1, s2; cbn; try congruence. intros _. exists 0, 0; now cbn.  
@@ -583,9 +537,6 @@ Proof.
   now exists s2. 
 Qed. 
 
-Lemma list_eqn_length (X : Type) (l1 l2 : list X) : l1 = l2 -> |l1| = |l2|. 
-Proof. congruence. Qed. 
-
 Lemma nth_nth_error (X : Type) (l : list X) n def a  : nth n l def = a -> n < |l| -> nth_error l n = Some a. 
 Proof. 
   intros. apply nth_error_Some in H0. destruct nth_error eqn:H1; [ | congruence].
@@ -599,4 +550,4 @@ Proof.
   - apply in_concat_iff. destruct H as (x & H1 & H2). exists (f x). split.
     + exact H2.
     + apply in_map. exact H1.
-Qed. 
+Qed.

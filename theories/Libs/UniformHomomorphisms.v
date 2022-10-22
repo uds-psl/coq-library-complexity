@@ -12,7 +12,7 @@ Section fixX.
   Definition homomorphism (h : list X -> list Y) := forall x1 x2, h (x1 ++ x2) = h x1 ++ h x2. 
 
   Lemma homo_nil h : homomorphism h -> h [] = []. 
-  Proof. 
+  Proof.
     intros. unfold homomorphism in H. specialize (H [] []). 
     cbn in H; rewrite H. destruct (h []) eqn:Heqn; cbn; [ congruence | ].  
     assert (|y :: l| = |(y :: l) ++ y :: l|) as H0 by congruence. 
@@ -70,7 +70,7 @@ Section fixX.
   Proof. 
     intros (H1 & H2 & H3) x H. 
     destruct x as [ | x y]; [easy | ]. rewrite homo_cons in H by easy. 
-    apply list_eqn_length in H. rewrite app_length in H. cbn in H. 
+    apply (f_equal (@length _)) in H. rewrite app_length in H. cbn in H. 
     specialize (H3 x); lia. 
   Qed. 
 
@@ -110,7 +110,7 @@ Section fixX.
   Lemma h_nil_inv a : h a = [] -> a = []. 
   Proof. 
     intros H. destruct a; [ easy | ]. replace (x ::a) with ([x] ++ a) in H by now cbn.
-    rewrite (proj1 h_unifHom) in H.  apply list_eqn_length in H. rewrite app_length in H. 
+    rewrite (proj1 h_unifHom) in H. apply (f_equal (@length Y)) in H. rewrite app_length in H. 
     specialize (proj2 (proj2 h_unifHom) x). cbn in H; lia.
   Qed. 
 
@@ -129,5 +129,3 @@ Proof.
     + rewrite homo_cons by auto. rewrite app_length, IH. cbn. enough (|h[a]| = |h[e]|) as -> by lia.
       apply H2. 
 Defined. (* because informative ? *)
-      
-

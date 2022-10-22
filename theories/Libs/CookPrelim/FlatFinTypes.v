@@ -124,7 +124,7 @@ Smpl Add 99 finReprSum : finRepr.
 Lemma finReprProd (A B : finType) (a b : nat) : finRepr A a -> finRepr B b -> finRepr (finType_CS (prod A B)) (flatProd a b).  
 Proof. 
   intros. unfold finRepr in *. unfold flatProd.
-  cbn. now rewrite prodLists_length. 
+  cbn. now rewrite prod_length.
 Qed. 
 Smpl Add (apply finReprProd) : finRepr.
 
@@ -222,7 +222,7 @@ Proof.
   now change (fun x => getPosition (elem X) x) with (getPosition (elem X)). 
 Qed.
 
-Lemma repEl_isFlatListOf (X : finType) a (A : X) n : finReprEl' a A -> isFlatListOf (repEl n a) (repEl n A).
+Lemma repEl_isFlatListOf (X : finType) a (A : X) n : finReprEl' a A -> isFlatListOf (repeat a n) (repeat A n).
 Proof. 
   induction n; cbn; intros; [ easy | now apply isFlatListOf_cons].
 Qed. 

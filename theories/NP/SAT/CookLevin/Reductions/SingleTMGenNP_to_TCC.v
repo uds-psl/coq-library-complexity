@@ -3134,14 +3134,14 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
 
   (** final condition *)
   Definition haltingStates := filter (fun x => halt x) (elem states). 
-  Definition finalSubstrings : list (list Gamma) := map (fun e => [inl e]) (prodLists haltingStates (elem (FinType (EqType (stateSigma))))). 
+  Definition finalSubstrings : list (list Gamma) := map (fun e => [inl e]) (list_prod haltingStates (elem (FinType (EqType (stateSigma))))). 
 
   Lemma finalSubstrings_correct s: (exists subs, subs el finalSubstrings /\ substring subs s) <-> containsHaltingState s. 
   Proof.
     split; intros.
     - destruct H as (subs & H1 & H2). unfold finalSubstrings in H1. 
       apply in_map_iff in H1 as (e & <- & H1). 
-      destruct e as (q, m). apply in_prodLists_iff in H1 as (H1 & H3). 
+      destruct e as (q, m). apply in_prod_iff in H1 as (H1 & H3). 
       unfold containsHaltingState. 
       exists q, (inl (q, m)). 
       split.
@@ -3154,7 +3154,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
      + unfold finalSubstrings. apply in_map_iff.
        destruct H2 as (m & ->).
        exists (q, m). split; [auto | ]. 
-       apply in_prodLists_iff.
+       apply in_prod_iff.
        unfold haltingStates. rewrite in_filter_iff. 
        repeat split.
        * apply elem_spec. 
@@ -3254,14 +3254,14 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
   Hint Constructors preludeRules : core.  
 
   Definition preludeInitialString : list preludeSig':=
-    [ndelimC] ++ rev (repEl z' nblank) ++ [ninit] ++ map nsig fixedInput ++ repEl k' nstar ++ repEl (wo + t) nblank ++ [ndelimC]. 
+    [ndelimC] ++ rev (repeat nblank z') ++ [ninit] ++ map nsig fixedInput ++ repeat nstar k' ++ repeat nblank (wo + t) ++ [ndelimC]. 
 
   Lemma preludeInitialString_length : |preludeInitialString| = l. 
-  Proof. unfold preludeInitialString. rewrite !app_length, rev_length, !repEl_length, map_length. unfold l, z', z, k, wo; cbn[length]. lia. Qed. 
+  Proof. unfold preludeInitialString. rewrite !app_length, rev_length, !repeat_length, map_length. unfold l, z', z, k, wo; cbn[length]. lia. Qed. 
 
   Lemma lifted_preludeInitialString : map (inr (A := Gamma)) preludeInitialString = 
-    [inr ndelimC] ++ rev (repEl z' (inr nblank)) ++ [inr ninit] ++ map (fun σ => inr (nsig σ)) fixedInput ++ repEl k' (inr nstar) ++ repEl (wo + t) (inr nblank) ++ [inr ndelimC]. 
-  Proof.  unfold preludeInitialString. rewrite !map_app, map_rev, !map_repEl, map_map. reflexivity. Qed. 
+    [inr ndelimC] ++ rev (repeat (inr nblank) z') ++ [inr ninit] ++ map (fun σ => inr (nsig σ)) fixedInput ++ repeat (inr nstar) k' ++ repeat (inr nblank) (wo + t) ++ [inr ndelimC]. 
+  Proof.  unfold preludeInitialString. rewrite !map_app, map_rev, !map_repeat, map_map. reflexivity. Qed. 
 
   (** we now use the method from PTCC_Preludes to derive that the prelude does in fact solve the problem of guessing an initial string *)
 
@@ -3307,12 +3307,12 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
 
   (** nblank symbols of the prelude do rewrite to blanks (right half of the string)*)
   Lemma prelude_blank_tape_covering_right n : 
-    (repEl (S (S n)) (inr nblank) ++ [inr ndelimC]) ⇝{lpreludeRules} (map inl (E neutral (S (S n)))). 
+    (repeat (inr nblank) (S (S n)) ++ [inr ndelimC]) ⇝{lpreludeRules} (map inl (E neutral (S (S n)))). 
   Proof.  induction n; cbn; eauto 10.  Qed. 
 
   (** in fact, nblanks do _only_ rewrite to blanks *)
   Lemma prelude_blank_tape_covering_right_unique n s: 
-   (map inr (repEl (S (S n)) nblank ++ [ndelimC]))  ⇝{lpreludeRules} s 
+   (map inr (repeat nblank (S (S n)) ++ [ndelimC]))  ⇝{lpreludeRules} s 
     -> s = map inl (E neutral (S (S n))).
   Proof. 
     intros. revert s H. induction n as [ | n IH]; intros.
@@ -3324,7 +3324,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
 
   (** a string consisting of nstars followed by nblanks can be rewritten to the empty tape *)
   Lemma prelude_right_half_covering_blank n n' : 
-    (repEl n (inr nstar) ++ repEl (S (S n')) (inr nblank) ++ [inr ndelimC]) ⇝{lpreludeRules} (map inl (E neutral (S (S (n + n'))))). 
+    (repeat (inr nstar) n ++ repeat (inr nblank) (S (S n')) ++ [inr ndelimC]) ⇝{lpreludeRules} (map inl (E neutral (S (S (n + n'))))). 
   Proof. 
     induction n as [ | n IH]; cbn. 
     - apply prelude_blank_tape_covering_right. 
@@ -3336,12 +3336,12 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
   (** but it can also be rewritten to a string starting with symbols of the tape alphabet, followed by blanks *)
   (** we'll later instantiate this with |s| <= k and n = t + k - |s| *)
   Lemma prelude_right_half_covering_cert s n n' : 
-    (repEl (|s|) (inr nstar) ++ repEl n (inr nstar) ++ repEl (S (S n')) (inr nblank) ++ [inr ndelimC]) 
+    (repeat (inr nstar) (|s|) ++ repeat (inr nstar) n ++ repeat (inr nblank) (S (S n')) ++ [inr ndelimC]) 
       ⇝{lpreludeRules} (map inl (stringForTapeHalf' (S (S (n + n'))) s)). 
   Proof using t.
     induction s as [ | a s IH].  
     - cbn. 
-      replace (inr nblank :: inr nblank :: repEl t (inr nblank) ++ [inr ndelimC]) with (repEl (S (S t)) (inr (A := Gamma) nblank) ++ [inr ndelimC]) by now cbn. 
+      replace (inr nblank :: inr nblank :: repeat (inr nblank) t ++ [inr ndelimC]) with (repeat (inr (A := Gamma) nblank) (S (S t)) ++ [inr ndelimC]) by now cbn. 
       replace (inl (inr (inr (neutral, |_|))) :: inl (inr (inr (neutral, |_|))) :: map inl (E neutral (n + t))) with (map (inl (B := preludeSig')) (E neutral (S (S (n + t))))) by now cbn. 
       apply prelude_right_half_covering_blank. 
     - cbn. constructor 3. 
@@ -3353,15 +3353,15 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
 
   (** a slightly different formulation of the same statement *)
   Lemma prelude_right_half_covering_cert' s n n': 
-    (repEl (|s| + n) (inr nstar) ++ repEl (S (S n')) (inr nblank) ++ [inr ndelimC]) 
+    (repeat (inr nstar) (|s| + n) ++ repeat (inr nblank) (S (S n')) ++ [inr ndelimC]) 
         ⇝{lpreludeRules} (map inl (stringForTapeHalf' (S (S (n + n'))) s)).
   Proof using t. 
-    rewrite repEl_add. rewrite <- app_assoc. apply prelude_right_half_covering_cert. 
+    rewrite repeat_app. rewrite <- app_assoc. apply prelude_right_half_covering_cert. 
   Qed. 
 
   (** a string starting with nstars can *only* rewrite to a string starting with (possibly zero) symbols of the tape alphabet, followed by blanks *)
   Lemma prelude_right_half_covering_cert_unique j i s: 
-    (map inr (repEl (S (S j)) nstar ++ repEl (S (S i)) nblank ++ [ndelimC])) ⇝{lpreludeRules} s 
+    (map inr (repeat nstar (S (S j)) ++ repeat nblank (S (S i)) ++ [ndelimC])) ⇝{lpreludeRules} s 
     -> exists s', |s'| <= S(S j) /\ s = map inl (stringForTapeHalf' (S (S i) + (S (S j) - |s'|)) s'). 
   Proof. 
     revert s. induction j as [ | j IH]; cbn; intros. 
@@ -3388,7 +3388,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
     end. 
 
   Lemma prelude_right_half_covering_cert_unique' j i s : 
-    (map inr (repEl j nstar ++ repEl (S (S i)) nblank ++ [ndelimC])) ⇝{lpreludeRules} s 
+    (map inr (repeat nstar j ++ repeat nblank (S (S i)) ++ [ndelimC])) ⇝{lpreludeRules} s 
     -> exists s', |s'| <= j /\ s = map inl (stringForTapeHalf' (S (S i) + j - (|s'|)) s'). 
   Proof. 
     intros H. 
@@ -3405,7 +3405,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
 
   (** now we add the fixed input at the start*)
   Lemma prelude_right_half_covering_input n finp s : 
-   (map (fun σ => inr (nsig σ)) finp ++ repEl (|s| + n) (inr nstar) ++ repEl (wo+ t) (inr nblank) ++ [inr ndelimC]) 
+   (map (fun σ => inr (nsig σ)) finp ++ repeat (inr nstar) (|s| + n) ++ repeat (inr nblank) (wo + t) ++ [inr ndelimC]) 
     ⇝{lpreludeRules} (map inl (stringForTapeHalf' (wo+ n + t) (finp ++ s))). 
   Proof. 
     induction finp as [ | ? finp IH]. 
@@ -3420,7 +3420,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
 
   (*and inversion *)
   Lemma prelude_right_half_covering_input_unique finp j i s : 
-    (map inr (map nsig finp ++ repEl j nstar ++ repEl (wo + i) nblank ++ [ndelimC])) ⇝{lpreludeRules} s 
+    (map inr (map nsig finp ++ repeat nstar j ++ repeat nblank (wo + i) ++ [ndelimC])) ⇝{lpreludeRules} s 
     -> exists s', |s'| <= j /\ s = map inl (stringForTapeHalf' (wo + i + j - (|s'|)) (finp ++ s')).
   Proof. 
     intros H. revert s H. induction finp as [ | ? finp IH]; intros.  
@@ -3447,7 +3447,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
   Qed. 
 
   Lemma prelude_right_half_covering_input_unique' s : 
-    (map inr (map nsig fixedInput ++ repEl k' nstar ++ repEl (wo + t) nblank ++ [ndelimC])) ⇝{lpreludeRules} s 
+    (map inr (map nsig fixedInput ++ repeat nstar k' ++ repeat nblank (wo + t) ++ [ndelimC])) ⇝{lpreludeRules} s 
     -> exists s', |s'| <= k' /\ s = map inl (stringForTapeHalf (fixedInput ++ s')).
   Proof. 
     intros H%prelude_right_half_covering_input_unique. 
@@ -3460,7 +3460,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
 
   (** add the center state symbol *)
   Lemma prelude_center_covering_state finp s n : 
-    ((inr ninit) :: map (fun σ => inr (nsig σ)) finp ++ repEl (|s| + n) (inr nstar) ++ repEl (wo+ t) (inr nblank) ++ [inr ndelimC]) 
+    ((inr ninit) :: map (fun σ => inr (nsig σ)) finp ++ repeat (inr nstar) (|s| + n) ++ repeat (inr nblank) (wo + t) ++ [inr ndelimC]) 
       ⇝{lpreludeRules} (inl (inl (start, |_|)) :: map inl (stringForTapeHalf' (wo+ n + t) (finp ++ s))). 
   Proof. 
     econstructor 3. 
@@ -3471,7 +3471,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
   Qed. 
 
   Lemma prelude_center_covering_state_unique finp j i s: 
-    (map inr (ninit :: map nsig finp ++ repEl j nstar ++ repEl (wo + i) nblank ++ [ndelimC]))  ⇝{lpreludeRules} s 
+    (map inr (ninit :: map nsig finp ++ repeat nstar j ++ repeat nblank (wo + i) ++ [ndelimC]))  ⇝{lpreludeRules} s 
     -> exists s', |s'| <= j /\ s = map inl (inl (start, |_|) :: stringForTapeHalf' (wo + i + j - (|s'|)) (finp ++ s')).
   Proof. 
     intros H. inv_valid. 
@@ -3482,8 +3482,8 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
 
   (** add the blanks of the left tape half *)
   Lemma prelude_left_covering_blank finp s n u: 
-    (repEl u (inr nblank) ++ (inr ninit) :: map (fun σ => inr (nsig σ)) finp ++ repEl (|s| + n) (inr nstar) ++ repEl (wo+ t) (inr nblank) ++ [inr ndelimC]) 
-    ⇝{lpreludeRules} (repEl u (inl (inr (inr (neutral, |_|)))) ++ inl (inl (start, |_|)) :: map inl (stringForTapeHalf' (wo+ n + t) (finp ++ s))). 
+    (repeat (inr nblank) u ++ (inr ninit) :: map (fun σ => inr (nsig σ)) finp ++ repeat (inr nstar) (|s| + n) ++ repeat (inr nblank) (wo + t) ++ [inr ndelimC]) 
+    ⇝{lpreludeRules} (repeat (inl (inr (inr (neutral, |_|)))) u ++ inl (inl (start, |_|)) :: map inl (stringForTapeHalf' (wo+ n + t) (finp ++ s))). 
   Proof. 
     induction u as [ | u IH]; [cbn; apply prelude_center_covering_state | ]. 
     constructor 3. 
@@ -3493,11 +3493,11 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
   Qed.
 
   Lemma prelude_left_covering_blank_unique finp j i u s: 
-    (map inr (repEl u nblank ++ ninit :: map nsig finp ++ repEl j nstar ++ repEl (wo + i) nblank ++ [ndelimC])) ⇝{lpreludeRules} s 
-    -> exists s', |s'| <= j /\ s = map inl (repEl u (inr (inr (neutral, |_|))) ++ inl (start, |_|) :: stringForTapeHalf' (wo + i + j - (|s'|)) (finp ++ s')).
+    (map inr (repeat nblank u ++ ninit :: map nsig finp ++ repeat nstar j ++ repeat nblank (wo + i) ++ [ndelimC])) ⇝{lpreludeRules} s 
+    -> exists s', |s'| <= j /\ s = map inl (repeat (inr (inr (neutral, |_|))) u ++ inl (start, |_|) :: stringForTapeHalf' (wo + i + j - (|s'|)) (finp ++ s')).
   Proof. 
     revert s. 
-    induction u as [ | u IH]; cbn [repEl app]; intros s.
+    induction u as [ | u IH]; cbn [repeat app]; intros s.
     - apply prelude_center_covering_state_unique. 
     - intros H. inv_valid. 
       1: { destruct u; cbn in H4; [ destruct finp; [destruct j | ]; cbn in H4; lia | destruct u; cbn in H4; lia]. }
@@ -3506,28 +3506,28 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
   Qed.
 
   (** the left delimiter symbol *)
-  Fact rev_E n p : rev (E p n) = inr (inl delimC) :: repEl n (inr (inr (p, |_|))). 
+  Fact rev_E n p : rev (E p n) = inr (inl delimC) :: repeat (inr (inr (p, |_|))) n. 
   Proof. 
     induction n as [ | n IH]; cbn; [easy | ]. 
-    rewrite IH. cbn. replace (inr (inr (p, |_|)) :: repEl n (inr (inr (p, |_|)))) with (repEl (n + 1) (inr (inr (p, |_|)) : Gamma)). 
-    2: { rewrite Nat.add_comm. cbn. easy. }
-    rewrite repEl_add. cbn. easy.
+    rewrite IH. cbn. replace (inr (inr (p, |_|)) :: repeat (inr (inr (p, |_|))) n) with (repeat (inr (inr (p, |_|)) : Gamma) (n + 1)). 
+    2: { now rewrite Nat.add_comm. }
+    now rewrite repeat_app.
   Qed.
 
   Lemma prelude_whole_string_covering finp s n u : 
-    ((inr ndelimC) :: repEl (wo + u) (inr nblank) ++ (inr ninit) :: map (fun σ => inr (nsig σ)) finp ++ repEl (|s| + n) (inr nstar) ++ repEl (wo+ t) (inr nblank) ++ [inr ndelimC]) 
+    ((inr ndelimC) :: repeat (inr nblank) (wo + u) ++ (inr ninit) :: map (fun σ => inr (nsig σ)) finp ++ repeat (inr nstar) (|s| + n) ++ repeat (inr nblank) (wo + t) ++ [inr ndelimC]) 
     ⇝{lpreludeRules} (rev (map inl (stringForTapeHalf' (wo + u) [])) ++ inl (inl (start, |_|)) :: map inl (stringForTapeHalf' (wo+ n + t) (finp ++ s))). 
   Proof. 
     unfold stringForTapeHalf'. cbn -[wo].  
     rewrite <- map_rev. rewrite rev_E. cbn [map].
-    rewrite map_repEl. 
+    rewrite map_repeat. 
     constructor 3. 
     - apply prelude_left_covering_blank. 
     - cbn. eauto.
   Qed.
 
   Lemma prelude_whole_string_covering_unique finp j i u s: 
-    (map inr (ndelimC :: repEl (wo + u) nblank ++ ninit :: map nsig finp ++ repEl j nstar ++ repEl (wo + i) nblank ++ [ndelimC])) ⇝{lpreludeRules} s 
+    (map inr (ndelimC :: repeat nblank (wo + u) ++ ninit :: map nsig finp ++ repeat nstar j ++ repeat nblank (wo + i) ++ [ndelimC])) ⇝{lpreludeRules} s 
     -> exists s', |s'| <= j /\ s = map inl (rev (stringForTapeHalf' (wo + u) []) ++ inl (start, |_|) :: stringForTapeHalf' (wo + i + j - (|s'|)) (finp ++ s')).
   Proof. 
     intros H.
@@ -3539,11 +3539,6 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
   Qed.
 
   (** we now put the above results together to obtain soundness and completeness. *)
-  Fact rev_repEl (X : Type) (x : X) n : rev(repEl n x) = repEl n x. 
-  Proof. 
-    induction n as [ | n IH]; cbn; [easy | ]. 
-    rewrite IH. clear IH. induction n as [ | n IH]; cbn; [easy | ]. now rewrite IH. 
-  Qed.
   
   Lemma prelude_complete s : isValidInitialString s /\ |s| = l 
       -> (map inr preludeInitialString) ⇝{lpreludeRules} (map inl s). 
@@ -3559,10 +3554,10 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
     unfold z, k in *. rewrite app_length.
     replace (wo + (t + ((|fixedInput|) + k')) - ((|fixedInput|) + (|s'|))) with (wo + (k' - (|s'|)) + t)  by lia. 
     Unset Keyed Unification.
-    rewrite !map_app. cbn -[stringForTapeHalf' repEl wo]. 
-    rewrite !map_rev, !map_repEl. rewrite map_map. 
+    rewrite !map_app. cbn -[stringForTapeHalf' repeat wo]. 
+    rewrite !map_rev, !map_repeat. rewrite map_map. 
     replace ((|s'|) + (k' - (|s'|))) with k' in H3 by lia. 
-    rewrite rev_repEl. apply H3. 
+    rewrite MCList.rev_repeat. apply H3. 
   Qed. 
 
   (** now the proof of soundness: the prelude can only generate valid initial strings *)
@@ -3570,8 +3565,8 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
   Lemma prelude_sound s: 
     (map inr preludeInitialString) ⇝{lpreludeRules} s -> exists s', s = map inl s' /\ isValidInitialString s'. 
   Proof. 
-    intros H. unfold preludeInitialString in H. cbn -[map rev repEl wo] in H. 
-    rewrite rev_repEl in H. 
+    intros H. unfold preludeInitialString in H. cbn -[map rev repeat wo] in H. 
+    rewrite MCList.rev_repeat in H. 
     apply (@prelude_whole_string_covering_unique fixedInput k' t z s) in H.
     destruct H as (s' & H1 & H2). 
     match type of H2 with s = map inl ?s1 => exists s1 end. split; [easy | ]. 
@@ -4103,14 +4098,14 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
     split; constructor; cbn; eapply finReprEl_finReprEl'; eauto.
   Qed. 
 
-  (** list_prod: cons every element of the first list to every element of the second list*)
-  Definition list_prod (X : Type) := fix rec (l : list X) (l' : list (list X)) : list (list X) :=
+  (** cons every element of the first list to every element of the second list*)
+  Definition list_distr (X : Type) := fix rec (l : list X) (l' : list (list X)) : list (list X) :=
     match l with [] => []
             | (h :: l) => map (@cons X h) l' ++ rec l l'
-    end. 
+    end.
 
-  Lemma in_list_prod_iff (X : Type) (l : list X) (l' : list (list X)) l0:
-    l0 el list_prod l l' <-> exists h l1, l0 = h :: l1 /\ h el l /\ l1 el l'. 
+  Lemma in_list_distr_iff (X : Type) (l : list X) (l' : list (list X)) l0:
+    l0 el list_distr l l' <-> exists h l1, l0 = h :: l1 /\ h el l /\ l1 el l'. 
   Proof. 
     induction l; cbn. 
     - split; [auto | intros (? & ? & _ & [] & _)].
@@ -4125,7 +4120,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
 
   (** an environment containing all combinations of n elements is created by iterating list_prod*)
   Definition mkVarEnv (X : Type) (l : list X) (n : nat) :=
-    it (fun acc => list_prod l acc ++ acc) n [[]].
+    it (fun acc => list_distr l acc ++ acc) n [[]].
 
   Lemma in_mkVarEnv_iff (X : Type) (l : list X) (n : nat) (l' : list X) :
     l' el mkVarEnv l n <-> |l'| <= n /\ l' <<= l. 
@@ -4135,7 +4130,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
     - split.
       + intros [<- | []]. eauto.
       + intros (H1 & H2); destruct l'; [eauto | cbn in H1; lia]. 
-    - rewrite in_app_iff. rewrite in_list_prod_iff. split.
+    - rewrite in_app_iff. rewrite in_list_distr_iff. split.
       + intros [(? & ? & -> & H1 & H2) | H1].
         * unfold mkVarEnv in IH. apply IH in H2 as (H2 & H3).
           split; [now cbn | cbn; intros a [-> | H4]; eauto ].  
@@ -4157,7 +4152,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
 
   (** this is now lifted to evalEnv *)
   Definition makeAllEvalEnv (X Y Z W : Type) (l1 : list X) (l2 : list Y) (l3 : list Z) (l4 : list W) (n1 n2 n3 n4 : nat) :=
-    let allenv := prodLists (prodLists (prodLists (mkVarEnv l1 n1) (mkVarEnv l2 n2)) (mkVarEnv l3 n3)) (mkVarEnv l4 n4) in
+    let allenv := list_prod (list_prod (list_prod (mkVarEnv l1 n1) (mkVarEnv l2 n2)) (mkVarEnv l3 n3)) (mkVarEnv l4 n4) in
     map (@tupToEvalEnv X Y Z W) allenv. 
 
   Lemma in_makeAllEvalEnv_iff (X Y Z W : Type) (l1 : list X) (l2 : list Y) (l3 : list Z) (l4 : list W) n1 n2 n3 n4 :
@@ -4170,15 +4165,15 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
     intros. unfold makeAllEvalEnv. rewrite in_map_iff.
     split.
     - intros ([[[]]] & H1 & H2). 
-      cbn in H1. inv H1.  
+      cbn in H1. inv H1.
       repeat match type of H2 with
-              | _ el prodLists _ _ => apply in_prodLists_iff in H2 as (H2 & ?%in_mkVarEnv_iff)
+              | _ el list_prod _ _ => apply in_prod_iff in H2 as (H2 & ?%in_mkVarEnv_iff)
               end. 
-      apply in_mkVarEnv_iff in H2. eauto 10.
+      apply in_mkVarEnv_iff in H2. tauto.
     - intros (H1 & H2 & H3 & H4). 
       exists (a, b, c, d). split; [now cbn | ]. 
       repeat match goal with
-            | [ |- _ el prodLists _ _ ]=> apply in_prodLists_iff; split
+            | [ |- _ el list_prod _ _ ]=> apply in_prod_iff; split
             end. 
       all: apply in_mkVarEnv_iff; eauto. 
   Qed. 
@@ -5475,7 +5470,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
   Fact zPflat_zP_eq : zPflat = z'. 
   Proof using flatFixedInput_compat. unfold zPflat, z'. now rewrite zflat_z_eq. Qed. 
 
-  Definition flat_initial_string := [flatInr flatGamma flatNdelimC ] ++ rev (repEl zPflat (flatInr flatGamma flatNblank)) ++ [flatInr flatGamma flatNinit] ++ map (fun n => flatInr flatGamma (flatNsig n)) flatFixedInput ++ repEl k' (flatInr flatGamma flatNstar) ++ repEl (wo + t) (flatInr flatGamma flatNblank) ++ [flatInr flatGamma flatNdelimC]. 
+  Definition flat_initial_string := [flatInr flatGamma flatNdelimC ] ++ rev (repeat (flatInr flatGamma flatNblank) zPflat) ++ [flatInr flatGamma flatNinit] ++ map (fun n => flatInr flatGamma (flatNsig n)) flatFixedInput ++ repeat (flatInr flatGamma flatNstar) k' ++ repeat (flatInr flatGamma flatNblank) (wo + t) ++ [flatInr flatGamma flatNdelimC]. 
   Lemma flat_initial : isFlatListOf flat_initial_string (map (inr (A := Gamma)) preludeInitialString). 
   Proof using Type*. 
     rewrite lifted_preludeInitialString. unfold flat_initial_string. 
@@ -5508,7 +5503,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
       + destruct flatTM_TM_compat. destruct R__halt. rewrite R__halt. easy.
   Qed. 
 
-  Definition flat_finalSubstrings : list (list nat) := map (fun pr => match pr with (s, m) => [flatInl $ flatInl (flatPair flatstates flatStateSigma s m)] end) (prodLists flat_haltingStates (seq 0 flatStateSigma)). 
+  Definition flat_finalSubstrings : list (list nat) := map (fun pr => match pr with (s, m) => [flatInl $ flatInl (flatPair flatstates flatStateSigma s m)] end) (list_prod flat_haltingStates (seq 0 flatStateSigma)). 
 
   Smpl Add (reflexivity) : finRepr. 
 
@@ -5523,8 +5518,8 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
   Proof. 
     unfold finalSubstrings. rewrite in_map_iff. split; intros. 
     - destruct H as ((q & m) & <- & H). exists q, m. split; [easy | ].
-      apply in_prodLists_iff in H as (H & _). unfold haltingStates in H. apply in_filter_iff in H. easy.
-    - destruct H as (q & m & -> & H). exists (q, m). split; [easy | apply in_prodLists_iff].
+      apply in_prod_iff in H as (H & _). unfold haltingStates in H. apply in_filter_iff in H. easy.
+    - destruct H as (q & m & -> & H). exists (q, m). split; [easy | apply in_prod_iff].
       split; [ apply in_filter_iff | apply elem_spec]. easy.
   Qed. 
   
@@ -5532,7 +5527,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
   Proof using flatTM_TM_compat. 
     split; intros. 
     - unfold flat_finalSubstrings in H. apply in_map_iff in H as ([s m] & <- & H2). 
-      apply in_prodLists_iff in H2 as (H2 & H3). 
+      apply in_prod_iff in H2 as (H2 & H3). 
       apply in_flat_haltingStates_iff in H2 as (q & -> & H2).
       apply in_seq in H3 as (_ & H3). cbn in H3. 
       rewrite stateSigma_finRepr in H3.
@@ -5548,7 +5543,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
       exists [flatInl $ flatInl $ flatPair flatstates flatStateSigma (index q) (index m)]. 
       split. 
       + apply in_map_iff. exists (index q, index m).
-        split; [easy | apply in_prodLists_iff]. split. 
+        split; [easy | apply in_prod_iff]. split. 
         * apply in_flat_haltingStates_iff. easy.
         * apply in_seq; split; [lia | rewrite stateSigma_finRepr; apply index_le].
       + apply isFlatListOf_single. finRepr_simpl; try easy; (apply finReprElP_finReprEl; [finRepr_simpl | try reflexivity]).

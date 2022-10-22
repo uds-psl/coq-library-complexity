@@ -16,16 +16,6 @@ Local Arguments loopM {_ _} _ _ _.
 Local Arguments halt {_ _} _ _.
 Local Arguments step {_ _} _ _.
 
-(* From PSL/Lists/BaseLists.v *)
-Lemma map_repeat (X Y : Type) (f : X -> Y) (n : nat) (a : X) :
-  map f (repeat a n) = repeat (f a) n.
-Proof.
-  induction n as [|n IHn].
-  - reflexivity.
-  - cbn. now rewrite IHn.
-Qed.
-
-
 Lemma max_list_rec_repeat (a : nat) (s : nat) (n : nat) :
   n <> 0 ->
   max_list_rec s (repeat a n) = max s a.

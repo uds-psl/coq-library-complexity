@@ -77,7 +77,7 @@ Proof.
     exists s''. split; [constructor; eauto | split; [apply F6 | ]].
     cbn. exists cert'. 
     split.
-    { unfold isFlatListOf in F7. apply list_eq_length in F7. rewrite map_length in F7. Lia.lia. }
+    { unfold isFlatListOf in F7. apply (f_equal (@length _)) in F7. rewrite map_length in F7. now rewrite <- F7. }
     exists c'. unfold initc. enough (TM.start M' = s0') by easy. 
     rewrite <- F5 in eq__start. now apply injective_index in eq__start. 
   - intros (fsig & M' & sfin & F1 & F2 & (certfin & F3 & (f & F4))). 

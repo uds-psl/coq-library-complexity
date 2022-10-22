@@ -24,18 +24,18 @@ Section fixInstance.
   
   (*we fix the homomorphism on natural numbers *)
   (*it just encodes the alphabet using a unary encoding: there is one indicator bit for each element of the alphabet*)
-  Definition hNat (Sig : nat) (x : nat) := if leb (S x) Sig then repEl x false ++ [true] ++ repEl (Sig - x -1) false
-                                                else repEl Sig false. 
+  Definition hNat (Sig : nat) (x : nat) := if leb (S x) Sig then repeat false x ++ [true] ++ repeat false (Sig - x -1)
+                                                else repeat false Sig. 
 
   Lemma hNat_length (Sig x : nat) : |hNat Sig x| = Sig. 
   Proof using. 
     clear A A1 pr.
     unfold hNat. destruct leb eqn:H. 
-    - rewrite !app_length, !repEl_length. apply leb_complete in H. cbn. nia. 
-    - now rewrite repEl_length.
+    - rewrite !app_length, !repeat_length. apply leb_complete in H. cbn. nia. 
+    - apply repeat_length.
   Qed. 
 
-  Lemma hP_inv1 (Sig x n : nat) : hNat Sig x = repEl n false ++ [true] ++ repEl (Sig - n -1) false -> x = n. 
+  Lemma hP_inv1 (Sig x n : nat) : hNat Sig x = repeat false n ++ [true] ++ repeat false (Sig - n -1) -> x = n. 
   Proof. 
     intros. unfold hNat in H. 
     destruct leb eqn:H1. 
@@ -44,13 +44,13 @@ Section fixInstance.
       + destruct n; cbn in H; [reflexivity | congruence]. 
       + destruct n; cbn in H; [ congruence | ]. inv H. now apply IHx in H1.
     - destruct (le_lt_dec n Sig). 
-      + assert (|repEl n false| <= |repEl Sig false|) by (now rewrite !repEl_length). 
+      + assert (|repeat false n| <= |repeat false Sig|) by (now rewrite !repeat_length). 
         apply list_length_split1 in H0 as (s1 & s2 & H0 & _ & H2). rewrite H2 in H. 
         apply app_eq_length in H as (_ & H); [ | apply H0]. 
         apply repEl_app_inv in H2 as (n1 & n2 & -> & -> & H2).   
         destruct n2; cbn in H; congruence. 
       + match type of H with ?a = ?b => assert (|a| = |b|) by congruence end. 
-        rewrite !app_length, !repEl_length in H0. cbn in H0. lia. 
+        rewrite !app_length, !repeat_length in H0. lia. 
   Qed. 
 
   (** now, the homomorphism for finite types is defined by composing hNat and index *)

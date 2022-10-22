@@ -734,50 +734,50 @@ Proof.
 Qed.
 
 Set Default Proof Using "Type".
-(** listProd *)
-Section fixListProd. 
+(** list_distr *)
+Section fixListDistr.
   Variable (X : Type).
   Context `{intX : encodable X}.
 
-  Definition c__listProd1 := 22 + c__map + c__app. 
-  Definition c__listProd2 := 18. 
-  Definition list_prod_time (l1 : list X) (l2 : list (list X)) := (|l1|) * (|l2| + 1) * c__listProd1 + c__listProd2.
+  Definition c__listDistr1 := 22 + c__map + c__app. 
+  Definition c__listDistr2 := 18. 
+  Definition list_distr_time (l1 : list X) (l2 : list (list X)) := (|l1|) * (|l2| + 1) * c__listDistr1 + c__listDistr2.
   
-  Global Instance term_listProd : computableTime' (@list_prod X) (fun l1 _ => (5, fun l2 _ => (list_prod_time l1 l2, tt))). 
+  Global Instance term_listDistr : computableTime' (@list_distr X) (fun l1 _ => (5, fun l2 _ => (list_distr_time l1 l2, tt))). 
   Proof. 
     extract. 
     solverec. 
-    all: unfold list_prod_time. 
+    all: unfold list_distr_time. 
     2: rewrite map_time_const, map_length.
-    all: unfold c__listProd1, c__listProd2. lia. cbn [length]. leq_crossout.
+    all: unfold c__listDistr1, c__listDistr2. lia. cbn [length]. leq_crossout.
   Qed. 
 
-  Definition poly__listProd n := n * (n + 1) * c__listProd1 + c__listProd2. 
-  Lemma list_prod_time_bound l1 l2: list_prod_time l1 l2 <= poly__listProd (size (enc l1) + size (enc l2)). 
+  Definition poly__listDistr n := n * (n + 1) * c__listDistr1 + c__listDistr2. 
+  Lemma list_prod_time_bound l1 l2: list_distr_time l1 l2 <= poly__listDistr (size (enc l1) + size (enc l2)). 
   Proof. 
-    unfold list_prod_time, poly__listProd. rewrite !list_size_length. leq_crossout. 
+    unfold list_distr_time, poly__listDistr. rewrite !list_size_length. leq_crossout. 
   Qed. 
-  Lemma list_prod_poly : monotonic poly__listProd /\ inOPoly poly__listProd. 
+  Lemma list_prod_poly : monotonic poly__listDistr /\ inOPoly poly__listDistr. 
   Proof. 
-    unfold poly__listProd; split; smpl_inO. 
+    unfold poly__listDistr; split; smpl_inO. 
   Qed. 
 
-  Lemma list_prod_length (l1 : list X) l2 : |list_prod l1 l2| = |l1| * |l2|.
+  Lemma list_distr_length (l1 : list X) l2 : |list_distr l1 l2| = |l1| * |l2|.
   Proof. 
-    unfold list_prod. induction l1; cbn; [easy | ].
+    unfold list_distr. induction l1; cbn; [easy | ].
     rewrite app_length, IHl1, map_length. lia. 
   Qed. 
-End fixListProd. 
+End fixListDistr. 
 
 (** mkVarEnv_step *)
-Definition mkVarEnv_step (l : list nat) (acc : list (list nat)) := list_prod l acc ++ acc. 
+Definition mkVarEnv_step (l : list nat) (acc : list (list nat)) := list_distr l acc ++ acc. 
 Definition c__mkVarEnvStep := c__app + 11. 
-Definition mkVarEnv_step_time (l : list nat) (acc : list (list nat)) := list_prod_time l acc + (|l| * |acc| * c__mkVarEnvStep) + c__mkVarEnvStep.
+Definition mkVarEnv_step_time (l : list nat) (acc : list (list nat)) := list_distr_time l acc + (|l| * |acc| * c__mkVarEnvStep) + c__mkVarEnvStep.
 #[export]
 Instance term_mkVarEnv_step : computableTime' mkVarEnv_step (fun l1 _ => (1, fun l2 _ => (mkVarEnv_step_time l1 l2, tt))). 
 Proof. 
   extract. solverec. 
-  rewrite list_prod_length. 
+  rewrite list_distr_length. 
   unfold mkVarEnv_step_time, c__mkVarEnvStep. solverec. 
 Qed.
 
@@ -816,21 +816,21 @@ Qed.
 Fact mkVarEnv_length (l : list nat) n : |mkVarEnv l n|  = (|l| + 1) ^ n.
 Proof. 
   unfold mkVarEnv. induction n; cbn; [easy | ].
-  rewrite app_length, list_prod_length. rewrite IHn. 
+  rewrite app_length, list_distr_length. rewrite IHn. 
   nia. 
 Qed.
 
 (** we show that for every fixed n giving the number of variables to bind, mkVarEnv has a polynomial running time*)
-Definition c__mkVarEnvB1 := (2 * (c__listProd1 + 1) * (c__mkVarEnvStep + 1)). 
-Definition c__mkVarEnvB2 := (c__listProd2 + c__mkVarEnv + c__it + c__mkVarEnvStep).
-Definition poly__mkVarEnv num n := num * c__mkVarEnvB1 * (n)^num + c__it + c__mkVarEnv + num * (n + c__mkVarEnvB2 + n * c__listProd1).
+Definition c__mkVarEnvB1 := (2 * (c__listDistr1 + 1) * (c__mkVarEnvStep + 1)). 
+Definition c__mkVarEnvB2 := (c__listDistr2 + c__mkVarEnv + c__it + c__mkVarEnvStep).
+Definition poly__mkVarEnv num n := num * c__mkVarEnvB1 * (n)^num + c__it + c__mkVarEnv + num * (n + c__mkVarEnvB2 + n * c__listDistr1).
 Lemma mkVarEnv_time_bound num l : mkVarEnv_time l num <= poly__mkVarEnv num (|l| + 1). 
 Proof. 
   unfold mkVarEnv_time. induction num; cbn -[Nat.add Nat.mul]. 
   - unfold poly__mkVarEnv. lia. 
   - match goal with [ |- ?a + ?b + ?c + ?d <= _] => replace (a + b + c + d) with (a + (b + d) + c) by lia end. 
     rewrite IHnum. 
-    unfold mkVarEnv_step_time, list_prod_time. unfold mkVarEnv_step. specialize mkVarEnv_length as H1. unfold mkVarEnv in H1. 
+    unfold mkVarEnv_step_time, list_distr_time. unfold mkVarEnv_step. specialize mkVarEnv_length as H1. unfold mkVarEnv in H1. 
     rewrite H1. 
     replace_le ((|l|) * (((|l|) + 1)^num + 1)) with ((|l| + 1)^(S num) + (|l|)) by cbn; nia. 
     replace_le ((|l|) * (((|l|) + 1)^num * c__mkVarEnvStep)) with (((|l|) + 1)^(S num) * c__mkVarEnvStep) by cbn; nia. 
@@ -860,14 +860,14 @@ Section fixprodLists.
   Definition c__prodLists1 := 22 + c__map + c__app. 
   Definition c__prodLists2 := 2 * c__map + 39 + c__app.
   Definition prodLists_time (l1 : list X) (l2 : list Y) := (|l1|) * (|l2| + 1) * c__prodLists2 + c__prodLists1. 
-  Global Instance term_prodLists : computableTime' (@prodLists X Y) (fun l1 _ => (5, fun l2 _ => (prodLists_time l1 l2, tt))). 
+  Global Instance term_prodLists : computableTime' (@list_prod X Y) (fun l1 _ => (5, fun l2 _ => (prodLists_time l1 l2, tt))). 
   Proof. 
     apply computableTimeExt with (x := fix rec (A : list X) (B : list Y) : list (X * Y) := 
       match A with 
       | [] => []
       | x :: A' => map (@pair X Y x) B ++ rec A' B 
       end). 
-    1: { unfold prodLists. change (fun x => ?h x) with h. intros l1 l2. induction l1; easy. }
+    1: { unfold list_prod. change (fun x => ?h x) with h. intros l1 l2. induction l1; easy. }
     extract. solverec. 
     all: unfold prodLists_time, c__prodLists1, c__prodLists2; solverec. 
     rewrite map_length, map_time_const. leq_crossout. 
@@ -898,8 +898,8 @@ Definition makeAllEvalEnvFlat_time (tm : flatTM) (n1 n2 n3 n4 : nat) :=
   + mkVarEnv_time (seq 0 (flatStateSigma tm)) n3
   + mkVarEnv_time (seq 0 (states tm)) n4
   + prodLists_time (mkVarEnv (seq 0 flatPolarity) n1) (mkVarEnv (seq 0 (sig tm)) n2)
-  + prodLists_time (prodLists (mkVarEnv (seq 0 flatPolarity) n1) (mkVarEnv (seq 0 (sig tm)) n2)) (mkVarEnv (seq 0 (flatStateSigma tm)) n3)
-  + prodLists_time (prodLists (prodLists (mkVarEnv (seq 0 flatPolarity) n1) (mkVarEnv (seq 0 (sig tm)) n2)) (mkVarEnv (seq 0 (flatStateSigma tm)) n3)) (mkVarEnv (seq 0 (states tm)) n4) 
+  + prodLists_time (list_prod (mkVarEnv (seq 0 flatPolarity) n1) (mkVarEnv (seq 0 (sig tm)) n2)) (mkVarEnv (seq 0 (flatStateSigma tm)) n3)
+  + prodLists_time (list_prod (list_prod (mkVarEnv (seq 0 flatPolarity) n1) (mkVarEnv (seq 0 (sig tm)) n2)) (mkVarEnv (seq 0 (flatStateSigma tm)) n3)) (mkVarEnv (seq 0 (states tm)) n4) 
   + (4^n1) * ((sig tm + 1) ^n2) * ((flatStateSigma tm + 1) ^n3) * ((states tm + 1) ^ n4) * c__makeAllEvalEnvFlat2
   + c__makeAllEvalEnvFlat1.
 
@@ -909,8 +909,8 @@ Proof.
   unfold makeAllEvalEnvFlat, makeAllEvalEnv. 
   extract. 
   solverec. 
-  rewrite map_time_const. 
-  rewrite !prodLists_length, !mkVarEnv_length, !seq_length.
+  rewrite map_time_const.
+  rewrite !prod_length, !mkVarEnv_length, !seq_length.
   cbn [length Nat.add]. 
   rewrite !seq_length. 
   unfold makeAllEvalEnvFlat_time, c__makeAllEvalEnvFlat1, c__makeAllEvalEnvFlat2. unfold flatStateSigma, flatOption. solverec. 
@@ -937,7 +937,7 @@ Proof.
   rewrite flatStateSigma_bound at 1. rewrite sig_TM_le, states_TM_le at 1. rewrite sig_TM_le at 1. 
   match goal with [ |- context [?a + mkVarEnv_time (seq 0 flatPolarity) ?b] ] => replace_le a with ((flatPolarity + 3 * size (enc tm) + 5) * c__seq) by nia end. 
   rewrite !mkVarEnv_time_bound. rewrite !seq_length. 
-  unfold prodLists_time. rewrite !prodLists_length, !mkVarEnv_length, !seq_length. 
+  unfold prodLists_time. rewrite !prod_length, !mkVarEnv_length, !seq_length. 
   poly_mono (mkVarEnv_poly n2). 2: { rewrite sig_TM_le. reflexivity. }
   poly_mono (mkVarEnv_poly n3). 2: { rewrite flatStateSigma_bound, sig_TM_le. reflexivity. }
   poly_mono (mkVarEnv_poly n4). 2: { rewrite states_TM_le. reflexivity. }
@@ -956,7 +956,7 @@ Lemma makeAllEvalEnvFlat_envOfFlatTypes tm n1 n2 n3 n4 : forall e, e el makeAllE
 Proof. 
   intros e. intros H. unfold makeAllEvalEnvFlat, makeAllEvalEnv in H. 
   apply in_map_iff in H  as ((((l1 & l2) & l3) & l4) & <- & H). 
-  rewrite !in_prodLists_iff in H. destruct H as (((H1 & H2) & H3) & H4).
+  rewrite !in_prod_iff in H. destruct H as (((H1 & H2) & H3) & H4).
   rewrite in_mkVarEnv_iff in *.
   cbn. unfold envOfFlatTypes; repeat split; cbn; unfold list_ofFlatType, ofFlatType. 
   - intros a H%H1. apply in_seq in H. lia. 
@@ -978,7 +978,7 @@ Definition poly__makeAllEvalEnvFlatLength (n1 n2 n3 n4 : nat) n := (flatPolarity
 Lemma makeAllEvalEnvFlat_length_bound tm n1 n2 n3 n4: |makeAllEvalEnvFlat tm n1 n2 n3 n4| <= poly__makeAllEvalEnvFlatLength n1 n2 n3 n4 (size (enc tm)).
 Proof. 
   unfold makeAllEvalEnvFlat, makeAllEvalEnv. 
-  rewrite map_length, !prodLists_length.
+  rewrite map_length, !prod_length.
   rewrite !mkVarEnv_length, !seq_length. 
   rewrite flatStateSigma_bound. rewrite sig_TM_le, states_TM_le.  
   unfold poly__makeAllEvalEnvFlatLength. replace (size (enc tm) + 1 + 1) with (size (enc tm) + 2) by lia. 
@@ -2151,17 +2151,17 @@ Proof.
   unfold poly__allFlatCardsSize; split; smpl_inO; apply allFlatCards_length_poly.
 Qed.
 
-(** repEl *)
-Section fixXrepEl. 
+(** repeat *)
+Section fixXrepeat.
   Variable (X : Type).
   Context `{encodable X}. 
-  Definition c__repEl := 12.
-  Global Instance term_repEl : computableTime' (@repEl X) (fun n _ => (5, fun e _ => ((n +1) * c__repEl, tt))). 
+  Definition c__repeat := 12.
+  Global Instance term_repeat : computableTime' (@repeat X) (fun e _ => (5, fun n _ => ((n +1) * c__repeat, tt))). 
   Proof. 
     extract. solverec. 
-    all: unfold c__repEl; solverec. 
+    all: unfold c__repeat; solverec. 
   Qed. 
-End fixXrepEl. 
+End fixXrepeat. 
 
 (** kflat *)
 Definition c__kflat := c__add1 + c__length + 1. 
@@ -2241,9 +2241,9 @@ Proof.
   unfold flatInr_flatNsig_time, c__flatInrflatNsig. solverec.    
 Qed.
 
-Definition c__flatInitialString := 7 * c__add1 + c__repEl * wo + 3 * c__repEl + add_time wo + 8 * c__app + 56 + c__rev.
+Definition c__flatInitialString := 7 * c__add1 + c__repeat * wo + 3 * c__repeat + add_time wo + 8 * c__app + 56 + c__rev.
 Definition flat_initial_string_time (t k' : nat) (tm : flatTM) (fixed : list nat) := 
-  6 * flatGamma_time tm + 6 * add_time (flatGamma tm) + zPflat_time t k' fixed + c__repEl * k' + c__repEl * t + map_time (flatInr_flatNsig_time tm) fixed + (wo + t) * c__app + c__app * k' + c__app * (|fixed|) + (c__app + c__rev + c__repEl) * zPflat t k' fixed + c__flatInitialString. 
+  6 * flatGamma_time tm + 6 * add_time (flatGamma tm) + zPflat_time t k' fixed + c__repeat * k' + c__repeat * t + map_time (flatInr_flatNsig_time tm) fixed + (wo + t) * c__app + c__app * k' + c__app * (|fixed|) + (c__app + c__rev + c__repeat) * zPflat t k' fixed + c__flatInitialString. 
 #[export]
 Instance term_flat_initial_string : computableTime' flat_initial_string (fun t _ => (1, fun k' _ => (1, fun tm _ => (1, fun fixed _ => (flat_initial_string_time t k' tm fixed, tt))))). 
 Proof. 
@@ -2251,29 +2251,28 @@ Proof.
     (x := (fun (t k' : nat) (flatTM : flatTM) (flatFixedInput : list nat) =>
    [flatInr (flatGamma flatTM) flatNdelimC] ++
    rev
-     (repEl (zPflat t k' flatFixedInput)
-        (flatInr (flatGamma flatTM) flatNblank)) ++
+     (repeat (flatInr (flatGamma flatTM) flatNblank) (zPflat t k' flatFixedInput)) ++
    [flatInr (flatGamma flatTM) flatNinit] ++
    map (flatInr_flatNsig flatTM)
      flatFixedInput ++
-   repEl k' (flatInr (flatGamma flatTM) flatNstar) ++
-   repEl (wo + t) (flatInr (flatGamma flatTM) flatNblank) ++
+   repeat (flatInr (flatGamma flatTM) flatNstar) k' ++
+   repeat (flatInr (flatGamma flatTM) flatNblank) (wo + t) ++
    [flatInr (flatGamma flatTM) flatNdelimC])). 
   { easy. }
   extract. solverec.
-  rewrite rev_length, map_length, !repEl_length.
+  rewrite rev_length, map_length, !repeat_length.
   unfold flat_initial_string_time, c__flatInitialString. simp_comp_arith. leq_crossout. 
 Qed.
 
 Definition poly__flatInitialString n := 
   6 * poly__flatGamma n +
   6 * ((c__flatGammaS * (n + 1) * (n + 1) + 1) * c__add) + 
-  poly__zPflat n + c__repEl * n + c__repEl * n +
+  poly__zPflat n + c__repeat * n + c__repeat * n +
   (n *
    (poly__flatGamma n + (c__flatGammaS * (n + 1) * (n + 1) + 1) * c__add +
     c__flatInrflatNsig + c__map) + c__map) + (wo + n) * c__app + 
   c__app * n + c__app * n +
-  (c__app + c__rev + c__repEl) * (wo + (n + (n + n))) + c__flatInitialString.
+  (c__app + c__rev + c__repeat) * (wo + (n + (n + n))) + c__flatInitialString.
 Lemma flat_initial_string_time_bound t k' tm fixed : flat_initial_string_time t k' tm fixed <= poly__flatInitialString (size (enc t) + size (enc k') + size (enc tm) + size (enc fixed)). 
 Proof. 
   unfold flat_initial_string_time. 
@@ -2313,13 +2312,8 @@ Qed.
 
 Lemma flat_initial_string_length t k' tm fixed: |flat_initial_string t k' tm fixed| = 2 * (zPflat t k' fixed + 1) + 1. 
 Proof. 
-  unfold flat_initial_string. rewrite !app_length, !rev_length, !repEl_length, !map_length.
+  unfold flat_initial_string. rewrite !app_length, !rev_length, !repeat_length, !map_length.
   cbn. unfold zflat, kflat. nia.
-Qed.
-
-Lemma in_repEl_iff (X : Type) (a b : X) n : a el repEl n b -> a = b. 
-Proof. 
-  induction n; cbn; [easy | ]. intros [-> | <-%IHn]; reflexivity. 
 Qed.
 
 Lemma list_ofFlatType_rev k l : list_ofFlatType k l -> list_ofFlatType k (rev l). 
@@ -2331,21 +2325,21 @@ Proof.
   unfold list_ofFlatType. intros H. setoid_rewrite in_map_iff. 
   intros H1 a (a' & <- & H2%H1). easy.
 Qed.
-Lemma list_ofFlatType_repEl k n m : ofFlatType k m -> list_ofFlatType k (repEl n m). 
+Lemma list_ofFlatType_repeat k n m : ofFlatType k m -> list_ofFlatType k (repeat m n). 
 Proof. 
-  unfold list_ofFlatType. intros H a H1%in_repEl_iff. easy.
+  unfold list_ofFlatType. intros H a H1%repeat_spec. easy.
 Qed.
 
 Lemma flat_initial_string_ofFlatType t k' tm fixed : list_ofFlatType (sig tm) fixed -> list_ofFlatType (flatAlphabet tm) (flat_initial_string t k' tm fixed). 
 Proof. 
   intros H0.  unfold flat_initial_string. rewrite !list_ofFlatType_app; repeat split.
   - intros a [<- | []]. apply inr_ofFlatType. unfold ofFlatType, flatPreludeSig', flatNdelimC; lia. 
-  - apply list_ofFlatType_rev. apply list_ofFlatType_repEl. apply inr_ofFlatType. unfold ofFlatType, flatPreludeSig', flatNblank; lia. 
+  - apply list_ofFlatType_rev. apply list_ofFlatType_repeat. apply inr_ofFlatType. unfold ofFlatType, flatPreludeSig', flatNblank; lia. 
   - intros a [<- | []]. apply inr_ofFlatType. unfold ofFlatType, flatPreludeSig', flatNinit; lia. 
   - eapply list_ofFlatType_map; [ | apply H0]. intros x H. apply inr_ofFlatType. 
     unfold ofFlatType, flatPreludeSig', flatNsig in *. lia. 
-  - apply list_ofFlatType_repEl, inr_ofFlatType. unfold ofFlatType, flatPreludeSig', flatNstar. lia. 
-  - apply list_ofFlatType_repEl, inr_ofFlatType. unfold ofFlatType, flatPreludeSig', flatNblank. lia. 
+  - apply list_ofFlatType_repeat, inr_ofFlatType. unfold ofFlatType, flatPreludeSig', flatNstar. lia. 
+  - apply list_ofFlatType_repeat, inr_ofFlatType. unfold ofFlatType, flatPreludeSig', flatNblank. lia. 
   - intros a [<- | []]. apply inr_ofFlatType. unfold ofFlatType, flatPreludeSig', flatNdelimC; lia. 
 Qed.
 
@@ -2477,12 +2471,12 @@ Proof.
 Qed.
 
 Definition c__finalSubstrings := c__flatStateSigma + 13. 
-Definition flat_finalSubstrings_time (tm : flatTM) :=   flat_haltingStates_time tm + seq_time (flatStateSigma tm) + prodLists_time (flat_haltingStates tm) (seq 0 (flatStateSigma tm)) + map_time (flat_finalSubstrings_step_time tm) (prodLists (flat_haltingStates tm) (seq 0 (flatStateSigma tm))) + c__finalSubstrings. 
+Definition flat_finalSubstrings_time (tm : flatTM) :=   flat_haltingStates_time tm + seq_time (flatStateSigma tm) + prodLists_time (flat_haltingStates tm) (seq 0 (flatStateSigma tm)) + map_time (flat_finalSubstrings_step_time tm) (list_prod (flat_haltingStates tm) (seq 0 (flatStateSigma tm))) + c__finalSubstrings. 
 #[export]
 Instance term_flat_finalSubstrings : computableTime' flat_finalSubstrings (fun tm _ => (flat_finalSubstrings_time tm, tt)). 
 Proof. 
   apply computableTimeExt with (x := 
-    fun tm => map (flat_finalSubstrings_step tm) (prodLists (flat_haltingStates tm) (seq 0 (flatStateSigma tm)))). 
+    fun tm => map (flat_finalSubstrings_step tm) (list_prod (flat_haltingStates tm) (seq 0 (flatStateSigma tm)))). 
   { easy. }
   extract. recRel_prettify2. 
   unfold flat_finalSubstrings_time, c__finalSubstrings; simp_comp_arith; solverec.
@@ -2497,10 +2491,10 @@ Proof.
   unfold prodLists_time. rewrite flat_haltingStates_length, seq_length. rewrite flatStateSigma_bound at 1.
   rewrite map_time_mono. 
   2: { instantiate (1 := fun _ => _).
-       intros [s m] [H1 H2]%in_prodLists_iff. apply flat_haltingStates_ofFlatType in H1. 
+       intros [s m] [H1 H2]%in_prod_iff. apply flat_haltingStates_ofFlatType in H1. 
        cbn. rewrite (flat_finalSubstrings_step_time_bound m H1). reflexivity. 
     }
-  rewrite map_time_const, prodLists_length, flat_haltingStates_length, seq_length. 
+  rewrite map_time_const, prod_length, flat_haltingStates_length, seq_length. 
   rewrite flatStateSigma_bound, sig_TM_le, states_TM_le.
   unfold poly__finalSubstrings; lia. 
 Qed.
@@ -2511,7 +2505,7 @@ Qed.
 
 Proposition flat_finalSubstrings_length (tm : flatTM) : |flat_finalSubstrings tm| <= states tm * (S (sig tm)). 
 Proof. 
-  unfold flat_finalSubstrings. rewrite map_length, prodLists_length.
+  unfold flat_finalSubstrings. rewrite map_length, prod_length.
   rewrite flat_haltingStates_length, seq_length. unfold flatStateSigma, flatOption. 
   lia. 
 Qed.
@@ -2519,7 +2513,7 @@ Qed.
 Lemma flat_finalSubstrings_el_bound tm n: [n] el flat_finalSubstrings tm -> ofFlatType (flatAlphabet tm) n. 
 Proof. 
   intros H. unfold flat_finalSubstrings in H. apply in_map_iff in H as ((a & b) & H1 & H). 
-  inv H1. apply in_prodLists_iff in H as (H1 & H2). 
+  inv H1. apply in_prod_iff in H as (H1 & H2). 
   finRepr_simpl. 
   - apply flat_haltingStates_ofFlatType, H1. 
   - apply in_seq in H2 as (_ & H2). apply H2. 
