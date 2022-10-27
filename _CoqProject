@@ -157,18 +157,9 @@ theories/TM/Single/DecodeTapes.v
 # PrettyBounds
 theories/TM/PrettyBounds/PrettyBounds.v
 theories/TM/PrettyBounds/BaseCode.v
-theories/TM/PrettyBounds/UnivBounds.v
 theories/TM/PrettyBounds/M2MBounds.v
 
 theories/TM/PrettyBounds/SpaceBounds.v
 theories/TM/PrettyBounds/SizeBounds.v
 theories/TM/PrettyBounds/BaseCodeSpace.v
-theories/TM/PrettyBounds/UnivSpaceBounds.v
 theories/TM/PrettyBounds/UnfoldClosBounds.v
-
-# Multi-Univ Simulation Theorem
-theories/TM/Univ/MultiUnivTimeSpaceSimulation.v
-
-
-
-
