@@ -1,5 +1,6 @@
 From Undecidability.L Require Import Tactics.LTactics.
 From Undecidability.L.Datatypes Require Import Lists LVector.
+From Complexity.Libs Require Import PSLCompat.
 From Complexity.Complexity Require Import NP Definitions Monotonic.
 From Undecidability.TM Require Import TM_facts.
 From Complexity.L.AbstractMachines Require Import FlatPro.Computable.LPro.
@@ -391,7 +392,7 @@ Proof.
   eexists (fun x => x*5 + 33).
   { intros [];cbn. 2-4:now cbv.
     rewrite size_list;unfold enc;cbn - ["+"].
-    rewrite map_app,MCList.map_repeat,sumn_map_add,sumn_map_c,map_app,sumn_app,MCList.map_repeat,map_map,app_length,repeat_length,map_length,sumn_repeat.
+    rewrite map_app,map_repeat,sumn_map_add,sumn_map_c,map_app,sumn_app,map_repeat,map_map,app_length,repeat_length,map_length,sumn_repeat.
     unfold enc. cbn;ring_simplify. rewrite LNat.size_nat_enc. unfold LNat.c__natsizeS, LNat.c__natsizeO, c__listsizeNil, c__listsizeCons.
  nia.
   }

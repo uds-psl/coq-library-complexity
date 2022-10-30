@@ -166,7 +166,7 @@ Proof.
   unfold stepFlat, step. cbn [fst snd cstate ctapes] in *.
   erewrite current_charsFlat_eq. 2:easy.
   replace (length t) with n.
-  2:{inv Ht. destruct c'. now rewrite LVector.to_list_length. }
+  2:{inv Ht. destruct c'. now rewrite VectorSpec.length_to_list. }
   erewrite <-isFlatteningTransOf_eq. 2:easy.
   destruct TM.trans. apply isFlatteningConfigOf_iff;do 2 econstructor.
   apply doAct_multiFlat;eauto. 

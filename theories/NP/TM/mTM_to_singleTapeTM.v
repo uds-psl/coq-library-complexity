@@ -93,12 +93,12 @@ Section LMGenNP_to_TMGenNP_mTM.
           assert (H':=proj2_sig M2MBounds.Loop_steps_nice). hnf in H'.
           unfold PrettyBounds.dominatedWith in H'.
           rewrite H'. rewrite putFirstAtEnd_to_list.
-          rewrite BaseCode.encodeList_size_app,size_list, to_list_length.
+          rewrite BaseCode.encodeList_size_app,size_list, Vector.length_to_list.
           unfold Code.size. cbn - [mult plus]. 
           autorewrite with list. cbn [length]. rewrite sizeOfTape_encodeTape_le.
           erewrite sumn_map_le_pointwise with (f2:=fun x => _).
           2:{ intros. rewrite sizeOfTape_encodeTape_le. rewrite sizeOfmTapes_upperBound. 2:now eapply Vector.to_list_In. reflexivity. }
-          rewrite !sumn_map_c,to_list_length.
+          rewrite !sumn_map_c, Vector.length_to_list.
           unshelve erewrite ( _ : (n * (2 + sizeOfmTapes v) + n + 1 + S (2 + sizeOfTape t1 + 1) + S n * steps)
                                   <= ((steps + sizeOfmTapes v + 5)* S n + sizeOfTape t1)). nia.
           reflexivity. 
@@ -108,7 +108,7 @@ Section LMGenNP_to_TMGenNP_mTM.
           rewrite sumn_le_bound.
           2:{ intros ? (?&<-&?)%in_map_iff.
               rewrite sizeOfTape_encodeTape_le, sizeOfmTapes_upperBound. 2:now apply Vector.to_list_In. reflexivity. }
-          rewrite map_length. rewrite to_list_length.
+          rewrite map_length. rewrite Vector.length_to_list.
           replace (1 + (2 + maxSize + 2)) with (maxSize + 5) by lia.
           setoid_rewrite <- correct__leUpToC.
           [f__steps]:refine (fun '(steps, sizeOfmTapes, maxSize) =>  _).
@@ -121,11 +121,11 @@ Section LMGenNP_to_TMGenNP_mTM.
          unfold encode_tapes in Htl;rewrite encode_list_concat in Htl.
          rewrite map_app,concat_map,map_map in Htl. cbn in Htl. 
          setoid_rewrite map_map in Htl. rewrite <- !app_assoc in Htl. cbn in Htl.
-         assert (H':=Htl). eapply concat_eq_inv_borderL with (isBorder := fun c => c = inr sigList_cons) in H'. rewrite map_length,to_list_length in H'.
+         assert (H':=Htl). eapply concat_eq_inv_borderL with (isBorder := fun c => c = inr sigList_cons) in H'. rewrite map_length, Vector.length_to_list in H'.
          5:easy. 4:now cbn;intuition subst.
          2,3:intros _ (x&<-&Hinx)%in_map_iff. 2,3:eexists _,_;split;[reflexivity | ].
          2,3:now split;[easy | intros ? (y&<-&Hiny)%in_map_iff;easy].
-         destruct H' as [Hinit Hlast]. rewrite <- MCList.map_skipn in Hlast.
+         destruct H' as [Hinit Hlast]. rewrite skipn_map in Hlast.
          destruct (split_vector v0 n) as (v'&vlst) eqn:Hsplit.
          unshelve eassert (H':=split_vector_correct _ _). 6:rewrite Hsplit in H'. clear. abstract nia. 
          cbn [fst snd] in H'. apply (f_equal (@vector_to_list _ _ )) in H'. rewrite vector_to_list_cast in H'. clear Hsplit.
@@ -138,7 +138,7 @@ Section LMGenNP_to_TMGenNP_mTM.
              unshelve eassert (Htmp:=Hinit (proj1_sig (Fin.to_nat i)) _). { now destruct Fin.to_nat. }
              destruct (Fin.to_nat i) eqn:Hi.
              rewrite map_app,<-!Vector.to_list_map in Htmp. 
-             rewrite nth_error_app1 in Htmp. 2:now rewrite to_list_length.
+             rewrite nth_error_app1 in Htmp. 2:now rewrite Vector.length_to_list.
              cbn in Htmp. rewrite !vector_nth_error_nat in Htmp.
              destruct lt_dec. 2:easy. 
              rewrite !nth_map' in Htmp. revert Htmp. intros [= Htmp].
@@ -147,7 +147,7 @@ Section LMGenNP_to_TMGenNP_mTM.
              erewrite Fin.of_nat_ext. apply Htmp.
          }
          clear Hinit v'.
-         rewrite skipn_app in Hlast. 2:now rewrite to_list_length. cbn in Hlast.
+         rewrite skipn_app in Hlast. 2:now rewrite Vector.length_to_list. cbn in Hlast.
          autorewrite with list in Hlast. cbn in Hlast. revert Hlast. intros [= ->].
          edestruct H_HaltOrDiv as (?&?&?&?).
          2:now eauto.
@@ -240,14 +240,14 @@ Section LMGenNP_to_TMGenNP_mTM.
       eexists (fun x => time x).
       { unfold t__start. extract. solverec. rewrite (UpToC_le _).
         rewrite (correct__leUpToC (mapTime_upTo _)). 
-        rewrite length_concat,map_map. subst g. cbn -[plus mult]. setoid_rewrite map_length. rewrite to_list_length.
+        rewrite length_concat,map_map. subst g. cbn -[plus mult]. setoid_rewrite map_length. rewrite Vector.length_to_list.
         erewrite sumn_map_le_pointwise  with (f2:=fun _ => _).
         2:{ intros;rewrite (UpToC_le t__g),sizeOfmTapes_upperBound;try reflexivity;now apply Vector.to_list_In. }
         erewrite sumn_map_le_pointwise with (f1:=fun x1 : tape sig => S (| encode_tape x1 |)) (f2:=fun _ => _).
         2:{ intros. setoid_rewrite sizeOfTape_encodeTape_le at 1. rewrite sizeOfmTapes_upperBound at 1. 2:now apply Vector.to_list_In.
             reflexivity. }
-        rewrite sumn_map_c,to_list_length.
-        rewrite sumn_map_c,to_list_length.
+        rewrite sumn_map_c, Vector.length_to_list.
+        rewrite sumn_map_c, Vector.length_to_list.
         rewrite sizeOfmTapes_by_size. set (L_facts.size _).
         unfold time. reflexivity.
       }
@@ -268,7 +268,7 @@ Section LMGenNP_to_TMGenNP_mTM.
           2:{ intros. setoid_rewrite sumn_map_le_pointwise with (f2:=fun x => _).
               2:{ intros. apply (correct__leUpToC (size_finType_any_le_c (X:=finType_CS (sigTape sig)))). }
               rewrite sumn_map_c. rewrite sizeOfTape_encodeTape_le,  sizeOfmTapes_upperBound. 2:now apply Vector.to_list_In. reflexivity. }
-          rewrite sumn_map_c. rewrite to_list_length. setoid_rewrite sizeOfmTapes_by_size.
+          rewrite sumn_map_c. rewrite Vector.length_to_list. setoid_rewrite sizeOfmTapes_by_size.
           set (n0:= L_facts.size _). ring_simplify. unfold f__size. reflexivity.
         }
         all:unfold f__size;smpl_inO.

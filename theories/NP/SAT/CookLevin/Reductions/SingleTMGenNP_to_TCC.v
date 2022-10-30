@@ -3557,7 +3557,7 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
     rewrite !map_app. cbn -[stringForTapeHalf' repeat wo]. 
     rewrite !map_rev, !map_repeat. rewrite map_map. 
     replace ((|s'|) + (k' - (|s'|))) with k' in H3 by lia. 
-    rewrite MCList.rev_repeat. apply H3. 
+    rewrite MCList.rev_repeat. apply H3.
   Qed. 
 
   (** now the proof of soundness: the prelude can only generate valid initial strings *)

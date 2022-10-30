@@ -1,5 +1,6 @@
 From Undecidability.L Require Import L_facts.
 From Undecidability.L.Datatypes Require Import LTerm Lists LSum.
+From Complexity.Libs Require Import PSLCompat.
 From Complexity.Complexity Require Import NP Monotonic PolyTimeComputable.
 From Complexity.NP.L Require Import CanEnumTerm_def.
 From Undecidability.L.AbstractMachines Require Import FlatPro.Programs.
@@ -115,7 +116,7 @@ Module boollist_enum.
     evar (c:nat). exists c. intros P. rewrite !size_list. induction P as [ | [] P].
     all:cbn.
     all:autorewrite with list;cbn.
-    2:rewrite concat_map,MCList.map_repeat,sumn_concat,MCList.map_repeat. 2:cbn [map].
+    2:rewrite concat_map,map_repeat,sumn_concat,map_repeat. 2:cbn [map].
     all:set (et:=size (enc true));cbv in et;subst et. all:set (et:=size (enc false));cbv in et;subst et.
     2:cbn [sumn];rewrite sumn_repeat. all:try rewrite size_Tok_enc.
     all:ring_simplify.

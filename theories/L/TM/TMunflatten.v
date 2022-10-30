@@ -99,7 +99,7 @@ Proof.
   unfold unflatten_in.
   erewrite <- (map_length (unflatten_symb sig) v).
   rewrite Vector_of_list_length_eq, VectorSpec.to_list_of_list_opp.
-  rewrite MCList.map_map_compose.
+  rewrite map_map.
   intros. 
   erewrite map_ext_in with (g:=fun x => x). now apply map_id.
   
@@ -163,7 +163,7 @@ Proof.
   unfold unflatten_acts,unflatten_acts'.
   erewrite <- (map_length _ v').
   rewrite Vector_of_list_length_eq,VectorSpec.to_list_of_list_opp.
-  rewrite MCList.map_map_compose.
+  rewrite map_map.
   intros. 
   erewrite map_ext_in with (g:=fun x => x). now apply map_id.
   
@@ -176,12 +176,6 @@ Proof.
 
   rewrite map_nth. cbn.
   rewrite index_nth_elem;easy.
-Qed.
-
-Lemma vector_to_list_length X n (l: Vector.t X n):
-  length (Vector.to_list l) = n.
-Proof.
-  induction l;cbn. easy. rewrite IHl at 1. reflexivity.
 Qed.
 
 Lemma unflatten_trans_correct st sig n d trans0:
@@ -219,7 +213,7 @@ Proof.
     cbn -[finType_CS]. right.
     setoid_rewrite index_nth. split. easy.
     clear. unfold unflatten_acts,unflatten_acts'.
-    rewrite MCList.map_repeat. cbn.
+    rewrite map_repeat. cbn.
     (*Set Printing Implicit.*)
     pattern n at 1 2 4 5 6 7.
     replace n with (length (@repeat (option (Fin.t sig) * move) (@None (Fin.t sig), Nmove) n)) at 1.
@@ -245,10 +239,10 @@ Proof.
   -intros. eapply H' in H as (?&?&?&?&?&->&->&->&->).
    repeat split.
    +eapply index_le.
-   +rewrite map_length,vector_to_list_length. easy.
+   +now rewrite map_length,Vector.length_to_list.
    +intros ? ([]&[=<- ]&?)%in_map_iff. eapply index_le.
    +eapply index_le.
-   +rewrite map_length,vector_to_list_length. easy.
+   +rewrite map_length,Vector.length_to_list. easy.
    +intros ? ? ([[]]&[= <- <-]&?)%in_map_iff. eapply index_le.
 Qed.
 
@@ -437,7 +431,7 @@ Lemma flatteningTapeIsValid (sig:finType) n t (t' : TM_facts.tapes sig n):
 Proof.
   intros H. inv H.
   unfold isValidFlatTapes.
-  rewrite vector_to_list_length. rewrite Nat.eqb_refl.
+  rewrite Vector.length_to_list. rewrite Nat.eqb_refl.
   induction t' as [ |t];cbn. easy.
   rewrite andb_true_iff. split.
   2:{easy. }
@@ -459,17 +453,17 @@ Proof.
   -exists (niltape _). easy.
   -eexists (leftof _ _). cbn. f_equal.
    +symmetry;eapply index_nth_elem. apply H. cbn;easy.
-   +erewrite MCList.map_map_compose. erewrite map_ext_in. now rewrite map_id.
+   +erewrite map_map. erewrite map_ext_in. now rewrite map_id.
     intros. cbn. unfold Basics.compose. eapply index_nth_elem. apply H. cbn;easy.
   -eexists (rightof _ _). cbn. f_equal.
    +symmetry;eapply index_nth_elem. apply H. cbn;easy.
-   +erewrite MCList.map_map_compose. erewrite map_ext_in. now rewrite map_id.
+   +erewrite map_map. erewrite map_ext_in. now rewrite map_id.
     intros. cbn. unfold Basics.compose. eapply index_nth_elem. apply H. cbn. rewrite in_app_iff, <- in_rev. eauto. 
   -eexists (midtape _ _ _). cbn. f_equal.
-   +erewrite MCList.map_map_compose. erewrite map_ext_in. now rewrite map_id.
+   +erewrite map_map. erewrite map_ext_in. now rewrite map_id.
     intros. cbn. unfold Basics.compose. eapply index_nth_elem. apply H. cbn. rewrite in_app_iff, <- in_rev. eauto. 
    +symmetry;eapply index_nth_elem. apply H. cbn;easy.
-   +erewrite MCList.map_map_compose. erewrite map_ext_in. now rewrite map_id.
+   +erewrite map_map. erewrite map_ext_in. now rewrite map_id.
     intros. cbn. unfold Basics.compose. eapply index_nth_elem. apply H. cbn. rewrite in_app_iff, <- in_rev. eauto.
     Unshelve.
     all:cbn in H.

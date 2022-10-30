@@ -173,12 +173,12 @@ Section putFirst.
     rewrite !vector_nth_error_nat. destruct lt_dec.
     { rewrite select_nth. unfold putFirstAtEnd. rewrite nth_tabulate,Fin.to_nat_of_nat;cbn.
       destruct lt_dec.
-      -erewrite nth_error_app1. 2:now erewrite LVector.to_list_length.
+      -erewrite nth_error_app1. 2:now erewrite Vector.length_to_list.
        cbn. rewrite vector_nth_error_nat. destruct lt_dec. 2:exfalso;nia.
        erewrite Fin.of_nat_ext. reflexivity.
-      -cbn. rewrite nth_error_app2. all:rewrite LVector.to_list_length. 2:nia. replace (i-n') with 0 by nia. easy.
+      -cbn. rewrite nth_error_app2. all:rewrite Vector.length_to_list. 2:nia. replace (i-n') with 0 by nia. easy.
     }
-    symmetry. apply nth_error_None. erewrite app_length, LVector.to_list_length. cbn;nia.
+    symmetry. apply nth_error_None. erewrite app_length, Vector.length_to_list. cbn;nia.
   Qed.
 
   Lemma putEnd_invL X n' (v : Vector.t X _) :
