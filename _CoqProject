@@ -1,5 +1,4 @@
 -Q theories Complexity
--Q coq-library-undecidability/theories Undecidability
 
 -arg -w -arg -notation-overridden
 COQDOCFLAGS = "--charset utf-8 -s --with-header website/resources/header.html --with-footer website/resources/footer.html --index indexpage"

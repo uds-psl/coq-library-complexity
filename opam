@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "dev+8.15"
+version: "dev+8.16"
 maintainer: "kunze@ps.uni-saarland.de"
 homepage: "https://github.com/uds-psl/coq-library-complexity/"
 dev-repo: "git+https://github.com/uds-psl/coq-library-complexity/"
@@ -7,7 +7,7 @@ bug-reports: "https://github.com/uds-psl/coq-library-complexity/issues"
 authors: ["Fabian Kunze"
           "Lennard Gäher"
           "Maximilian Wuttke"
-          "Yannick Forster"]
+          "Yannick Forster" ]
 license: "CeCILL"
 build: [
   [make "-j%{jobs}%"]
@@ -19,15 +19,12 @@ remove: [
   ["rm" "-R" "%{lib}%/coq/user-contrib/Complexity"]
 ]
 depends: [
-  "coq" {= "8.15.0"}
-  "coq-equations" {= "1.3+8.15"}
-  "ocaml"
-  "coq-smpl" {>= "8.15"}
-  "coq-library-undecidability" {>= "dev+8.15" }
+  "coq" {= "8.16"}
+  "coq-library-undecidability" {>= "dev+8.16" }
 ]
 
 synopsis: "A Coq Library of Complexity Theory"
 flags: light-uninstall
 url {
-  git: "https://github.com/uds-psl/coq-library-complexity#coq-8.15"
+  git: "https://github.com/uds-psl/coq-library-complexity#coq-8.16"
 }
