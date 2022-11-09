@@ -33,5 +33,5 @@ jobs:
 
       - run: opam repo add coq-released https://coq.inria.fr/opam/released
       - run: opam update
-      - run: opam pin add coq-library-undecidability.dev+8.16 "https://github.com/uds-psl/coq-library-undecidability.git#coq-8.16"
+      - run: opam install coq-library-undecidability.1.0.1+8.16
       - run: opam exec -- make all -j2 TIMED=1
