@@ -1,7 +1,7 @@
 # The Coq Library of Complexity Theory
 [![build](https://github.com/uds-psl/coq-library-complexity/workflows/build/badge.svg?branch=coq-8.15)](https://github.com/uds-psl/coq-library-complexity/actions)
 
-This library contains complexity theory. It is built upon the [Coq Library of Undecidability Proofs](https://github.com/uds-psl/coq-library-undecidability).
+This library contains complexity theory formalised in the Coq proof assistant, developed at Saarland University and initiated by Fabian Kunze. It is built upon the [Coq Library of Undecidability Proofs](https://github.com/uds-psl/coq-library-undecidability).
 
 ## Content
 
@@ -51,10 +51,8 @@ We use two frameworks which ease computability proofs with resource analysis for
 
 ## Contributors
 
-- Fabian Kunze
-- Lennard Gäher
-- Maximilian Wuttke
-- Yannick Forster
-- Stefan Haan
-
-
+- Fabian Kunze, Saarland University (2017-2022)
+- Lennard Gäher, Saarland University (2017-2021)
+- Maximilian Wuttke, Saarland University (2017-2021)
+- Yannick Forster, Saarland University (2017-2019)
+- Stefan Haan (2022)
