@@ -91,7 +91,7 @@ Instance term_reduction : computableTime' reduction (fun p _ => (let '(ts, maxSi
   Qed. 
 
   Lemma TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP : 
-    TMGenNP_fixed M ⪯p  FlatFunSingleTMGenNP. 
+    TMGenNP_fixed M ⪯p  FlatFunSingleTMGenNP.
   Proof using index__comp. 
     apply reducesPolyMO_intro with (f := reduction). 
     - evar (f : nat -> nat). exists f. 
@@ -101,16 +101,15 @@ Instance term_reduction : computableTime' reduction (fun p _ => (let '(ts, maxSi
         replace_le (size (enc ts)) with (size (enc (ts, n, n0))) by (rewrite !size_prod; cbn; nia). 
         generalize (size (enc (ts, n, n0))). intros n'. 
         [f]: intros n. subst f. cbn. reflexivity. 
-      + subst f. smpl_inO. 
-      + subst f. smpl_inO. 
+      + unfold f. smpl_inO. 
+      + unfold f. solve_proper. 
       + evar (g : nat -> nat). exists g. 
         * intros ((ts & maxSize) & steps). cbn. 
           rewrite !size_prod. cbn. rewrite size_input_index.  
           instantiate (g := fun n => size (enc flatM) + c__listsizeNil + 8 + (c__sizeInputIndex + 1) * n). 
           subst g. cbn. nia. 
-        * subst g. smpl_inO. 
-        * subst g. smpl_inO. 
+        * unfold g. smpl_inO. 
+        * unfold g. solve_proper.
     - apply reduction_correct. 
   Qed. 
 End fixTM. 
-

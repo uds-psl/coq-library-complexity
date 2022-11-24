@@ -52,6 +52,7 @@ theories/L/AbstractMachines/FlatPro/Computable/LPro.v
 theories/L/Datatypes/LBinNums.v
 theories/L/Datatypes/LComparison.v
 theories/L/Datatypes/LDepPair.v
+theories/L/Datatypes/LNat.v
 theories/L/Functions/IterupN.v
 theories/L/Functions/BinNums.v
 theories/L/Functions/BinNumsAdd.v

@@ -23,11 +23,14 @@ Proof.
   {subst f. extract.
    recRel_prettify. intros x _. split. nia. intros c__t _. split. 2:easy.
    remember (size (enc (x, c__t))) as n0 eqn:eqn0.
-   rewrite (mono__polyTC enumTerm (x':=n0)). 2:{ subst n0. rewrite size_prod. cbn;lia. }
+   setoid_replace (size (enc c__t)) with n0 using relation le.
+   2:{ subst n0. rewrite size_prod. cbn;lia. }
    erewrite (mono_t__R _).
    2:{
      rewrite size_prod in eqn0|-*;cbn [fst snd] in eqn0|-*.
-     rewrite (bounds__rSP enumTerm c__t). rewrite (mono__rSP _ (x':=n0)). 2:{subst n0;nia. }
+     rewrite (bounds__rSP enumTerm c__t).
+     setoid_replace (size (enc c__t)) with n0 using relation le.
+     2:{ subst n0; nia. }
      instantiate (1:=n0 + resSize__rSP enumTerm n0). nia.
    }
    unfold time;reflexivity. 
@@ -129,16 +132,17 @@ Proof.
    +unfold mSize, steps, stepsInner. extract.
     recRel_prettify2. generalize (size (enc x)). intro. unfold f'. reflexivity.
    +subst f'. cbn beta. setoid_rewrite size_nat_enc. all:smpl_inO. all:eapply inOPoly_comp. 
-     all:unfold add_time; smpl_inO. all:eapply inOPoly_comp. all:smpl_inO. all:eapply inOPoly_comp. all:smpl_inO.
-    all:eapply inOPoly_comp. all:smpl_inO.
-   +subst f'. cbn beta. setoid_rewrite size_nat_enc. all:unfold add_time; smpl_inO.
+    all:unfold add_time; first [solve_proper | smpl_inO].
+    all:eapply inOPoly_comp. all: first [solve_proper | smpl_inO].
+    all:eapply inOPoly_comp. all: first [solve_proper | smpl_inO].
+    all:eapply inOPoly_comp. all: first [solve_proper | smpl_inO].
+   + subst f'. cbn beta. setoid_rewrite size_nat_enc. unfold add_time. solve_proper.
    +unfold mSize,steps,stepsInner. eexists (fun x => _).
     *intros. 
      repeat (setoid_rewrite -> size_prod;cbn[fst snd]).
      rewrite !size_nat_enc,!size_term_enc. cbn [size]. 
      generalize (size (enc x)). intros. reflexivity.
-    *smpl_inO. all:eapply inOPoly_comp. all:smpl_inO. all:eapply inOPoly_comp. all:smpl_inO. all:eapply inOPoly_comp. all:smpl_inO. 
-    *smpl_inO.
+    *smpl_inO. all:eapply inOPoly_comp. all:first [solve_proper | smpl_inO]. all:eapply inOPoly_comp. all:first [solve_proper | smpl_inO].
+     eapply inOPoly_comp; [solve_proper | smpl_inO | smpl_inO].
+    *solve_proper.
 Qed.
-
-

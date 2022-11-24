@@ -13,16 +13,16 @@ Notation " f ∈O g" := (inO f g) (at level 70).
 Instance inO_PreOrder : PreOrder inO.
 Proof.
   split.
-  -exists 1,0. intros. Lia.lia.
+  -exists 1,0. intros. lia.
   -intros f g h (c&n0&H) (c'&n0'&H').
    exists (c*c'),(max n0 n0').
    intros n Hn.
-   rewrite H,H'. all:Lia.lia.
+   rewrite H,H'. all: lia.
 Qed.
 
 
 #[export]
-Instance inO_pointwise_leq : Proper ( Basics.flip (pointwise_relation _ le)  ==>  (pointwise_relation _ le) ==> Basics.impl) inO.
+Instance inO_pointwise_leq : Proper ((pointwise_relation _ le)  -->  (pointwise_relation _ le) ==> Basics.impl) inO.
 Proof.
   intros ? ? R1 ? ? R2. unfold inO. hnf in R1,R2|-*.
   setoid_rewrite R1. setoid_rewrite R2. easy. 
@@ -94,8 +94,6 @@ Qed.
 
 Smpl Create inO.
 
-Smpl Add 11 (smpl monotonic) : inO.
-
 Smpl Add 10 (first [ simple eapply inO_add_l | simple eapply inO_mul_c_l | simple eapply inO_mul_c_r | progress (eapply inO_c) | reflexivity]) (*
                     | simple eapply inO_c with (n0:=1);intro;try rewrite <- !f_geq_n;Lia.nia
                                  | inO_leq 1])*) : inO.
@@ -114,7 +112,7 @@ Qed.
 
 Lemma inO_comp_l f1 f2  g1 g2:
   f1 ∈O g1 -> f2 ∈O g2 ->
-  monotonic f1 ->
+  Proper (le ==> le) f1 ->
   (forall x, x <= g2 x ) ->
   (forall c, (fun x => g1 (c*x)) ∈O g1) -> (fun n => f1 (f2 n)) ∈O (fun n => g1 (g2 n)).
 Proof.
@@ -216,7 +214,7 @@ Proof.
   apply inOPoly_c. 
 Qed.
 
-Lemma inOPoly_comp f1 f2: monotonic f1 -> inOPoly f1 -> inOPoly f2 -> inOPoly (fun x => f1 (f2 x)).
+Lemma inOPoly_comp f1 f2: Proper (le ==> le) f1 -> inOPoly f1 -> inOPoly f2 -> inOPoly (fun x => f1 (f2 x)).
 Proof.
   intros ? (n1&?) (n2&?).
   exists ((max 1 n2)*n1). 

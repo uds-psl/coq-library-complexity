@@ -7,7 +7,7 @@ From Undecidability.L.Functions Require Import EqBool.
 
 Inductive kCNF (k : nat) : cnf -> Prop :=
 | kCNFB : kCNF k []
-| kCNFS (N : cnf) (C : clause) : (|C|) = k -> kCNF k N -> kCNF k (C ::  N).               
+| kCNFS (N : cnf) (C : clause) : (|C|) = k -> kCNF k N -> kCNF k (C ::  N).
 
 #[export]
 Hint Constructors kCNF : core.
@@ -76,12 +76,13 @@ Proof.
       instantiate (1 := encodable_nat_enc).
       instantiate (1 := fun n => (c__length + c__eqbComp nat) * (n + 1) + c__clauseLengthDecb). 
       cbn -[Nat.add Nat.mul]. solverec. 
-    - smpl_inO. 
+    - solve_proper. 
   } 
   rewrite list_size_length. 
   unfold poly__kCNFDecb, c__kCNFDecbBound1, c__kCNFDecbBound2. lia.
-Qed. 
-Lemma kCNF_decb_poly : monotonic poly__kCNFDecb /\ inOPoly poly__kCNFDecb. 
-Proof. 
-  unfold poly__kCNFDecb. split; smpl_inO. 
-Qed. 
+Qed.
+
+Lemma kCNF_decb_poly : inOPoly poly__kCNFDecb. 
+Proof. unfold poly__kCNFDecb. smpl_inO. Qed.
+#[export] Instance kCNF_decb_mono: Proper (le ==> le) poly__kCNFDecb.
+Proof. unfold poly__kCNFDecb. solve_proper. Qed.

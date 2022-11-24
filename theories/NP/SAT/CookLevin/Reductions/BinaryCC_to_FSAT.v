@@ -1,5 +1,6 @@
 From Undecidability.Shared.Libs.PSL Require Import Base. 
 From Complexity.Libs.CookPrelim Require Import Tactics MorePrelim. 
+From Complexity.L.Datatypes Require Import LNat.
 From Undecidability.L.Datatypes Require Import Lists LNat LBool LProd LOptions. 
 From Complexity.NP.SAT Require Import FSAT BinaryCC FormulaEncoding. 
 Require Import Lia. 
@@ -512,10 +513,10 @@ Proof.
   unfold encodeCardAt_time. unfold encodeListAt_time. rewrite H1, H2. 
   unfold poly__encodeCardAt; solverec.
 Qed. 
-Lemma encodeCardAt_poly : monotonic poly__encodeCardAt /\ inOPoly poly__encodeCardAt. 
-Proof. 
-  unfold poly__encodeCardAt; split; smpl_inO. 
-Qed. 
+Lemma encodeCardAt_poly : inOPoly poly__encodeCardAt. 
+Proof. unfold poly__encodeCardAt; smpl_inO. Qed.
+#[export] Instance encodeCardAt_mono: Proper (le ==> le) poly__encodeCardAt.
+Proof. unfold poly__encodeCardAt. solve_proper. Qed.
 
 Lemma encodeCardAt_varsIn s1 s2 k card : CCCard_of_size card k -> formula_varsIn (fun n => (n >= s1 /\ n < s1 + k) \/ (n >= s2 /\ n < s2 + k)) (encodeCardAt s1 s2 card). 
 Proof. 
@@ -543,20 +544,21 @@ Definition poly__encodeCardsAt n := n * (poly__encodeCardAt n + c__map) + c__map
 Lemma encodeCardsAt_time_bound bpr s1 s2: 
   BinaryCC_wellformed bpr 
   -> encodeCardsAt_time bpr s1 s2 <= poly__encodeCardsAt (size (enc bpr)). 
-Proof. 
+Proof.
   intros H. unfold encodeCardsAt_time. 
   rewrite map_time_mono. 2: { intros card H1. apply H in H1. instantiate (1 := fun _ => _). cbn. 
     rewrite encodeCardAt_time_bound by apply H1. reflexivity. 
   } 
   rewrite map_time_const.
-  unfold listOr_time. rewrite map_length. 
-  poly_mono encodeCardAt_poly. 2: { rewrite size_nat_enc_r. instantiate (1 := size (enc bpr)). rewrite BinaryCC_enc_size. lia. }
+  unfold listOr_time. rewrite map_length.
+  setoid_replace (width bpr) with (size (enc bpr)) using relation le at 1.
+  2: { rewrite size_nat_enc_r. rewrite BinaryCC_enc_size. lia. }
   rewrite list_size_length. replace_le (size (enc (cards bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
-  unfold poly__encodeCardsAt. solverec.   
+  reflexivity.
 Qed.
-Lemma encodeCardsAt_poly : monotonic poly__encodeCardsAt /\ inOPoly poly__encodeCardsAt. 
+Lemma encodeCardsAt_poly : inOPoly poly__encodeCardsAt. 
 Proof. 
-  unfold poly__encodeCardsAt; split; smpl_inO; apply encodeCardAt_poly. 
+  unfold poly__encodeCardsAt; smpl_inO; apply encodeCardAt_poly. 
 Qed.
 
 Lemma encodeCardsAt_varsIn s1 s2 bpr : 
@@ -618,10 +620,10 @@ Proof.
     replace_le (size (enc (width bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; cbn; lia). 
     unfold poly__encodeCardsInLineP1. unfold add_time. nia.  
 Qed.
-Lemma encodeCardsInLineP1_poly : monotonic poly__encodeCardsInLineP1 /\ inOPoly poly__encodeCardsInLineP1. 
-Proof. 
-  unfold poly__encodeCardsInLineP1; split; smpl_inO; apply encodeCardsAt_poly. 
-Qed.
+Lemma encodeCardsInLineP1_poly : inOPoly poly__encodeCardsInLineP1. 
+Proof. unfold poly__encodeCardsInLineP1; smpl_inO; apply encodeCardsAt_poly. Qed.
+#[export] Instance encodeCardsInLineP1_mono: Proper (le ==> le) poly__encodeCardsInLineP1.
+Proof. unfold poly__encodeCardsInLineP1, poly__encodeCardsAt. solve_proper. Qed.
 
 (** in a second step, we also bound the numbers by their encoding size *)
 Definition poly__encodeCardsInLine' n := (n + 1) * poly__encodeCardsInLineP1 n + n * (n * n + n + 1) * c__add * 2.
@@ -634,18 +636,18 @@ Proof.
   replace_le (size (enc (offset bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
   rewrite size_nat_enc_r with (n := startA) at 1. 
   rewrite size_nat_enc_r with (n := startB) at 1. 
-  pose (g := size (enc bpr) + size (enc stepindex) + size (enc startA) + size (enc startB)). 
-  poly_mono encodeCardsInLineP1_poly. 2: { instantiate (1 := g). subst g; lia. }
+  pose (g := size (enc bpr) + size (enc stepindex) + size (enc startA) + size (enc startB)).
+  setoid_replace (size (enc bpr)) with g using relation le at 1 by lia.
   replace_le (size (enc stepindex)) with g by (subst g; lia) at 1 2 3 4. 
   replace_le (size (enc bpr)) with g by (subst g; lia) at 1 2. 
   replace_le (size (enc startA)) with g by (subst g; lia) at 1. replace_le (size (enc startB)) with g by (subst g; lia) at 1. 
   fold g. 
   unfold poly__encodeCardsInLine'. nia. 
 Qed.
-Lemma encodeCardsInLineP_poly : monotonic poly__encodeCardsInLine' /\ inOPoly poly__encodeCardsInLine'. 
-Proof. 
-  unfold poly__encodeCardsInLine'; split; smpl_inO; apply encodeCardsInLineP1_poly. 
-Qed. 
+Lemma encodeCardsInLineP_poly : inOPoly poly__encodeCardsInLine'. 
+Proof. unfold poly__encodeCardsInLine'; smpl_inO; apply encodeCardsInLineP1_poly. Qed.
+#[export] Instance encodeCardsInLineP_mono: Proper (le ==> le) poly__encodeCardsInLine'.
+Proof. unfold poly__encodeCardsInLine'. solve_proper. Qed. 
 
 Lemma encodeCardsInLineP_varsIn bpr stepi l startA startB : 
   BinaryCC_wellformed bpr
@@ -686,35 +688,38 @@ Proof.
   unfold encodeCardsInLine_time, c__encodeCardsInLine. solverec. 
 Qed.
 
-Definition poly__encodeCardsInLine n := 3 * c__length * n + (n + 1) * c__add + poly__encodeCardsInLine' (n * (c__natsizeS + 2) + c__natsizeO) + c__encodeCardsInLine. 
+Definition poly__encodeCardsInLine n := 3 * c__length * n + (n + 1) * c__add + poly__encodeCardsInLine' (n * (c__natsizeS + 2) + c__natsizeO) + c__encodeCardsInLine.
 Lemma encodeCardsInLine_time_bound bpr s : 
   BinaryCC_wellformed bpr
   -> encodeCardsInLine_time bpr s <= poly__encodeCardsInLine (size (enc bpr) + size (enc s)). 
 Proof. 
   intros H. unfold encodeCardsInLine_time. 
   rewrite encodeCardsInLineP_time_bound by easy.
-  poly_mono encodeCardsInLineP_poly. 
+  setoid_replace (size (enc bpr) + size (enc (| init bpr |)) + size (enc s) + size (enc (s + (| init bpr |))))
+    with ((size (enc bpr) + size (enc s)) * ( c__natsizeS + 2) + c__natsizeO)
+    using relation le.
   2: { setoid_rewrite size_nat_enc at 3. rewrite list_size_enc_length, list_size_length. 
        rewrite size_nat_enc_r with (n := s) at 2. 
        replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
-       instantiate (1 := (size (enc bpr) + size (enc s)) * ( c__natsizeS + 2) + c__natsizeO). lia. 
-  } 
+       lia. 
+  }
   rewrite list_size_length. replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
   unfold add_time. rewrite size_nat_enc_r with (n := s) at 1. 
   unfold poly__encodeCardsInLine; solverec.  
 Qed.
-Lemma encodeCardsInLine_poly : monotonic poly__encodeCardsInLine /\ inOPoly poly__encodeCardsInLine. 
+Lemma encodeCardsInLine_poly : inOPoly poly__encodeCardsInLine. 
 Proof. 
-  unfold poly__encodeCardsInLine; split; smpl_inO.
-  - apply encodeCardsInLineP_poly.
-  - apply inOPoly_comp; smpl_inO; apply encodeCardsInLineP_poly. 
-Qed. 
+  unfold poly__encodeCardsInLine; smpl_inO.
+  apply inOPoly_comp; [solve_proper | apply encodeCardsInLineP_poly | smpl_inO]. 
+Qed.
+#[export] Instance encodeCardsInLine_mono: Proper (le ==> le) poly__encodeCardsInLine.
+Proof. unfold poly__encodeCardsInLine. solve_proper. Qed.
 
 Lemma encodeCardsInLine_varsIn bpr s : 
   BinaryCC_wellformed bpr
   -> formula_varsIn (fun n => (n >= s /\ n < s + 2 * (|init bpr|))) (encodeCardsInLine bpr s). 
 Proof. 
-  intros H. eapply formula_varsIn_monotonic. 
+  intros H. eapply formula_varsIn_monotonic.
   2: { unfold encodeCardsInLine. apply encodeCardsInLineP_varsIn, H. }
   cbn. intros n. lia. 
 Qed. 
@@ -734,31 +739,24 @@ Proof.
   unfold encodeCardsInAllLines_time, c__encodeCardsInAllLines. simp_comp_arith; lia.  
 Qed.
 
-Fact nat_size_mul a b: size (enc (a * b)) <= size (enc a) * size (enc b). 
-Proof. 
-  rewrite !size_nat_enc. unfold c__natsizeS. nia. 
-Qed.
-
 Definition poly__encodeCardsInAllLines n := 
   c__length * n + (poly__tabulateStep n + (n * (poly__encodeCardsInLine (n + n * n) + c__map) + c__map)) + c__tabulateFormula + (n + 1) * c__listAnd + c__encodeCardsInAllLines. 
 Lemma encodeCardsInAllLines_time_bound bpr : BinaryCC_wellformed bpr -> encodeCardsInAllLines_time bpr <= poly__encodeCardsInAllLines (size (enc bpr)). 
 Proof. 
   intros H. unfold encodeCardsInAllLines_time. 
   rewrite list_size_length at 1. replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
-  unfold tabulate_formula_time. rewrite tabulate_step_time_bound. 
-  poly_mono tabulate_step_poly. 2: { rewrite list_size_enc_length. instantiate (1 := size (enc bpr)). rewrite BinaryCC_enc_size; lia. }
-  rewrite map_time_mono. 
+  unfold tabulate_formula_time. rewrite tabulate_step_time_bound.
+  setoid_replace (size (enc (| init bpr |)) + size (enc (steps bpr))) with (size (enc bpr)) using relation le.
+  2: { rewrite list_size_enc_length. rewrite BinaryCC_enc_size; lia. }
+  rewrite map_time_mono.
   2: { intros start Hel. instantiate (1 := fun _ => _). cbn -[Nat.add Nat.mul]. 
        rewrite encodeCardsInLine_time_bound by apply H. 
-       apply in_tabulate_step_iff in Hel as (i & H1 & ->). 
-       poly_mono encodeCardsInLine_poly. 
-       2: { rewrite nat_size_le with (a := 0 + (|init bpr|) * i). 2: { instantiate (1 := (|init bpr|) * steps bpr). nia. }
-            rewrite nat_size_mul. rewrite list_size_enc_length. 
-            replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
-            replace_le (size (enc (steps bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
-            reflexivity. 
-       } 
-       reflexivity. 
+       apply in_tabulate_step_iff in Hel as (i & H1 & ->).
+       rewrite nat_size_le with (a := 0 + (|init bpr|) * i). 2: { instantiate (1 := (|init bpr|) * steps bpr). nia. }
+       rewrite nat_size_mul. rewrite list_size_enc_length. 
+       replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
+       replace_le (size (enc (steps bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
+       reflexivity.
   } 
   rewrite map_time_const. 
   rewrite tabulate_step_length. 
@@ -766,10 +764,14 @@ Proof.
   rewrite size_nat_enc_r with (n := steps bpr) at 1 2. replace_le (size (enc (steps bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia).
   unfold poly__encodeCardsInAllLines. nia.
 Qed. 
-Lemma encodeCardsInAllLines_poly : monotonic poly__encodeCardsInAllLines /\ inOPoly poly__encodeCardsInAllLines. 
+Lemma encodeCardsInAllLines_poly : inOPoly poly__encodeCardsInAllLines.
 Proof. 
-  unfold poly__encodeCardsInAllLines; split; smpl_inO; try apply inOPoly_comp; smpl_inO; first [apply tabulate_step_poly | apply encodeCardsInLine_poly]. 
+  unfold poly__encodeCardsInAllLines; smpl_inO.
+  - exact tabulate_step_poly.
+  - apply inOPoly_comp; [solve_proper | apply encodeCardsInLine_poly | smpl_inO].
 Qed. 
+#[export] Instance encodeCardsInAllLines_mono: Proper (le ==> le) poly__encodeCardsInAllLines.
+Proof. unfold poly__encodeCardsInAllLines. solve_proper. Qed.
 
 Lemma encodeCardsInAllLines_varsIn bpr :
   BinaryCC_wellformed bpr 
@@ -777,14 +779,14 @@ Lemma encodeCardsInAllLines_varsIn bpr :
 Proof. 
   intros H. unfold encodeCardsInAllLines. apply listAnd_varsIn. 
   intros f H1. destruct steps; [now cbn in H1 | ]. 
-  eapply tabulate_formula_varsIn in H1. 
+  eapply tabulate_formula_varsIn in H1.
   2: { intros s. eapply formula_varsIn_monotonic. 2: apply encodeCardsInLine_varsIn, H. 
        intros n'. cbn. intros [_ H2]. apply H2.
   } 
-  2: smpl_inO. 
-  cbn in H1. eapply formula_varsIn_monotonic. 2 : apply H1. intros n'. cbn. 
-  nia. 
-Qed. 
+  2: solve_proper.
+  cbn in H1. eapply formula_varsIn_monotonic. 2 : apply H1. intros n'. cbn.
+  nia.
+Qed.
 
 Lemma encodeCardsInAllLines_size bpr : 
   BinaryCC_wellformed bpr
@@ -828,14 +830,15 @@ Proof.
     unfold ltb_time, leb_time. rewrite Nat.le_min_r. 
     rewrite list_size_length. 
     rewrite size_nat_enc_r with (n := offset bpr) at 1. 
-    replace_le (size (enc (offset bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; cbn; lia). 
-    poly_mono encodeListAt_poly. 2: { instantiate (1 := size (enc bpr) + size (enc s)). lia. }
-    unfold poly__encodeSubstringInLineP1. unfold add_time. nia.  
+    replace_le (size (enc (offset bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; cbn; lia).
+    setoid_replace (size (enc s)) with (size (enc bpr) + size (enc s))
+      using relation le at 1 by lia.
+    unfold poly__encodeSubstringInLineP1, add_time. nia.
 Qed.
-Lemma encodeSubstringInLineP_poly1 : monotonic poly__encodeSubstringInLineP1 /\ inOPoly poly__encodeSubstringInLineP1. 
-Proof. 
-  unfold poly__encodeSubstringInLineP1; split; smpl_inO; apply encodeListAt_poly. 
-Qed.
+Lemma encodeSubstringInLineP_poly1 : inOPoly poly__encodeSubstringInLineP1. 
+Proof. unfold poly__encodeSubstringInLineP1; smpl_inO; apply encodeListAt_poly. Qed.
+#[export] Instance encodeSubstringInLineP1_mono: Proper (le ==> le) poly__encodeSubstringInLineP1.
+Proof. unfold poly__encodeSubstringInLineP1. solve_proper. Qed.
 
 Definition poly__encodeSubstringInLine' n := (n + 1) * poly__encodeSubstringInLineP1 n + n * (n * n + n + 1) * c__add. 
 Lemma encodeSubstringInLineP_time_bound bpr s stepindex l start : 
@@ -843,7 +846,8 @@ Lemma encodeSubstringInLineP_time_bound bpr s stepindex l start :
 Proof. 
   intros H. rewrite encodeSubstringInLineP_time_bound1 by apply H. 
   pose (g := size (enc bpr) + size (enc s) + size (enc stepindex) + size (enc start)).
-  poly_mono encodeSubstringInLineP_poly1. 2 : { instantiate (1 := g). subst g; lia. }
+  setoid_replace (size (enc bpr) + size (enc s)) with g
+    using relation le at 1 by lia.
   rewrite size_nat_enc_r with (n := stepindex) at 1 2 3. 
   rewrite size_nat_enc_r with (n := offset bpr). replace_le (size (enc (offset bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
   rewrite size_nat_enc_r with (n := start) at 1. 
@@ -852,10 +856,10 @@ Proof.
   replace_le (size (enc start)) with g by (unfold g; lia) at 1. 
   fold g.  unfold poly__encodeSubstringInLine'.  nia.  
 Qed.
-Lemma encodeSubstringInLineP_poly : monotonic poly__encodeSubstringInLine' /\ inOPoly poly__encodeSubstringInLine'. 
-Proof. 
-  unfold poly__encodeSubstringInLine'; split; smpl_inO; apply encodeSubstringInLineP_poly1. 
-Qed.
+Lemma encodeSubstringInLineP_poly : inOPoly poly__encodeSubstringInLine'. 
+Proof. unfold poly__encodeSubstringInLine'; smpl_inO; apply encodeSubstringInLineP_poly1. Qed.
+#[export] Instance encodeSubstringInLineP_mono: Proper (le ==> le) poly__encodeSubstringInLine'.
+Proof. unfold poly__encodeSubstringInLine'. solve_proper. Qed.
 
 Lemma encodeSubstringInLineP_varsIn bpr s stepindex l start: formula_varsIn (fun n => n >= start /\ n < start + l) (encodeSubstringInLine' bpr s stepindex l start). 
 Proof. 
@@ -939,10 +943,11 @@ Proof.
   2: { intros l Hel. unfold encodeFinalConstraint_step_time, encodeSubstringInLine_time.  
        instantiate (1 := fun _ => _). cbn -[Nat.mul Nat.add]. 
        rewrite encodeSubstringInLineP_time_bound by apply H.
-       rewrite list_size_length at 1. replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
-       poly_mono encodeSubstringInLineP_poly. 
-       2: { instantiate (1 := 2 * (size (enc bpr) + size (enc start))). 
-            rewrite (list_el_size_bound Hel), list_size_enc_length. 
+       rewrite list_size_length at 1. replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia).
+       setoid_replace (size (enc bpr) + size (enc l) + size (enc (| init bpr |)) + size (enc start))
+          with (2 * (size (enc bpr) + size (enc start)))
+          using relation le.
+       2: { rewrite (list_el_size_bound Hel), list_size_enc_length. 
             cbn. rewrite BinaryCC_enc_size at 2. lia. 
        } 
        reflexivity. 
@@ -951,12 +956,15 @@ Proof.
   replace_le (size (enc (final bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia).
   unfold poly__encodeFinalConstraint; nia.  
 Qed. 
-Lemma encodeFinalConstraint_poly : monotonic poly__encodeFinalConstraint /\ inOPoly poly__encodeFinalConstraint. 
+Lemma encodeFinalConstraint_poly : inOPoly poly__encodeFinalConstraint. 
 Proof. 
-  unfold poly__encodeFinalConstraint; split; smpl_inO. 
-  - apply encodeSubstringInLineP_poly. 
-  - apply inOPoly_comp; smpl_inO; apply encodeSubstringInLineP_poly. 
-Qed. 
+  unfold poly__encodeFinalConstraint; smpl_inO. apply inOPoly_comp.
+  - solve_proper. 
+  - apply encodeSubstringInLineP_poly.
+  - smpl_inO.
+Qed.
+#[export] Instance encodeFinalConstraint_mono: Proper (le ==> le) poly__encodeFinalConstraint.
+Proof. unfold poly__encodeFinalConstraint. solve_proper. Qed.
 
 Lemma encodeFinalConstraint_varsIn bpr start : formula_varsIn (fun n => n >= start /\ n < start + (|init bpr|)) (encodeFinalConstraint bpr start).
 Proof. 
@@ -987,24 +995,28 @@ Definition poly__encodeTableau n := poly__encodeListAt n + poly__encodeCardsInAl
 Lemma encodeTableau_time_bound bpr : BinaryCC_wellformed bpr -> encodeTableau_time bpr <= poly__encodeTableau (size (enc bpr)). 
 Proof. 
   intros H. unfold encodeTableau_time. 
-  rewrite encodeListAt_time_bound. poly_mono encodeListAt_poly. 2: { instantiate (1:= size (enc bpr)). rewrite BinaryCC_enc_size; lia. }
-  rewrite encodeCardsInAllLines_time_bound by apply H.     
-  rewrite encodeFinalConstraint_time_bound by apply H. 
-  poly_mono encodeFinalConstraint_poly. 
-  2: { rewrite nat_size_mul. rewrite list_size_enc_length. 
-       replace_le (size (enc (steps bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
-       replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
-       reflexivity. 
-  } 
+  rewrite encodeListAt_time_bound.
+  setoid_replace (size (enc (init bpr))) with (size (enc bpr)) using relation le.
+  2: { rewrite BinaryCC_enc_size; lia. }
+  rewrite encodeCardsInAllLines_time_bound by apply H.
+  rewrite encodeFinalConstraint_time_bound by apply H.
+  rewrite nat_size_mul. rewrite list_size_enc_length.
+  replace_le (size (enc (steps bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
+  replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia).
   unfold mult_time. rewrite list_size_length at 1 2. rewrite size_nat_enc_r with (n := steps bpr). 
   replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia) at 1 2. 
   replace_le (size (enc (steps bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia) at 1 2.
   unfold poly__encodeTableau; nia. 
 Qed.
-Lemma encodeTableau_poly : monotonic poly__encodeTableau /\ inOPoly poly__encodeTableau. 
+Lemma encodeTableau_poly : inOPoly poly__encodeTableau. 
 Proof. 
-  unfold poly__encodeTableau; split; smpl_inO; try apply inOPoly_comp; smpl_inO; first [apply encodeListAt_poly | apply encodeCardsInAllLines_poly | apply encodeFinalConstraint_poly]. 
-Qed. 
+  unfold poly__encodeTableau; smpl_inO.
+  - apply encodeListAt_poly.
+  - apply encodeCardsInAllLines_poly.
+  - apply inOPoly_comp; [solve_proper | apply encodeFinalConstraint_poly | smpl_inO].
+Qed.
+#[export] Instance encodeTableau_mono: Proper (le ==> le) poly__encodeTableau.
+Proof. unfold poly__encodeTableau. solve_proper. Qed.
 
 Lemma encodeTableau_varsIn bpr: BinaryCC_wellformed bpr -> formula_varsIn (fun n => n < (1 + steps bpr) * (|init bpr|)) (encodeTableau bpr). 
 Proof. 
@@ -1016,7 +1028,7 @@ Proof.
   - unfold encodeFinalConstraint' in H2. apply encodeFinalConstraint_varsIn in H2. nia. 
 Qed. 
 
-Lemma encodeTableau_size : {f : nat -> nat & (forall bpr, BinaryCC_wellformed bpr -> formula_size (encodeTableau bpr) <= f (size (enc bpr))) /\ monotonic f /\ inOPoly f}. 
+Lemma encodeTableau_size : {f : nat -> nat & (forall bpr, BinaryCC_wellformed bpr -> formula_size (encodeTableau bpr) <= f (size (enc bpr))) /\ Proper (le ==> le) f /\ inOPoly f}. 
 Proof. 
   eexists. split; [ | split]. 
   - intros bpr H. unfold encodeTableau. cbn. 
@@ -1039,11 +1051,11 @@ Proof.
     rewrite size_nat_enc_r with (n := steps bpr). 
     replace_le (size (enc (steps bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia).
     instantiate (1 := fun n => _). cbn -[Nat.add Nat.mul]. generalize (size (enc bpr)). reflexivity. 
-  - smpl_inO. 
+  - solve_proper.
   - smpl_inO. 
 Qed. 
 
-Lemma encodeTableau_enc_size : {f : nat -> nat & (forall bpr, BinaryCC_wellformed bpr -> size (enc (encodeTableau bpr)) <= f (size (enc bpr))) /\ inOPoly f /\ monotonic f}.
+Lemma encodeTableau_enc_size : {f : nat -> nat & (forall bpr, BinaryCC_wellformed bpr -> size (enc (encodeTableau bpr)) <= f (size (enc bpr))) /\ inOPoly f /\ Proper (le ==> le) f}.
 Proof. 
   destruct encodeTableau_size as (f' & H1 & H2 & H3). 
   eexists. split; [ | split]. 
@@ -1054,8 +1066,8 @@ Proof.
     rewrite list_size_length. replace_le (size (enc (init bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia). 
     rewrite size_nat_enc_r with (n := steps bpr). replace_le (size (enc (steps bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; lia).
     generalize (size (enc bpr)). reflexivity. 
-  - smpl_inO. 
-  - smpl_inO. 
+  - smpl_inO.
+  - solve_proper.
 Qed. 
 
 (** BinaryCC_wf_dec *)
@@ -1067,7 +1079,7 @@ Instance term_BinaryCC_wf_dec : computableTime' BinaryCC_wf_dec (fun bpr _ => (B
 Proof. 
   extract. solverec. 
   unfold BinaryCC_wf_dec_time, c__BinaryCCWfDec, leb_time. rewrite !eqbTime_le_r.
-   rewrite !Nat.le_min_l with (n:=1). simp_comp_arith. ring_simplify;reflexivity. 
+  rewrite !Nat.le_min_l with (n:=1). simp_comp_arith. ring_simplify;reflexivity. 
 Qed. 
 
 Definition c__BinaryCCWfDecBound := 2*(2 * c__length + c__leb + FlatCC.c__prcardOfSizeDecBound + c__forallb + 2 * c__moduloBound + c__BinaryCCWfDec).
@@ -1083,7 +1095,7 @@ Proof.
     split; [intros | ].
     - specialize (FlatCC.CCCard_of_size_dec_time_bound (X := bool) y a) as H1.
       instantiate (2:= fun n => (n + 1) * FlatCC.c__prcardOfSizeDecBound). simp_comp_arith; nia. 
-    - smpl_inO. 
+    - solve_proper. 
   }
   rewrite list_size_length. 
   replace_le (size(enc (cards fpr))) with (size (enc fpr)) by (rewrite BinaryCC_enc_size; lia). 
@@ -1092,10 +1104,10 @@ Proof.
   replace_le (size(enc(offset fpr))) with (size (enc fpr)) by (rewrite BinaryCC_enc_size; lia). 
   unfold poly__BinaryCCWfDec, c__BinaryCCWfDecBound. nia.
 Qed. 
-Lemma BinaryCC_wf_dec_poly : monotonic poly__BinaryCCWfDec /\ inOPoly poly__BinaryCCWfDec.
-Proof. 
-  unfold poly__BinaryCCWfDec; split; smpl_inO. 
-Qed. 
+Lemma BinaryCC_wf_dec_poly : inOPoly poly__BinaryCCWfDec.
+Proof. unfold poly__BinaryCCWfDec; smpl_inO. Qed.
+#[export] Instance BinaryCC_wf_dec_mono: Proper (le ==> le) poly__BinaryCCWfDec.
+Proof. unfold poly__BinaryCCWfDec. solve_proper. Qed.
 
 (** reduction *)
 Definition c__reduction := 4. 
@@ -1119,13 +1131,12 @@ Proof.
         generalize (size (enc bpr)). reflexivity. 
       * rewrite BinaryCC_wf_dec_time_bound. lia. 
     + smpl_inO; first [apply encodeTableau_poly | apply BinaryCC_wf_dec_poly]. 
-    + smpl_inO; first [apply encodeTableau_poly | apply BinaryCC_wf_dec_poly]. 
+    + solve_proper.
     + destruct encodeTableau_enc_size as (f & H1 & H2 & H3). 
       exists (fun n => f n + size (enc trivialNoInstance)). 
-      * intros bpr. unfold reduction. destruct BinaryCC_wf_dec eqn:H4. 
-        -- apply BinaryCC_wf_dec_correct in H4. rewrite H1 by apply H4. lia. 
-        -- lia. 
+      * intros bpr. unfold reduction. destruct BinaryCC_wf_dec eqn:H4; [|lia]. 
+        apply BinaryCC_wf_dec_correct in H4. rewrite H1 by apply H4. lia.
       * smpl_inO. 
-      * smpl_inO. 
+      * solve_proper.
   - apply BinaryCC_to_FSAT. 
 Qed. 

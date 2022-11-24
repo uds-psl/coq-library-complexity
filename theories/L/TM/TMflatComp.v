@@ -491,10 +491,10 @@ Proof.
    +destruct v. easy.
 Qed.
 
-Lemma execFlat_poly : {f : nat -> nat & (forall M t k, execFlatTM_time M t k <= f (size (enc M) +t + k)) /\ inOPoly f /\ monotonic f}.
+Lemma execFlat_poly : {f : nat -> nat & (forall M t k, execFlatTM_time M t k <= f (size (enc M) +t + k)) /\ inOPoly f /\ Proper (le ==> le) f}.
 Proof.
   unfold execFlatTM_time,isValidFlatTM_time,time_isValidFlatTrans,isInjFinfuncTable_time,allSameEntry_time,loopMflat_timeNice,haltConfFlat_time,isValidFlatTapes_time,isValidFlatTape_time,stepFlat_timeNice.
-  eexists (fun x => _). split.
+  eexists (fun x => _). repeat split.
   {
     intros M t k.
     remember ( (size (enc M) + t + k)) as x.
@@ -525,5 +525,6 @@ Proof.
     rewrite Hk. 
     clear. reflexivity.
   }
-  split. all:smpl_inO.
+  - smpl_inO.
+  - solve_proper.
 Qed.

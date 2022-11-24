@@ -47,12 +47,14 @@ Record isPoly (X : Type) `{encodable X} (f : X -> nat) : Set :=
     isP__poly : nat -> nat; 
     isP__bounds : forall x, f x <= isP__poly (size (enc x)); 
     isP__inOPoly : inOPoly isP__poly; 
-    isP__mono : monotonic isP__poly;
+    isP__mono : Proper (le ==> le) isP__poly;
   }. 
 Arguments isP__bounds {X} {H} {_} _. 
 Arguments isP__poly {X} {H} {_} _. 
 
-Smpl Add 15 apply isP__mono : inO. 
+#[global] Instance mono_isP__poly X `{encodable X} (f: X -> nat) (polyf: isPoly f):
+  Proper (le ==> le) (isP__poly polyf).
+Proof. apply isP__mono. Qed.
 Smpl Add 15 apply isP__inOPoly : inO. 
 
 Tactic Notation "rewpoly" constr(s) :=
@@ -79,48 +81,6 @@ Tactic Notation "replace_le" constr(s) "with" constr(r) :=
 
 
 From Undecidability.L.Datatypes Require Import Lists LNat. 
-(** useful lemmas *)
-#[export]
-Instance proper_lt_mul : Proper (lt ==> eq ==> le) Nat.mul. 
-Proof. 
-  intros a b c d e f. nia.
-Qed. 
-
-#[export]
-Instance proper_lt_add : Proper (lt ==> eq ==> le) Nat.add.
-Proof. 
-  intros a b c d e f. nia. 
-Qed. 
-
-#[export]
-Instance proper_le_pow : Proper (le ==> eq ==> le) Nat.pow.
-Proof. 
-  intros a b H1 d e ->. apply Nat.pow_le_mono_l, H1. 
-Qed. 
-
-#[export]
-Instance mult_lt_le : Proper (eq ==> lt ==> le) mult. 
-Proof. 
-  intros a b -> d e H. nia. 
-Qed.
-
-#[export]
-Instance add_lt_lt : Proper (eq ==> lt ==> lt) Nat.add. 
-Proof. 
-  intros a b -> c d H. lia.
-Qed.
-
-#[export]
-Instance le_lt_impl : Proper (le --> eq ==> Basics.impl) lt. 
-Proof. 
-  intros a b H d e ->. unfold Basics.flip in H. unfold Basics.impl. lia. 
-Qed.
-
-#[export]
-Instance lt_le_impl : Proper (lt --> eq ==> Basics.impl) le. 
-Proof. 
-  intros a b H d e ->. unfold Basics.flip in H. unfold Basics.impl. lia.  
-Qed.
 
 Lemma list_el_size_bound {X : Type} `{encodable X} (l : list X) (a : X) :
   a el l -> size(enc a) <= size(enc l). 

@@ -173,9 +173,9 @@ Proof.
   unfold flatPolSigma_time. rewrite flatStateSigma_bound. 
   unfold poly__flatPolSigma. rewrite sig_TM_le. nia.
 Qed. 
-Lemma flatPolSigma_poly : monotonic poly__flatPolSigma /\ inOPoly poly__flatPolSigma. 
+Lemma flatPolSigma_poly : inOPoly poly__flatPolSigma. 
 Proof. 
-  unfold poly__flatPolSigma; split; smpl_inO. 
+  unfold poly__flatPolSigma; smpl_inO. 
 Qed. 
 
 Definition c__flatTapeSigma := c__add1 + 1 + (flatDelim + 1) * c__add.
@@ -201,10 +201,10 @@ Proof.
   unfold flatStates_time. unfold mult_time. rewrite flatStateSigma_bound. 
   rewrite states_TM_le, sig_TM_le. unfold poly__flatStates. nia.
 Qed. 
-Lemma flatStates_poly : monotonic poly__flatStates /\ inOPoly poly__flatStates. 
-Proof. 
-  unfold poly__flatStates; split; smpl_inO. 
-Qed. 
+Lemma flatStates_poly : inOPoly poly__flatStates.
+Proof. unfold poly__flatStates; smpl_inO. Qed.
+#[export] Instance flatStates_mono: Proper (le ==> le) poly__flatStates.
+Proof. unfold poly__flatStates. solve_proper. Qed.
 
 Definition c__flatGamma := c__add1 + 1.
 Definition flatGamma_time (tm : flatTM) := flatStates_time tm + flatTapeSigma_time tm + add_time (flatStates tm) + c__flatGamma.
@@ -224,10 +224,12 @@ Proof.
   rewrite states_TM_le, sig_TM_le. 
   unfold poly__flatGamma. nia.
 Qed. 
-Lemma flatGamma_poly : monotonic poly__flatGamma /\ inOPoly poly__flatGamma.  
+Lemma flatGamma_poly : inOPoly poly__flatGamma.  
 Proof. 
-  unfold poly__flatGamma; split; smpl_inO; first [apply flatStates_poly | apply flatPolSigma_poly].
-Qed. 
+  unfold poly__flatGamma; smpl_inO; first [apply flatStates_poly | apply flatPolSigma_poly].
+Qed.
+#[export] Instance flatGamma_mono: Proper (le ==> le) poly__flatGamma.
+Proof. unfold poly__flatGamma, poly__flatStates, poly__flatPolSigma. solve_proper. Qed.
 
 Definition c__flatPreludeSig' :=c__add1 + 5 * c__add + 22.
 #[export]
@@ -253,10 +255,10 @@ Proof.
   rewrite sig_TM_le, states_TM_le. 
   unfold poly__flatAlphabet. nia. 
 Qed. 
-Lemma flatAlphabet_poly : monotonic poly__flatAlphabet /\ inOPoly poly__flatAlphabet. 
-Proof. 
-  unfold poly__flatAlphabet; split; smpl_inO; apply flatGamma_poly. 
-Qed. 
+Lemma flatAlphabet_poly : inOPoly poly__flatAlphabet. 
+Proof. unfold poly__flatAlphabet; smpl_inO; apply flatGamma_poly. Qed.
+#[export] Instance flatAlphabet_mono: Proper (le ==> le) poly__flatAlphabet.
+Proof. unfold poly__flatAlphabet. solve_proper. Qed.
   
 (** flattenPolarity *)
 
@@ -307,10 +309,10 @@ Proof.
   - lia. 
   - unfold nth_error_time. rewrite H1. rewrite Nat.le_min_l. nia.
 Qed. 
-Lemma generatePolarityFlat_poly : monotonic poly__generatePolarityFlat /\ inOPoly poly__generatePolarityFlat. 
-Proof. 
-  unfold poly__generatePolarityFlat; split; smpl_inO. 
-Qed. 
+Lemma generatePolarityFlat_poly : inOPoly poly__generatePolarityFlat. 
+Proof. unfold poly__generatePolarityFlat; smpl_inO. Qed.
+#[export] Instance generatePolarityFlat_mono: Proper (le ==> le) poly__generatePolarityFlat.
+Proof. unfold poly__generatePolarityFlat. solve_proper. Qed.
 
 Lemma generatePolarityFlat_ofFlatType tm env c n: envOfFlatTypes tm env -> generatePolarityFlat env c = Some n -> n < flatPolarity. 
 Proof. 
@@ -365,10 +367,10 @@ Proof.
   - unfold nth_error_time. rewrite H1, Nat.le_min_l. nia.
   - unfold nth_error_time. rewrite H2, Nat.le_min_l. nia. 
 Qed. 
-Lemma generateStateSigmaFlat_poly : monotonic poly__generateStateSigmaFlat /\ inOPoly poly__generateStateSigmaFlat. 
-Proof. 
-  unfold poly__generateStateSigmaFlat; split; smpl_inO. 
-Qed. 
+Lemma generateStateSigmaFlat_poly : inOPoly poly__generateStateSigmaFlat. 
+Proof. unfold poly__generateStateSigmaFlat; smpl_inO. Qed.
+#[export] Instance generateStateSigmaFlat_mono: Proper (le ==> le) poly__generateStateSigmaFlat.
+Proof. unfold poly__generateStateSigmaFlat. solve_proper. Qed.
   
 
 Lemma generateStateSigmaFlat_ofFlatType tm n env c : envOfFlatTypes tm env -> generateStateSigmaFlat env c = Some n -> n < flatStateSigma tm. 
@@ -417,13 +419,8 @@ Proof.
   intros H H0. 
   unfold generatePolSigmaFlat_time. destruct c as (p & s). 
   rewrite generatePolarityFlat_time_bound by apply H. 
-  rewrite generateStateSigmaFlat_time_bound by apply H. 
-  poly_mono generatePolarityFlat_poly. 2: { 
-    replace_le n with (size (enc tm) + n) by lia at 1. reflexivity.  
-  } 
-  poly_mono generateStateSigmaFlat_poly. 2: { 
-    replace_le n with (size (enc tm) + n) by lia at 1. reflexivity. 
-  }
+  rewrite generateStateSigmaFlat_time_bound by apply H.
+  replace_le n with (size (enc tm) + n) by lia at 1 2.
   destruct generatePolarityFlat eqn:H1. 
   - destruct generateStateSigmaFlat eqn:H2. 
     + unfold flatPair_time, mult_time, add_time, flatOption. 
@@ -433,9 +430,9 @@ Proof.
     + unfold poly__generatePolSigmaFlat. lia. 
   - unfold poly__generatePolSigmaFlat. lia. 
 Qed. 
-Lemma generatePolSigmaFlat_poly : monotonic poly__generatePolSigmaFlat /\ inOPoly poly__generatePolSigmaFlat. 
+Lemma generatePolSigmaFlat_poly : inOPoly poly__generatePolSigmaFlat. 
 Proof. 
-  unfold poly__generatePolSigmaFlat; split; smpl_inO; first [apply generatePolarityFlat_poly | apply generateStateSigmaFlat_poly].
+  unfold poly__generatePolSigmaFlat; smpl_inO; first [apply generatePolarityFlat_poly | apply generateStateSigmaFlat_poly].
 Qed. 
       
 Lemma generatePolSigmaFlat_ofFlatType tm env c n: envOfFlatTypes tm env -> generatePolSigmaFlat tm env c = Some n -> n < flatPolSigma tm.
@@ -477,10 +474,12 @@ Proof.
   - lia. 
   - rewrite (generatePolSigmaFlat_time_bound _ H H0). lia. 
 Qed. 
-Lemma generateTapeSigmaFlat_poly : monotonic poly__generateTapeSigmaFlat /\ inOPoly poly__generateTapeSigmaFlat. 
+Lemma generateTapeSigmaFlat_poly : inOPoly poly__generateTapeSigmaFlat. 
 Proof. 
-  unfold poly__generateTapeSigmaFlat; split; smpl_inO; apply generatePolSigmaFlat_poly. 
-Qed. 
+  unfold poly__generateTapeSigmaFlat; smpl_inO; apply generatePolSigmaFlat_poly. 
+Qed.
+#[export] Instance generateTapeSigmaFlat_mono: Proper (le ==> le) poly__generateTapeSigmaFlat.
+Proof. unfold poly__generateTapeSigmaFlat, poly__generatePolSigmaFlat. solve_proper. Qed.
 
 Lemma generateTapeSigmaFlat_ofFlatType tm env c n : envOfFlatTypes tm env -> generateTapeSigmaFlat tm env c = Some n -> n < flatTapeSigma tm. 
 Proof. 
@@ -517,8 +516,7 @@ Proof.
   rewrite (generateStateSigmaFlat_time_bound _ H). 
   destruct H as (_ & _ & _ & H). 
   unfold nth_error_time. rewrite H. rewrite Nat.le_min_l.
-  poly_mono generateStateSigmaFlat_poly.
-  2: { replace_le n with (size (enc tm) + n) by lia at 1. reflexivity. }
+  replace_le n with (size (enc tm) + n) by lia at 2.
   destruct nth_error eqn:H1. 
   - unfold flatPair_time, flatOption, add_time, mult_time. 
     apply nth_error_In in H1. apply H0 in H1. unfold ofFlatType in H1. rewrite H1. 
@@ -533,11 +531,11 @@ Proof.
     unfold poly__generateStatesFlat. generalize (size (enc tm) + n). intros n'. nia.
   - unfold poly__generateStatesFlat. lia.
 Qed. 
-Lemma generateStatesFlat_poly : monotonic poly__generateStatesFlat /\ inOPoly poly__generateStatesFlat. 
+Lemma generateStatesFlat_poly : inOPoly poly__generateStatesFlat. 
 Proof. 
-  unfold poly__generateStatesFlat; split; smpl_inO; apply generateStateSigmaFlat_poly. 
+  unfold poly__generateStatesFlat; smpl_inO; apply generateStateSigmaFlat_poly. 
 Qed. 
-      
+
 Lemma generateStatesFlat_ofFlatType env tm n c : envOfFlatTypes tm env -> generateStatesFlat tm env c = Some n -> n < flatStates tm.  
 Proof. 
   intros H. unfold generateStatesFlat. 
@@ -580,14 +578,13 @@ Proof.
   - rewrite flatStates_time_bound, generateTapeSigmaFlat_time_bound by easy.
     unfold add_time. rewrite flatStates_bound. 
     rewrite sig_TM_le, states_TM_le. 
-    poly_mono flatStates_poly. 
-    2: { replace_le (size (enc tm)) with (size (enc tm) + n) by lia at 1. reflexivity. }
+    replace_le (size (enc tm)) with (size (enc tm) + n) by lia at 1.
     unfold poly__generateGammaFlat. lia. 
 Qed. 
-Lemma generateGammaFlat_poly : monotonic poly__generateGammaFlat /\ inOPoly poly__generateGammaFlat. 
+Lemma generateGammaFlat_poly : inOPoly poly__generateGammaFlat. 
 Proof. 
-  unfold poly__generateGammaFlat; split; smpl_inO; first [apply flatStates_poly | apply generateTapeSigmaFlat_poly | apply generateStatesFlat_poly ]. 
-Qed. 
+  unfold poly__generateGammaFlat; smpl_inO; first [apply flatStates_poly | apply generateTapeSigmaFlat_poly | apply generateStatesFlat_poly ]. 
+Qed.
 
 Lemma generateGammaFlat_ofFlatType tm env f n: envOfFlatTypes tm env -> generateGammaFlat tm env f = Some n -> ofFlatType (flatGamma tm) n. 
 Proof. 
@@ -626,10 +623,10 @@ Proof.
   5: { unfold nth_error_time. destruct H as (_ & H1 & _). rewrite H1, Nat.le_min_l. lia. }
   all: lia. 
 Qed. 
-Lemma generatePreludeSigPFlat_poly : monotonic poly__generatePreludeSigPFlat /\ inOPoly poly__generatePreludeSigPFlat. 
-Proof. 
-  unfold poly__generatePreludeSigPFlat; split; smpl_inO. 
-Qed. 
+Lemma generatePreludeSigPFlat_poly : inOPoly poly__generatePreludeSigPFlat. 
+Proof. unfold poly__generatePreludeSigPFlat; smpl_inO. Qed.
+#[export] Instance generatePreludeSigPFlat_mono: Proper (le ==> le) poly__generatePreludeSigPFlat.
+Proof. unfold poly__generatePreludeSigPFlat. solve_proper. Qed.
 
 Lemma generatePreludeSigP_ofFlatType tm env f n : envOfFlatTypes tm env -> generatePreludeSigPFlat env f = Some n -> ofFlatType (flatPreludeSig' tm) n. 
 Proof. 
@@ -669,16 +666,16 @@ Proof.
   intros H H0. unfold generateAlphabetFlat_time. unfold poly__generateAlphabetFlat. destruct c.
   - rewrite generateGammaFlat_time_bound by easy. lia. 
   - rewrite generatePreludeSigPFlat_time_bound by easy. 
-    poly_mono generatePreludeSigPFlat_poly. 2: { replace_le n with (size (enc tm) + n) by lia at 1. reflexivity. } 
+    replace_le n with (size (enc tm) + n) by lia at 1.
     rewrite flatGamma_time_bound. 
-    poly_mono flatGamma_poly. 2: { replace_le (size (enc tm)) with (size (enc tm) + n) by lia at 1. reflexivity. }
+    replace_le (size (enc tm)) with (size (enc tm) + n) by lia at 1.
     unfold add_time. rewrite flatGamma_bound. 
     rewrite sig_TM_le, states_TM_le. 
     leq_crossout.  
 Qed. 
-Lemma generateAlphabetFlat_poly : monotonic poly__generateAlphabetFlat /\ inOPoly poly__generateAlphabetFlat. 
+Lemma generateAlphabetFlat_poly : inOPoly poly__generateAlphabetFlat. 
 Proof. 
-  unfold poly__generateAlphabetFlat; split; smpl_inO; first [apply generateGammaFlat_poly | apply flatGamma_poly | apply generatePreludeSigPFlat_poly]. 
+  unfold poly__generateAlphabetFlat; smpl_inO; first [apply generateGammaFlat_poly | apply flatGamma_poly | apply generatePreludeSigPFlat_poly]. 
 Qed. 
 
 Lemma generateAlphabetFlat_ofFlatType tm env f n: envOfFlatTypes tm env -> generateAlphabetFlat tm env f = Some n -> ofFlatType (flatAlphabet tm) n. 
@@ -717,9 +714,14 @@ Proof.
   rewrite !generateAlphabetFlat_time_bound by eauto.
   unfold poly__generateCard; lia. 
 Qed. 
-Lemma generateCard_poly : monotonic poly__generateCard /\ inOPoly poly__generateCard. 
-Proof. 
-  split; unfold poly__generateCard; smpl_inO; apply generateAlphabetFlat_poly. 
+Lemma generateCard_poly : inOPoly poly__generateCard. 
+Proof. unfold poly__generateCard; smpl_inO; apply generateAlphabetFlat_poly. Qed.
+#[export] Instance generateCard_mono: Proper (le ==> le) poly__generateCard.
+Proof.
+  unfold poly__generateCard, poly__generateAlphabetFlat, poly__generateGammaFlat,
+  poly__flatStates, poly__generateTapeSigmaFlat, poly__generatePolSigmaFlat,
+  poly__generatePolarityFlat, poly__generateStateSigmaFlat, poly__generateStatesFlat.
+  solve_proper.
 Qed. 
 
 Lemma generateCardFlat_ofFlatType tm env rule card: envOfFlatTypes tm env -> generateCardFlat tm env rule = Some card -> TCCCard_ofFlatType card (flatAlphabet tm).
@@ -757,9 +759,9 @@ Section fixListDistr.
   Proof. 
     unfold list_distr_time, poly__listDistr. rewrite !list_size_length. leq_crossout. 
   Qed. 
-  Lemma list_prod_poly : monotonic poly__listDistr /\ inOPoly poly__listDistr. 
+  Lemma list_prod_poly : inOPoly poly__listDistr. 
   Proof. 
-    unfold poly__listDistr; split; smpl_inO. 
+    unfold poly__listDistr; smpl_inO. 
   Qed. 
 
   Lemma list_distr_length (l1 : list X) l2 : |list_distr l1 l2| = |l1| * |l2|.
@@ -839,10 +841,10 @@ Proof.
     replace_le ((|l| + 1) ^ num) with ((|l| + 1)^(S num)) by cbn; nia. 
     unfold c__mkVarEnvB1, c__mkVarEnvB2. leq_crossout. 
 Qed. 
-Lemma mkVarEnv_poly n : monotonic (poly__mkVarEnv n) /\ inOPoly (poly__mkVarEnv n). 
-Proof. 
-  unfold poly__mkVarEnv. split; smpl_inO. 
-Qed. 
+Lemma mkVarEnv_poly n : inOPoly (poly__mkVarEnv n). 
+Proof. unfold poly__mkVarEnv. smpl_inO. Qed.
+#[export] Instance mkVarEnv_mono: Proper (eq ==> le ==> le) poly__mkVarEnv.
+Proof. intros _ n ->. unfold poly__mkVarEnv. solve_proper. Qed.
 
 (** tupToEvalEnv *)
 Definition c__tupToEvalEnv := 17.
@@ -879,9 +881,9 @@ Section fixprodLists.
     unfold prodLists_time. rewrite !list_size_length. 
     unfold poly__prodLists. solverec. 
   Qed. 
-  Lemma prodLists_poly : monotonic poly__prodLists /\ inOPoly poly__prodLists. 
+  Lemma prodLists_poly : inOPoly poly__prodLists. 
   Proof. 
-    unfold poly__prodLists; split; smpl_inO. 
+    unfold poly__prodLists; smpl_inO. 
   Qed. 
 End fixprodLists. 
 
@@ -938,19 +940,25 @@ Proof.
   match goal with [ |- context [?a + mkVarEnv_time (seq 0 flatPolarity) ?b] ] => replace_le a with ((flatPolarity + 3 * size (enc tm) + 5) * c__seq) by nia end. 
   rewrite !mkVarEnv_time_bound. rewrite !seq_length. 
   unfold prodLists_time. rewrite !prod_length, !mkVarEnv_length, !seq_length. 
-  poly_mono (mkVarEnv_poly n2). 2: { rewrite sig_TM_le. reflexivity. }
-  poly_mono (mkVarEnv_poly n3). 2: { rewrite flatStateSigma_bound, sig_TM_le. reflexivity. }
-  poly_mono (mkVarEnv_poly n4). 2: { rewrite states_TM_le. reflexivity. }
+  rewrite sig_TM_le at 1.
+  rewrite flatStateSigma_bound, sig_TM_le at 1.
+  rewrite states_TM_le at 1.
   rewrite flatStateSigma_bound. 
-  rewrite !sig_TM_le, !states_TM_le. 
+  rewrite !sig_TM_le, !states_TM_le.
   repeat match goal with [ |- context[?a + 1 + 1]] => replace (a + 1 + 1) with (a + 2) by lia end. 
   unfold poly__makeAllEvalEnvFlat. leq_crossout. 
 Qed. 
-Lemma makeAllEvalEnvFlat_poly n1 n2 n3 n4 : monotonic (poly__makeAllEvalEnvFlat n1 n2 n3 n4) /\ inOPoly (poly__makeAllEvalEnvFlat n1 n2 n3 n4). 
+Lemma makeAllEvalEnvFlat_poly n1 n2 n3 n4 : inOPoly (poly__makeAllEvalEnvFlat n1 n2 n3 n4). 
 Proof. 
-  unfold poly__makeAllEvalEnvFlat; split; smpl_inO; try apply inOPoly_comp; smpl_inO. 
-  all: apply mkVarEnv_poly. 
-Qed. 
+  unfold poly__makeAllEvalEnvFlat; smpl_inO; apply inOPoly_comp.
+  all: first [apply mkVarEnv_poly | solve_proper | smpl_inO ].
+Qed.
+#[export] Instance makeAllEvalEnvFlat_mono n1 n2 n3 n4:
+  Proper (le ==> le) (poly__makeAllEvalEnvFlat n1 n2 n3 n4).
+Proof. unfold poly__makeAllEvalEnvFlat. solve_proper. Qed.
+
+(* see https://coq.zulipchat.com/#narrow/stream/237977-Coq-users/topic/Rewrite.20gets.20stuck/near/318011578 *)
+#[global] Typeclasses Opaque poly__makeAllEvalEnvFlat.
 
 Lemma makeAllEvalEnvFlat_envOfFlatTypes tm n1 n2 n3 n4 : forall e, e el makeAllEvalEnvFlat tm n1 n2 n3 n4 -> envOfFlatTypes tm e. 
 Proof. 
@@ -984,10 +992,13 @@ Proof.
   unfold poly__makeAllEvalEnvFlatLength. replace (size (enc tm) + 1 + 1) with (size (enc tm) + 2) by lia. 
   nia. 
 Qed.
-Lemma makeAllEvalEnvFlat_length_poly n1 n2 n3 n4 : monotonic (poly__makeAllEvalEnvFlatLength n1 n2 n3 n4) /\ inOPoly (poly__makeAllEvalEnvFlatLength n1 n2 n3 n4). 
+Lemma makeAllEvalEnvFlat_length_poly n1 n2 n3 n4 : inOPoly (poly__makeAllEvalEnvFlatLength n1 n2 n3 n4). 
 Proof. 
-  unfold poly__makeAllEvalEnvFlatLength; split; smpl_inO. 
+  unfold poly__makeAllEvalEnvFlatLength; smpl_inO. 
 Qed.
+#[global] Instance makeAllEvalEnvFlatLength_mono n1 n2 n3 n4:
+  Proper (le ==> le) (poly__makeAllEvalEnvFlatLength n1 n2 n3 n4).
+Proof. unfold poly__makeAllEvalEnvFlatLength. solve_proper. Qed.
 
 (** filterSome *)
 Section fixfilterSome.
@@ -1013,9 +1024,9 @@ Section fixfilterSome.
   Proof. 
     unfold filterSome_time, poly__filterSome. rewrite list_size_length. lia. 
   Qed. 
-  Lemma filterSome_poly : monotonic poly__filterSome /\ inOPoly poly__filterSome. 
+  Lemma filterSome_poly : inOPoly poly__filterSome. 
   Proof. 
-    unfold poly__filterSome; split; smpl_inO. 
+    unfold poly__filterSome; smpl_inO. 
   Qed. 
 End fixfilterSome.
 
@@ -1053,19 +1064,15 @@ Proof.
   intros H. unfold makeCardsP_flat_time. 
   unfold makeCardsP_flat_step_time. rewrite map_time_mono with (f2 := fun _ => poly__generateCard(size (enc tm) + n) + c__makeCardsPFlatStep). 
   2: { intros e [H1 H2]%H. rewrite (generateCard_time_bound _ H2 H1). lia. }
-  rewrite map_time_const. 
-  poly_mono generateCard_poly. 2: { instantiate (1 := size (enc tm) + n + (|envs|)). lia. }
+  rewrite map_time_const.
+  setoid_replace (size (enc tm) + n) with (size (enc tm) + n + (|envs|))
+    using relation le at 1 by lia.
   unfold poly__makeCards'. nia.  
 Qed. 
-Lemma makeCardsP_poly : monotonic poly__makeCards' /\ inOPoly poly__makeCards'. 
-Proof. 
-  unfold poly__makeCards'; split; smpl_inO; apply generateCard_poly. 
-Qed. 
-
-Lemma filterSome_length (X : Type) (l : list (option X)) : |filterSome l| <= |l|. 
-Proof. 
-  induction l; cbn; [lia | destruct a; cbn; lia].
-Qed.
+Lemma makeCardsP_poly : inOPoly poly__makeCards'. 
+Proof. unfold poly__makeCards'; smpl_inO; apply generateCard_poly. Qed.
+#[export] Instance makeCardsP_mono: Proper (le ==> le) poly__makeCards'.
+Proof. unfold poly__makeCards'. solve_proper. Qed.
 
 Lemma makeCardsP_length tm envs card: |makeCardsP_flat tm envs card| <= |envs|.
 Proof. 
@@ -1094,14 +1101,15 @@ Proof.
   rewrite map_time_const. 
   rewrite concat_time_exp. rewrite map_map, map_length.  
   rewrite sumn_map_mono with (f2 := fun _ => c__concat * |envs|). 2: { intros card _. rewrite makeCardsP_length. unfold evalEnvFlat. lia. }
-  rewrite sumn_map_const. 
-  poly_mono makeCardsP_poly. 2: { instantiate (1 := size (enc tm) + n + (|envs|) + (|cards|)). lia. }
+  rewrite sumn_map_const.
+  setoid_replace (size (enc tm) + n + (| envs |)) with (size (enc tm) + n + (|envs|) + (|cards|))
+    using relation le at 1 by lia.
   unfold poly__makeCardsFlat. lia.
 Qed. 
-Lemma makeCardsFlat_poly : monotonic poly__makeCardsFlat /\ inOPoly poly__makeCardsFlat. 
-Proof. 
-  unfold poly__makeCardsFlat; split; smpl_inO; apply makeCardsP_poly. 
-Qed.
+Lemma makeCardsFlat_poly : inOPoly poly__makeCardsFlat. 
+Proof. unfold poly__makeCardsFlat; smpl_inO; apply makeCardsP_poly. Qed.
+#[export] Instance makeCardsFlat_mono: Proper (le ==> le) poly__makeCardsFlat.
+Proof. unfold poly__makeCardsFlat. solve_proper. Qed.
 
 Lemma makeCardsFlat_length_bound tm envs cards : |makeCardsFlat tm envs cards| <= |envs| * |cards|.  
 Proof. 
@@ -1203,20 +1211,27 @@ Qed.
 
 Definition poly__flatMTRCards n := poly__makeAllEvalEnvFlat 1 4 0 0 n + poly__makeCardsFlat (n + 4 + poly__makeAllEvalEnvFlatLength 1 4 0 0 n + |mtrRules|) + c__flatMTRCards.
 Lemma flatMTRCards_time_bound tm : flatMTRCards_time tm <= poly__flatMTRCards (size (enc tm)). 
-Proof. 
-  unfold flatMTRCards_time. 
-  rewrite makeAllEvalEnvFlat_time_bound. 
-  rewrite makeCardsFlat_time_bound. 2: apply makeAllEvalEnvFlat_envBounded. 
+Proof.
+  unfold flatMTRCards_time.
+  rewrite makeAllEvalEnvFlat_time_bound.
+  rewrite makeCardsFlat_time_bound.
+  2: apply makeAllEvalEnvFlat_envBounded. 
   cbn [max].
-  poly_mono makeCardsFlat_poly. 
-  2: { rewrite makeAllEvalEnvFlat_length_bound. reflexivity. }
-  unfold poly__flatMTRCards. nia.  
+  rewrite makeAllEvalEnvFlat_length_bound.
+  unfold poly__flatMTRCards. reflexivity.
 Qed.
-Lemma flatMTRCards_poly : monotonic poly__flatMTRCards /\ inOPoly poly__flatMTRCards. 
+
+Lemma flatMTRCards_poly : inOPoly poly__flatMTRCards. 
 Proof. 
-  unfold poly__flatMTRCards; split; smpl_inO; try apply inOPoly_comp; smpl_inO.
-  all: first [apply makeAllEvalEnvFlat_poly | apply makeCardsFlat_poly | apply makeAllEvalEnvFlat_length_poly].
+  unfold poly__flatMTRCards; smpl_inO.
+  - apply makeAllEvalEnvFlat_poly.
+  - apply inOPoly_comp.
+    + solve_proper.
+    + exact makeCardsFlat_poly.
+    + smpl_inO. apply makeAllEvalEnvFlat_length_poly.
 Qed.
+#[export] Instance flatMTRCards_mono: Proper (le ==> le) poly__flatMTRCards.
+Proof. unfold poly__flatMTRCards. solve_proper. Qed.
 
 Definition c__flatMTICards := 25. 
 Definition flatMTICards_time (tm : flatTM) := makeAllEvalEnvFlat_time tm 2 0 4 0 + makeCardsFlat_time tm (makeAllEvalEnvFlat tm 2 0 4 0) mtiRules + c__flatMTICards.
@@ -1234,15 +1249,18 @@ Proof.
   rewrite makeAllEvalEnvFlat_time_bound. 
   rewrite makeCardsFlat_time_bound. 2: apply makeAllEvalEnvFlat_envBounded. 
   cbn [max].
-  poly_mono makeCardsFlat_poly. 
-  2: { rewrite makeAllEvalEnvFlat_length_bound. reflexivity. }
-  unfold poly__flatMTICards. nia.  
+ rewrite makeAllEvalEnvFlat_length_bound.
+  unfold poly__flatMTICards. reflexivity.
 Qed.
-Lemma flatMTICards_poly : monotonic poly__flatMTICards /\ inOPoly poly__flatMTICards. 
+Lemma flatMTICards_poly : inOPoly poly__flatMTICards. 
 Proof. 
-  unfold poly__flatMTICards; split; smpl_inO; try apply inOPoly_comp; smpl_inO.
-  all: first [apply makeAllEvalEnvFlat_poly | apply makeCardsFlat_poly | apply makeAllEvalEnvFlat_length_poly].
+  unfold poly__flatMTICards; smpl_inO.
+  - apply makeAllEvalEnvFlat_poly.
+  - apply inOPoly_comp; [ solve_proper | exact makeCardsFlat_poly | ].
+    smpl_inO. apply makeAllEvalEnvFlat_length_poly.
 Qed.
+#[export] Instance flatMTICards_mono: Proper (le ==> le) poly__flatMTICards.
+Proof. unfold poly__flatMTICards. solve_proper. Qed.
 
 Definition c__flatMTLCards := 22. 
 Definition flatMTLCards_time (tm : flatTM) := makeAllEvalEnvFlat_time tm 1 4 0 0 + makeCardsFlat_time tm (makeAllEvalEnvFlat tm 1 4 0 0) mtlRules + c__flatMTLCards.
@@ -1255,20 +1273,25 @@ Qed.
 
 Definition poly__flatMTLCards n := poly__makeAllEvalEnvFlat 1 4 0 0 n + poly__makeCardsFlat (n + 4 + poly__makeAllEvalEnvFlatLength 1 4 0 0 n + |mtlRules|) + c__flatMTLCards.
 Lemma flatMTLCards_time_bound tm : flatMTLCards_time tm <= poly__flatMTLCards (size (enc tm)). 
-Proof. 
-  unfold flatMTLCards_time. 
+Proof.
+  unfold flatMTLCards_time.
   rewrite makeAllEvalEnvFlat_time_bound. 
   rewrite makeCardsFlat_time_bound. 2: apply makeAllEvalEnvFlat_envBounded. 
   cbn [max].
-  poly_mono makeCardsFlat_poly. 
-  2: { rewrite makeAllEvalEnvFlat_length_bound. reflexivity. }
-  unfold poly__flatMTLCards. nia.  
+  rewrite makeAllEvalEnvFlat_length_bound.
+  unfold poly__flatMTLCards. reflexivity.
 Qed.
-Lemma flatMTLCards_poly : monotonic poly__flatMTLCards /\ inOPoly poly__flatMTLCards. 
+Lemma flatMTLCards_poly : inOPoly poly__flatMTLCards. 
 Proof. 
-  unfold poly__flatMTLCards; split; smpl_inO; try apply inOPoly_comp; smpl_inO.
-  all: first [apply makeAllEvalEnvFlat_poly | apply makeCardsFlat_poly | apply makeAllEvalEnvFlat_length_poly].
+  unfold poly__flatMTLCards; smpl_inO.
+  - apply makeAllEvalEnvFlat_poly.
+  - apply inOPoly_comp.
+    + solve_proper.
+    + exact makeCardsFlat_poly.
+    + smpl_inO. apply makeAllEvalEnvFlat_length_poly.
 Qed.
+#[export] Instance flatMTLCards_mono: Proper (le ==> le) poly__flatMTLCards.
+Proof. unfold poly__flatMTLCards. solve_proper. Qed.
 
 Definition c__flatTapeCards := 2 * c__app + 11. 
 Definition flatTapeCards_time (tm : flatTM) := flatMTRCards_time tm + flatMTICards_time tm + flatMTLCards_time tm + (|flatMTICards tm| + |flatMTRCards tm| + 1) * c__flatTapeCards.
@@ -1289,11 +1312,13 @@ Proof.
   rewrite !makeAllEvalEnvFlat_length_bound. 
   unfold poly__flatTapeCards; nia. 
 Qed.
-Lemma flatTapeCards_poly : monotonic poly__flatTapeCards /\ inOPoly poly__flatTapeCards. 
+Lemma flatTapeCards_poly : inOPoly poly__flatTapeCards.
 Proof.
-  unfold poly__flatTapeCards; split; smpl_inO. 
-  all: first [apply flatMTRCards_poly | apply flatMTLCards_poly | apply flatMTICards_poly | apply makeAllEvalEnvFlat_length_poly]. 
+  unfold poly__flatTapeCards; smpl_inO. 
+  all: first [apply flatMTRCards_poly | apply flatMTLCards_poly | apply flatMTICards_poly | apply makeAllEvalEnvFlat_length_poly].
 Qed.
+#[export] Instance flatTapeCards_mono: Proper (le ==> le) poly__flatTapeCards.
+Proof. unfold poly__flatTapeCards. solve_proper. Qed.
 
 Definition poly__flatTapeCardsLength n :=
   poly__makeAllEvalEnvFlatLength 1 4 0 0 n * (| mtrRules |) +
@@ -1307,9 +1332,9 @@ Proof.
   rewrite !makeAllEvalEnvFlat_length_bound. 
   unfold poly__flatTapeCardsLength. nia. 
 Qed.  
-Lemma flatTapeCards_length_poly : monotonic poly__flatTapeCardsLength /\ inOPoly poly__flatTapeCardsLength. 
+Lemma flatTapeCards_length_poly : inOPoly poly__flatTapeCardsLength. 
 Proof. 
-  unfold poly__flatTapeCardsLength; split; smpl_inO. 
+  unfold poly__flatTapeCardsLength; smpl_inO. 
   all: apply makeAllEvalEnvFlat_length_poly. 
 Qed.
 
@@ -1367,12 +1392,13 @@ Proof.
   replace (size (enc tm) + S (S n) + (|envs|) + (|cards|)) with (size (enc tm) + (|cards|) + (|envs|) + n + 2) by lia. 
   unfold poly__makeSomeBaseFlat. nia.  
 Qed.
-Lemma makeSome_base_flat_poly : monotonic poly__makeSomeBaseFlat /\ inOPoly poly__makeSomeBaseFlat. 
+Lemma makeSome_base_flat_poly : inOPoly poly__makeSomeBaseFlat. 
 Proof. 
-  unfold poly__makeSomeBaseFlat; split; smpl_inO. 
-  - apply makeCardsFlat_poly. 
-  - apply inOPoly_comp; smpl_inO; apply makeCardsFlat_poly. 
+  unfold poly__makeSomeBaseFlat; smpl_inO.
+  apply inOPoly_comp; [solve_proper | apply makeCardsFlat_poly | smpl_inO].
 Qed. 
+#[export] Instance makeSome_base_flat_mono: Proper (le ==> le) poly__makeSomeBaseFlat.
+Proof. unfold poly__makeSomeBaseFlat. solve_proper. Qed.
 
 (** makeSomeRight *)
 Definition makeSomeRightFlat tm q q' m m' := makeSomeRight q q' m m' (makeCardsFlat tm). 
@@ -1454,12 +1480,13 @@ Proof.
   replace (size (enc tm) + S (S n) + (|envs|) + (|rules|)) with (size (enc tm) + (|rules|) + (|envs|) + n + 2) by lia. 
   unfold poly__makeNoneBaseFlat. nia.  
 Qed.
-Lemma makeNone_base_flat_poly : monotonic poly__makeNoneBaseFlat /\ inOPoly poly__makeNoneBaseFlat. 
+Lemma makeNone_base_flat_poly : inOPoly poly__makeNoneBaseFlat. 
 Proof. 
-  unfold poly__makeNoneBaseFlat; split; smpl_inO. 
-  - apply makeCardsFlat_poly. 
-  - apply inOPoly_comp; smpl_inO; apply makeCardsFlat_poly. 
-Qed. 
+  unfold poly__makeNoneBaseFlat; smpl_inO.
+  apply inOPoly_comp; [solve_proper | apply makeCardsFlat_poly | smpl_inO].
+Qed.
+#[export] Instance makeNone_base_flat_mono: Proper (le ==> le) poly__makeNoneBaseFlat.
+Proof. unfold poly__makeNoneBaseFlat. solve_proper. Qed.
 
 (** makeNoneRight *)
 Definition makeNoneRightFlat tm q q' := makeNoneRight q q' (makeCardsFlat tm). 
@@ -1558,7 +1585,7 @@ Proof.
       | None, (q', (None, TM.Nmove)) => makeNoneStayFlat tm q q' (flat_baseEnvNone tm)
       end). 
   1: { unfold makeSomeLeftFlat, makeSomeStayFlat, makeSomeRightFlat, makeNoneLeftFlat, makeNoneStayFlat, makeNoneRightFlat. easy. }
-  extract. 
+  extract. (* timing 384.33 secs *)
   recRel_prettify2. 
   all: unfold opt_generateCardsForFlatNonHalt_time, c__optGenerateCardsForFlatNonHalt. 
   all: unfold optReturn; lia. 
@@ -1588,27 +1615,32 @@ Lemma opt_generateCardsForFlatNonHalt_time_bound tm q m act:
   -> opt_generateCardsForFlatNonHalt_time tm q m act <= poly__optGenerateCardsForFlatNonHalt (size (enc tm)). 
 Proof. 
   intros H1 H2 H3. unfold isValidFlatStateSig, isValidFlatAct in *.
-  unfold opt_generateCardsForFlatNonHalt_time. 
-  destruct m as [m | ], act as (q' & [m' | ] & []). 
+  unfold opt_generateCardsForFlatNonHalt_time.
+  destruct m as [m | ], act as (q' & [m' | ] & []).
   10-12:
     rewrite makeNone_base_flat_time_bound; [ | unfold flat_baseEnvNone; apply makeAllEvalEnvFlat_envBounded | easy | easy]; 
-    cbn [max]; unfold flat_baseEnvNone; 
-    poly_mono makeNone_base_flat_poly; 
+    cbn [max]; unfold flat_baseEnvNone;
+    erewrite makeNone_base_flat_mono; 
     [ | rewrite makeAllEvalEnvFlat_length_bound; instantiate (1 := size (enc tm) + c__genNone + poly__makeAllEvalEnvFlatLength 2 2 2 0 (size (enc tm)) + 2); unfold c__genNone; lia];
     rewrite !makeAllEvalEnvFlat_time_bound; 
     unfold poly__optGenerateCardsForFlatNonHalt; lia. 
   1-9: 
     rewrite makeSome_base_flat_time_bound; [ | unfold flat_baseEnv; apply makeAllEvalEnvFlat_envBounded | easy | easy | now finRepr_simpl| now finRepr_simpl ];
     cbn [max]; unfold flat_baseEnv;
-    poly_mono makeSome_base_flat_poly; 
+    erewrite makeSome_base_flat_mono;
     [ | rewrite makeAllEvalEnvFlat_length_bound; instantiate (1 := (size (enc tm) + c__genSome + poly__makeAllEvalEnvFlatLength 1 0 3 0 (size (enc tm)) + 3)); unfold c__genSome; lia];
     rewrite !makeAllEvalEnvFlat_time_bound; 
     unfold poly__optGenerateCardsForFlatNonHalt; lia.
 Qed.
-Lemma opt_generateCardsForFlatNonHalt_poly : monotonic poly__optGenerateCardsForFlatNonHalt /\ inOPoly poly__optGenerateCardsForFlatNonHalt. 
+Lemma opt_generateCardsForFlatNonHalt_poly : inOPoly poly__optGenerateCardsForFlatNonHalt. 
 Proof. 
-  unfold poly__optGenerateCardsForFlatNonHalt; split; smpl_inO; try apply inOPoly_comp; smpl_inO; 
-  first [apply makeSome_base_flat_poly | apply makeNone_base_flat_poly | apply makeAllEvalEnvFlat_length_poly | apply makeAllEvalEnvFlat_poly].
+  unfold poly__optGenerateCardsForFlatNonHalt; smpl_inO.
+  - apply inOPoly_comp; [solve_proper | apply makeSome_base_flat_poly | ].
+    smpl_inO. apply makeAllEvalEnvFlat_length_poly.
+  - apply inOPoly_comp; [solve_proper | apply makeNone_base_flat_poly | ].
+    smpl_inO. apply makeAllEvalEnvFlat_length_poly.
+  - apply makeAllEvalEnvFlat_poly.
+  - apply makeAllEvalEnvFlat_poly.
 Qed.
 
 Lemma opt_generateCardsForFlatNonHalt_ofFlatType tm q m act: 
@@ -1628,9 +1660,7 @@ Qed.
 Import LProd List.List_eqb LOptions LNat.
 From Complexity Require Import CompCode.
 Lemma eqbComp_inp : EqBool.eqbCompT (nat * list (option nat)).
-Proof.
-  easy.
-Qed.
+Proof. easy. Qed.
 
  
 (** generateCardsForFlatNonHalt *)
@@ -1671,7 +1701,7 @@ Proof.
   all: unfold generateCardsForFlatNonHalt_time, c__generateCardsForFlatNonHalt; rewrite H; solverec. 
 Qed.
 
-Definition poly__generateCardsForFlatNonHalt n :=       
+Definition poly__generateCardsForFlatNonHalt n :=
   poly__optGenerateCardsForFlatNonHalt n + n * ((2 * n + 5 + c__listsizeCons + c__listsizeNil + 4) * c__eqbComp (nat * list (option nat)) + 24) + 4 + c__generateCardsForFlatNonHalt.
 Lemma generateCardsForFlatNonHalt_time_bound tm q m : 
   validFlatTM tm -> ofFlatType (states tm) q -> isValidFlatStateSig tm m
@@ -1705,10 +1735,12 @@ Proof.
   } 
   all: unfold poly__generateCardsForFlatNonHalt; nia. 
 Qed.
-Lemma generateCardsForFlatNonHalt_poly : monotonic poly__generateCardsForFlatNonHalt /\ inOPoly poly__generateCardsForFlatNonHalt.
+Lemma generateCardsForFlatNonHalt_poly : inOPoly poly__generateCardsForFlatNonHalt.
 Proof. 
-  unfold poly__generateCardsForFlatNonHalt; split; smpl_inO; apply opt_generateCardsForFlatNonHalt_poly. 
+  unfold poly__generateCardsForFlatNonHalt; smpl_inO; apply opt_generateCardsForFlatNonHalt_poly. 
 Qed.
+#[export] Instance generateCardsForFlatNonHalt_mono: Proper (le ==> le) poly__generateCardsForFlatNonHalt.
+Proof. unfold poly__generateCardsForFlatNonHalt, poly__optGenerateCardsForFlatNonHalt. solve_proper. Qed.
 
 Lemma flat_baseEnv_length tm : |flat_baseEnv tm| <= poly__makeAllEvalEnvFlatLength 1 0 3 0 (size (enc tm)).
 Proof. 
@@ -1734,11 +1766,13 @@ Proof.
   1-3: unfold makeNoneRight, makeNoneStay, makeNoneLeft, makeNone_base; rewrite makeCardsFlat_length_bound, map_length, flat_baseEnvNone_length;  
     unfold poly__generateCardsForFlatNonHaltLength, c__genNone; nia. 
 Qed. 
-Lemma generateCardsForFlatNonHalt_length_poly : monotonic poly__generateCardsForFlatNonHaltLength /\ inOPoly poly__generateCardsForFlatNonHaltLength. 
+Lemma generateCardsForFlatNonHalt_length_poly : inOPoly poly__generateCardsForFlatNonHaltLength. 
 Proof. 
-  unfold poly__generateCardsForFlatNonHaltLength; split; smpl_inO. 
+  unfold poly__generateCardsForFlatNonHaltLength; smpl_inO.
   all: apply makeAllEvalEnvFlat_length_poly.
 Qed.
+#[export] Instance generateCardsForFlatNonHalt_length_mono: Proper (le ==> le) poly__generateCardsForFlatNonHaltLength.
+Proof. unfold poly__generateCardsForFlatNonHaltLength. solve_proper. Qed.
 
 Lemma generateCardsForFlatNonHalt_ofFlatType tm q m: 
   validFlatTM tm -> ofFlatType (states tm) q -> isValidFlatStateSig tm m
@@ -1783,17 +1817,17 @@ Proof.
   intros H H1. unfold makeHaltFlat_time. 
   rewrite makeCardsFlat_time_bound. 
   2: { intros e (e' & <- & H2)%in_map_iff. apply envAddState_envBounded; eauto. }
-  rewrite map_length. 
-  poly_mono makeCardsFlat_poly.
-  2: { replace_le (size (enc tm) + S n + (|envs|) + (|makeHalt_rules|)) with (size (enc tm) + n + (|envs|) + ((|makeHalt_rules|) + 1)) by lia. reflexivity. }
+  rewrite map_length.
+  replace_le (size (enc tm) + S n + (|envs|) + (|makeHalt_rules|)) with (size (enc tm) + n + (|envs|) + ((|makeHalt_rules|) + 1)) by lia.
   unfold poly__makeHaltFlat. leq_crossout.
 Qed.
-Lemma makeHaltFlat_poly : monotonic poly__makeHaltFlat /\ inOPoly poly__makeHaltFlat.  
+Lemma makeHaltFlat_poly : inOPoly poly__makeHaltFlat.  
 Proof. 
-  unfold poly__makeHaltFlat; split; smpl_inO. 
-  - apply makeCardsFlat_poly. 
-  - apply inOPoly_comp; smpl_inO; apply makeCardsFlat_poly. 
+  unfold poly__makeHaltFlat; smpl_inO.
+  apply inOPoly_comp; [solve_proper | exact makeCardsFlat_poly | smpl_inO].
 Qed.
+#[export] Instance makeHaltFlat_mono: Proper (le ==> le) poly__makeHaltFlat.
+Proof. unfold poly__makeHaltFlat. solve_proper. Qed.
   
 (** generateCardsForFlatHalt *)
 Definition generateCardsForFlatHalt_time tm q := makeAllEvalEnvFlat_time tm 1 0 3 0 + c__flatBaseEnv + makeHaltFlat_time tm q (flat_baseEnv tm) + 3.
@@ -1816,15 +1850,18 @@ Proof.
   3: apply H.  
   2: { unfold flat_baseEnv. apply makeAllEvalEnvFlat_envBounded. }
   cbn [max].
-  poly_mono makeHaltFlat_poly.
-  2: { unfold flat_baseEnv. rewrite makeAllEvalEnvFlat_length_bound. reflexivity. }
+  unfold flat_baseEnv. rewrite makeAllEvalEnvFlat_length_bound.
   unfold poly__generateCardsForFlatHalt. nia.  
 Qed.
-Lemma generateCardsForFlatHalt_poly : monotonic poly__generateCardsForFlatHalt /\ inOPoly poly__generateCardsForFlatHalt. 
+Lemma generateCardsForFlatHalt_poly : inOPoly poly__generateCardsForFlatHalt. 
 Proof. 
-  unfold poly__generateCardsForFlatHalt; split; smpl_inO; try apply inOPoly_comp; smpl_inO. 
-  all: first [apply makeAllEvalEnvFlat_poly | apply makeHaltFlat_poly | apply makeAllEvalEnvFlat_length_poly]. 
+  unfold poly__generateCardsForFlatHalt; smpl_inO.
+  - apply makeAllEvalEnvFlat_poly.
+  - apply inOPoly_comp; [solve_proper | exact makeHaltFlat_poly | smpl_inO].
+    apply makeAllEvalEnvFlat_length_poly.
 Qed.
+#[export] Instance generateCardsForFlatHalt_mono: Proper (le ==> le) poly__generateCardsForFlatHalt.
+Proof. unfold poly__generateCardsForFlatHalt. solve_proper. Qed.
 
 Lemma generateCardsForFlatHalt_length tm q: |generateCardsForFlatHalt tm q| <= poly__makeAllEvalEnvFlatLength 1 0 3 0 (size (enc tm)) * (| makeHalt_rules |). 
 Proof. 
@@ -1909,11 +1946,13 @@ Proof.
   unfold ofFlatType in H. rewrite H, states_TM_le.  
   unfold poly__generateCardsForFlat. nia. 
 Qed.
-Lemma generateCardsForFlat_poly : inOPoly poly__generateCardsForFlat /\ monotonic poly__generateCardsForFlat. 
+Lemma generateCardsForFlat_poly : inOPoly poly__generateCardsForFlat. 
 Proof. 
-  unfold poly__generateCardsForFlat; split; smpl_inO. 
+  unfold poly__generateCardsForFlat; smpl_inO.
   all: first [apply generateCardsForFlatHalt_poly | apply generateCardsForFlatNonHalt_poly | apply generateCardsForFlatNonHalt_length_poly ]. 
-Qed. 
+Qed.
+#[export] Instance generateCardsForFlat_mono: Proper (le ==> le) poly__generateCardsForFlat.
+Proof. unfold poly__generateCardsForFlat. solve_proper. Qed.
 
 Definition poly__generateCardsForFlatLength n := poly__makeAllEvalEnvFlatLength 1 0 3 0 n * (|makeHalt_rules|) 
   + poly__generateCardsForFlatNonHaltLength n * (n + 1).
@@ -1928,15 +1967,17 @@ Proof.
     rewrite sig_TM_le. 
     unfold poly__generateCardsForFlatLength; nia.  
 Qed.
-Lemma generateCardsForFlat_length_poly : monotonic poly__generateCardsForFlatLength /\ inOPoly poly__generateCardsForFlatLength.
+Lemma generateCardsForFlat_length_poly : inOPoly poly__generateCardsForFlatLength.
 Proof.
-  unfold poly__generateCardsForFlatLength; split; smpl_inO. 
+  unfold poly__generateCardsForFlatLength; smpl_inO.
   all: first [apply makeAllEvalEnvFlat_length_poly | apply generateCardsForFlatNonHalt_length_poly ]. 
-Qed. 
+Qed.
+#[export] Instance generateCardsForFlat_length_mono: Proper (le ==> le) poly__generateCardsForFlatLength.
+Proof. unfold poly__generateCardsForFlatLength. solve_proper. Qed.
 
 (**flatStateCards *)
 Definition c__flatStateCards := 17. 
-Definition flatStateCards_time (tm : flatTM) :=   seq_time (states tm) + map_time (fun q => generateCardsForFlat_time tm q) (seq 0 (states tm)) + concat_time (map (generateCardsForFlat tm) (seq 0 (states tm))) + c__flatStateCards.
+Definition flatStateCards_time (tm : flatTM) := seq_time (states tm) + map_time (fun q => generateCardsForFlat_time tm q) (seq 0 (states tm)) + concat_time (map (generateCardsForFlat tm) (seq 0 (states tm))) + c__flatStateCards.
 #[export]
 Instance term_flatStateCards : computableTime' flatStateCards (fun tm _ => (flatStateCards_time tm, tt)). 
 Proof. 
@@ -1958,11 +1999,13 @@ Proof.
   rewrite map_length, seq_length, states_TM_le. 
   unfold poly__flatStateCards. nia. 
 Qed. 
-Lemma flatStateCards_poly : inOPoly poly__flatStateCards /\ monotonic poly__flatStateCards. 
+Lemma flatStateCards_poly : inOPoly poly__flatStateCards. 
 Proof. 
-  unfold poly__flatStateCards; split; smpl_inO. 
+  unfold poly__flatStateCards; smpl_inO. 
   all: first [apply generateCardsForFlat_poly | apply generateCardsForFlat_length_poly]. 
 Qed.
+#[export] Instance flatStateCards_mono: Proper (le ==> le) poly__flatStateCards.
+Proof. unfold poly__flatStateCards. solve_proper. Qed.
 
 Lemma flatStateCards_length tm : |flatStateCards tm| <= states tm * poly__generateCardsForFlatLength (size (enc tm)).
 Proof. 
@@ -2006,14 +2049,16 @@ Proof.
   rewrite makeCardsFlat_time_bound. 
   2: { intros e (e' & <- & H1)%in_map_iff. eapply envAddState_envBounded; easy. }
   rewrite map_length. 
-  poly_mono makeCardsFlat_poly. 
-  2: { replace_le (size (enc tm) + S n + (|envs|) + (|listPreludeRules|)) with (size (enc tm) + n + (|envs|) + (|listPreludeRules|) + 1) by lia. reflexivity. }
+  replace_le (size (enc tm) + S n + (|envs|) + (|listPreludeRules|)) with (size (enc tm) + n + (|envs|) + (|listPreludeRules|) + 1) by lia.
   unfold poly__makePreludeCardsFlat. nia. 
 Qed.
-Lemma makePreludeCards_flat_poly : monotonic poly__makePreludeCardsFlat /\ inOPoly poly__makePreludeCardsFlat. 
+Lemma makePreludeCards_flat_poly : inOPoly poly__makePreludeCardsFlat. 
 Proof. 
-  unfold poly__makePreludeCardsFlat; split; smpl_inO; try apply inOPoly_comp; smpl_inO; apply makeCardsFlat_poly. 
+  unfold poly__makePreludeCardsFlat; smpl_inO. 
+  apply inOPoly_comp; [solve_proper | exact makeCardsFlat_poly | smpl_inO].
 Qed.
+#[export] Instance makePreludeCards_flat_mono: Proper (le ==> le) poly__makePreludeCardsFlat.
+Proof. unfold poly__makePreludeCardsFlat. solve_proper. Qed.
 
 (** flat_baseEnvPrelude *)
 Definition c__flatBaseEnvPrelude := 17. 
@@ -2048,14 +2093,15 @@ Proof.
   3: { intros e. unfold flat_baseEnvPrelude. apply makeAllEvalEnvFlat_envBounded. }
   2: { destruct H. easy. }
   rewrite makeAllEvalEnvFlat_time_bound. cbn[max].
-  poly_mono makePreludeCards_flat_poly. 
-  2: { rewrite flat_baseEnvPrelude_length. reflexivity. }
+  rewrite flat_baseEnvPrelude_length.
   unfold poly__flatPreludeCards. nia.  
 Qed.
-Lemma flatPreludeCards_poly : monotonic poly__flatPreludeCards /\ inOPoly poly__flatPreludeCards. 
+Lemma flatPreludeCards_poly : inOPoly poly__flatPreludeCards. 
 Proof. 
-  unfold poly__flatPreludeCards; split; smpl_inO; try apply inOPoly_comp; smpl_inO. 
-  all: first [apply makeAllEvalEnvFlat_poly | apply makePreludeCards_flat_poly | apply makeAllEvalEnvFlat_length_poly].
+  unfold poly__flatPreludeCards; smpl_inO.
+  - apply makeAllEvalEnvFlat_poly.
+  - apply inOPoly_comp; [solve_proper | exact makePreludeCards_flat_poly | smpl_inO].
+    apply makeAllEvalEnvFlat_length_poly.
 Qed.
 
 Lemma flatPreludeCards_length tm : |flatPreludeCards tm| <= poly__makeAllEvalEnvFlatLength 0 3 1 0 (size (enc tm)) * (|listPreludeRules|).
@@ -2098,11 +2144,13 @@ Proof.
   rewrite flatPreludeCards_length.  
   unfold poly__allFlatCards. lia.
 Qed.
-Lemma allFlatCards_poly : monotonic poly__allFlatCards /\ inOPoly poly__allFlatCards. 
+Lemma allFlatCards_poly : inOPoly poly__allFlatCards. 
 Proof. 
-  unfold poly__allFlatCards; split; smpl_inO. 
-  all: first [apply flatPreludeCards_poly | apply flatTapeCards_poly | apply flatStateCards_poly | apply flatTapeCards_length_poly | apply makeAllEvalEnvFlat_length_poly ]. 
+  unfold poly__allFlatCards.
+  smpl_inO; [apply flatPreludeCards_poly | apply flatTapeCards_poly | apply flatStateCards_poly | apply flatTapeCards_length_poly | apply makeAllEvalEnvFlat_length_poly ]. 
 Qed.
+#[export] Instance allFlatCards_mono: Proper (le ==> le) poly__allFlatCards.
+Proof. unfold poly__allFlatCards, poly__flatPreludeCards, poly__flatTapeCardsLength. solve_proper. Qed.
 
 Definition poly__allFlatCardsLength n := poly__makeAllEvalEnvFlatLength 0 3 1 0 n * (|listPreludeRules|) + poly__flatTapeCardsLength n + n * poly__generateCardsForFlatLength n.
 Lemma allFlatCards_length tm : |allFlatCards tm| <= poly__allFlatCardsLength (size (enc tm)). 
@@ -2112,13 +2160,15 @@ Proof.
   unfold allFlatSimCards. rewrite app_length. 
   rewrite flatTapeCards_length, flatStateCards_length. 
   rewrite states_TM_le. 
-  unfold poly__allFlatCardsLength. nia.   
+  unfold poly__allFlatCardsLength. nia.
 Qed.
-Lemma allFlatCards_length_poly : monotonic poly__allFlatCardsLength /\ inOPoly poly__allFlatCardsLength. 
+Lemma allFlatCards_length_poly : inOPoly poly__allFlatCardsLength. 
 Proof. 
-  unfold poly__allFlatCardsLength; split; smpl_inO. 
+  unfold poly__allFlatCardsLength; smpl_inO.
   all: first [apply makeAllEvalEnvFlat_length_poly | apply flatTapeCards_length_poly | apply generateCardsForFlat_length_poly]. 
 Qed.
+#[export] Instance allFlatCards_length_mono: Proper (le ==> le) poly__allFlatCardsLength.
+Proof. unfold poly__allFlatCardsLength, poly__flatTapeCardsLength. solve_proper. Qed.
 
 Lemma allFlatCards_ofFlatType tm : validFlatTM tm -> isValidFlatCards (allFlatCards tm) (flatAlphabet tm).
 Proof. 
@@ -2146,9 +2196,9 @@ Proof.
   rewrite size_nat_enc with (n := flatAlphabet tm). rewrite flatAlphabet_bound, sig_TM_le, states_TM_le. 
   unfold poly__allFlatCardsSize; reflexivity.
 Qed.
-Lemma allFlatCards_size_poly : monotonic poly__allFlatCardsSize /\ inOPoly poly__allFlatCardsSize. 
+Lemma allFlatCards_size_poly : inOPoly poly__allFlatCardsSize. 
 Proof. 
-  unfold poly__allFlatCardsSize; split; smpl_inO; apply allFlatCards_length_poly.
+  unfold poly__allFlatCardsSize; smpl_inO; apply allFlatCards_length_poly.
 Qed.
 
 (** repeat *)
@@ -2180,10 +2230,10 @@ Proof.
   unfold add_time. rewrite size_nat_enc_r with (n := k') at 1. 
   unfold poly__kflat. leq_crossout.
 Qed.
-Lemma kflat_poly : monotonic poly__kflat /\ inOPoly poly__kflat. 
-Proof. 
-  unfold poly__kflat; split; smpl_inO. 
-Qed.
+Lemma kflat_poly : inOPoly poly__kflat. 
+Proof. unfold poly__kflat; smpl_inO. Qed.
+#[export] Instance kflat_mono: Proper (le ==> le) poly__kflat.
+Proof. unfold poly__kflat. solve_proper. Qed.
 
 (** zflat *)
 Definition  c__zflat := c__add1 + 2. 
@@ -2199,13 +2249,13 @@ Definition poly__zflat n := poly__kflat n + (n + 1) * c__add + c__zflat.
 Lemma zflat_time_bound t k' fixed : zflat_time t k' fixed <= poly__zflat (size (enc t) + size (enc k') + size (enc fixed)). 
 Proof. 
   unfold zflat_time. rewrite kflat_time_bound. 
-  poly_mono kflat_poly. 2: { replace_le (size (enc k') + size (enc fixed)) with (size (enc t) + size (enc k') + size (enc fixed)) by lia. reflexivity. }
+  replace_le (size (enc k') + size (enc fixed)) with (size (enc t) + size (enc k') + size (enc fixed)) by lia.
   unfold add_time. rewrite size_nat_enc_r with (n := t) at 2. 
   unfold poly__zflat. leq_crossout. 
 Qed. 
-Lemma zflat_poly : monotonic poly__zflat /\ inOPoly poly__zflat. 
+Lemma zflat_poly : inOPoly poly__zflat. 
 Proof.  
-  unfold poly__zflat; split; smpl_inO; apply kflat_poly. 
+  unfold poly__zflat; smpl_inO; apply kflat_poly. 
 Qed.
 
 (** zPflat *)
@@ -2224,10 +2274,10 @@ Proof.
   unfold zPflat_time. 
   rewrite zflat_time_bound. unfold poly__zPflat; lia. 
 Qed.
-Lemma zPflat_poly : monotonic poly__zPflat /\ inOPoly poly__zPflat. 
-Proof. 
-  unfold poly__zPflat; split; smpl_inO; apply zflat_poly. 
-Qed.
+Lemma zPflat_poly : inOPoly poly__zPflat. 
+Proof. unfold poly__zPflat; smpl_inO; apply zflat_poly. Qed.
+#[export] Instance zPflat_mono: Proper (le ==> le) poly__zPflat.
+Proof. unfold poly__zPflat, poly__zflat. solve_proper. Qed.
 
 (** flatInitialString *)
 (* step function for map *)
@@ -2274,41 +2324,33 @@ Definition poly__flatInitialString n :=
   c__app * n + c__app * n +
   (c__app + c__rev + c__repeat) * (wo + (n + (n + n))) + c__flatInitialString.
 Lemma flat_initial_string_time_bound t k' tm fixed : flat_initial_string_time t k' tm fixed <= poly__flatInitialString (size (enc t) + size (enc k') + size (enc tm) + size (enc fixed)). 
-Proof. 
+Proof.
   unfold flat_initial_string_time. 
-  rewrite flatGamma_time_bound. rewrite zPflat_time_bound. 
+  rewrite flatGamma_time_bound, zPflat_time_bound. 
   unfold flatInr_flatNsig_time. rewrite map_time_const. 
   rewrite flatGamma_time_bound. 
   unfold zPflat, zflat, kflat. 
   rewrite list_size_length with (l :=  fixed). 
   unfold add_time. rewrite flatGamma_bound.
   rewrite states_TM_le, sig_TM_le. 
-  rewrite size_nat_enc_r with (n := k') at 2 3 4. 
-  rewrite size_nat_enc_r with (n := t) at 2 3 4. 
+  rewrite size_nat_enc_r with (n := k') at 2 3 4.
+  rewrite size_nat_enc_r with (n := t) at 2 3 4.
 
-  pose (m := size (enc t) + size (enc k') + size (enc tm) + size (enc fixed)). 
-  poly_mono flatGamma_poly. 2: { instantiate (1 := m). subst m. lia. } 
-  replace_le (size (enc tm)) with m by (subst m; lia) at 1. 
-  replace_le (size (enc tm)) with m by (subst m; lia) at 1. 
-  replace_le (size (enc tm)) with m by (subst m; lia) at 1. 
-  replace_le (size (enc tm)) with m by (subst m; lia) at 1. 
-  poly_mono zPflat_poly. 2: {instantiate (1 := m). subst m; lia. }
-  replace_le (size (enc k')) with m by (subst m; lia) at 1. 
-  replace_le (size (enc k')) with m by (subst m; lia) at 1. 
-  replace_le (size (enc k')) with m by (subst m; lia) at 1. 
-  replace_le (size (enc t)) with m by (subst m; lia) at 1. 
-  replace_le (size (enc t)) with m by (subst m; lia) at 1. 
-  replace_le (size (enc t)) with m by (subst m; lia) at 1. 
-  replace_le (size (enc fixed)) with m by (subst m; lia) at 1.
-  replace_le (size (enc fixed)) with m by (subst m; lia) at 1. 
-  replace_le (size (enc fixed)) with m by (subst m; lia) at 1. 
-  fold m. generalize m. intros m'. 
-  unfold poly__flatInitialString. reflexivity. 
+  pose (m := size (enc t) + size (enc k') + size (enc tm) + size (enc fixed)).
+  setoid_replace (size (enc tm)) with m using relation le at 1 2 3 4 5 6 by lia.
+  setoid_replace (size (enc t) + size (enc k') + size (enc fixed)) with m
+    using relation le at 1 by lia.
+  setoid_replace (size (enc k')) with m using relation le at 1 2 3 by lia.
+  setoid_replace (size (enc t)) with m using relation le at 1 2 3 by lia.
+  setoid_replace (size (enc fixed)) with m using relation le at 1 2 3 by lia.
+  reflexivity.
 Qed.
-Lemma flat_initial_string_poly : monotonic poly__flatInitialString /\ inOPoly poly__flatInitialString. 
+Lemma flat_initial_string_poly : inOPoly poly__flatInitialString. 
 Proof. 
-  unfold poly__flatInitialString; split; smpl_inO; first [apply flatGamma_poly | apply zPflat_poly]. 
-Qed. 
+  unfold poly__flatInitialString; smpl_inO; first [apply flatGamma_poly | apply zPflat_poly]. 
+Qed.
+#[export] Instance flat_initial_string_mono: Proper (le ==> le) poly__flatInitialString.
+Proof. unfold poly__flatInitialString. solve_proper. Qed.
 
 Lemma flat_initial_string_length t k' tm fixed: |flat_initial_string t k' tm fixed| = 2 * (zPflat t k' fixed + 1) + 1. 
 Proof. 
@@ -2347,7 +2389,8 @@ Definition poly__flatInitialStringSize n :=   (c__flatAlphabetS * c__natsizeS * 
 Lemma flat_initial_string_size_bound t k' tm fixed: list_ofFlatType (sig tm) fixed -> size (enc (flat_initial_string t k' tm fixed)) <= poly__flatInitialStringSize (size (enc t) + size (enc k') + size (enc tm) +  size (enc fixed)). 
 Proof. 
   intros H. rewrite list_size_of_el. 
-  2: { intros a H1%flat_initial_string_ofFlatType. 2: apply H. rewrite nat_size_lt by apply H1. 
+  2: { intros a H1%flat_initial_string_ofFlatType%Nat.lt_le_incl; [|apply H].
+       rewrite nat_size_le. 2: exact H1.
        rewrite nat_size_le. 
        2: { rewrite flatAlphabet_bound. reflexivity. }
        reflexivity. 
@@ -2359,15 +2402,12 @@ Proof.
 
   pose (g := size (enc t) + size (enc k') + size (enc tm) + size (enc fixed)). 
   replace_le (size (enc tm)) with g by (subst g; lia) at 1. replace_le (size (enc tm)) with g by (subst g; lia) at 1.
-  replace_le (size (enc t) + (size (enc k') + size (enc fixed))) with g by (subst g; lia) at 1. 
-  replace_le (size (enc t) + (size (enc k') + size (enc fixed))) with g by (subst g; lia) at 1.
+  replace_le (size (enc t) + (size (enc k') + size (enc fixed))) with g by (subst g; lia) at 1 2.
   fold g. unfold poly__flatInitialStringSize. 
   nia. 
 Qed.
-Lemma flat_initial_string_size_poly : monotonic poly__flatInitialStringSize /\ inOPoly poly__flatInitialStringSize. 
-Proof. 
-  unfold poly__flatInitialStringSize; split; smpl_inO. 
-Qed.
+Lemma flat_initial_string_size_poly : inOPoly poly__flatInitialStringSize. 
+Proof. unfold poly__flatInitialStringSize; smpl_inO. Qed.
 
 Section fixX. 
   Variable (X : Type). 
@@ -2411,7 +2451,7 @@ Instance term_flat_haltingStates : computableTime' flat_haltingStates (fun tm _ 
 Proof. 
   unfold flat_haltingStates. 
   apply computableTimeExt with (x :=fun tm => filter (isHalting tm) (seq 0 (states tm))). 
-  { easy. }
+  { reflexivity. }
   extract.  solverec. 
   unfold flat_haltingStates_time, c__flatHaltingStates. solverec. 
 Qed.
@@ -2426,11 +2466,12 @@ Proof.
   rewrite states_TM_le at 1 2. 
   unfold poly__flatHaltingStates. nia.  
 Qed. 
-Lemma flat_haltingStates_poly : monotonic poly__flatHaltingStates /\ inOPoly poly__flatHaltingStates. 
-Proof. 
-  unfold poly__flatHaltingStates; split; smpl_inO. 
-Qed. 
+Lemma flat_haltingStates_poly : inOPoly poly__flatHaltingStates.
+Proof. unfold poly__flatHaltingStates; smpl_inO. Qed.
+#[export] Instance flat_haltingStates_mono: Proper (le ==> le) poly__flatHaltingStates.
+Proof. unfold poly__flatHaltingStates. solve_proper. Qed.
 
+(* TODO: use stdlib when https://github.com/coq/coq/pull/17027 gets merged *)
 Lemma filter_length (X : Type) (p : X -> bool) (l : list X) : |filter p l| <= |l|. 
 Proof. 
   induction l; cbn; [lia | destruct p; cbn; lia]. 
@@ -2465,10 +2506,10 @@ Proof.
   unfold flatPair_time, mult_time, add_time. rewrite flatStateSigma_bound, H. 
   rewrite states_TM_le, sig_TM_le. unfold poly__flatFinalSubstringsStep; solverec. 
 Qed.
-Lemma flat_finalSubstrings_step_poly : monotonic poly__flatFinalSubstringsStep /\ inOPoly poly__flatFinalSubstringsStep.
-Proof. 
-  unfold poly__flatFinalSubstringsStep; split; smpl_inO. 
-Qed.
+Lemma flat_finalSubstrings_step_poly : inOPoly poly__flatFinalSubstringsStep.
+Proof. unfold poly__flatFinalSubstringsStep; smpl_inO. Qed.
+#[export] Instance flat_finalSubstrings_steps_mono: Proper (le ==> le) poly__flatFinalSubstringsStep.
+Proof. unfold poly__flatFinalSubstringsStep. solve_proper. Qed.
 
 Definition c__finalSubstrings := c__flatStateSigma + 13. 
 Definition flat_finalSubstrings_time (tm : flatTM) :=   flat_haltingStates_time tm + seq_time (flatStateSigma tm) + prodLists_time (flat_haltingStates tm) (seq 0 (flatStateSigma tm)) + map_time (flat_finalSubstrings_step_time tm) (list_prod (flat_haltingStates tm) (seq 0 (flatStateSigma tm))) + c__finalSubstrings. 
@@ -2477,7 +2518,7 @@ Instance term_flat_finalSubstrings : computableTime' flat_finalSubstrings (fun t
 Proof. 
   apply computableTimeExt with (x := 
     fun tm => map (flat_finalSubstrings_step tm) (list_prod (flat_haltingStates tm) (seq 0 (flatStateSigma tm)))). 
-  { easy. }
+  { reflexivity. }
   extract. recRel_prettify2. 
   unfold flat_finalSubstrings_time, c__finalSubstrings; simp_comp_arith; solverec.
 Qed.
@@ -2498,10 +2539,13 @@ Proof.
   rewrite flatStateSigma_bound, sig_TM_le, states_TM_le.
   unfold poly__finalSubstrings; lia. 
 Qed.
-Lemma flat_finalSubstrings_poly : monotonic poly__finalSubstrings /\ inOPoly poly__finalSubstrings. 
+Lemma flat_finalSubstrings_poly : inOPoly poly__finalSubstrings. 
 Proof. 
-  unfold poly__finalSubstrings; split; smpl_inO; first [apply flat_haltingStates_poly | apply flat_finalSubstrings_step_poly]. 
+  unfold poly__finalSubstrings.
+  smpl_inO; [apply flat_haltingStates_poly | apply flat_finalSubstrings_step_poly].
 Qed. 
+#[export] Instance flat_finalSubstrings_mono: Proper (le ==> le) poly__finalSubstrings.
+Proof. unfold poly__finalSubstrings. solve_proper. Qed.
 
 Proposition flat_finalSubstrings_length (tm : flatTM) : |flat_finalSubstrings tm| <= states tm * (S (sig tm)). 
 Proof. 
@@ -2538,9 +2582,9 @@ Proof.
   unfold enc at 1. cbn -[Nat.add Nat.mul]. rewrite size_nat_enc, sig_TM_le, states_TM_le. 
   unfold poly__flatFinalSubstringsSize. nia.
 Qed.
-Lemma flat_finalSubstrings_size_poly : monotonic poly__flatFinalSubstringsSize /\ inOPoly poly__flatFinalSubstringsSize. 
+Lemma flat_finalSubstrings_size_poly : inOPoly poly__flatFinalSubstringsSize. 
 Proof. 
-  unfold poly__flatFinalSubstringsSize; split; smpl_inO. 
+  unfold poly__flatFinalSubstringsSize; smpl_inO. 
 Qed. 
 
 (** reduction_wf *)
@@ -2555,23 +2599,27 @@ Qed.
 
 Definition poly__reductionWf n := poly__flatAlphabet n + poly__flatInitialString n + poly__allFlatCards n + poly__finalSubstrings n + c__reductionWf.
 Lemma reduction_wf_time_bound t k' tm fixed: validFlatTM tm -> reduction_wf_time t k' tm fixed <= poly__reductionWf (size (enc t) + size (enc k') + size (enc tm) + size (enc fixed)). 
-Proof. 
+Proof.
   intros H. unfold reduction_wf_time. 
   rewrite flatAlphabet_time_bound, flat_initial_string_time_bound. 
   rewrite allFlatCards_time_bound by easy.
   rewrite flat_finalSubstrings_time_bound. 
-  pose (m := size (enc t) + size (enc k') + size (enc tm) + size (enc fixed)). 
-  poly_mono flatAlphabet_poly. 2: { instantiate (1 := m). subst m;lia. }
-  poly_mono flat_initial_string_poly. 2: { instantiate (1 := m); subst m; lia. }
-  poly_mono allFlatCards_poly. 2 : { instantiate (1 := m); subst m; lia. }
-  poly_mono flat_finalSubstrings_poly. 2 : { instantiate (1 := m); subst m; lia. } 
-  subst m; unfold poly__reductionWf. lia. 
-Qed. 
-Lemma reduction_wf_poly : monotonic poly__reductionWf /\ inOPoly poly__reductionWf. 
-Proof. 
-  unfold poly__reductionWf; split; smpl_inO. 
-  all: first [apply flatAlphabet_poly | apply flat_initial_string_poly | apply allFlatCards_poly | apply flat_finalSubstrings_poly]. 
+  set (m := size (enc t) + size (enc k') + size (enc tm) + size (enc fixed)).
+  setoid_replace (size (enc tm)) with m using relation le at 1 2 3 by lia.
+  reflexivity. 
 Qed.
+Lemma reduction_wf_poly : inOPoly poly__reductionWf. 
+Proof. 
+  unfold poly__reductionWf.
+  smpl_inO; [apply flatAlphabet_poly | apply flat_initial_string_poly | apply allFlatCards_poly | apply flat_finalSubstrings_poly]. 
+Qed.
+#[export] Instance reduction_wf_mono: Proper (le ==> le) poly__reductionWf.
+Proof. unfold poly__reductionWf, poly__flatAlphabet. solve_proper. Qed.
+
+#[export] Instance allFlatCardsSize_mono: Proper (le ==> le) poly__allFlatCardsSize.
+Proof. unfold poly__allFlatCardsSize. solve_proper. Qed.
+#[export] Instance flatFinalSubstringsSize_mono: Proper (le ==> le) poly__flatFinalSubstringsSize.
+Proof. unfold poly__flatFinalSubstringsSize. solve_proper. Qed.
 
 Definition poly__reductionWfSize n := 
   c__flatAlphabetS * (n + 1) * (n + 1) * c__natsizeS + c__natsizeO
@@ -2580,27 +2628,31 @@ Definition poly__reductionWfSize n :=
 Lemma reduction_wf_size_bound t k' tm fixed : 
   validFlatTM tm -> list_ofFlatType (sig tm) fixed
   -> size (enc (reduction_wf t k' tm fixed)) <= poly__reductionWfSize (size (enc t) + size (enc k') + size (enc tm) + size (enc fixed)). 
-Proof. 
+Proof.
   intros H H0. unfold reduction_wf. 
   rewrite FlatTCC_enc_size. cbn -[allFlatCards flat_initial_string poly__reductionWfSize].
   rewrite flat_initial_string_size_bound by easy.
   rewrite allFlatCards_size_bound by easy.
   rewrite flat_finalSubstrings_size_bound by easy.
-  pose (g := size (enc t) + size (enc k') + size (enc tm) + size (enc fixed)).
-  poly_mono allFlatCards_size_poly. 2: { instantiate (1 := g); subst g; lia. }
-  poly_mono flat_finalSubstrings_size_poly. 2: { instantiate (1 := g); subst g; lia. }
+  set (g := size (enc t) + size (enc k') + size (enc tm) + size (enc fixed)).
+  setoid_replace (size (enc tm)) with g using relation le at 1 2 by lia.
   rewrite size_nat_enc at 1; rewrite flatAlphabet_bound, states_TM_le, sig_TM_le at 1.
   replace (size (enc (S t))) with (c__natsizeS + size (enc t)). 
   2: { rewrite !size_nat_enc. nia. } 
-  replace_le (size (enc tm)) with g by (subst g; lia) at 1. 
-  replace_le (size (enc tm)) with g by (subst g; lia) at 1.
-  replace_le (size (enc t)) with g by (subst g; lia) at 2.
+  replace_le (size (enc tm)) with g by (subst g; lia) at 1 2.
+  replace_le (size (enc t)) with g by (subst g; lia) at 1.
   fold g. unfold poly__reductionWfSize; leq_crossout. 
 Qed.
-Lemma reduction_wf_size_poly : monotonic poly__reductionWfSize /\ inOPoly poly__reductionWfSize.
+Lemma reduction_wf_size_poly : inOPoly poly__reductionWfSize.
 Proof. 
-  unfold poly__reductionWfSize; split; smpl_inO. 
-  all: first [apply flat_initial_string_size_poly | apply allFlatCards_size_poly | apply flat_finalSubstrings_size_poly]. 
+  unfold poly__reductionWfSize.
+  smpl_inO; [apply flat_initial_string_size_poly | apply allFlatCards_size_poly | apply flat_finalSubstrings_size_poly]. 
+Qed.
+#[export] Instance reduction_wf_size_mono: Proper (le ==> le) poly__reductionWfSize.
+Proof.
+  unfold poly__reductionWfSize, poly__flatInitialStringSize,
+         poly__allFlatCardsSize, poly__flatFinalSubstringsSize.
+  solve_proper.
 Qed.
   
 (** implb *)
@@ -2668,10 +2720,10 @@ Section fixIsInjFinfuncTable.
       unfold poly__allSameEntry.  
       rewrite list_size_cons, size_prod; cbn -[Nat.add Nat.mul]. nia.  
   Qed. 
-  Lemma allSameEntry_poly : monotonic poly__allSameEntry /\ inOPoly poly__allSameEntry. 
-  Proof. 
-    unfold poly__allSameEntry; split; smpl_inO. 
-  Qed.
+  Lemma allSameEntry_poly : inOPoly poly__allSameEntry. 
+  Proof. unfold poly__allSameEntry; smpl_inO. Qed.
+  #[export] Instance allSameEntry_mono: Proper (le ==> le) poly__allSameEntry.
+  Proof. unfold poly__allSameEntry. solve_proper. Qed.
 
   (** isInjFinfuncTable *)
   Definition c__isInjFinfuncTable := 21. 
@@ -2692,14 +2744,15 @@ Section fixIsInjFinfuncTable.
     - unfold poly__isInjFinfuncTable. rewrite size_list; cbn -[Nat.add]. unfold c__listsizeNil; nia.
     - destruct a. rewrite IHl. 
       rewrite allSameEntry_time_bound. 
-      unfold poly__isInjFinfuncTable. 
-      poly_mono allSameEntry_poly. 2: { instantiate (1 := size (enc ((x, y) :: l))). rewrite list_size_cons. nia. }
+      unfold poly__isInjFinfuncTable.
+      setoid_replace (size (enc l)) with (size (enc ((x, y) :: l)))
+        using relation le at 1 3 by (rewrite list_size_cons; nia).
       rewrite list_size_cons. unfold c__listsizeCons. leq_crossout.       
   Qed.
-  Lemma isInjFinfuncTable_poly : monotonic poly__isInjFinfuncTable /\ inOPoly poly__isInjFinfuncTable. 
-  Proof. 
-    unfold poly__isInjFinfuncTable; split; smpl_inO; apply allSameEntry_poly. 
-  Qed.
+  Lemma isInjFinfuncTable_poly : inOPoly poly__isInjFinfuncTable. 
+  Proof. unfold poly__isInjFinfuncTable; smpl_inO; apply allSameEntry_poly. Qed.
+  #[export] Instance isInjFinfuncTable_mono: Proper (le ==> le) poly__isInjFinfuncTable.
+  Proof. unfold poly__isInjFinfuncTable. solve_proper. Qed.
 End fixIsInjFinfuncTable.
 
 (** isBoundTransTable *)
@@ -2726,7 +2779,7 @@ Definition ltb_time (a b : nat) := leb_time (S a) b + c__ltb.
 Instance term_ltb : computableTime' Nat.ltb (fun a _ => (1, fun b _ => (ltb_time a b, tt))). 
 Proof. 
   extract. recRel_prettify2. 
-  - lia. 
+  - reflexivity. 
   - unfold ltb_time, c__ltb, flatSome. solverec. 
 Qed.
 
@@ -2751,9 +2804,9 @@ Proof.
     rewrite size_nat_enc_r with (n := k) at 1. unfold poly__optBound. nia. 
   - unfold poly__optBound. nia. 
 Qed.
-Lemma optBound_poly : monotonic poly__optBound /\ inOPoly poly__optBound.
+Lemma optBound_poly : inOPoly poly__optBound.
 Proof. 
-  unfold poly__optBound; split; smpl_inO. 
+  unfold poly__optBound; smpl_inO. 
 Qed.
 
 Definition c__fstOptBound := 7. 
@@ -2782,6 +2835,9 @@ Proof.
   rewrite size_nat_enc. unfold c__natsizeO, c__leb, c__natsizeS. nia. 
 Qed.
 
+#[export] Instance optBound_mono: Proper (le ==> le) poly__optBound.
+Proof. unfold poly__optBound. solve_proper. Qed.
+
 Definition poly__isBoundTrans n := 
   n * (2 * c__leb + 2 * c__length + 2 * c__eqbComp nat + 2 * c__forallb + c__fstOptBound) + 2 * c__forallb + 2 * c__ltb + 2 * c__eqbComp nat + 2 * n * poly__optBound n + c__isBoundTrans.
 Lemma isBoundTrans_time_bound sig n states t : isBoundTrans_time sig n states t <= poly__isBoundTrans (size (enc t) + size (enc sig)). 
@@ -2796,9 +2852,9 @@ Proof.
   unfold forallb_time. 
   rewrite sumn_map_mono. 2: {instantiate (1 := fun _ => _).  intros x _. cbn. unfold fst_optBound_time. rewrite optBound_time_bound. reflexivity. }
   rewrite sumn_map_const. 
-  rewrite !list_size_length. 
-  poly_mono optBound_poly. 
-  2: { instantiate (1 := size (enc (s, v, (s', v'))) + size (enc sig)). lia. }
+  rewrite !list_size_length.
+  setoid_replace (size (enc sig)) with (size (enc (s, v, (s', v'))) + size (enc sig))
+    using relation le at 1 2 by lia.
    
   replace_le (size (enc s)) with (size (enc (s, v, (s', v')))) by (rewrite !size_prod; cbn; lia ).
   replace_le (size (enc v)) with (size (enc (s, v, (s', v')))) by (rewrite !size_prod; cbn; lia ). 
@@ -2807,10 +2863,12 @@ Proof.
   generalize (size (enc (s, v, (s', v')))). intros n'. 
   unfold poly__isBoundTrans. nia. 
 Qed.
-Lemma isBoundTrans_poly : monotonic poly__isBoundTrans /\ inOPoly poly__isBoundTrans. 
+Lemma isBoundTrans_poly : inOPoly poly__isBoundTrans. 
 Proof. 
-  unfold poly__isBoundTrans; split; smpl_inO; apply optBound_poly.  
+  unfold poly__isBoundTrans; smpl_inO; apply optBound_poly.  
 Qed.
+#[export] Instance isBoundTrans_mono: Proper (le ==> le) poly__isBoundTrans.
+Proof. unfold poly__isBoundTrans, poly__optBound. solve_proper. Qed.
 
 Definition c__isBoundTransTable := 5. 
 Definition isBoundTransTable_time (sig n states : nat) (l : list (nat * list (option nat) * (nat * list (option nat * TM.move)))) :=
@@ -2818,8 +2876,7 @@ Definition isBoundTransTable_time (sig n states : nat) (l : list (nat * list (op
 #[export]
 Instance term_isBoundTransTable : computableTime' isBoundTransTable (fun sig _ => (1, fun n _ => (1, fun states _ => (1, fun l _ => (isBoundTransTable_time sig n states l, tt))))). 
 Proof. 
-  eapply computableTimeExt with (x := isBoundTransTable').  
-  { easy. }
+  eapply computableTimeExt with (x := isBoundTransTable'); [reflexivity |].
   extract. solverec. unfold isBoundTransTable_time, c__isBoundTransTable; simp_comp_arith; solverec. 
 Qed.
   
@@ -2832,17 +2889,17 @@ Proof.
   - cbn -[Nat.add Nat.mul]. 
     match goal with [ |- ?a + ?b + ?c + ?d + ?e <= _] => replace (a + b + c + d + e) with (a + b + (c + d + e)) by lia end. rewrite IHl. 
     rewrite isBoundTrans_time_bound. 
-    unfold poly__isBoundTransTable.   
-    poly_mono isBoundTrans_poly. 2: { instantiate (1 := size (enc (a :: l)) + size (enc sig)). rewrite list_size_cons. lia. } 
-    poly_mono isBoundTrans_poly at 2. 2: { instantiate (1 := size (enc (a :: l)) + size (enc sig)). rewrite list_size_cons. lia. }
+    unfold poly__isBoundTransTable.
+    setoid_replace (size (enc a) + size (enc sig)) with (size (enc (a :: l)) + size (enc sig))
+      using relation le at 1 by (rewrite list_size_cons; lia).
+    setoid_replace (size (enc l) + size (enc sig)) with (size (enc (a :: l)) + size (enc sig))
+      using relation le at 2 by (rewrite list_size_cons; lia).
     rewrite list_size_cons at 3 5. 
     unfold c__listsizeCons. 
     leq_crossout. 
 Qed.
-Lemma isBoundTransTable_poly : monotonic poly__isBoundTransTable /\ inOPoly poly__isBoundTransTable. 
-Proof. 
-  unfold poly__isBoundTransTable; split; smpl_inO; apply isBoundTrans_poly. 
-Qed.
+Lemma isBoundTransTable_poly : inOPoly poly__isBoundTransTable. 
+Proof. unfold poly__isBoundTransTable; smpl_inO; apply isBoundTrans_poly. Qed.
 
 (** isValidFlatTrans *)
 Definition c__isValidFlatTrans := 9. 
@@ -2862,16 +2919,15 @@ Definition poly__isValidFlatTrans n := poly__isInjFinfuncTable (X := nat * list 
 Lemma isValidFlatTrans_time_bound sig n states l : isValidFlatTrans_time sig n states l <= poly__isValidFlatTrans (size (enc l) + size (enc sig)). 
 Proof. 
   unfold isValidFlatTrans_time. 
-  rewrite isInjFinfuncTable_time_bound. 
-  rewrite isBoundTransTable_time_bound. 
-  poly_mono (isInjFinfuncTable_poly (X := nat * list (option nat)) (Y := nat * list (option nat * TM.move))). 
-  2: { instantiate (1 := size (enc l) + size (enc sig)). lia. }
-  unfold poly__isValidFlatTrans. lia. 
+  rewrite isInjFinfuncTable_time_bound, isBoundTransTable_time_bound.
+  setoid_replace (size (enc l)) with (size (enc l) + size (enc sig))
+    using relation le at 1 by lia.
+  unfold poly__isValidFlatTrans. reflexivity. 
 Qed.
-Lemma isValidFlatTrans_poly : monotonic poly__isValidFlatTrans /\ inOPoly poly__isValidFlatTrans. 
+Lemma isValidFlatTrans_poly : inOPoly poly__isValidFlatTrans. 
 Proof. 
-  unfold poly__isValidFlatTrans; split; smpl_inO. 
-  all: first [apply isInjFinfuncTable_poly | apply isBoundTransTable_poly ]. 
+  unfold poly__isValidFlatTrans.
+  smpl_inO; [apply isInjFinfuncTable_poly | apply isBoundTransTable_poly ].
 Qed.
 
 (** isValidFlatTM *)
@@ -2884,19 +2940,27 @@ Proof.
   unfold isValidFlatTM_time, c__isValidFlatTM. solverec. 
 Qed.
 
+#[export] Instance isValidFlatTrans_mono: Proper (le ==> le) poly__isValidFlatTrans.
+Proof. unfold poly__isValidFlatTrans, poly__isBoundTransTable. solve_proper. Qed.
+
 Definition poly__isValidFlatTM n := poly__isValidFlatTrans n + n * c__leb + c__ltb + c__isValidFlatTM.
 Lemma isValidFlatTM_time_bound tm : isValidFlatTM_time tm <= poly__isValidFlatTM (size (enc tm)). 
 Proof. 
   unfold isValidFlatTM_time. rewrite isValidFlatTrans_time_bound. 
-  rewrite ltb_time_bound_l. 
-  poly_mono isValidFlatTrans_poly. 
-  2: { instantiate (1 := size (enc tm)). rewrite size_TM. destruct tm. cbn. lia. }
+  rewrite ltb_time_bound_l.
+  setoid_replace (size (enc (trans tm)) + size (enc (sig tm))) with (size (enc tm))
+    using relation le at 1.
+  2: { rewrite size_TM. destruct tm. cbn. lia.  }
   replace_le (size (enc (start tm))) with (size (enc tm)) by (rewrite size_TM; destruct tm; cbn ;lia). 
   unfold poly__isValidFlatTM. lia.  
 Qed.
-Lemma isValidFlatTM_poly : monotonic poly__isValidFlatTM /\ inOPoly poly__isValidFlatTM. 
-Proof. 
-  unfold poly__isValidFlatTM; split; smpl_inO; apply isValidFlatTrans_poly. 
+Lemma isValidFlatTM_poly : inOPoly poly__isValidFlatTM. 
+Proof. unfold poly__isValidFlatTM; smpl_inO; apply isValidFlatTrans_poly. Qed.
+#[export] Instance isValidFlatTM_mono: Proper (le ==> le) poly__isValidFlatTM.
+Proof.
+  unfold poly__isValidFlatTM, poly__isValidFlatTrans, poly__isInjFinfuncTable,
+         poly__isBoundTransTable.
+  solve_proper.
 Qed.
 
 (** reduction *)
@@ -2919,19 +2983,23 @@ Lemma reduction_time_bound t k' tm fixed : reduction_time t k' tm fixed <= poly_
 Proof. 
   unfold reduction_time. 
   rewrite isValidFlatTM_time_bound. rewrite list_ofFlatType_dec_time_bound. 
-  pose (m := size (enc k') + size (enc t) + size (enc tm) + size (enc fixed)). 
-  poly_mono isValidFlatTM_poly. 2: { instantiate (1 := m). subst m; lia. } 
-  poly_mono list_ofFlatType_dec_poly. 2 : { instantiate (1 := m). subst m. rewrite size_TM; destruct tm; cbn. lia. }
+  pose (m := size (enc k') + size (enc t) + size (enc tm) + size (enc fixed)).
+  setoid_replace (size (enc tm)) with m using relation le at 1 by lia. 
+  setoid_replace (size (enc (sig tm)) + size (enc fixed)) with m
+    using relation le at 1.
+  2 : { unfold m. rewrite size_TM; destruct tm; cbn. lia. }
   destruct isValidFlatTM eqn:H1.
   - rewrite reduction_wf_time_bound. 2: { rewrite reflect_iff; [apply H1 | apply isValidFlatTM_spec]. }
     subst m. unfold poly__reduction. nia. 
   - subst m. unfold poly__reduction. nia. 
 Qed.
-Lemma reduction_poly : monotonic poly__reduction /\ inOPoly poly__reduction. 
+Lemma reduction_poly : inOPoly poly__reduction. 
 Proof. 
-  unfold poly__reduction; split; smpl_inO. 
-  all: first [apply isValidFlatTM_poly | apply list_ofFlatType_dec_poly | apply reduction_wf_poly]. 
+  unfold poly__reduction.
+  smpl_inO; [apply isValidFlatTM_poly | apply list_ofFlatType_dec_poly | apply reduction_wf_poly]. 
 Qed.
+#[export] Instance reduction_mono: Proper (le ==> le) poly__reduction.
+Proof. unfold poly__reduction. solve_proper. Qed.
 
 Definition poly__reductionSize n := poly__reductionWfSize n + size (enc trivial_no_instance).
 Lemma reduction_size_bound p : size (enc (reduction p)) <= poly__reductionSize (size (enc p)). 
@@ -2942,8 +3010,9 @@ Proof.
   destruct list_ofFlatType_dec eqn:H3; cbn -[poly__reductionSize]; [ |  unfold poly__reductionSize; lia].
   rewrite <- reflect_iff in H1; [ | apply isValidFlatTM_spec ]. 
   apply list_ofFlatType_dec_correct in H3. rewrite reduction_wf_size_bound by easy.
-  poly_mono reduction_wf_size_poly. 
-  2: { instantiate (1 := size (enc (tm, fixed, k', t))). rewrite !size_prod. cbn. lia. }
+  setoid_replace (size (enc t) + size (enc k') + size (enc tm) + size (enc fixed))
+    with (size (enc (tm, fixed, k', t))) using relation le
+    by (rewrite !size_prod; cbn; lia).
   unfold poly__reductionSize. lia.  
 Qed.
 
@@ -2955,14 +3024,15 @@ From Complexity.NP.SAT.CookLevin.Subproblems Require Import SingleTMGenNP.
 Theorem FlatSingleTMGenNP_to_FlatTCCLang_poly : FlatSingleTMGenNP ⪯p FlatTCCLang. 
 Proof. 
   apply reducesPolyMO_intro with (f := reduction). 
-  - exists poly__reduction.
+  - exists poly__reduction; [|apply reduction_poly|exact reduction_mono|].
     + exists (extT reduction). eapply computesTime_timeLeq. 2: apply term_reduction.
       cbn. intros p _. split; [ | easy]. destruct p as (((tm & fixed) & t) & k').
-      rewrite reduction_time_bound. poly_mono reduction_poly; [reflexivity | rewrite !size_prod; cbn;lia].
-    + apply reduction_poly. 
-    + apply reduction_poly. 
-    + evar (f :nat -> nat). exists f. 
-      1: { intros p. rewrite reduction_size_bound. [f]: intros n. subst f; reflexivity. }
-      all: subst f; smpl_inO; unfold poly__reductionSize; smpl_inO; apply reduction_wf_size_poly. 
+      rewrite reduction_time_bound.
+      rewrite !size_prod. cbn.
+      apply reduction_mono. lia.
+    + evar (f :nat -> nat). exists f.
+      * intros p. rewrite reduction_size_bound. [f]: intros n. subst f; reflexivity.
+      * unfold f, poly__reductionSize. smpl_inO. apply reduction_wf_size_poly.
+      * unfold f, poly__reductionSize. solve_proper.
   - apply FlatSingleTMGenNP_to_FlatTCC.
 Qed.

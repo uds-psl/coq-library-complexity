@@ -639,7 +639,7 @@ Proof.
     split; [intros | ].
     - specialize (CCCard_of_size_dec_time_bound (X := nat) y a) as H1.
       instantiate (2:= fun n => (n + 1) * c__prcardOfSizeDecBound). simp_comp_arith. nia. 
-    - smpl_inO. 
+    - solve_proper. 
   }
   rewrite list_size_length. 
   replace_le (size(enc (cards fpr))) with (size (enc fpr)) by (rewrite FlatCC_enc_size; lia). 
@@ -648,9 +648,9 @@ Proof.
   replace_le (size(enc(offset fpr))) with (size (enc fpr)) by (rewrite FlatCC_enc_size; lia). 
   unfold poly__FlatCCWfDec, c__FlatCCWfDecBound. nia.
 Qed. 
-Lemma FlatCC_wf_dec_poly : monotonic poly__FlatCCWfDec /\ inOPoly poly__FlatCCWfDec.
+Lemma FlatCC_wf_dec_poly : inOPoly poly__FlatCCWfDec.
 Proof. 
-  unfold poly__FlatCCWfDec; split; smpl_inO. 
+  unfold poly__FlatCCWfDec; smpl_inO. 
 Qed. 
 
 
@@ -669,16 +669,18 @@ Lemma CCCard_ofFlatType_dec_time_bound sig w : CCCard_ofFlatType_dec_time sig w 
 Proof. 
   unfold CCCard_ofFlatType_dec_time. rewrite !list_ofFlatType_dec_time_bound. 
   unfold poly__CCCardOfFlatTypeDec.
-  poly_mono list_ofFlatType_dec_poly at 2.
-  2: (replace_le (size (enc (conc w))) with (size (enc w)) by (rewrite CCCard_enc_size; lia)); reflexivity.
-  poly_mono list_ofFlatType_dec_poly at 1.
-  2: (replace_le (size (enc (prem w))) with (size (enc w)) by (rewrite CCCard_enc_size; lia)); reflexivity.
+  setoid_replace (size (enc (conc w))) with (size (enc w))
+    using relation le by (rewrite CCCard_enc_size; lia).
+  setoid_replace (size (enc (prem w))) with (size (enc w))
+    using relation le by (rewrite CCCard_enc_size; lia).
   unfold c__CCCardOfFlatTypeDecBound. nia. 
 Qed. 
-Lemma CCCard_ofFlatType_dec_poly : monotonic poly__CCCardOfFlatTypeDec /\ inOPoly poly__CCCardOfFlatTypeDec. 
+Lemma CCCard_ofFlatType_dec_poly : inOPoly poly__CCCardOfFlatTypeDec. 
 Proof. 
-  split; unfold poly__CCCardOfFlatTypeDec; smpl_inO; apply list_ofFlatType_dec_poly.  
-Qed. 
+  unfold poly__CCCardOfFlatTypeDec; smpl_inO; apply list_ofFlatType_dec_poly.  
+Qed.
+#[export] Instance CCCard_ofFlatType_dec_mono: Proper (le ==> le) poly__CCCardOfFlatTypeDec.
+Proof. unfold poly__CCCardOfFlatTypeDec. solve_proper. Qed.
 
 (** isValidFlattening_dec *)
 Definition c__isValidFlatteningDec := 3 * c__Sigma + c__init + c__final + c__cards + 16.
@@ -700,27 +702,29 @@ Proof.
   2: {
     split; [intros | ].
     - rewrite list_ofFlatType_dec_time_bound, Nat.add_comm; reflexivity. 
-    - apply list_ofFlatType_dec_poly. 
+    - solve_proper.
   }
   erewrite forallb_time_bound_env. 
   2 : {
     split; [intros | ].
     - rewrite CCCard_ofFlatType_dec_time_bound, Nat.add_comm; reflexivity. 
-    - apply CCCard_ofFlatType_dec_poly. 
+    - solve_proper.
   }
 
   rewrite !list_size_length. 
-  poly_mono list_ofFlatType_dec_poly at 1. 
-  2: (replace_le (size (enc (Sigma fpr)) + size (enc (init fpr))) with (size (enc fpr)) by (rewrite FlatCC_enc_size; lia)); reflexivity. 
-  poly_mono list_ofFlatType_dec_poly at 2. 
-  2: (replace_le (size (enc (final fpr)) + size (enc (Sigma fpr))) with (size (enc fpr)) by (rewrite FlatCC_enc_size; lia)); reflexivity. 
+  setoid_replace (size (enc (Sigma fpr)) + size (enc (init fpr))) with (size (enc fpr))
+    using relation le by (rewrite FlatCC_enc_size; lia).
+  setoid_replace (size (enc (final fpr)) + size (enc (Sigma fpr))) with (size (enc fpr))
+    using relation le by (rewrite FlatCC_enc_size; lia).
   replace_le (size (enc (final fpr))) with (size (enc fpr)) by (rewrite FlatCC_enc_size; lia) at 1. 
   replace_le (size (enc (cards fpr))) with (size (enc fpr)) by (rewrite FlatCC_enc_size; lia) at 1. 
-  poly_mono CCCard_ofFlatType_dec_poly at 1. 
-  2: (replace_le (size (enc (cards fpr)) + size (enc (Sigma fpr))) with (size (enc fpr)) by (rewrite FlatCC_enc_size; lia)); reflexivity. 
+  setoid_replace (size (enc (cards fpr)) + size (enc (Sigma fpr))) with (size (enc fpr))
+    using relation le by (rewrite FlatCC_enc_size; lia).  
   unfold poly__isValidFlatteningDec, c__isValidFlatteningDecBound. nia.
 Qed. 
-Lemma isValidFlatteningDec_poly : monotonic poly__isValidFlatteningDec /\ inOPoly poly__isValidFlatteningDec. 
+Lemma isValidFlatteningDec_poly : inOPoly poly__isValidFlatteningDec. 
 Proof. 
-  split; (unfold poly__isValidFlatteningDec; smpl_inO; [apply list_ofFlatType_dec_poly |apply CCCard_ofFlatType_dec_poly ]). 
-Qed. 
+  unfold poly__isValidFlatteningDec; smpl_inO.
+  - exact list_ofFlatType_dec_poly.
+  - exact CCCard_ofFlatType_dec_poly. 
+Qed.

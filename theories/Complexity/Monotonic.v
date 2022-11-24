@@ -1,113 +1,55 @@
-From smpl Require Import Smpl.
-From Undecidability Require Import L.Prelim.MoreBase.
-Definition monotonic (f:nat -> nat) : Prop :=
-  forall x x', x <= x' -> f x <= f x'.
+Require Import Morphisms Arith.
 
-Lemma monotonic_c c: monotonic (fun _ => c).
-Proof.
-  hnf.
-  intros **. easy.
-Qed.
+#[global] Instance add_params: Params (@Nat.add) 0 := {}.
+#[global] Instance mul_params: Params (@Nat.mul) 0 := {}.
 
+(* TODO: can be removed if https://github.com/coq/coq/pull/16792 is merged *)
 
-Lemma monotonic_add f1 f2: monotonic f1 -> monotonic f2 -> monotonic (fun x => f1 x + f2 x).
-Proof.
-  unfold monotonic.
-  intros H1 H2 **.
-  rewrite H1,H2. reflexivity. all:eassumption.
-Qed.
-
-Lemma monotonic_S f : monotonic f -> monotonic (fun x => S (f x)). 
+#[global] Instance add_le_mono: Proper (le ==> le ==> le) Nat.add.
 Proof. 
-  intros H. eapply (@monotonic_add (fun _ => 1) f); [apply monotonic_c | apply H]. 
-Qed. 
-
-Lemma monotonic_mul f1 f2: monotonic f1 -> monotonic f2 -> monotonic (fun x => f1 x * f2 x).
-Proof.
-  unfold monotonic.
-  intros H1 H2 **.
-  rewrite H1,H2. reflexivity. all:eassumption.
+  intros x1 y1 H1 x2 y2 H2.
+  now apply Nat.add_le_mono.
 Qed.
 
-Require Import Nat.
-Lemma monotonic_pow_c f1 c: monotonic f1  -> monotonic (fun x => (f1 x) ^ c).
+#[global] Instance mul_le_mono: Proper (le ==> le ==> le) Nat.mul.
 Proof.
-  intros **. 
-  unfold monotonic.
-  intros H1 **. eapply PeanoNat.Nat.pow_le_mono_l. apply H. easy.
+  intros x1 y1 H1 x2 y2 H2.
+  now apply Nat.mul_le_mono.
 Qed.
 
-Lemma monotonic_x: monotonic (fun x => x).
+#[global] Instance pow_le_mono: Proper (le ==> eq ==> le) Nat.pow.
 Proof.
-  unfold monotonic. easy.
+  intros x1 y1 H1 x2 y2 H2. subst.
+  now apply Nat.pow_le_mono_l.
 Qed.
 
-Lemma monotonic_comp f1 f2: monotonic f1 -> monotonic f2 -> monotonic (fun x => f1 (f2 x)). 
+(* end: can be removed ... *)
+
+#[global] Instance monotonic_c c: Proper (le==>le) (fun _ => c).
+Proof. constructor. Qed.
+
+#[global]
+Instance monotonic_pointwise_eq: Proper ((pointwise_relation _ eq)  ==> iff) (Proper (le==>le)).
 Proof.
-  unfold monotonic.
-  intros H1 H2 **.
-  rewrite H1. reflexivity. eauto.
+  intros f g R. split; intros M x y H.
+  - now rewrite <-R, H.
+  - now rewrite   R, H.
 Qed.
 
-Smpl Create monotonic.
-Smpl Add 10 (first [ simple eapply monotonic_add | simple eapply monotonic_S | simple eapply monotonic_mul | simple eapply monotonic_c | simple eapply monotonic_x | simple eapply monotonic_pow_c] )  : monotonic.
-
-Smpl Add 20 (lazymatch goal with
-               |- monotonic (fun x => ?f (@?g x)) =>
-               (lazymatch g with
-               | fun x => x => fail
-               | _ => simple eapply monotonic_comp
-               end)
-             end) : monotonic.
+Require Import Lia.
 
 #[export]
-Instance monotonic_pointwise_eq: Proper ((pointwise_relation _ eq)  ==> iff) monotonic.
-Proof.
-  intros ? ? R1. unfold monotonic. setoid_rewrite R1. all:easy.
-Qed.
+Instance proper_lt_mul : Proper (lt ==> eq ==> le) Nat.mul. 
+Proof. intros a b c d e f. nia. Qed.
 
-(*
-Inductive TTnat: Type -> Type :=
-  TTnatBase : TTnat nat
-| TTnatArr X Y (ttx : TTnat X) (tty : TTnat Y) : TTnat (X -> Y).
-
-Arguments TTnatArr _ _ {_ _}.
-Existing Class TTnat.
 #[export]
-Existing Instances TTnatBase TTnatArr.
+Instance proper_lt_add : Proper (lt ==> eq ==> le) Nat.add.
+Proof. intros a b c d e f. nia. Qed. 
 
-
-Fixpoint leHO {ty} {tt : TTnat ty} : ty -> ty -> Prop :=
-  match tt with
-    TTnatBase => le
-  | TTnatArr X Y => respectful (@leHO X _) (@leHO Y _)
-  end.
-Arguments leHO : simpl never.
-
-(*
 #[export]
-Instance leHO_Pointwise_le X Y (ttx : TTnat X) (tty : TTnat Y) (f g : X -> Y):
-  Proper 
-  Pointwise (@leHO _ ttx ==> leqHO _ tty).*)
+Instance mult_lt_le : Proper (eq ==> lt ==> le) mult. 
+Proof. intros a b -> d e H. nia. Qed.
 
-Notation "'monotonicHO'" := (Proper leHO) (at level 0).
-
-(*)
-Lemma leHO_monotonic (f : nat -> nat) :
-  monotonic f <-> monotonicHO f.
-Proof.
-  reflexivity.
-Qed.
-
-Module test.
-  Variable f : nat -> nat -> nat.
-  Context {Hf : monotonicHO f}.
-
-  Goal forall x y y', y <= y' -> f x y <= f x y'.
-  Proof.
-    pose Hf.
-    intros. now setoid_rewrite H.
-  Qed.
-End test.
-
-*)*)
+#[export]
+Instance add_lt_lt : Proper (eq ==> lt ==> lt) Nat.add. 
+Proof. intros a b -> c d H. lia. Qed.

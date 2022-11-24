@@ -7,7 +7,7 @@ MetaCoq Run (tmGenEncode "positive_enc" positive).
 #[export]
 Hint Resolve positive_enc_correct : Lrewrite.
 
-Global Instance termT_Pos_xI : computableTime' xI (fun x _ => (1,tt)).
+Global Instance termT_Pos_xI : computableTime xI (fun x _ => (1,tt)).
 extract constructor. solverec.
 Qed.
 

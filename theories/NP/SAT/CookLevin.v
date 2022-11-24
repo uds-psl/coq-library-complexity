@@ -51,12 +51,9 @@ Proof.
   eapply reducesPolyMO_transitive with (Q := FlatFunSingleTMGenNP). 
   apply (TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP M).  eassumption.
   eapply reducesPolyMO_intro with (f := id).
-  - exists (fun _ => 1). 
-    + extract. solverec. 
-    + smpl_inO.  
-    + smpl_inO. 
-    + exists (fun n => n). 2, 3: smpl_inO.  
-      intros x. now cbn. 
+  - exists (fun _ => 1); [ | smpl_inO | apply monotonic_c | ]. 
+    + extract. solverec.
+    + exists (fun n => n); [ easy | smpl_inO | solve_proper ]. 
   - intros (((? & ?) & ?) & ?). apply FlatFunSingleTMGenNP_FlatSingleTMGenNP_equiv.
 Qed. 
 

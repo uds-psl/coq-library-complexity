@@ -8,8 +8,12 @@ Record canEnumTerms (X__cert : Type) `{R__cert : encodable X__cert} : Type :=
     inSize__toTerm : nat -> nat;
     complete__toTerm : (forall s:term, exists x:X__cert, f__toTerm x = s /\ size (enc x) <= inSize__toTerm (size (enc s)));
     polyIn__toTerm : inOPoly inSize__toTerm;
-    monoIn__toTerm : monotonic inSize__toTerm;
+    monoIn__toTerm : Proper (le ==> le) inSize__toTerm;
   }.
+
+#[global] Instance mono_inSize__toTerm X (R__cert : encodable X) (H: @canEnumTerms X _):
+  Proper (le ==> le) (inSize__toTerm H).
+Proof. apply monoIn__toTerm. Qed.
 
 Arguments canEnumTerms : clear implicits.
 Arguments canEnumTerms _ {_}.
@@ -17,7 +21,6 @@ Arguments canEnumTerms _ {_}.
 #[export]
 Hint Extern 2 (computableTime (f__toTerm _) _) => unshelve (simple apply @comp__polyTC);simple apply @comp__toTerm :typeclass_instances.
 Smpl Add 10 (simple apply polyIn__toTerm) : inO.
-Smpl Add 10 (simple apply monoIn__toTerm) : inO.
 
 Lemma canEnumTerms_compPoly (X__cert : Type) `{R__cert : encodable X__cert}:
   canEnumTerms X__cert -> exists H : canEnumTerms X__cert, inhabited (polyTimeComputable (time__polyTC H))

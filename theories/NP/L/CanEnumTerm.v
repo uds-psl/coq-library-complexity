@@ -17,19 +17,21 @@ Proof with try eauto;smpl_inO.
   now cbv;reflexivity.
   1,2:unfold time...
   exists id...
+  solve_proper.
 Qed.
 
 
 Lemma pro_enum_term : canEnumTerms Pro.
 Proof.
-  evar (fsize : nat -> nat). [fsize]:intros n0.
+  pose (fsize := fun n => n * Compile.c__size).
   eexists (fun P => match decompile 0 P [] with inl [s] => s | _ => var 0 end) fsize.
   2:{ intros s. exists (compile s). rewrite decompile_correct. split. easy.
-      rewrite compile_enc_size,LTerm.size_term_enc_r.
-      set (size (enc s)). unfold fsize. reflexivity.
+      rewrite compile_enc_size,LTerm.size_term_enc_r. reflexivity.
   }
-  2,3:now unfold fsize;smpl_inO.
-  clear fsize. evar (time : nat -> nat). [time]:intros n0.
+  2: unfold fsize; smpl_inO.
+  2: unfold fsize; solve_proper.
+  clear fsize.
+  evar (time : nat -> nat). [time]:intros n0.
   exists time.
   {extract. solverec. all:rewrite time_decompile_nice_leq.
    all:unfold time_decompile_nice.
@@ -39,7 +41,7 @@ Proof.
   }
   1,2:now unfold time;smpl_inO.
   clear time. evar (fsize : nat -> nat). [fsize]:intros n0.
-  enough (mono__f:monotonic fsize).
+  enough (mono__f: Proper (le ==> le) fsize).
   exists fsize. 3:assumption.
   {intros x.
    destruct decompile as [[ |? []]| ] eqn:eq.
@@ -53,7 +55,8 @@ Proof.
    all:unfold fsize.
    all:do 2 (unfold enc at 1;cbn). all:rewrite (size_list x);cbn; unfold c__listsizeNil;easy.
   }
-  all:unfold fsize;smpl_inO.
+  - unfold fsize. smpl_inO.
+  - unfold fsize. solve_proper.
 Qed.
 
 Module boollist_enum.
@@ -137,7 +140,7 @@ Module boollist_enum.
   Lemma boollists_enum_term : canEnumTerms (list bool).
   Proof.
     evar (fsize : nat -> nat). [fsize]:intros n.
-    cut (monotonic fsize). intros mono_fsize.
+    cut (Proper (le ==> le) fsize). intros mono_fsize.
     eexists (fun bs => f__toTerm pro_enum_term (boollist_term bs [])) fsize.
     2:{ intros s. specialize (complete__toTerm pro_enum_term) as (P&Hf&Hfsize).
         exists (pro_to_boollist P).
@@ -151,11 +154,14 @@ Module boollist_enum.
     clear. evar (time : nat -> nat). [time]:intros n0.
     exists time.
     {extract. solverec. rewrite UpToC_le, size_list_enc_r. set (size (enc x)). unfold time. reflexivity.  }
-    1,2:now unfold time;smpl_inO;eapply inOPoly_comp;smpl_inO.
-    clear time. evar (fsize : nat -> nat). [fsize]:intros n0.
-    exists fsize. 
-    {intros x. rewrite boollist_term_size. rewrite (size_list []). cbn.
-     set (n0:=size _). unfold fsize. reflexivity. }
-    all:unfold fsize;smpl_inO.
+    - unfold time. smpl_inO.
+    - unfold time. solve_proper.
+    - clear time. evar (fsize : nat -> nat). [fsize]:intros n0.
+      exists fsize.
+      + intros x. rewrite boollist_term_size. rewrite (size_list []). cbn.
+        set (n0:=size _). unfold fsize. reflexivity.
+      + unfold fsize. smpl_inO.
+      + unfold fsize. solve_proper.
+    - solve_proper.
   Qed.
 End boollist_enum.

@@ -14,20 +14,26 @@ Lemma polyTimeComputable_sig_in X Y `(encodable X) `(encodable Y) P f' (f:{x:X|P
   -> polyTimeComputable f'
   -> polyTimeComputable f.
 Proof.
-  intros Hext [time Hcomp]. exists (fun x => time x +2). 2,3:solve [smpl_inO].
+  intros Hext [time Hcomp]. exists (fun x => time x +2).
   - apply computableTimeExt with (x:=fun x => f' (proj1_sig x)) (x':=f).
     + intros []; cbn. apply Hext.
     + extract. solverec. reflexivity.
-  - eexists (resSize__rSP resSize__polyTC). 2,3:solve [smpl_inO].
-    intros []. rewrite <- Hext. rewrite bounds__rSP, enc_sig_exist_eq. reflexivity.
+  - smpl_inO.
+  - solve_proper.
+  - eexists (resSize__rSP resSize__polyTC).
+    + intros []. rewrite <- Hext. rewrite bounds__rSP, enc_sig_exist_eq. reflexivity.
+    + apply poly__rSP.
+    + apply mono__rSP.
 Qed.
 
 Lemma polyTimeComputable_sig_out X Y {RX: encodable X} {RY:encodable Y} validY (f : X -> {y:Y | validY y}):
   polyTimeComputable (fun x => proj1_sig (f x))
   -> polyTimeComputable f.
 Proof.
-  intros H. exists (time__polyTC H). 2,3:now smpl_inO.
+  intros H. exists (time__polyTC H).
   - computable_casted_result. eauto.
+  - apply poly__polyTC.
+  - apply mono__polyTC.
   - exists (resSize__rSP H). 2,3:now smpl_inO.
     intro. rewrite <- bounds__rSP, enc_sig_eq. reflexivity.
 Qed.
@@ -38,11 +44,10 @@ Lemma reducesPolyMO_intro_restrictBy_out X Y `{RX: encodable X} `{RY:encodable Y
     -> (forall x , {Hfx : validY (f x) | P x <-> Q (f x)})
     -> P ⪯p restrictBy validY Q.
 Proof.
-  intros H H'. unshelve eexists (fun x => exist _ (f x) (proj1_sig (H' x))).
+  intros H H'. exists (fun x => exist _ (f x) (proj1_sig (H' x))).
   - now apply polyTimeComputable_sig_out.
-  - intros x. all:now edestruct H'.
+  - intros x. all: now destruct H'.
 Qed.
-
 
 Lemma reducesPolyMO_intro_restrictBy_in X Y `{RX: encodable X} `{RY:encodable Y}
   (validX P : X -> Prop) Q (f:X -> Y):

@@ -361,10 +361,10 @@ Lemma ofFlatType_dec_time_bound sig e: ofFlatType_dec_time sig e <= poly__ofFlat
 Proof. 
   unfold ofFlatType_dec_time. rewrite leb_time_bound_r. unfold poly__ofFlatTypeDec, c__ofFlatTypeDecBound; nia.
 Qed. 
-Lemma ofFlatType_dec_poly : monotonic poly__ofFlatTypeDec /\ inOPoly poly__ofFlatTypeDec. 
-Proof.
-  split; unfold poly__ofFlatTypeDec; smpl_inO. 
-Qed. 
+Lemma ofFlatType_dec_poly : inOPoly poly__ofFlatTypeDec. 
+Proof. unfold poly__ofFlatTypeDec; smpl_inO. Qed.
+#[export] Instance ofFlatType_dec_mono: Proper (le ==> le) poly__ofFlatTypeDec.
+Proof. unfold poly__ofFlatTypeDec. solve_proper. Qed.
 
 (*list_ofFlatType_dec *)
 Definition c__listOfFlatTypeDec := 3.
@@ -383,16 +383,19 @@ Proof.
   erewrite forallb_time_bound_env.
   2: {
     split; [ intros | ]. 
-    - rewrite (ofFlatType_dec_time_bound y a). poly_mono ofFlatType_dec_poly.
-      2: apply Nat.le_add_l with (n := size(enc y)). reflexivity.
-    - apply ofFlatType_dec_poly.
+    - rewrite (ofFlatType_dec_time_bound y a).
+      setoid_replace (size (enc y)) with (size (enc a) + size (enc y)) using relation le at 1 by apply Nat.le_add_l.
+      reflexivity.
+    - solve_proper.
   }
   rewrite list_size_length.
   replace_le (size(enc l)) with (size (enc t) + size (enc l)) by lia at 1.
   setoid_rewrite Nat.add_comm at 5.
   unfold poly__listOfFlatTypeDec, c__listOfFlatTypeDecBound. nia.
 Qed. 
-Lemma list_ofFlatType_dec_poly : monotonic poly__listOfFlatTypeDec /\ inOPoly poly__listOfFlatTypeDec. 
+Lemma list_ofFlatType_dec_poly : inOPoly poly__listOfFlatTypeDec. 
 Proof.
-  split; unfold poly__listOfFlatTypeDec; smpl_inO; apply ofFlatType_dec_poly.
-Qed. 
+  unfold poly__listOfFlatTypeDec. smpl_inO. apply ofFlatType_dec_poly.
+Qed.
+#[export] Instance list_ofFlatType_dec_mono: Proper (le ==> le) poly__listOfFlatTypeDec.
+Proof. unfold poly__listOfFlatTypeDec. solve_proper. Qed.

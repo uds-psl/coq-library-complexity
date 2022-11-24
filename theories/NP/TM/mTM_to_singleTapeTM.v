@@ -189,7 +189,8 @@ Section LMGenNP_to_TMGenNP_mTM.
         unfold add_time, mult_time. 
         unshelve erewrite (_ : a0 <= n0). nia. unshelve erewrite (_ : b0 <= n0). nia. unshelve erewrite (_ : b <= n0). nia.
         unfold time. reflexivity. }
-      1,2:unfold time;smpl_inO.
+      { unfold time. smpl_inO. }
+      { unfold time. solve_proper. }
       { evar (f__size : nat -> nat). [f__size]:intros n0. exists f__size.
         { intros [[a0 b0] b]. unfold f__nice.
           set (n0:=(L_facts.size (enc (a0, b0, b)))).
@@ -200,7 +201,8 @@ Section LMGenNP_to_TMGenNP_mTM.
           change S with (plus 1).
           unfold f__size;reflexivity.
         }
-        all:unfold f__size;smpl_inO.
+        - unfold f__size. smpl_inO.
+        - unfold f__size. solve_proper.
       }
     }
     clearbody f__nice.
@@ -211,15 +213,16 @@ Section LMGenNP_to_TMGenNP_mTM.
       eexists (fun _ => c0).
       { unfold t__size. extract. solverec. all:rewrite eqbTime_le_l.
         all:set (c:=L_facts.size (enc 0)). all:cbv in c;subst c. all:subst c0. 2:easy. nia. }
-      1,2:smpl_inO.
+      { apply inOPoly_c. }
+      { apply monotonic_c. }
       { evar (f__size : nat -> nat). [f__size]:intros n0. exists f__size.
         { intros x. unfold t__size.
           set (n0:=(L_facts.size (enc x))).
           assert (Hx:x<=n0) by apply size_nat_enc_r.
           rewrite size_nat_enc. destruct _. 2:rewrite Hx;unfold f__size;reflexivity. unfold f__size. nia.
         }
-        
-        all:unfold f__size;smpl_inO.
+        - unfold f__size. smpl_inO.
+        - unfold f__size. solve_proper.
       }
     }clearbody t__size.
 
@@ -251,7 +254,8 @@ Section LMGenNP_to_TMGenNP_mTM.
         rewrite sizeOfmTapes_by_size. set (L_facts.size _).
         unfold time. reflexivity.
       }
-      1,2:now unfold time;change S with (plus 1);smpl_inO.
+      { unfold time. smpl_inO. }
+      { unfold time. solve_proper. }
       { evar (f__size : nat -> nat). [f__size]:intros n0. exists f__size.
         { intros x. unfold t__start.
           rewrite size_list_cons. subst g f.
@@ -271,7 +275,8 @@ Section LMGenNP_to_TMGenNP_mTM.
           rewrite sumn_map_c. rewrite Vector.length_to_list. setoid_rewrite sizeOfmTapes_by_size.
           set (n0:= L_facts.size _). ring_simplify. unfold f__size. reflexivity.
         }
-        all:unfold f__size;smpl_inO.
+        - unfold f__size. smpl_inO.
+        - unfold f__size. solve_proper.
       }
     }
     clearbody f__steps t__start.
@@ -283,13 +288,14 @@ Section LMGenNP_to_TMGenNP_mTM.
         extract. solverec.
         remember (L_facts.size (enc (a0, b0, b))) as n0 eqn:Hn0.
         rewrite !size_prod in Hn0. cbn [fst snd] in Hn0.
-        erewrite (mono__polyTC X0 (x':=n0)). 2:{ subst n0. repeat set (L_facts.size _). nia. }
-        rewrite (mono__polyTC X1 (x':=n0)). 2:{ subst n0. repeat set (L_facts.size _). nia. } 
+        setoid_replace (size (enc b0)) with n0 using relation le at 1 by nia.
+        setoid_replace (size (enc a0)) with n0 using relation le at 1.
+        2:{ subst n0. repeat apply Arith_prebase.le_plus_trans_stt. reflexivity. }
         set (c0 := 5+c__natsizeO +c__natsizeS). 
         assert (H'' : L_facts.size (enc (b, sizeOfmTapes a0, b0)) <= n0*c0).
         {  rewrite !size_prod. cbn [fst snd]. setoid_rewrite size_nat_enc at 2.
             rewrite sizeOfmTapes_by_size. subst n0. repeat set (L_facts.size _). nia. }
-        setoid_rewrite (mono__polyTC X (x':=n0*c0)). 2:exact H''. 
+        rewrite H'' at 1.
         specialize (bounds__rSP (f:=f__nice)) as H'. setoid_rewrite <- size_nat_enc_r in H'.
         unfold mult_time, add_time. 
         unshelve rewrite H'. now apply resSize__polyTC.
@@ -297,7 +303,11 @@ Section LMGenNP_to_TMGenNP_mTM.
         rewrite sizeOfmTapes_by_size at 1. unshelve erewrite (_ : L_facts.size (enc a0) <= n0). now (subst n0;clear;repeat set (L_facts.size _);nia).
         unfold time. reflexivity.
       }
-      1,2:now unfold time;smpl_inO;apply inOPoly_comp;smpl_inO.
+      { unfold time. smpl_inO. all: apply inOPoly_comp.
+        1,4,7: solve_proper.
+        all: smpl_inO.
+      }
+      { unfold time. solve_proper. }
       { evar (f__size : nat -> nat). [f__size]:intros n0. exists f__size.
         { intros [[a0 b0] b]. remember (L_facts.size (enc (a0, b0, b))) as n0 eqn:Hn0.
           rewrite !size_prod in Hn0|-*. cbn [fst snd] in Hn0|-*. rewrite !size_nat_enc.
@@ -309,19 +319,19 @@ Section LMGenNP_to_TMGenNP_mTM.
         setoid_rewrite mono__rSP. 2:exact H''.
 
         specialize (bounds__rSP (f:=t__size)) as Hsize. setoid_rewrite <- size_nat_enc_r in Hsize at 1.
-        unshelve rewrite Hsize. now apply resSize__polyTC. 
-        setoid_rewrite (mono__rSP _ (x':=n0)) at 1 . 2:nia.
+        unshelve rewrite Hsize. now apply resSize__polyTC.
+        setoid_replace (size (enc b0)) with n0 using relation le at 1 by nia.
 
         specialize (bounds__rSP (f:=t__start)) as Hstart.
-        unshelve rewrite Hstart. now apply resSize__polyTC. 
-        setoid_rewrite (mono__rSP _ (x':=n0)) at 1 . 2:subst;clear;repeat (set (L_facts.size _));nia.
+        unshelve rewrite Hstart. now apply resSize__polyTC.
+        setoid_replace (size (enc a0)) with n0 using relation le.
+        2:subst;clear;repeat (set (L_facts.size _));nia.
         unfold f__size. reflexivity.
         }
-        1,2:unfold f__size;smpl_inO; apply inOPoly_comp;smpl_inO.
-
+        - unfold f__size. smpl_inO.
+          apply inOPoly_comp; [apply monotonic_rSP | apply poly__rSP | smpl_inO].
+        - unfold f__size. solve_proper.
       }
-    
-        
   Qed.
 
   (* Print Assumptions LMGenNP_to_TMGenNP_mTM. *)

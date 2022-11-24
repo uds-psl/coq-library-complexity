@@ -1,6 +1,7 @@
 From Undecidability.L Require Import L.
 From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import Lists LNat LProd.
+From Undecidability.L.Datatypes Require Import Lists LProd.
+From Complexity.L.Datatypes Require Import LNat.
 From Complexity.NP.Clique Require Import FlatUGraph FlatClique kSAT_to_Clique.
 From Complexity.NP.SAT Require Import kSAT SAT_inNP.
 From Complexity.Libs.CookPrelim Require Import FlatFinTypes MorePrelim.
@@ -249,7 +250,9 @@ Proof.
   unfold allPositions_time. unfold seq_time. 
   rewrite list_size_length at 1 2. rewrite size_nat_enc_r with (n := k) at 1.  
   rewrite prodLists_time_bound. 
-  poly_mono prodLists_poly. 
+  setoid_replace (size (enc (seq 0 (| N |))) + size (enc (seq 0 k))) with
+     ((size (enc N) + size (enc k))^2 + c__listsizeCons * (size (enc N) + size (enc k)) + 2* c__listsizeNil)
+      using relation le.
   2: { rewrite list_size_of_el.  2: { intros a (_ & H)%in_seq. rewrite nat_size_le. 
         2: instantiate (1 := (|N|)); lia. reflexivity. 
        } 
@@ -258,14 +261,18 @@ Proof.
        } 
        rewrite !seq_length. rewrite list_size_enc_length, !list_size_length. 
        rewrite size_nat_enc_r with (n := k) at 2 3.
-       instantiate (1 := ((size (enc N) + size (enc k))^2 + c__listsizeCons * (size (enc N) + size (enc k)) + 2* c__listsizeNil)). cbn -[Nat.mul c__listsizeCons]. leq_crossout. 
+       cbn -[Nat.mul c__listsizeCons]. leq_crossout. 
   } 
   unfold poly__allPositions. leq_crossout.
 Qed. 
-Lemma allPositions_poly : monotonic poly__allPositions /\ inOPoly poly__allPositions.
+Lemma allPositions_poly : inOPoly poly__allPositions.
 Proof. 
-  unfold poly__allPositions; split; smpl_inO; try apply inOPoly_comp; smpl_inO; apply prodLists_poly. 
-Qed. 
+  unfold poly__allPositions; smpl_inO.
+  apply inOPoly_comp.
+    - solve_proper.
+    - exact prodLists_poly.
+    - smpl_inO.
+Qed.
 
 (** literalsConflict_decb *)
 Definition c__literalsConflictDecb := c__eqbBool + 24. 
@@ -301,10 +308,10 @@ Proof.
   unfold EqBool.eqbTime. rewrite Nat.le_min_l. 
   unfold poly__optLiteralsConflictDecb. rewrite size_option, size_prod; cbn. nia.
 Qed.
-Lemma opt_literalsConflict_decb_poly : monotonic poly__optLiteralsConflictDecb /\ inOPoly poly__optLiteralsConflictDecb. 
-Proof. 
-  unfold poly__optLiteralsConflictDecb; split; smpl_inO. 
-Qed.
+Lemma opt_literalsConflict_decb_poly : inOPoly poly__optLiteralsConflictDecb. 
+Proof. unfold poly__optLiteralsConflictDecb; smpl_inO. Qed.
+#[export] Instance opt_literalsConflict_decb_mono: Proper (le ==> le) poly__optLiteralsConflictDecb.
+Proof. unfold poly__optLiteralsConflictDecb. solve_proper. Qed.
 
 (** toVertex *)
 Definition c__toVertex := c__length + 8.
@@ -328,10 +335,10 @@ Proof.
   replace_le (size (enc ci)) with g by (subst g; rewrite size_prod; cbn; lia) at 1 2 3.
   fold g.  unfold poly__toVertex. nia. 
 Qed. 
-Lemma toVertex_poly : monotonic poly__toVertex /\ inOPoly poly__toVertex. 
-Proof. 
-  unfold poly__toVertex; split; smpl_inO. 
-Qed.
+Lemma toVertex_poly : inOPoly poly__toVertex. 
+Proof. unfold poly__toVertex; smpl_inO. Qed.
+#[export] Instance toVertex_mono: Proper (le ==> le) poly__toVertex.
+Proof. unfold poly__toVertex. solve_proper. Qed.
 
 (** cnfGetLiteral *)
 Definition c__cnfGetLiteral := 15. 
@@ -359,10 +366,10 @@ Proof.
   - rewrite nth_error_time_bound. rewrite Nat.le_min_l. 
     unfold poly__cnfGetLiteral; nia.  
 Qed.
-Lemma cnfGetLiteral_poly : monotonic poly__cnfGetLiteral /\ inOPoly poly__cnfGetLiteral. 
-Proof. 
-  unfold poly__cnfGetLiteral; split; smpl_inO. 
-Qed. 
+Lemma cnfGetLiteral_poly : inOPoly poly__cnfGetLiteral. 
+Proof. unfold poly__cnfGetLiteral; smpl_inO. Qed.
+#[export] Instance cnfGetLiteral_mono: Proper (le ==> le) poly__cnfGetLiteral.
+Proof. unfold poly__cnfGetLiteral. solve_proper. Qed.
 
 Lemma cnfGetLiteral_size N ci li: size (enc (cnfGetLiteral N ci li)) <= size (enc N) + 5. 
 Proof. 
@@ -394,20 +401,31 @@ Proof.
   rewrite !cnfGetLiteral_time_bound. 
   rewrite opt_literalsConflict_decb_time_bound. 
   rewrite !toVertex_time_bound. 
-  pose (g := size (enc k) + size (enc N) + size (enc ((ci1, li1), (ci2, li2)))). 
-  poly_mono cnfGetLiteral_poly. 2: { instantiate (1 := g). unfold g; nia. }
-  poly_mono toVertex_poly. 2: { instantiate (1 := g). unfold g. rewrite !size_prod; cbn; nia. }
-  poly_mono toVertex_poly at 2. 2: { instantiate (1 := g). unfold g. rewrite !size_prod; cbn; nia. }
-  poly_mono opt_literalsConflict_decb_poly. 2: { rewrite cnfGetLiteral_size. instantiate (1 := g + 5). unfold g. lia. } 
-  unfold EqBool.eqbTime. rewrite Nat.le_min_l. 
+  pose (g := size (enc k) + size (enc N) + size (enc ((ci1, li1), (ci2, li2)))).
+  setoid_replace (size (enc N)) with g using relation le at 1 2 by nia.
+  setoid_replace (size (enc N) + size (enc k) + size (enc (ci1, li1))) with g
+    using relation le at 1 by (unfold g;rewrite !size_prod; cbn; nia).
+  setoid_replace (size (enc N) + size (enc k) + size (enc (ci2, li2))) with g
+    using relation le at 1 by (unfold g; rewrite !size_prod; cbn; nia).
+  setoid_replace (size (enc (cnfGetLiteral N ci1 li1))) with (g + 5)
+    using relation le at 1 by (rewrite cnfGetLiteral_size; unfold g; lia). 
+  unfold EqBool.eqbTime. rewrite Nat.le_min_l.
   fold g. replace_le (size (enc ci1)) with g by (unfold g; rewrite !size_prod; cbn; lia).  
-  unfold poly__makeEdge; nia. 
+  unfold poly__makeEdge. lia. 
 Qed.
-Lemma makeEdge_poly : monotonic poly__makeEdge /\ inOPoly poly__makeEdge. 
+
+Lemma makeEdge_poly : inOPoly poly__makeEdge. 
 Proof. 
-  unfold poly__makeEdge; split; smpl_inO; try apply inOPoly_comp; smpl_inO. 
-  all: first [apply cnfGetLiteral_poly | apply opt_literalsConflict_decb_poly | apply toVertex_poly]. 
-Qed. 
+  unfold poly__makeEdge. smpl_inO.
+  - exact cnfGetLiteral_poly.
+  - apply inOPoly_comp.
+    + solve_proper.
+    + exact opt_literalsConflict_decb_poly.
+    + smpl_inO.
+  - apply toVertex_poly. 
+Qed.
+#[export] Instance makeEdge_mono: Proper (le ==> le) poly__makeEdge.
+Proof. unfold poly__makeEdge. solve_proper. Qed.
 
 (** makeEdges *)
 Definition c__makeEdges := 11. 
@@ -429,31 +447,33 @@ Proof.
   unfold makeEdges_time. rewrite allPositions_time_bound. 
   rewrite prodLists_time_bound. 
   pose (g := size (enc N) + size (enc k)).
-  poly_mono prodLists_poly.
+  setoid_replace (size (enc (allPositions k N)) + size (enc (allPositions k N)))
+    with (((g + 4) * (g * g) + c__listsizeCons * g * g + c__listsizeNil) * 2)
+    using relation le.
   2: { unfold allPositions. rewrite list_size_of_el. 
-    2: { intros (a & b) (H1 & H2)%in_prod_iff. 
+    2: { intros (a & b) (H1 & H2)%in_prod_iff.
       apply in_seq in H1 as (_ &H1). apply in_seq in H2 as (_&H2). rewrite size_prod. cbn in *.
       rewrite nat_size_lt; [ | unfold Ncl in H1; apply H1].
       rewrite nat_size_lt with (a := b); [ | apply H2]. rewrite list_size_enc_length. 
       reflexivity.
     }
     rewrite prod_length, !seq_length. unfold Ncl. rewrite size_nat_enc_r with (n := k) at 2 3 5 6. 
-    rewrite list_size_length. 
-    instantiate (1 := ((g + 4) * (g * g) + c__listsizeCons * g * g + c__listsizeNil) * 2). 
+    rewrite list_size_length.
     fold g. replace_le (size (enc N)) with g by (subst g; lia). replace_le (size (enc k)) with g by (subst g; lia). nia. 
   } 
   rewrite map_time_mono. 2: { 
     intros ((ci1 & li1) & (ci2 & li2)) Hel. instantiate (1 := fun _ => _). cbn -[makeEdge_time Nat.add Nat.mul]. 
     rewrite makeEdge_time_bound.  
-    poly_mono makeEdge_poly. 
+    setoid_replace (size (enc k) + size (enc N) + size (enc (ci1, li1, (ci2, li2))))
+      with ((g + 4) * 3) using relation le.
     2: { apply in_prod_iff in Hel as (H1 & H2). apply in_allPositions_iff in H1 as (H1 & H1'). 
       apply in_allPositions_iff in H2 as (H2 & H2').
-      rewrite !size_prod. cbn. unfold Ncl in *. 
+      rewrite !size_prod. cbn. unfold Ncl in *.
       rewrite nat_size_lt with (a := ci1); [ | apply H1]. 
       rewrite nat_size_lt with (a := li1); [ | apply H1'].
       rewrite nat_size_lt with (a := ci2); [ | apply H2]. 
       rewrite nat_size_lt with (a := li2); [ | apply H2'].
-      rewrite list_size_enc_length. instantiate (1 := (g + 4) * 3). subst g. nia.
+      rewrite list_size_enc_length. subst g. nia.
     } 
     reflexivity. 
   } 
@@ -469,11 +489,15 @@ Proof.
   replace_le (size (enc N)) with g by (subst g; nia). replace_le (size (enc k)) with g by (subst g; nia).
   unfold poly__makeEdges; cbn [Nat.pow]; nia. 
 Qed.
-Lemma makeEdges_poly : monotonic poly__makeEdges /\ inOPoly poly__makeEdges. 
+Lemma makeEdges_poly : inOPoly poly__makeEdges. 
 Proof. 
-  unfold poly__makeEdges; split; smpl_inO; try apply inOPoly_comp; smpl_inO.
-  all: first [apply allPositions_poly | apply prodLists_poly | apply makeEdge_poly].
+  unfold poly__makeEdges; smpl_inO.
+  - exact allPositions_poly.
+  - apply inOPoly_comp; [solve_proper | exact prodLists_poly | smpl_inO].
+  - apply inOPoly_comp; [solve_proper | exact makeEdge_poly | smpl_inO].
 Qed.
+#[export] Instance makeEdges_mono: Proper (le ==> le) poly__makeEdges.
+Proof. unfold poly__makeEdges, poly__allPositions. solve_proper. Qed.
 
 Lemma makeEdges_length k N : |makeEdges k N| <= k * k * (|N|) * (|N|).
 Proof. 
@@ -521,15 +545,10 @@ Proof.
   rewrite makeEdges_time_bound. 
   unfold poly__Gflat. nia. 
 Qed.
-Lemma Gflat_poly : monotonic poly__Gflat /\ inOPoly poly__Gflat. 
-Proof. 
-  unfold poly__Gflat; split; smpl_inO; apply makeEdges_poly. 
-Qed. 
-
-Fact nat_size_mul a b: size (enc (a * b)) <= size (enc a) * size (enc b). 
-Proof. 
-  rewrite !size_nat_enc. unfold c__natsizeS; nia. 
-Qed.
+Lemma Gflat_poly : inOPoly poly__Gflat. 
+Proof. unfold poly__Gflat; smpl_inO; apply makeEdges_poly. Qed.
+#[export] Instance Gflat_mono: Proper (le ==> le) poly__Gflat.
+Proof. unfold poly__Gflat. solve_proper. Qed.
 
 Definition poly__GflatSize n := n * n + (n * n * 2 + 4) * n^4 + c__listsizeCons * n^4 + c__listsizeNil + 4.
 Lemma Gflat_size_bound k N: kCNF k N -> size (enc (Gflat k N)) <= poly__GflatSize (size (enc N) + size (enc k)). 
@@ -544,10 +563,10 @@ Proof.
   replace_le (size (enc k)) with g by (unfold g;nia). 
   unfold poly__GflatSize. cbn [Nat.pow]. nia. 
 Qed. 
-Lemma Gflat_size_poly : monotonic poly__GflatSize /\ inOPoly poly__GflatSize. 
-Proof. 
-  unfold poly__GflatSize; split; smpl_inO. 
-Qed.
+Lemma Gflat_size_poly : inOPoly poly__GflatSize. 
+Proof. unfold poly__GflatSize; smpl_inO. Qed.
+#[export] Instance Gflat_size_mono: Proper (le ==> le) poly__GflatSize.
+Proof. unfold poly__GflatSize. solve_proper. Qed.
 
 (** reduction *)
 Definition c__reduction := 14. 
@@ -572,15 +591,17 @@ Proof.
       rewrite kCNF_decb_time_bound, Gflat_time_bound.
       rewrite list_size_length. instantiate (f := fun n => poly__kCNFDecb (n + size (enc k)) + poly__Gflat (n + size (enc k)) + c__length * n + c__length + (c__leb * 2 + c__ltb) + c__reduction). 
       subst f; simp_comp_arith; nia.
-    + subst f; smpl_inO; apply inOPoly_comp; smpl_inO; first [apply kCNF_decb_poly  | apply Gflat_poly]. 
-    + subst f; smpl_inO; first [apply kCNF_decb_poly  | apply Gflat_poly]. 
+    + unfold f; smpl_inO.
+      * apply inOPoly_comp; [solve_proper | exact kCNF_decb_poly | smpl_inO].
+      * apply inOPoly_comp; [solve_proper | exact Gflat_poly | smpl_inO].
+    + unfold f. solve_proper. 
     + eexists (fun n => size (enc (trivialNoInstance)) + poly__GflatSize (n + size (enc k)) + n + 4). 
       * intros N. unfold reduction. destruct kCNF_decb eqn:H1, Nat.ltb; cbn. 
         2-4: lia. 
         apply kCNF_decb_iff in H1. rewrite size_prod; cbn. 
         rewrite Gflat_size_bound by apply H1. unfold Ncl. rewrite list_size_enc_length.
-        nia. 
-      * smpl_inO. apply inOPoly_comp; smpl_inO; apply Gflat_size_poly.  
-      * smpl_inO. apply Gflat_size_poly. 
+        nia.
+      * smpl_inO. apply inOPoly_comp; [solve_proper | exact Gflat_size_poly | smpl_inO].
+      * solve_proper. 
   - apply kSAT_reduces_to_FlatClique. 
 Qed.

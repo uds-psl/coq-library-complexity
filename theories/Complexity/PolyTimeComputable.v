@@ -11,7 +11,9 @@ Proof.
   {intros x. rewrite (bounds__rSP Hg). setoid_rewrite mono__rSP. 2:now apply (bounds__rSP Hf).
    set (n0:=size _). unfold fsize. reflexivity.
   }
-  1,2:now unfold fsize;smpl_inO;eapply inOPoly_comp;smpl_inO.
+  - unfold fsize.
+    apply inOPoly_comp; [apply mono__rSP | apply poly__rSP | apply poly__rSP].
+  - unfold fsize. solve_proper.
 Qed.
 
 Lemma polyTimeComputable_composition X Y Z `{encodable X} `{encodable Y} `{encodable Z} (f:X-> Y) (g : Y -> Z):
@@ -23,10 +25,12 @@ Proof.
   {extract. solverec. 
    setoid_rewrite mono__polyTC at 2. 2:now apply (bounds__rSP Hf). set (size (enc x)). unfold time. reflexivity. 
   }
-  1,2:now unfold time;smpl_inO;eapply inOPoly_comp;smpl_inO.
-  eapply resSizePoly_composition. all:eauto using resSize__polyTC.
+  - unfold time. smpl_inO.
+    apply inOPoly_comp; [apply mono__polyTC | apply poly__polyTC | apply poly__rSP].
+  - unfold time. solve_proper.
+  - eapply resSizePoly_composition.
+    all: apply resSize__polyTC; assumption.
 Qed.
-
 
 Lemma resSizePoly_composition2 X Y1 Y2 Z `{encodable X} `{encodable Y1} `{encodable Y2} `{encodable Z}
       (f1:X-> Y1) (f2:X-> Y2) (g : Y1 -> Y2 -> Z):
@@ -39,7 +43,8 @@ Proof.
    2:{ rewrite LProd.size_prod;cbn. rewrite (bounds__rSP Hf1). now rewrite (bounds__rSP Hf2). }
    set (n0:=size _). unfold fsize. reflexivity.
   }
-  1,2:now unfold fsize;smpl_inO;eapply inOPoly_comp;smpl_inO.
+  - unfold fsize. apply inOPoly_comp; [apply mono__rSP | apply poly__rSP | smpl_inO].
+  - unfold fsize. solve_proper.
 Qed.
 
 Lemma polyTimeComputable_composition2 X Y1 Y2 Z `{encodable X} `{encodable Y1} `{encodable Y2} `{encodable Z}
@@ -55,10 +60,12 @@ Proof.
    2:{ rewrite LProd.size_prod;cbn. rewrite (bounds__rSP Hf1). now rewrite (bounds__rSP Hf2). }
    set (size (enc x)). unfold time. reflexivity. 
   }
-  1,2:now unfold time;smpl_inO;eapply inOPoly_comp;smpl_inO.
-  eapply resSizePoly_composition2. all:eauto using resSize__polyTC.
+  - unfold time. smpl_inO.
+    apply inOPoly_comp; [apply mono__polyTC | apply poly__polyTC | smpl_inO].
+  - unfold time. solve_proper.
+  - eapply resSizePoly_composition2.
+    all: apply resSize__polyTC; assumption.
 Qed.
-
 
 Lemma resSizePoly_prod X Y Z `{encodable X} `{encodable Y} `{encodable Z} (f:X-> Y) (g : X -> Z):
   resSizePoly f -> resSizePoly g -> resSizePoly (fun x => (f x, g x)).
@@ -70,7 +77,8 @@ Proof.
    rewrite (bounds__rSP Hf),(bounds__rSP Hg). 
    set (n0:=size _). unfold fsize. reflexivity.
   }
-  1,2:now unfold fsize;smpl_inO;eapply inOPoly_comp;smpl_inO.
+  - unfold fsize. smpl_inO.
+  - unfold fsize. solve_proper.
 Qed.
 
 Lemma polyTimeComputable_prod X Y Z `{encodable X} `{encodable Y} `{encodable Z} (f:X-> Y) (g : X -> Z):
@@ -81,8 +89,9 @@ Proof.
   exists time.
   {extract. solverec. set (size (enc x)). unfold time. reflexivity. 
   }
-  1,2:now unfold time;smpl_inO;eapply inOPoly_comp;smpl_inO.
-  eapply resSizePoly_prod. all:eauto using resSize__polyTC.
+  - unfold time. smpl_inO.
+  - unfold time. solve_proper.
+  - apply resSizePoly_prod; apply resSize__polyTC; assumption.
 Qed.
 
 
@@ -248,10 +257,11 @@ Proof.
   eexists time.
   {extract. solverec. rewrite LProd.size_prod. cbn - [mult c__mult1].
    rewrite !LNat.size_nat_enc. [time]:exact (fun n => n*n). unfold time, c__mult1, mult_time, c__mult, c__natsizeO, c__natsizeS, c__add1, c__add. nia. }
-  1,2:unfold time;now smpl_inO.
-  eexists (fun n => n*n). all:unfold time. 2,3:now smpl_inO.
-  intros []. rewrite LProd.size_prod,!LNat.size_nat_enc. cbn. 
-  unfold c__natsizeS, c__natsizeO. lia.
+  - unfold time. smpl_inO.
+  - unfold time. solve_proper.
+  - eexists (fun n => n*n); [ | smpl_inO | solve_proper].
+    intros []. rewrite LProd.size_prod,!LNat.size_nat_enc. cbn. 
+    unfold c__natsizeS, c__natsizeO. lia.
 Qed.
 Smpl Add 5 simple apply pTC_mult : polyTimeComputable.
 
@@ -280,9 +290,10 @@ Proof.
    rewrite !LNat.size_nat_enc. [time]:exact (fun n => n*n). unfold time. cbn. 
    unfold max_time, c__max2, c__natsizeS, c__natsizeO. 
    nia. }
-  1,2:unfold time;now smpl_inO.
-  eexists (fun n => n*n). all:unfold time. 2,3:now smpl_inO.
-  intros []. rewrite LProd.size_prod,!LNat.size_nat_enc. cbn. lia.
+  - unfold time. smpl_inO.
+  - unfold time. solve_proper.
+  - eexists (fun n => n*n); [ | smpl_inO | solve_proper].
+    intros []. rewrite LProd.size_prod,!LNat.size_nat_enc. lia.
 Qed.
 Smpl Add 5 simple apply pTC_max : polyTimeComputable.
 

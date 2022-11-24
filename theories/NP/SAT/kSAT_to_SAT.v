@@ -7,11 +7,11 @@ Proof.
   destruct k. 
   { (* always return a trivial no-instance if k = 0 *)
     apply reducesPolyMO_intro with (f := fun N => [[(true, 0)]; [(false, 0)]]).  
-    - exists (fun n => 13).
-      + extract. solverec. 
-      + smpl_inO. 
-      + smpl_inO. 
-      + exists (fun n => size (enc [[(true, 0)]; [(false, 0)]])); [solverec | smpl_inO | smpl_inO].
+    - exists (fun n => 13); [extract; solverec | smpl_inO | apply monotonic_c |].
+      exists (fun n => size (enc [[(true, 0)]; [(false, 0)]])).
+      + solverec.
+      + smpl_inO.
+      + apply monotonic_c.
     - intros N. cbn. unfold kSAT. 
       split; [lia | ]. intros [a H]. 
       unfold satisfies, evalCnf in H; cbn in H. 
@@ -25,14 +25,15 @@ Proof.
       all: rewrite kCNF_decb_time_bound. 
       instantiate (f := fun n => poly__kCNFDecb (n + size (enc (S k))) + 18). 
       all: subst f; solverec. 
-    + subst f; smpl_inO. apply inOPoly_comp; smpl_inO; apply kCNF_decb_poly. 
-    + subst f; smpl_inO. apply kCNF_decb_poly. 
+    + subst f; smpl_inO.
+      apply inOPoly_comp; [solve_proper | apply kCNF_decb_poly | smpl_inO].
+    + unfold f. solve_proper.
     + evar (g : nat -> nat). exists g. 
       * intros N. destruct kCNF_decb. 
         instantiate (g := fun n => n + size (enc [[(true, 0)]; [(false, 0)]])). 
         all: subst g; solverec. 
-      * subst g; smpl_inO. 
-      * subst g; smpl_inO. 
+      * subst g. smpl_inO.
+      * unfold g. solve_proper.
   - intros N. split.
     + intros [H1 [H2 H3]].
       apply kCNF_decb_iff in H2. rewrite H2. apply H3.  

@@ -4,19 +4,6 @@ From Complexity.Libs Require Import CookPrelim.MorePrelim UniformHomomorphisms F
 From Complexity.NP.SAT.CookLevin Require Import BinaryCC FlatCC CC_to_BinaryCC. 
 Require Import Lia.
 
-#[export] Instance equi_equivalence X: Equivalence (@equi X).
-Proof.
-  eexists.
-  - intro l. split; apply incl_refl.
-  - intros l l' H. split; apply H.
-  - intros l l' l'' [] []. split; eapply incl_tran; eassumption.
-Qed.
-
-#[export] Instance in_equi_proper X x: Proper (@equi X ==> Basics.impl) (In x).
-Proof.
-  intros ??[H]?. now apply H.
-Qed.
-
 (** * Reduction of FlatCC to BinaryCC *)
 (** logically, we reduce FlatCC to CC and use the reduction of CC to BinaryCC *)
 (** but in order to make the reduction extractable, we give a shortcut reduction which produces instances which are the same up to syntax (like reordering)*)
@@ -180,21 +167,18 @@ Section fixX.
   Global Instance term_repEl : computableTime' (@repeat X) (fun e _ => (c__repeat2, fun n _ => (repeat_time n, tt))). 
   Proof. 
     extract. solverec. all: unfold repeat_time, c__repeat, c__repeat2; solverec.
-  Qed. 
-
-  Lemma repeat_time_mono : monotonic repeat_time. 
-  Proof. 
-    unfold repeat_time; smpl_inO. 
-  Qed. 
+  Qed.
+  #[export] Instance repat_time_mono: Proper (le ==> le) repeat_time.
+  Proof. unfold repeat_time. solve_proper. Qed.
 
   Definition poly__repeat n := (n+1) * c__repeat.
   Lemma repeat_time_bound n : repeat_time n <= poly__repeat (size (enc n)). 
   Proof. 
     unfold repeat_time, poly__repeat. replace_le n with (size (enc n)) by (apply size_nat_enc_r) at 1. lia. 
   Qed. 
-  Lemma repEl_poly : monotonic poly__repeat /\ inOPoly poly__repeat. 
+  Lemma repEl_poly : inOPoly poly__repeat. 
   Proof. 
-    unfold poly__repeat; split; smpl_inO. 
+    unfold poly__repeat; smpl_inO.
   Qed. 
 End fixX. 
 
@@ -212,11 +196,12 @@ Definition c__hNat := 2 * (c__leb2 + 2 * c__repeat2 + 18 + 2* c__app + 2 * c__su
 Definition hNat_time sig n := (leb_time (S n) sig + repeat_time sig + sig + 1) * c__hNat. 
 #[export]
 Instance term_hNat : computableTime' hNat (fun sig _ => (1, fun n _ => (hNat_time sig n, tt))). 
-Proof. 
-  specialize repeat_time_mono as H1. unfold monotonic in H1. 
+Proof.
   extract. solverec. 
   - setoid_rewrite sub_time_bound_r at 2. rewrite repeat_length. 
-    apply leb_iff in H. rewrite H1 with (x' := x) by lia. setoid_rewrite H1 with (x' := x) at 2. 2: lia. 
+    apply leb_iff in H.
+    setoid_replace (x - x0 - 1) with x using relation le by lia.
+    setoid_replace x0 with x using relation le at 3 by lia.
     replace_le x0 with x by lia at 3. 
     rewrite sub_time_bound_l.
     unfold hNat_time, c__hNat. cbn[Nat.add]. unfold c__sub1, c__sub. nia.
@@ -232,10 +217,10 @@ Proof.
   unfold poly__hNat, c__hNatBound. rewrite repeat_time_bound. rewrite size_nat_enc_r with (n := sig) at 3.
   lia. 
 Qed. 
-Lemma hNat_poly : monotonic poly__hNat /\ inOPoly poly__hNat. 
-Proof.
-  unfold poly__hNat; split; smpl_inO; apply repEl_poly. 
-Qed. 
+Lemma hNat_poly : inOPoly poly__hNat. 
+Proof. unfold poly__hNat; smpl_inO; apply repEl_poly. Qed.
+#[export] Instance hNat_mono: Proper (le ==> le) poly__hNat.
+Proof. unfold poly__hNat. solve_proper. Qed.
 
 (** hflat *)
 Definition c__hflat := c__Sigma + 3. 
@@ -268,30 +253,27 @@ Proof.
   unfold hflat_time. rewrite map_time_bound_env. 
   2: { 
     split; [ intros | ]. 
-    - rewrite hNat_time_bound. poly_mono hNat_poly. 2: apply Nat.le_add_r with (m := size (enc ele)). reflexivity. 
-    - apply hNat_poly. 
+    - rewrite hNat_time_bound.
+      setoid_replace (size (enc env)) with (size (enc env) + size (enc ele))
+        using relation le at 1 by apply Nat.le_add_r.
+      reflexivity.
+    - solve_proper.
     } 
-  poly_mono hNat_poly. 
-  2: (replace_le (size (enc (Sigma fpr))) with (size (enc fpr)) by (rewrite FlatCC_enc_size; lia)); reflexivity.
-
-  rewrite concat_time_bound. poly_mono concat_poly. 
-  2: { 
-    rewrite map_hNat_size_bound. rewrite list_size_length. 
-    replace_le (Sigma fpr) with (size (enc fpr)) by (rewrite size_nat_enc_r with (n := Sigma fpr); rewrite FlatCC_enc_size; lia). 
-    reflexivity. 
-  } 
+  replace_le (size (enc (Sigma fpr))) with (size (enc fpr)) by (rewrite FlatCC_enc_size; lia); reflexivity.
+  rewrite concat_time_bound.
+  rewrite map_hNat_size_bound. rewrite list_size_length. 
+  replace_le (Sigma fpr) with (size (enc fpr)) by (rewrite size_nat_enc_r with (n := Sigma fpr); rewrite FlatCC_enc_size; lia).
   unfold poly__concat. 
-  rewrite list_size_length.
   replace_le (size (enc l)) with (size (enc fpr) + size (enc l)) by lia at 1 3. 
   replace_le (size (enc fpr)) with (size (enc fpr) + size (enc l)) by lia at 4.
   replace_le (size (enc l)) with (size (enc fpr) + size (enc l)) by lia at 5.   
   set (size (enc fpr) + size (enc l)). 
   unfold poly__hflat. nia. 
 Qed. 
-Lemma hflat_poly : monotonic poly__hflat /\ inOPoly poly__hflat.    
-Proof. 
-  split; unfold poly__hflat; smpl_inO; apply hNat_poly. 
-Qed. 
+Lemma hflat_poly : inOPoly poly__hflat.
+Proof. unfold poly__hflat; smpl_inO; apply hNat_poly. Qed.
+#[export] Instance hflat_mono: Proper (le ==> le) poly__hflat.
+Proof. unfold poly__hflat. solve_proper. Qed.
 
 Lemma hflat_length fpr l : |hflat fpr l| = (Sigma fpr) * |l|. 
 Proof. 
@@ -320,15 +302,15 @@ Definition poly__hcard n := poly__hflat n + poly__hflat n + c__hcard.
 Lemma hcard_time_bound fpr card : hcard_time fpr card <= poly__hcard (size (enc fpr) + size (enc card)).
 Proof. 
   unfold hcard_time. rewrite !hflat_time_bound. 
-  unfold poly__hcard. 
-  poly_mono hflat_poly. 2: { replace_le (size (enc (prem card))) with (size (enc card)) by (rewrite CCCard_enc_size; lia). reflexivity. }
-  poly_mono hflat_poly at 2. 2: { replace_le (size (enc (conc card))) with (size (enc card)) by (rewrite CCCard_enc_size; lia). reflexivity. }
-  lia. 
+  unfold poly__hcard.
+  replace_le (size (enc (prem card))) with (size (enc card)) by (rewrite CCCard_enc_size; lia).
+  replace_le (size (enc (conc card))) with (size (enc card)) by (rewrite CCCard_enc_size; lia).
+  reflexivity.
 Qed. 
-Lemma hcard_poly : monotonic poly__hcard /\ inOPoly poly__hcard. 
-Proof. 
-  unfold poly__hcard; split; smpl_inO; apply hflat_poly. 
-Qed. 
+Lemma hcard_poly : inOPoly poly__hcard. 
+Proof. unfold poly__hcard; smpl_inO; apply hflat_poly. Qed.
+#[export] Instance hcard_mono: Proper (le ==> le) poly__hcard.
+Proof. unfold poly__hcard. solve_proper. Qed. 
 
 Definition c__hcardSize1 := c__listsizeNil +  c__listsizeNil + c__sizeCCCard. 
 Definition c__hcardSize2 := 2 * c__hflatSize.
@@ -356,18 +338,15 @@ Definition poly__hcards n :=  ((n + 1) * (poly__hcard (n+ n) + 1) + 1) * c__hcar
 Lemma hcards_time_bound fpr : hcards_time fpr <= poly__hcards (size (enc fpr)). 
 Proof. 
   unfold hcards_time. 
-  rewrite map_time_bound_env. 2: split; [ intros; apply hcard_time_bound | apply hcard_poly]. 
+  rewrite map_time_bound_env. 2: split; [ intros; apply hcard_time_bound | solve_proper].
   rewrite list_size_length. 
-  replace_le (size (enc (cards fpr))) with (size (enc fpr)) by (rewrite FlatCC_enc_size; lia) at 1. 
-  poly_mono hcard_poly. 
-  2: { replace_le (size (enc (cards fpr))) with (size (enc fpr)) by (rewrite FlatCC_enc_size; lia) at 1. reflexivity. }
+  replace_le (size (enc (cards fpr))) with (size (enc fpr)) by (rewrite FlatCC_enc_size; lia) at 1 2. 
   unfold poly__hcards, c__hcardsBound. lia.
 Qed. 
-Lemma hcards_poly : monotonic poly__hcards /\ inOPoly poly__hcards. 
+Lemma hcards_poly : inOPoly poly__hcards. 
 Proof. 
-  unfold poly__hcards; split; smpl_inO. 
-  - apply hcard_poly. 
-  - eapply inOPoly_comp; [apply hcard_poly | apply hcard_poly | smpl_inO].
+  unfold poly__hcards; smpl_inO.
+  apply inOPoly_comp; [solve_proper | apply hcard_poly | smpl_inO].
 Qed. 
 
 Definition c__hcardsSize1 := c__hcardSize1 + c__listsizeNil.
@@ -397,18 +376,16 @@ Definition poly__hfinal n :=  ((n + 1) * (poly__hflat (n+ n) + 1) + 1) * c__hfin
 Lemma hfinal_time_bound fpr : hfinal_time fpr <= poly__hfinal (size (enc fpr)). 
 Proof. 
   unfold hfinal_time. 
-  rewrite map_time_bound_env. 2: split; [ intros; apply hflat_time_bound | apply hflat_poly]. 
+  rewrite map_time_bound_env. 2: split; [ intros; apply hflat_time_bound | solve_proper]. 
   rewrite list_size_length. 
   replace_le (size (enc (final fpr))) with (size (enc fpr)) by (rewrite FlatCC_enc_size; lia) at 1. 
-  poly_mono hflat_poly. 
-  2: { replace_le (size (enc (final fpr))) with (size (enc fpr)) by (rewrite FlatCC_enc_size; lia) at 1. reflexivity. }
+ replace_le (size (enc (final fpr))) with (size (enc fpr)) by (rewrite FlatCC_enc_size; lia) at 1.
   unfold poly__hfinal, c__hfinalBound. lia.
 Qed. 
-Lemma hfinal_poly : monotonic poly__hfinal /\ inOPoly poly__hfinal. 
+Lemma hfinal_poly : inOPoly poly__hfinal. 
 Proof. 
-  unfold poly__hfinal; split; smpl_inO. 
-  - apply hflat_poly. 
-  - eapply inOPoly_comp; [apply hflat_poly | apply hflat_poly | smpl_inO].
+  unfold poly__hfinal; smpl_inO.
+  apply inOPoly_comp; [solve_proper | apply hflat_poly | smpl_inO].
 Qed. 
 
 (** one could obtain a linear time bound, but a quadratic bound is easier to prove *)
@@ -442,16 +419,17 @@ Proof.
   replace_le (offset fpr) with (size (enc fpr)) by (rewrite size_nat_enc_r, FlatCC_enc_size; lia).
   replace_le (width fpr) with (size (enc fpr)) by (rewrite size_nat_enc_r, FlatCC_enc_size; lia).
   rewrite hflat_time_bound. 
-  poly_mono hflat_poly. 
-  2: { (replace_le (size (enc (init fpr))) with (size (enc fpr)) by (rewrite FlatCC_enc_size; lia)); reflexivity. }
+  replace_le (size (enc (init fpr))) with (size (enc fpr)) by (rewrite FlatCC_enc_size; lia).
   rewrite hfinal_time_bound. rewrite hcards_time_bound. 
   unfold poly__hBinaryCC. lia. 
 Qed. 
-Lemma hBinaryCC_poly : monotonic poly__hBinaryCC /\ inOPoly poly__hBinaryCC. 
+Lemma hBinaryCC_poly : inOPoly poly__hBinaryCC. 
 Proof. 
-  split; unfold poly__hBinaryCC; smpl_inO. all: try solve [apply hflat_poly  | apply hcards_poly | apply hfinal_poly ].
-  eapply inOPoly_comp; [apply hflat_poly | apply hflat_poly | smpl_inO].
-Qed. 
+  unfold poly__hBinaryCC; smpl_inO.
+  - apply inOPoly_comp; [solve_proper | exact hflat_poly | smpl_inO].
+  - exact hcards_poly.
+  - exact hfinal_poly.
+Qed.
 
 Proposition nat_mul_size_bound n m : size (enc (n * m)) <= size (enc n) * size (enc m). 
 Proof. 
@@ -498,14 +476,25 @@ Proof.
   unfold reduction_time, poly__reduction. 
   rewrite FlatCC_wf_dec_time_bound, isValidFlattening_dec_time_bound, hBinaryCC_time_bound. lia. 
 Qed. 
-Lemma reduction_poly : monotonic poly__reduction /\ inOPoly poly__reduction. 
+Lemma reduction_poly : inOPoly poly__reduction. 
 Proof. 
-  split; unfold poly__reduction; smpl_inO. 
-  all: try solve [ apply FlatCC_wf_dec_poly | apply isValidFlatteningDec_poly | apply hBinaryCC_poly]. 
-Qed. 
+  unfold poly__reduction; smpl_inO.
+  - exact FlatCC_wf_dec_poly.
+  - exact isValidFlatteningDec_poly.
+  - exact hBinaryCC_poly.
+Qed.
+
+#[export] Instance hBinaryCC_mono: Proper (le ==> le) poly__hBinaryCC.
+Proof. unfold poly__hBinaryCC, poly__hflat, poly__hcards, poly__hfinal. solve_proper. Qed.
+#[export] Instance isValidFlatteningDec_mono: Proper (le ==> le) poly__isValidFlatteningDec.
+Proof. unfold poly__isValidFlatteningDec. solve_proper. Qed.
+#[export] Instance FlatCCWfDec_mono: Proper (le ==> le) poly__FlatCCWfDec.
+Proof. unfold poly__FlatCCWfDec. solve_proper. Qed.
+#[export] Instance reduction_mono: Proper (le ==> le) poly__reduction.
+Proof. unfold poly__reduction. solve_proper. Qed.
 
 (** size bound *)
-Lemma reduction_size_bound : {f | (forall fpr, size (enc (reduction fpr)) <= f (size (enc fpr))) /\ inOPoly f /\ monotonic f}.
+Lemma reduction_size_bound : {f | (forall fpr, size (enc (reduction fpr)) <= f (size (enc fpr))) /\ inOPoly f /\ Proper (le ==> le) f}.
 Proof. 
   exists (fun n => c__hBinaryCCSize * (n + 1)^3 + c__hBinaryCCSize2 + 32).
   split; [ | split]. 
@@ -515,7 +504,7 @@ Proof.
     + unfold trivialNoInstance. rewrite BinaryCC_enc_size. cbn -[Nat.mul Nat.add].
       rewrite !size_nat_enc. rewrite !size_list. cbn. lia.
   - unfold Nat.pow. smpl_inO. 
-  - smpl_inO. 
+  - solve_proper.
 Qed. 
 
 (** This is the polynomial-time result of the reduction. 
@@ -528,7 +517,7 @@ Proof.
     + extract. solverec. 
       all: specialize (reduction_time_bound x) as H1; unfold reduction_time, c__reduction in H1; lia.
     + apply reduction_poly.
-    + apply reduction_poly. 
+    + solve_proper.
     + destruct (reduction_size_bound) as (f & H1 & H2 & H3). exists f; auto.
   - apply FlatCC_to_BinaryCC. 
 Qed. 
