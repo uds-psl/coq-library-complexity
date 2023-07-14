@@ -458,10 +458,10 @@ Proof.
   unfold add_time. rewrite size_nat_enc_r with (n := step) at 1. 
   unfold poly__tabulateStep; solverec.  
 Qed.
-Lemma tabulate_step_poly : monotonic poly__tabulateStep /\ inOPoly poly__tabulateStep.
-Proof. 
-  unfold poly__tabulateStep; split; smpl_inO. 
-Qed.
+Lemma tabulate_step_poly : inOPoly poly__tabulateStep.
+Proof. unfold poly__tabulateStep; smpl_inO. Qed.
+#[export] Instance tabulate_step_mono: Proper (le ==> le) poly__tabulateStep.
+Proof. unfold poly__tabulateStep. solve_proper. Qed.
 
 Lemma tabulate_step_length step s n: |tabulate_step step s n| = n.
 Proof. 
@@ -485,14 +485,15 @@ Qed.
 
 Lemma tabulate_formula_varsIn s step n t (g : nat -> nat): 
   (forall start, formula_varsIn (fun n => n < g start) (t start))
-  -> monotonic g
+  -> Proper (le ==> le) g
   -> forall f, f el tabulate_formula s step n t -> formula_varsIn (fun v => v < g (s + step * (n -1))) f. 
 Proof. 
   intros H H0 f Hel. unfold tabulate_formula in Hel. apply in_map_iff in Hel as (i & <- & Hel). 
   apply in_tabulate_step_iff in Hel as (i' & H1 & ->). 
   eapply formula_varsIn_monotonic. 
   2: apply H. 
-  cbn. intros n' Hn'. unfold monotonic in H0. specialize (H0 (s + step * i') (s + step * (n -1)) ltac:(nia)). nia. 
+  cbn. intros n' Hn'.
+  specialize (H0 (s + step * i') (s + step * (n -1)) ltac:(nia)). nia. 
 Qed. 
 
 Lemma tabulate_formula_length s step n t : |tabulate_formula s step n t| = n. 
@@ -541,10 +542,10 @@ Proof.
   unfold encodeListAt_time. rewrite list_size_length. 
   unfold poly__encodeListAt; solverec. 
 Qed. 
-Lemma encodeListAt_poly : monotonic poly__encodeListAt /\ inOPoly poly__encodeListAt. 
-Proof. 
-  unfold poly__encodeListAt; split; smpl_inO. 
-Qed.
+Lemma encodeListAt_poly : inOPoly poly__encodeListAt. 
+Proof. unfold poly__encodeListAt; smpl_inO. Qed.
+#[export] Instance encodeListAt_mono: Proper (le ==> le) poly__encodeListAt.
+Proof. unfold poly__encodeListAt. solve_proper. Qed.
 
 Lemma encodeListAt_varsIn start l: formula_varsIn (fun n => n >= start /\ n < start + |l|) (encodeListAt start l). 
 Proof. 

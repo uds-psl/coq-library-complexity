@@ -84,15 +84,17 @@ Proof.
      
      
      destruct (Nat.leb_spec (sizeOfmTapesFlat t) maxSize).
-     rewrite Hf''. hnf in monof''. rewrite monof'' with (x':=x).
+     rewrite Hf''.
+     setoid_replace (size (enc M) + sizeOfmTapesFlat t + steps) with x
+      using relation le.
      2:{rewrite H. subst x. rewrite !size_prod. cbn [fst snd]. rewrite <- !size_nat_enc_r. lia. }
      destruct execFlatTM.
      all:unfold f'.
      reflexivity.
      all:lia.
    }
-   all:unfold f'.
-   all:smpl_inO.
+   + unfold f'. smpl_inO.
+   + unfold f'. solve_proper.
   -evar (f:nat -> nat). [f]:intro x.
    exists f.
    +intros [[TM maxSize] steps] y.  cbn.
@@ -112,6 +114,6 @@ Proof.
       all:rewrite size_nat_enc_r at 1; subst;nia.
      }
      unfold f;reflexivity.
-   +unfold f;smpl_inO.
-   +unfold f;smpl_inO.
+   + unfold f;smpl_inO.
+   + unfold f. solve_proper.
 Qed.

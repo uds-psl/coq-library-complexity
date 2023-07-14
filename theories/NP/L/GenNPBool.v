@@ -2,7 +2,11 @@ From Undecidability.L Require Import L_facts.
 From Undecidability.L.Datatypes Require Import LProd LTerm LBool.
 From Complexity.Complexity Require Import NP Definitions Monotonic.
 From Undecidability.L.Functions Require Import Size.
-Import Nat L_Notations. 
+Import Nat L_Notations.
+
+#[export] Instance add_time_mono: Proper (le ==> le) add_time.
+Proof. unfold add_time. solve_proper. Qed.
+
 Definition GenNPBool : term*nat*nat -> Prop:=
   fun '(s', maxSize, steps (*in unary*)) =>
     (proc s'/\exists (c:term), size (enc c) <= maxSize
@@ -45,15 +49,15 @@ Proof.
    eexists (fun x => f' x). 
    +extract.
     recRel_prettify2. cbn [size]. set (size (enc x)). unfold f'. reflexivity. 
-   +subst f'. cbn beta. unfold add_time. smpl_inO. all:eapply inOPoly_comp. all:try setoid_rewrite size_nat_enc. all:smpl_inO.
-   +subst f'. cbn beta. unfold add_time. smpl_inO. all:try setoid_rewrite size_nat_enc. all:smpl_inO.
+   +subst f'. cbn beta. unfold add_time. smpl_inO. all:eapply inOPoly_comp. all: try solve_proper. all:try setoid_rewrite size_nat_enc. all:smpl_inO.
+   + subst f'. cbn beta. all:try setoid_rewrite size_nat_enc. solve_proper.
    + eexists (fun x => _);repeat split.
-    *intros. 
-     repeat (setoid_rewrite -> size_prod;cbn[fst snd]).
-     rewrite !size_nat_enc,!size_term_enc. cbn [size]. 
-     generalize (size (enc x)). intros. reflexivity.
-    *smpl_inO. all:eapply inOPoly_comp. all:smpl_inO.
-    *smpl_inO.
+    * intros.
+      repeat (setoid_rewrite -> size_prod;cbn[fst snd]).
+      rewrite !size_nat_enc,!size_term_enc. cbn [size]. 
+      generalize (size (enc x)). intros. reflexivity.
+    * smpl_inO. apply inOPoly_comp; [exact mono_t__R | exact poly_t__R | smpl_inO].
+    * solve_proper.
 Qed.
 
 From Undecidability.L.Functions Require Import Proc.
@@ -112,12 +116,12 @@ Proof.
      split.
      +cbn. intuition eauto 10. 
      +intros (?&?&?&[= -> -> ->]&?). intuition eauto 10. Lproc.
-    -unfold f__t.
-     smpl_inO.
-    -unfold f__t.
-     smpl_inO.
+    -unfold f__t. smpl_inO.
+    -unfold f__t. solve_proper.
   }
-  eexists (fun x => x). 3,4:smpl_inO.
+  eexists (fun x => x).
+  3: smpl_inO.
+  3: solve_proper.
   all:intros ((?,?),?). all:cbn.
   -intros ? (?&?&?&[= <- <- <-]&?&?&?). eauto 10.
   -intros (?&?&?&?). eexists.  split. eauto 10.  repeat setoid_rewrite size_prod. cbn [fst snd].

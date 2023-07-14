@@ -730,9 +730,9 @@ From Complexity.Complexity Require Import UpToCPoly.
 Require Import Complexity.Libs.CookPrelim.PolyBounds. 
 
 Lemma reduction_poly_size: 
-  { p: nat -> nat & (forall f, size (enc (reduction f)) <= p (size (enc f))) /\ monotonic p /\ inOPoly p }.
+  { p: nat -> nat & (forall f, size (enc (reduction f)) <= p (size (enc f))) /\ Proper (le ==> le) p /\ inOPoly p }.
 Proof. 
-  evar (p : nat -> nat). exists p. split. 
+  evar (p : nat -> nat). exists p. repeat split.
   - intros f. 
     rewrite cnf_enc_size_bound with (N := reduction f).
     rewrite cnf_varsIn_bound. 
@@ -742,7 +742,8 @@ Proof.
     rewrite formula_size_enc_bound.
     rewrite formula_maxVar_enc_bound. 
     [p] : intros n. generalize (size (enc f)). subst p. cbn -[Nat.add Nat.mul]. reflexivity. 
-  - split; subst p; smpl_inO. 
+  - unfold p. solve_proper.
+  - unfold p. smpl_inO. 
 Qed. 
 
 (** ** Running-time analysis *)
@@ -773,9 +774,9 @@ Proof.
   - rewrite IHf1, IHf2. setoid_rewrite formula_enc_size at 3. nia.
   - rewrite IHf. setoid_rewrite formula_enc_size at 2. nia. 
 Qed. 
-Lemma eliminateOR_poly : monotonic poly__eliminateOR /\ inOPoly poly__eliminateOR. 
+Lemma eliminateOR_poly : inOPoly poly__eliminateOR. 
 Proof. 
-  unfold poly__eliminateOR; split; smpl_inO. 
+  unfold poly__eliminateOR; smpl_inO. 
 Qed.
 
 (** tseytinAnd *)
@@ -868,9 +869,9 @@ Proof.
     rewrite formula_size_enc_bound. 
     unfold poly__tseytin', c__tseytinPBound1. leq_crossout. 
 Qed. 
-Lemma tseytinP_poly : monotonic poly__tseytin' /\ inOPoly poly__tseytin'. 
+Lemma tseytinP_poly : inOPoly poly__tseytin'. 
 Proof. 
-  unfold poly__tseytin'; split; smpl_inO. 
+  unfold poly__tseytin'; smpl_inO.
 Qed. 
 
 (** tseytin *)
@@ -889,10 +890,14 @@ Proof.
   unfold tseytin_time. rewrite tseytinP_time_bound, formula_maxVar_time_bound. 
   unfold poly__tseytin; lia.  
 Qed.
-Lemma tseytin_poly : inOPoly poly__tseytin /\ monotonic poly__tseytin. 
+Lemma tseytin_poly : inOPoly poly__tseytin.
 Proof. 
-  unfold poly__tseytin; split; smpl_inO; first [apply formula_maxVar_poly | apply tseytinP_poly]. 
-Qed. 
+  unfold poly__tseytin; smpl_inO.
+  - exact formula_maxVar_poly.
+  - unfold poly__tseytin'. smpl_inO.
+Qed.
+#[export] Instance tseytin_mono: Proper (le ==> le) poly__tseytin.
+Proof. unfold poly__tseytin, poly__formulaMaxVar, poly__tseytin'. solve_proper. Qed.
 
 (** reduction *)
 Lemma eliminateOR_enc_size_bound f : size (enc (eliminateOR f)) <= c__eliminateOrSize * size (enc f). 
@@ -911,22 +916,25 @@ Definition reduction_time (f : formula) := eliminateOR_time f + tseytin_time (el
 #[export]
 Instance term_reduction : computableTime' reduction (fun f _ => (reduction_time f, tt)). 
 Proof. 
-  extract. solverec. unfold reduction_time, c__reduction. solverec. 
+  extract. solverec. reflexivity.
 Qed. 
 
 Definition poly__reduction n := poly__eliminateOR n + poly__tseytin (c__eliminateOrSize * n) + c__reduction.
 Lemma reduction_time_bound f : reduction_time f <= poly__reduction (size (enc f)). 
 Proof. 
   unfold reduction_time. rewrite eliminateOR_time_bound, tseytin_time_bound. 
-  poly_mono tseytin_poly. 2: apply eliminateOR_enc_size_bound. 
+  rewrite eliminateOR_enc_size_bound. 
   unfold poly__reduction. nia. 
 Qed. 
-Lemma reduction_poly : monotonic poly__reduction /\ inOPoly poly__reduction. 
+Lemma reduction_poly : inOPoly poly__reduction. 
 Proof. 
-  unfold poly__reduction; split; smpl_inO; try apply inOPoly_comp; smpl_inO; first [apply tseytin_poly | apply eliminateOR_poly]. 
-Qed. 
-  
-  
+  unfold poly__reduction; smpl_inO.
+  - exact eliminateOR_poly.
+  - apply inOPoly_comp; [solve_proper | exact tseytin_poly | smpl_inO].
+Qed.
+#[export] Instance reduction_mono: Proper (le ==> le) poly__reduction.
+Proof. unfold poly__reduction, poly__eliminateOR. solve_proper. Qed.
+
 (** ** full reduction *)
 Theorem FSAT_to_SAT_poly : FSAT ⪯p SAT. 
 Proof. 
@@ -935,7 +943,7 @@ Proof.
     + eexists. eapply computesTime_timeLeq. 2: apply term_reduction. 
       cbn -[Nat.add Nat.mul]. intros f _. split; [ | easy]. apply reduction_time_bound. 
     + apply reduction_poly. 
-    + apply reduction_poly. 
+    + solve_proper. 
     + destruct (reduction_poly_size) as (h & H1 & H2). exists h; [apply H1 | apply H2 | apply H2]. 
   - apply FSAT_to_SAT. 
 Qed. 
@@ -947,7 +955,7 @@ Proof.
     + eexists. eapply computesTime_timeLeq. 2: apply term_reduction. 
       cbn -[Nat.add Nat.mul]. intros f _. split; [ | easy]. apply reduction_time_bound. 
     + apply reduction_poly. 
-    + apply reduction_poly. 
+    + solve_proper. 
     + destruct (reduction_poly_size) as (h & H1 & H2). exists h; [apply H1 | apply H2 | apply H2]. 
   - apply FSAT_to_3SAT. 
 Qed.

@@ -106,19 +106,15 @@ Section fixX.
   Proof. 
     unfold CC_cards_time. unfold poly__CCCards, c__CCCardsBound. 
     rewrite (map_time_bound_env (Y := unit) (X := (TCCCard X)) (fT := fun _ _ => c__TCCCardToCCCard) (f__bound := fun n => c__TCCCardToCCCard)).
-    3: easy. 
-    2: { 
-      split.
-      - intros _ _. reflexivity. 
-      - smpl_inO.
-    }
-    rewrite list_size_length. nia. 
-  Qed. 
+    - rewrite list_size_length. nia.
+    - split; [reflexivity | apply monotonic_c].
+    - constructor.
+  Qed.
 
-  Lemma CCCards_poly : monotonic poly__CCCards /\ inOPoly poly__CCCards. 
-  Proof. 
-    split; unfold poly__CCCards; smpl_inO. 
-  Qed. 
+  Lemma CCCards_poly : inOPoly poly__CCCards.
+  Proof. unfold poly__CCCards; smpl_inO. Qed.
+  #[export] Instance CCCards_mono: Proper (le ==> le) poly__CCCards.
+  Proof. unfold poly__CCCards. solve_proper. Qed.
 
   Definition CC_cards_size (w : list (TCCCard X)): size (enc (CC_cards w)) <= size (enc (w)) + (|w|) * c__TCCCardToCCCardSize. 
   Proof. 
@@ -144,18 +140,19 @@ Lemma FlatTCC_to_FlatCC_poly : FlatTCCLang ⪯p FlatCCLang.
 Proof. 
   apply reducesPolyMO_intro with (f := FCC_instance).
   - exists (fun n => c__FCC_instance + poly__CCCards n).  
-    + extract. solverec. rewrite CC_cards_time_bound. 
-      poly_mono CCCards_poly. 
-      2: (replace_le (size (enc (FlatTCC.cards x))) with (size (enc x)) by (rewrite FlatTCC_enc_size; lia)); reflexivity. unfold c__FCC_instance; lia. 
+    + extract. solverec. rewrite CC_cards_time_bound.
+      replace_le (size (enc (FlatTCC.cards x))) with (size (enc x))
+        by (rewrite FlatTCC_enc_size; lia).
+      unfold c__FCC_instance; lia. 
     + smpl_inO. apply CCCards_poly. 
-    + smpl_inO. apply CCCards_poly. 
-    + evar (f : nat -> nat). exists f. repeat split.
+    + solve_proper. 
+    + evar (f : nat -> nat). exists f.
       * intros fpr. unfold FCC_instance. rewrite FlatCC_enc_size; cbn. 
         rewrite CC_cards_size. rewrite list_size_length. 
         rewrite (size_nat_enc 1). rewrite (size_nat_enc 3). 
         instantiate (f := fun n => (1 + c__TCCCardToCCCardSize) * n + 4 * c__natsizeS + 2 * c__natsizeO + 9). subst f. 
         rewrite FlatTCC_enc_size. cbn -[Nat.add Nat.mul]. nia.
-      * subst f. smpl_inO. 
-      * subst f. smpl_inO. 
+      * unfold f. smpl_inO. 
+      * unfold f. solve_proper. 
   - apply FlatTCC_to_FlatCC. 
 Qed. 

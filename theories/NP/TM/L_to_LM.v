@@ -51,23 +51,23 @@ Proof.
     {subst n0. rewrite !LProd.size_prod;cbn [fst snd]. now rewrite LTerm.size_term_enc_r at 1. }
     unfold time. unfold add_time, mult_time. rewrite H . reflexivity.
   }
-  1,2:now unfold time;smpl_inO.
-  {unfold f. evar (resSize : nat -> nat). [resSize]:intros n0. eexists resSize.
-   {intros [[x mSize] steps].
-    set(n0:=size (enc (x, mSize, steps))).
-    rewrite !LProd.size_prod;cbn [fst snd].
-    setoid_rewrite size_nat_enc at 2.
-    eassert (steps <= n0) as ->.
-    {subst n0. rewrite !LProd.size_prod;cbn [fst snd]. now rewrite size_nat_enc_r at 1. }
-    eassert (size (enc mSize) <= n0) as ->.
-    {subst n0. rewrite !LProd.size_prod;cbn [fst snd]. easy. }
-    rewrite compile_enc_size.
-    eassert (size x <= n0) as ->.
-    {subst n0. rewrite !LProd.size_prod;cbn [fst snd]. now rewrite size_term_enc_r at 1. }
-    unfold resSize. reflexivity.
-   }
-   1,2:unfold resSize;smpl_inO.
-  }
+  - unfold time. smpl_inO.
+  - unfold time. solve_proper.
+  - unfold f. evar (resSize : nat -> nat). [resSize]:intros n0. eexists resSize.
+    + intros [[x mSize] steps].
+      set(n0:=size (enc (x, mSize, steps))).
+      rewrite !LProd.size_prod;cbn [fst snd].
+      setoid_rewrite size_nat_enc at 2.
+      eassert (steps <= n0) as ->.
+      {subst n0. rewrite !LProd.size_prod;cbn [fst snd]. now rewrite size_nat_enc_r at 1. }
+      eassert (size (enc mSize) <= n0) as ->.
+      {subst n0. rewrite !LProd.size_prod;cbn [fst snd]. easy. }
+      rewrite compile_enc_size.
+      eassert (size x <= n0) as ->.
+      {subst n0. rewrite !LProd.size_prod;cbn [fst snd]. now rewrite size_term_enc_r at 1. }
+      unfold resSize. reflexivity.
+   + unfold resSize. smpl_inO.
+   + unfold resSize. solve_proper.
 Qed.
 
 (*

@@ -1,5 +1,10 @@
 From Undecidability.L.Datatypes Require Export LNat.
 
+Fact nat_size_mul a b: size (enc (a * b)) <= size (enc a) * size (enc b). 
+Proof. 
+  rewrite !size_nat_enc. unfold c__natsizeS. nia. 
+Qed.
+
 Definition c__sqrt_iter := 5.
 Definition sqrt_iter_time (k p q r: nat) := 4 + 20 * k.
 #[global] Instance termT_sqrt_iter:

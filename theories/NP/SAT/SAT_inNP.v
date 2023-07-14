@@ -99,6 +99,7 @@ Section fixX.
       rewrite IHa. split; [ firstorder | intros [[-> | H2] H3]; [congruence | auto]]. 
   Qed. 
 
+  (*TODO: replace with Coq.Lists.List.nodup *)
   Fixpoint dedup (a : list X) := match a with 
   | [] => []
   | x :: a => if list_in_decb eqbX a x then dedup a else x :: dedup a
@@ -422,8 +423,9 @@ Instance term_evalClause : computableTime' evalClause _ := projT2 _term_evalClau
     { intros (a & C). unfold evalClause_time. 
       rewrite !list_size_length. rewrite maxSize_enc_size. 
       rewrite size_prod. cbn. [p] : exact (n * n * n). 
-      and_solve p. } 
-    all: subst p; smpl_inO. 
+      and_solve p. }
+    - unfold p. smpl_inO.
+    - unfold p. solve_proper. 
   Qed.
   Arguments evalClause_time: simpl never. 
 
@@ -458,7 +460,8 @@ Instance term_evalCnf : computableTime' evalCnf _ := projT2 _term_evalCnf.
         inst_const. } 
       rewrite sumn_map_const. rewrite list_size_length. rewrite size_prod. 
       [p]: exact (n * isP__poly evalClause_poly n + n + 1). and_solve p. } 
-    all: subst p; smpl_inO. 
+    - unfold p. smpl_inO.
+    - unfold p. solve_proper.
   Qed.
 
   (** sat_verifierb *)
@@ -488,7 +491,8 @@ Proof.
       intros cn a H.  cbn. exists a; tauto.  
     - unfold SAT, sat_verifier. intros cn [a H]. exists (compressAssignment a cn). split. 
       + apply compressAssignment_cnf_equiv in H. cbn. apply H.
-      + apply assignment_small_size. cbn. apply compressAssignment_small. 
+      + apply assignment_small_size, compressAssignment_small.
+    - solve_proper.
   }
 
   unfold inTimePoly. exists_poly p. repeat split.  
@@ -499,5 +503,6 @@ Proof.
       set (L_facts.size _). [p]: intros n. and_solve p.
     + intros [N a]. cbn. apply sat_verifierb_correct.
   } 
-  all: subst p; smpl_inO. 
+  - unfold p. smpl_inO.
+  - unfold p. solve_proper.
 Qed.

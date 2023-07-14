@@ -181,11 +181,11 @@ Proof.
         rewrite list_in_decb_time_bound at 1. instantiate (1 := fun _ => _). cbn. reflexivity. 
     } 
     rewrite sumn_map_const. 
-    rewrite list_size_length. 
-    poly_mono (@list_in_decb_poly (nat * nat) _ _ _ _). 2: { instantiate (1 := size (enc E) + size (enc (a::l))). lia. }
-    unfold poly__allPairsOfEdgesDecb. 
-    poly_mono (@list_in_decb_poly (nat * nat) _ _ _ _) at 2. 2: { instantiate (1 := size (enc E) + size (enc (a::l))). rewrite list_size_cons. lia. }
-    rewrite list_size_cons at 3 4 6. 
+    rewrite list_size_length.
+    setoid_replace (size (enc E)) with (size (enc E) + size (enc (a::l))) using relation le at 1 by easy.
+    unfold poly__allPairsOfEdgesDecb.
+    setoid_replace (size (enc E) + size (enc l)) with (size (enc E) + size (enc (a::l))) using relation le at 3 by now rewrite list_size_cons.
+    rewrite list_size_cons at 3 4 6.
     
     (* nia is too dumb to solve this; leq_crossout is smart enough and fast, but produces proof terms which are too large*)
     replace_le (size (enc l)) with (size (enc E) + size (enc l)) by lia at 1. 
@@ -194,14 +194,16 @@ Proof.
     replace (poly__listInDecb (X := nat * nat) (size (enc E) + size (enc (a :: l))) + c__fedgesEdgeInDecb +
  c__allPairsOfEdgesDecbStep + c__forallb) with (poly__listInDecb (X := nat * nat) (size (enc E) + size (enc (a::l))) + c__allPairsOfEdgesDecbBound1) by (unfold c__allPairsOfEdgesDecbBound1; lia). 
     unfold c__allPairsOfEdgesDecbBound2. 
-    unfold c__listsizeCons. 
-    lia. 
+    unfold c__listsizeCons.
+    lia.
 Qed.
-Lemma allPairsOfEdges_decb_poly : monotonic poly__allPairsOfEdgesDecb /\ inOPoly poly__allPairsOfEdgesDecb. 
+Lemma allPairsOfEdges_decb_poly : inOPoly poly__allPairsOfEdgesDecb. 
 Proof. 
-  unfold poly__allPairsOfEdgesDecb; split; smpl_inO; apply list_in_decb_poly. 
-Qed. 
-    
+  unfold poly__allPairsOfEdgesDecb; smpl_inO; apply list_in_decb_poly. 
+Qed.
+#[export] Instance allPairsOfEdges_decb_mono: Proper (le ==> le) poly__allPairsOfEdgesDecb.
+Proof. unfold poly__allPairsOfEdgesDecb. solve_proper. Qed.
+
 Definition c__isfCliqueDecb := 21. 
 Definition isfClique_decb_time (G : fgraph) (l : list fvertex) := let (V, E) := G in list_ofFlatType_dec_time V l + dupfreeb_time l + allPairsOfEdges_decb_time l E + c__isfCliqueDecb.
 #[export]
@@ -216,17 +218,24 @@ Proof.
   unfold isfClique_decb_time. destruct G as (V & E). 
   rewrite list_ofFlatType_dec_time_bound. 
   rewrite dupfreeb_time_bound. 
-  rewrite allPairsOfEdges_decb_time_bound. 
-  poly_mono list_ofFlatType_dec_poly. 2: { instantiate (1 := size (enc (V, E)) + size (enc l)). rewrite size_prod; cbn. lia. }
-  poly_mono (@dupfreeb_poly nat _ _ _ _). 2: { instantiate (1 := size (enc (V, E)) + size (enc l)). rewrite size_prod; cbn. lia. }
-  poly_mono allPairsOfEdges_decb_poly. 2: { instantiate (1 := size (enc (V, E)) + size (enc l)). rewrite size_prod; cbn. lia. }
-  unfold poly__isfCliqueDecb; solverec.  
+  rewrite allPairsOfEdges_decb_time_bound.
+  setoid_replace (size (enc V) + size (enc l)) with (size (enc (V, E)) + size (enc l))
+    using relation le by (now rewrite size_prod; cbn).
+  setoid_replace (size (enc l)) with (size (enc (V, E)) + size (enc l))
+    using relation le at 2 by easy.
+  setoid_replace (size (enc E) + size (enc l)) with (size (enc (V, E)) + size (enc l))
+    using relation le by (now rewrite size_prod; cbn).
+  unfold poly__isfCliqueDecb. solverec.
 Qed. 
-Lemma isfClique_decb_poly: monotonic poly__isfCliqueDecb /\ inOPoly poly__isfCliqueDecb. 
+Lemma isfClique_decb_poly: inOPoly poly__isfCliqueDecb. 
 Proof. 
-  unfold poly__isfCliqueDecb; split; smpl_inO. 
-  all: first [apply list_ofFlatType_dec_poly | apply dupfreeb_poly | apply allPairsOfEdges_decb_poly]. 
-Qed. 
+  unfold poly__isfCliqueDecb; smpl_inO.
+  - exact list_ofFlatType_dec_poly.
+  - apply dupfreeb_poly.
+  - exact allPairsOfEdges_decb_poly.
+Qed.
+#[export] Instance isfClique_decb_mono: Proper (le ==> le) poly__isfCliqueDecb.
+Proof. unfold poly__isfCliqueDecb. solve_proper. Qed.
 
 (** isfKClique_decb *)
 Definition c__isfKCliqueDecb := 12 + c__length. 
@@ -248,10 +257,10 @@ Proof.
   unfold eqbTime. rewrite Nat.le_min_l, list_size_enc_length. 
   unfold poly__isfKCliqueDecb. solverec.  
 Qed. 
-Lemma isfKClique_decb_poly : monotonic poly__isfKCliqueDecb /\ inOPoly poly__isfKCliqueDecb.
-Proof. 
-  unfold poly__isfKCliqueDecb; split; smpl_inO; apply isfClique_decb_poly. 
-Qed.  
+Lemma isfKClique_decb_poly : inOPoly poly__isfKCliqueDecb.
+Proof. unfold poly__isfKCliqueDecb; smpl_inO; apply isfClique_decb_poly. Qed.
+#[export] Instance isfKClique_decb_mono: Proper (le ==> le) poly__isfKCliqueDecb.
+Proof. unfold poly__isfKCliqueDecb. solve_proper. Qed.
 
 (** fedges_symmetric_decb *)
 Definition fedges_symmetric_decb_step (E : list fedge) (e : fedge) := let (v1, v2) := e in fedges_edge_in_decb E (v2, v1). 
@@ -286,10 +295,12 @@ Proof.
   rewrite sumn_map_const. rewrite list_size_length. 
   unfold poly__fedgesSymmetricDecb. lia. 
 Qed. 
-Lemma fedges_symmetric_decb_poly : monotonic poly__fedgesSymmetricDecb /\ inOPoly poly__fedgesSymmetricDecb. 
+Lemma fedges_symmetric_decb_poly : inOPoly poly__fedgesSymmetricDecb. 
 Proof. 
-  unfold poly__fedgesSymmetricDecb; split; smpl_inO; apply list_in_decb_poly. 
-Qed. 
+  unfold poly__fedgesSymmetricDecb; smpl_inO; apply list_in_decb_poly. 
+Qed.
+#[export] Instance fedges_symmetric_decb_mono: Proper (le ==> le) poly__fedgesSymmetricDecb.
+Proof. unfold poly__fedgesSymmetricDecb. solve_proper. Qed.
 
 (** fedge_wf_decb *)
 Definition c__fedgeWfDecb := 2 * c__ltb + 12. 
@@ -320,10 +331,10 @@ Proof.
   rewrite size_nat_enc_r with (n := V) at 1. 
   unfold poly__fedgesWfDecb. leq_crossout. 
 Qed.
-Lemma fedges_wf_decb_poly : monotonic poly__fedgesWfDecb /\ inOPoly poly__fedgesWfDecb. 
-Proof. 
-  unfold poly__fedgesWfDecb; split; smpl_inO. 
-Qed. 
+Lemma fedges_wf_decb_poly : inOPoly poly__fedgesWfDecb. 
+Proof. unfold poly__fedgesWfDecb; smpl_inO. Qed.
+#[export] Instance fedges_wf_decb_mono: Proper (le ==> le) poly__fedgesWfDecb.
+Proof. unfold poly__fedgesWfDecb. solve_proper. Qed.
 
 (** fgraph_wf_decb *)
 Definition c__fgraphWfDecb := 11. 
@@ -338,15 +349,21 @@ Definition poly__fgraphWfDecb n := poly__fedgesSymmetricDecb n + poly__fedgesWfD
 Lemma fgraph_wf_decb_time_bound G : fgraph_wf_decb_time G <= poly__fgraphWfDecb (size (enc G)). 
 Proof. 
   unfold fgraph_wf_decb_time. destruct G as (V & E). 
-  rewrite fedges_symmetric_decb_time_bound, fedges_wf_decb_time_bound. 
-  poly_mono fedges_symmetric_decb_poly. 2: { instantiate (1 := size (enc (V, E))). rewrite size_prod; cbn; lia. }
-  poly_mono fedges_wf_decb_poly. 2: { instantiate (1 := size (enc (V, E))). rewrite size_prod; cbn; lia. }
-  unfold poly__fgraphWfDecb; lia.  
+  rewrite fedges_symmetric_decb_time_bound, fedges_wf_decb_time_bound.
+  setoid_replace (size (enc E)) with (size (enc (V, E)))
+    using relation le at 1 by (now rewrite size_prod; cbn).
+  setoid_replace (size (enc V) + size (enc E)) with (size (enc (V, E)))
+    using relation le at 1 by (rewrite size_prod; cbn; lia).
+  unfold poly__fgraphWfDecb. reflexivity.
 Qed. 
-Lemma fgraph_wf_decb_poly : monotonic poly__fgraphWfDecb /\ inOPoly poly__fgraphWfDecb. 
-Proof. 
-  unfold poly__fgraphWfDecb; split; smpl_inO; first [apply fedges_symmetric_decb_poly | apply fedges_wf_decb_poly]. 
-Qed. 
+Lemma fgraph_wf_decb_poly : inOPoly poly__fgraphWfDecb. 
+Proof.
+  unfold poly__fgraphWfDecb; smpl_inO.
+  - apply fedges_symmetric_decb_poly.
+  - apply fedges_wf_decb_poly.
+Qed.
+#[export] Instance fgraph_wf_decb_mono: Proper (le ==> le) poly__fgraphWfDecb.
+Proof. unfold poly__fgraphWfDecb. solve_proper. Qed.
 
 
 (** ** NP containment *)
@@ -361,7 +378,8 @@ Proof.
       destruct G as (V & E). destruct H1 as [_ ((H1 & H2 & _) & _)].  
       enough (size (enc l) <= size (enc (seq 0 V))) as H3. 
       { rewrite H3. rewrite list_size_of_el. 
-        2: { intros a (_ & Hb)%in_seq. rewrite nat_size_le; [ | rewrite Hb; reflexivity]. 
+        2: { intros a (_ & Hb)%in_seq.
+             rewrite nat_size_le; [| apply Nat.lt_le_incl; exact Hb].
              reflexivity. 
         } 
         rewrite seq_length. cbn -[Nat.mul]. rewrite size_nat_enc_r with (n := V) at 2 3.
@@ -372,17 +390,21 @@ Proof.
       + intros a Hel. apply H1 in Hel. apply in_seq. split; [lia | apply Hel]. 
       + apply H2. 
     - smpl_inO. 
-    - smpl_inO. 
+    - solve_proper.
   } 
   eexists. split. 
   - constructor. exists (fun '(G, k, l) => fgraph_wf_decb G && isfKClique_decb k G l). 
-    + extract. recRel_prettify2. rewrite isfKClique_decb_time_bound, fgraph_wf_decb_time_bound. 
-      poly_mono isfKClique_decb_poly. 2: {instantiate (1 := size (enc (a, b1, b0, b))). rewrite !size_prod; cbn. lia. }
-      poly_mono fgraph_wf_decb_poly. 2: {instantiate (1 := size (enc (a, b1, b0, b))). rewrite !size_prod; cbn. lia. }
+    + extract. recRel_prettify2. rewrite isfKClique_decb_time_bound, fgraph_wf_decb_time_bound.
+      setoid_replace (size (enc (a, b1)) + size (enc b)) with (size (enc (a, b1, b0, b)))
+        using relation le at 1 by (rewrite !size_prod; cbn; lia).
+      setoid_replace (size (enc (a, b1))) with (size (enc (a, b1, b0, b)))
+        using relation le at 1 by (rewrite !size_prod; cbn; lia).
       instantiate (1 := fun n => _). cbn. generalize (size (enc (a, b1, b0, b))). reflexivity. 
     + intros ((G & k) & l). cbn. rewrite andb_true_iff. rewrite fgraph_wf_decb_iff. 
       split. 
-      * intros [H1 H2]; split; [apply H1 | rewrite isfKClique_decb_iff; easy]. 
-      * intros [H1 H2]; split; [apply H1 | rewrite <- isfKClique_decb_iff; easy ]. 
-  - split; smpl_inO; first [apply fgraph_wf_decb_poly | apply isfKClique_decb_poly]. 
+      * intros [H1 H2]; split; [apply H1 | now rewrite isfKClique_decb_iff].
+      * intros [H1 H2]; split; [apply H1 | now rewrite <- isfKClique_decb_iff].
+  - split.
+    + smpl_inO; [apply isfKClique_decb_poly | apply fgraph_wf_decb_poly ].
+    + solve_proper.
 Qed.

@@ -17,7 +17,7 @@ Section NP_certificate_fix.
   Context `{RegY : encodable Y}.
 
   Definition inTimePoly {X} `{encodable X} `(P: X -> Prop):=
-    exists f, inhabited (decInTime P f) /\ inOPoly f /\ monotonic f.
+    exists f, inhabited (decInTime P f) /\ inOPoly f /\ Proper (le ==> le) f.
 
   Record polyCertRel (P: X -> Prop) (R: X -> Y -> Prop) : Type :=
     polyBoundedWitness_introSpec
@@ -26,8 +26,11 @@ Section NP_certificate_fix.
         sound__pCR : forall x y, R x y -> P x;
         complete__pCR : forall x, P x -> exists (y:Y), R x y /\ size (enc y) <= p__pCR (size (enc x));
         poly__pCR : inOPoly p__pCR ;
-        mono__pCR : monotonic p__pCR;
+        mono__pCR : Proper (le ==> le) p__pCR;
       }.
+
+  #[global] Instance monotonic__pCR P R (H: polyCertRel P R): Proper (le ==> le) (p__pCR H).
+  Proof. apply mono__pCR. Qed.
 
   Lemma polyCertRel_compPoly (P:X -> Prop) R:
     polyCertRel P R -> exists H : polyCertRel P R , inhabited (polyTimeComputable (p__pCR H)).
@@ -44,7 +47,7 @@ Section NP_certificate_fix.
 
   
   Lemma inTimePoly_compTime  (P:X -> Prop):
-    inTimePoly P -> exists f, inhabited (polyTimeComputable f) /\ inhabited (decInTime P f) /\ inOPoly f /\ monotonic f.
+    inTimePoly P -> exists f, inhabited (polyTimeComputable f) /\ inhabited (decInTime P f) /\ inOPoly f /\ Proper (le ==> le) f.
   Proof.
     intros (time&[P__dec]&t__poly&t__mono).
     destruct (inOPoly_computable t__poly) as (p'&?&Hbounds&?&?).
@@ -68,7 +71,6 @@ Section NP_certificate_fix.
   
 End NP_certificate_fix.
 Smpl Add 10 (simple apply poly__pCR) : inO.
-Smpl Add 10 (simple apply mono__pCR) : inO.
 
 Local Set Warnings "-cannot-define-projection".
 Record inNP {X} `{encodable X} (P : X -> Prop) : Prop :=
@@ -87,16 +89,16 @@ Lemma inNP_intro {X Y} `{_:encodable X} `{encodable Y} `{@encInj Y _} {_:decodab
   -> polyCertRel P R
   -> inNP P.
 Proof.
-  cbn.
   intros decode__comp R__comp R__bound.
   eexists (fun x y => exists y', y = enc y' /\ R x y').
   2:{ 
       exists (fun x => p__pCR R__bound x * c__termsize).
-      3,4:solve [smpl_inO].
-      -intros x y' (y&->&Hy). now eapply sound__pCR.
-      -intros x ?. edestruct (complete__pCR R__bound) as (y&?&?). easy.
+      - intros x y' (y&->&Hy). now eapply sound__pCR.
+      - intros x ?. edestruct (complete__pCR R__bound) as (y&?&?). easy.
        exists (enc y);split. easy.
-       rewrite size_term_enc. unfold c__termsize, c__natsizeS. lia.
+       rewrite size_term_enc. unfold c__termsize, c__natsizeS. easy.
+      - smpl_inO.
+      - solve_proper.
   }
   { (*TODO: simplify*)
     destruct R__comp as (t__f&[R__comp]&?&mono_t__f).
@@ -115,10 +117,10 @@ Proof.
       *eapply decode_correct2 in H3 as <-.
        remember (size (enc a) + size (enc (enc y)) + 4) as n eqn:eqn.
        rewrite (mono_t__f _ n). 2:subst n;rewrite <- size_term_enc_r;lia.
-       rewrite (mono__polyTC _ (x':=n)). 2:lia.
+       setoid_replace (size (enc (enc y))) with n using relation le by easy.
        unfold t__f';reflexivity.
-      *rewrite (mono__polyTC _ (x':=(size (enc a) + size (enc b) + 4))). 2:lia.
-       unfold t__f'. lia.
+      * setoid_replace (size (enc b)) with (size (enc a) + size (enc b) + 4) using relation le at 1 by easy.
+        now unfold t__f'.
      +unfold f'. intros [x]. cbn.
       destruct decode  as [y| ] eqn:H'.
       *etransitivity. 2:unshelve eapply correct__decInTime;easy. cbn.
@@ -127,9 +129,9 @@ Proof.
        --cbn. enough (y = y') by congruence. eapply inj_enc. congruence.
        --eauto.
       *split.  2:eauto.
-       intros (?&->&?). rewrite decode_correct in H'.  easy.
-    -unfold t__f'. smpl_inO.
-    -unfold t__f'. smpl_inO.
+       intros (?&->&?). rewrite decode_correct in H'. easy.
+    - unfold t__f'. smpl_inO.
+    - unfold t__f'. solve_proper.
   }
 Qed.
 
@@ -148,17 +150,18 @@ Proof.
     split. 
     { destruct H1 as [H1]. destruct H1. 
       constructor. exists (fun (p : X * unit) => let (x , _) := p in f__decInTime x).
-      + extract. solverec. unfold monotonic in H3. 
-        rewrite H3 with (x' := size (enc (a, tt))). 2: { rewrite size_prod; cbn; lia. }  
+      + extract. solverec.
+        setoid_replace (size (enc a)) with (size (enc (a, tt))) using relation le. 2: { rewrite size_prod. now cbn. }  
         [f']: intros n. subst f'. cbn. 
         generalize (size (enc (a, tt))). intros; reflexivity.
       + intros [x ?]. cbn. apply correct__decInTime. 
     } 
-    split; subst f'; smpl_inO. 
+    split; subst f'; [smpl_inO | solve_proper].
   - exists (fun n => size (enc tt)). 
-    3, 4: smpl_inO. 
     + intros x _. easy.
-    + intros x H2. exists tt. easy. 
+    + intros x H2. exists tt. easy.
+    + smpl_inO.
+    + easy. 
 Qed. 
 
 (** ** Poly Time Reduction*)
@@ -189,10 +192,11 @@ Qed.
 Lemma reducesPolyMO_reflexive X {regX : encodable X} (P : X -> Prop) : P ⪯p P.
 Proof.
   eapply reducesPolyMO_intro with (f := fun x => x). 2:easy. 
-  exists (fun _ => 1). 4:exists (fun x => x).
-  2,3,5,6:solve [ smpl_inO].
-  -extract. solverec.
-  -reflexivity.
+  exists (fun _ => 1).
+  - extract. solverec.
+  - smpl_inO.
+  - easy.
+  - exists (fun x => x); [reflexivity | smpl_inO | solve_proper].
 Qed.
 
 Lemma reducesPolyMO_transitive X Y Z {regX : encodable X} {regY : encodable Y} {regZ : encodable Z}
@@ -206,12 +210,12 @@ Proof.
   exists (fun x => time__polyTC f__c x + time__polyTC g__c (resSize__rSP f__c x) + 1).
   -extract. solverec.
    erewrite (mono__polyTC g__c). 2:now apply bounds__rSP . reflexivity.
-  -smpl_inO.  eapply inOPoly_comp. all:smpl_inO.
-  -smpl_inO.
+  - smpl_inO. eapply inOPoly_comp; [solve_proper | smpl_inO | smpl_inO].
+  - solve_proper.
   -exists (fun x => resSize__rSP g__c (resSize__rSP f__c x)).
    +intros. rewrite (bounds__rSP g__c), (mono__rSP g__c). 2:apply (bounds__rSP f__c). easy.
-   +eapply inOPoly_comp. all:smpl_inO.
-   +eapply monotonic_comp. all:smpl_inO.
+   + eapply inOPoly_comp; [solve_proper | smpl_inO | smpl_inO].
+   + solve_proper.
 Qed.
 
 Lemma red_inNP X Y `{regX : encodable X} `{regY : encodable Y} (P : X -> Prop) `(Q : Y -> Prop) :
@@ -219,32 +223,32 @@ Lemma red_inNP X Y `{regX : encodable X} `{regY : encodable Y} (P : X -> Prop) `
 Proof.
   intros [f f__comp f__correct] [R polyR certR]. 
   exists (fun x z => R (f x) z).  
-  -(* destruct (polyRes__polyTC f__comp) as (size__f&Hsize__f&?&mono__sizef). *)
-   destruct polyR as (time__R&[R__comp]&inO__timeR&mono__timeR).
+  -destruct polyR as (time__R&[R__comp]&inO__timeR&mono__timeR).
    evar (time : nat -> nat). [time]:intros n.
    exists time. split.
-   (*eexists (fun n => cnst n (*)polyTimeC__t n*) + time__R (time__polyTC f__comp (size__f n + n)) + 7). split.*)
    +split. exists (fun '(x,z)=> f__decInTime R__comp (f x,z)).
     *extract. solverec.
      all:rewrite !LProd.size_prod. all:cbn [fst snd]. set (n0:=size (enc a) + size (enc b) + 4).
-     rewrite (mono__polyTC _ (x':=n0)). 2:subst n0;nia.
+     setoid_replace (size (enc a)) with n0 using relation le by easy.
      erewrite (mono__timeR _ _).
-     2:{ rewrite (bounds__rSP f__comp), (mono__rSP f__comp (x':=n0)). 2:unfold n0;lia. instantiate (1:=resSize__rSP f__comp n0 + n0). unfold n0;try lia. }
+     2: {
+      rewrite (bounds__rSP f__comp).
+      setoid_replace (size (enc a)) with n0 using relation le by easy.
+      instantiate (1:=resSize__rSP f__comp n0 + n0). unfold n0;try lia.
+     }
      unfold time. reflexivity. 
     *intros [x c]. cbn. rewrite <- correct__decInTime;cbn. easy.   
-   +unfold time;split;smpl_inO.
-    { eapply inOPoly_comp. all:smpl_inO. }
+   +unfold time; split.
+    * smpl_inO. eapply inOPoly_comp; [easy | smpl_inO | smpl_inO].
+    * solve_proper.
   -clear - certR f__correct f__comp.
    exists (fun x =>  p__pCR certR (resSize__rSP f__comp x)). 
    +intros ? ? ?%(sound__pCR certR);cbn. now apply f__correct.
    +intros x Hx;cbn. apply f__correct in Hx. edestruct (complete__pCR certR) as (?&?&?). eauto. eexists;split. easy.
     rewrite H0. cbn. apply mono__pCR. apply bounds__rSP.
-   +apply inOPoly_comp;smpl_inO.
-   +smpl_inO.
+   + apply inOPoly_comp; [solve_proper | smpl_inO | smpl_inO].
+   + solve_proper.
 Qed.
-
-
-
 
 (** ** NP Hardness and Completeness *)
 Definition NPhard X `{encodable X} (P : X -> Prop) :=
@@ -265,10 +269,11 @@ Corollary NPhard_sig X `{encodable X} vX `(P : X -> Prop):
 Proof.
   eapply red_NPhard.
   eapply reducesPolyMO_intro with (f := fun x => proj1_sig x). 2:easy. 
-  exists (fun _ => 2). 4:exists (fun x => x).
-  2,3,5,6:solve [ smpl_inO].
-  -extract. solverec.
-  -reflexivity.
+  exists (fun _ => 2).
+  - extract. solverec.
+  - apply inOPoly_c.
+  - apply monotonic_c.
+  - exists (fun x => x); [easy | smpl_inO | easy].
 Qed.
 
 Definition NPcomplete X `{encodable X} (P : X -> Prop) :=

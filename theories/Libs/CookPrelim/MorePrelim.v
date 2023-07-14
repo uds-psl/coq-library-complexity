@@ -349,7 +349,12 @@ Proof.
       * eauto. 
       * right; now apply IHl. 
   - rewrite IHl. split; intros H; [ eauto | now destruct H]. 
-Qed. 
+Qed.
+
+Lemma filterSome_length (X : Type) (l : list (option X)) : |filterSome l| <= |l|. 
+Proof. 
+  induction l; cbn; [lia | destruct a; cbn; lia].
+Qed.
 
 (*an actually usable version of the lemma without useless bool2Prop stuff *)
 Lemma in_filter_iff (X : Type) (x : X) (p : X -> bool) (A : list X): x el filter p A <-> x el A /\ p x = true. 

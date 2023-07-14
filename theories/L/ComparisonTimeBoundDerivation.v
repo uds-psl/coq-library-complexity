@@ -94,9 +94,11 @@ Instance term_evalVar : computableTime' evalVar (fun a _ => (1, fun v _ => (eval
     }
     unfold poly__evalVar. solverec.
   Qed.
-  Lemma evalVar_poly : inOPoly poly__evalVar /\ monotonic poly__evalVar.
-  Proof. unfold poly__evalVar; split; smpl_inO. Qed.
+  Lemma evalVar_poly : inOPoly poly__evalVar.
+  Proof. unfold poly__evalVar; smpl_inO. Qed.
   Smpl Add apply evalVar_poly : inO.
+  #[export] Instance evalVar_mono: Proper (le ==> le) poly__evalVar.
+  Proof. unfold poly__evalVar. solve_proper. Qed.
 
 
   (** evalLiteral *)
@@ -114,9 +116,11 @@ Instance term_evalLiteral : computableTime' evalLiteral (fun a _ => (1, fun l _ 
     unfold evalLiteral_time. destruct l as [s v]. rewrite evalVar_time_bound.
     unfold poly__evalLiteral; solverec.
   Qed.
-  Lemma evalLiteral_poly : inOPoly poly__evalLiteral /\ monotonic poly__evalLiteral.
-  Proof. unfold poly__evalLiteral; split; smpl_inO. Qed.
+  Lemma evalLiteral_poly : inOPoly poly__evalLiteral.
+  Proof. unfold poly__evalLiteral; smpl_inO. Qed.
   Smpl Add apply evalLiteral_poly : inO.
+  #[export] Instance evalLiteral_mono: Proper (le ==> le) poly__evalLiteral.
+  Proof. unfold poly__evalLiteral. solve_proper. Qed.
 
   Section fixX.
     Context {X : Type} `{encodable X}.
@@ -164,12 +168,15 @@ Instance term_evalClause : computableTime' evalClause (fun a _ => (1, fun C _ =>
     unfold evalClause_time. rewrite existsb_time_explicit.
     rewrite sumn_map_mono. 2:{ intros. rewrite evalLiteral_time_bound at 1. instantiate (1 := fun _ => _); cbn; reflexivity. }
     rewrite sumn_map_const. rewrite list_size_length.
-    poly_mono evalLiteral_poly. 2: replace_le (size (enc a)) with (size (enc a) + size (enc C)) by lia at 1; reflexivity.
+    setoid_replace (size (enc a)) with (size (enc a) + size (enc C))
+      using relation le at 1 by easy.
     unfold poly__evalClause; lia.
   Qed.
-  Lemma evalClause_poly : monotonic poly__evalClause /\ inOPoly poly__evalClause.
-  Proof. unfold poly__evalClause; split; smpl_inO. Qed.
+  Lemma evalClause_poly : inOPoly poly__evalClause.
+  Proof. unfold poly__evalClause; smpl_inO. Qed.
   Smpl Add apply evalClause_poly : inO.
+  #[export] Instance evalClause_mono: Proper (le ==> le) poly__evalClause.
+  Proof. unfold poly__evalClause. solve_proper. Qed.
 
   (* evalCnf *)
   Definition c__evalCnf := 3.
@@ -186,14 +193,19 @@ Instance term_evalCnf : computableTime' evalCnf (fun a _ => (1, fun N _ => (eval
   Proof.
     unfold evalCnf_time. rewrite forallb_time_explicit.
     rewrite sumn_map_mono. 2:{ intros. rewrite evalClause_time_bound at 1.
-      poly_mono evalClause_poly at 1. 2: { rewrite list_el_size_bound with (a := x). 2: apply H. reflexivity. }
-      instantiate (1 := fun _ => _); cbn; reflexivity. }
+      instantiate (1 := fun _ => _).
+      setoid_replace (size (enc x)) with (size (enc N)) using relation le
+        by now apply list_el_size_bound.
+      reflexivity. }
     rewrite sumn_map_const. rewrite list_size_length.
     unfold poly__evalCnf; lia.
   Qed.
-  Lemma evalCnf_poly : monotonic poly__evalCnf /\ inOPoly poly__evalCnf.
-  Proof. unfold poly__evalCnf; split; smpl_inO. Qed.
+
+  Lemma evalCnf_poly : inOPoly poly__evalCnf.
+  Proof. unfold poly__evalCnf; smpl_inO. Qed.
   Smpl Add apply evalCnf_poly : inO.
+  #[export] Instance evalCnf_mono: Proper (le ==> le) poly__evalCnf.
+  Proof. unfold poly__evalCnf. solve_proper. Qed.
 
   (** sat_verifierb *)
   Definition c__satVerifierb := 6.
@@ -207,11 +219,14 @@ Instance term_sat_verifierb : computableTime' sat_verifierb (fun p _ => (sat_ver
   Proof.
     unfold sat_verifierb_time, poly__satVerifierb.
     destruct p as [N a]. rewrite evalCnf_time_bound.
-    poly_mono evalCnf_poly. 2: { instantiate (1 := size (enc (N, a))). rewrite size_prod; cbn; lia. }
-    lia.
+    setoid_replace (size (enc a) + size (enc N)) with (size (enc (N, a)))
+      using relation le by (rewrite size_prod; cbn; lia).
+    reflexivity.
   Qed.
-  Lemma sat_verifierb_poly : inOPoly poly__satVerifierb /\ monotonic poly__satVerifierb.
-  Proof. unfold poly__satVerifierb; split; smpl_inO. Qed.
+  Lemma sat_verifierb_poly : inOPoly poly__satVerifierb.
+  Proof. unfold poly__satVerifierb; smpl_inO. Qed.
+  #[export] Instance sat_verifierb_mono: Proper (le ==> le) poly__satVerifierb.
+  Proof. unfold poly__satVerifierb. solve_proper. Qed.
 
 
   (** We obtain that SAT is in NP *)
@@ -227,7 +242,8 @@ Instance term_sat_verifierb : computableTime' sat_verifierb (fun p _ => (sat_ver
         intros cn  a H.  cbn. exists a; tauto.
       - unfold SAT, sat_verifier. intros cn [a H]. exists (compressAssignment a cn). split.
         + apply compressAssignment_cnf_equiv in H. cbn. apply H.
-        + apply assignment_small_size. cbn. apply compressAssignment_small.
+        + apply assignment_small_size, compressAssignment_small.
+      - solve_proper.
     }
 
     unfold inTimePoly. exists poly__satVerifierb. repeat split.
@@ -236,7 +252,8 @@ Instance term_sat_verifierb : computableTime' sat_verifierb (fun p _ => (sat_ver
         cbn. intros [N a] _. split; [ | easy]. apply sat_verifierb_time_bound.
       + intros [N a]. cbn. apply sat_verifierb_correct.
     }
-    all: apply sat_verifierb_poly.
+    - apply sat_verifierb_poly.
+    - solve_proper.
   Qed.
 End explicit_bounds.
 End explicit_bounds.
@@ -397,12 +414,13 @@ Instance term_sat_verifierb : computableTime' sat_verifierb _ := projT2 _term_sa
     1 : apply linDec_polyTimeComputable.
     2 : {
       exists (fun n => n * (1 + c__listsizeCons + c__listsizeNil)).
-      3, 4: smpl_inO.
+      3: smpl_inO.
       - unfold SAT, sat_verifier.
         intros cn a H.  cbn. exists a; tauto.
       - unfold SAT, sat_verifier. intros cn [a H]. exists (compressAssignment a cn). split.
         + apply compressAssignment_cnf_equiv in H. cbn. apply H.
-        + apply assignment_small_size. cbn. apply compressAssignment_small.
+        + apply assignment_small_size, compressAssignment_small.
+      - solve_proper.
     }
 
     unfold inTimePoly. exists_poly p. repeat split.
@@ -418,7 +436,8 @@ Instance term_sat_verifierb : computableTime' sat_verifierb _ := projT2 _term_sa
         all: rewrite size_prod; cbn; lia.
       + intros [N a]. cbn. apply sat_verifierb_correct.
     }
-    all: subst p; smpl_inO.
+    - unfold p. smpl_inO.
+    - unfold p. solve_proper.
   Qed.
 End uptoc_pure.
 End uptoc_pure.
@@ -529,7 +548,8 @@ Instance term_evalClause : computableTime' evalClause _ := projT2 _term_evalClau
     { intros (a & C). unfold evalClause_time.
       rewrite !list_size_length. rewrite maxSize_enc_size.
       rewrite size_prod. cbn. [p] : exact (n * n * n). and_solve p. }
-    all: subst p; smpl_inO.
+    - unfold p. smpl_inO.
+    - unfold p. solve_proper.
   Qed.
   Arguments evalClause_time: simpl never.
 
@@ -567,7 +587,8 @@ Instance term_evalCnf : computableTime' evalCnf _ := projT2 _term_evalCnf.
       rewrite sumn_map_const. rewrite list_size_length.
       replace_le (size (enc N)) with (size (enc (a, N))) by rewrite size_prod; cbn; lia.
       set (size _). and_solve p. }
-    all: subst p; smpl_inO.
+    - unfold p. smpl_inO.
+    - unfold p. solve_proper.
   Qed.
 
   (** sat_verifierb *)
@@ -591,13 +612,14 @@ Instance term_sat_verifierb : computableTime' sat_verifierb _ := projT2 _term_sa
     1 : apply linDec_polyTimeComputable.
     2 : {
       exists (fun n => n * (1 + c__listsizeCons + c__listsizeNil)).
-      3, 4: smpl_inO.
+      3: smpl_inO.
       - unfold SAT, sat_verifier.
         intros cn a H.  cbn. exists a; tauto.
       - unfold SAT, sat_verifier. intros cn [a H]. exists (compressAssignment a cn). split.
         + apply compressAssignment_cnf_equiv in H. cbn. apply H.
-        + apply assignment_small_size. cbn. apply compressAssignment_small.
-    }
+        + apply assignment_small_size, compressAssignment_small.
+      - solve_proper.
+    } 
 
     unfold inTimePoly. exists_poly p. repeat split.
     { exists (sat_verifierb).
@@ -607,7 +629,8 @@ Instance term_sat_verifierb : computableTime' sat_verifierb _ := projT2 _term_sa
         set (L_facts.size _). [p]: intros n. and_solve p.
       + intros [N a]. cbn. apply sat_verifierb_correct.
     }
-    all: subst p; smpl_inO.
+    - unfold p. smpl_inO.
+    - unfold p. solve_proper.
   Qed.
 
 End uptoc_mixed.

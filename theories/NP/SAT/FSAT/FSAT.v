@@ -233,8 +233,7 @@ Proof.
     unfold poly__formulaMaxVar, c__formulaMaxVarBound1. leq_crossout. 
   - rewrite IHf. setoid_rewrite formula_enc_size at 2. unfold poly__formulaMaxVar, c__formulaMaxVarBound1. leq_crossout. 
 Qed. 
-Lemma formula_maxVar_poly : monotonic poly__formulaMaxVar /\ inOPoly poly__formulaMaxVar. 
+Lemma formula_maxVar_poly : inOPoly poly__formulaMaxVar. 
 Proof. 
-  split; unfold poly__formulaMaxVar; smpl_inO. 
+  unfold poly__formulaMaxVar; smpl_inO. 
 Qed. 
-

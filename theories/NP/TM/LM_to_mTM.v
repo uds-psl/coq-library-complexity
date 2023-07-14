@@ -11,8 +11,6 @@ From Undecidability.TM.L Require M_LHeapInterpreter.
 
 Set Default Proof Using "Type".
 
-(* Check LMtoTM.M. *)
-
 From Undecidability Require Import LSum.
 From Complexity Require Import L.TM.CompCode.
 
@@ -161,10 +159,6 @@ End M.
 
 From Complexity Require Import PolyTimeComputable.
 
-(*REMOVE?*)
-Import GenericNary UpToCNary.
-From Coq Require Import CRelationClasses CMorphisms.
-
 (* TODO MOVE :tidy up *)
 Lemma pTC_length X `{encodable X}: polyTimeComputable (@length X).
 Proof.
@@ -173,10 +167,12 @@ Proof.
   { eapply computableTime_timeLeq. 2:exact _.
     solverec. rewrite size_list_enc_r. set (n:=L_facts.size _). [time]:refine (fun n => _). unfold time. reflexivity.
   }
-  1,2:unfold time;now smpl_inO.
-  eexists (fun n => _). 
-  {intros. rewrite !LNat.size_nat_enc, size_list_enc_r. set (n:= L_facts.size _). reflexivity. }
-    1,2:unfold time;now smpl_inO.
+  - unfold time. smpl_inO.
+  - unfold time. solve_proper.
+  - eexists (fun n => _).
+    + intros. rewrite !LNat.size_nat_enc, size_list_enc_r. set (n:= L_facts.size _). reflexivity.
+    + smpl_inO.
+    + solve_proper.
 Qed.
 
 Smpl Add 1 simple apply pTC_length : polyTimeComputable.
@@ -248,7 +244,7 @@ Smpl Add 5 lazymatch goal with
 
 
 Lemma mono_map_time X `{encodable X} (f: nat -> nat) (xs: list X):
-  monotonic f
+  Proper (le ==> le) f
   -> sumn (map (fun x => f (L_facts.size (enc x))) xs) <= length xs * f (L_facts.size (enc xs)).
 Proof.
   intros Hf. 
@@ -268,7 +264,8 @@ Proof.
    unshelve erewrite (_ : length x <= n). now apply size_list_enc_r.
    [time]:intro. unfold time. reflexivity.
   }
-  1,2:now unfold time;smpl_inO.
+  { unfold time. smpl_inO. }
+  { unfold time. solve_proper. }
   evar (size:nat -> nat). exists size. 
   {intros x. rewrite size_list,sumn_map_add,sumn_map_c,map_map,map_length.
    rewrite sumn_map_le_pointwise.
@@ -278,7 +275,8 @@ Proof.
    unshelve erewrite (_ : length x <= n). now apply size_list_enc_r.
    [size]:intro. unfold size. reflexivity.
   }
-  1,2:now unfold size;smpl_inO.
+  { unfold size. smpl_inO. }
+  { unfold size. solve_proper. }
 Qed.
 
 
@@ -297,7 +295,8 @@ Proof.
    set (n:=L_facts.size _).
    [time]:intro. unfold time. reflexivity.
   }
-  1,2:now unfold time;smpl_inO.
+  { unfold time. smpl_inO. }
+  { unfold time. solve_proper. }
   evar (size:nat -> nat). exists size. 
   {intros x.
    rewrite size_list, sumn_map_add,sumn_map_c.
@@ -323,7 +322,8 @@ Proof.
    }
    set (L_facts.size _). [size]:intros n. unfold size. reflexivity.
   }
-  1,2:unfold size;smpl_inO.
+  - unfold size. smpl_inO.
+  - unfold size. solve_proper.
 Qed.
 
 Lemma pTC_app X Y `{encodable X} `{encodable Y} (f1 f2:X -> list Y):
@@ -337,14 +337,16 @@ Proof.
       { rewrite LProd.size_prod,size_list_enc_r;cbn. nia. }
       set (L_facts.size _). [time]:intro. now unfold time.
      }
-     1,2:now unfold time;smpl_inO.
+     { unfold time. smpl_inO. }
+     { unfold time. solve_proper. }
      { evar (size : nat -> nat). exists size.
        {
          intros [a b]. rewrite LProd.size_prod, !size_list,map_app,sumn_app,!sumn_map_add,!sumn_map_c.
          cbn [fst snd].
          [size]:exact (fun x => x + 4). unfold size. lia.
        }
-       all:unfold size;smpl_inO.
+       - unfold size. smpl_inO.
+       - unfold size. solve_proper.
      }
 Qed.
   
@@ -359,19 +361,21 @@ Proof.
       Unshelve. solverec. 1,2:now smpl_inO.
       evar (size : nat -> nat). exists size. unfold enc at 1;cbn;intros x.
       set (n0:=L_facts.size (enc x)). [size]:intros n0. repeat (unfold enc,size; cbn). reflexivity.
-      all:unfold size. all:smpl_inO.
+      - unfold size. smpl_inO.
+      - unfold size. solve_proper.
   }
   eapply pTC_app.
   2:now apply pTC_cnst.
   eapply polyTimeComputable_composition.
-  2:{ eapply pTC_map. exists (fun _ => 4). extract. solverec.  1,2:now smpl_inO.
-      exists (fun x => x+4).
-      {intros. now setoid_rewrite size_sum. }
-      all:smpl_inO.
+  2:{ eapply pTC_map.
+      exists (fun _ => 4); [ | apply inOPoly_c | easy | ].
+      - extract. solverec.
+      - exists (fun x => x+4); [ | smpl_inO | solve_proper].
+        intro. now rewrite size_sum.
   }
   unfold Encode_map. cbn.
-  eapply polyTimeComputable_composition. eassumption.
-  eapply pTC_map. eassumption.
+  eapply polyTimeComputable_composition. assumption.
+  apply pTC_map. assumption.
 Qed.
 Smpl Add 5 unshelve simple eapply pTC_initValue : polyTimeComputable.
 
@@ -385,18 +389,15 @@ Lemma pTC_Encode_Com : polyTimeComputable (Encode_Com).
 Proof.
   unfold Encode_Com;cbn. unfold Com_to_sum.
   change (fun x1 : sigNat => sigSum_X x1) with (@sigSum_X sigNat ACom).
-  eexists (fun x => x*(11 + c__app + c__map) + 16 + c__app + c__map).
+  eexists (fun x => x*(11 + c__app + c__map) + 16 + c__app + c__map); [ | smpl_inO | solve_proper | ].
   {extract. solverec. rewrite map_time_const,app_length,!repeat_length,size_Tok_enc. cbn [length]. 
     nia. }
-  1,2:now smpl_inO.
-  eexists (fun x => x*5 + 33).
-  { intros [];cbn. 2-4:now cbv.
-    rewrite size_list;unfold enc;cbn - ["+"].
-    rewrite map_app,map_repeat,sumn_map_add,sumn_map_c,map_app,sumn_app,map_repeat,map_map,app_length,repeat_length,map_length,sumn_repeat.
-    unfold enc. cbn;ring_simplify. rewrite LNat.size_nat_enc. unfold LNat.c__natsizeS, LNat.c__natsizeO, c__listsizeNil, c__listsizeCons.
- nia.
-  }
-  1,2:now smpl_inO.
+  eexists (fun x => x*5 + 33); [ | smpl_inO | solve_proper].
+  intros [];cbn. 2-4:now cbv.
+  rewrite size_list;unfold enc;cbn - ["+"].
+  rewrite map_app,map_repeat,sumn_map_add,sumn_map_c,map_app,sumn_app,map_repeat,map_map,app_length,repeat_length,map_length,sumn_repeat.
+  unfold enc. cbn;ring_simplify. rewrite LNat.size_nat_enc. unfold LNat.c__natsizeS, LNat.c__natsizeO, c__listsizeNil, c__listsizeCons.
+  nia.
 Qed.
 
 Lemma pTC_Encode_Prog : polyTimeComputable (Alphabets.Encode_Prog).
@@ -409,7 +410,9 @@ Proof.
   eapply polyTimeComputable_composition.
   exact pTC_Encode_Com. eapply pTC_map.
   {eexists (fun x => _). eapply term_sigList_X. 1,2:now smpl_inO.
-   eexists (fun x => _). intros x. rewrite size_sigList. set (L_facts.size _). reflexivity. all:smpl_inO.
+   eexists (fun x => _). intros x. rewrite size_sigList. set (L_facts.size _). reflexivity.
+   - smpl_inO.
+   - solve_proper.
   }
   repeat smpl polyTimeComputable.
 Qed.
@@ -418,9 +421,13 @@ Smpl Add 1 simple eapply pTC_Encode_Prog : polyTimeComputable.
 
 Lemma pTC_inl X Y `{encodable X} `{encodable Y} : polyTimeComputable (@inl X Y). 
 Proof. 
-  eexists (fun x => _). eapply term_inl. 1, 2: smpl_inO. 
-  eexists (fun x => _). intros x. rewrite size_sum. set (L_facts.size (enc x)). reflexivity. 
-  all: smpl_inO. 
+  eexists (fun x => _). eapply term_inl.
+  - apply inOPoly_c.
+  - easy.
+  - eexists (fun x => _).
+    + intros x. rewrite size_sum. set (L_facts.size (enc x)). reflexivity.
+    + smpl_inO.
+    + solve_proper.
 Qed.
 Smpl Add 1 eapply pTC_inl : polyTimeComputable. 
 
@@ -527,10 +534,17 @@ Proof.
       
       now eapply pTC_id. 3, 4: smpl polyTimeComputable. 
       2:{ eexists (fun x => _). eapply term_sigList_X. 1,2:now smpl_inO.
-          eexists (fun x => _). intros x. rewrite size_sigList. set (size _). reflexivity. all:smpl_inO.
+          eexists (fun x => _). intros x. rewrite size_sigList. set (size _). reflexivity.
+          - smpl_inO.
+          - solve_proper.
       }
-      { eexists (fun x' => _). now apply (term_sigPair_Y).  1,2:now smpl_inO.
-        eexists (fun x => 4 + _). intros x. unfold enc;cbn. set (size _). reflexivity. all:smpl_inO.
+      { eexists (fun x' => _). now apply (term_sigPair_Y).
+        - apply inOPoly_c.
+        - easy.
+        - eexists (fun x => 4 + _).
+          + intros x. unfold enc;cbn. set (size _). reflexivity.
+          + smpl_inO.
+          + solve_proper.
       }
     }
     -unfold f__steps. nary apply pTC_destructuringToProj.
@@ -540,4 +554,3 @@ Proof.
      repeat smpl polyTimeComputable.
   }
 Qed.
-
