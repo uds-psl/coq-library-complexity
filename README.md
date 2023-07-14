@@ -37,7 +37,7 @@ Newer versions of the library are not supported, in particular versions 1.1 and 
 ## Published work and technical reports
 
 - Mechanising Complexity Theory: The Cook-Levin Theorem in Coq. Lennard Gäher, Fabian Kunze. ITP 2021. Subdirectory `NP/SAT`. https://doi.org/10.4230/LIPIcs.ITP.2021.20
-- A Mechanised Proof of the Time Invariance Thesis for the Weak Call-By-Value λ-Calculus. Yannick Forster, Fabian Kunze, Gert Smolka, Maximilian Wuttke. ITP 2021. Subdirectories `L/TM` and `TM`. https://doi.org/10.4230/LIPIcs.ITP.2021.19
+- A Mechanised Proof of the Time Invariance Thesis for the Weak Call-By-Value λ-Calculus. Yannick Forster, Fabian Kunze, Gert Smolka, Maxi Wuttke. ITP 2021. Subdirectories `L/TM` and `TM`. https://doi.org/10.4230/LIPIcs.ITP.2021.19
 - Formal Small-step Verification of a Call-by-value Lambda Calculus Machine. Fabian Kunze, Gert Smolka, and Yannick Forster. APLAS 2018. Subdirectory `L/AbstractMachines`. https://www.ps.uni-saarland.de/extras/cbvlcm2/
 - The Weak Call-By-Value λ-Calculus is Reasonable for Both Time and Space.Yannick Forster, Fabian Kunze, Marc Roth. POPL 2020. Mechanised parts in `L/AbstractMachines` and `SpaceboundsTime.v` https://www.ps.uni-saarland.de/extras/wcbv-reasonable/
   
@@ -47,12 +47,12 @@ We make heavy use of the following results, which for technical reasons are ours
 
 We use two frameworks which ease computability proofs with resource analysis for call-by-value lambda-calculus and Turing machines:
 - A certifying extraction with time bounds from Coq to call-by-value lambda-calculus. ITP '19. https://github.com/uds-psl/certifying-extraction-with-time-bounds
-- Verified Programming of Turing Machines in Coq. Yannick Forster, Fabian Kunze, Maximilian Wuttke. Technical report. https://github.com/uds-psl/tm-verification-framework/
+- Verified Programming of Turing Machines in Coq. Yannick Forster, Fabian Kunze, Maxi Wuttke. Technical report. https://github.com/uds-psl/tm-verification-framework/
 
 ## Contributors
 
 - Fabian Kunze, Saarland University (2017-2022)
 - Lennard Gäher, Saarland University (2017-2021)
-- Maximilian Wuttke, Saarland University (2017-2021)
+- Maxi Wuttke, Saarland University (2017-2021)
 - Yannick Forster, Saarland University (2017-2019)
 - Stefan Haan (2022)
