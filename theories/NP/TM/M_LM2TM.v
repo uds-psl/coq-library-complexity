@@ -1,33 +1,28 @@
-From Undecidability.TM Require TM_facts ProgrammingTools CaseList CaseBool.
-From Complexity.TM Require Code.Decode Code.DecodeList.
+From Complexity.Libs Require Import UpToCNary MoreFin.
+From Complexity.TM Require Import TM_facts ProgrammingTools CaseList CaseBool.
+From Complexity.TM Require Import Code.Decode Code.DecodeList.
 
 From Undecidability.TM Require Import TM.
 From Complexity.TM.PrettyBounds Require Import SizeBounds.
 
-From Undecidability.L.Complexity  Require Import UpToCNary.
 From Complexity.NP.L  Require Import LMGenNP.
 
+From Complexity.L.AbstractMachines Require Import FlatPro.Programs FlatPro.Computable.Compile.
 
-From Undecidability.L.AbstractMachines Require Import FlatPro.Programs.
-From Complexity.L.AbstractMachines Require Import FlatPro.Computable.Compile.
-     
 Unset Printing Coercions.
 
-From Undecidability.TM.L Require Alphabets M_LHeapInterpreter.
+From Complexity.TM.L Require Import Alphabets M_LHeapInterpreter.
 
 From Coq Require Import Lia Ring Arith.
 
-From Undecidability.TM.L Require Import Boollist_to_Enc.
+From Complexity.TM.L Require Import Boollist_to_Enc.
 
 From Complexity.L.AbstractMachines Require SizeAnalysisStep LMBounds_Loop.
 
 Set Default Proof Using "Type".
 
-Import DecodeList Decode.
 Module LMtoTM.
   Section sec.
-    Import ProgrammingTools Combinators M_LHeapInterpreter.
-
     Variable (sig : finType).
     
     Context `{retr__LAM : Retract sigStep sig}
@@ -59,7 +54,7 @@ Module LMtoTM.
                    /\ exists sigma' k, ARS.evaluatesIn LM_heap_def.step k (initLMGen P (compile (Extract.enc (rev bs)))) sigma'
           end.
 (* initLMGen = n s c : list Tok => ([(0, s ++ c ++ [appT])], [], []) *)
-    Import Boollist_to_Enc ListTM Alphabets StepTM.
+    Import Boollist_to_Enc List.App Alphabets StepTM.
 
     Definition M : pTM sig ^+ bool 11 :=
       If (CheckEncodesBoolList.M _ @ [|Fin0|])
@@ -163,7 +158,7 @@ Module LMtoTM.
           {hnf. cbn. TMSimp. exists bs. repeat simple apply conj. easy. 1-3:try isVoid_mono. 
            erewrite UpToC_le. rewrite Hlebs. reflexivity. }
           intros t1_ _ (HP'&Hrem_1). specialize (HP' bs). TMSimp. modpon HP'.
-          infTer 5. TMSimp_goal. intros t2_ _ (Ht2&Ht2Rem). modpon Ht2.
+          infTer 5. TMSimp. intros t2_ _ (Ht2&Ht2Rem). modpon Ht2.
           (*unfold tapes in tin,tout,t1 |-. destruct_vector. cbn [Vector.nth Vector.caseS] in *. all:subst. *)
           TMSimp.
           
@@ -206,9 +201,9 @@ Module LMtoTM.
           infTer 4. intros t11 _ (Ht11&Ht11Rem). specialize Ht11. modpon Ht11. TMSimp.
           hnf. eexists [(0,_)],[],[],_. repeat eapply conj. 
           -eexists. eassumption.
-          -cbn. simpl_surject. TMSimp_goal. contains_ext. 
-          -cbn. simpl_surject. TMSimp_goal. contains_ext. 
-          -cbn. simpl_surject. TMSimp_goal. contains_ext.
+          -cbn. simpl_surject. TMSimp. contains_ext. 
+          -cbn. simpl_surject. TMSimp. contains_ext. 
+          -cbn. simpl_surject. TMSimp. contains_ext.
           -intros i. cbn. destruct_fin i;cbn. all:simpl_surject. all:isVoid_mono.
           -unshelve erewrite (correct__leUpToC Loop_steps_nice (_,_)). 
            cbn [length]. unfold sizeP. rewrite !map_app,!sumn_app.

@@ -1,17 +1,19 @@
-From Undecidability.TM Require Import CodeTM Single.EncodeTapes.
-From Undecidability.L Require Import LTactics LBool GenEncode Datatypes.Lists.
+From Complexity.Libs Require Import UpToC.
+From Complexity.TM Require Import CodeTM.
+From Complexity Require Import TMEncoding.
+From Undecidability.L Require Import Tactics.GenEncode.
+From Complexity.TM Require Import Single.EncodeTapes.
 
 Import Nat.
 Require Export Undecidability.Shared.Libs.PSL.FiniteTypes.FinTypes.
-
 Require Import Undecidability.Shared.Libs.PSL.Vectors.Vectors.
      
-From Undecidability Require Import TMEncoding EqBool.
+From Complexity.L Require Import LBool Datatypes.Lists EqBool.
 
 (* TODO: seperate general TM-related stuff from the specific alphabets from sUniversalTM (sigTape) and L-simulation TM *)
 
 Set Default Proof Using "Type".
-Import GenEncode.  
+Import GenEncode.
 MetaCoq Run (tmGenEncode "boundary_enc" boundary).
 #[export]
 Hint Resolve boundary_enc_correct : Lrewrite.
@@ -138,7 +140,7 @@ Section int.
 End int.
 
 
-From Undecidability Require Import GenEncode Alphabets.
+From Complexity.TM.L Require Import Alphabets.
 MetaCoq Run (tmGenEncode "sigNat_enc" sigNat).
 #[export]
 Hint Resolve sigNat_enc_correct : Lrewrite.
@@ -173,7 +175,6 @@ Proof.
   all:unfold c. all:nia.
 Qed.
 
-Import GenEncode.
 MetaCoq Run (tmGenEncode "ACom_enc" ACom).
 #[export]
 Hint Resolve ACom_enc_correct : Lrewrite.

@@ -1,4 +1,5 @@
-From Undecidability Require Import PSL.Prelim L.Prelim.MoreBase.
+From Undecidability Require Import PSL.Prelim.
+From Complexity.Libs Require Import MoreBase.
 From Complexity.Complexity Require Import Monotonic.
 Require Import smpl.Smpl.
 Require Import Nat Lia.

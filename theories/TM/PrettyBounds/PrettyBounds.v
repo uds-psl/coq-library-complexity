@@ -1,8 +1,8 @@
 (** * Definitions and Automation for PrettyBounds *)
 
-From Undecidability Require Export TM.Util.Prelim.
-From Undecidability Require Export TM.Util.ArithPrelim.
-From Undecidability Require Export TM.Code.Code.
+From Complexity.Libs Require Import MoreBase.
+From Complexity Require Export TM.Code.Code.
+Require Import smpl.Smpl.
 
 Arguments size {sig X cX}.
 

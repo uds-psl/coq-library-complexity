@@ -69,7 +69,7 @@ Section fixInstance.
     - destruct H0 as (subs & H1 & H2). exists subs. 
       destruct H2 as (b1 & b2 & ->). 
       exists (|b1|). split; [ apply H1 | ]. 
-      rewrite skipn_app; [ | easy]. 
+      rewrite skipn_app_exact; [ | easy]. 
       split; [ rewrite !app_length in H; lia | now exists b2].
     - destruct H0 as (subs & k & H1 & H2 & (b & H3)). exists subs. split; [ apply H1 | ]. 
       unfold substring. 
@@ -95,4 +95,4 @@ Proof.
     + destruct H1 as (_ & _ & _ & H1 &_). cbn in H1. apply H1.  
     + apply relpower_valid_agree; [ apply H1 | apply H2]. 
     + eapply final_agree, H3. apply relpower_valid_length_inv in H2. lia. 
-Qed. 
+Qed.

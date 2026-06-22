@@ -1,5 +1,5 @@
-From Undecidability.L.Tactics Require Import LTactics GenEncode Computable.
-From Undecidability.L Require Import  FinTypeLookup LFinType LSum.
+From Complexity.Libs Require Import MoreList MoreBase.
+From Complexity.L Require Import FinTypeLookup LFinType LSum.
 From Undecidability.Shared.Libs.PSL Require Import FinTypes.
 
 From Complexity.NP Require Import FSAT_to_SAT kSAT_to_SAT kSAT_to_FlatClique. 
@@ -11,14 +11,14 @@ From Complexity.NP.SAT.CookLevin Require Import FlatSingleTMGenNP_to_FlatTCC Fla
 Require Import Complexity.NP.SAT.CookLevin.Reductions.TMGenNP_fixed_singleTapeTM_to_FlatFunSingleTMGenNP.
 From Complexity.NP.TM Require Import IntermediateProblems.
 
-From Undecidability.TM Require Import TM_facts CodeTM.
 
 From Complexity Require Import L_to_LM LM_to_mTM mTM_to_singleTapeTM TMGenNP_fixed_mTM.
-From Undecidability.L Require Import Prelim.MoreList Prelim.MoreBase.
 From Complexity.Complexity Require Import NP Definitions Subtypes.
 From Complexity.NP Require Import GenNP.
 
 From Complexity Require GenNP_is_hard CanEnumTerm.
+From Complexity.L.TM Require Import CompCode.
+From Complexity.TM Require Import TM_facts CodeTM.
 
 (** * Overview of the results proved in the paper. *)
 

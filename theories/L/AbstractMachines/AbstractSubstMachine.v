@@ -1,4 +1,5 @@
-From Undecidability.L Require Import L_facts Programs Complexity.ResourceMeasures.
+From Undecidability.L Require Import L_facts Programs.
+From Complexity Require Import Complexity.ResourceMeasures.
 
 Require Import Lia Ring Arith.
 

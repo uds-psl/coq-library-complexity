@@ -39,8 +39,8 @@ Lemma vector_to_list_inj (X : Type) (n : nat) (xs ys : Vector.t X n) :
   Vector.to_list xs = Vector.to_list ys -> xs = ys.
 Proof.
   revert ys. induction xs as [ | x n xs IH]; intros; cbn in *.
-  - destruct_vector. reflexivity.
-  - destruct_vector. cbn in *. inv H. f_equal. auto.
+  - induction ys using Vector.case0. reflexivity.
+  - induction ys using Vector.caseS'. cbn in *. inv H. f_equal. auto.
 Qed.
 
 (* From TM/Util/VectorPrelim.v *)
@@ -68,7 +68,9 @@ Proof. subst. rename n2 into n. induction v as [ | x n v IH]; cbn; f_equal; auto
 (* From PSL/FiniteTypes/VectorFin.v *)
 Lemma Fin_cardinality n : | elem (finType_CS (Fin.t n)) | = n.
 Proof.
-  apply VectorSpec.length_to_list.
+  induction n.
+  - reflexivity.
+  - cbn in *. simpl_list. congruence.
 Qed.
 
 (* from PSL/FiniteTypes/FinTypes.v *)

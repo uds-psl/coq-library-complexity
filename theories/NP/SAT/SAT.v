@@ -1,9 +1,8 @@
 From Complexity.NP.SAT Require Export SharedSAT.
 Require Import Lia. 
 
-From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import  LProd LOptions LBool LNat Lists LUnit.
-From Undecidability.L.Functions Require Import EqBool. 
+From Complexity.L.Datatypes Require Import  LProd LOptions LBool LNat Lists.
+From Complexity.L.Functions Require Import EqBool. 
 From Complexity.Complexity Require Import UpToCPoly.
 From Complexity.Libs.CookPrelim Require Import MorePrelim.
 
@@ -134,4 +133,4 @@ Qed.
 Lemma size_cnf_app N1 N2 : size_cnf (N1 ++ N2) = size_cnf N1 + size_cnf N2. 
 Proof. 
   unfold size_cnf. rewrite map_app, sumn_app, app_length. lia.
-Qed. 
+Qed.

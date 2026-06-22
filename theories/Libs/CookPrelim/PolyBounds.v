@@ -1,29 +1,7 @@
 From Complexity.Complexity Require Export NP ONotation UpToCPoly.
-From Undecidability.L.Tactics Require Import LTactics.
 From Complexity.Libs.CookPrelim Require Import MorePrelim.
-From Undecidability.L Require Export Datatypes.Lists Datatypes.LNat.
-From Undecidability.L.Functions Require Import EqBool.
-
-(*concat *)
-Section concat_fixX. 
-  Context {X : Type}.
-  Context `{encodable X}.
-  
-  Definition c__concat := c__app + 15.
-  Definition concat_time (l : list (list X)) := fold_right (fun l acc => c__concat * (|l|) + acc + c__concat) c__concat l.
-  Global Instance term_concat : computableTime' (@concat X) (fun l _ => (concat_time l, tt)). 
-  Proof. 
-    extract. unfold concat_time, c__concat. solverec. 
-  Qed. 
-  
-End concat_fixX. 
-
-Lemma concat_time_exp (X : Type) (l : list (list X)): concat_time l = sumn (map (fun l' => c__concat * length l') l) + (|l| + 1) * c__concat. 
-Proof. 
-  induction l; cbn -[Nat.add Nat.mul]. 
-  - lia.
-  - unfold concat_time in IHl. rewrite IHl. lia. 
-Qed. 
+From Complexity.L.Datatypes Require Import Lists LNat.
+From Complexity.L.Functions Require Import EqBool.
 
 Tactic Notation "poly_mono" constr(H) "at" ne_integer_list(occ) :=
   let He := fresh in specialize H as He; match type of He with
@@ -44,16 +22,6 @@ Proof.
   unfold c__moduloBound. nia. 
 Qed. 
 
-Lemma leb_time_bound_l a b: leb_time a b <= (size(enc a) + 1) * c__leb. 
-Proof. 
-  unfold leb_time. rewrite Nat.le_min_l. rewrite size_nat_enc_r with (n := a) at 1. lia.
-Qed. 
-
-Lemma leb_time_bound_r a b : leb_time a b <= (size(enc b) + 1) * c__leb. 
-Proof. 
-  unfold leb_time. rewrite Nat.le_min_r. rewrite size_nat_enc_r with (n:= b) at 1. lia. 
-Qed. 
-
 Section fixXEq. 
   Context {X : Type}.
   Context {H : encodable X}.
@@ -68,7 +36,7 @@ Section fixXEq.
     - unfold poly__listInDecb. nia. 
     - rewrite IHl. unfold eqbTime. 
       rewrite Nat.le_min_l. unfold poly__listInDecb. 
-      rewrite list_size_cons. unfold c__listsizeCons; leq_crossout.
+      rewrite list_size_cons. unfold c__listsizeCons; lia.
   Qed.
   Lemma list_in_decb_poly : monotonic poly__listInDecb /\ inOPoly poly__listInDecb. 
   Proof. 
@@ -160,6 +128,7 @@ Section fixX.
   Qed. 
 End fixX.
 
+(*
 Section fixXY.
   Context {X Y Z: Type}.
   Context {H:encodable X}.
@@ -205,6 +174,7 @@ Section fixXY.
       nia.
   Qed. 
 End fixXY.
+*)
 
 Section prodLists_bound. 
   Variable (X Y : Type).

@@ -1,8 +1,8 @@
-From Undecidability.TM Require Import TM ProgrammingTools Code.
-From Complexity.TM Require Import Code.Decode Single.DecodeTape.
-From Undecidability.L Require Import MoreBase.
+From Complexity.Libs Require Import MoreBase.
+From Complexity.TM Require Import ProgrammingTools Code.
+From Complexity.TM Require Import Code.Decode Single.DecodeTape Single.EncodeTapes.
 Require Import Lia Ring Arith Program.Wf.
-Import While Mono Multi Switch If Combinators EncodeTapes.
+(*Import While Mono Multi Switch If Combinators EncodeTapes.*)
 
 Unset Printing Coercions.
 
@@ -13,7 +13,7 @@ Proof.
   {cbn. intros x x'. rewrite (destruct_vector_nil x),(destruct_vector_nil x'). reflexivity. }
   intros v v'. destruct (destruct_vector_cons v) as (x&xs&->). destruct (destruct_vector_cons v') as (x'&xs'&->). cbn.
   intros t t' [= Heq].
-  unshelve erewrite ( _ : (fun x : sigTape sig => sigList_X x) = Retr_f) in Heq. 1:reflexivity.
+  unshelve erewrite ( _ : sigList_X = Retr_f) in Heq. 1:reflexivity.
   rewrite <- !app_assoc in Heq. 
   specialize (map_retract_prefix_inj Heq) as (tmp&tmp'&Htmp). eapply tape_encode_prefixInjective in Htmp as ->.
   eapply app_inv_head in Heq. now apply IHn in Heq as ->.
@@ -105,7 +105,7 @@ Module CheckEncodesTapes.
             intros ? ? ?. destruct b.
             -infTer 5. intros ? ? ->.
              rewrite !Ht. cbn in *. fold n0.  destruct H as [_ (k&H)].
-             rewrite H. rewrite iter_transitive with (g:=fun x => | right x |) (R:=le). 2:eauto. 2:apply Ht.
+             rewrite H. rewrite iter_transitive with (g:=fun x => | right x |) (R:=le). 2:exact _. 2:apply Ht.
              rewrite Htout,Ht. fold n0. reflexivity.
             -nia.
             -nia.

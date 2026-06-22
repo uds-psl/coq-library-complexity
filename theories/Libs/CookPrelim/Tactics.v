@@ -57,7 +57,7 @@ Lemma singleton_incl (X : Type) (a : X) (h : list X) :
   [a] <<= h <-> a el h. 
 Proof. 
   split; intros. 
-  - now apply H. 
+  - apply H, in_eq.
   - now intros a' [-> | []]. 
 Qed. 
 

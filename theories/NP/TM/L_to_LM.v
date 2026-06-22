@@ -1,9 +1,9 @@
-From Undecidability.L Require Import Tactics.LTactics Prelim.MoreList Prelim.MoreBase.
-From Complexity.Complexity Require Import NP Definitions Monotonic Subtypes.
+From Complexity.Libs Require Import MoreList MoreBase.
+From Complexity.Complexity Require Import NP Definitions Monotonic Subtypes ResourceMeasures.
 From Complexity.NP.L Require Import GenNP LMGenNP. 
 
-From Undecidability.L Require Import LM_heap_def LM_heap_correct LBool ResourceMeasures LNat LTerm LProd.
-From Complexity.L Require Import Compile.
+From Complexity.L Require Import LM_heap_def LM_heap_correct LBool LNat LTerm LProd.
+From Complexity.L Require Import ComputableTime Compile.
 
 Import Nat.
 Lemma GenNP_to_LMGenNP (X:Type) `{R__X : encodable X}:

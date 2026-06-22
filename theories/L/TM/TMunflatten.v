@@ -1,8 +1,9 @@
 From Undecidability Require Import L.Functions.EqBool TM.Util.TM_facts.
-From Undecidability Require L.TM.TMEncoding.
-From Undecidability.L.Functions Require Import FinTypeLookup.
+From Undecidability Require Import L.TM.TMEncoding.
+From Complexity.L.Functions Require Import FinTypeLookup EqBool.
+From Complexity.L.Datatypes Require Import LProd LOptions Lists.
 From Complexity Require Import L.TM.TMflat.
-From Complexity.Libs Require Export PSLCompat.
+From Complexity.Libs Require Export PSLCompat MoreList.
 
 Definition Vector_of_list_length A n (l:list A) : option (Vector.t A n) :=
   match Nat.eq_dec (length l) n with
@@ -223,8 +224,8 @@ Proof.
 Qed.
 
 Lemma isFlatteningTrans_validFlatTrans n sig' (M' : TM sig' n) f:
-isFlatteningTransOf f (TM.trans (m:=M'))
--> validFlatTrans (| elem sig' |) n (| elem (TM.state M')|) f.
+  isFlatteningTransOf f (TM.trans (m:=M'))
+  -> validFlatTrans (| elem sig' |) n (| elem (TM.state M')|) f.
 Proof.
   intros [H'].
   split.
@@ -375,10 +376,10 @@ Proof.
    -intros ? [[] ]; cbn - [Nat.ltb]. rewrite Nat.ltb_lt. all:easy.
    -intros H ? ? ?%H. now rewrite <- Nat.ltb_lt.
   }
-Qed.   
+Qed.
 
 Definition isValidFlatTrans sig n states (f : list (nat * list (option nat) * (nat * list (option nat * move)))) :=
-  isInjFinfuncTable  f && isBoundTransTable sig n states f.
+  isInjFinfuncTable f && isBoundTransTable sig n states f.
 
 Lemma isValidFlatTrans_spec sig n states f:
   reflect (validFlatTrans sig n states f)

@@ -1,12 +1,15 @@
-From Undecidability.L Require Import L LTactics.
 From Complexity.Complexity Require Import NP Definitions Monotonic.
 
+(* [X__cert] encodes generic certificates (L-terms). More precisely, we have
+ * a polynomial-time surjection onto [term] that additionally is *not wasteful*:
+ * the encoding is at most polynomially bigger than the term itself *)
 Record canEnumTerms (X__cert : Type) `{R__cert : encodable X__cert} : Type :=
   {
     f__toTerm : X__cert -> term;
     comp__toTerm :> polyTimeComputable f__toTerm;
     inSize__toTerm : nat -> nat;
-    complete__toTerm : (forall s:term, exists x:X__cert, f__toTerm x = s /\ size (enc x) <= inSize__toTerm (size (enc s)));
+    complete__toTerm : (forall s:term, exists x:X__cert,
+      f__toTerm x = s /\ size (enc x) <= inSize__toTerm (size (enc s)));
     polyIn__toTerm : inOPoly inSize__toTerm;
     monoIn__toTerm : monotonic inSize__toTerm;
   }.

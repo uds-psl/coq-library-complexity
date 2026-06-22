@@ -1,5 +1,4 @@
 Require Export Complexity.L.Datatypes.LDepPair.
-From Undecidability Require Import LTactics.
 From Complexity Require Import Definitions NP PolyTimeComputable.
 
 (* this notion allows to restrict a problem of a subset of the domain*)
@@ -27,7 +26,7 @@ Lemma polyTimeComputable_sig_out X Y {RX: encodable X} {RY:encodable Y} validY (
   -> polyTimeComputable f.
 Proof.
   intros H. exists (time__polyTC H). 2,3:now smpl_inO.
-  - computable_casted_result. eauto.
+  - computable_casted_result. exact _.
   - exists (resSize__rSP H). 2,3:now smpl_inO.
     intro. rewrite <- bounds__rSP, enc_sig_eq. reflexivity.
 Qed.

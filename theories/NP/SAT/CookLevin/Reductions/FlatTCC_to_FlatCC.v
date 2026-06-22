@@ -1,5 +1,6 @@
 From Undecidability.Shared.Libs.PSL Require Import Base FinTypes. 
 From Undecidability.Shared.Libs.PSL Require Import Vectors.Vectors. 
+From Complexity.Libs Require Import MoreList.
 From Complexity.Libs.CookPrelim Require Import MorePrelim FlatFinTypes.
 From Complexity.NP.SAT.CookLevin Require Import FlatTCC FlatCC TCC_to_CC.
 
@@ -68,8 +69,7 @@ Proof.
 Qed. 
 
 (** ** extraction *)
-From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import  LProd LOptions.
+From Complexity.L.Datatypes Require Import Lists LProd LOptions.
 From Complexity.Libs.CookPrelim Require Import PolyBounds. 
 
 
@@ -158,4 +158,4 @@ Proof.
       * subst f. smpl_inO. 
       * subst f. smpl_inO. 
   - apply FlatTCC_to_FlatCC. 
-Qed. 
+Qed.

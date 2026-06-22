@@ -1,7 +1,5 @@
-From Undecidability.TM Require Import TM_facts.
-From Undecidability.L.TM Require Import TMEncoding.
+From Complexity.TM Require Import TM_facts.
 From Complexity.Complexity Require Import NP Subtypes.
-From Undecidability.L Require Import Tactics.LTactics.
 
 (** For each Machine M (with n+1 tapes), we define this problem:
 Given n tapes and a sizeBound and a step bound, does there exist a (small enough) first tape such that the machine halts on the resulting n+1 tapes in fewer steps than the step bound? *)

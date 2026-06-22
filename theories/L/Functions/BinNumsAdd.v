@@ -1,8 +1,6 @@
-From Undecidability.L Require Import Tactics.LTactics.
-Require Import Numbers.BinNums.
+Require Import NArith.
 
-From Undecidability.L.Datatypes Require Import LNat LBool.
-From Complexity.L Require Import LBinNums.
+From Complexity.L.Datatypes Require Import LBool LBinNums.
 
 (** *** Addition of binary numbers *)
 Fixpoint addC (c:bool) (x : positive) {struct x}: positive -> positive:=

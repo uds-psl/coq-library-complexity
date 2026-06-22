@@ -1,5 +1,5 @@
 From Complexity.Libs.CookPrelim Require Import Tactics MorePrelim. 
-From Undecidability.L.Datatypes Require Import Lists LNat LBool LProd LOptions. 
+From Complexity.L.Datatypes Require Import Lists LNat LBool LProd LOptions. 
 From Complexity.NP.SAT Require Import FSAT.
 
 (** * Some generic tools for encoding things as Boolean formulas *)
@@ -131,7 +131,7 @@ Section encodings.
 
   Lemma projVars_app2 l1 l2 u m : |l1| = u -> projVars u m (l1 ++ l2) = projVars 0 m l2. 
   Proof. 
-    intros. unfold projVars. rewrite skipn_app; [ | easy]. now cbn. 
+    intros. unfold projVars. rewrite skipn_app_exact; [ | easy]. now cbn. 
   Qed. 
 
   Lemma projVars_app3 l1 l2 u1 u2 m : |l1| = u1 -> projVars (u1 + u2) m (l1 ++ l2) = projVars u2 m l2. 
@@ -392,10 +392,10 @@ Ltac encodesPredicateAt_comp_simp H :=
   try rewrite !Nat.sub_diag in H.
 
 (** *** extraction *)
-From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Complexity.Libs.CookPrelim Require Import PolyBounds. 
-From Undecidability.L.Datatypes Require Import LProd LOptions LBool LSum. 
-From Undecidability.L.Functions Require Import EqBool.
+From Complexity.L.Datatypes Require Import LProd LOptions LBool LSum. 
+From Complexity.L.Functions Require Import EqBool.
+From Complexity.L Require Import ComputableTime.
 
 Implicit Type (p : nat -> Prop).
 
@@ -559,4 +559,3 @@ Lemma encodeListAt_size start l : formula_size (encodeListAt start l) <= 3 * (|l
 Proof. 
   revert start; induction l; cbn -[Nat.mul]; intros; [lia | rewrite IHl]. rewrite encodeLiteral_size. lia. 
 Qed. 
- 

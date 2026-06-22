@@ -1,13 +1,10 @@
 From Undecidability.TM Require Import TM_facts.
-From Undecidability.L.TM Require Import TMEncoding.
+From Complexity.L.TM Require Import TMEncoding.
 From Complexity.L.TM Require Import TMflat TMflatEnc TMflatFun TapeDecode TMunflatten.
-From Undecidability.L.Datatypes Require Import LNat LProd Lists.
+From Complexity.L.Datatypes Require Import LNat LProd Lists.
 From Complexity.Complexity Require Import NP LinTimeDecodable ONotation.
-From Undecidability.L Require Import Tactics.LTactics.
-From Undecidability.L Require Import Functions.Decoding.
+From Complexity.L.Functions Require Import Decoding EqBool.
 From Complexity.L Require Import TMflatFun TMflatComp.
-From Undecidability Require Import L.Functions.EqBool.
-From Undecidability Require Import L.Datatypes.LNat.
 
 (** Using this problem to establish NP-hardness as by Cook-levin would require us to construct TMs from L-terms. We don't want to do this. Instead, we define another problem (GenNPHalt_fixed_mTM) where the machine itself and some tape content is fixed, but a single tape has arbitrary content on it. *)
 

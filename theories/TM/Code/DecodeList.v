@@ -1,5 +1,6 @@
-From Undecidability.TM Require Import TM ProgrammingTools Code.
-From Undecidability.TM Require Hoare.
+From Complexity.Libs Require Import MoreList.
+From Complexity.TM Require Import ProgrammingTools Code.
+From Complexity.TM Require Hoare.
 From Complexity.TM Require Import Code.Decode.
 Require Import FunInd Lia Ring Arith Program.Wf.
 
@@ -142,10 +143,7 @@ Module CheckEncodesBoolList.
        destruct tin[@Fin0] as [ | | | t__L c t__R ] eqn:Htin. all: cbn in Hin. 1-3:easy.
        destruct (Retr_g c) as [[] | ] eqn:Hc. 1,2,4:easy.
        apply retract_g_inv in Hc as ->. destruct Hin as (t1&[]&H__X&_&Hmid'&[=]).
-       hnf in H__X. destruct H__X as [(x&Hx1&Hx2) [k__x Hk__x]]. (* cbn in Hx1.
-       destruct t__R;revert Ht0;cbn. all:intros [= <- -> ->]. cbn in Hk__x.
-       hnf in Hmid|-*. rewrite Hmid' in *. clear Hmid' tmid.
-       (*)rewrite Hmid',Htin in *.  clear tin Htin tmid Hmid'. *) *)
+       hnf in H__X. destruct H__X as [(x&Hx1&Hx2) [k__x Hk__x]].
        intros [hmid [k Hk]]. 
        split. 2:{ eexists _. clear hmid. cbn in *. rewrite nat_rect_succ_r. cbn. rewrite nat_rect_plus. rewrite <- Hk__x.
                   rewrite Hmid' in Hk.        rewrite <- nat_rect_succ_r in Hk. exact Hk.
@@ -167,9 +165,6 @@ Module CheckEncodesBoolList.
        }
        edestruct hmid as (xs&Hxs&->). rewrite tape_local_move_right' in Hxs. subst t__R. rewrite tape_left_move_right',Hx2.
        exists (x::xs). cbn in *. autorewrite with list. now cbn.
-       (* rewrite rev_app_distr,map_app,map_app,!map_rev,!map_app,!map_map,!app_assoc_reverse,!map_rev,map_map.
-       set (f' := map _ (cX x)). change f' with (map (Retr_f (Retract:=I__X)) (cX x)). clear f'.
-       split. easy. rewrite HcX. cbn. now autorewrite with list. *)
     Qed.
 
     Lemma Terminates' :
@@ -222,4 +217,3 @@ Module CheckEncodesBoolList.
     Qed.
   End checkEncodesBoolList2.
 End CheckEncodesBoolList.
-

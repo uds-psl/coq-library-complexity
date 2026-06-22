@@ -1,6 +1,4 @@
-From Undecidability.L Require Import L .
-From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import Lists LNat. 
+From Complexity.L.Datatypes Require Import Lists LNat. 
 From Complexity.NP.SAT Require Export SharedSAT.
 Require Import Lia Nat. 
 
@@ -117,10 +115,9 @@ Fixpoint formula_size (f : formula) := match f with
 end. 
 
 (** ** extraction *)
-From Undecidability.L.Datatypes Require Import LNat.
-From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import  LProd LOptions LBool LUnit.
+From Complexity.L.Datatypes Require Import  LProd LOptions LBool.
 From Complexity.Libs.CookPrelim Require Import PolyBounds. 
+From Undecidability.L.Tactics Require Import GenEncode.
 
 MetaCoq Run (tmGenEncode "formula_enc" formula).
 #[export]
@@ -227,14 +224,13 @@ Proof.
   - unfold poly__formulaMaxVar, c__formulaMaxVarBound1; nia. 
   - rewrite IHf1, IHf2. unfold max_time. rewrite Nat.le_min_l. 
     rewrite formula_maxVar_enc_bound. setoid_rewrite formula_enc_size at 4. 
-    unfold poly__formulaMaxVar, c__formulaMaxVarBound1. leq_crossout. 
+    unfold poly__formulaMaxVar, c__formulaMaxVarBound1. lia. 
   - rewrite IHf1, IHf2. unfold max_time. rewrite Nat.le_min_l. 
     rewrite formula_maxVar_enc_bound. setoid_rewrite formula_enc_size at 4. 
-    unfold poly__formulaMaxVar, c__formulaMaxVarBound1. leq_crossout. 
-  - rewrite IHf. setoid_rewrite formula_enc_size at 2. unfold poly__formulaMaxVar, c__formulaMaxVarBound1. leq_crossout. 
+    unfold poly__formulaMaxVar, c__formulaMaxVarBound1. lia. 
+  - rewrite IHf. setoid_rewrite formula_enc_size at 2. unfold poly__formulaMaxVar, c__formulaMaxVarBound1. lia. 
 Qed. 
 Lemma formula_maxVar_poly : monotonic poly__formulaMaxVar /\ inOPoly poly__formulaMaxVar. 
 Proof. 
   split; unfold poly__formulaMaxVar; smpl_inO. 
-Qed. 
-
+Qed.

@@ -1,13 +1,10 @@
-
 From Complexity Require Import TM.PrettyBounds.PrettyBounds.
 From Complexity Require Import TM.PrettyBounds.BaseCode.
-From Undecidability Require Import LM_heap_def TM.PrettyBounds.MaxList.
+From Complexity Require Import LM_heap_def.
 
-From Undecidability.TM.L Require Import Alphabets CaseCom StepTM M_LHeapInterpreter.
+From Complexity.TM.L Require Import Alphabets CaseCom StepTM M_LHeapInterpreter.
 From Complexity.L.AbstractMachines Require Import SizeAnalysisStep LMBounds.
-
-From Undecidability Require Import UpToC UpToCNary.
-
+From Complexity.Libs Require Import MaxList UpToC UpToCNary MoreBase ARS.
 
 
 Lemma sizeT_ge_1 t:
@@ -63,13 +60,6 @@ Proof.
 Qed.
  *)
 
-Lemma size_list (sig X : Type) (cX : codable sig X) (xs : list X):
-  size xs = length xs + sumn (map size xs) + 1.
-Proof.
-  induction xs. now rewrite encodeList_size_nil.
-  rewrite encodeList_size_cons. cbn [length map sumn]. nia.
-Qed.
-
 Lemma size_list_le_bound (sig X : Type) (cX : codable sig X) (xs : list X) c:
   (forall x, x el xs -> size x <= c)
   -> size xs <= length xs * (c+1) + 1.
@@ -101,7 +91,7 @@ Lemma Heap_size_nicer P0 (T V : list HClos) (H : Heap) i :
   -> size H <= i * (6*i + 3*sizeP P0 + 4*i) + 1.
 Proof.
   intros H0.
-  specialize SizeAnalysisStep.size_clos with (1:=H0) as Hsize.
+  specialize (SizeAnalysisStep.size_clos H0) as Hsize.
   unfold Encode_Heap, sigHeap. erewrite size_list_le_bound with (xs:=H).
   2:{
     intros [[[a' P'] beta] | ] H1. 2:cbv.  

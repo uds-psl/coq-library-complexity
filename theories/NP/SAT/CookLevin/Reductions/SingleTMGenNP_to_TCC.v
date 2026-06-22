@@ -1,6 +1,8 @@
 (* -*- company-coq-local-symbols: (("|_|" .?␣)); -*- *)
 (** printing  *|_|* %\textvisiblespace% #␣# *)
 From Complexity.NP.SAT Require Import SingleTMGenNP TCC FlatTCC PTCC_Preludes TM_single. 
+From Complexity.Libs Require Import MoreList.
+From Complexity.L.Functions Require Import FinTypeLookup.
 From Complexity.Libs.CookPrelim Require Import FlatFinTypes MorePrelim. 
 From Undecidability.Shared.Libs.PSL Require Import FiniteTypes. 
 Require Import Lia. 
@@ -309,7 +311,7 @@ Section fixTM.
     intros (_ & ->) x H1. 
     apply in_app_or in H1 as [H1 | H1]. 
     + unfold mapPolarity in H1. apply in_map_iff in H1 as (? & <- & H2). eauto. 
-    + revert H1. generalize (wo + w - |u|). induction n; intros [H | H]; eauto. 
+    + revert H1. generalize (wo + w - |u|). induction n; intros [H | H]; easy.
   Qed. 
 
   Lemma tape_repr_inv13 u p p' w rs σ: 
@@ -551,8 +553,8 @@ Section fixTM.
         inv H0. apply tapeRules_revp' in H3. 
         cbn [rev map].
         repeat rewrite <- app_assoc.
-        rewrite skipn_app with (xs := rev (map polarityFlipGamma a)).
-        rewrite skipn_app with (xs := rev (map polarityFlipGamma b)).
+        rewrite skipn_app_exact with (xs := rev (map polarityFlipGamma a)).
+        rewrite skipn_app_exact with (xs := rev (map polarityFlipGamma b)).
         2, 3: rewrite rev_length, map_length. 3: reflexivity. 
         2: { apply valid_length_inv in H; cbn [length] in H. lia. }
         cbn. constructor. apply H3. 
@@ -861,7 +863,7 @@ Section fixTM.
   (** decomposition into left, center, right *)
   Lemma tapeToList_lcr sig (tp : tape sig) : tapeToList tp = rev (left tp) ++ (match current tp with Some a => [a] | _ => [] end) ++ right tp. 
   Proof.
-    clear_all. destruct tp; cbn. all: firstorder. now rewrite app_nil_r.   
+    clear. destruct tp; cbn. all: firstorder. now rewrite app_nil_r.   
   Qed. 
 
   Lemma sizeOfTape_lcr sig (tp : tape sig) : sizeOfTape tp = |left tp| + |right tp| + (if current tp then 1 else 0). 
@@ -880,6 +882,10 @@ Section fixTM.
   Proposition Some_injective (A : Type) : forall (x y : A), Some x = Some y -> x = y. 
   Proof. intros; congruence. Qed. 
 
+  Lemma cons_injective (X : Type) (x1 x2 : X) (l1 l2 : list X) :
+    x1 :: l1 = x2 :: l2 -> x1 = x2 /\ l1 = l2.
+  Proof. intros H. inv H. auto. Qed.
+
   Ltac simp_eqn := repeat match goal with
                           | [H : trans (?a, ?b) = ?h1, H1 : trans (?a, ?b) = ?h2 |- _] => assert (h1 = h2) by (now (rewrite <- H;rewrite <- H1)); clear H1
                           | [H : (?a, ?b) = (?c, ?d) |- _] => simple apply prod_eq in H as []
@@ -888,7 +894,7 @@ Section fixTM.
                           | [H : Some ?a = Some ?b |- _] => apply Some_injective in H
                           | [H : inr ?a = inr ?b |- _] => apply inr_injective in H 
                           | [H : inl ?a = inl ?b |- _] => apply inl_injective in H 
-                          | [H : ?h1 :: ?a = ?h2 :: ?b |- _] => apply Code.cons_injective in H as [? ?]
+                          | [H : ?h1 :: ?a = ?h2 :: ?b |- _] => apply cons_injective in H as [? ?]
                           | [H : rev ?A = _ |- _ ] => is_var A; apply involution_invert_eqn2 in H as ?; [ | involution_simpl]; clear H
                           | [H : _ = rev ?A |- _ ] => is_var A; symmetry in H; apply involution_invert_eqn2 in H; [ | involution_simpl]
                           | [H : _ = ?a |- _] => is_var a; symmetry in H;move H at bottom; subst a
@@ -2509,19 +2515,19 @@ Section fixTM.
         rewrite !app_assoc in H1.  
         rewrite !skipn_add  in H1. 2, 3: rewrite app_length; cbn; lia.  
         apply H1. cbn in *; lia.  
-      + specialize (H1 (|A|)). unfold coversAt in H1. rewrite !skipn_app in H1. 2, 3: lia.  
+      + specialize (H1 (|A|)). unfold coversAt in H1. rewrite !skipn_app_exact in H1 by lia.
         cbn in H1. rewrite coversHeadInd_tail_invariant with (s1' := []) (s2' := []) in H1. 
         apply coversHeadInd_single, H1. rewrite app_length; cbn; lia.  
       + specialize (H1 (S (|A|))). unfold coversAt in H1. 
         replace (A ++ [c; d; e; f; g] ++ B) with ((A ++ [c]) ++ [d; e; f; g] ++ B) in H1 by (rewrite <- app_assoc; now cbn).  
         replace (A' ++ [c'; d'; e'; f'; g'] ++ B') with ((A' ++ [c']) ++ [d';e';f';g'] ++ B') in H1 by (rewrite <- app_assoc; now cbn).  
-        rewrite !skipn_app in H1. 2, 3: rewrite app_length; cbn; lia. 
+        rewrite !skipn_app_exact in H1. 2, 3: rewrite app_length; cbn; lia. 
         cbn in H1. rewrite coversHeadInd_tail_invariant with (s1' := []) (s2' := []) in H1. 
         apply coversHeadInd_single, H1. rewrite !app_length; cbn; lia. 
       + specialize (H1 (S (S (|A|)))). unfold coversAt in H1. 
         replace (A ++ [c; d; e; f; g] ++ B) with ((A ++ [c;d]) ++ [e; f; g] ++ B) in H1 by (rewrite <- app_assoc; now cbn).  
         replace (A' ++ [c'; d'; e'; f'; g'] ++ B') with ((A' ++ [c'; d']) ++ [e';f';g'] ++ B') in H1 by (rewrite <- app_assoc; now cbn).  
-        rewrite !skipn_app in H1. 2, 3: rewrite app_length; cbn; lia. 
+        rewrite !skipn_app_exact in H1. 2, 3: rewrite app_length; cbn; lia. 
         cbn in H1. rewrite coversHeadInd_tail_invariant with (s1' := []) (s2' := []) in H1. 
         apply coversHeadInd_single, H1. rewrite !app_length; cbn; lia. 
    - destruct H as (H1 & H2 & H3 & H4 & H5). 
@@ -2543,18 +2549,18 @@ Section fixTM.
           cbn. lia.  
       * (* middle*) 
         destruct (nat_eq_dec i (|A|)); [ | destruct (nat_eq_dec i (S (|A|)))].  
-        ++ unfold coversAt. rewrite !skipn_app. 2,3:lia.  
+        ++ unfold coversAt. rewrite !skipn_app_exact by lia.
            cbn. now apply coversHeadInd_tail_invariant with (s1' := []) (s2' := []). 
         ++ replace (A ++ [c; d; e; f; g] ++ B) with (A ++ [c] ++ [d; e; f; g] ++ B) by now cbn. 
            replace (A' ++ [c'; d'; e'; f'; g'] ++ B') with (A' ++ [c'] ++ [d'; e'; f';g'] ++ B') by now cbn.  
            unfold coversAt. rewrite app_assoc. setoid_rewrite app_assoc at 2. 
-           rewrite !skipn_app. 2, 3: rewrite app_length; now cbn.  
+           rewrite !skipn_app_exact. 2, 3: rewrite app_length; now cbn.  
            now apply coversHeadInd_tail_invariant with (s1' := []) (s2' := []). 
        ++ assert (i = S (S (|A|))) by lia. clear n n0 l1 l0.  
           replace (A ++ [c; d; e; f; g] ++ B) with (A ++ [c; d] ++ [e; f; g] ++ B) by now cbn. 
            replace (A' ++ [c'; d'; e'; f'; g'] ++ B') with (A' ++ [c'; d'] ++ [e'; f';g'] ++ B') by now cbn.  
            unfold coversAt. rewrite app_assoc. setoid_rewrite app_assoc at 2. 
-           rewrite !skipn_app. 2, 3: rewrite app_length; now cbn.  
+           rewrite !skipn_app_exact. 2, 3: rewrite app_length; now cbn.  
            now apply coversHeadInd_tail_invariant with (s1' := []) (s2' := []). 
     * (*lhs*) 
       apply valid_iff in H1 as (H1' & H1). specialize (H1 i).  
@@ -3149,18 +3155,18 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
         auto. 
       + unfold substring in H2. destruct H2 as (? & ? & -> ). 
         split; [ | eauto]. eauto. 
-   - destruct H as (q & qs & H1 & H2 & H3). 
-     exists [qs]. split. 
-     + unfold finalSubstrings. apply in_map_iff.
-       destruct H2 as (m & ->).
-       exists (q, m). split; [auto | ]. 
-       apply in_prod_iff.
-       unfold haltingStates. rewrite in_filter_iff. 
-       repeat split.
-       * apply elem_spec. 
-       * auto. 
-       * apply elem_spec. 
-    + unfold substring. now apply In_explicit. 
+    - destruct H as (q & qs & H1 & H2 & H3). 
+      exists [qs]. split. 
+      + unfold finalSubstrings. apply in_map_iff.
+        destruct H2 as (m & ->).
+        exists (q, m). split; [auto | ]. 
+        apply in_prod_iff.
+        unfold haltingStates. rewrite in_filter_iff. 
+        repeat split.
+        * apply elem_spec. 
+        * auto. 
+        * apply elem_spec. 
+      + unfold substring. now apply in_split.
   Qed.
 
   (** simulation lemma: for valid inputs, the CC instance does rewrite to a final string iff the Turing machine does accept *)
@@ -4248,16 +4254,16 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
   Lemma in_makeCards_iff (X Y Z W M : Type) (generate : evalEnv X Y Z W -> fAlphabet -> option M) allEnv rules card :
     card el makeCards generate allEnv rules <-> exists env rule, rule el rules /\ env el allEnv /\ Some card = generateCard generate env rule. 
   Proof.
-    unfold makeCards. rewrite in_concat_iff. split.
-    - intros (l' & H1 & (rule & <- & H2)%in_map_iff). 
+    unfold makeCards. rewrite in_concat. split.
+    - intros (l' & (rule & <- & H2)%in_map_iff & H1). 
       apply in_makeCardsP_iff in H1 as (env & H3 & H4).
       exists env, rule. eauto.
     - intros (env & rule & H1 & H2 & H3).
       setoid_rewrite in_map_iff.
       exists (makeCards' generate allEnv rule). 
       split.
-      + apply in_makeCardsP_iff. eauto.
       + eauto.  
+      + apply in_makeCardsP_iff. eauto.
   Qed. 
 
   Definition makeCardsFin := makeCards generateAlphabetFin.  
@@ -4315,24 +4321,24 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
   Proof using flatTM_TM_compat. 
     intros H0. split. 
     - intros card H. unfold makeCardsFlat, makeCardsFin, makeCards in H. 
-      apply in_concat_iff in H as (cards & H & H1). 
-      apply in_map_iff in H1 as (rule & <- & H2). 
+      apply in_concat in H as (cards & H & H1). 
+      apply in_map_iff in H as (rule & <- & H2). 
       apply (makeCardsP_isFlatTCardsOf rule) in H0.
-      apply H0 in H as (w' & F1 & F2). exists w'.  
+      apply H0 in H1 as (w' & F1 & F2). exists w'.  
       split; [  | apply F2 ]. 
-      unfold makeCardsFin, makeCards. apply in_concat_iff. 
+      unfold makeCardsFin, makeCards. apply in_concat.
       setoid_rewrite in_map_iff.
       eauto 12.
     - intros. unfold makeCardsFin, makeCards in H. 
-      apply in_concat_iff in H as (cards & H & H1). 
-      apply in_map_iff in H1 as (rule & <- & H2). 
+      apply in_concat in H as (cards & H & H1). 
+      apply in_map_iff in H as (rule & <- & H2). 
       apply (makeCardsP_isFlatTCardsOf rule) in H0.
-      apply H0 in H as (w & F1 & F2). exists w.  
+      apply H0 in H1 as (w & F1 & F2). exists w.  
       split; [ |apply F2 ]. 
-      unfold makeCardsFin, makeCardsFlat, makeCards. apply in_concat_iff. 
+      unfold makeCardsFin, makeCardsFlat, makeCards. apply in_concat. 
       setoid_rewrite in_map_iff.
       eauto 10. 
-  Qed. 
+  Qed.
  
   Lemma finType_enum_list_finReprEl (T : finType) : list_finReprEl (length (elem T)) (seq 0 (length (elem T))) (elem T). 
   Proof. 
@@ -5336,24 +5342,24 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
   Qed. 
 
   Lemma fin_flat_stateCards_agree : isFlatTCardsOf flatStateCards finStateCards.
-  Proof using flatTM_TM_compat. 
-    destruct flatTM_TM_compat as [_  _  _  _  _ []]. 
-    split; intros. 
+  Proof using flatTM_TM_compat.
+    destruct flatTM_TM_compat as [_  _  _  _  _ []].
+    split; intros.
     - unfold flatStateCards in H. apply in_concat_map_iff in H as (q & H1 & H2). 
       apply in_seq in H1 as (_ & H1). cbn in H1. rewrite (states_finRepr) in H1. apply finReprElP_exists in H1 as (Q & H1).
-      unfold generateCardsForFlat in H2. destruct nth eqn:H3; rewrite <- H1, R__halt in H3. 
-      + eapply fin_flat_haltCards_agree in H2 as (fincard & H2 & H4); [ | apply H1]. 
-        exists fincard. split; [ | eapply H4]. 
-        unfold finStateCards. apply in_concat_map_iff. exists Q; split; [apply elem_spec | ]. 
-        unfold generateCardsForFin. rewrite H3. apply H2. 
-      + apply in_app_iff in H2. destruct_or H2; [ | apply in_concat_iff in H2 as (l' & H2 & H4); apply in_map_iff in H4 as (m & <- & H5)]. 
+      unfold generateCardsForFlat in H2. destruct nth eqn:H3; rewrite <- H1, R__halt in H3.
+      + eapply fin_flat_haltCards_agree in H2 as (fincard & H2 & H4); [ | apply H1].
+        exists fincard. split; [ | eapply H4].
+        unfold finStateCards. apply in_concat_map_iff. exists Q; split; [apply elem_spec | ].
+        unfold generateCardsForFin. rewrite H3. apply H2.
+      + apply in_app_iff in H2. destruct_or H2; [ | apply in_concat in H2 as (l' & H2 & H4); apply in_map_iff in H2 as (m & <- & H5)].
         * eapply fin_flat_nonhaltCards_agree in H2 as (fincard & H2 & H4); [ | apply H1 | apply opt_finReprElP_None]. 
           exists fincard. split; [ | apply H4]. 
           unfold finStateCards. apply in_concat_map_iff. exists Q; split; [apply elem_spec | ]. 
           unfold generateCardsForFin. rewrite H3. 
           apply in_concat_map_iff. exists None; split; [ apply elem_spec | ]. apply H2. 
         * apply in_seq in H5 as (_ & H5). cbn in H5. rewrite (Sigma_finRepr) in H5. apply finReprElP_exists in H5 as (M & H5). 
-          eapply fin_flat_nonhaltCards_agree in H2 as (fincard & H2 & H4); [ | apply H1 | apply opt_finReprElP_Some; eauto]. 
+          eapply fin_flat_nonhaltCards_agree in H4 as (fincard & H2 & H4); [ | apply H1 | apply opt_finReprElP_Some; eauto]. 
           exists fincard. split; [ | apply H4]. 
           unfold finStateCards. apply in_concat_map_iff. exists Q; split; [apply elem_spec | ]. 
           unfold generateCardsForFin. rewrite H3. 
@@ -5364,19 +5370,19 @@ Ltac solve_stepsim_uniqueness H H2 F1 F2 Z3 W3 :=
         exists flatcard; split; [ | apply H4]. 
         unfold flatStateCards. apply in_concat_map_iff. exists (index q). 
         split; [ rewrite states_finRepr; apply in_seq; cbn; split; [lia | apply index_le] | ]. 
-        unfold generateCardsForFlat. rewrite H3. apply H2. 
-      + apply in_concat_map_iff in H2 as (m & _ & H2). 
+        unfold generateCardsForFlat. rewrite H3. apply H2.
+      + apply in_concat_map_iff in H2 as (m & _ & H2).
         destruct m as [m | ]; 
         (eapply fin_flat_nonhaltCards_agree in H2 as (flatcard & H2 & H4); [ | reflexivity | ]).
-        2: now apply opt_finReprElP_Some. 
-        3: now apply opt_finReprElP_None. 
+        2: now apply opt_finReprElP_Some.
+        3: now apply opt_finReprElP_None.
         * exists flatcard. split; [ | apply H4]. 
           unfold flatStateCards. apply in_concat_map_iff. exists (index q). 
           split; [ rewrite states_finRepr; apply in_seq; cbn; split; [lia | apply index_le] | ]. 
           unfold generateCardsForFlat. rewrite H3. apply in_app_iff. 
-          right; apply in_concat_iff.
+          right; apply in_concat.
           exists (generateCardsForFlatNonHalt (index q) (Some (index m))).
-          split; [apply H2 | ]. apply in_map_iff. exists (index m). split; [easy | ]. 
+          split; [| apply H2]. apply in_map_iff. exists (index m). split; [easy | ]. 
           apply in_seq; rewrite Sigma_finRepr; cbn; split; [lia | apply index_le]. 
         * exists flatcard. split; [ | apply H4]. 
           unfold flatStateCards. apply in_concat_map_iff. exists (index q). 

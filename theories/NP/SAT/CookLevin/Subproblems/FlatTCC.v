@@ -1,7 +1,12 @@
 From Complexity.NP.SAT.CookLevin Require Import FlatCC.
 From Complexity.Libs.CookPrelim Require Import MorePrelim FlatFinTypes.
+From Complexity.Libs Require Import MoreList.
 From Complexity.NP.SAT.CookLevin.Subproblems Require Export TCC.
 From Undecidability.Shared.Libs.PSL Require Import Base FinTypes. 
+
+From Complexity.L Require Import ComputableTime.
+From Complexity.L.Datatypes Require Import LProd LOptions.
+From Undecidability.L.Tactics Require Import GenEncode.
 Require Import Lia.
 
 (** * Flat 3-Covering Cards *)
@@ -201,8 +206,8 @@ Proof.
     exists subs'. split; [ apply H1 | ]. 
     unfold substring in *. destruct H2 as (b1 & b2 & ->). 
     unfold isFlatListOf in H0. 
-    symmetry in H0. apply map_eq_app in H0 as (ls1 & ls2 & -> & -> & H0). 
-    symmetry in H0. apply map_eq_app in H0 as (ls3 & ls4 &-> & ? & ->). 
+    symmetry in H0. apply map_eq_app in H0 as (ls1 & ls2 & -> & <- & H0). 
+    apply map_eq_app in H0 as (ls3 & ls4 & -> & ? & <-). 
     rewrite H3 in H0. apply map_injective in H0; [ | apply injective_index]. 
     rewrite H0. eauto.
   - intros (subs & H1 & H2). apply H in H1 as (subs' & H1 &H3). 
@@ -330,9 +335,6 @@ Proof.
 Qed.
 
 (** ** extraction *)
-
-From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import  LProd LOptions.
 
 Section fix_X.
   Variable (X:Type).
@@ -463,5 +465,3 @@ Lemma FlatTCC_enc_size (fpr : FlatTCC) : size (enc fpr) = size (enc (Sigma fpr))
 Proof. 
   destruct fpr. cbn. unfold enc at 1. cbn. unfold c__sizeFlatTCC. nia.
 Qed. 
-
-

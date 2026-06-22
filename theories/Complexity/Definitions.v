@@ -1,10 +1,10 @@
-From Undecidability.L Require Import Tactics.LTactics Prelim.MoreList Prelim.MoreBase Datatypes.LNat.
-From Complexity.L.Datatypes Require Import LBinNums.
+From Complexity.Libs Require Import MoreList MoreBase.
+From Complexity.L.Datatypes Require Import LBinNums LNat.
 From Complexity.Complexity Require Export Monotonic ONotation LinTimeDecodable.
+From Complexity.L Require Import ComputableTime.
+Require Import NArith.
 
 (** * Basics of decision problems *)
-
-
 
 Record decInTime {X} `{R :encodable X} P (fT : nat -> nat) :Type :=
   decInTime_intro
@@ -146,8 +146,9 @@ Proof.
 Qed.
 
 Lemma polyTimeComputable_compTime X Y `{encodable X} `{encodable Y} (f: X -> Y):
-  polyTimeComputable f -> exists H : polyTimeComputable f, inhabited (polyTimeComputable (time__polyTC H))
-                                                     /\ inhabited (polyTimeComputable (resSize__rSP H)).
+  polyTimeComputable f -> exists H : polyTimeComputable f,
+        inhabited (polyTimeComputable (time__polyTC H))
+     /\ inhabited (polyTimeComputable (resSize__rSP H)).
 Proof.
   intros R__spec. destruct (inOPoly_computable (poly__polyTC R__spec)) as (p'&[?]&Hbounds&?&?).
   destruct (resSizePoly_compSize R__spec) as (?&[]).

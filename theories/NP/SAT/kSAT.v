@@ -1,6 +1,6 @@
 From Complexity.NP.SAT Require Export SAT.
-From Undecidability.L.Datatypes Require Import LProd LTerm LNat Lists LOptions.
-From Undecidability.L.Functions Require Import EqBool.
+From Complexity.L.Datatypes Require Import LBool LProd LTerm LNat Lists LOptions.
+From Complexity.L.Functions Require Import EqBool.
 
 (** * k-SAT  *)
 (** A CNF is a k-CNF if each of its clauses has exactly k literals. k-SAT is SAT restricted to k-CNFs. *)

@@ -1,9 +1,9 @@
 From Complexity.NP.SAT Require Export SharedSAT SAT.
 Require Import Lia. 
 
-From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import  LProd LOptions LBool LNat Lists LUnit.
-From Undecidability.L.Functions Require Import EqBool. 
+From Complexity.L.Datatypes Require Import  LProd LOptions LBool LNat Lists.
+From Complexity.L.Functions Require Import EqBool.
+From Complexity.L Require Import ComputableTime.
 From Complexity.Complexity Require Import UpToCPoly.
 From Complexity.Libs.CookPrelim Require Import MorePrelim.
 
@@ -30,9 +30,9 @@ Proof.
 Qed. 
 
 Lemma varsOfClause_correct C v : v el varsOfClause C <-> exists l, l el C /\ v el varsOfLiteral l. 
-Proof. 
+Proof.
   unfold varsOfClause. now rewrite in_concat_map_iff. 
-Qed. 
+Qed.
 
 Lemma varsOfCnf_correct N v : v el varsOfCnf N <-> exists C, C el N /\ v el varsOfClause C. 
 Proof. 
@@ -40,7 +40,7 @@ Proof.
 Qed.
 
 (** An assignment is small if it only contains variables used by the CNF and is duplicate-free *)
-Definition assignment_small N a := a <<= varsOfCnf N /\ dupfree a.
+Definition assignment_small N a := a <<= varsOfCnf N /\ NoDup a.
 
 Lemma varsOfLiteral_size (l : literal) : size (enc (varsOfLiteral l)) <= size (enc l) + c__listsizeCons + c__listsizeNil. 
 Proof. 
@@ -116,9 +116,9 @@ Section fixX.
       + intros [-> | H2]; [now left | right; easy]. 
   Qed. 
 
-  Lemma dupfree_dedup (a : list X) : dupfree (dedup a). 
+  Lemma dupfree_dedup (a : list X) : NoDup (dedup a). 
   Proof using H. 
-    induction a; cbn; [ eauto using dupfree | ]. 
+    induction a; cbn; [ eauto using NoDup | ]. 
     destruct list_in_decb eqn:H1. 
     - apply list_in_decb_iff in H1; easy. 
     - apply list_in_decb_iff' in H1; [ | easy]. constructor. 
@@ -341,7 +341,7 @@ Section extraction.
           replace_le (size (enc x)) with g by (subst g; apply Nat.le_max_l) at 1. 
           replace_le (maxSize l) with g by (subst g; apply Nat.le_max_r) at 1. 
           cbn. fold (maxSize l) g. 
-          instantiate (c := c__eqbComp X + 21). subst c. leq_crossout. 
+          instantiate (c := c__eqbComp X + 21). subst c. lia.
         + subst c. unfold list_in_decb_time. cbn. lia. }
       smpl_upToC_solve. 
     Qed.

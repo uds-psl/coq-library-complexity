@@ -1,9 +1,9 @@
-From Undecidability.TM Require Import TM ProgrammingTools.
-From Complexity.TM Require Import Code.Decode.
+From Complexity.Libs Require Import MoreList.
+From Complexity.TM Require Import ProgrammingTools.
+From Complexity.TM Require Import Code.Decode EncodeTapes.
 
-From Complexity.TM Require Single.EncodeTapesInvariants .
+From Complexity.TM Require Import Single.EncodeTapesInvariants.
 Require Import FunInd Lia Ring Arith Program.Wf.
-Import EncodeTapes EncodeTapesInvariants.
 From Undecidability.Shared.Libs.PSL Require Import BaseLists.
 
 Lemma tape_encode_injective sig (t t' : tape sig): encode_tape t = encode_tape t' -> t = t'.

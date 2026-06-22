@@ -1,4 +1,6 @@
-From Undecidability.TM Require Import TM ProgrammingTools Single.EncodeTapes.
+From Complexity.Libs Require Import MoreList.
+From Complexity.TM Require Import Single.EncodeTapes.
+From Complexity.TM Require Import ProgrammingTools.
 
 Import Lia.
 
@@ -55,7 +57,8 @@ Proof.
   destruct (encode_tape_invariants x) as [-> | (b__L&b__R&t'&Hx&Hsymb&Hmarked&Hnnil)].
   {cbn;congruence. }
   rewrite Hx. intros [= <- Ht'] Hall.
-  assert (H__R : t__R <> []). 1:{ destruct t__R. 2:easy. rewrite app_nil_r in Ht'. subst t. ediscriminate (Hall (RightBlank _)). now eauto. }
+  assert (H__R : t__R <> []).
+  { destruct t__R. 2:easy. rewrite app_nil_r in Ht'. subst t. ediscriminate (Hall (RightBlank _)). now eauto. }
   apply exists_last in H__R as (init__R&last__R&->). 
   rewrite !app_assoc in Ht';apply last_app_eq in Ht' as [-> [= <-]]. 
   split. 1:{ eexists _, _;split. reflexivity. intros. apply Hsymb. eauto. }

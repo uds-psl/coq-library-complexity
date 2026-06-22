@@ -1,5 +1,5 @@
 From Undecidability.Shared.Libs.PSL Require Import Base. 
-From Undecidability.L.Datatypes Require Import Lists.
+From Complexity.L.Datatypes Require Import Lists.
 From Complexity.Libs Require Import MorePrelim.
 From Complexity.NP.SAT Require Import FSAT SAT SAT_inNP kSAT.
 Require Import Lia. 
@@ -860,13 +860,13 @@ Proof.
   - unfold poly__tseytin', c__tseytinPBound1. nia. 
   - fold tseytinP_time in IHf1, IHf2. 
     rewrite IHf1, IHf2. rewrite !formula_size_enc_bound. 
-    unfold poly__tseytin', c__tseytinPBound1. leq_crossout.  
+    unfold poly__tseytin', c__tseytinPBound1. lia.
   - fold tseytinP_time in IHf1, IHf2. 
     rewrite IHf1, IHf2. rewrite !formula_size_enc_bound. 
-    unfold poly__tseytin', c__tseytinPBound1. leq_crossout.  
+    unfold poly__tseytin', c__tseytinPBound1. lia.
   - fold tseytinP_time in IHf. rewrite IHf. 
     rewrite formula_size_enc_bound. 
-    unfold poly__tseytin', c__tseytinPBound1. leq_crossout. 
+    unfold poly__tseytin', c__tseytinPBound1. lia.
 Qed. 
 Lemma tseytinP_poly : monotonic poly__tseytin' /\ inOPoly poly__tseytin'. 
 Proof. 

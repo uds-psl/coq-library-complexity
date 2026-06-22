@@ -1,10 +1,6 @@
-From Complexity.Complexity Require Export Definitions EncodableP.
-From Undecidability.L.Complexity Require Export LTD_def.
-From Undecidability.L.Tactics Require Import LTactics.
-
-
-From Undecidability.L.Datatypes Require Import LProd LOptions LTerm LUnit.
-From Undecidability.L Require Export Functions.Decoding.
+From Complexity.Complexity Require Export Definitions EncodableP LinTimeDecodable.
+From Complexity.L.Datatypes Require Import LProd LOptions LTerm.
+From Complexity.L Require Export Functions.Decoding ComputableTime.
 
 (** inspired by Papadimitriou *)
 
@@ -126,7 +122,7 @@ Proof.
        split;[intros (y'&?&?)|intros ?].
        --cbn. enough (y = y') by congruence. eapply inj_enc. congruence.
        --eauto.
-      *split.  2:eauto.
+      *split.  2: easy.
        intros (?&->&?). rewrite decode_correct in H'.  easy.
     -unfold t__f'. smpl_inO.
     -unfold t__f'. smpl_inO.
@@ -223,7 +219,6 @@ Proof.
    destruct polyR as (time__R&[R__comp]&inO__timeR&mono__timeR).
    evar (time : nat -> nat). [time]:intros n.
    exists time. split.
-   (*eexists (fun n => cnst n (*)polyTimeC__t n*) + time__R (time__polyTC f__comp (size__f n + n)) + 7). split.*)
    +split. exists (fun '(x,z)=> f__decInTime R__comp (f x,z)).
     *extract. solverec.
      all:rewrite !LProd.size_prod. all:cbn [fst snd]. set (n0:=size (enc a) + size (enc b) + 4).

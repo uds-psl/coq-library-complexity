@@ -7,7 +7,7 @@ Section fixGraph.
   Notation V := (V g).
   Notation E := (@E g).
 
-  Definition isClique (l : list V) := (forall v1 v2, v1 el l -> v2 el l -> v1 <> v2 -> E (v1, v2)) /\ dupfree l. 
+  Definition isClique (l : list V) := (forall v1 v2, v1 el l -> v2 el l -> v1 <> v2 -> E (v1, v2)) /\ NoDup l. 
   Definition isKClique k (l : list V) := |l| = k /\ isClique l. 
 
   (** an alternative inductive characterisation *)

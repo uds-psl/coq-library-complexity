@@ -1,6 +1,5 @@
-From Complexity Require Import Complexity.Definitions.
-From Undecidability.L Require Import L.
-From Undecidability.L.Tactics Require Import LTactics.
+From Complexity Require Import Complexity.Definitions Libs.UpToCNary.
+From Complexity.L Require Import ComputableTime.
 
 Lemma resSizePoly_composition X Y Z `{encodable X} `{encodable Y} `{encodable Z} (f:X-> Y) (g : Y -> Z):
   resSizePoly f -> resSizePoly g -> resSizePoly (fun x => g (f x)).

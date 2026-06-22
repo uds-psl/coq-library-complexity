@@ -1,13 +1,11 @@
 (** * PrettyBounds for LM *)
 
+From Complexity.Libs Require Import MaxList.
 From Complexity Require Import TM.PrettyBounds.PrettyBounds.
 From Complexity Require Import TM.PrettyBounds.BaseCode.
-From Undecidability Require Import LM_heap_def TM.PrettyBounds.MaxList.
+From Complexity Require Import LM_heap_def.
 
-From Undecidability.TM.L  Require Import CaseCom Alphabets JumpTargetTM LookupTM StepTM.
-
-
-From Undecidability.TM.L Require Import StepTM M_LHeapInterpreter.
+From Complexity.TM.L  Require Import CaseCom Alphabets JumpTargetTM LookupTM StepTM M_LHeapInterpreter.
 From Complexity.L.AbstractMachines.FlatPro Require Import SizeAnalysisStep.
 
 (** ** LM step functions *)

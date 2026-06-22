@@ -1,7 +1,6 @@
-From Undecidability.L Require Import L Tactics.LTactics.
-From Undecidability.L.Datatypes Require Import LSum LBool LNat Lists.
+From Complexity.L.Datatypes Require Import LSum LBool LNat Lists.
 
-From Undecidability.L.AbstractMachines  Require Import FlatPro.Programs.
+From Complexity.L.AbstractMachines  Require Import FlatPro.Programs.
 From Complexity.L.AbstractMachines  Require Import Computable.LPro.
 
 Import L.

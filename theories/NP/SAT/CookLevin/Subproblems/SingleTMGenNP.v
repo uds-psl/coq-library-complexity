@@ -61,7 +61,7 @@ Fact isFlatListOf_app_inv (f : finType) s1 s2 (s : list f):
 Proof. 
   unfold isFlatListOf. 
   intros H. 
-  symmetry in H. apply map_eq_app in H as (s1' & s2' & -> & -> & ->). eauto.
+  symmetry in H. apply map_eq_app in H as (s1' & s2' & -> & <- & <-). eauto.
 Qed. 
 
 Lemma FlatFunSingleTMGenNP_FlatSingleTMGenNP_equiv M s maxSize steps: 

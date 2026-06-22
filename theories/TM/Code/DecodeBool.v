@@ -1,4 +1,4 @@
-From Undecidability.TM Require Import TM ProgrammingTools.
+From Complexity.TM Require Import ProgrammingTools.
 From Complexity.TM Require Import Code.Decode.
 
 Require Import Lia Ring Arith Program.Wf.
@@ -49,5 +49,3 @@ Module CheckEncodesBool.
 
   End checkEncodesBool.
 End CheckEncodesBool.
-
-

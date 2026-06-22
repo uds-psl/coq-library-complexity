@@ -1,5 +1,6 @@
-From Undecidability Require Import TM.Util.TM_facts TM.Util.Relations.
-From Undecidability.L Require Import LM_heap_def.
+From Complexity.TM Require Import TM_facts.
+From Complexity.L Require Import LM_heap_def.
+From Complexity.Libs Require Import MoreList ARS.
 
 Set Default Proof Using "Type".
 Require Import FunInd.

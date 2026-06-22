@@ -41,9 +41,8 @@ Section TM_single.
   Proof. 
     destruct c. cbn.
     destruct mtrans eqn:H1. unfold sconfig_for_mconfig.
-    unfold step. unfold doAct_multi. cbn. unfold current_chars. cbn. setoid_rewrite H1. 
-    specialize(vec_case1 t0) as (? & ->). 
-    erewrite Vector.nth_map2 with (p2 := Fin0) (p3 := Fin0). 2-3: reflexivity. cbn. reflexivity.  
+    unfold step. unfold doAct_multi. cbn. unfold current_chars. cbn. setoid_rewrite H1.
+    now specialize(vec_case1 t0) as (? & ->).
   Qed. 
 
   Lemma sstep_agree2 (c : mconfig Sigma mstates 1) : mconfig_for_sconfig (sstep strans (sconfig_for_mconfig c)) = step (c : mconfig Sigma (state TM) 1).  

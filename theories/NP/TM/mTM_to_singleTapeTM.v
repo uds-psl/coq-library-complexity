@@ -1,17 +1,14 @@
-From Undecidability.L Require Import Tactics.LTactics.
-From Undecidability.L.Datatypes Require Import Lists LVector LSum LProd LFinType LNat.
+From Complexity.L.Datatypes Require Import Lists LVector LSum LProd LFinType LNat.
 From Complexity.Complexity Require Import NP Definitions Monotonic Subtypes.
-From Undecidability.L.Functions Require Import EqBool.
-From Undecidability.L.TM Require Import TapeFuns.
+From Complexity.L.Functions Require Import EqBool.
+From Complexity.L.TM Require Import TapeFuns.
 From Complexity.L.TM Require Import CompCode.
 
-
-From Undecidability.TM Require Import TM_facts CodeTM.
-From Undecidability.TM.Single Require Import EncodeTapes StepTM.
+From Complexity.TM Require Import TM_facts CodeTM Single.EncodeTapes.
+From Undecidability.TM.Single Require Import StepTM.
 
 From Complexity.TM Require Import M2MBounds PrettyBounds.SizeBounds.
-From Undecidability Require Import TM.Util.VectorPrelim.
-From Complexity.Libs Require Import PSLCompat.
+From Complexity.Libs Require Import PSLCompat MoreList MaxList UpToCNary SplitVector CookPrelim.MorePrelim.
 
 Unset Printing Coercions.
 
@@ -48,7 +45,7 @@ Section LMGenNP_to_TMGenNP_mTM.
   Proof.
     setoid_rewrite enc_vector_eq. rewrite Lists.size_list.
     erewrite <- sumn_map_le_pointwise with (f1:=fun _ => _). 2:{ intros. setoid_rewrite <- sizeOfTape_by_size. reflexivity. }
-    rewrite sizeOfmTapes_max_list_map. unfold MaxList.max_list_map. rewrite max_list_sumn.
+    rewrite sizeOfmTapes_max_list_map. unfold max_list_map. rewrite max_list_sumn.
     etransitivity. 2:now apply Nat.le_add_r. apply sumn_map_le_pointwise. intros. apply Nat.le_add_r.
   Qed.
   
@@ -127,8 +124,8 @@ Section LMGenNP_to_TMGenNP_mTM.
          2,3:now split;[easy | intros ? (y&<-&Hiny)%in_map_iff;easy].
          destruct H' as [Hinit Hlast]. rewrite skipn_map in Hlast.
          destruct (split_vector v0 n) as (v'&vlst) eqn:Hsplit.
-         unshelve eassert (H':=split_vector_correct _ _). 6:rewrite Hsplit in H'. clear. abstract nia. 
-         cbn [fst snd] in H'. apply (f_equal (@vector_to_list _ _ )) in H'. rewrite vector_to_list_cast in H'. clear Hsplit.
+         unshelve eassert (H':=split_vector_correct _ _ _). 6:rewrite Hsplit in H'. clear. abstract nia.
+         cbn [fst snd] in H'. apply (f_equal (@Vector.to_list _ _ )) in H'. rewrite vector_to_list_cast in H'. clear Hsplit.
          rewrite Vector.to_list_append in H'.  
          revert v' vlst H'. replace (Init.Nat.min n (S n)) with n by nia. replace (S n - n) with 1 by nia.
          intros v' vlst eq. destruct_vector (* vlst as h *). cbn in eq.
@@ -147,7 +144,7 @@ Section LMGenNP_to_TMGenNP_mTM.
              erewrite Fin.of_nat_ext. apply Htmp.
          }
          clear Hinit v'.
-         rewrite skipn_app in Hlast. 2:now rewrite Vector.length_to_list. cbn in Hlast.
+         rewrite skipn_app_exact in Hlast. 2:now rewrite Vector.length_to_list. cbn in Hlast.
          autorewrite with list in Hlast. cbn in Hlast. revert Hlast. intros [= ->].
          edestruct H_HaltOrDiv as (?&?&?&?).
          2:now eauto.
@@ -227,7 +224,7 @@ Section LMGenNP_to_TMGenNP_mTM.
     {
       set (f:=fun s : sigTape sig => inr (sigList_X s)) in t__start.
       assert ( {f__c:UpToC (fun _ => 1) & computableTime' f (fun _ _ => (f__c tt,tt))}) as [t__f comp__f].
-      {  evar (c:nat). exists_UpToC (fun _ => c). unfold f. clear_all. extract. solverec. [c]:exact 3. now unfold c. subst c. smpl_upToC_solve. }
+      {  evar (c:nat). exists_UpToC (fun _ => c). unfold f. clear. extract. solverec. [c]:exact 3. now unfold c. subst c. smpl_upToC_solve. }
 
       set (g:= (fun t : tape sig => inr sigList_cons :: map f (encode_tape t))) in t__start.
       assert ( {t__g:UpToC (fun t=> sizeOfTape t + 1) & computableTime' g (fun t _ => (t__g t,tt))}) as [t__g comp__g].
@@ -238,9 +235,10 @@ Section LMGenNP_to_TMGenNP_mTM.
       
       evar (time : nat -> nat). [time]:intros n0.
       eexists (fun x => time x).
-      { unfold t__start. extract. solverec. rewrite (UpToC_le _).
+      { unfold t__start. extract. solverec.
+        rewrite  concat_time_exp'.
         rewrite (correct__leUpToC (mapTime_upTo _)). 
-        rewrite length_concat,map_map. subst g. cbn -[plus mult]. setoid_rewrite map_length. rewrite Vector.length_to_list.
+        rewrite length_concat, !map_map. subst g. cbn -[plus mult]. setoid_rewrite map_length. rewrite Vector.length_to_list.
         erewrite sumn_map_le_pointwise  with (f2:=fun _ => _).
         2:{ intros;rewrite (UpToC_le t__g),sizeOfmTapes_upperBound;try reflexivity;now apply Vector.to_list_In. }
         erewrite sumn_map_le_pointwise with (f1:=fun x1 : tape sig => S (| encode_tape x1 |)) (f2:=fun _ => _).
@@ -320,8 +318,6 @@ Section LMGenNP_to_TMGenNP_mTM.
         1,2:unfold f__size;smpl_inO; apply inOPoly_comp;smpl_inO.
 
       }
-    
-        
   Qed.
 
   (* Print Assumptions LMGenNP_to_TMGenNP_mTM. *)

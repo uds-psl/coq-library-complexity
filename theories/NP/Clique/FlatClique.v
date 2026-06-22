@@ -1,15 +1,14 @@
-From Undecidability.L Require Import L.
-From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import Lists LNat LProd.
+From Complexity.L.Datatypes Require Import Lists LNat LProd LOptions LBool LSum.
+From Complexity.L.Functions Require Import EqBool.
 From Undecidability.Shared.Libs.PSL Require Import FinTypes. 
 From Complexity.NP.Clique Require Import FlatUGraph Clique UGraph.
-From Complexity.Libs.CookPrelim Require Import MorePrelim FlatFinTypes. 
+From Complexity.Libs.CookPrelim Require Import MorePrelim PolyBounds FlatFinTypes. 
 
 (** * Clique on flat graphs and NP containment *)
 
 Definition isfClique (G : fgraph) (l : list fvertex) := 
   let (V, E) := G in
-  list_ofFlatType V l /\ dupfree l /\ (forall v1 v2, v1 el l -> v2 el l -> v1 <> v2 -> (v1, v2) el E). 
+  list_ofFlatType V l /\ NoDup l /\ (forall v1 v2, v1 el l -> v2 el l -> v1 <> v2 -> (v1, v2) el E). 
 
 Definition isfKClique (k : nat) (G : fgraph) (l : list fvertex) := isfClique G l /\ |l| = k. 
 
@@ -25,7 +24,7 @@ Definition isfClique_decb (G : fgraph) l :=
   let (V, E) := G in list_ofFlatType_dec V l && dupfreeb Nat.eqb l && allPairsOfEdges_decb l E. 
 
 Lemma allPairsOfEdges_decb_iff V E l: 
-  fgraph_wf (V, E) -> (forall v, v el l -> isfVertex V v) -> dupfree l 
+  fgraph_wf (V, E) -> (forall v, v el l -> isfVertex V v) -> NoDup l 
   -> allPairsOfEdges_decb l E = true <-> (forall v1 v2, v1 el l -> v2 el l -> v1 <> v2 -> (v1, v2) el E).
 Proof. 
   intros H0 H Hdup. 
@@ -73,7 +72,7 @@ Section fixGraph.
   Context (H : isFlatGraphOf G UG). 
  
   (** We require dupfreeness as list_finReprEl' does not enforce any order or how often an element appears *)
-  Lemma clique_flat_agree l (L: list (V UG)): dupfree l -> dupfree L -> list_finReprEl' l L -> isfClique G l <-> isClique L. 
+  Lemma clique_flat_agree l (L: list (V UG)): NoDup l -> NoDup L -> list_finReprEl' l L -> isfClique G l <-> isClique L. 
   Proof using H. 
     destruct G as (fV & fE). destruct H as (Hv & He). inv He.
     intros Hdup1 Hdup2 [H1 H2]. unfold isfClique, isClique. split. 
@@ -114,16 +113,12 @@ Section fixGraph.
     rewrite <- Heq in H. eapply clique_flat_agree. 
     4: rewrite Heq; apply Hc.  
     - apply Hc. 
-    - eapply map_dupfree. rewrite <- H1. apply Hc. 
+    - eapply NoDup_map_inv. rewrite <- H1. apply Hc. 
     - apply isFlatListOf_list_finReprEl', H1. 
   Defined. (* because informative*)
 End fixGraph.
 
 (** ** extraction *)
-From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Complexity.Libs.CookPrelim Require Import PolyBounds FlatFinTypes. 
-From Undecidability.L.Datatypes Require Import LProd LOptions LBool LSum. 
-From Undecidability.L.Functions Require Import EqBool.
 
 (** fedges_edge_in_decb *)
 Definition c__fedgesEdgeInDecb := 6. 
@@ -318,7 +313,7 @@ Lemma fedges_wf_decb_time_bound V E : fedges_wf_decb_time V E <= poly__fedgesWfD
 Proof.
   unfold fedges_wf_decb_time. rewrite list_size_length. unfold fedge_wf_decb_time. 
   rewrite size_nat_enc_r with (n := V) at 1. 
-  unfold poly__fedgesWfDecb. leq_crossout. 
+  unfold poly__fedgesWfDecb. lia.
 Qed.
 Lemma fedges_wf_decb_poly : monotonic poly__fedgesWfDecb /\ inOPoly poly__fedgesWfDecb. 
 Proof. 

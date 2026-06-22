@@ -1,6 +1,6 @@
 From Undecidability.Shared.Libs.PSL Require Import Base FiniteTypes. 
 From Complexity.Libs Require Import MorePrelim UniformHomomorphisms.
-From Complexity.NP.SAT.CookLevin.Subproblems Require CC BinaryCC .
+From Complexity.NP.SAT.CookLevin.Subproblems Require CC BinaryCC.
 Import CC.
 Require Import Lia.
 
@@ -302,7 +302,7 @@ Section fixInstance.
       (*otherwise, we know that sf has a length of at least k0 * offset *)
       destruct subs. 
       + rewrite homo_nil; [ | apply h_unifHom]. unfold prefix; cbn; eauto. 
-      + rewrite skipn_app. 
+      + rewrite skipn_app_exact. 
         * rewrite H3. rewrite (proj1 h_unifHom). exists (h b); eauto. 
         * rewrite h_multiplier. rewrite firstn_length. 
           enough (|sf| >= k0 * offset) by nia. 
@@ -312,7 +312,7 @@ Section fixInstance.
       destruct H3 as (b & H3). unfold prefix. 
       rewrite <- (firstn_skipn (k0 * offset) sf), (proj1 h_unifHom) in H3. 
       unfold hinit in H2; rewrite h_multiplier in H2. split; [ nia | ]. 
-      rewrite skipn_app in H3. 
+      rewrite skipn_app_exact in H3. 
       + eapply h_app_inv in H3 as (a1 & a2 & -> & H4 & H5); [ | rewrite Nat.mul_comm, h_multiplier; easy ].
         exists a2. enough (a1 = subs') by easy. 
         symmetry; apply h_injective. easy.

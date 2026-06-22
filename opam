@@ -21,7 +21,7 @@ remove: [
 ]
 depends: [
   "coq" {>= "8.16" & < "8.17"}
-  "coq-library-undecidability" {= "1.0.1+8.16" }
+  "coq-library-undecidability" {= "1.1+8.16" }
 ]
 
 synopsis: "A Coq Library of Complexity Theory"

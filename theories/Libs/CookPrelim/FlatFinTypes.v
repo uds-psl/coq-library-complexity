@@ -2,6 +2,7 @@ Require Import Lia.
 Require Export smpl.Smpl.
 Require Import Undecidability.Shared.Libs.PSL.FiniteTypes.BasicDefinitions.
 From Complexity.Libs Require Export PSLCompat.
+From Complexity.Libs Require Import MoreList.
 From Complexity.Libs.CookPrelim Require Import MorePrelim.
  
 
@@ -327,10 +328,9 @@ Proof.
 Qed. 
 
 (** extraction *)
-From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import LProd LOptions LBool LSum.
-From Complexity.Libs.CookPrelim Require Import PolyBounds. 
-From Undecidability.L.Functions Require Import EqBool.
+From Complexity.L.Datatypes Require Import LProd LOptions LBool LSum LNat Lists.
+From Complexity.Libs.CookPrelim Require Import PolyBounds.
+From Complexity.L.Functions Require Import EqBool.
 Require Import Nat. 
 
 #[export]
@@ -392,7 +392,8 @@ Proof.
   setoid_rewrite Nat.add_comm at 5.
   unfold poly__listOfFlatTypeDec, c__listOfFlatTypeDecBound. nia.
 Qed. 
+
 Lemma list_ofFlatType_dec_poly : monotonic poly__listOfFlatTypeDec /\ inOPoly poly__listOfFlatTypeDec. 
 Proof.
   split; unfold poly__listOfFlatTypeDec; smpl_inO; apply ofFlatType_dec_poly.
-Qed. 
+Qed.

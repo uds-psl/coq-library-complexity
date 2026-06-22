@@ -1,10 +1,10 @@
-From Undecidability.L Require Import Tactics.LTactics Datatypes.LNat Datatypes.Lists Functions.EqBool.
-From Complexity Require Import TMflat.
+From Complexity.L.Datatypes Require Import LNat Lists.
+From Complexity.L.Functions Require Import EqBool FinTypeLookup.
+From Complexity.L.TM Require Import TMflat TMEncoding.
 
-From Undecidability Require Import TM_facts TM.TMEncoding.
+From Complexity.TM Require Import TM_facts.
 From Complexity Require Import L.TM.TMunflatten.
 
-From Undecidability Require Import Functions.FinTypeLookup.
 
 Lemma size_flatTape (sig : finType) (t' : tape sig):
   size (enc (mapTape index t')) <= sizeOfTape t' * (| elem sig| * 4+9) + 17.
@@ -34,23 +34,19 @@ Proof.
   unfold sizeOfmTapes,mapTapes.
   rewrite size_list.
   rewrite Vector.fold_left_right_assoc_eq. 2:intros;nia.
-  induction n.
-  -rewrite !destruct_vector_nil with (v:=t').
-   cbn. easy.
-  -edestruct destruct_vector_cons with (v:=t') as (?&?&->).
-   cbn - [mult]. fold (Vector.to_list (Vector.map (mapTape index) x0)).
-   specialize (IHn x0).
-   rewrite size_flatTape.
-   set (a := sumn _). set (b := VectorDef.fold_right _ _ _). set (c := | _ |).
-   set (d:=sizeOfTape _).
-   enough (a <= n * b * (c * 4 + 9) + n * 22) as ->. 
-   2: { unfold c__listsizeCons, c__listsizeNil in *. nia. }
-   unfold c__listsizeNil, c__listsizeCons in *. 
-   repeat eapply Nat.max_case_strong;intros ?. 
-   + nia. 
-   + rewrite H.  nia.
+  induction t'.
+  - cbn. easy.
+  - cbn - [mult]. fold (Vector.to_list (Vector.map (mapTape index) t')).
+    rewrite size_flatTape.
+    set (a := sumn _). set (b := VectorDef.fold_right _ _ _). set (c := | _ |).
+    set (d:=sizeOfTape _).
+    enough (a <= n * b * (c * 4 + 9) + n * 22) as ->. 
+    2: { unfold c__listsizeCons, c__listsizeNil in *. nia. }
+    unfold c__listsizeNil, c__listsizeCons in *. 
+    repeat eapply Nat.max_case_strong;intros ?. 
+    + nia. 
+    + rewrite H.  nia.
 Qed.
-
 
 
 Lemma sizeoftape_maptape_eq sig sig' (f:sig -> sig') t:
@@ -72,12 +68,10 @@ Proof.
   intro R__tapes. inv R__tapes.
   unfold sizeOfmTapes,mapTapes.
   rewrite Vector.fold_left_right_assoc_eq. 2:intros;nia.
-  induction n.
-  -rewrite !destruct_vector_nil with (v:=ts').
-   cbn. easy.
-  -edestruct destruct_vector_cons with (v:=ts') as (?&?&->).
-   cbn - [mult]. fold (Vector.to_list (Vector.map (mapTape index) x0)).
-   specialize (IHn x0). rewrite IHn,sizeoftape_maptape_eq. lia.
+  induction ts'.
+  - easy.
+  - cbn - [mult]. fold (Vector.to_list (Vector.map (mapTape index) ts')).
+    rewrite IHts', sizeoftape_maptape_eq. lia.
 Qed.
 
 Lemma isFlatteningTransOf_eq st sig' n trans trans' s v:
@@ -128,18 +122,18 @@ Lemma doAct_multiFlat (sig:finType) n acts t (t' : tapes sig n):
   isFlatteningTapesOf (zipWith (doAct (sig:=nat)) t (map (map_fst (option_map index)) (Vector.to_list acts))) (doAct_multi t' acts).
 Proof.
   intros H. inv H. rewrite isFlatteningTapesOf_iff.
-  induction n in *|-*.
-  -rewrite !destruct_vector_nil with (v:=t').
-   rewrite !destruct_vector_nil with (v:=acts). easy.
-  -destruct destruct_vector_cons with (v:=t') as (?&?&->).
-   destruct destruct_vector_cons with (v:=acts) as (?&?&->).
+  induction acts in *.
+  - induction t' using Vector.case0. easy.
+  - induction t' using Vector.caseS'.
    
    cbn.
-   setoid_rewrite IHn.  f_equal.
-   destruct x,x1 as [[] []]; cbn - [tape_move_left tape_move_right]. all:try easy. 
-   all:try (setoid_rewrite <- mapTape_move_right || rewrite <- mapTape_move_left). all:cbn. all:easy.
+   setoid_rewrite IHacts.  f_equal.
+   destruct h as [[] []]; cbn - [tape_move_left tape_move_right].
+   all:autorewrite with tape.
+   all:try easy.
+   all:try (setoid_rewrite <- mapTape_move_right || rewrite <- mapTape_move_left).
+   all:cbn. all:easy.
 Qed.
-
 
 
 Definition stepFlat (trans:list (nat * list (option nat) * (nat * list (option nat * move)))) (c:mconfigFlat) : mconfigFlat :=
@@ -150,11 +144,11 @@ Lemma current_charsFlat_eq (sig:finType) n t (t': tapes sig n):
   isFlatteningTapesOf t t' ->
   map (current (Σ:=nat)) t = map ((option_map index)) (Vector.to_list (current_chars t')).
 Proof.
-  intros H. inv H. induction n in *|-*.
-  -rewrite !destruct_vector_nil with (v:=t'). easy.
-  -destruct destruct_vector_cons with (v:=t') as (?&?&->). cbn. setoid_rewrite IHn.
-   unfold current_chars. cbn.  f_equal.
-   destruct x; easy.
+  intros H. inv H. induction t'.
+  - easy.
+  - cbn. setoid_rewrite IHt'.
+    unfold current_chars. cbn.  f_equal.
+    destruct h; easy.
 Qed.
 
 Lemma stepFlat_eq sig' n (M': TM sig' n) (trans:list (nat * list (option nat) * (nat * list (option nat * move)))) (c:mconfigFlat) c':

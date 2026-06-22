@@ -1,7 +1,6 @@
-From Undecidability.L Require Import Tactics.LTactics Prelim.MoreList Prelim.MoreBase.
-From Complexity.Complexity Require Import Definitions Subtypes.
-
-From Undecidability.L Require Import LM_heap_def.
+From Complexity.Libs Require Import MoreList MoreBase.
+From Complexity.Complexity Require Import NP Subtypes.
+From Complexity.L Require Import LM_heap_def Functions.Encoding.
 
 (** The halting formulation of the generic NP-complete problem for the abstract machine executing L-terms. 
 This is usefull as we have a Turing machine that simulates this abstract machine. *)

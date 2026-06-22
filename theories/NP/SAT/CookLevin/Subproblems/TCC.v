@@ -367,4 +367,3 @@ Proof.
     exists sf; cbn. split; [ | apply H2]. 
     eapply relpower_congruent; [ apply valid_congruent; symmetry; apply cards_list_ind_coversHead_agree, H | apply H1]. 
 Qed. 
-

@@ -1,6 +1,6 @@
 From Undecidability.Shared.Libs.PSL Require Import Base. 
 From Complexity.Libs.CookPrelim Require Import Tactics MorePrelim. 
-From Undecidability.L.Datatypes Require Import Lists LNat LBool LProd LOptions. 
+From Complexity.L.Datatypes Require Import Lists LNat LBool LProd LOptions. 
 From Complexity.NP.SAT Require Import FSAT BinaryCC FormulaEncoding. 
 Require Import Lia. 
 
@@ -489,11 +489,10 @@ Proof.
 Qed. 
 
 (** ** extraction *)
-From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Complexity.Libs.CookPrelim Require Import PolyBounds. 
-From Undecidability.L.Datatypes Require Import LProd LOptions LBool LSum. 
-From Undecidability.L.Functions Require Import EqBool.
-
+From Complexity.L.Datatypes Require Import LProd LOptions LBool LSum. 
+From Complexity.L.Functions Require Import EqBool.
+From Complexity.L Require Import ComputableTime.
  
 (** encodeCardAt *)
 Definition c__encodeCardAt := FlatCC.cnst_prem + FlatCC.cnst_conc + 13.
@@ -607,7 +606,7 @@ Proof.
   - unfold ltb_time, leb_time. rewrite Nat.le_min_r. 
     rewrite size_nat_enc_r with (n := width bpr) at 1. 
     replace_le (size (enc (width bpr))) with (size (enc bpr)) by (rewrite BinaryCC_enc_size; cbn; lia). 
-    unfold poly__encodeCardsInLineP1. leq_crossout. 
+    unfold poly__encodeCardsInLineP1. lia. 
   - rewrite IHstepindex. clear IHstepindex. 
     rewrite encodeCardsAt_time_bound by apply H. 
     unfold sub_time. rewrite Nat.le_min_r. 
@@ -1104,7 +1103,7 @@ Definition reduction_time (bpr : BinaryCC) := (if BinaryCC_wf_dec bpr then  enco
 Instance term_reduction : computableTime' reduction (fun bpr _ => (reduction_time bpr, tt)). 
 Proof. 
   extract. unfold reduction_time, c__reduction; solverec. 
-Qed. 
+Qed.
 
 (** full reduction statement *)
 Theorem BinaryCC_to_FSAT_poly : BinaryCCLang ⪯p FSAT. 
@@ -1128,4 +1127,4 @@ Proof.
       * smpl_inO. 
       * smpl_inO. 
   - apply BinaryCC_to_FSAT. 
-Qed. 
+Qed.

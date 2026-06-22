@@ -1,14 +1,10 @@
 From Undecidability.TM Require Import TM_facts.
-From Undecidability.L.TM Require Import TMEncoding TapeFuns.
-From Complexity.L.TM Require Import TMflat TMflatEnc TMflatFun TapeDecode TMunflatten.
-From Undecidability.L.Datatypes Require Import LNat LProd Lists LOptions.
+From Complexity.L.TM Require Import TMflat TMflatEnc TMflatFun TapeDecode TMunflatten TMEncoding TapeFuns.
+From Complexity.L.Datatypes Require Import LNat LProd Lists LOptions.
+From Complexity.L.Functions Require Import Decoding EqBool FinTypeLookup.
  
 From Complexity.Complexity Require Import ONotation Monotonic.
-From Undecidability.L Require Import Tactics.LTactics.
-From Undecidability Require Import Functions.Decoding .
 From Complexity Require Import TMflatFun.
-
-From Undecidability Require Import L.Functions.EqBool.
 
 Definition haltConfFlat_time (c : nat) := 20 * c + 21.
 
@@ -36,8 +32,6 @@ Proof.
 Qed.
 
 
-
-From Undecidability.L Require Import Functions.FinTypeLookup.
 Definition stepFlat_time (f : nat) (c:mconfigFlat) := 153 * (| snd c |) + f * size (enc (fst c, map (current (Σ:=nat)) (snd c))) * c__eqbComp (nat * list (option nat)) + 24 * f + 96.
 Import Nat.
 #[export]
@@ -132,11 +126,6 @@ Proof.
   - intros n'. rewrite !in_app_iff. firstorder. nia. 
 Qed.
 
-Lemma Forall_elim (A : Type) (P : A -> Prop) l : Forall P l -> forall x, x el l -> P x. 
-Proof. 
-  induction 1 as [ | x l Hp _ IH]; [auto | ]. intros x' [-> | H]; [apply Hp | now apply IH]. 
-Qed.
-
 Lemma in_repeat_iff (A : Type) n (a x: A): n > 0 -> x el repeat a n <-> x = a. 
 Proof. 
   intros H. induction n as [ | [] IH]; [lia | | ]. 
@@ -156,13 +145,13 @@ Proof.
   - apply T1 in H as (_ & _ & _ & _ & _ & F3). clear T0 T1. 
     apply Forall_zipWith. intros x y Helx Hely. 
     destruct y as [[a | ] y]; [apply doAct_validFlatTape_Some | apply doAct_validFlatTape_None]. 
-    1,3: eapply Forall_elim; [apply H2 |apply Helx].
+    1,3: eapply Forall_forall; [apply H2 |apply Helx].
     eapply F3, Hely. 
   - eapply T1, H.
   - rewrite <- H1, zipWith_length. inv H. rewrite repeat_length. lia. 
   - inv H. apply Forall_zipWith. intros x y Helx Hely. 
     apply in_repeat_iff in Hely. 2: destruct t; cbn in *; [ tauto | lia].  
-    rewrite Hely. cbn. eapply Forall_elim; [apply H2 |apply Helx].
+    rewrite Hely. cbn. eapply Forall_forall; [apply H2 |apply Helx].
   - now injection H.
 Qed.
 
@@ -369,7 +358,7 @@ Proof.
   all:rewrite !Nat.le_min_l.
   all:rewrite !size_nat_enc. 
   all: unfold c__leb2, leb_time, c__leb, c__length, c__listsizeNil, c__listsizeCons, c__natsizeO, c__natsizeS, c__forallb. 
-  all:zify. all:clear; nia. 
+  lia.
 Qed.
 
 #[export]
@@ -390,7 +379,7 @@ Proof.
   rewrite !sumn_map_mult_c_r.
   rewrite !sumn_map_add, !sumn_map_c.
   all: unfold c__forallb, c__listsizeNil, c__listsizeCons. 
-  all:ring_simplify. zify. clear; nia.
+  all:ring_simplify. lia.
 Qed.
 
 Definition time_isValidFlatTrans lf sf := isInjFinfuncTable_time (X:=nat * list (option nat)) (Y:=(nat * list (option nat * move))) lf sf + sf * (c__eqbComp nat + 8) + 9.

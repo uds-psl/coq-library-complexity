@@ -1,7 +1,8 @@
 Require Import Undecidability.Shared.Libs.PSL.Base.
 Require Import Lia. 
 From Undecidability.L Require Import L_facts.
-Require Import Undecidability.Shared.ListAutomation.
+Require Import Undecidability.Shared.ListAutomation. Import ListAutomationHints.
+Require Import Complexity.Libs.MoreBase.
 From Complexity.Libs.CookPrelim Require Export Tactics.
 
 (** * Various preliminaries for the TM -> SAT part of the Cook-Levin Theorem *)
@@ -55,7 +56,7 @@ Section subsequence.
     - unfold subsequence. destruct A; cbn; try firstorder.
       intros (C & D & H). destruct C; cbn in H; congruence.   
     - intros (C & D & H). intros x xel. destruct C. 
-      + cbn in H. rewrite H. firstorder. 
+      + cbn in H. rewrite H. firstorder.
       + cbn in H. assert (x0 = a) as -> by congruence.  
         right. apply IHB; [|assumption]. exists C,D. congruence. 
   Qed.
@@ -93,6 +94,8 @@ Section remove.
   Qed. 
 End remove.
 
+(* TODO 
+Search NoDup map.
 Proposition map_dupfree (X Y : Type) (f : X -> Y) (A : list X) : dupfree (map f A) -> dupfree A.
 Proof. 
   remember (map f A) as B. intros H1. revert A HeqB. induction H1; intros B HeqB.
@@ -101,11 +104,12 @@ Proof.
     inv HeqB. constructor. 
     + rewrite in_map_iff in H. contradict H. eauto.
     + now apply IHNoDup. 
-Qed. 
+Qed.
+ *)
 
 Require Import Lia.
 (*Require Template.utils.*)
-From Undecidability.Shared.Libs.PSL Require Export FiniteTypes.FinTypes FiniteTypes.BasicFinTypes FiniteTypes.CompoundFinTypes Retracts Inhabited Base Vectors.Vectors FiniteTypes. 
+From Undecidability.Shared.Libs.PSL Require Export FiniteTypes.FinTypes FiniteTypes.BasicFinTypes FiniteTypes.CompoundFinTypes (*Retracts*) Inhabited Base Vectors.Vectors FiniteTypes. 
 Require Export smpl.Smpl.
 From Undecidability.Shared Require Import Prelim.
 
@@ -159,6 +163,7 @@ Smpl Add (apply rev_involution) : involution.
 Definition prefix (X : Type) (a b : list X) := exists b', b = a ++ b'.
 Definition substring (X : Type) (a b : list X) := exists b1 b2, b = b1 ++ a ++ b2. 
 
+(* ** Lemmas about [firstn] and [skipn] *)
 Lemma map_skipn (A B : Type) (f : A -> B) (l : list A) (n : nat) : map f (skipn n l) = skipn n (map f l). 
 Proof. 
   induction n as [ | n] in l |-*; cbn; [reflexivity | destruct l as [ | x l]]; cbn; firstorder. 
@@ -170,6 +175,13 @@ Proof.
   - inv_list. now cbn. 
   - inv_list. cbn. apply IHj. cbn in H; congruence.
 Qed. 
+
+Lemma skipn_app_exact (X : Type) (xs ys : list X) (n : nat) :
+  n = (| xs |) ->
+  skipn n (xs ++ ys) = ys.
+Proof.
+  intros ->. revert ys. induction xs; cbn; auto.
+Qed.
 
 Lemma skipn_app2 (X : Type) i (a b c : list X): c <> [] -> skipn i a = c -> skipn i (a ++ b) = c ++ b. 
 Proof.
@@ -183,11 +195,8 @@ Qed.
 Lemma skipn_app3 (X : Type) i (a b : list X) : i <= |a| -> exists a', skipn i (a ++ b) = a' ++ b /\ a = firstn i a ++ a'. 
 Proof. 
   intros. exists (skipn i a). split.
-  + destruct (nat_eq_dec i (|a|)). 
-    - rewrite skipn_app. 2: apply e. rewrite skipn_all2. 2: lia. now cbn. 
-    - apply skipn_app2.
-      * enough (|skipn i a| <> 0) by (destruct skipn; cbn in *; congruence). rewrite skipn_length. lia. 
-      * reflexivity. 
+  + rewrite skipn_app.
+    now replace (i - |a|) with 0 by lia.
   + now rewrite firstn_skipn. 
 Qed.
 
@@ -195,7 +204,7 @@ Lemma firstn_skipn_rev (X : Type) i (h : list X) : firstn i h = rev (skipn (|h| 
 Proof. 
   rewrite <- (firstn_skipn i h) at 3. 
   rewrite rev_app_distr.
-  rewrite skipn_app. 
+  rewrite skipn_app_exact. 
   - now rewrite rev_involution.
   - rewrite rev_length. now rewrite skipn_length.
 Qed. 
@@ -219,7 +228,6 @@ Proof.
   - now rewrite !firstn_nil. 
   - destruct i; cbn; [reflexivity | now rewrite IHh].
 Qed.
-
 
 Lemma length_app_decompose (X : Type) (a : list X) i j : length a = i + j -> exists a1 a2, a = a1 ++ a2 /\ length a1 = i /\ length a2 = j. 
 Proof. 
@@ -390,6 +398,7 @@ Proof.
   induction l as [ | x l IH] in n |-*; destruct n as [ | n]; cbn; try congruence. lia. intros H%IH; lia.
 Qed.
 
+(* use in_split
 Lemma In_explicit (X : Type) (x : X) (l : list X) :
   x el l <-> exists s1 s2, l = s1 ++ [x] ++ s2. 
 Proof. 
@@ -405,6 +414,7 @@ Proof.
       * inv H. right; apply IHl.
         exists l0, s2. eauto. 
 Qed. 
+ *)
 
 Lemma list_length_split1 (X : Type) (s : list X) n : n <= |s| -> exists s1 s2, |s1| = n /\ |s2| = |s| - n /\ s = s1 ++ s2. 
 Proof. 
@@ -427,7 +437,7 @@ Qed.
 Lemma app_eq_length (X : Type) (s1 s2 w1 w2 : list X) : |s1| = |w1| -> s1 ++ s2 = w1 ++ w2 -> s1 = w1 /\ s2 = w2. 
 Proof.
   intros. revert w1 H H0. induction s1; cbn in *; intros. 
-  - destruct w1; cbn in *; eauto. 
+  - destruct w1; cbn in *; [auto | congruence].
   - destruct w1; cbn in *; [congruence | ]. inv H0. inv H. 
     specialize (IHs1 w1 H1 H3) as (-> & ->). eauto. 
 Qed. 
@@ -546,8 +556,6 @@ Qed.
 Lemma in_concat_map_iff (X Y : Type) (f : X -> list Y) (l : list X) y : y el concat (map f l) <-> exists x, x el l /\ y el f x. 
 Proof. 
   split; intros. 
-  - apply in_concat_iff in H as (? & H1 & (? & <- & H3)%in_map_iff). eauto. 
-  - apply in_concat_iff. destruct H as (x & H1 & H2). exists (f x). split.
-    + exact H2.
-    + apply in_map. exact H1.
+  - apply in_concat in H as (? & (? & <- & H3)%in_map_iff & H1). eauto. 
+  - apply in_concat. destruct H as (x & H1 & H2). exists (f x). split; auto using in_map.
 Qed.

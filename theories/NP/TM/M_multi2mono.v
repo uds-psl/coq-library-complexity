@@ -1,13 +1,12 @@
 From Complexity.Complexity Require Import NP.
-From Undecidability.TM Require TM ProgrammingTools CaseList.
-From Undecidability.TM Require Import TM_facts SizeBounds.
+From Complexity.TM Require ProgrammingTools CaseList.
+From Complexity.TM Require Import TM_facts SizeBounds.
 
 From Complexity.NP.TM  Require Import TMGenNP_fixed_mTM.
-From Undecidability.TM.Single Require EncodeTapes StepTM.
-From Complexity.TM.Single Require DecodeTapes.
+From Undecidability.TM.Single Require StepTM.
+From Complexity.TM.Single Require EncodeTapes DecodeTapes.
 
-From Undecidability Require Import TM.Util.VectorPrelim.
-From Complexity.Libs Require Import PSLCompat.
+From Complexity.Libs Require Import PSLCompat VectorDupfree MoreFin.
 
 Unset Printing Coercions.
 
@@ -128,9 +127,9 @@ Section putFirst.
     Local Arguments Fin.F1 : clear implicits.
     Local Arguments Vector.cast : clear implicits.
 
-    Lemma putFirstAtEnd_dupfree m: VectorDupfree.dupfree (putFirstAtEnd m).
+    Lemma putFirstAtEnd_dupfree m: dupfree (putFirstAtEnd m).
     Proof.
-      clear_all. apply dupfree_tabulate_injective.
+      apply dupfree_tabulate_injective.
       intros i j. destruct (Fin.to_nat i) as [i' Hi] eqn:eqi. destruct (Fin.to_nat j) as [j' Hj] eqn:eqj .
       cbn. 1:do 2 destruct lt_dec. 2,3:easy.
       2:{ intros _. apply Fin.to_nat_inj. rewrite eqi. rewrite eqj. cbn. clear eqi eqj. nia. }
@@ -143,9 +142,9 @@ Section putFirst.
       now inv H.
     Qed.
 
-    Lemma putEndAtFirst_dupfree m: VectorDupfree.dupfree (putEndAtFirst m).
+    Lemma putEndAtFirst_dupfree m: dupfree (putEndAtFirst m).
     Proof.
-      clear_all. apply dupfree_tabulate_injective.
+      apply dupfree_tabulate_injective.
       intros i j.
       destruct (Fin.to_nat i) eqn:?;destruct (Fin.to_nat j) eqn:?; cbn in *.
       eassert (H'1:=Heqs). assert (H'2:=Heqs0).
@@ -211,7 +210,7 @@ End putFirst.
 
 
 
-From Undecidability Require Import Datatypes.Lists LBool.
+From Complexity Require Import Datatypes.Lists LBool.
 From Complexity Require Import L.TM.CompCode.
 
 Section lemmas_for_LMGenNP_to_TMGenNP_mTM.

@@ -1,5 +1,6 @@
 From Complexity.NP.SAT.CookLevin Require Import TCC.
 From Complexity.Libs.CookPrelim Require Import MorePrelim.
+From Complexity.Libs Require Import MoreList.
 From Undecidability.Shared.Libs.PSL Require Import Base FinTypes. 
 Require Import Lia. 
 
@@ -273,11 +274,11 @@ Section fixPTCCInstance.
     - unfold satFinal in *. intros H.
       destruct H as (subs & H1 & H2). apply in_map_iff in H1 as (subs' & <- & H1).
       exists subs'; split; [apply H1 | ]. 
-      unfold substring in *. destruct H2 as (b1 & b2 & H). 
-      apply map_eq_app in H as (b1' & b & H & -> & H2). 
-      symmetry in H2. apply map_eq_app in H2 as (b' & b2' & -> & H2 & ->). 
+      unfold substring in *. destruct H2 as (b1 & b2 & H).
+      apply map_eq_app in H as (b1' & b & H & <- & H2).
+      apply map_eq_app in H2 as (b' & b2' & -> & H2 & <-). 
       exists b1', b2'. enough (subs' = b') by (subst; reflexivity). 
-      apply map_injective in H2; [apply H2 | unfold injective; congruence].
+      apply map_injective in H2; [easy | unfold injective; congruence].
   Qed.
 
   (** Reduction to ExPTCC *)
@@ -431,4 +432,4 @@ Section fixPrelude.
           apply relpower_valid_length_inv in H1.  rewrite !map_length in H1. lia.
         * now eapply lift_final. 
   Qed. 
-End fixPrelude. 
+End fixPrelude.

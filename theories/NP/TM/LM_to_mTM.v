@@ -1,24 +1,17 @@
-From Undecidability.L Require Import Tactics.LTactics.
-From Undecidability.L.Datatypes Require Import Lists LVector.
-From Complexity.Libs Require Import PSLCompat.
+From Complexity.TM Require Import TM_facts ProgrammingTools.
+From Complexity.Libs Require Import PSLCompat UpToC.
 From Complexity.Complexity Require Import NP Definitions Monotonic.
-From Undecidability.TM Require Import TM_facts.
 From Complexity.L.AbstractMachines Require Import FlatPro.Computable.LPro.
-From Undecidability.L.AbstractMachines Require Import FlatPro.Programs.
+From Complexity.L.AbstractMachines Require Import FlatPro.Programs.
 From Complexity.NP Require Import LMGenNP TMGenNP_fixed_mTM M_LM2TM.
 
-From Undecidability.TM.L Require M_LHeapInterpreter.
+From Complexity.TM.L Require M_LHeapInterpreter.
 
 Set Default Proof Using "Type".
 
-(* Check LMtoTM.M. *)
-
-From Undecidability Require Import LSum.
-From Complexity Require Import L.TM.CompCode.
-
-From Undecidability Require Import Alphabets.
-
-Import ProgrammingTools.
+From Complexity.TM.L Require Import Alphabets.
+From Complexity.L.TM Require Import TMEncoding CompCode.
+From Complexity.L.Datatypes Require Import Lists LVector LSum.
 
 Module TrueOrDiverge.
   Import TM.TM ProgrammingTools CaseList CaseBool Code.Decode Code.DecodeList.
@@ -59,7 +52,7 @@ Arguments LMtoTM.M : clear implicits.
 
 (*move*)
 Lemma initValue_sizeOfTape (sig sigX X : Type) (cX : codable sigX X) (I : Retract sigX sig) (x : X):
-  sizeOfTape (initValue cX I x) = size x + 2.
+  sizeOfTape (initValue cX I x) = Code.size x + 2.
 Proof.
   cbn. autorewrite with list. cbn. now unfold size.
 Qed.
@@ -141,7 +134,7 @@ Module M.
     
   Lemma sizeStart t__cert P:
     sizeOfmTapes (t__cert ::: M.ts__start P)
-    = max (sizeOfTape t__cert) (size P + 2).
+    = max (sizeOfTape t__cert) (Code.size P + 2).
   Proof.
     unfold sizeOfmTapes. rewrite Vector.fold_left_right_assoc_eq. 2:nia. cbn - [Vector.const initValue initRight].
     rewrite <- Vector.fold_left_right_assoc_eq.  2:nia.
@@ -186,7 +179,7 @@ Lemma pTC_Code_size X sig `{encodable X} `{encodable sig}  (cX : codable sig X):
   polyTimeComputable cX -> polyTimeComputable (@Code.size sig X cX).
 Proof.
   intros. 
-  unfold size. repeat smpl polyTimeComputable.
+  unfold Code.size. repeat smpl polyTimeComputable.
 Qed.
 Smpl Add 5 simple eapply pTC_Code_size : polyTimeComputable.
 
@@ -246,7 +239,6 @@ Smpl Add 5 lazymatch goal with
              |- polyTimeComputable (fun X => _ ::: _) => apply pTC_Vector_cons
            end: polyTimeComputable.
 
-
 Lemma mono_map_time X `{encodable X} (f: nat -> nat) (xs: list X):
   monotonic f
   -> sumn (map (fun x => f (L_facts.size (enc x))) xs) <= length xs * f (L_facts.size (enc xs)).
@@ -270,7 +262,7 @@ Proof.
   }
   1,2:now unfold time;smpl_inO.
   evar (size:nat -> nat). exists size. 
-  {intros x. rewrite size_list,sumn_map_add,sumn_map_c,map_map,map_length.
+  {intros x. rewrite Lists.size_list,sumn_map_add,sumn_map_c,map_map,map_length.
    rewrite sumn_map_le_pointwise.
    2:{ intros ? _. apply (bounds__rSP Hf). }
    rewrite mono_map_time. 2:eapply mono__rSP.
@@ -286,8 +278,8 @@ Lemma pTC_concat X Y `{encodable X} `{encodable Y} (f:X -> list (list Y)):
   polyTimeComputable f -> polyTimeComputable (fun x => concat (f x)).
 Proof.
   intros Hf.
-  evar (time:nat -> nat). exists time. extract.
-  {solverec. rewrite UpToC_le.
+  evar (time:nat -> nat). exists time.
+  {extract. solverec. rewrite concat_time_exp'.
    rewrite sumn_map_le_pointwise.
    2:{ intros ? ?. apply size_list_enc_r. }
    setoid_rewrite mono_map_time with (f:=fun x => x). 2:now hnf.
@@ -347,7 +339,6 @@ Proof.
        all:unfold size;smpl_inO.
      }
 Qed.
-  
 
 Lemma pTC_initValue X  sig tau `{encodable X} `{encodable sig} `{encodable tau} (cX : codable sig X) (r:Retract sig tau) :
   polyTimeComputable cX -> polyTimeComputable (Retr_f (Retract:=r)) ->  polyTimeComputable (initValue cX r).
@@ -418,7 +409,7 @@ Smpl Add 1 simple eapply pTC_Encode_Prog : polyTimeComputable.
 
 Lemma pTC_inl X Y `{encodable X} `{encodable Y} : polyTimeComputable (@inl X Y). 
 Proof. 
-  eexists (fun x => _). eapply term_inl. 1, 2: smpl_inO. 
+  eexists (fun x => _). eapply termT_inl. 1, 2: smpl_inO. 
   eexists (fun x => _). intros x. rewrite size_sum. set (L_facts.size (enc x)). reflexivity. 
   all: smpl_inO. 
 Qed.

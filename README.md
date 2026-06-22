@@ -9,7 +9,7 @@ This library contains complexity theory formalised in the Coq proof assistant, d
 
 - `Complexity`: basic notions of complexity theory, formulated for the call-by-value lambda calculus `L`
 - `HierarchyTheorem`: the Time Hierarchy Theorem
-- `NP`: NP hardness and completeness proofs 
+- `NP`: NP hardness and completeness proofs
 - `NP/SAT`: the Cook Levin Theorem
 - `L/AbstractMachines`: universal machines for L and their computability and resource analysis
 - `L/TM`: the `L`-computability of Turing machine related concepts
@@ -39,7 +39,7 @@ Newer versions of the library are not supported, in particular versions 1.1 and 
 - Mechanising Complexity Theory: The Cook-Levin Theorem in Coq. Lennard Gäher, Fabian Kunze. ITP 2021. Subdirectory `NP/SAT`. https://doi.org/10.4230/LIPIcs.ITP.2021.20
 - A Mechanised Proof of the Time Invariance Thesis for the Weak Call-By-Value λ-Calculus. Yannick Forster, Fabian Kunze, Gert Smolka, Maxi Wuttke. ITP 2021. Subdirectories `L/TM` and `TM`. https://doi.org/10.4230/LIPIcs.ITP.2021.19
 - Formal Small-step Verification of a Call-by-value Lambda Calculus Machine. Fabian Kunze, Gert Smolka, and Yannick Forster. APLAS 2018. Subdirectory `L/AbstractMachines`. https://www.ps.uni-saarland.de/extras/cbvlcm2/
-- The Weak Call-By-Value λ-Calculus is Reasonable for Both Time and Space.Yannick Forster, Fabian Kunze, Marc Roth. POPL 2020. Mechanised parts in `L/AbstractMachines` and `SpaceboundsTime.v` https://www.ps.uni-saarland.de/extras/wcbv-reasonable/
+- The Weak Call-By-Value λ-Calculus is Reasonable for Both Time and Space. Yannick Forster, Fabian Kunze, Marc Roth. POPL 2020. Mechanised parts in `L/AbstractMachines` and `SpaceboundsTime.v` https://www.ps.uni-saarland.de/extras/wcbv-reasonable/
   
 ### Related Papers and abstracts from the Coq Library of Undecidability Proofs
 

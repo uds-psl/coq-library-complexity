@@ -1,4 +1,6 @@
-From Undecidability.L Require Import L_facts Complexity.ResourceMeasures AbstractMachines.FlatPro.Programs.
+From Complexity Require Import Complexity.ResourceMeasures Libs.MoreList.
+From Complexity.L Require Import AbstractMachines.FlatPro.Programs.
+From Undecidability Require Import L_facts.
 Require Import Undecidability.Shared.Libs.PSL.Lists.BaseLists.
 Require Import ListDec.
 
@@ -15,7 +17,7 @@ Fixpoint L_Pro n {struct n}: list Pro :=
   end.
 
 #[export]
-Hint Rewrite in_concat_iff : list.
+Hint Rewrite in_concat : list.
 #[export]
 Hint Rewrite in_app_iff : list.
 #[export]
@@ -29,32 +31,32 @@ Proof.
   revert P;induction n as [n IH] using lt_wf_ind;intros P.
   destruct n;cbn.
   all:destruct P;cbn. 
-  -lia.  
-  -lia.
-  -transitivity True. 2: now intuition lia. split. tauto. intros [].
-   autorewrite with list. intuition.
-  -autorewrite with list. unfold sizeP in *.
-   split.
-   +intuition.
-    all:now repeat match goal with
-                     H : exists x, _ |- _ => destruct H
-                   | H : (_ :: _ = _ :: _) |- _ => inv H
-                   | H : ?P el L_Pro _ |- _ => rewrite IH in H;[ | lia]
-                   | H : _ <=? _ = true |- _ => apply leb_complete in H
-                   | H : _ :: _ el [[]] |- _ => now inv H
-                   | _ => intuition;autorewrite with list in *;subst;cbn [sizeT];unfold sizeP in *
-                   end.  
-   +intros H.
-    destruct t.
-    1:left.
-    2-4: repeat (left + right);eexists;split;[reflexivity| ].
-    2-4:now cbn [sizeT] in *; apply IH;try lia.
-    cbn in H.
-    eexists. split. 2:autorewrite with list. 2:eexists;split;[reflexivity |].
-    autorewrite with list. eexists. split. reflexivity.
-    autorewrite with list.
-    rewrite IH. 2:now cbn in H;lia. lia.
-    apply natsLess_in_iff. lia.
+  - lia.
+  - lia.
+  - transitivity True. 2: now intuition lia. split. tauto. intros [].
+    autorewrite with list. intuition.
+  - autorewrite with list. unfold sizeP in *.
+    split.
+    + intuition.
+      all:now repeat match goal with
+                       H : exists x, _ |- _ => destruct H
+                     | H : (_ :: _ = _ :: _) |- _ => inv H
+                     | H : ?P el L_Pro _ |- _ => rewrite IH in H;[ | lia]
+                     | H : _ <=? _ = true |- _ => apply leb_complete in H
+                     | H : _ :: _ el [[]] |- _ => now inv H
+                     | _ => intuition;autorewrite with list in *;subst;cbn [sizeT];unfold sizeP in *
+                     end.  
+    + intros H.
+      destruct t.
+      1:left.
+      2-4: repeat (left + right);eexists;split;[reflexivity| ].
+      2-4:now cbn [sizeT] in *; apply IH;try lia.
+      cbn in H.
+      eexists. split. 1:autorewrite with list. 1:eexists;split;[reflexivity |].
+      2: {
+        autorewrite with list. eexists. split. reflexivity.
+        rewrite IH; lia. }
+      apply natsLess_in_iff. lia.
 Qed.
 
 Lemma L_Pro_mono n m :
@@ -106,7 +108,7 @@ Qed.
 Lemma L_term_card n A:
   (forall s, s el A -> size s <= n) ->
   (5^(2*n) < length A) ->
-  ~ dupfree A.
+  ~ NoDup A.
 Proof.
   intros HallSmall' Hlong Hdupfree'.
   pose (A':= map compile A).
@@ -115,7 +117,7 @@ Proof.
    rewrite HallSmall'. all:eauto. }
   clear HallSmall'.
   erewrite <- map_length with (f:=compile) in Hlong. fold A' in Hlong.
-  assert (Hdupfree : dupfree A').
+  assert (Hdupfree : NoDup A').
   {apply FinFun.Injective_map_NoDup. intros x y. apply compile_inj. exact Hdupfree'. }
   clear Hdupfree'.
   clearbody A'. clear A.
@@ -130,7 +132,6 @@ Proof.
 Qed.
 
 Section TraceArgument.
-
   Variable X : Type.
   Variable R : X -> X -> Prop.
 
@@ -147,7 +148,6 @@ Section TraceArgument.
      eexists;split. now eapply rcomp_1 with (R:=R);eassumption.
      eauto.
   Qed.
-
 End TraceArgument.
 
 (* TODO: remove for Coq 8.17 *)
@@ -166,7 +166,7 @@ intro H0. induction l as [|a l IHl].
 Qed.
 
 Lemma trace_not_dupfree_loop (X : eqType) (R: X -> X -> Prop) s (A:list X) :
-  trace R (s::A) -> (~dupfree (s::A)) -> exists s' k, star R s s' /\ pow R (S k) s' s'.
+  trace R (s::A) -> (~NoDup (s::A)) -> exists s' k, star R s s' /\ pow R (S k) s' s'.
 Proof.
   intros tr (a&A1&A2&A3&eqA) % not_NoDup.
   induction A1 in tr, s, A, eqA |- *.

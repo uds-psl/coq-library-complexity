@@ -1,9 +1,7 @@
-From Undecidability.L Require Import L Tactics.LTactics.
-From Undecidability.L.AbstractMachines Require Import FlatPro.Programs.
+From Complexity.L.AbstractMachines Require Import FlatPro.Programs.
+From Complexity.L.Datatypes Require Import LNat.
+From Complexity.L Require Import ComputableTime.
 From Undecidability.L Require Import Tactics.GenEncode.
-
-From Undecidability.L.Datatypes Require Import LNat.
-
 
 MetaCoq Run (tmGenEncode "token_enc" Tok).
 #[export]

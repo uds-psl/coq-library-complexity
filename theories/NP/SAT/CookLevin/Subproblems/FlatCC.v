@@ -1,7 +1,10 @@
 From Undecidability.Shared.Libs.PSL Require Import Base FinTypes. 
-From Undecidability Require Import L.Functions.EqBool.
+From Complexity Require Import L.Functions.EqBool L.ComputableTime.
+From Complexity.L.Datatypes Require Import Lists LProd LOptions.
 From Complexity.NP.SAT.CookLevin Require Export CC.
+From Complexity.Libs Require Import MoreList.
 From Complexity.Libs.CookPrelim Require Import MorePrelim FlatFinTypes.
+From Undecidability.L.Tactics Require Import GenEncode.
 Require Import Lia.
 
 (** * Flat Covering Cards *)
@@ -20,7 +23,7 @@ Inductive FlatCC := {
 
 (**validity of cards and final constraints relative to an alphabet *)
 (**we have to enforce this as we always consider only a finite subset of N *)
-Definition CCCard_ofFlatType (card : CCCard nat) k:= list_ofFlatType k (prem card) /\ list_ofFlatType k (conc card). 
+Definition CCCard_ofFlatType (card : CCCard nat) k := list_ofFlatType k (prem card) /\ list_ofFlatType k (conc card). 
 Definition isValidFlatCards (l : list (CCCard nat)) k := (forall card, card el l -> CCCard_ofFlatType card k).
 Definition isValidFlatFinal (l : list (list nat)) k := (forall s, s el l -> list_ofFlatType k s).
 Definition isValidFlatInitial (l : list nat) k := list_ofFlatType k l.
@@ -282,14 +285,14 @@ Section fixFCCInstance.
         destruct s2; [ | now unfold isFlatListOf in H1].
         constructor. 
       + unfold isFlatListOf in H4, H5. 
-        symmetry in H4. apply map_eq_app in H4 as (ls1 & ls2 & -> & -> & ->). 
-        symmetry in H5. apply map_eq_app in H5 as (rs1 & rs2 & -> & -> & ->).
+        symmetry in H4. apply map_eq_app in H4 as (ls1 & ls2 & -> & <- & <-). 
+        symmetry in H5. apply map_eq_app in H5 as (rs1 & rs2 & -> & <- & <-).
         constructor 2. 
         2-4: now rewrite map_length in *. 
         apply IHvalid; easy. 
       + unfold isFlatListOf in H5, H6.
-        symmetry in H5. apply map_eq_app in H5 as (ls1 & ls2 & -> & -> & ->). 
-        symmetry in H6. apply map_eq_app in H6 as (rs1 & rs2 & -> & -> & ->).
+        symmetry in H5. apply map_eq_app in H5 as (ls1 & ls2 & -> & <- & <-).
+        symmetry in H6. apply map_eq_app in H6 as (rs1 & rs2 & -> & <- & <-).
         assert (exists w, w el cards /\ coversHead w (map index ls1 ++ map index ls2) (map index rs1 ++ map index rs2)) as H5 by eauto.
         eapply coversHead_flat_agree in H5 as (fincard & H5 & H6). 
         * econstructor 3. 2-3: now rewrite map_length in *. 
@@ -483,9 +486,6 @@ Proof.
 Qed.
 
 (** ** extraction *)
-
-From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import  LProd LOptions.
 
 Section fix_X.
   Variable (X:Type).
@@ -723,4 +723,4 @@ Qed.
 Lemma isValidFlatteningDec_poly : monotonic poly__isValidFlatteningDec /\ inOPoly poly__isValidFlatteningDec. 
 Proof. 
   split; (unfold poly__isValidFlatteningDec; smpl_inO; [apply list_ofFlatType_dec_poly |apply CCCard_ofFlatType_dec_poly ]). 
-Qed. 
+Qed.

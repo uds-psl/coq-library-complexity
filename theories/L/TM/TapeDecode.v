@@ -1,25 +1,19 @@
-From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import LNat Lists LProd LFinType LOptions LTerm.
-From Undecidability.L Require Import TM.TMEncoding.
-
 From Undecidability Require Import TM.TM.
+From Complexity.L Require Import TM.TMEncoding.
+From Complexity.L.Datatypes Require Import LNat Lists LProd LFinType LOptions LTerm.
+From Complexity.L.Functions Require Import Decoding EqBool.
 
-From Undecidability.L Require Import Functions.Decoding.
 From Complexity.Complexity Require Import Definitions LinTimeDecodable.
 
-From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import LNat Lists LProd LFinType LVector.
-From Undecidability.L Require Import Functions.EqBool.
+(*From Undecidability.L.Datatypes Require Import LNat Lists LProd LFinType LVector.*)
 
-From Undecidability Require Import TM.Util.VectorPrelim.
+(*From Undecidability Require Import TM.Util.VectorPrelim.*)
 
 
-From Undecidability Require Import TM.TM.
 Require Import Undecidability.Shared.Libs.PSL.FiniteTypes.FinTypes.
 
 Import L_Notations.
 
-From Undecidability Require Import TMEncoding.
 
 
 Import L.

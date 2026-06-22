@@ -3,10 +3,10 @@
 
 From Complexity Require Import TM.PrettyBounds.PrettyBounds.
 From Complexity Require Import TM.PrettyBounds.BaseCode.
+From Complexity Require Import TM.Code.CodeTM.
+From Complexity Require Import TM.Single.EncodeTapes.
 
 From Undecidability Require Import TM.Single.StepTM.
-From Undecidability Require Import TM.Single.EncodeTapes.
-From Undecidability Require Import TM.Util.VectorPrelim.
 
 
 
@@ -179,7 +179,7 @@ Section ToSingleTape_bounds.
   Qed.
 
   Lemma ReadCurrentSymbols_steps_nice :
-    { c | forall (n : nat) sig (T : tapes sig n), ReadCurrentSymbols_steps T <=(c) tape_size_sum (vector_to_list T) + 1 }.
+    { c | forall (n : nat) sig (T : tapes sig n), ReadCurrentSymbols_steps T <=(c) tape_size_sum (Vector.to_list T) + 1 }.
   Proof.
     eexists. intros. unfold ReadCurrentSymbols_steps.
     (* This is quite a hack! *)
@@ -202,7 +202,7 @@ Section ToSingleTape_bounds.
   Qed.
 
   Lemma Encode_tapes_size_fold {sig : Type} (tps : list (tape sig)) :
-    length (encode_list _ tps) = size tps.
+    length (encode_list (@encode_tape sig) tps) = size tps.
   Proof. reflexivity. Qed.
 
   Lemma size_tapes_ge1 {sig : Type} (tps : list (tape sig)) :
@@ -433,6 +433,8 @@ Instance sub_le_mono : Proper (le ==> ge ==> le) minus.
             end); abstract lia.
   Defined (* because informative *).
 
+  Notation fin_to_nat := StepTM.fin_to_nat.
+
   (* Generalisation of the lemma [map_vect_list_app] *)
   Lemma map_vect_list_app_drop (X Y : Type) (f : X -> Y -> X) (n : nat) (vs : Vector.t Y n) (xs ys : list X)
         (i : Fin.t n) :
@@ -574,34 +576,34 @@ Instance sub_le_mono : Proper (le ==> ge ==> le) minus.
   Lemma Step_steps_nice' :
     { c | forall sig (F : finType) (n : nat) (pM : pTM sig F n) (q : state (projT1 pM)) (T : tapes sig n),
         let (q', act) := trans (m := projT1 pM) (q, current_chars T) in
-        Step_steps q T <=(c) size (vector_to_list (doAct_multi T act)) * size (vector_to_list (doAct_multi T act)) }.
+        Step_steps q T <=(c) size (Vector.to_list (doAct_multi T act)) * size (Vector.to_list (doAct_multi T act)) }.
   Proof.
     eexists. intros. unfold Step_steps. destruct trans as (q', act) eqn:E. ring_simplify. apply dominatedWith_add_r. domWith_approx.
     - eapply dominatedWith_trans. apply (proj2_sig ReadCurrentSymbols_steps_nice).
       apply dominatedWith_add_r.
       + apply dominatedWith_solve.
-        enough (tape_size_sum (vector_to_list T) <= size (vector_to_list (doAct_multi T act))) by nia.
+        enough (tape_size_sum (Vector.to_list T) <= size (Vector.to_list (doAct_multi T act))) by nia.
         unfold doAct_multi. rewrite <- map_vect_list_eq. rewrite <- size_doActions'. apply tape_size_sum_le_size.
-      + enough (1 <= size (vector_to_list (doAct_multi T act))) by nia. apply size_tapes_ge1.
+      + enough (1 <= size (Vector.to_list (doAct_multi T act))) by nia. apply size_tapes_ge1.
     - eapply dominatedWith_trans. apply (proj2_sig MoveToStart_steps_nice).
       apply dominatedWith_solve.
-      enough (size (vector_to_list T) <= size (vector_to_list (doAct_multi T act))) by nia.
+      enough (size (Vector.to_list T) <= size (Vector.to_list (doAct_multi T act))) by nia.
       unfold doAct_multi. rewrite <- map_vect_list_eq. apply size_doActions'.
     - eapply dominatedWith_trans. apply (proj2_sig DoActions_steps_nice).
       + apply Vector.length_to_list.
       + apply dominatedWith_add_r. 2: now rewrite <- size_tapes_ge1.
         apply dominatedWith_solve. unfold doAct_multi. rewrite <- map_vect_list_eq.
-        enough ((| vector_to_list T |) <= size (map_vect_list (doAct (sig:=eqType_X (type sig))) act (vector_to_list T))) by nia.
+        enough ((| Vector.to_list T |) <= size (map_vect_list (doAct (sig:=eqType_X (type sig))) act (Vector.to_list T))) by nia.
         rewrite Vector.length_to_list.
         rewrite Encode_list_hasSize. rewrite <- Encode_list_hasSize_ge_length. now rewrite map_vect_list_length, Vector.length_to_list.
     - eapply dominatedWith_trans. apply (proj2_sig MoveToStart_steps_nice). apply dominatedWith_solve. nia.
-    - enough (1 <= size (vector_to_list (doAct_multi T act))) by nia. apply size_tapes_ge1.
+    - enough (1 <= size (Vector.to_list (doAct_multi T act))) by nia. apply size_tapes_ge1.
   Qed.
 
 
   Lemma Step_steps_nice :
     { c | forall sig F (n : nat) (pM : pTM sig F n) (q : state (projT1 pM)) (T : tapes sig n),
-        Step_steps q T <=(c) size (vector_to_list T) * size (vector_to_list T) }.
+        Step_steps q T <=(c) size (Vector.to_list T) * size (Vector.to_list T) }.
   Proof.
     eexists. intros.
     pose proof (proj2_sig Step_steps_nice' _ _ _ _ q T). destruct trans as [q' act] eqn:Etrans.
@@ -610,9 +612,9 @@ Instance sub_le_mono : Proper (le ==> ge ==> le) minus.
     - apply dominatedWith_solve. unfold doAct_multi. rewrite <- map_vect_list_eq. rewrite !size_doActions. reflexivity.
     - ring_simplify. domWith_approx.
       + rewrite (Nat.mul_comm 4), <- Nat.mul_comm, !Nat.mul_assoc. apply dominatedWith_mult_r.
-        apply dominatedWith_solve. enough (n <= size (vector_to_list T)) by nia. now rewrite Encode_list_hasSize, <- Encode_list_hasSize_ge_length, Vector.length_to_list.
+        apply dominatedWith_solve. enough (n <= size (Vector.to_list T)) by nia. now rewrite Encode_list_hasSize, <- Encode_list_hasSize_ge_length, Vector.length_to_list.
       + rewrite (Nat.mul_comm 4), <- Nat.mul_comm, !Nat.mul_assoc. apply dominatedWith_mult_r.
-        apply dominatedWith_solve. enough (n <= size (vector_to_list T)) by nia. now rewrite Encode_list_hasSize, <- Encode_list_hasSize_ge_length, Vector.length_to_list.
+        apply dominatedWith_solve. enough (n <= size (Vector.to_list T)) by nia. now rewrite Encode_list_hasSize, <- Encode_list_hasSize_ge_length, Vector.length_to_list.
   Qed.
 
 
@@ -624,7 +626,7 @@ Instance sub_le_mono : Proper (le ==> ge ==> le) minus.
          | 0 => 0 (* can't happen *)
          | S k' =>
            let (q', acts) := trans (m := M) (q, current_chars T) in
-           size (vector_to_list T) * size (vector_to_list T) + Loop_steps_asym q' (doAct_multi T acts) k'
+           size (Vector.to_list T) * size (Vector.to_list T) + Loop_steps_asym q' (doAct_multi T acts) k'
          end.
 
   Lemma Loop_steps_asym_halt {n : nat} sig {M : TM sig n} (q : state M) (T : tapes sig n) (k : nat) :
@@ -643,22 +645,22 @@ Instance sub_le_mono : Proper (le ==> ge ==> le) minus.
       destruct trans as [q' acts] eqn:Etrans.
       specialize IH with (q := q') (T := doAct_multi T acts); hnf in IH.
       rewrite Hc_step, IH. hnf. ring_simplify.
-      enough (1 <= size (vector_to_list T) * size (vector_to_list T)) by nia.
+      enough (1 <= size (Vector.to_list T) * size (Vector.to_list T)) by nia.
       now rewrite <- size_tapes_ge1.
   Qed.
 
   
   Lemma size_doAct_multi {sig : Type} (n : nat) (T : tapes sig n) (act : Vector.t (option sig * move) n) :
-    size (vector_to_list T) <= size (vector_to_list (doAct_multi T act)).
+    size (Vector.to_list T) <= size (Vector.to_list (doAct_multi T act)).
   Proof. unfold doAct_multi. rewrite <- map_vect_list_eq. apply size_doActions'. Qed.
 
   Lemma size_doAct_multi' {sig : Type} (n : nat) (T : tapes sig n) (act : Vector.t (option sig * move) n) :
-    size (vector_to_list (doAct_multi T act)) <= size (vector_to_list T) + 2 * n.
+    size (Vector.to_list (doAct_multi T act)) <= size (Vector.to_list T) + 2 * n.
   Proof. unfold doAct_multi. rewrite <- map_vect_list_eq. apply size_doActions. Qed.
 
   Lemma size_final_tapes {sig : finType} {n : nat} {M : TM sig n} (q : state M) (T : tapes sig n) (k : nat) (q_fin : state M) (T_fin : tapes sig n) :
     loopM (mk_mconfig q T) k = Some (mk_mconfig q_fin T_fin) ->
-    size (vector_to_list T) <= size (vector_to_list T_fin).
+    size (Vector.to_list T) <= size (Vector.to_list T_fin).
   Proof.
     intros HLoop. revert q T q_fin T_fin HLoop. induction k as [ | k' IH]; intros; cbn in *.
     - unfold haltConf in HLoop. cbn in *. destruct (halt q); now inv HLoop.
@@ -672,7 +674,7 @@ Instance sub_le_mono : Proper (le ==> ge ==> le) minus.
 
   Lemma size_final_tapes' {sig : finType} {n : nat} {M : TM sig n} (q : state M) (T : tapes sig n) (k : nat) (q_fin : state M) (T_fin : tapes sig n) :
     loopM (mk_mconfig q T) k = Some (mk_mconfig q_fin T_fin) ->
-    size (vector_to_list T_fin) <= size (vector_to_list T) + 2 * n * k.
+    size (Vector.to_list T_fin) <= size (Vector.to_list T) + 2 * n * k.
   Proof.
     intros HLoop. revert q T q_fin T_fin HLoop. induction k as [ | k' IH]; intros; cbn in *.
     - unfold haltConf in HLoop. cbn in *. destruct (halt q); inv HLoop. nia.
@@ -688,7 +690,7 @@ Instance sub_le_mono : Proper (le ==> ge ==> le) minus.
   (** Bound every step term with the term for the tape after the execution *)
   Lemma Loop_steps_asym_bounded sig {n : nat} {M : TM sig n} (q : state M) (T : tapes sig n) (k : nat) (q_fin : state M) (T_fin : tapes sig n) :
     loopM (mk_mconfig q T) k = Some (mk_mconfig q_fin T_fin) ->
-    Loop_steps_asym q T k <= size (vector_to_list T_fin) * size (vector_to_list T_fin) * k.
+    Loop_steps_asym q T k <= size (Vector.to_list T_fin) * size (Vector.to_list T_fin) * k.
   Proof.
     intros HLoop. revert q T q_fin T_fin HLoop. induction k as [ | k' IH]; intros; cbn in *.
     - destruct halt; nia.
@@ -698,7 +700,7 @@ Instance sub_le_mono : Proper (le ==> ge ==> le) minus.
       specialize IH with (q := q') (T := doAct_multi T acts) (q_fin := q_fin) (T_fin := T_fin). rewrite IH. clear IH.
       2:{ rewrite <- HLoop. unfold step. cbn. now rewrite Etrans. }
       ring_simplify.
-      enough (size (vector_to_list T) <= size (vector_to_list T_fin)) by nia.
+      enough (size (Vector.to_list T) <= size (Vector.to_list T_fin)) by nia.
       eapply size_final_tapes with (k := (S k')). setoid_rewrite loop_step; eauto. all: now rewrite <- HLoop. (* we need this for Coq<8.9 *)
   Qed.
 
@@ -707,7 +709,7 @@ Instance sub_le_mono : Proper (le ==> ge ==> le) minus.
     { c | forall sig F (n : nat) (pM : pTM sig F n) (q : state (projT1 pM)) (T : tapes sig n) (k : nat),
         forall (q_fin : state (projT1 pM)) (T_fin : tapes sig n),
           loopM (mk_mconfig q T) k = Some (mk_mconfig q_fin T_fin) ->
-          Loop_steps q T k <=(c) size (vector_to_list T_fin) * size (vector_to_list T_fin) * k }.
+          Loop_steps q T k <=(c) size (Vector.to_list T_fin) * size (Vector.to_list T_fin) * k }.
   Proof.
     eexists. intros. eapply dominatedWith_trans. apply (proj2_sig Loop_steps_asym_nice).
     apply dominatedWith_solve. eapply Loop_steps_asym_bounded; eauto.
@@ -717,7 +719,7 @@ Instance sub_le_mono : Proper (le ==> ge ==> le) minus.
   (** Bound for the final tape size after k steps *)
   Lemma Loop_steps_asym_bounded' sig {n : nat} {M : TM sig n} (q : state M) (T : tapes sig n) (k : nat) (* (q_fin : state M) (T_fin : tapes sig n) *) :
     (* loopM (mk_mconfig q T) k = Some (mk_mconfig q_fin T_fin) -> *)
-    Loop_steps_asym q T k <= (size (vector_to_list T) + 2 * n * k) * (size (vector_to_list T) + 2 * n * k) * k.
+    Loop_steps_asym q T k <= (size (Vector.to_list T) + 2 * n * k) * (size (Vector.to_list T) + 2 * n * k) * k.
   Proof.
     revert q T. induction k as [ | k' IH]; intros; cbn in *.
     - destruct halt; nia.
@@ -728,7 +730,7 @@ Instance sub_le_mono : Proper (le ==> ge ==> le) minus.
 
   Lemma Loop_steps_nice :
     { c | forall sig F (n : nat) (pM : pTM sig F n) (q : state (projT1 pM)) (T : tapes sig n) (k : nat),
-          Loop_steps q T k <=(c) (size (vector_to_list T) + n * k) * (size (vector_to_list T) + n * k) * k }.
+          Loop_steps q T k <=(c) (size (Vector.to_list T) + n * k) * (size (Vector.to_list T) + n * k) * k }.
   Proof.
     eexists. intros. eapply dominatedWith_trans. apply (proj2_sig Loop_steps_asym_nice).
     eapply dominatedWith_trans.

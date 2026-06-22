@@ -1,8 +1,10 @@
-From Undecidability.L Require Import L Tactics.LTactics Prelim.LoopSum Functions.LoopSum.
-From Undecidability.L.Datatypes Require Import LSum LBool LNat Lists LProd LTerm.
+From Complexity.Libs Require Import LoopSum UpToC.
+From Complexity.L Require Import Functions.LoopSum.
+From Complexity.L.Datatypes Require Import LSum LBool LNat Lists LProd LTerm.
+From Complexity.L.Functions Require Import UnboundedIteration.
 
-From Undecidability.L.AbstractMachines  Require Import FlatPro.Programs.
-From Complexity.L.AbstractMachines  Require Import Computable.LPro.
+
+From Complexity.L.AbstractMachines Require Import FlatPro.Programs Computable.LPro.
 (*
 fix compile (s : term) : list Tok :=
   match s with
@@ -76,8 +78,6 @@ Proof.
   induction s;cbn [size compileTR'_fuel];try Lia.lia.
 Qed.
   
-
-From Undecidability Require Import Functions.UnboundIteration.
 
 
 Local Definition c1 := (c__compileTR' * 2 + 44 + 2 * c__rev).

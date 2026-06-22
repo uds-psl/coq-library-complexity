@@ -1,10 +1,10 @@
-From Undecidability.L.TM Require Import TMEncoding. 
-From Complexity.L.TM Require Import TMflatEnc TMflat. 
-From Undecidability.L.Tactics Require Import LTactics GenEncode.
+From Complexity.TM Require Import TM_facts.
+From Complexity.L.TM Require Import TMEncoding.
+From Complexity.L.TM Require Import TMflatEnc TMflat.
 From Complexity.Libs.CookPrelim Require Import MorePrelim PolyBounds FlatFinTypes.
-From Undecidability.L.Datatypes Require Import LProd LOptions LBool LSum LNat Lists. 
-From Undecidability.L.Functions Require Import EqBool.
-From Complexity.NP Require Import SingleTMGenNP_to_TCC FlatTCC. 
+From Complexity.L.Datatypes Require Import LProd LOptions LBool LSum LNat Lists.
+From Complexity.L.Functions Require Import EqBool.
+From Complexity.NP Require Import SingleTMGenNP_to_TCC FlatTCC.
 
 Fact None_ofFlatType n : ofFlatType (flatOption n) flatNone . 
 Proof. 
@@ -316,7 +316,8 @@ Lemma generatePolarityFlat_ofFlatType tm env c n: envOfFlatTypes tm env -> gener
 Proof. 
   intros H. 
   unfold generatePolarityFlat. destruct c. 
-  - intros [=<-]. unfold flattenPolarity. unfold flatPolarity. specialize (index_le m). cbn -[index]. lia. 
+  - intros [=<-]. unfold flattenPolarity. unfold flatPolarity.
+    specialize (index_le m). cbn -[index]. lia. 
   - destruct nth_error eqn:H1; [ | congruence].
     apply nth_error_In in H1. apply H in H1. intros [=<-]. apply H1. 
 Qed. 
@@ -674,8 +675,9 @@ Proof.
     poly_mono flatGamma_poly. 2: { replace_le (size (enc tm)) with (size (enc tm) + n) by lia at 1. reflexivity. }
     unfold add_time. rewrite flatGamma_bound. 
     rewrite sig_TM_le, states_TM_le. 
-    leq_crossout.  
-Qed. 
+    lia.
+Qed.
+
 Lemma generateAlphabetFlat_poly : monotonic poly__generateAlphabetFlat /\ inOPoly poly__generateAlphabetFlat. 
 Proof. 
   unfold poly__generateAlphabetFlat; split; smpl_inO; first [apply generateGammaFlat_poly | apply flatGamma_poly | apply generatePreludeSigPFlat_poly]. 
@@ -749,13 +751,13 @@ Section fixListDistr.
     solverec. 
     all: unfold list_distr_time. 
     2: rewrite map_time_const, map_length.
-    all: unfold c__listDistr1, c__listDistr2. lia. cbn [length]. leq_crossout.
+    all: unfold c__listDistr1, c__listDistr2. lia. cbn [length]. lia.
   Qed. 
 
   Definition poly__listDistr n := n * (n + 1) * c__listDistr1 + c__listDistr2. 
   Lemma list_prod_time_bound l1 l2: list_distr_time l1 l2 <= poly__listDistr (size (enc l1) + size (enc l2)). 
   Proof. 
-    unfold list_distr_time, poly__listDistr. rewrite !list_size_length. leq_crossout. 
+    unfold list_distr_time, poly__listDistr. rewrite !list_size_length. lia.
   Qed. 
   Lemma list_prod_poly : monotonic poly__listDistr /\ inOPoly poly__listDistr. 
   Proof. 
@@ -837,7 +839,7 @@ Proof.
     (*rewrite list_size_length. *)
     unfold poly__mkVarEnv.  
     replace_le ((|l| + 1) ^ num) with ((|l| + 1)^(S num)) by cbn; nia. 
-    unfold c__mkVarEnvB1, c__mkVarEnvB2. leq_crossout. 
+    unfold c__mkVarEnvB1, c__mkVarEnvB2. lia. 
 Qed. 
 Lemma mkVarEnv_poly n : monotonic (poly__mkVarEnv n) /\ inOPoly (poly__mkVarEnv n). 
 Proof. 
@@ -870,7 +872,7 @@ Section fixprodLists.
     1: { unfold list_prod. change (fun x => ?h x) with h. intros l1 l2. induction l1; easy. }
     extract. solverec. 
     all: unfold prodLists_time, c__prodLists1, c__prodLists2; solverec. 
-    rewrite map_length, map_time_const. leq_crossout. 
+    rewrite map_length, map_time_const. lia. 
   Qed.
 
   Definition poly__prodLists n := n * (n + 1) * c__prodLists2 + c__prodLists1.
@@ -915,7 +917,7 @@ Proof.
   rewrite !seq_length. 
   unfold makeAllEvalEnvFlat_time, c__makeAllEvalEnvFlat1, c__makeAllEvalEnvFlat2. unfold flatStateSigma, flatOption. solverec. 
   replace (1 + (sig x + 1)) with (1 + sig x + 1) by lia.
-  leq_crossout.
+  lia.
 Qed.
 
 (**we prove that the running time is polynomial for fixed n1, n2, n3, n4 *)
@@ -944,7 +946,7 @@ Proof.
   rewrite flatStateSigma_bound. 
   rewrite !sig_TM_le, !states_TM_le. 
   repeat match goal with [ |- context[?a + 1 + 1]] => replace (a + 1 + 1) with (a + 2) by lia end. 
-  unfold poly__makeAllEvalEnvFlat. leq_crossout. 
+  unfold poly__makeAllEvalEnvFlat. lia. 
 Qed. 
 Lemma makeAllEvalEnvFlat_poly n1 n2 n3 n4 : monotonic (poly__makeAllEvalEnvFlat n1 n2 n3 n4) /\ inOPoly (poly__makeAllEvalEnvFlat n1 n2 n3 n4). 
 Proof. 
@@ -1558,7 +1560,7 @@ Proof.
       | None, (q', (None, TM.Nmove)) => makeNoneStayFlat tm q q' (flat_baseEnvNone tm)
       end). 
   1: { unfold makeSomeLeftFlat, makeSomeStayFlat, makeSomeRightFlat, makeNoneLeftFlat, makeNoneStayFlat, makeNoneRightFlat. easy. }
-  extract. 
+  Time extract. (* 350s *)
   recRel_prettify2. 
   all: unfold opt_generateCardsForFlatNonHalt_time, c__optGenerateCardsForFlatNonHalt. 
   all: unfold optReturn; lia. 
@@ -1625,16 +1627,14 @@ Proof.
 Qed.
 
 (** inp_eqb *)
-Import LProd List.List_eqb LOptions LNat.
+From Complexity Require Import LProd List.List_eqb LOptions LNat.
 From Complexity Require Import CompCode.
 Lemma eqbComp_inp : EqBool.eqbCompT (nat * list (option nat)).
-Proof.
-  easy.
-Qed.
+Proof. exact _. Qed.
 
  
 (** generateCardsForFlatNonHalt *)
-From Undecidability.L.Functions Require Import FinTypeLookup EqBool.
+From Complexity.L.Functions Require Import FinTypeLookup EqBool.
 From Complexity.L.TM Require Import TMunflatten. 
 
 Lemma tm_trans_isValidFlatAct tm : validFlatTM tm
@@ -1786,7 +1786,7 @@ Proof.
   rewrite map_length. 
   poly_mono makeCardsFlat_poly.
   2: { replace_le (size (enc tm) + S n + (|envs|) + (|makeHalt_rules|)) with (size (enc tm) + n + (|envs|) + ((|makeHalt_rules|) + 1)) by lia. reflexivity. }
-  unfold poly__makeHaltFlat. leq_crossout.
+  unfold poly__makeHaltFlat. lia.
 Qed.
 Lemma makeHaltFlat_poly : monotonic poly__makeHaltFlat /\ inOPoly poly__makeHaltFlat.  
 Proof. 
@@ -2178,7 +2178,7 @@ Lemma kflat_time_bound k' fixed : kflat_time k' fixed <= poly__kflat (size (enc 
 Proof. 
   unfold kflat_time. rewrite list_size_length at 1.
   unfold add_time. rewrite size_nat_enc_r with (n := k') at 1. 
-  unfold poly__kflat. leq_crossout.
+  unfold poly__kflat. lia.
 Qed.
 Lemma kflat_poly : monotonic poly__kflat /\ inOPoly poly__kflat. 
 Proof. 
@@ -2201,7 +2201,7 @@ Proof.
   unfold zflat_time. rewrite kflat_time_bound. 
   poly_mono kflat_poly. 2: { replace_le (size (enc k') + size (enc fixed)) with (size (enc t) + size (enc k') + size (enc fixed)) by lia. reflexivity. }
   unfold add_time. rewrite size_nat_enc_r with (n := t) at 2. 
-  unfold poly__zflat. leq_crossout. 
+  unfold poly__zflat. lia. 
 Qed. 
 Lemma zflat_poly : monotonic poly__zflat /\ inOPoly poly__zflat. 
 Proof.  
@@ -2261,7 +2261,7 @@ Proof.
   { easy. }
   extract. solverec.
   rewrite rev_length, map_length, !repeat_length.
-  unfold flat_initial_string_time, c__flatInitialString. simp_comp_arith. leq_crossout. 
+  unfold flat_initial_string_time, c__flatInitialString. simp_comp_arith. lia. 
 Qed.
 
 Definition poly__flatInitialString n := 
@@ -2595,7 +2595,7 @@ Proof.
   replace_le (size (enc tm)) with g by (subst g; lia) at 1. 
   replace_le (size (enc tm)) with g by (subst g; lia) at 1.
   replace_le (size (enc t)) with g by (subst g; lia) at 2.
-  fold g. unfold poly__reductionWfSize; leq_crossout. 
+  fold g. unfold poly__reductionWfSize; lia. 
 Qed.
 Lemma reduction_wf_size_poly : monotonic poly__reductionWfSize /\ inOPoly poly__reductionWfSize.
 Proof. 
@@ -2661,7 +2661,7 @@ Section fixIsInjFinfuncTable.
   Proof. 
     unfold allSameEntry_time. unfold forallb_time. unfold allSameEntry_step_time. 
     induction l; cbn -[poly__allSameEntry Nat.mul Nat.add]. 
-    - unfold poly__allSameEntry. rewrite size_list; cbn -[Nat.add Nat.mul]. unfold c__listsizeNil. leq_crossout. 
+    - unfold poly__allSameEntry. rewrite size_list; cbn -[Nat.add Nat.mul]. unfold c__listsizeNil. lia. 
     - destruct a0 as (a' & b'). rewrite !eqb_time_bound_r. 
       match goal with [ |- ?a + sumn ?b + ?c + ?d <= _] => replace (a + sumn b + c + d) with (a + (sumn b + c + d)) by lia end. 
       rewrite IHl. 
@@ -2694,7 +2694,7 @@ Section fixIsInjFinfuncTable.
       rewrite allSameEntry_time_bound. 
       unfold poly__isInjFinfuncTable. 
       poly_mono allSameEntry_poly. 2: { instantiate (1 := size (enc ((x, y) :: l))). rewrite list_size_cons. nia. }
-      rewrite list_size_cons. unfold c__listsizeCons. leq_crossout.       
+      rewrite list_size_cons. unfold c__listsizeCons. lia.       
   Qed.
   Lemma isInjFinfuncTable_poly : monotonic poly__isInjFinfuncTable /\ inOPoly poly__isInjFinfuncTable. 
   Proof. 
@@ -2837,7 +2837,7 @@ Proof.
     poly_mono isBoundTrans_poly at 2. 2: { instantiate (1 := size (enc (a :: l)) + size (enc sig)). rewrite list_size_cons. lia. }
     rewrite list_size_cons at 3 5. 
     unfold c__listsizeCons. 
-    leq_crossout. 
+    lia. 
 Qed.
 Lemma isBoundTransTable_poly : monotonic poly__isBoundTransTable /\ inOPoly poly__isBoundTransTable. 
 Proof. 

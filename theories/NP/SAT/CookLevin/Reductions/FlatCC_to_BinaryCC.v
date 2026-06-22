@@ -165,8 +165,7 @@ Qed.
 
 
 (** ** extraction *)
-From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import  LProd LOptions LBool.
+From Complexity.L.Datatypes Require Import LProd LOptions LBool Lists.
 From Complexity.Libs.CookPrelim Require Import PolyBounds. 
 
 (** repeat *)
@@ -531,4 +530,4 @@ Proof.
     + apply reduction_poly. 
     + destruct (reduction_size_bound) as (f & H1 & H2 & H3). exists f; auto.
   - apply FlatCC_to_BinaryCC. 
-Qed. 
+Qed.

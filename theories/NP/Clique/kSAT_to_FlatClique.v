@@ -1,6 +1,4 @@
-From Undecidability.L Require Import L.
-From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import Lists LNat LProd.
+From Complexity.L.Datatypes Require Import Lists LNat LProd LBool LOptions.
 From Complexity.NP.Clique Require Import FlatUGraph FlatClique kSAT_to_Clique.
 From Complexity.NP.SAT Require Import kSAT SAT_inNP.
 From Complexity.Libs.CookPrelim Require Import FlatFinTypes MorePrelim.
@@ -229,9 +227,8 @@ Qed.
 
 (** ** extraction *)
 From Complexity Require Import NP Complexity.Definitions.
-From Undecidability.L Require Import Tactics.LTactics Complexity.UpToCNary.
-From Complexity Require Import kSAT CookPrelim.PolyBounds. 
-From Undecidability.L.Datatypes Require Import LBool Lists LNat LProd LOptions. 
+From Complexity.Libs Require Import UpToCNary.
+From Complexity Require Import CookPrelim.PolyBounds. 
 
 (** allPositions *)
 Definition c__allPositions := c__length + 16.
@@ -258,9 +255,9 @@ Proof.
        } 
        rewrite !seq_length. rewrite list_size_enc_length, !list_size_length. 
        rewrite size_nat_enc_r with (n := k) at 2 3.
-       instantiate (1 := ((size (enc N) + size (enc k))^2 + c__listsizeCons * (size (enc N) + size (enc k)) + 2* c__listsizeNil)). cbn -[Nat.mul c__listsizeCons]. leq_crossout. 
+       instantiate (1 := ((size (enc N) + size (enc k))^2 + c__listsizeCons * (size (enc N) + size (enc k)) + 2* c__listsizeNil)). cbn -[Nat.mul c__listsizeCons]. lia. 
   } 
-  unfold poly__allPositions. leq_crossout.
+  unfold poly__allPositions. lia.
 Qed. 
 Lemma allPositions_poly : monotonic poly__allPositions /\ inOPoly poly__allPositions.
 Proof. 

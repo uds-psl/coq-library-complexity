@@ -1,9 +1,8 @@
-From Undecidability.L Require Import Tactics.LTactics.
 From Complexity Require Import SAT SAT_inNP kSAT CookPrelim.PolyBounds Complexity.NP Complexity.Definitions. 
-From Undecidability.L.Datatypes Require Import LBool LNat Lists LProd. 
+From Complexity.L.Datatypes Require Import LBool LNat Lists LProd. 
 
-Lemma kSAT_to_SAT (k : nat): reducesPolyMO (kSAT k) SAT. 
-Proof. 
+Lemma kSAT_to_SAT (k : nat): kSAT k ⪯p SAT. 
+Proof.
   destruct k. 
   { (* always return a trivial no-instance if k = 0 *)
     apply reducesPolyMO_intro with (f := fun N => [[(true, 0)]; [(false, 0)]]).  
@@ -47,4 +46,4 @@ Proof.
   eapply red_inNP with (Q := SAT). 
   - apply kSAT_to_SAT. 
   - apply sat_NP. 
-Qed. 
+Qed.

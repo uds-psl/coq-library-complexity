@@ -1,7 +1,5 @@
-From Undecidability.TM Require Import TM Code  ProgrammingTools.
-From Undecidability.TM Require CodeTM.
-
-Import Retracts.
+From Complexity.TM Require Import Code ProgrammingTools.
+From Complexity.TM Require CodeTM.
 
 Definition prefixInjective (sig: Type) (X: Type) (encode : X -> list sig) :=
   forall (x x' :X) t t', encode x ++ t = encode x' ++ t' -> x = x'.
@@ -90,7 +88,7 @@ Proof.
 Qed.
 
 Arguments ContainsEncoding.Rel : simpl never.
-From Undecidability.TM Require Import ProgrammingTools MoveToSymbol.
+From Undecidability.TM Require Import MoveToSymbol.
 Module CheckTapeContains.
   Section fixx.
     Import CodeTM.

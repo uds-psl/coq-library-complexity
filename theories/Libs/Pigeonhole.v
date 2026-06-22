@@ -29,8 +29,8 @@ Section rep.
     destruct H as [y B H|y B H]; intros [= -> ->]; auto 2.
   Qed.
 
-  Fact rep_dupfree_False A :
-    rep A -> dupfree A -> False.
+  Fact rep_NoDup_False A :
+    rep A -> NoDup A -> False.
   Proof.
     intros H1 H2.
     induction H1 as [x A|x A _ IH].
@@ -47,7 +47,7 @@ Section rep.
   Qed.
 
   Fact rep_plus_nrep A :
-    rep A + dupfree A.
+    rep A + NoDup A.
   Proof.
     induction A as [|x A [IH|IH]].
     - right. constructor.
@@ -60,21 +60,21 @@ Section rep.
   Goal forall A, dec (rep A).
   Proof.
     intros A.
-    generalize (rep_plus_nrep A), (@rep_dupfree_False A).
+    generalize (rep_plus_nrep A), (@rep_NoDup_False A).
     unfold dec. tauto.
   Qed.
 
-  Fact dupfree_not_rep A :
-    dupfree A <-> ~rep A.
+  Fact NoDup_not_rep A :
+    NoDup A <-> ~rep A.
   Proof.
-    generalize (rep_plus_nrep A), (@rep_dupfree_False A).
+    generalize (rep_plus_nrep A), (@rep_NoDup_False A).
     tauto.
   Qed.
 
-  Fact not_dupfree_rep A :
-    not (dupfree A) <-> rep A.
+  Fact not_NoDup_rep A :
+    not (NoDup A) <-> rep A.
   Proof. 
-    generalize (rep_plus_nrep A), (@rep_dupfree_False A); tauto. 
+    generalize (rep_plus_nrep A), (@rep_NoDup_False A); tauto. 
   Qed. 
    
   Fact mem_sigma (x : X) A :
@@ -135,10 +135,10 @@ Section rep.
   Qed.
  
   Fact nrep_card_length A :
-    dupfree A <-> card A = length A.
+    NoDup A <-> card A = length A.
   Proof.
     (* Note the use of setoid rewriting *)
-    rewrite dupfree_not_rep, rep_card_length.
+    rewrite NoDup_not_rep, rep_card_length.
     generalize (card_length A). lia. 
   Qed.
 
@@ -244,8 +244,8 @@ Section rep.
     lia. 
   Qed. 
 
-  Lemma pigeonhole' (l1 l2 : list X) : l1 <<= l2 -> |l2| < |l1| -> not (dupfree l1). 
+  Lemma pigeonhole' (l1 l2 : list X) : l1 <<= l2 -> |l2| < |l1| -> not (NoDup l1). 
   Proof. 
-    intros H1 H2. eapply not_dupfree_rep, pigeonhole; eauto.
+    intros H1 H2. eapply not_NoDup_rep, pigeonhole; eauto.
   Qed. 
 End rep.

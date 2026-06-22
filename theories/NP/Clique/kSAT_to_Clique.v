@@ -1,6 +1,4 @@
-From Undecidability.L Require Import L.
-From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import Lists LNat LProd.
+From Complexity.L.Datatypes Require Import Lists LNat LProd.
 From Complexity.Libs Require Import PSLCompat CookPrelim.MorePrelim Pigeonhole.
 From Complexity.NP.Clique Require Import Clique UGraph.
 From Complexity.NP.SAT Require Import SAT kSAT.
@@ -155,7 +153,7 @@ Section fixSAT.
       intros H1 H2. unfold opt_literalsConflict. split; [now eapply evalLiteral_true_no_conflict | apply H].
     Qed. 
 
-    Hint Constructors dupfree : core.
+    Hint Constructors NoDup : core.
     Lemma exists_clique' N' i : (exists N'', N = N'' ++ N') -> |N'| + i = |N| -> 
         exists L, isKClique (|N'|) L /\ verticesClauseGe L i /\ (forall v, v el L -> vertexSatisfied a__sat v).
     Proof using Hkgt Hkcnf H_sat. 
@@ -221,7 +219,7 @@ Section fixSAT.
     Qed.
 
     Definition clausesOf (L : list (V Gcnf)) := map (fun '(ci, li) => ci) L. 
-    Lemma isClique_clausesOf_dupfree cl : isClique cl -> dupfree (clausesOf cl).
+    Lemma isClique_clausesOf_dupfree cl : isClique cl -> NoDup (clausesOf cl).
     Proof. 
       intros [H1 H2]. induction cl; cbn; [constructor | ].
       destruct a as (ci & li). constructor.
@@ -253,9 +251,10 @@ Section fixSAT.
       intros H. assert (forall v, v el L -> not (ofClause v i)) as H0.
       { intros v Hel Hc. apply H; eauto. } 
       clear H. 
-      enough (not (dupfree (clausesOf L))) as H. 
+      enough (not (NoDup (clausesOf L))) as H. 
       { destruct Hclique as (_ & H1). now apply isClique_clausesOf_dupfree in H1. }
-      eapply Pigeonhole.pigeonhole'; [easy | | ].
+      eapply Pigeonhole.pigeonhole'.
+      - apply Fin_eq_dec.
       - instantiate (1 := remove (@eqType_dec (EqType (Fin.t Ncl))) (nth i (elem (finType_CS (Fin.t Ncl))) (Fin.of_nat_lt Hi)) (elem (finType_CS (Fin.t Ncl)))). 
         intros ci Hel. apply in_remove_iff.
         split; [apply elem_spec | ].
@@ -277,7 +276,7 @@ Section fixSAT.
     
     Definition satPositions := toPos L.
 
-    Lemma satPositions_dupfree : dupfree satPositions. 
+    Lemma satPositions_dupfree : NoDup satPositions. 
     Proof using Hclique. 
       unfold satPositions, toPos. 
       apply FinFun.Injective_map_NoDup. 2: apply Hclique.
@@ -469,4 +468,4 @@ Proof.
     rewrite kCNF_decb_iff in H1'.
     specialize (projT2 trivialNoInstance) as H2. cbn in H2. 
     split; tauto.
-Qed. 
+Qed.
